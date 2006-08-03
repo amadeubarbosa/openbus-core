@@ -1,0 +1,151 @@
+\section{Arquitetura}
+\label{arquitetura}
+
+O OpenBus consistirá de um barramento para troca de dados estruturados e mensagens entre aplicações.
+As aplicações conectadas ao barramento poderão fazer uso de algumas aplicações especiais chamadas de
+serviços OpenBus. Os serviços OpenBus são os seguintes:
+\begin{itemize}
+\item Serviço de diretórios
+\item Serviço de dados
+\item Serviço de notificações
+\item Serviço de autenticação/autorização
+\item Serviço de colaboração
+\end{itemize}
+Através do serviço de diretórios, uma aplicação poderá encontrar outras aplicações e os outros serviços
+disponíveis no barramento OpenBus. O serviço de autenticação/autorização será usado para autenticar as
+aplicações no barramento e poderá ser utilizado pelas aplicações para autorizar acessos a seus dados.
+O serviço de colaboração permite que aplicações 
+
+\subsection{Requisitos}
+\begin{itemize}
+\item Facilidade de especialização para representar dados de diferentes
+  domínios.
+\item Suporte a aplicações desenvolvidas em linguagens heterogêneas.
+\item Objetos (dados estruturados) são descritos por meio de metadados.
+\item Metadados de um objeto permitem a inspeção programática de sua
+  estrutura
+  e conteúdo.
+\item Aplicações são descritas por meio de metadados.
+\item Os metadados de uma aplicação permitem a inspeção programática dos
+  serviços
+  por ela oferecidos.
+\item Aplicações podem publicar objetos no barramento.
+\item Aplicações podem pesquisar objetos publicados no barramento.
+\item Aplicações podem recuperar metadados de um objeto.
+\item Aplicações podem recuperar o conteúdo (i.e. o dado) de um objeto.
+\item Aplicações podem monitorar um objeto, recebendo mensagens indicativas
+  de que
+  o objeto foi alterado de alguma forma.
+\item Aplicações podem pesquisar outras aplicações conectadas ao barramento.
+\item Aplicações podem recuperar metadados de outras aplicações.
+\item Aplicações podem enviar mensagens para outras aplicações.
+\item Objetos e serviços disponibilizados no barramento são passíveis de
+  controle
+  de acesso.
+\item Barramento disponibiliza um mecanismo de autenticação de usuários.
+%
+\item Barramento criado e gerenciado por um servidor OpenBus.
+\item Servidores OpenBus se conectam formando uma federação.
+\item Requisições são resolvidas no menor escopo possível.
+\item Transferência de grandes objetos (ordem de centenas de Gigabytes).
+\begin{itemize}
+  \item Comunicação ponto-a-ponto para transferência eficiente de objetos.
+  \item Transferência via barramento quando a comunicação ponto-a-ponto não
+    for
+    possível ou desejada.
+\end{itemize}
+\item Gerência de grandes quantidades de objetos (ordem de milhares).
+\begin{itemize}
+  \item Pesquisa de objetos e recuperação de metadados sem necessidade de
+    utilizar
+    referências remotas, possivelmente via linguagem de consulta (quais
+seriam
+    as alternativas?).
+\end{itemize}
+\item Metadados de objetos e aplicações são descritos em XML. (NÃO)
+\end{itemize}
+
+\subsection{Detalhamento}
+
+O OpenBus é um ambiente de execução onde diferentes aplicações podem
+interagir através de seus dados. Uma aplicação pode obter dados de
+outras aplicações e pode também disponibilizar seus próprios dados para
+outras aplicações através do Ambiente de Execução OpenBus (AEOB).
+
+Os dados disponibilizados pelas aplicações no AEOB são acessados por
+interfaces definidas no próprio OpenBus, tornando o acesso a esses dados
+uniforme e independente da aplicação ao qual o dado pertence. Essas
+interfaces de dados são tipos primitivos do OpenBus e são genéricas o
+bastante para serem usadas por qualquer tipo de aplicação. É possível
+estender o AEOB com a adição de novas interfaces de dados criadas para
+um domínio específico, o que torna o OpenBus um framework.
+
+Para se conectar ao AEOB, uma aplicação precisa escrever um driver
+seguindo o protocolo definido pelo OpenBus. Através desse driver, a
+aplicação poderá navegar pelos dados disponibilizados por outras
+aplicações bem como poderá disponibilizar seus próprios dados.
+
+O OpenBus também permite integrar vários AEOB criando uma federação.
+Numa federação existirá um AEOB que será conhecido como AEOB principal.
+Outros AEOB são conectados ao AEOB principal sendo chamados, por causa
+disso, de AEOB secundários. Para as aplicações integradas a um AEOB, não
+há diferença entre AEOB principal e AEOB secundário.
+
+Um AEOB secundário pode estar executando na mesma máquina onde
+determinadas aplicações estão executando, gerando melhoria de desempenho
+e um aumento na resiliência das aplicações. Em caso de queda na
+comunicação com o servidor OpenBus principal, as aplicações conectadas
+ao servidor OpenBus secundário continuariam trocando dados normalmente.
+
+%\begin{figure} [htb]
+%\centering
+%\includegraphics[width=2in]{figs/architecture.pdf} %height=3in, 
+%\caption{Arquitetura do OpenBus}
+%\label{fig:architecture}
+%\end{figure}
+
+\begin{itemize}
+\item serviços no barramento
+\item diretórios (trader?)
+\item federação
+\item autenticação / autorização \\
+serviço (chaves / usuário)\\
+usuário
+\item eventos \\
+datachange \\
+colaboração
+\item ponte
+\item tratamento de erros
+\item suporte a query sem BD \\
++ de 1 interface de query (+ simples)
+\item integração com .net e cia \\
+clientes \\
+serviços (pontes) - ops
+
+
+Se tivermos a opção de oferecer as interfaces dos nossos serviços via
+SOAP,
+já temos o problema praticamente resolvido. Também temos a opção de usar
+o Lua.Net em casos mais específicos.
+\end{itemize}
+
+Falar sobre as tecnologias que serão usadas em cada item.
+
+\subsubsection{integração com clientes atuais}
+
+\subsubsection{como integrar uma aplicação já existente ao openbus}
+
+a aplicação deve implementar a idl do serviço
+
+\subsubsection{como acessar um serviço openbus}
+
+contactar diretamente a quem implementa o serviço ou conectar a um 
+servidor de serviços
+
+\subsubsection{segurança}
+
+falar do servidor de autenticação
+
+\subsubsection{...}
+
+%\subsection{Requisitos de {\em Hardware} e {\em Software}}

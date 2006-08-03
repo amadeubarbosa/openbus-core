@@ -1,0 +1,69 @@
+%\documentclass[12pt,fleqn, leqno, acm]{article}
+\documentclass[12pt]{article}
+
+%% Estilos e Plug-Ins
+%\usepackage{a4wide}
+\usepackage{a4}
+\ifx\pdfoutput\undefined
+   \usepackage[dvips]{graphicx}
+\else
+   \usepackage[pdftex]{graphicx}
+\fi
+\usepackage{times}
+\usepackage{isolatin1}
+\usepackage[brazil]{babel}
+\usepackage{fancyheadings}
+\usepackage{lastpage} 
+
+\pagestyle{fancy}
+
+\textheight=8.2in
+%\headwidth=1.2\textwidth
+\lhead{\setlength{\unitlength}{1mm} 
+\begin{picture}(0,0) 
+\put(5,0){\includegraphics[width=0.8in]{figs/fundacao.pdf}} 
+\end{picture}} 
+\chead{}
+\rhead{\setlength{\unitlength}{1mm} 
+\begin{picture}(0,0) 
+\put(5,0){\includegraphics[width=0.8in]{figs/tecgraf.pdf}} 
+\end{picture}} 
+
+\lfoot{\scriptsize %
+Tecgraf/PUC-Rio \hfill -
+\hfill Rua Marquês de São Vicente, 225 - Prédio Velloso \hfill -
+\hfill CEP 22453-900 \hfill - \hfill Rio de Janeiro -- Brasil\\
+Tel. +55 21 512-5984 - Fax. +55 21 259-2232 \hfill -
+\hfill E-mail: openbus@tecgraf.puc-rio.br \hfill -
+\hfill URL: http://www.tecgraf.puc-rio.br\\
+\vspace{0.5cm} 
+\today \hfill Página \thepage \hspace{0.1cm} de \pageref{LastPage}} 
+%27/6/2006	Pï¿½ina 1 de 33
+\cfoot{}
+\rfoot{}
+
+\addtolength{\parskip}{\baselineskip}
+
+%\hyphenation{
+%in-te-gra-\c{c}\~oes
+%apli-ca-\c{c}\~oes
+%}
+
+% ===================
+% Inï¿½io do documento
+% ===================
+\begin{document}
+
+\title{OpenBus}
+\author{}
+\date{}
+\maketitle
+\thispagestyle{empty}
+
+\input{introducao}
+
+\input{arquitetura}
+
+\input{conclusao}
+
+\end{document}

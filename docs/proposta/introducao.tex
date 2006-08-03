@@ -1,0 +1,99 @@
+\section{Introdução}
+\label{introducao}
+
+A unidade de Exploração e Produção (E\&P) da Petrobras possui diversas
+aplicações que são utilizadas por seus funcionários na realização dos seus
+fluxos de trabalho. Existem aplicações desenvolvidas pela própria Petrobras,
+desenvolvidas em parceria com universidades ou compradas de terceiros.
+Embora essas aplicações trabalhem bem individualmente, o fluxo de trabalho de
+um funcionário pode envolver a utilização de mais de uma dessas aplicações
+e, como essas aplicações foram desenvolvidas para serem executadas de maneira
+independente, qualquer troca de dados deve ser realizada manualmente pelos
+funcionários (os usuários das aplicações).
+
+Para diminuir a participação manual do usuário no papel de integrador, algumas
+aplicações já estão oferencendo mecanismos para que outras aplicações acessem
+seus dados. Como exemplo temos o WebSintesi que disponibiliza uma biblioteca
+para acesso à sua área de projetos o e o Sigeo que possui um servidor que
+possibilita às aplicações gravarem dados em sua área de projetos. O maior
+problema dsse tipo de integração pontual é que o número de integrações tende a
+se tornar exponencial (\(\frac{n(n-1)}{2}\)). Se quiséssemos integrar 10
+aplicações, deveríamos implementar 45 integrações.
+
+Algumas aplicações especiais, os chamados sistemas integradores, vêm sendo
+utilizados para facilitar a integração de aplicações. Esses sistemas provêem
+uma infraestrutura básica para a criação de aplicações que devem estar
+integradas. O WebSintesi, por exemplo, realiza a integração de aplicações de
+análise e síntese de dados geofísicos. Outro sistema integrador importante é o
+OpenSpirit que integra e padroniza o acesso a dados de Geologia e Geofísica
+independente da forma como esses dados estão armazenados nas suas
+aplicações originais. Até mesmo esses sistemas integradores estão
+integrados. O WebSintesi, por exemplo, acessa os dados disponibilizados
+pelo OpenSpirit.
+
+Nesse contexto, podemos apontar algumas dificuldades:
+
+\begin{itemize}
+\item {\bf O usuário ainda assume o papel de integrador entre várias aplicações.}
+O usuário precisa conhecer funcionalidades de aplicações que
+nem precisaria utilizar. O usuário do Sigeo, por exemplo, precisa saber
+que a aplicação VGE acessa os dados da base e se quiser algum dado da
+base - feições, por exemplo - terá de usar o VGE para obter esse dado
+para o seu projeto no Sigeo.
+
+\item {\bf Dificuldade em integrar aplicações Petrobras.}
+A integração de aplicações Petrobras é bastante complexa, especialmente quando
+as aplicações são desenvolvidas por equipes diferentes. Para implementar
+essas integrações são adotadas soluções específicas para resolver o
+problema. Nem sempre essa solução específica pode ser reutilizada quando
+uma integração similar é necessária. Seguem dois exemplos de
+implementação atuais:
+\begin{enumerate}
+\item A integração do WebSintesi com o V3O2 é implementada com a criação de
+uma camada CORBA que acessa o serviço de projetos do WebSintesi escrito
+em Java. Isso permite ao V3O2 ler e gravar arquivos na área de projetos
+do WebSintesi.
+\item A integração do VGE com o Sigeo faz uso de um servidor Java, acessado
+pelo servidor VGE, que utiliza uma biblioteca nativa do Sigeo. Isso
+permite ao VGE exportar dados para o Sigeo.
+\end{enumerate}
+
+Embora sejam idênticas conceitualmente, foram necessárias implementações
+diferentes para essas duas integrações.
+
+\item {\bf Aplicações integradoras comerciais são limitadas.}
+O integrador comercial em uso na unidade de Exploração de Produção
+atualmente é o OpenSpirit. Por ser uma aplicação comercial fechada,
+possui varias limitações em relação às funcionalidades necessárias
+ao E\&P. As principais limitações são:
+\begin{enumerate}
+\item Não é permitido criar um servidor de dados para prover dados ao
+OpenSpirit. Com isso, aplicações do E\&P como o VGE não podem exportar
+seus dados para outras aplicações via OpenSpirit.
+\item Os dados reconhecidos pelo OpenSpirit estão apenas no domínio de
+Geologia e Geofísica. Isso impede o uso do OpenSpirit em aplicações dos
+domínios de Engenharia e de Química, por exemplo.
+\end{enumerate}
+
+Além disso, a E\&P corre todos os perigos de se adotar soluções
+comerciais fechadas:
+\begin{itemize}
+\item Os fabricantes podem descontinuar o produto a qualquer momento.
+\item Algum concorrente pode se tornar padrão de mercado e seria necessário
+implementar as integrações novamente num outro produto.
+\item Os fabricantes podem não implementar alguma funcionalidade importante para
+o E\&P caso não tenham interesse.
+\end{itemize}
+
+\end{itemize}
+
+Como a integração de aplicações é uma tarefa bastante complexa, é necessária a
+utilização de uma política de integração. Atualmente o modo mais utilizado de
+integrar aplicações diferentes é utilizando um Barramento de Serviços.
+
+Aplicações escritas em diferentes linguagens, aplicações de código
+proprietário, formatos de dado diferentes, segurança e controle de acesso
+são alguns dos aspectos que aumentam ainda mais a complexidade da
+integração.
+
+As próximas seções descrevem o resultado das pesquisas sobre as ferramentas e tecnologias disponíveis para a solução, a arquitetura proposta para o OpenBus e uma conclusão.
