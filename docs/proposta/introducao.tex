@@ -13,12 +13,10 @@ funcionários (os usuários das aplicações).
 
 Para diminuir a participação manual do usuário no papel de integrador, algumas
 aplicações já estão oferencendo mecanismos para que outras aplicações acessem
-seus dados. Como exemplo temos o WebSintesi que disponibiliza uma biblioteca
-para acesso à sua área de projetos o e o Sigeo que possui um servidor que
-possibilita às aplicações gravarem dados em sua área de projetos. O maior
-problema dsse tipo de integração pontual é que o número de integrações tende a
-se tornar exponencial (\(\frac{n(n-1)}{2}\)). Se quiséssemos integrar 10
-aplicações, deveríamos implementar 45 integrações.
+seus dados. Como exemplo temos o WebSintesi e o Sigeo que permitem acesso às
+suas áreas de projeto. O WebSintesi disponibiliza uma biblioteca para acesso à
+sua área de projetos enquanto que o Sigeo possui um servidor que possibilita às
+aplicações gravarem dados em sua área de projetos.
 
 Algumas aplicações especiais, os chamados sistemas integradores, vêm sendo
 utilizados para facilitar a integração de aplicações. Esses sistemas provêem
@@ -35,13 +33,19 @@ Nesse contexto, podemos apontar algumas dificuldades:
 
 \begin{itemize}
 \item {\bf O usuário ainda assume o papel de integrador entre várias aplicações.}
+
 O usuário precisa conhecer funcionalidades de aplicações que
 nem precisaria utilizar. O usuário do Sigeo, por exemplo, precisa saber
-que a aplicação VGE acessa os dados da base e se quiser algum dado da
-base - feições, por exemplo - terá de usar o VGE para obter esse dado
+que a aplicação VGE acessa os dados da base da sísmica e se quiser algum dado
+contido nessa base - feições, por exemplo - terá de usar o VGE para obtê-lo
 para o seu projeto no Sigeo.
 
 \item {\bf Dificuldade em integrar aplicações Petrobras.}
+
+O maior problema dsse tipo de integração pontual é que o número de integrações
+tende a se tornar exponencial (\(\frac{n(n-1)}{2}\)). Se quiséssemos integrar
+10 aplicações, deveríamos implementar 45 integrações.
+
 A integração de aplicações Petrobras é bastante complexa, especialmente quando
 as aplicações são desenvolvidas por equipes diferentes. Para implementar
 essas integrações são adotadas soluções específicas para resolver o
@@ -62,6 +66,7 @@ Embora sejam idênticas conceitualmente, foram necessárias implementações
 diferentes para essas duas integrações.
 
 \item {\bf Aplicações integradoras comerciais são limitadas.}
+
 O integrador comercial em uso na unidade de Exploração de Produção
 atualmente é o OpenSpirit. Por ser uma aplicação comercial fechada,
 possui varias limitações em relação às funcionalidades necessárias
