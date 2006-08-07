@@ -4,19 +4,20 @@
 A unidade de Exploração e Produção (E\&P) da Petrobras possui diversas
 aplicações que são utilizadas por seus funcionários na realização dos seus
 fluxos de trabalho. Existem aplicações desenvolvidas pela própria Petrobras,
-desenvolvidas em parceria com universidades ou compradas de terceiros.
-Embora essas aplicações trabalhem bem individualmente, o fluxo de trabalho de
-um funcionário pode envolver a utilização de mais de uma dessas aplicações
-e, como essas aplicações foram desenvolvidas para serem executadas de maneira
-independente, qualquer troca de dados deve ser realizada manualmente pelos
+desenvolvidas em parceria com universidades ou compradas de terceiros. Durante
+a realização de seu fluxo de trabalho, o funcionário pode ter a necessidade de
+utilizar mais de uma aplicação e, embora essas aplicações trabalhem bem
+individualmente, qualquer troca de dados deve ser realizada manualmente pelos
 funcionários (os usuários das aplicações).
 
-Para diminuir a participação manual do usuário no papel de integrador, algumas
-aplicações já estão oferencendo mecanismos para que outras aplicações acessem
-seus dados. Como exemplo temos o WebSintesi e o Sigeo que permitem acesso às
-suas áreas de projeto. O WebSintesi disponibiliza uma biblioteca para acesso à
-sua área de projetos enquanto que o Sigeo possui um servidor que possibilita às
-aplicações gravarem dados em sua área de projetos.
+Para diminuir a participação do usuário no papel de integrador, a unidade de
+E\&P precisa integrar todas as aplicações utilizadas pelos usuários
+nos seus fluxos de trabalho. Algumas aplicações já estão oferencendo
+mecanismos para que outras aplicações acessem seus dados. Como exemplo temos o
+WebSintesi e o Sigeo que permitem acesso às suas áreas de projeto. O
+WebSintesi disponibiliza uma biblioteca para acesso à sua área de projetos
+enquanto que o Sigeo possui um servidor que possibilita às aplicações gravarem
+dados em sua área de projetos.
 
 Algumas aplicações especiais, os chamados sistemas integradores, vêm sendo
 utilizados para facilitar a integração de aplicações. Esses sistemas provêem
@@ -32,7 +33,7 @@ pelo OpenSpirit.
 Nesse contexto, podemos apontar algumas dificuldades:
 
 \begin{itemize}
-\item {\bf O usuário ainda assume o papel de integrador entre várias aplicações.}
+\item {\bf O usuário precisa assumir o papel de integrador enquanto realiza o seu fluxo de trabalho.}
 
 O usuário precisa conhecer funcionalidades de aplicações que
 nem precisaria utilizar. O usuário do Sigeo, por exemplo, precisa saber
@@ -40,7 +41,15 @@ que a aplicação VGE acessa os dados da base da sísmica e se quiser algum dado
 contido nessa base - feições, por exemplo - terá de usar o VGE para obtê-lo
 para o seu projeto no Sigeo.
 
-\item {\bf Dificuldade em integrar aplicações Petrobras.}
+\item {\bf Dificuldade em integrar aplicações.}
+Como a integração de aplicações é uma tarefa bastante complexa, é necessária a
+utilização de uma política de integração. Atualmente o modo mais utilizado de
+integrar aplicações diferentes é utilizando um Barramento de Serviços.
+
+Aplicações escritas em diferentes linguagens, aplicações de código
+proprietário, formatos de dado diferentes, segurança e controle de acesso
+são alguns dos aspectos que aumentam ainda mais a complexidade da
+integração.
 
 O maior problema dsse tipo de integração pontual é que o número de integrações
 tende a se tornar exponencial (\(\frac{n(n-1)}{2}\)). Se quiséssemos integrar
@@ -92,13 +101,4 @@ o E\&P caso não tenham interesse.
 
 \end{itemize}
 
-Como a integração de aplicações é uma tarefa bastante complexa, é necessária a
-utilização de uma política de integração. Atualmente o modo mais utilizado de
-integrar aplicações diferentes é utilizando um Barramento de Serviços.
-
-Aplicações escritas em diferentes linguagens, aplicações de código
-proprietário, formatos de dado diferentes, segurança e controle de acesso
-são alguns dos aspectos que aumentam ainda mais a complexidade da
-integração.
-
-As próximas seções descrevem o resultado das pesquisas sobre as ferramentas e tecnologias disponíveis para a solução, a arquitetura proposta para o OpenBus e uma conclusão.
+A seção 2 apresenta um estudo sobre as ferramentas e tecnologias disponíveis para a implementação de uma solução. A seção 3 apresenta os requisitos que devem ser atendidos pela solução e a arquitetura proposta. Finalmente, a seção 4 apresenta as conclusões.
