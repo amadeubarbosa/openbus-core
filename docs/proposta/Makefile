@@ -1,4 +1,4 @@
-LATEX = latex
+LATEX = pdflatex
 
 openbus.pdf : *.tex figs/*.pdf
 	@$(LATEX) openbus.tex
