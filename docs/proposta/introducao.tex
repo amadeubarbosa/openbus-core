@@ -45,7 +45,7 @@ Essa forma de integração é fraca, pois obriga o usuário a assumir o papel de
  integrador e abre a possibilidade de perda das informações que porventura não
  sejam representadas no formato de arquivo utilizado.
 Em uma situação extrema, as aplicações podem não compartilhar um formato comum
- de arquivo, o que inviabiliza a troca de dados entre elas.
+ de arquivo, o que pode inviabilizar a troca de dados entre elas.
 
 Quando as aplicações são desenvolvidas internamente pela Petrobras, ou possuem
  código aberto, ou, ainda, dispõem de interfaces para programação de extensões,
@@ -62,14 +62,14 @@ Essa forma de integração também está presente, eventualmente, entre aplicações
  da Landmark.
 
 Dois exemplos de integração programática direta entre aplicações próprias da
- Petrobras são a integração v3o2/WebSintesi e a WebSintesi/Sigeo.
+ Petrobras são a integração v3o2/WebSintesi e a WebSintesi/SIGEO.
 A integração v3o2/WebSintesi é feita através de uma interface de acesso à área
  de projetos própria do WebSintesi que é acessada pelo v3o2.
 Dessa forma, o v3o2 tem acesso aos projetos do WebSintesi, podendo ler e
  escrever arquivos nos projetos.
-A integração WebSintesi/Sigeo é feita de forma análoga: uma interface de acesso
- específica para aos projetos do Sigeo é acessada pelo WebSintesi que, através
- dela, consegue criar novos objetos nos projetos Sigeo.
+A integração WebSintesi/SIGEO é feita de forma análoga: uma interface de acesso
+ específica para aos projetos do SIGEO é acessada pelo WebSintesi que, através
+ dela, consegue criar novos objetos nos projetos SIGEO.
 
 A integração direta entre aplicações é, sem dúvida, melhor do que a integração
  externa, feita pelo usuário através da troca de arquivos e ajustes manuais.
@@ -78,13 +78,13 @@ Entretanto, o esforço necessário na infra-estrutura para integrar as aplicações
  ligar cada par de aplicações.
 Isso nos leva a um número quadrático de codificações de pontes em relação ao
  número de aplicações.
-A cada nova aplicação a ser integrada, é preciso codificar uma ponte para cada
- uma das aplicações já existentes, o que significa (\(\frac{n(n-1)}{2}\))
- codificações para {\em n} aplicações.
+A cada nova aplicação a ser integrada, é preciso codificar uma ponte que
+ integre esta nova aplicação com cada uma das aplicações já existentes, o que
+ significa (\(\frac{n(n-1)}{2}\)) codificações para {\em n} aplicações.
 Por exemplo, para integrar 10 aplicações precisamos codificar 45 pontes.
 
-Se a integração específica entre os pares de aplicações demanda um esforço
- muito elevado, a adoção de aplicações de um mesmo fabricante, que possuem
+Se a integração direta entre os pares de aplicações demanda um esforço muito
+ elevado, a adoção de aplicações de um mesmo fabricante, que possuem
  funcionalidades de integração intrínsecas, é direta mas insuficiente.
 Afinal, nenhum fabricante possui um conjunto de aplicações que atenda a
  totalidade das funcionalidades exigidas pelos profissionais nos seus ciclos de
@@ -106,9 +106,9 @@ Nesse modelo, cada aplicação se conecta ao barramento, segundo um protocolo
 Como na integração direta, é necessário codificar uma ponte para conectar cada
  aplicação ao barramento.
 Também como na integração direta, o fato de se estabelecer uma interface e de
- se codificar uma ponte própria, permite maximizar a qualidade do dado trocado
- entre as aplicações, minimizando a eventual perda de informações decorrente da
- heterogeneidade dessas aplicações.
+ se codificar uma ponte específica, permite maximizar a qualidade do dado
+ trocado entre as aplicações, minimizando a eventual perda de informações
+ decorrente da heterogeneidade dessas aplicações.
 Por outro lado, como o barramento define uma linguagem comum entre todas as
  aplicações, a codificação de uma ponte entre uma aplicação e o barramento é o
  suficiente para que esta aplicação se integre a todas as demais aplicações
@@ -122,8 +122,9 @@ De fato, para integrar {\em n} aplicações, é preciso codificar apenas {\em n}
 Outra vantagem significativa da integração através de um barramento comum é a
  possibilidade de criarmos {\em ligações ativas} entre as aplicações.
 Uma ligação ativa é uma ligação através da qual uma aplicação pode perceber
- mudanças nos dados de outra aplicação, ou seja, por meio de uma ligação ativa
- duas aplicações podem trocar mensagens ao invés de apenas dados.
+ mudanças nos dados de outra aplicação.
+Ou seja, por meio de uma ligação ativa duas aplicações podem trocar mensagens
+ ao invés de apenas dados.
 Através das ligações ativas podemos criar integrações onde as aplicações
  trocam informações dinamicamente, à medida em que o usuário interage com cada
  uma.
@@ -140,7 +141,7 @@ Entretanto, como veremos na seção seguinte, essas soluções são limitadas e não
  atendem a todos os requisitos de integração do E\&P da Petrobras.
 Em função dessas limitações, e do fato desta abordagem de integração se mostrar
  como a mais adequada, nós propomos, neste documento, a construção de uma
- arquitetura de integração, que chamamos de OpenBus.
+ arquitetura de integração baseada em um barramento, que chamamos de OpenBus.
 
 Na seção seguinte, além da apresentação e da análise das soluções de mercado,
  nós apresentamos as tecnologias que podem ser utilizadas na construção de uma
