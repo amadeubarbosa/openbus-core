@@ -159,8 +159,12 @@ de integração como um todo.
 Além disso, como vimos acima, a tecnologia de serviços WEB não 
 dá suporte à manutenção de estado em uma sequência de requisições
 de serviço, um requisito de alguns cenários de compartilhamento de dados,
-como, por exemplo, na integração entre uma aplicação de visualização
-e um repositório de dados.
+como, por exemplo, a interação entre uma aplicação de visualização
+ou processamento de dados e um repositório.
+Nesse tipo de cenário, é conveniente prover fábricas
+de objetos que implementam diversos métodos de acesso a dados 
+estruturados, uma funcionalidade que não pode ser mapeada para interfaces
+de serviços WEB.
 
 De forma geral, a tecnologia de serviços WEB é mais adequada 
 a ambientes de alto nível de integração,
