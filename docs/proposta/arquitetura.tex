@@ -1,4 +1,4 @@
-\section{Arquitetura}
+\section{Proposta}
 \label{arquitetura}
 
 O OpenBus consistirá de um barramento para troca de dados estruturados e mensagens entre aplicações.
@@ -65,87 +65,262 @@ seriam
 \item Metadados de objetos e aplicações são descritos em XML. (NÃO)
 \end{itemize}
 
-\subsection{Detalhamento}
 
-O OpenBus é um ambiente de execução onde diferentes aplicações podem
-interagir através de seus dados. Uma aplicação pode obter dados de
-outras aplicações e pode também disponibilizar seus próprios dados para
-outras aplicações através do Ambiente de Execução OpenBus (AEOB).
+%%%%%%%%%%%%%%
+%% CRISTINA %%
+%%%%%%%%%%%%%%
+\subsection{Descrição da solução}
 
-Os dados disponibilizados pelas aplicações no AEOB são acessados por
-interfaces definidas no próprio OpenBus, tornando o acesso a esses dados
-uniforme e independente da aplicação ao qual o dado pertence. Essas
-interfaces de dados são tipos primitivos do OpenBus e são genéricas o
-bastante para serem usadas por qualquer tipo de aplicação. É possível
-estender o AEOB com a adição de novas interfaces de dados criadas para
-um domínio específico, o que torna o OpenBus um framework.
+O \openbus é um barramento de serviços que tem como principais objetivos
+oferecer uma arquitetura aberta e extensível a diferentes domínios,
+que permita a troca de dados estruturados e adequados a esses domínios
+e que seja compatível com múltiplas linguagens.
+Assim como o OpenSpirit, o OpenBus é baseado no {\em middleware} CORBA
+e em alguns dos serviços padronizados para sua arquitetura.
 
-Para se conectar ao AEOB, uma aplicação precisa escrever um driver
-seguindo o protocolo definido pelo OpenBus. Através desse driver, a
-aplicação poderá navegar pelos dados disponibilizados por outras
-aplicações bem como poderá disponibilizar seus próprios dados.
+O barramento do \openbus é formado por componentes que podem oferecer
+serviços ou podem apenas consultar serviços de outros componentes.
+A infraestrutura básica do \openbus provê alguns serviços que podem ser
+oferecidos por um único componente ou podem estar
+distribuídos em diversos componentes em diferentes máquinas
+(Figura~\ref{fig:architecture}).
+A medida que as aplicações se conectam ao barramento, o espaço
+de serviços que o \openbus oferece cresce. 
+Desta forma, o \openbus pode ser estendido com serviços para acesso a
+repositórios de dados, acesso a dados de uma aplicação, etc.
 
-O OpenBus também permite integrar vários AEOB criando uma federação.
-Numa federação existirá um AEOB que será conhecido como AEOB principal.
-Outros AEOB são conectados ao AEOB principal sendo chamados, por causa
-disso, de AEOB secundários. Para as aplicações integradas a um AEOB, não
-há diferença entre AEOB principal e AEOB secundário.
+\begin{figure} [htb]
+\centering
+\includegraphics[width=8cm]{figs/servicosbasicos.pdf} %height=3in, 
+\caption{Serviços básicos}
+\label{fig:architecture}
+\end{figure}
 
-Um AEOB secundário pode estar executando na mesma máquina onde
-determinadas aplicações estão executando, gerando melhoria de desempenho
-e um aumento na resiliência das aplicações. Em caso de queda na
-comunicação com o servidor OpenBus principal, as aplicações conectadas
-ao servidor OpenBus secundário continuariam trocando dados normalmente.
+%(Figura \ref{fig:servicos})
 
 %\begin{figure} [htb]
 %\centering
-%\includegraphics[width=2in]{figs/architecture.pdf} %height=3in, 
-%\caption{Arquitetura do OpenBus}
-%\label{fig:architecture}
+%\includegraphics[width=8cm]{figs/servicos.pdf} %height=3in, 
+%\caption{Serviços estendidos}
+%\label{fig:servicos}
 %\end{figure}
 
+Qualquer aplicação que queira oferecer um serviço para o barramento
+deve implementar um componente {\tt OBComponent}. Este componente deve
+ser capaz de se conectar ao barramento, se autenticar e publicar a
+interface do serviço que deseja oferecer.
+Da mesma forma, para acessar os serviços do barramento uma aplicação
+deve implementar um componente {\tt OBComponent}, capaz de se conectar e
+se autenticar ao barramento.
+Através dos serviços oferecidos pelo \openbus, o componente pode acessar
+um serviço previamente conhecido, ou pode consultar o serviço de
+localização para descobrir qual componente oferece o serviço que ele
+deseja acessar.
+
+\subsubsection{Serviços básicos}
+
+Entre os serviços básicos oferecidos pelo \openbus podemos destacar os
+serviços de autenticação, localização, troca de mensagens e colaboração
+(Figura \ref{fig:servidorob}).
+
+\begin{figure} [htb]
+\centering
+\includegraphics[width=5cm]{figs/servidorob.pdf} %height=3in, 
+\caption{Serviços \openbus}
+\label{fig:servidorob}
+\end{figure}
+
 \begin{itemize}
-\item serviços no barramento
-\item diretórios (trader?)
-\item federação
-\item autenticação / autorização \\
-serviço (chaves / usuário)\\
-usuário
-\item eventos \\
-datachange \\
-colaboração
-\item ponte
-\item tratamento de erros
-\item suporte a query sem BD \\
-+ de 1 interface de query (+ simples)
-\item integração com .net e cia \\
+%%%%%%%%%%
+%% item %%
+%%%%%%%%%%
+\item Serviço de autenticação 
+
+Para fazer parte do barramento, um componente deve se autenticar a ele.
+Existem {\em tipicamente} duas formas de autenticação para um
+componente. Uma onde o componente usa a credencial de um usuário e outra
+onde o componente (ou aplicação) possui uma credencial própria.
+
+Aplicações como o VGE, onde o usuário fornece seu identificador e sua
+senha, podem usar a própria credencial do usuário para 
+autenticar seus componentes no barramento.
+Já as aplicações que executam como um {\em daemon} podem utilizar uma
+credencial própria.
+
+Como apenas um componente do barramento pode acessar serviços de outro
+componente e todos os componentes do barramento já foram autenticados,
+os componentes do barramento são considerados confiáveis.
+Entretanto, cabe a cada serviço verificar se um componente possui a
+devida autorização para acessar seus serviços.
+
+%\begin{figure} [htb]
+%\centering
+%\includegraphics[width=8cm]{figs/autenticacao.pdf} %height=3in, 
+%\caption{Serviço de autenticação}
+%\label{fig:autenticacao}
+%\end{figure}
+
+%%%%%%%%%%
+%% item %%
+%%%%%%%%%%
+\item Serviço de localização 
+
+O serviço de localização é baseado no serviço de {\em trading} de 
+CORBA. Este serviço facilita a oferta e o descobrimento de instâncias de
+serviços de tipos específicos.
+Com este serviço, componentes podem publicar suas características
+e outros componentes podem encontrar os serviços desejados
+através das características publicadas.
+
+Para publicar um serviço, um componente provê ao serviço de localização
+uma descrição de seu serviço e a localização de onde este serviço está
+disponível. Para encontrar um serviço, um componente pergunta ao serviço
+de localização se existe algum serviço com determinadas características.
+O serviço de localização procura entre as descrições que possui e
+responde com a localização da interface do serviço selecionado.
+O componente que solicitou o serviço pode então acessar o serviço
+desejado.
+
+%%%%%%%%%%
+%% item %%
+%%%%%%%%%%
+\item Serviço de troca de mensagens
+
+- troca de dados e mensagens entre (as aplicações) os componentes
+
+%\begin{figure} [htb]
+%\centering
+%\includegraphics[width=8cm]{figs/eventos.pdf} %height=3in, 
+%\caption{Troca de mensagens}
+%\label{fig:datachange}
+%\end{figure}
+
+%%%%%%%%%%
+%% item %%
+%%%%%%%%%%
+\item Serviço de colaboração
+
+Através do serviço de colaboração, um componente pode criar uma seção de
+colaboração, onde ele define quem são os componentes participantes.
+Inicialmente, cada componente é convidado pelo serviço de colaboração
+a fazer parte desta seção.
+
+Cada seção de colaboração possui atributos específicos e pode envolver
+mais de um tipo de aplicação de diferentes usuários.
+Por exemplo, para uma colaboração entre diferentes instâncias 
+do VGE, os atributos podem ser ...
+Através de uma seção, os componentes envolvidos podem compartilhar
+diferentes tipos de eventos, como por exemplo, eventos de interação
+de usuário (seleção e alteração de dados, movimentação de cursor). Cada
+componente pode gerar e receber esses eventos.
+
+O serviço de colaboração é baseado no serviço de notificação de CORBA.
+
+%\begin{figure} [htb]
+%\centering
+%\includegraphics[width=8cm]{figs/colaboracao.pdf} %height=3in, 
+%\caption{Colaboração}
+%\label{fig:colaboracao}
+%\end{figure}
+
+
+%%%%%%%%%%%
+%%% item %%
+%%%%%%%%%%%
+%\item ponte
+%%%%%%%%%%
+%% item %%
+%%%%%%%%%%
+%\item tratamento de erros
+%%%%%%%%%%%
+%%% item %%
+%%%%%%%%%%%
+%\item federação
+%
+%O \openbus também permite integrar vários AEOB criando uma federação.
+%Numa federação existirá um AEOB que será conhecido como AEOB principal.
+%Outros AEOB são conectados ao AEOB principal sendo chamados, por causa
+%disso, de AEOB secundários. Para as aplicações integradas a um AEOB, não
+%há diferença entre AEOB principal e AEOB secundário.
+%
+%Um AEOB secundário pode estar executando na mesma máquina onde
+%determinadas aplicações estão executando, gerando melhoria de desempenho
+%e um aumento na resiliência das aplicações. Em caso de queda na
+%comunicação com o servidor \openbus principal, as aplicações conectadas
+%ao servidor \openbus secundário continuariam trocando dados normalmente.
+
+\end{itemize}
+
+\subsubsection{Como criar um cliente \openbus}
+
+A aplicação deve implementar um componente para o \openbus. Através
+desse componente é possível acessar todos os serviços existentes no
+barramento.
+
+um componente pode ser parte de uma aplicação, permitindo que aplicações
+xxx façam parte do barramento.
+
+contactar diretamente a quem implementa o serviço ou conectar a um 
+servidor de serviços
+
+\subsubsection{Como criar um serviço \openbus}
+
+- facilidade para criação de servidores de dados
+
+Aplicações como VGE querem exportar seus dados para outras aplicações.
+
+um componente que é cliente também pode ser servidor.
+
+integração com .net e cia \\
 clientes \\
 serviços (pontes) - ops
-
 
 Se tivermos a opção de oferecer as interfaces dos nossos serviços via
 SOAP,
 já temos o problema praticamente resolvido. Também temos a opção de usar
 o Lua.Net em casos mais específicos.
-\end{itemize}
 
-Falar sobre as tecnologias que serão usadas em cada item.
+implementação do serviço de acesso a diferentes repositórios
 
-\subsubsection{integração com clientes atuais}
+visão uniforme e homogênea dos dados, independente dos formatos internos
+adotados por cada tipo de repositório.
 
-\subsubsection{como integrar uma aplicação já existente ao openbus}
+Como é possível desenvolver um conector?
 
-a aplicação deve implementar a idl do serviço
+\subsubsection{Serviços de dados}
 
-\subsubsection{como acessar um serviço openbus}
+%- eficiência da troca de grandes volumes de dados
+%- escalabilidade na troca de grandes volumes de mensagens
 
-contactar diretamente a quem implementa o serviço ou conectar a um 
-servidor de serviços
+- dados estruturados e adequados ao domínio
 
-\subsubsection{segurança}
+? Não falamos nada de troca de dados
 
-falar do servidor de autenticação
+diferentes requisitos
+dependem do tipo de dado e da forma de armazenamento (reposítório)
 
-\subsubsection{...}
+acesso aos serviços de dados
 
+query e ``bulk data''
+
+query é ideal para suporte a bd
+
+bulk é ideal para aplicações, dados grandes volumes. representação de
+dados como objetos remotos.
+
+flexibilidade para atender aos 2 casos.
+
+
+
+
+Os dados disponibilizados pelas aplicações no \openbus são acessados por
+interfaces definidas no próprio \openbus, tornando o acesso a esses dados
+uniforme e independente da aplicação ao qual o dado pertence. Essas
+interfaces de dados são tipos primitivos do \openbus e são genéricas o
+bastante para serem usadas por qualquer tipo de aplicação. É possível
+estender o \openbus com a adição de novas interfaces de dados criadas para
+um domínio específico.
+
+suporte a query sem BD \\
++ de 1 interface de query (+ simples)
 %\subsection{Requisitos de {\em Hardware} e {\em Software}}
