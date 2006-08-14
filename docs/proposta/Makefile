@@ -1,6 +1,9 @@
 LATEX = pdflatex
+BIBTEX = bibtex
 
 openbus.pdf : *.tex figs/*.pdf
+	@$(LATEX) openbus.tex
+	@$(BIBTEX) openbus
 	@$(LATEX) openbus.tex
 
 clean:
