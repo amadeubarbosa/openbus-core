@@ -11,7 +11,7 @@ tornando essa arquitetura um padrão de referência
 para a implementação de soluções de integração.
 
 Numa arquitetura SOA, aplicações compartilham dados e funcionalidades
-sob a forma de serviços, e interagem atuando como consumidores e/ou
+sob a forma de serviços e interagem atuando como consumidores e/ou
 provedores desses serviços. 
 A principal característica desse tipo de arquitetura é o baixo grau de 
 acoplamento entre provedores e consumidores de serviços.
@@ -28,7 +28,7 @@ e que consumidores desses serviços possam pesquisá-las,
 e interagir com os serviços,
 sem conhecer, de antemão, a identidade ou localização de seus provedores.
 Essa relação dinâmica entre provedores e consumidores
-de serviço, ilustrada na figura~\ref{figsoa},
+de serviço, ilustrada na Figura~\ref{figsoa},
 confere ao ambiente um alto grau de reuso, extensibilidade, 
 e de adaptação a mudanças.
 \begin{figure}
@@ -50,7 +50,7 @@ serviços é fundamental para garantir a interoperabilidade em
 ambientes heterogêneos e a independência de fornecedores de tecnologias.
 Nesse sentido, tanto serviços WEB 
 como a própria arquitetura CORBA, tecnologias baseadas em padrões abertos, 
-independentes de fornecedor, e de ampla aceitação no mercado, 
+independentes de fornecedor e de ampla aceitação no mercado, 
 são opções a serem consideradas para a implementação de uma solução 
 de integração multi-plataforma.
 Uma outra opção a ser considerada é Java Business Integration (JBI),
@@ -62,7 +62,7 @@ Serviços WEB \cite{Newcomer2002} são, basicamente, envelopes
 ({\em wrappers})\  XML que encapsulam diversos tipos de sistemas de
 software (objetos distribuídos, sistemas de bancos de dados,
 aplicações WEB, aplicações convencionais),
-oferecendo interfaces padronizadas para acesso aos dados e outras 
+oferecendo formas  padronizadas para acesso aos dados e outras 
 funcionalidades desses sistemas. 
 O acesso a um serviço WEB é realizado através do envio de mensagens
 de requisição de serviço representadas por documentos XML;
@@ -140,7 +140,7 @@ requisitos mais rígidos de escabilidade e desempenho podem inviabilizar esse tip
 
 No padrão orientado a documento, a interação entre um consumidor e um
 serviço é assíncrona;
-requisições de serviço são mensagens XML auto-contidas, e não envolvem
+requisições de serviço são mensagens XML auto-contidas e não envolvem
 uma resposta imediata ao consumidor.
 Esse tipo de interação é similar ao implementado, por exemplo, 
 por sistemas de mensageria ({\em message-based systems}), 
@@ -175,7 +175,7 @@ a ambientes de alto nível de integração,
 onde a interação entre consumidores e provedores de
 serviços é inerentemente
 assíncrona,
-interfaces de serviço provêem funcionalidades complexas,
+interfaces de serviço provêem funcionalidades complexas
 e desempenho de comunicação não é um requisito essencial \cite{Vinoski20022}.
 Essa propriedade não contempla
 todas as características e requisitos para um ambiente de
@@ -185,7 +185,7 @@ integração de aplicações e dados do E\&P da Petrobras.
 Java Business Integration (JBI) \cite{JBI2005} é uma proposta
 para uma arquitetura de uma infraestrutura de integração 
 baseada em Java e em princípios de SOA. 
-Essa arquitetura, ilustrada na figura~\ref{figjbi}, consiste, basicamente,
+Essa arquitetura, ilustrada na Figura~\ref{figjbi}, consiste, basicamente,
 de um {\em container} ({\em JBI Environment}) que hospeda componentes 
 dinamicamente conectados a um roteador de mensagens 
 ({\em Normalized Message Router}).
@@ -251,16 +251,16 @@ e interagir com esses serviços.
 Além da infraestrutura de suporte à interação entre componentes,
 o padrão JBI define também
 mecanismos para a administração do ambiente de integração,
-baseado sem JMX ({\em Java Management Extensions}).
+baseado em JMX ({\em Java Management Extensions}).
 Esses mecanismos provêem suporte para a instalação de componentes,
-para o controle de seu ciclo de vida, e
+para o controle de seu ciclo de vida e
 para o gerenciamento do ambiente como um todo.
 
 A arquitetura JBI é fortemente baseada na tecnologia de serviços WEB
 e, como essa tecnologia, privilegia ambientes de um alto nível de integração,
 mostrando-se inadequada para os mesmos cenários que discutimos
 anteriormente: o compartilhamento de dados binários
-e de grande volume, e interações que requeiram suporte 
+e de grande volume e interações que requeiram suporte 
 à manutenção de estado entre requisições de serviço.
 
 Uma outra questão relevante é o foco da arquitetura JBI
@@ -273,12 +273,27 @@ linguagens.
 A integração dessas aplicações a um ambiente JBI
 requer a implementação de 
 {\em Binding Components}, de mecanismos de acesso
-para a comunicação entre as aplicações e esses componentes,
+para a comunicação entre as aplicações e esses componentes
 e de mecanismos de tradução entre as interfaces internas
 e externas ao ambiente JBI.
 Esse tipo de integração,
 além de prejudicar o desempenho das aplicações,
 envolve um maior esforço de desenvolvimento. 
+
+O foco na integração de aplicações e sistemas desenvolvidos em Java
+e o favorecimento de ambientes de um alto nível de integração
+--- são encontradas em algumas infraestruturas comerciais para
+a construção de barramentos de serviços, como o {\em AquaLogic Service Bus} da BEA.
+Assim como a arquitetura JBI, essa infraestrutura provê um mecanismo de
+roteamento de mensagens que representam requisições de serviços descritos
+em WSDL. Esses serviços são oferecidos por dois tipos de componentes:
+\begin {itemize}
+\item {\em Business Services} --- serviços corporativos e de acesso a bancos de
+dados conectados diretamente ao barramento de serviços.
+em um servidor WebLogic.
+\item {\em Proxy Services} --- intermediários para provedores de serviços externos.
+\end{itemize}
+
 
 \subsubsection{Arquitetura CORBA}
 Rascunho:
