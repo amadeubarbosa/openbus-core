@@ -1,0 +1,65 @@
+\section{Proposta}
+\label{proposta}
+
+O OpenBus consistirá de um barramento para troca de dados estruturados e mensagens entre aplicações.
+As aplicações conectadas ao barramento poderão fazer uso de algumas aplicações especiais chamadas de
+serviços OpenBus. Os serviços OpenBus são os seguintes:
+\begin{itemize}
+\item Serviço de diretórios
+\item Serviço de dados
+\item Serviço de notificações
+\item Serviço de autenticação/autorização
+\item Serviço de colaboração
+\end{itemize}
+Através do serviço de diretórios, uma aplicação poderá encontrar outras aplicações e os outros serviços
+disponíveis no barramento OpenBus. O serviço de autenticação/autorização será usado para autenticar as
+aplicações no barramento e poderá ser utilizado pelas aplicações para autorizar acessos a seus dados.
+O serviço de colaboração permite que aplicações 
+
+\begin{itemize}
+\item Facilidade de especialização para representar dados de diferentes
+  domínios.
+\item Suporte a aplicações desenvolvidas em linguagens heterogêneas.
+\item Objetos (dados estruturados) são descritos por meio de meta-dados.
+\item Meta-dados de um objeto permitem a inspeção programática de sua
+  estrutura
+  e conteúdo.
+\item Aplicações são descritas por meio de meta-dados.
+\item Os meta-dados de uma aplicação permitem a inspeção programática dos
+  serviços
+  por ela oferecidos.
+\item Aplicações podem publicar objetos no barramento.
+\item Aplicações podem pesquisar objetos publicados no barramento.
+\item Aplicações podem recuperar meta-dados de um objeto.
+\item Aplicações podem recuperar o conteúdo (i.e. o dado) de um objeto.
+\item Aplicações podem monitorar um objeto, recebendo mensagens indicativas
+  de que
+  o objeto foi alterado de alguma forma.
+\item Aplicações podem pesquisar outras aplicações conectadas ao barramento.
+\item Aplicações podem recuperar meta-dados de outras aplicações.
+\item Aplicações podem enviar mensagens para outras aplicações.
+\item Objetos e serviços disponibilizados no barramento são passíveis de
+  controle
+  de acesso.
+\item Barramento disponibiliza um mecanismo de autenticação de usuários.
+%
+\item Barramento criado e gerenciado por um servidor OpenBus.
+\item Servidores OpenBus se conectam formando uma federação.
+\item Requisições são resolvidas no menor escopo possível.
+\item Transferência de grandes objetos (ordem de centenas de Gigabytes).
+\begin{itemize}
+  \item Comunicação ponto-a-ponto para transferência eficiente de objetos.
+  \item Transferência via barramento quando a comunicação ponto-a-ponto não
+    for
+    possível ou desejada.
+\end{itemize}
+\item Gerência de grandes quantidades de objetos (ordem de milhares).
+\begin{itemize}
+  \item Pesquisa de objetos e recuperação de meta-dados sem necessidade de
+    utilizar
+    referências remotas, possivelmente via linguagem de consulta (quais
+seriam
+    as alternativas?).
+\end{itemize}
+\item Meta-dados de objetos e aplicações são descritos em XML. (NÃO)
+\end{itemize}
