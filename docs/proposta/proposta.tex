@@ -1,65 +1,120 @@
 \section{Proposta}
 \label{proposta}
 
-O OpenBus consistirá de um barramento para troca de dados estruturados e mensagens entre aplicações.
-As aplicações conectadas ao barramento poderão fazer uso de algumas aplicações especiais chamadas de
-serviços OpenBus. Os serviços OpenBus são os seguintes:
-\begin{itemize}
-\item Serviço de diretórios
-\item Serviço de dados
-\item Serviço de notificações
-\item Serviço de autenticação/autorização
-\item Serviço de colaboração
-\end{itemize}
-Através do serviço de diretórios, uma aplicação poderá encontrar outras aplicações e os outros serviços
-disponíveis no barramento OpenBus. O serviço de autenticação/autorização será usado para autenticar as
-aplicações no barramento e poderá ser utilizado pelas aplicações para autorizar acessos a seus dados.
-O serviço de colaboração permite que aplicações 
+Conforme vimos na seção anterior, duas ferramentas de mercado objetivam a
+ integração de aplicações da área de E\&P, OpenSpirit e PowerHub.
+Entretanto, nenhuma das duas pode ser adotada como ferramenta de integração das
+ aplicações de E\&P da Petrobras.
+No caso do OpenSpirit, a razão técnica que inviabiliza sua adoção é o fato
+ desta ferramenta não permitir a criação de um provedor de dados, o que
+ significa que não é possível disponibilizar em seu barramento os dados das
+ várias bases de dados e aplicações próprias da Petrobras.
+Já no caso do PowerHub, há duas questões técnicas impeditivas: o fato desta
+ ferramenta não prover suporte para troca dados--que é o objetivo principal da
+ integração desejada--e o fato de estar restrita à linguagem Java.
 
-\begin{itemize}
-\item Facilidade de especialização para representar dados de diferentes
-  domínios.
-\item Suporte a aplicações desenvolvidas em linguagens heterogêneas.
-\item Objetos (dados estruturados) são descritos por meio de meta-dados.
-\item Meta-dados de um objeto permitem a inspeção programática de sua
-  estrutura
-  e conteúdo.
-\item Aplicações são descritas por meio de meta-dados.
-\item Os meta-dados de uma aplicação permitem a inspeção programática dos
-  serviços
-  por ela oferecidos.
-\item Aplicações podem publicar objetos no barramento.
-\item Aplicações podem pesquisar objetos publicados no barramento.
-\item Aplicações podem recuperar meta-dados de um objeto.
-\item Aplicações podem recuperar o conteúdo (i.e. o dado) de um objeto.
-\item Aplicações podem monitorar um objeto, recebendo mensagens indicativas
-  de que
-  o objeto foi alterado de alguma forma.
-\item Aplicações podem pesquisar outras aplicações conectadas ao barramento.
-\item Aplicações podem recuperar meta-dados de outras aplicações.
-\item Aplicações podem enviar mensagens para outras aplicações.
-\item Objetos e serviços disponibilizados no barramento são passíveis de
-  controle
-  de acesso.
-\item Barramento disponibiliza um mecanismo de autenticação de usuários.
-%
-\item Barramento criado e gerenciado por um servidor OpenBus.
-\item Servidores OpenBus se conectam formando uma federação.
-\item Requisições são resolvidas no menor escopo possível.
-\item Transferência de grandes objetos (ordem de centenas de Gigabytes).
-\begin{itemize}
-  \item Comunicação ponto-a-ponto para transferência eficiente de objetos.
-  \item Transferência via barramento quando a comunicação ponto-a-ponto não
-    for
-    possível ou desejada.
-\end{itemize}
-\item Gerência de grandes quantidades de objetos (ordem de milhares).
-\begin{itemize}
-  \item Pesquisa de objetos e recuperação de meta-dados sem necessidade de
-    utilizar
-    referências remotas, possivelmente via linguagem de consulta (quais
-seriam
-    as alternativas?).
-\end{itemize}
-\item Meta-dados de objetos e aplicações são descritos em XML. (NÃO)
-\end{itemize}
+Pelo lado não técnico, adotar uma ferramenta de mercado como infra-estrutura de
+ integração das bases de dados e das aplicações de E\&P também pode não ser
+ desejável.
+Usar uma ferramenta de mercado significa criar uma dependência significativa,
+ no sentido de que todas as aplicações que forem integradas passam a conter
+ código específico dessa ferramenta.
+Mais do que isso, todo o fluxo de trabalho dos profissionais passa a depender
+ do uso dessa infra-estrutura.
+Assim, abandonar essa ferramenta no futuro significaria despender um grande
+ esforço, tanto na atualização das aplicações quanto em função do
+ comprometimento dos fluxos de trabalho.
+Motivos possíveis para uma eventual interrupção do uso são o aumento do custo,
+ a descontinuidade da ferramenta por parte do fabricante ou mesmo a
+ inadequação, tendo em vista que o fabricante só incorpora funcionalidades que
+ julga conveniente ao produto.
+Como exemplos de inadequação, podemos citar o fato do OpenSpirit não permitir
+ a colaboração entre aplicações de diferentes usuários e a possibilidade de não
+ contemplar um determinado tipo de dado necessário ao ambiente da Petrobras.
+
+Em função dessas questões, nós propomos a construção de uma nova arquitetura de
+ integração de aplicações, baseada em um barramento, própria da Petrobras, que
+ chamamos de OpenBus.
+Com uma arquitetura própria, todos os requisitos relevantes do ambiente da
+ Petrobras poderão ser contemplados.
+Além disso, a arquitetura poderá ser mantida e estendida, de modo a contemplar
+ novos requisitos que vejam a surgir, se adequando às necessidades futuras.
+
+O desenvolvimento de uma arquitetura de integração e sua adoção nas aplicações
+ representa uma tarefa de esforço considerável.
+A infra-estrutura, envolvendo o servidor e os serviços básicos a serem
+ providos, é complexa e a construção das pontes que ligam cada aplicação ao
+ barramento envolvem conhecimentos específicos destas aplicações.
+Em função do esforço não ser pequeno, é importante que o ponto de partida deste
+ trabalho seja:
+\begin{enumerate}
+\item O levantamento dos requisitos contemplados pela arquitetura.
+\item A definição das tecnologias empregadas na implementação.
+\end{enumerate}
+
+Na elaboração desta proposta, definimos os seguintes requisitos a serem
+ contemplados pela arquitetura OpenBus:
+
+\begin{description}
+\item [Arquitetura aberta e extensível a diferentes domínios.] O E\&P completo
+ abrange várias áreas de conhecimento além de geologia e geofísica. Além disso,
+ considerando a empresa inteira, há inúmeras áreas nas quais a existência de
+ uma arquitetura de integração de aplicações seria de grande valia. Assim, um
+ dos requisitos do OpenBus é que ele seja flexível para atender diferentes
+ domínios. Por exemplo, deve ser possível montar um integrador de aplicações
+ de engenharia reaproveitando toda a infra-estrutura e os serviços básicos que
+ serão desenvolvidos inicialmente para aplicar em geologia e geofísica.
+\item [Dados estruturados e adequados ao domínio.] É importante que os dados
+ sejam modelados de forma estruturada e de acordo com o domínio para permitir
+ que as aplicações naveguem por estes dados, encontrem e recuperem as
+ informações desejadas. Esse requisito é fundamental para permitirmos que dados
+ de grandes volumes possam ser utilizados. Por exemplo, é um volume sísmico
+ deve ser visto conforme sua estrutura lógica, dividido em atributos,
+ {\em inlines} e {\em crosslines}, ao invés de uma mera seqüência de bytes,
+ como armazenado em um arquivo no formato {\em seg-y}.
+\item [Compatível com múltiplas linguagens.] Para integrar de forma nativa e,
+ em decorrência, eficiente as aplicações próprias da Petrobras, é necessário
+ que o OpenBus seja independente de linguagem de programação, pois há várias
+ aplicações escritas em C, C++, Java, .NET etc.
+\item [Facilidade para criação de clientes.] A exemplo do que é feito pelo
+ OpenSpirit, é interessante prover bibliotecas, nas principais linguagens de
+ desenvolvimento, que facilitem a construção de pontes ligando aplicações ao
+ barramento. Esse requisito é importante para facilitar a difundir entre os
+ programadores a prática de integração das aplicações ao ambiente integrador.
+\item [Facilidade para criação de servidores de dados.] É fundamental que seja
+ possível prover dados de qualquer banco ou aplicação que se conecte ao
+ barramento. Assim viabilizamos o maior grau de integração possível entre as
+ diferentes aplicações.
+\item [Troca de dados e mensagens entre as aplicações.] A troca de dados entre
+ as aplicações é o objetivo principal da arquitetura de integração. Porém, a
+ troca de mensagens genéricas, de forma síncrona e assíncrona, permite aumentar
+ significativamente as possibilidades de integração entre essas aplicações.
+\item [Eficiência da troca de grandes volumes de dados.] Os dados sísmicos são
+ da ordem de grandeza de centenas de Gigabytes e precisam ser trocados entre as
+ aplicações dos domínios de geologia e geofísica. A transferência desses
+ dados não devem apenas ser permitida mas deve ser o mais eficiente possível.
+\item [Escalabilidade na troca de grandes volumes de mensagens.] A troca de
+ mensagens, conforme dissemos, aumenta as possibilidades de integração. Por
+ exemplo, através de troca de mensagens, duas aplicações podem sincronizar
+ alterações simultâneas sendo feitas em um  mesmo dado que seja visualizado
+ em ambas. Esse tipo de uso pode exigir grandes volumes de mensagens e a
+ arquitetura deve dar suporte, sem degradação de desempenho do sistema.
+\item [Suporte a mecanismos de autenticação e autorização.] Em praticamente
+ qualquer área da Petrobras, a segurança da informação é premente. O OpenBus
+ deve, então, dar suporte para que a autenticação dos usuários e a autorização
+ de acesso a dados e serviços podem ser feitos da forma necessária.
+\item [Suporte ao trabalho colaborativo.] A integração de aplicações para a
+ troca de dados, aliada à troca de mensagens que citamos acima formam a base
+ o trabalho colaborativo entre usuários. A arquitetura pode, então, oferecer
+ os serviços básicos, no nível de abstração adequado, para as aplicações que
+ desejem explorar a colaboração.
+\end{description}
+
+\endinput
+x contextualizar com a seção anterior, justificando o desenvolvimento do openbus
+  em função das limitações dos existentes
+- apontar a tecnologia escolhida para implementação, também em função do que foi
+  dito na seção anterior
+x descrever a lista de requisitos elencados
+- explicitar que o openbus endereça cada uma das questões apontadas na seção
+  anterior
