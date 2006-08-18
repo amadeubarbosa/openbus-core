@@ -12,8 +12,7 @@ O barramento do \openbus é formado por componentes que podem oferecer
 serviços ou podem apenas consultar serviços de outros componentes.
 A infraestrutura básica do \openbus provê alguns serviços que podem ser
 oferecidos por um único componente ou podem estar
-distribuídos em diversos componentes em diferentes máquinas
-(Figura~\ref{fig:architecture}).
+distribuídos em diversos componentes em diferentes máquinas.
 A medida que as aplicações se conectam ao barramento, o espaço
 de serviços que o \openbus oferece cresce. 
 Desta forma, o \openbus pode ser estendido com serviços para acesso a
@@ -21,50 +20,45 @@ repositórios de dados, acesso a dados de uma aplicação, etc.
 
 \begin{figure} [htb]
 \centering
-\includegraphics[width=8cm]{figs/servicosbasicos.pdf} %height=3in, 
-\caption{Serviços básicos}
+\includegraphics[width=14cm]{figs/arquitetura.pdf} %height=3in, 
+\caption{Arquitetura do \openbus}
 \label{fig:architecture}
 \end{figure}
 
-%(Figura \ref{fig:servicos})
-
-%\begin{figure} [htb]
-%\centering
-%\includegraphics[width=8cm]{figs/servicos.pdf} %height=3in, 
-%\caption{Serviços estendidos}
-%\label{fig:servicos}
-%\end{figure}
-
-Qualquer aplicação que queira oferecer um serviço para o barramento
-deve implementar um componente {\tt OBComponent}. Este componente deve
-ser capaz de se conectar ao barramento, se autenticar e publicar a
-interface do serviço que deseja oferecer.
-Da mesma forma, para acessar os serviços do barramento uma aplicação
-deve implementar um componente {\tt OBComponent}, capaz de se conectar e
-se autenticar ao barramento.
+Qualquer aplicação que queira fazer parte do barramento deve
+implementar um componente para o \openbus. Através desse componente
+é possível acessar todos os serviços existentes no barramento.
+Para isso, o componente deve ser capaz de se conectar ao barramento e se
+autenticar.
 Através dos serviços oferecidos pelo \openbus, o componente pode acessar
 um serviço previamente conhecido, ou pode consultar o serviço de
 localização para descobrir qual componente oferece o serviço que ele
 deseja acessar.
+Para oferecer um serviço, uma aplicação pode usar o mesmo componente ou
+implementar outro. Tal componente deve ser capaz de publicar no
+barramento a interface do serviço que deseja oferecer.
 
-\subsubsection{Serviços básicos}
+%Qualquer aplicação que queira acessar um serviço deve ser
+%capaz de se conectar ao barramento e se autenticar.
+%Além disso, para oferecer um serviço ao barramento, uma aplicação 
+%deve ser capaz de publicar a
+%interface do serviço que deseja oferecer.
+%%%% A aplicação já virou componente e ainda não falamos da diferença
+%%%% entre eles.
+%Através dos serviços oferecidos pelo \openbus, o componente pode acessar
+%um serviço previamente conhecido, ou pode consultar o serviço de
+%localização para descobrir qual componente oferece o serviço que ele
+%deseja acessar.
+
+\subsection{Serviços básicos}
 
 Entre os serviços básicos oferecidos pelo \openbus podemos destacar os
-serviços de autenticação, localização, troca de mensagens e colaboração
-(Figura \ref{fig:servidorob}).
-
-\begin{figure} [htb]
-\centering
-\includegraphics[width=5cm]{figs/servidorob.pdf} %height=3in, 
-\caption{Serviços \openbus}
-\label{fig:servidorob}
-\end{figure}
+serviços de autenticação, localização, troca de mensagens e colaboração.
 
 \begin{itemize}
 %%%%%%%%%%
-%% item %%
-%%%%%%%%%%
 \item Serviço de autenticação 
+%%%%%%%%%%
 
 Para fazer parte do barramento, um componente deve se autenticar a ele.
 Existem {\em tipicamente} duas formas de autenticação para um
@@ -83,17 +77,9 @@ os componentes do barramento são considerados confiáveis.
 Entretanto, cabe a cada serviço verificar se um componente possui a
 devida autorização para acessar seus serviços.
 
-%\begin{figure} [htb]
-%\centering
-%\includegraphics[width=8cm]{figs/autenticacao.pdf} %height=3in, 
-%\caption{Serviço de autenticação}
-%\label{fig:autenticacao}
-%\end{figure}
-
-%%%%%%%%%%
-%% item %%
 %%%%%%%%%%
 \item Serviço de localização 
+%%%%%%%%%%
 
 O serviço de localização é baseado no serviço de {\em trading} de 
 CORBA. Este serviço facilita a oferta e o descobrimento de instâncias de
@@ -112,9 +98,8 @@ O componente que solicitou o serviço pode então acessar o serviço
 desejado.
 
 %%%%%%%%%%
-%% item %%
-%%%%%%%%%%
 \item Serviço de troca de mensagens
+%%%%%%%%%%
 
 - troca de dados e mensagens entre (as aplicações) os componentes
 
@@ -126,9 +111,8 @@ desejado.
 %\end{figure}
 
 %%%%%%%%%%
-%% item %%
-%%%%%%%%%%
 \item Serviço de colaboração
+%%%%%%%%%%
 
 Através do serviço de colaboração, um componente pode criar uma seção de
 colaboração, onde ele define quem são os componentes participantes.
@@ -145,39 +129,6 @@ de usuário (seleção e alteração de dados, movimentação de cursor). Cada
 componente pode gerar e receber esses eventos.
 
 O serviço de colaboração é baseado no serviço de notificação de CORBA.
-
-%\begin{figure} [htb]
-%\centering
-%\includegraphics[width=8cm]{figs/colaboracao.pdf} %height=3in, 
-%\caption{Colaboração}
-%\label{fig:colaboracao}
-%\end{figure}
-
-
-%%%%%%%%%%%
-%%% item %%
-%%%%%%%%%%%
-%\item ponte
-%%%%%%%%%%
-%% item %%
-%%%%%%%%%%
-%\item tratamento de erros
-%%%%%%%%%%%
-%%% item %%
-%%%%%%%%%%%
-%\item federação
-%
-%O \openbus também permite integrar vários AEOB criando uma federação.
-%Numa federação existirá um AEOB que será conhecido como AEOB principal.
-%Outros AEOB são conectados ao AEOB principal sendo chamados, por causa
-%disso, de AEOB secundários. Para as aplicações integradas a um AEOB, não
-%há diferença entre AEOB principal e AEOB secundário.
-%
-%Um AEOB secundário pode estar executando na mesma máquina onde
-%determinadas aplicações estão executando, gerando melhoria de desempenho
-%e um aumento na resiliência das aplicações. Em caso de queda na
-%comunicação com o servidor \openbus principal, as aplicações conectadas
-%ao servidor \openbus secundário continuariam trocando dados normalmente.
 
 \end{itemize}
 
