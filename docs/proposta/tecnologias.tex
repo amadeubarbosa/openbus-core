@@ -22,8 +22,8 @@ de sua implementação.
 Esse tipo de descrição ``neutra''\  permite, por exemplo, que consumidores e
 provedores de serviço sejam desenvolvidos em linguagens diferentes,
 e executem sob diversas plataformas.
-Além disso, a provisão de um serviço de registro, ou diretório, no ambiente de
-integração permite que provedores de serviço publiquem essas descrições,
+Além disso, a provisão de um serviço de registro, ou diretório,
+permite que provedores de serviço publiquem essas descrições,
 e que consumidores desses serviços possam pesquisá-las,
 e interagir com os serviços,
 sem conhecer, de antemão, a identidade ou localização de seus provedores.
@@ -40,15 +40,15 @@ e de adaptação a mudanças.
 
 A implementaçao de uma arquitetura SOA não pressupõe o uso de uma
 tecnologia específica;
-qualquer tecnologia ou infraestrutura que dê suporte a descoberta 
-dinâmica de serviços e a descrição desses serviços
+qualquer tecnologia ou infraestrutura que dê suporte à descoberta 
+dinâmica de serviços e à descrição desses serviços
 com base em interfaces bem definidas e independentes de implementação
 pode ser utilizada.
 Contudo, a adoção de padrões abertos para a descrição e publicação
 de serviços e para a interação entre consumidores e provedores de
 serviços é fundamental para garantir a interoperabilidade em 
-ambientes heterogêneos, e a independência de fornecedores de tecnologias.
-Nesse sentido, tanto serviços WEB ({\em WEB services})
+ambientes heterogêneos e a independência de fornecedores de tecnologias.
+Nesse sentido, tanto serviços WEB 
 como a própria arquitetura CORBA, tecnologias baseadas em padrões abertos, 
 independentes de fornecedor, e de ampla aceitação no mercado, 
 são opções a serem consideradas para a implementação de uma solução 
@@ -62,17 +62,17 @@ Serviços WEB \cite{Newcomer2002} são, basicamente, envelopes
 ({\em wrappers})\  XML que encapsulam diversos tipos de sistemas de
 software (objetos distribuídos, sistemas de bancos de dados,
 aplicações WEB, aplicações convencionais),
-oferecendo padronizadas para acesso aos dados e outras 
+oferecendo interfaces padronizadas para acesso aos dados e outras 
 funcionalidades desses sistemas. 
 O acesso a um serviço WEB é realizado através do envio de mensagens
-(requisições de serviço) representadas por documentos XML;
+de requisição de serviço representadas por documentos XML;
 é responsabilidade da implementação da interface de um serviço WEB
 transformar essas mensagens XML para o formato apropriado
 à invocação do sistema ou componente encapsulado e, quando for o caso,
 criar a mensagem XML correspondente à resposta de uma requisição.
 
-A tecnologia básica para a construção de serviços WEB é, portanto XML 
-(Extensible Markup Language), a linguagem é utilizada para descrever 
+A tecnologia básica para a construção de serviços WEB é, portanto, XML 
+--- a linguagem é utilizada para descrever 
 todo o tipo de dado, ou informação, envolvido na interação com esses serviços.
 Além de XML, uma infraestrutura de integração baseada em serviços WEB envolve 
 as seguintes tecnologias relacionadas:
@@ -131,11 +131,12 @@ Esse mapeamento, contudo, não expõe toda a funcionalidade provida
 por um sistema de objetos distribuídos \cite{Vinoski2002, Vogels2003}.
 A tecnologia de serviços WEB, por exemplo, não inclui
 a noção de referências a objetos,
-essencial a padrões de interação que requeiram manutenção
-de estado. Apesar de ser possível expor objetos como serviços
+essencial a padrões de interação que requeiram a manutenção
+de estado entre requisições de serviço.
+Apesar de ser possível expor objetos como serviços
 WEB, representando-os através de 
 {\em Universal Resource Identifiers},
-questões de escabilidade e desempenho inviabilizam esse tipo de solução. 
+requisitos mais rígidos de escabilidade e desempenho podem inviabilizar esse tipo de solução. 
 
 No padrão orientado a documento, a interação entre um consumidor e um
 serviço é assíncrona;
@@ -154,17 +155,20 @@ A representação desses dados em XML impõe um {\em overhead}
 de processamento relevante a consumidores e provedores
 de dados,
 além de um alto consumo da banda de comunicação,
-prejudicando o desempenho das aplicações integradas, e do ambiente
+prejudicando o desempenho das aplicações e do ambiente
 de integração como um todo.
-Além disso, como vimos acima, a tecnologia de serviços WEB não 
-dá suporte à manutenção de estado em uma sequência de requisições
-de serviço, um requisito de alguns cenários de compartilhamento de dados,
-como, por exemplo, a interação entre uma aplicação de visualização
-ou processamento de dados e um repositório.
-Nesse tipo de cenário, é conveniente prover fábricas
-de objetos que implementam diversos métodos de acesso a dados 
-estruturados, uma funcionalidade que não pode ser mapeada para interfaces
-de serviços WEB.
+
+Um outro cenário desfavorável a uma infraestrutura de integração
+baseada em serviços WEB é a interação entre uma aplicação de visualização
+ou processamento e um repositório de dados.
+Para prover suporte a esse tipo de interação,
+o serviço de acesso a um repositório usualmente disponibiliza
+fábricas de objetos que implementam diferentes métodos de acesso
+aos dados do repositório.
+Esses objetos mantém o estado da interação durante toda uma sequência
+de requisiçôes enviadas por uma aplicação cliente.
+Conforme discutimos anteriormente, essa funcionalidade dificilmente é 
+mapeada para interfaces de serviços WEB.
 
 De forma geral, a tecnologia de serviços WEB é mais adequada 
 a ambientes de alto nível de integração,
@@ -172,7 +176,7 @@ onde a interação entre consumidores e provedores de
 serviços é inerentemente
 assíncrona,
 interfaces de serviço provêm funcionalidades complexas,
-e desempenho não é um requisito essencial \cite{Vinoski20022}.
+e desempenho de comunicação não é um requisito essencial \cite{Vinoski20022}.
 Essa propriedade não contempla
 todas as características e requisitos para um ambiente de
 integração de aplicações e dados do E\&P da Petrobras. 
@@ -221,33 +225,16 @@ no ambiente JBI.
 \label{figjbi}
 \end{figure}
 
-Assim como em infraestruturas de serviços WEB,
+Assim como em uma infraestrutura baseada em serviços WEB.
 os componentes de um ambiente JBI interagem através de
-um mecanismo de troca de mensagens baseado em XML.
-A interface de um serviço compreende um conjunto de
-funções modeladas como {\em operações} WSDL.
-Quatro padrões básicos de troca de mensagens podem ser
-especificados para uma operação:
-{\em One-Way}, {\em Reliable One-Way},
-{\em Request-Response}
-e {\em Request Optional-Response}. 
-Nos dois primeiros padrões, uma requisição de serviço
-não produz mensagem de resposta;
-a diferença entre eles é que o segundo 
-padrão ({\em Reliable One-Way}) permite ao provedor
-de um serviço enviar uma
-sinalização de falha ao consumidor.
-No terceiro padrão ({\em Request-Response}),
-uma requisição de serviço produz sempre uma resposta
-ou sinalização de falha ao consumidor.
-No quarto padrão ({\em Request Optional-Response}),
-a resposta a uma requisição de
-serviço é opcional, e tanto o provedor como 
-o consumidor de um serviço podem sinalizar
-uma condição de falha ao processar uma mensagem
-recebida durante sua interação.
+um mecanismo de troca de mensagens baseado em XML,
+e descrevem seus serviços através de interfaces WSDL.
+A interface de um serviço compreende um conjunto de funções
+--- operações WSDL --- que, dependendo do modelo de interação
+especificado ({\em One-Way} ou {\em Request-Response}),
+podem ou não produzir respostas síncronas ao consumidor do serviço.
 
-Em um ambiente JBI, a interação entre componentes
+A interação entre componentes JBI
 é mediada por um roteador de mensagens
 --- {\em Normalized Message Router} (NMR).
 É esse roteador quem recebe as mensagens geradas por um consumidor
@@ -261,17 +248,6 @@ publicam suas interfaces WSDL e que consumidores
 obtém as informações necessárias para localizar
 e interagir com esses serviços.
 
-As mensagens trocadas entre componentes JBI através do NMR
---- mensagens normalizadas ({\em normalized messages}) ---
-são compostas por duas partes distintas: contexto e conteúdo.
-O contexto de uma mensagem normalizada é utilizado para
-o transporte de metadados, como, por exemplo, informações de 
-segurança.
-O conteúdo da mensagem ({\em payload}) é um documento XML,
-definido na descrição da interface do serviço.
-Opcionalmente, uma mensagem normalizada pode transportar dados
-binários, representados como {\em attachments} ao documento XML.
-
 Além da infraestrutura de suporte à interação entre componentes,
 o padrão JBI define também
 mecanismos para a administração do ambiente de integração,
@@ -280,10 +256,9 @@ Esses mecanismos provêm suporte para a instalação de componentes,
 para o controle de seu ciclo de vida, e
 para o gerenciamento do ambiente como um todo.
 
-Assim como a tecnologia de serviços WEB ---
-a base para muitos dos seus conceitos ---
-a arquitetura JBI favorece ambientes de alto nível de integração,
-e se mostra inadequada para os mesmos cenários que discutimos
+A arquitetura JBI é fortemente baseada na tecnologia de serviços WEB
+e, como essa tecnologia, privilegia ambientes de um alto nível de integração,
+mostrando-se inadequada para os mesmos cenários que discutimos
 anteriormente: o compartilhamento de dados binários
 e de grande volume, e interações que requeiram suporte 
 à manutenção de estado entre requisições de serviço.
