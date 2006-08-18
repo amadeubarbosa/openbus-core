@@ -1,36 +1,38 @@
 \section{Arquitetura}
 \label{arquitetura}
 
-O \openbus é um barramento de serviços que tem como principais objetivos
+O OpenBus é um barramento de serviços que tem como principais objetivos
 oferecer uma arquitetura aberta e extensível a diferentes domínios,
 que permita a troca de dados estruturados e adequados a esses domínios
 e que seja compatível com múltiplas linguagens.
 Assim como o OpenSpirit, o OpenBus é baseado no {\em middleware} CORBA
 e em alguns dos serviços padronizados para sua arquitetura.
 
-O barramento do \openbus é formado por componentes que podem oferecer
+O barramento do OpenBus é formado por componentes que podem oferecer
 serviços ou podem apenas consultar serviços de outros componentes.
-A infraestrutura básica do \openbus provê alguns serviços que podem ser
+A infraestrutura do OpenBus provê alguns serviços básicos que podem ser
 oferecidos por um único componente ou podem estar
 distribuídos em diversos componentes em diferentes máquinas.
 A medida que as aplicações se conectam ao barramento, o espaço
-de serviços que o \openbus oferece cresce. 
-Desta forma, o \openbus pode ser estendido com serviços para acesso a
-repositórios de dados, acesso a dados de uma aplicação, etc.
+de serviços que o OpenBus oferece cresce. 
+Desta forma, o OpenBus pode ser estendido com serviços para acesso a
+repositórios de dados (Base integrada, OpenSpirit),
+acesso a dados de uma aplicação (Websintesi, v3o2), etc.
+(Figura~\ref{fig:architecture}.)
 
 \begin{figure} [htb]
 \centering
 \includegraphics[width=14cm]{figs/arquitetura.pdf} %height=3in, 
-\caption{Arquitetura do \openbus}
+\caption{Arquitetura do OpenBus}
 \label{fig:architecture}
 \end{figure}
 
 Qualquer aplicação que queira fazer parte do barramento deve
-implementar um componente para o \openbus. Através desse componente
+implementar um componente para o OpenBus. Através desse componente
 é possível acessar todos os serviços existentes no barramento.
 Para isso, o componente deve ser capaz de se conectar ao barramento e se
 autenticar.
-Através dos serviços oferecidos pelo \openbus, o componente pode acessar
+Através dos serviços oferecidos pelo OpenBus, o componente pode acessar
 um serviço previamente conhecido, ou pode consultar o serviço de
 localização para descobrir qual componente oferece o serviço que ele
 deseja acessar.
@@ -45,14 +47,14 @@ barramento a interface do serviço que deseja oferecer.
 %interface do serviço que deseja oferecer.
 %%%% A aplicação já virou componente e ainda não falamos da diferença
 %%%% entre eles.
-%Através dos serviços oferecidos pelo \openbus, o componente pode acessar
+%Através dos serviços oferecidos pelo OpenBus, o componente pode acessar
 %um serviço previamente conhecido, ou pode consultar o serviço de
 %localização para descobrir qual componente oferece o serviço que ele
 %deseja acessar.
 
-\subsection{Serviços básicos}
+%\subsection{Serviços básicos}
 
-Entre os serviços básicos oferecidos pelo \openbus podemos destacar os
+Entre os serviços básicos oferecidos pelo OpenBus podemos destacar os
 serviços de autenticação, localização, troca de mensagens e colaboração.
 
 \begin{itemize}
@@ -61,7 +63,7 @@ serviços de autenticação, localização, troca de mensagens e colaboração.
 %%%%%%%%%%
 
 Para fazer parte do barramento, um componente deve se autenticar a ele.
-Existem {\em tipicamente} duas formas de autenticação para um
+Existem tipicamente duas formas de autenticação para um
 componente. Uma onde o componente usa a credencial de um usuário e outra
 onde o componente (ou aplicação) possui uma credencial própria.
 
@@ -89,19 +91,22 @@ e outros componentes podem encontrar os serviços desejados
 através das características publicadas.
 
 Para publicar um serviço, um componente provê ao serviço de localização
-uma descrição de seu serviço e a localização de onde este serviço está
-disponível. Para encontrar um serviço, um componente pergunta ao serviço
+uma descrição de seu serviço e a sua localização.
+Para encontrar um serviço, um componente pergunta ao serviço
 de localização se existe algum serviço com determinadas características.
 O serviço de localização procura entre as descrições que possui e
 responde com a localização da interface do serviço selecionado.
-O componente que solicitou o serviço pode então acessar o serviço
-desejado.
+O componente que solicitou o serviço pode então acessá-lo.
 
 %%%%%%%%%%
 \item Serviço de troca de mensagens
 %%%%%%%%%%
 
-- troca de dados e mensagens entre (as aplicações) os componentes
+O serviço de troca de mensagens é baseado no serviço de notificação de 
+CORBA.
+Através dele, as aplicações podem comunicar-se livremente,
+trocando mensagens diretas ou registrando interesse em receber 
+mensagens quando algum evento ocorre na outra aplicação.
 
 %\begin{figure} [htb]
 %\centering
@@ -114,21 +119,20 @@ desejado.
 \item Serviço de colaboração
 %%%%%%%%%%
 
-Através do serviço de colaboração, um componente pode criar uma seção de
-colaboração, onde ele define quem são os componentes participantes.
+O serviço de colaboração usa o serviço de troca de mensagens.
+Através dele, um componente pode criar uma seção de
+colaboração definir quem são os componentes participantes.
 Inicialmente, cada componente é convidado pelo serviço de colaboração
 a fazer parte desta seção.
 
 Cada seção de colaboração possui atributos específicos e pode envolver
 mais de um tipo de aplicação de diferentes usuários.
 Por exemplo, para uma colaboração entre diferentes instâncias 
-do VGE, os atributos podem ser ...
+do v3o2, os atributos podem ser ... (Figura~\ref{fig:architecture}.)
 Através de uma seção, os componentes envolvidos podem compartilhar
 diferentes tipos de eventos, como por exemplo, eventos de interação
 de usuário (seleção e alteração de dados, movimentação de cursor). Cada
 componente pode gerar e receber esses eventos.
-
-O serviço de colaboração é baseado no serviço de notificação de CORBA.
 
 \end{itemize}
 
