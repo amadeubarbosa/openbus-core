@@ -151,22 +151,22 @@ A adoção da tecnologia de serviços WEB
 pode não ser adequada em alguns cenários de integração,
 como o compartilhamento de dados de grande volume ---
 dados sísmicos, por exemplo.
-A representação desses dados em XML impõe um {\em overhead} 
-de processamento relevante a consumidores e provedores
+A representação desses dados em XML impõe uma sobrecarga
+relevante de processamento a consumidores e provedores
 de dados,
 além de um alto consumo da banda de comunicação,
-prejudicando o desempenho das aplicações e do ambiente
+o que pode prejudicar o desempenho das aplicações e do ambiente
 de integração como um todo.
-
-Um outro cenário desfavorável a uma infraestrutura de integração
-baseada em serviços WEB é a interação entre uma aplicação de visualização
-ou processamento e um repositório de dados.
-Para prover suporte a esse tipo de interação,
+Além disso, 
+dependendo do tamanho do dado acessado,
+copiá-lo integralmente para clientes como
+aplicações de visualização pode ser inviável.
+Para atender a essa situação,
 o serviço de acesso a um repositório usualmente disponibiliza
-fábricas de objetos que implementam diferentes métodos de acesso
-aos dados do repositório.
-Esses objetos mantém o estado da interação durante toda uma sequência
-de requisiçôes enviadas por uma aplicação cliente.
+fábricas de objetos que implementam diferentes métodos para o acesso
+estruturado aos dados.
+Acessando esses objetos, o consumidor poder obter segmentos, 
+ou porções, do dado, à medida que forem necessários.
 Conforme discutimos anteriormente, essa funcionalidade dificilmente é 
 mapeada para interfaces de serviços WEB.
 
@@ -191,8 +191,7 @@ dinamicamente conectados a um roteador de mensagens
 ({\em Normalized Message Router}).
 Esses componentes atuam no ambiente JBI como provedores ou
 consumidores de serviços, ou simultaneamente nos dois papéis. 
-
-Os componentes de um ambiente JBI têm dois tipos distintos:
+Dois tipos distintos de componentes são definidos:
 \begin{itemize}
 \item {\em Service Engines}
 
@@ -279,21 +278,6 @@ e externas ao ambiente JBI.
 Esse tipo de integração,
 além de prejudicar o desempenho das aplicações,
 envolve um maior esforço de desenvolvimento. 
-
-O foco na integração de aplicações e sistemas desenvolvidos em Java
-e o favorecimento de ambientes de um alto nível de integração
---- são encontradas em algumas infraestruturas comerciais para
-a construção de barramentos de serviços, como o {\em AquaLogic Service Bus} da BEA.
-Assim como a arquitetura JBI, essa infraestrutura provê um mecanismo de
-roteamento de mensagens que representam requisições de serviços descritos
-em WSDL. Esses serviços são oferecidos por dois tipos de componentes:
-\begin {itemize}
-\item {\em Business Services} --- serviços corporativos e de acesso a bancos de
-dados conectados diretamente ao barramento de serviços.
-em um servidor WebLogic.
-\item {\em Proxy Services} --- intermediários para provedores de serviços externos.
-\end{itemize}
-
 
 \subsubsection{Arquitetura CORBA}
 Rascunho:
