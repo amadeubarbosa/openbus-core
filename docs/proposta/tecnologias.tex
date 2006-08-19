@@ -22,9 +22,10 @@ de sua implementação.
 Esse tipo de descrição ``neutra''\  permite, por exemplo, que consumidores e
 provedores de serviço sejam desenvolvidos em linguagens diferentes,
 e executem sob diversas plataformas.
-Além disso, a provisão de um serviço de registro, ou diretório,
-permite que provedores de serviço publiquem essas descrições,
+Além disso, a disponibilização de um serviço de registro, ou diretório,
+permite que servidores publiquem suas ofertas de serviço, 
 e que consumidores desses serviços possam pesquisá-las,
+conhecer seus detalhes
 e interagir com os serviços,
 sem conhecer, de antemão, a identidade ou localização de seus provedores.
 Essa relação dinâmica entre provedores e consumidores
@@ -134,8 +135,8 @@ a noção de referências a objetos,
 essencial a padrões de interação que requeiram a manutenção
 de estado entre requisições de serviço.
 Apesar de ser possível expor objetos como serviços
-WEB, representando-os através de 
-{\em Universal Resource Identifiers},
+WEB, representando-os através de URIs
+({\em Universal Resource Identifiers}),
 requisitos mais rígidos de escabilidade e desempenho podem inviabilizar esse tipo de solução. 
 
 No padrão orientado a documento, a interação entre um consumidor e um
@@ -161,8 +162,8 @@ Além disso,
 dependendo do tamanho do dado acessado,
 copiá-lo integralmente para clientes como
 aplicações de visualização pode ser inviável.
-Para atender a essa situação,
-o serviço de acesso a um repositório usualmente disponibiliza
+Para atender esse tipo de cenário,
+serviços de acesso a repositórios usualmente disponibilizam
 fábricas de objetos que implementam diferentes métodos para o acesso
 estruturado aos dados.
 Acessando esses objetos, o consumidor poder obter segmentos, 
@@ -250,7 +251,7 @@ e interagir com esses serviços.
 Além da infraestrutura de suporte à interação entre componentes,
 o padrão JBI define também
 mecanismos para a administração do ambiente de integração,
-baseado em JMX ({\em Java Management Extensions}).
+baseados em JMX ({\em Java Management Extensions}).
 Esses mecanismos provêem suporte para a instalação de componentes,
 para o controle de seu ciclo de vida e
 para o gerenciamento do ambiente como um todo.
@@ -275,33 +276,170 @@ requer a implementação de
 para a comunicação entre as aplicações e esses componentes
 e de mecanismos de tradução entre as interfaces internas
 e externas ao ambiente JBI.
-Esse tipo de integração,
-além de prejudicar o desempenho das aplicações,
-envolve um maior esforço de desenvolvimento. 
 
 \subsubsection{Arquitetura CORBA}
 \label{CORBA}
+A arquitetura CORBA \cite{Bolton2002} foi criada, em meados da década de 90,
+em resposta a uma demanda crescente por uma infraestrutura para o
+desenvolvimento de aplicações distribuídas em ambientes heterogêneos.
+Até o início dos anos 2000, o desenvolvimento e evolução de CORBA
+recebeu um enorme suporte da indústria, refletido nas centenas de membros
+da OMG --- a organização responsável pela especificações dos padrões
+adotados para essa arquitetura.
+Diversas implementações comerciais de CORBA foram oferecidas e utilizadas para
+o desenvolvimento de aplicações e sistemas distribuídos em diferentes 
+domínios, como comércio eletrônico, telecomunicações, aplicações bancárias
+e científicas e sistemas de tempo real.
+Implementações abertas, bastante completas e de qualidade --- como MICO
+e JacORB --- também contribuiram fortemente para o sucesso dessa arquitetura. 
 
-Rascunho:
+Nos últimos anos observa-se, porém, uma significativa redução no 
+uso de CORBA e o redirecionamento do mercado para outras tecnologias.
+Esse redirecionamento deve-se, em grande parte, a dois fatores
+principais.
+O primeiro deles é o uso crescente da linguagem Java e de suas
+plataformas próprias para a construção de sistemas distribuídos,
+como J2EE.
+Entretanto,
+plataformas centradas em uma linguagem não são
+adequadas a ambientes predominantemente heterogêneos;
+a integração de aplicações desenvolvidas
+em outras linguagens requer a implementação de 
+adaptadores, o que implica um maior esforço
+de desenvolvimento e, usualmente, prejuízos de desempenho.
 
- CORBA é um middleware de sucesso. Ainda hoje é "a" plataforma
-para integração de componentes heterogêneos.
+O segundo fator foi a introdução da tecnologia de serviços WEB
+e sua identificação com os benefícios de SOA.
+Apesar de sua adequação a alguns cenários de integração,
+essa tecnologia, como discutimos anteriormente,
+não oferece as mesmas características e funcionalidades de 
+um sistema de objetos distribuídos, muitas delas necessárias
+à implementação de uma infraestrutura de integração com
+requisitos específicos, como é o caso da integração de
+aplicações de E\&P.
 
-CORBA não exclui SOA nem mensageria,
-mas agrega vantagens e facilidades de objetos distribuídos
+CORBA é, basicamente, uma tecnologia de objetos distribuídos
+cuja principal característica é a independência de plataforma e
+linguagem de programação.
+Essa independência é garantida através do uso de uma linguagem neutra (IDL)
+para a descrição das interfaces de serviço oferecidas por um objeto
+--- isto é, as operações disponibilizadas e os tipos de dados que representam
+os parâmetros de entrada e saída definidos para essas operações.
+Interfaces de serviço descritas em IDL são significativamente
+mais claras e sucintas que interfaces WSDL, permitindo, por exemplo, uma
+melhor compreensão das interações entre consumidores
+e provedores de um determinado serviço.
 
-Atende a diversos cenários de integração.
-Não há razão para "reinventar" a roda...
+O padrão CORBA define o mapeamento de IDL para 
+as principais linguagens de programação utilizadas atualmente,
+como C, C++, Java e Python, dentre outras.
+Implementações de CORBA tipicamente oferecem compiladores que
+traduzem interfaces IDL para linguagens específicas,
+produzindo o código que permite que clientes e provedores
+de serviço desenvolvidos nessas linguagens possam invocar e atender 
+as operações definidas em IDL.
+Como os mapeamentos de IDL são padronizados,
+implementações de clientes e servidores independem do compilador
+de um fornecedor específico, e podem ser portadas sem qualquer
+alteração.
 
-Desempenho muito superior a tecnologias baseadas em XML.
-Muito esforço despendido por pesquisadores e fabricantes.
+Para garantir a interoperabilidade entre diferentes implementações 
+da arquitetura CORBA, o transporte de requisições de serviço e 
+de suas respostas utiliza um protocolo padronizado pela OMG (IIOP).
+A especificação desse protocolo define o formato das mensagens
+trocadas, a representação dos dados transportados nessas mensagens,
+e o mapeamento da comunicação sobre conexões TCP/IP% 
+\footnote{IIOP é, na verdade, a especialização de um protocolo genérico (GIOP),
+que não especifica um protocolo de transporte específico,
+apenas um conjunto de requisitos, como o suporte a conexões bi-direcionais.}.
+O projeto desse protocolo levou em consideração uma série de requisitos,
+dentre eles escabilidade e desempenho.
+Ao contrário de SOAP, por exemplo, que utiliza XML (uma representação 
+textual), o protocolo IIOP utiliza uma representação mais adequada
+ao transporte eficiente de diversos tipos de dados, inclusive dados
+binários.  
+Essa característica, aliada à disponibilidade de implementações de CORBA
+de grande desempenho,
+explica o sucesso e a predominância dessa arquitetura 
+em domínios como sistemas de tempo real e sistemas embutidos.
 
-SOA em CORBA: Trading para registro e descoberta de serviços,
-idl para descrever interfaces de serviço.
+Além da infraestrutura para suporte à interação entre
+clientes e provedores de serviço, o padrão CORBA define também
+uma série de serviços básicos, dentre eles um serviço de nomes
+e um serviço de {\em trading}
 
-serviço de notificação suporta interações assíncronas e desacoplamento entre componentes (caso da colaboração)
+A função básica do serviço de nomes é permitir que clientes de um 
+serviço obtenham dinamicamente a localização --- isto é, a referência 
+--- dos objetos que constituem os pontos de acesso a esse serviço.
+Para prover essa funcionalidade, o serviço de nomes mantém um
+repositório que armazena associações ({\em bindings}) entre nomes
+e referências de objetos.
+Provedores de serviços fornecem ao serviço de nomes essas associações;
+clientes de serviços utilizam o serviço de nomes para
+obter a localização do objeto associado a um determinado nome.
 
-É a infraestrutura de integração adotada pelo OpenSpirit,
-que atende aos requisitos do nosso ambiente de integração
-(a menos da possibilidade de integrar servidores próprios)
+O serviço de {\em trading} oferece uma funcionalidade mais rica
+para a descoberta de provedores de serviços, permitindo
+a associação de características, ou propriedades,
+às ofertas de um tipo de serviço (uma interface).
+Ao exportar uma oferta de serviço, um provedor especifica,
+além de sua interface e localização, valores para essas propriedades.
+Através de consultas ao serviço de {\em trading}, consumidores
+de um serviço podem obter a localização de um ou mais provedores que 
+satisfaçam determinados critérios --- restrições ou condições quanto
+aos valores das propriedades.
 
+A especificação de interfaces de serviço em um linguagem neutra (IDL)
+e a possibilidade de descoberta dinâmica de provedores de serviço,
+seja através do serviço de nomes ou do serviço de {\em trading},
+provêm o suporte necessário para a implementação de uma arquitetura
+SOA baseada em CORBA.
+CORBA
+provê também todas as facilidades de uma tecnologia de 
+objetos distribuídos: o suporte a referências a objetos,
+à instanciação de objetos a partir de fábricas
+e à manutenção de estado ao longo de interações entre consumidores
+e provedores de serviço.
+Essas características, aliadas a um transporte mais eficiente 
+de dados binários e de grande volume,
+permitem que uma infraestrutura baseada em CORBA
+atenda aos requisitos necessários
+à integração de aplicações de E\&P.
+
+O padrão CORBA define também
+dois serviços que provêem suporte à troca assíncrona de 
+mensagens genéricas: o serviço de eventos e o serviço de 
+notificações.
+Esses serviços 
+disponibilizam canais de comunicação que 
+atuam como roteadores, intermediando a interação
+entre geradores e consumidores de mensagens.
+Geradores e receptores de mensagens são fortemente desacoplados.
+Um gerador envia suas mensagens a um canal de comunicação, 
+sem necessariamente conhecer a identidade ou localização de
+possíveis consumidores.
+Consumidores de mensagens, por sua vez, recebem mensagens 
+de um canal sem necessariamente conhecer a identidade ou localização 
+de seus geradores.
+O estabelecimento de um canal de comunicação
+não exige uma correspondência de um para
+um entre geradores e consumidores de mensagens;
+a conexão de múltiplos geradores e de múltiplos consumidores a
+um mesmo canal de comunicação é permitida.
+
+O serviço de notificações estende a funcionalidade básica do
+serviço de eventos --- a troca assíncrona de mensagens genéricas ---
+oferecendo algumas facilidades adicionais, como, por exemplo,
+a definição de eventos estruturados,
+a possibilidade de um consumidor especificar filtros para
+restringir o tipo de eventos que deseja receber,
+e a configuração de diversas  propriedades de qualidade
+de serviço --- como garantia de entrega, prioridade e 
+tempo de vida de mensagens.   
+
+O suporte à troca de mensagens assíncronas entre aplicações
+é uma funcionalidade importante para ambientes de integração.
+Além de permitir, quando adequado, um maior desacoplamento
+entre provedores e consumidores de serviço,
+essa funcionalidade é essencial a aplicações que desejam
+implementar facilidades de colaboração.

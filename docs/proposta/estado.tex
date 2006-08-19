@@ -1,21 +1,21 @@
 \section{Estado da arte}
 \subsection{Soluções de mercado para a integração de dados e aplicações de E\&P}
 A solução para a integração de aplicações de E\&P mais abrangente disponível
-no mercado é a plataforma OpenSpirit. O desenvolvimento dessa plataforma resultou de um consórcio
-(a OpenSpirit Alliance),
+no mercado é a plataforma OpenSpirit \cite{openspirit}. O desenvolvimento dessa plataforma resultou de um consórcio
+--- a OpenSpirit Alliance ---
 que uniu esforços de diferentes companhias de petróleo e fabricantes de
 software para a definição de um {\em framework} de integração de aplicações
 que suportasse tanto o compartilhamento de dados mantidos em diferentes
 repositórios, 
 como também a colaboração entre diferentes aplicações.
 Esse {\em framework} é comercializado hoje por uma companhia de software
-independente (a OpenSpirit Foundation), que conta com um grupo de investidores
+independente --- a OpenSpirit Corporation --- que conta com um grupo de investidores
 que inclui tanto companhias de petróleo, como Chevron e Shell, como também
 provedores de software e serviços, como Schlumberger e Paradigm.
 
 O {\em framework} OpenSpirit é composto por três elementos principais:
-o OpenSpirit Runtime, conectores de dados (Data Connectors)
-e adaptadores de aplicações (Application Adapters).
+o {\em OpenSpirit Runtime}, conectores de dados ({\em Data Connectors})
+e adaptadores de aplicações ({\em Application Adapters}).
 \begin{itemize}
 \item OpenSpirit Runtime
 
@@ -45,7 +45,7 @@ Esses conectores provêem às aplicações uma visão uniforme e homogênea dos
 dados acessados, independente dos formatos internos adotados
 por cada tipo de repositório.
 Essa visão uniforme é baseada em um modelo de dados genérico 
-(OpenSpirit Data Model),
+({\em OpenSpirit Data Model}),
 oferecido pelos conectores de dados em sua interface de acesso;
 é responsabilidade de cada tipo de conector realizar o mapeamento desse modelo
 para um repositório específico.
@@ -167,6 +167,3 @@ Finalmente, a plataforma PowerHub contempla apenas o acesso integrado a
 diferentes repositórios de dados;
 facilidades para a colaboração entre aplicações não são oferecidas
 por essa plataforma.
-
-(Falar do SeaBed? É uma proposta da Schlumberger para um modelo de 
-dados maior, a OpenSpirit vai adotar...)
