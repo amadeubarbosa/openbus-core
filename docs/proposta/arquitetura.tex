@@ -1,21 +1,21 @@
 \section{Arquitetura}
 \label{arquitetura}
 
-O OpenBus é um barramento de serviços que tem como principais objetivos
+O \openbus\/ é um barramento de serviços que tem como principais objetivos
 oferecer uma arquitetura aberta e extensível a diferentes domínios,
 que permita a troca de dados estruturados e adequados a esses domínios
 e que seja compatível com múltiplas linguagens.
-Assim como o OpenSpirit, o OpenBus é baseado no {\em middleware} CORBA
+Assim como o OpenSpirit, o \openbus\/ é baseado no {\em middleware} CORBA
 e em alguns dos serviços padronizados para sua arquitetura.
 
-O barramento do OpenBus é formado por componentes que podem oferecer
+O barramento do \openbus\/ é formado por componentes que podem oferecer
 serviços ou podem apenas consultar serviços de outros componentes.
-A infraestrutura do OpenBus provê alguns serviços básicos que podem ser
+A infraestrutura do \openbus\/ provê alguns serviços básicos que podem ser
 oferecidos por um único componente ou podem estar
 distribuídos em diversos componentes em diferentes máquinas.
 A medida que as aplicações se conectam ao barramento, o espaço
-de serviços que o OpenBus oferece cresce. 
-Desta forma, o OpenBus pode ser estendido com serviços para acesso a
+de serviços que o \openbus\/ oferece cresce. 
+Desta forma, o \openbus\/ pode ser estendido com serviços para acesso a
 repositórios de dados (Base integrada, OpenSpirit),
 acesso a dados de uma aplicação (Websintesi, v3o2), etc.
 (Figura~\ref{fig:architecture}.)
@@ -23,16 +23,16 @@ acesso a dados de uma aplicação (Websintesi, v3o2), etc.
 \begin{figure} [htb]
 \centering
 \includegraphics[width=14cm]{figs/arquitetura.pdf} %height=3in, 
-\caption{Arquitetura do OpenBus}
+\caption{Arquitetura do \openbus}
 \label{fig:architecture}
 \end{figure}
 
 Qualquer aplicação que queira fazer parte do barramento deve
-implementar um componente para o OpenBus. Através desse componente
+implementar um componente para o \openbus. Através desse componente
 é possível acessar todos os serviços existentes no barramento.
 Para isso, o componente deve ser capaz de se conectar ao barramento e se
 autenticar.
-Através dos serviços oferecidos pelo OpenBus, o componente pode acessar
+Através dos serviços oferecidos pelo \openbus, o componente pode acessar
 um serviço previamente conhecido, ou pode consultar o serviço de
 localização para descobrir qual componente oferece o serviço que ele
 deseja acessar.
@@ -47,14 +47,14 @@ barramento a interface do serviço que deseja oferecer.
 %interface do serviço que deseja oferecer.
 %%%% A aplicação já virou componente e ainda não falamos da diferença
 %%%% entre eles.
-%Através dos serviços oferecidos pelo OpenBus, o componente pode acessar
+%Através dos serviços oferecidos pelo \openbus, o componente pode acessar
 %um serviço previamente conhecido, ou pode consultar o serviço de
 %localização para descobrir qual componente oferece o serviço que ele
 %deseja acessar.
 
 %\subsection{Serviços básicos}
 
-Entre os serviços básicos oferecidos pelo OpenBus podemos destacar os
+Entre os serviços básicos oferecidos pelo \openbus\/ podemos destacar os
 serviços de autenticação, localização, troca de mensagens e colaboração.
 
 \begin{itemize}
