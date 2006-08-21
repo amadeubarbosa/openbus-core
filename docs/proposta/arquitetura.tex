@@ -1,14 +1,9 @@
 \section{Arquitetura}
 \label{arquitetura}
 
-O \openbus\/ é um barramento de serviços que tem como principais objetivos
-oferecer uma arquitetura aberta e extensível a diferentes domínios,
-que permita a troca de dados estruturados e adequados a esses domínios
-e que seja compatível com múltiplas linguagens.
-Assim como o OpenSpirit, o \openbus\/ é baseado no {\em middleware} CORBA
+O \openbus\/ é baseado no {\em middleware} CORBA
 e em alguns dos serviços padronizados para sua arquitetura.
-
-O barramento do \openbus\/ é formado por componentes que podem oferecer
+Seu barramento é formado por componentes que podem oferecer
 serviços ou podem apenas consultar serviços de outros componentes.
 A infraestrutura do \openbus\/ provê alguns serviços básicos que podem ser
 oferecidos por um único componente ou podem estar
@@ -39,18 +34,6 @@ deseja acessar.
 Para oferecer um serviço, uma aplicação pode usar o mesmo componente ou
 implementar outro. Tal componente deve ser capaz de publicar no
 barramento a interface do serviço que deseja oferecer.
-
-%Qualquer aplicação que queira acessar um serviço deve ser
-%capaz de se conectar ao barramento e se autenticar.
-%Além disso, para oferecer um serviço ao barramento, uma aplicação 
-%deve ser capaz de publicar a
-%interface do serviço que deseja oferecer.
-%%%% A aplicação já virou componente e ainda não falamos da diferença
-%%%% entre eles.
-%Através dos serviços oferecidos pelo \openbus, o componente pode acessar
-%um serviço previamente conhecido, ou pode consultar o serviço de
-%localização para descobrir qual componente oferece o serviço que ele
-%deseja acessar.
 
 %\subsection{Serviços básicos}
 
@@ -106,7 +89,11 @@ O serviço de troca de mensagens é baseado no serviço de notificação de
 CORBA.
 Através dele, as aplicações podem comunicar-se livremente,
 trocando mensagens diretas ou registrando interesse em receber 
-mensagens quando algum evento ocorre na outra aplicação.
+mensagens quando algum even\-to ocorre na outra aplicação.
+
+Quando duas aplicações estão vendo o mesmo dado e uma delas o altera, 
+através desse serviço, ela pode enviar uma mensagem para a outra
+aplicação para que ela atualize a sua cópia do dado.
 
 %\begin{figure} [htb]
 %\centering
@@ -127,8 +114,9 @@ a fazer parte desta seção.
 
 Cada seção de colaboração possui atributos específicos e pode envolver
 mais de um tipo de aplicação de diferentes usuários.
-Por exemplo, para uma colaboração entre diferentes instâncias 
-do v3o2, os atributos podem ser ... (Figura~\ref{fig:architecture}.)
+Por exemplo, uma colaboração entre diferentes instâncias 
+do v3o2 pode ter atributos de câmera, para que as diferentes instâncias
+tenham a mesma visão do volume (Figura~\ref{fig:architecture}.)
 Através de uma seção, os componentes envolvidos podem compartilhar
 diferentes tipos de eventos, como por exemplo, eventos de interação
 de usuário (seleção e alteração de dados, movimentação de cursor). Cada
