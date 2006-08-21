@@ -10,8 +10,9 @@ No caso do OpenSpirit, a razão técnica que inviabiliza sua adoção é o fato
  significa que não é possível disponibilizar em seu barramento os dados das
  várias bases de dados e aplicações próprias da Petrobras.
 Já no caso do PowerHub, há duas questões técnicas impeditivas: o fato desta
- ferramenta não prover suporte para a troca de alguns tipos de dados---que é o objetivo principal da
- integração desejada---e o fato de estar restrita à linguagem Java.
+ ferramenta não prover suporte para a troca de alguns tipos de dados---que é o
+ objetivo principal da integração desejada---e o fato de estar restrita à
+ linguagem Java.
 
 Pelo lado não técnico, adotar uma ferramenta de mercado como infra-estrutura de
  integração das bases de dados e das aplicações de E\&P também pode não ser
@@ -33,8 +34,8 @@ Como exemplos de inadequação, podemos citar o fato do OpenSpirit não permitir
  contemplar um determinado tipo de dado necessário ao ambiente da Petrobras.
 
 Em função dessas questões, nós propomos a construção de uma nova arquitetura de
- integração de aplicações, baseada em um barramento de serviços, própria da Petrobras, que
- chamamos de \openbus.
+ integração de aplicações, baseada em um barramento de serviços, própria da
+ Petrobras, que chamamos de \openbus.
 Com uma arquitetura própria, todos os requisitos relevantes do ambiente da
  Petrobras poderão ser contemplados.
 Além disso, a arquitetura poderá ser mantida e estendida, de modo a contemplar
@@ -102,9 +103,9 @@ Na elaboração desta proposta, definimos os seguintes requisitos para o
  volumes de mensagens e a arquitetura deve dar suporte, sem degradação de
  desempenho do sistema.
 \item [Suporte a mecanismos de autenticação e autorização.] Em praticamente
- qualquer área da Petrobras, a segurança da informação é essencial. O \openbus\/
- deve, então, dar suporte para que a autenticação dos usuários e a autorização
- de acesso a dados e serviços sejam feitos conforme necessário.
+ qualquer área da Petrobras, a segurança da informação é essencial. O
+ \openbus\/ deve, então, dar suporte para que a autenticação dos usuários e a
+ autorização de acesso a dados e serviços sejam feitos conforme necessário.
 \item [Suporte ao trabalho colaborativo.] A integração de aplicações para a
  troca de dados, aliada à troca de mensagens que citamos acima formam uma base
  para o trabalho colaborativo entre usuários. A arquitetura pode, então,
@@ -124,16 +125,16 @@ Uma arquitetura SOA atende à solução que propomos por garantir um alto grau
  funcionais, ainda considerando desempenho e escalabilidade.
 Além de atender aos requisitos técnicos específicos, a adoção de uma
  arquitetura orientada a serviços também atende às diretrizes estabelecidas
- pela {\bf colocar aqui o nome gerência de arquitetura} em \cite{petrobras}.
+ pela TI-IDTA-AT em \cite{petrobras}.
 
 Com base nos requisitos levantados, a tecnologia que julgamos mais adequada à
  implementação do \openbus\/ é CORBA.
-Como apresentamos na Seção \ref{CORBA}, CORBA possui todos os requisitos para
- uma implementação de SOA.
-Além disso, CORBA oferece suporte para descrição clara e sucinta das interfaces dos
- serviços, à construção de componentes em múltiplas linguagens, à mensageria, à
- implementação de mecanismos de autenticação e ao acesso, via referências, a
- objetos remotos que podem preservar estado.
+Como apresentamos na seção anterior, CORBA possui todos os requisitos para uma
+ implementação de SOA.
+Além disso, CORBA oferece suporte para descrição clara e sucinta das interfaces
+ dos serviços, à construção de componentes em múltiplas linguagens, à
+ mensageria, à implementação de mecanismos de autenticação e ao acesso, via
+ referências, a objetos remotos que podem preservar estado.
 Por fim, CORBA possibilita um desempenho muito superior quando comparado com as
  tecnologias que adotam comunicação baseada em XML.
 
