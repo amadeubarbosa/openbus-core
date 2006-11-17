@@ -1,0 +1,237 @@
+Protótipo OpenBUS
+=================
+
+Cenário: Aplicação v3O2 utiliza serviço(s) de "dados de poço" para obter 
+(num primeiro momento) trajetórias de poços.
+
+     => No detalhamento dos casos/cenários de uso do protótipo poderemos 
+        identificar outros tipos de dados que poderão ser utilizados de alguma 
+        forma por clientes de serviço de dados de poço...
+
+  Atualmente, esse tipo de dado é obtido a partir de arquivos gerados pela 
+  aplicação EXATA, com o 
+  seguinte cenário:
+
+    - usuário utiliza a aplicação VGE, e, a partir da árvore de dados, pode
+      obter o arquivo que contém a trajetória de um poço em perfuração.
+
+      . A aplicação EXATA disponibiliza (copia, atualiza periodicamentei) o 
+        arquivo com os dados da trajetória e alimenta a base integrada com as 
+        informações para obtê-lo (path).
+      . A "chave" para acesso às informações sobre o arquivo na base é o 
+        identificador do poço (a partir da subárvore deste poço, o ramo dessa
+        subárvore que dá acesso ao arquivo de trajetória é o de "arquivos de
+        monitoração").
+      . O critério para identificar o arquivo (na query) é o padrão de seu 
+        nome na base (xxx_TRAJET.TXT)
+
+	=> VERIFICAR QUE TIPO DE AUTORIZAÇÂO È NECESSÀRIA PARA OBTER ESSE 
+           ARQUIVO!
+
+    - usuário utiliza a aplicação v3o2, que lê o arquivo para exibir a 
+     trajetória do poço
+
+        => VERIFICAR COM O PEDRO MÀRIO O USO DOS CAMPOS DO ARQUIVO DO EXATA.
+           OUTROS REPOSITÒRIOS FORNECEM TRAJETÓRIAS COM IDENTIFICAÇÔES 
+           DIFERENTES DOS PONTOS (p.ex. x/y ou dx/dy, cota/prof...)
+
+
+     ** => QUAL È A FUNCIONALIDADE DA APLICAÇÂO (X) EXATA INICIADA PELO VGE??
+           E PELO DESKTOP DO WEBSINTESI? (são pgms diferentes...)
+
+     
+  Além de arquivos gerados pelo EXATA, outras duas fontes para esse tipo de 
+  dado (trajetória de poço, e dados de poço em gerai) são:
+
+    1) A própria base integrada
+         ------------------------
+
+         Um poço (identificador) tem associado um conjunto de "sidetracks".
+         Um sidetrack é composto por um conjunto de "registros direcionais" 
+         (são os pontos da trajetória)
+
+         => VERIFICAR SE EXISTE ALGUMA IDENTIFICAÇÂO PARA SIDETRACK 
+            "abandonado" E "em produção"
+
+         => VERIFICAR COMO OBTER OUTROS ATRIBUTOS PARA PONTOS DA TRAJETÓRIA 
+            (CASO SEJA NECESSÁRIO)
+
+        => ACESSO A DADOS DE POÇO (os que o vge acessa hoje) TEM RESTRIÇÔES
+           (PERMISSÕES) ?
+
+    2) Repositórios (datastores) acessíveis via OpenSpirit
+          ---------------------------------------------------
+         
+        Trajetórias (e outros dados do poço, incluindo curvas e velocidades) são
+        associados a "wellbores".
+        O acesso i(query) a um wellbore deve estar no escopo de um (ou mais) 
+        projetos armazenados
+        no repositório. Um projeto é identificado pelo tipo de datastore, 
+        instalação, e nome do projeto.
+
+     3) SIGEO exporta arquivos de trajetória
+          ------------------------------------
+
+         => VERIFICAR FORMATO/CONTEÚDO DESSE ARQUIVO
+         => VERIFICAR SE OBTÉM ESSES PONTOS DA BASE
+         => SIGEO tem funcionalidade para interpolar a trajetória (com seleção
+            de pontos)
+
+
+  CASO DE USO (com OpenBUS):
+  =========================
+
+  1) Usuário executa aplicação v3o2. Através de um menu, inicia procedimento 
+     para obter a trajetória de um poço.
+
+  a) Nesse momento a aplicação v3o2 se conecta ao barramento OpenBUS. 
+     É necessário autenticá-la. Para isso, serão pedidas identificação e senha 
+     do usuário.
+     Uma vez conectada ao barramento, a aplicação v3o2 passa a ser um "membro" 
+     do barramento (membro associado a usuário).
+
+  b) Ao conectar-se ao barramento, o "membro" pode solicitar a criação de uma
+     "sessão", indicar uma sessão já estabelecida, ou informar que não 
+     participará de uma sessão.
+
+     A uma sessão será associado um canal (simples) de eventos. Os membros de 
+     uma sessão são, potencialmente, produtores e consumidores de eventos 
+     encaminhados por esse canal.
+
+     => O "resultado" de uma conexão é a obtenção de referência(s) para acesso 
+        aos serviços (básicos) do barramento?
+
+     => A "identificação" de uma nova sessão é fornecida pelo membro ou criada e
+        retornada pelo servidor do barramento?
+
+     => Como sinalizar erros? - autenticação, sessão inexistente...
+
+     => Há necessidade de informar uma característica do membro (nome?) para 
+        permitir, por exemplo, encontrar todos os membros de um tipo 
+        conectados ao barramento?
+        Por exemplo, os "v3o2" (para convidar para uma colaboração...)? 
+        Pode ser o nome (componentID) do SCS? Pode haver mais
+        de um membro com mesmo componentID?
+
+     => MODELAGEM DOS EVENTOS QUE TRAFEGAM NO CANAL ASSOCIADO A UMA SESSÂO
+
+     => Como o membro obtém a referência para o canal associado a sua seção?
+        É um dos serviços básicos? Qual?
+
+     => As interfaces de produtor/consumidor de eventos são facetas?
+
+  c) O servidor (gerente/mantenedor) do barramento possui registro dos membros
+     conectados. Nesse registro são mantidas, para cada membro conectado:
+
+        - nome (?), usuário associado, sessão, referência para o membro
+          (faceta? qual?)
+
+     O servidor (serviço de diretório?) utiliza algum mecanismo (heart beat, 
+     leasing) para validar a presença dos membros conectados ao barramento.
+
+     O "cleanup" de desconexão de um membro deve remover/destruir uma sessão 
+     caso todos os seus membros se desconectem (voluntariamente, ou por deteção 
+     de "ausência")
+
+  2) Faz sentido prosseguir se não houver disponibilidade de serviços de dados 
+     de poço no barramento (com trajetórias) ?
+     O membro v3o2 deve nesse momento consultar as ofertas de serviço ?
+
+     Conexão e publicação de ofertas de serviço descritas adiante...
+     
+  3) Assumindo que o identificador do poço não é conhecido, mas sim sua 
+     localização (geográfica?), usuário pode lançar mão das facilidades de 
+     navegação do VGE para identificar o poço desejado.
+
+  a) Nesse momento, a aplicação v3o2 comanda a execução do VGE (via webstart). 
+     O VGE receberá a identificação da sessão à qual estará associado
+
+     Se o cliente VGE é assinado (provavelmente será), pode conectar-se 
+     diretamente ao barramento.
+     Não deve ser necessário autenticá-lo novamente! Deve valer a autenticação
+     do v302.
+
+  b) O VGE deve disponibilizar (ao localizar um poço) uma opção de 
+     "enviar evento" através de sua sessão. O evento é o identificador do poço.
+
+     Se a aplicação VGE termina, pode se desconectar do barramento.
+
+     A aplicação v3o2 estava aguardando o evento com o identificador do poço.
+
+       => o usuário pode "cancelar" essa espera e finalizar todo o processo
+
+  4) v3o2 de posse do identificador do poço (obtido via VGE ou do próprio 
+     usuário, pulando etapa anterior) pode iniciar o procedimento de obtenção 
+    do dado propriamente dito (trajetória)
+
+     Membro v3o2 pesquisa ofertas de serviço de dados de poço com trajetória
+      (trajetória é uma faceta? ou o serviço de poço é uma faceta, e ter
+       trajetória é uma característica ?)
+
+     Pode haver "tipos" diferentes para essa oferta: poço em perfuração 
+     (acesso a arquivos EXATA), poço ... (trajetoria está na base)
+
+     => Como identificar esses tipos na publicação da oferta de serviço?
+
+     Escolhida uma implementação (oferta) do serviço, v3o2 obtém os dados da
+     trajetória do poço, fornecendo identificador do poço.
+
+     => Detalhar variante para identificação e acesso aos dados do poço via 
+        OpenSpirit
+
+
+  CONEXÂO DE SERVIDORES E PUBLICAÇÂO DE OFERTAS DE SERVIÇO
+  ========================================================
+
+  1) Não há distinção entre clientes e servidores (provedores de serviço).
+     Todos são membros do barramento, e estáo no registro.
+
+     => Inclusive os provedores de serviços básicos?
+
+  2) Ao invés de usuário e senha, um servidor pode se autenticar no barramento 
+     de forma semelhante ao de um servidor csbase local (par de chaves)
+    
+     => Exige serviço de administração para o cadastramento da chave do 
+        servidor.
+       (fica no registro? o registro indica se o membro está conectado?)
+
+  3) Um membro pode publicar ofertas de serviço. Pode alterar suas ofertas de 
+     serviço e pode também retirá-las.
+  
+     Recebe uma identificação para o registro de sua oferta (para alterá-la, 
+     removê-la...)
+
+     Se é detetada a ausência DEFINITIVA de um membro, suas ofertas devem ser 
+     retiradas
+     (atenção para o caso de problemas de comunicação temporarios, com ofertas 
+      não sendo republicadas...)
+
+    => Uma oferta de serviço contém referência para um membro ou para uma 
+      faceta desse membro? Ou para as duas coisas? 
+
+      Link do repositório de ofertas com registro.
+
+    => O nome de uma oferta de serviço é o nome de uma faceta?
+
+  4) Por que o repositório de ofertas não é apenas o registro?
+
+     => Porque queremos que as ofertas de serviço possam ser 
+        controladas/gerenciadas pelos provedores. A oferta não pode ser 
+        automatica (p.ex. oferecimento das facetas de um membro)
+
+  => VAMOS IMPLEMENTAR PESQUISA DE OFERTAS "A la trading" ?
+     Critérios simples (por exemplo, o "tipo" que distingue poços em produção 
+     e poços na base...)
+     Constraints mais sofisticados...
+
+  CASO DE USO PARA COLABORAÇÂO ENTRE USUÀRIOS
+  ===========================================
+
+  CASO DE USO PARA v3o2 PROVENDO DADOS A OUTROS MEMBROS (SERVIDOR TEMPORARIO)
+  ===========================================================================
+
+  Uma aplicação v3o2 pode (através de colaboração?) oferecer seus dados de 
+  trajetória.
+  Sem necessariamente publicar uma oferta de serviço no barramento 
+  (pode passar para outro membro uma referencia para uma faceta/interface de 
+  dados?)
