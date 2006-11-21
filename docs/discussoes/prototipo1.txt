@@ -80,80 +80,71 @@ Cenário: Aplicação v3O2 utiliza serviço(s) de "dados de poço" para obter
 
   CASO DE USO (com OpenBUS):
   =========================
-
+  
   1) Usuário executa aplicação v3o2. Através de um menu, inicia procedimento 
      para obter a trajetória de um poço.
 
   a) Nesse momento a aplicação v3o2 se conecta ao barramento OpenBUS. 
      É necessário autenticá-la. Para isso, serão pedidas identificação e senha 
      do usuário.
-     Uma vez conectada ao barramento, a aplicação v3o2 passa a ser um "membro" 
-     do barramento (membro associado a usuário).
+     O componente responsável pela autenticação/conexão ao barramento é um
+     serviço "bem conhecido".
 
-  b) Ao conectar-se ao barramento, o "membro" pode solicitar a criação de uma
-     "sessão", indicar uma sessão já estabelecida, ou informar que não 
-     participará de uma sessão.
+     Uma vez conectada ao barramento, a aplicação v3o2 recebe uma credencial
+     relativa a sua autenticacão, e a referência para o componente que oferece
+     acesso aos serviços básicos do barramento (esse componente "fachada"
+     oferece as facetas correspondentes a esses serviços).
 
-     A uma sessão será associado um canal (simples) de eventos. Os membros de 
+     Será mantida no serviço de diretórios uma entrada relativa a essa
+     autenticação/credencial. Essa entrada deverá ser periodicamente
+     "validada" através de mecanismo de heartbeat/leasing (RODRIGO)
+     A falha na validação dessa entrada invalida a autenticação/credencial
+     associada.
+
+     A conexão ao barramento envolve a criação de uma "sessão", que é
+     associada à credencial.
+
+     É possivel obter (via serviço de diretorio) a sessão associada a uma
+     credencial.
+
+     A posse da credencial permite a obtenção da referência para o componente
+     que dá acesso aos serviços básicos do barramento (ou seja, um membro
+     autenticado poderá repassar sua credencial a outra aplicação, que
+     compartilhará então essa autenticação e a sessão associada).
+
+  b) A uma sessão será associado um canal (simples) de eventos. Os membros de 
      uma sessão são, potencialmente, produtores e consumidores de eventos 
      encaminhados por esse canal.
 
-     => O "resultado" de uma conexão é a obtenção de referência(s) para acesso 
-        aos serviços (básicos) do barramento?
+     => MODELAGEM DOS EVENTOS QUE TRAFEGAM NO CANAL ASSOCIADO A UMA SESSÂO !!
 
-     => A "identificação" de uma nova sessão é fornecida pelo membro ou criada e
-        retornada pelo servidor do barramento?
 
-     => Como sinalizar erros? - autenticação, sessão inexistente...
+  c) A conexão de um membro ao barramento não é suficiente para permitir sua
+     "localização" (por exemplo, para encontrar membros de um determinado
+     "tipo", convidá-los para uma colaboração...)
+     A conexão permite apenas que se estabeleça uma sessão e que esse membro
+     seja capaz de utilizar os serviços básicos do barramento, e também
+     serviços "exportados" por outros membros (localizaveis através do serviço
+     de diretórios)
 
-     => Há necessidade de informar uma característica do membro (nome?) para 
-        permitir, por exemplo, encontrar todos os membros de um tipo 
-        conectados ao barramento?
-        Por exemplo, os "v3o2" (para convidar para uma colaboração...)? 
-        Pode ser o nome (componentID) do SCS? Pode haver mais
-        de um membro com mesmo componentID?
+     Um membro se tornará "identificável/localizável" se "exportar" uma
+     interface (faceta?) específica para isso.
+     Procedimento semelhante ao de uma oferta de serviço...
 
-     => MODELAGEM DOS EVENTOS QUE TRAFEGAM NO CANAL ASSOCIADO A UMA SESSÂO
-
-     => Como o membro obtém a referência para o canal associado a sua seção?
-        É um dos serviços básicos? Qual?
-
-     => As interfaces de produtor/consumidor de eventos são facetas?
-
-  c) O servidor (gerente/mantenedor) do barramento possui registro dos membros
-     conectados. Nesse registro são mantidas, para cada membro conectado:
-
-        - nome (?), usuário associado, sessão, referência para o membro
-          (faceta? qual?)
-
-     O servidor (serviço de diretório?) utiliza algum mecanismo (heart beat, 
-     leasing) para validar a presença dos membros conectados ao barramento.
-
-     O "cleanup" de desconexão de um membro deve remover/destruir uma sessão 
-     caso todos os seus membros se desconectem (voluntariamente, ou por deteção 
-     de "ausência")
-
-  2) Faz sentido prosseguir se não houver disponibilidade de serviços de dados 
-     de poço no barramento (com trajetórias) ?
-     O membro v3o2 deve nesse momento consultar as ofertas de serviço ?
-
-     Conexão e publicação de ofertas de serviço descritas adiante...
-     
-  3) Assumindo que o identificador do poço não é conhecido, mas sim sua 
+  2) Assumindo que o identificador do poço não é conhecido, mas sim sua 
      localização (geográfica?), usuário pode lançar mão das facilidades de 
      navegação do VGE para identificar o poço desejado.
 
   a) Nesse momento, a aplicação v3o2 comanda a execução do VGE (via webstart). 
-     O VGE receberá a identificação da sessão à qual estará associado
+     O VGE receberá a credencial para permitir sua conexão (uso do barramento)
 
      Se o cliente VGE é assinado (provavelmente será), pode conectar-se 
      diretamente ao barramento.
-     Não deve ser necessário autenticá-lo novamente! Deve valer a autenticação
-     do v302.
 
   b) O VGE deve disponibilizar (ao localizar um poço) uma opção de 
      "enviar evento" através de sua sessão. O evento é o identificador do poço.
-
+     A partir de sua credencial, pode obter a referência para a sessão
+     (canal).
      Se a aplicação VGE termina, pode se desconectar do barramento.
 
      A aplicação v3o2 estava aguardando o evento com o identificador do poço.
@@ -164,7 +155,8 @@ Cenário: Aplicação v3O2 utiliza serviço(s) de "dados de poço" para obter
      usuário, pulando etapa anterior) pode iniciar o procedimento de obtenção 
     do dado propriamente dito (trajetória)
 
-     Membro v3o2 pesquisa ofertas de serviço de dados de poço com trajetória
+     Membro v3o2 pesquisa no serviço de diretório ofertas de serviço de dados de poço 
+     com trajetória
       (trajetória é uma faceta? ou o serviço de poço é uma faceta, e ter
        trajetória é uma característica ?)
 
@@ -184,16 +176,15 @@ Cenário: Aplicação v3O2 utiliza serviço(s) de "dados de poço" para obter
   ========================================================
 
   1) Não há distinção entre clientes e servidores (provedores de serviço).
-     Todos são membros do barramento, e estáo no registro.
-
-     => Inclusive os provedores de serviços básicos?
+     Todos são membros do barramento, autenticados na conexão, e estáo no registro.
+     (diretório).
 
   2) Ao invés de usuário e senha, um servidor pode se autenticar no barramento 
      de forma semelhante ao de um servidor csbase local (par de chaves)
     
      => Exige serviço de administração para o cadastramento da chave do 
         servidor.
-       (fica no registro? o registro indica se o membro está conectado?)
+       (chave fica no registro? o registro indica se o membro está conectado?)
 
   3) Um membro pode publicar ofertas de serviço. Pode alterar suas ofertas de 
      serviço e pode também retirá-las.
@@ -201,7 +192,8 @@ Cenário: Aplicação v3O2 utiliza serviço(s) de "dados de poço" para obter
      Recebe uma identificação para o registro de sua oferta (para alterá-la, 
      removê-la...)
 
-     Se é detetada a ausência DEFINITIVA de um membro, suas ofertas devem ser 
+     Se é detetada a ausência DEFINITIVA de um membro (falha na validação da 
+     entrada relativa à sua autenticação/conexão), suas ofertas devem ser 
      retiradas
      (atenção para o caso de problemas de comunicação temporarios, com ofertas 
       não sendo republicadas...)
@@ -209,15 +201,13 @@ Cenário: Aplicação v3O2 utiliza serviço(s) de "dados de poço" para obter
     => Uma oferta de serviço contém referência para um membro ou para uma 
       faceta desse membro? Ou para as duas coisas? 
 
-      Link do repositório de ofertas com registro.
-
     => O nome de uma oferta de serviço é o nome de uma faceta?
 
   4) Por que o repositório de ofertas não é apenas o registro?
 
      => Porque queremos que as ofertas de serviço possam ser 
         controladas/gerenciadas pelos provedores. A oferta não pode ser 
-        automatica (p.ex. oferecimento das facetas de um membro)
+        automatica (p.ex. oferecimento "automatico" das facetas de um membro)
 
   => VAMOS IMPLEMENTAR PESQUISA DE OFERTAS "A la trading" ?
      Critérios simples (por exemplo, o "tipo" que distingue poços em produção 
@@ -234,4 +224,5 @@ Cenário: Aplicação v3O2 utiliza serviço(s) de "dados de poço" para obter
   trajetória.
   Sem necessariamente publicar uma oferta de serviço no barramento 
   (pode passar para outro membro uma referencia para uma faceta/interface de 
-  dados?)
+  dados? não está exportando para todos os membros conectados, e sim para
+  um específico)
