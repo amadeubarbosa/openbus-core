@@ -1,0 +1,26 @@
+#ifndef SS_IDL
+#define SS_IDL
+
+#include "scs.idl"
+#include "access_control_service.idl"
+
+module OpenBus {
+
+module SS {
+
+typedef long Identifier;
+
+struct Session {
+    Identifier identifier;
+};
+
+interface SessionService : SCS::IComponent {
+    Session createSession(in AS::Credential credential);
+    Session getSession(in AS::Credential credential);
+};
+
+};
+
+};
+
+#endif

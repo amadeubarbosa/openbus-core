@@ -1,0 +1,45 @@
+#ifndef AS_IDL
+#define AS_IDL
+
+#include "scs.idl"
+#include "life_cycle.idl"
+#include "registry_service.idl"
+
+module OpenBus {
+
+module AS {
+
+typedef long Identifier;
+
+struct Credential {
+    long id;
+    string entityName;
+};
+
+interface CredentialResource : LifeCycle::Resource {
+    Identifier getIdentifier();
+    OpenBus::AS::Credential getCredential();
+};
+
+interface CredentialManagerObserver {
+    void credentialWasDeleted(in Credential credential);
+};
+
+interface CredentialManagerObservable {
+    void addObserver(in CredentialManagerObserver observer);
+    void removeObserver(in CredentialManagerObserver observer);
+};
+
+interface AccessControlService : CredentialManagerObservable, LifeCycle::Stethoscope {
+    OpenBus::AS::Identifier loginByCredential (in OpenBus::AS::Credential credential, in OpenBus::LifeCycle::Heart heart);
+    OpenBus::AS::Credential loginByPassword (in string name, in string password); 
+    void logout (in OpenBus::AS::Identifier identifier);
+    boolean validate (in OpenBus::AS::Credential credential);
+    OpenBus::RS::RegistryService getRegistryService (in OpenBus::AS::Credential credential);
+};
+
+};
+
+};
+
+#endif
