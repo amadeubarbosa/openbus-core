@@ -18,7 +18,7 @@ struct Credential {
 
 interface CredentialResource : LifeCycle::Resource {
     Identifier getIdentifier();
-    OpenBus::AS::Credential getCredential();
+    Credential getCredential();
 };
 
 interface CredentialManagerObserver {
@@ -31,11 +31,11 @@ interface CredentialManagerObservable {
 };
 
 interface AccessControlService : CredentialManagerObservable, LifeCycle::Stethoscope {
-    OpenBus::AS::Identifier loginByCredential (in OpenBus::AS::Credential credential, in OpenBus::LifeCycle::Heart heart);
-    OpenBus::AS::Credential loginByPassword (in string name, in string password); 
-    void logout (in OpenBus::AS::Identifier identifier);
-    boolean validate (in OpenBus::AS::Credential credential);
-    OpenBus::RS::RegistryService getRegistryService (in OpenBus::AS::Credential credential);
+    Identifier loginByCredential (in Credential credential, in LifeCycle::Heart heart);
+    Credential loginByPassword (in string name, in string password); 
+    void logout (in Identifier identifier);
+    boolean validate (in Credential credential);
+    RS::RegistryService getRegistryService (in Credential credential);
 };
 
 };

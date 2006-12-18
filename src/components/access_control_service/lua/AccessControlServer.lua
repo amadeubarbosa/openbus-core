@@ -1,4 +1,5 @@
 require "oil"
+
 require "AccessControlService"
 
 oil.verbose.level(3)
@@ -10,26 +11,14 @@ if CORBA_IDL_DIR == nil then
 end
 
 local idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
-print("IXI")
-oil.loadidlfile(CORBA_IDL_DIR.."/scs.idl")
-print("IXII")
-oil.loadidlfile(CORBA_IDL_DIR.."/life_cycle.idl")
-print("IXIII")
---oil.loadidlfile(CORBA_IDL_DIR.."/registry_service.idl")
 
-print("IX")
 oil.loadidlfile (idlfile)
 
-print("IIX")
 local accessControlService = AccessControlService:new()
-print("IIIX")
 
-print("X")
-accessControlService = oil.newobject (accessControlService, "IDL:SCS/AS/AccessControlService:1.0")
-print("XX")
+accessControlService = oil.newobject (accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
 
 accessControlService:startup()
-print("XXX")
 
 print(accessControlService:_ior())
 

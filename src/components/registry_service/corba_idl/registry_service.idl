@@ -23,14 +23,17 @@ typedef sequence<Criterion> Criteria;
 typedef long Identifier;
 
 interface IdentifierResource : LifeCycle::Resource {
-    OpenBus::RS::Identifier getIdentifier();
+    Identifier getIdentifier();
 };
 
-interface RegistryService : SCS::IComponent {
-    OpenBus::RS::IdentifierResource register(in OpenBus::RS::ServiceOffer serviceOffer);
-    void unregister(in OpenBus::RS::Identifier identifier);
-    void refresh(in OpenBus::RS::Identifier identifier, in OpenBus::RS::ServiceOffer serviceOffer);
-    SCS::IComponent find (in OpenBus::RS::Criteria criteria, in string type);
+interface RegistryService {
+    IdentifierResource register(in ServiceOffer serviceOffer);
+    void unregister(in Identifier identifier);
+    void refresh(in Identifier identifier, in ServiceOffer serviceOffer);
+    SCS::IComponent find (in Criteria criteria, in string type);
+};
+
+interface RegistryServiceComponent : SCS::IComponent {
 };
 
 };

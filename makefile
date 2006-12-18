@@ -19,9 +19,9 @@ install:
 	mkdir -p $(ACCESS_CONTROL_SERVICE_DIR)
 	cp `find src/components/access_control_service -name '*.lua'` $(ACCESS_CONTROL_SERVICE_DIR)
 	mkdir -p $(REGISTRY_SERVICE_DIR)
-	#cp `find src/components/registry_service -name '*.lua'` $(REGISTRY_SERVICE_DIR)
+	cp `find src/components/registry_service -name '*.lua'` $(REGISTRY_SERVICE_DIR)
 	mkdir -p $(SESSION_SERVICE_DIR)
-	#cp `find src/components/session_service -name '*.lua'` $(SESSION_SERVICE_DIR)
+	cp `find src/components/session_service -name '*.lua'` $(SESSION_SERVICE_DIR)
 
 clean:
 	rm -rf $(INSTALL_DIR)

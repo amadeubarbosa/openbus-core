@@ -14,9 +14,13 @@ struct Session {
     Identifier identifier;
 };
 
-interface SessionService : SCS::IComponent {
+interface SessionService {
     Session createSession(in AS::Credential credential);
     Session getSession(in AS::Credential credential);
+    boolean removeSession(in AS::Credential credential);
+};
+
+interface SessionServiceComponent : SCS::IComponent{
 };
 
 };

@@ -1,46 +1,59 @@
 require "OOP"
-
-require "Authenticator"
-require "CredentialValidator"
+require "lualdap"
 
 AccessControlService = Object:new{
+    hostname = "segall.tecgraf.puc-rio.br",
     credentials = {},
 
-    facets = {},
-
-    facetsByName = {},
-
-    startup = function(self)
-        local authenticator = Authenticator:new{credentials = self.credentials}
-        local authenticatorInterface = "IDL:SCS/AS/Authenticator:1.0"
-        authenticator = oil.newobject(authenticator, authenticatorInterface)
-        self.facets[authenticatorInterface] = authenticator
-        self.facetsByName["authenticator"] = authenticator
-
-        local credentialValidator = CredentialValidator:new{credentials = self.credentials}
-        local credentialValidatorInterface = "IDL:SCS/AS/CredentialValidator:1.0"
-        credentialValidator = oil.newobject(credentialValidator, credentialValidatorInterface)
-        self.facets[credentialValidatorInterface] = credentialValidator
-        self.facetsByName["credentialValidator"] = credentialValidator
-
-        local registryManager = RegistryManager:new{credentialValidator = self.facets[credentialValidatorInterface]}
-        local registryManagerInterface = "IDL:SCS/AS/RegistryManager:1.0"
-        registryManager = oil.newobject(registryManager, registryManagerInterface)
-        self.facets[registryManagerInterface] = registryManager
-        self.facetsByName["registryManager"] = registryManager
+    loginByCredential = function(self, credential)
+        if self.credentials[credential.entityName] == nil then
+            return false
+        end
+        return true
     end,
 
-    shutdown = function(self)
-        self.facets = {}
-        self.facetsByName = {}
+    loginByPassword = function(self, name, password)
+        local connection = lualdap.open_simple(self.hostname, name, password, false)
+        if connection == nil then
+            return {id = -1, entityName = name}
+        end
+        connection:close()
+        local credential = {id = 1, entityName = name}
+        self.credentials[name] = credential
+        return credential
     end,
 
-    getFacet = function(self, facet_interface)
-        return self.facets[facet_interface]
+    logout = function(self, credential)
+        self.credentials[credential.entityName] = nil
     end,
 
-    getFacetByName = function(self, facet)
-        return self.facetsByName[facet]
+    isValid = function(self, credential)
+        local bufferedCredential = self.credentials[credential.entityName]
+        if bufferedCredential == nil then
+            return false
+        end
+
+        if bufferedCredential.entityName ~= credential.entityName then
+            return false
+        end
+        if bufferedCredential.id ~= credential.id then
+            return false
+        end
+
+        return true
+    end,
+
+    getRegistryService = function(self, credential)
+        if self.credentialValidator:validate(credential) == false then
+            return nil
+        end
+        return self.registryService
+    end,
+
+    addObserver = function (self, observer)
+    end,
+
+    removeObserver = function(self, observer)
     end,
 
     beat = function(self, resource)
