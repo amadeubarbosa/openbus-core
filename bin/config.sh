@@ -1,4 +1,4 @@
-set OPENBUS_HOME=/home/rodrigochenrique/Trabalho/Projetos/openbus/principal/install
+set OPENBUS_HOME=..
 
 setenv CORBA_IDL_DIR ${OPENBUS_HOME}/corba_idl
 
