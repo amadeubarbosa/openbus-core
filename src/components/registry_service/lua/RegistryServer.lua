@@ -1,4 +1,5 @@
 require "oil"
+
 require "RegistryServiceComponent"
 
 oil.verbose.level(3)

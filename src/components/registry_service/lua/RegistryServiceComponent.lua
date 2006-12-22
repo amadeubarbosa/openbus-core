@@ -12,7 +12,7 @@ RegistryServiceComponent = IComponent:new{
 
         local accessControlService = self:getAccessControlService()
 
-        self.credentialResource = accessControlService:login()
+        self.credentialResource = accessControlService:loginByCertificate()
     end,
 
     shutdown = function(self)

@@ -18,8 +18,6 @@ local accessControlService = AccessControlService:new()
 
 accessControlService = oil.newobject (accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
 
-accessControlService:startup()
-
 print(accessControlService:_ior())
 
 oil.run()

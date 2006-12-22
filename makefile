@@ -1,6 +1,7 @@
 INSTALL_DIR=install
 
 CORBA_IDL_DIR=$(INSTALL_DIR)/corba_idl
+BIN_DIR=$(INSTALL_DIR)/bin
 
 CORE_DIR=$(INSTALL_DIR)/core
 
@@ -11,7 +12,8 @@ SESSION_SERVICE_DIR=$(COMPONENTS_DIR)/session_service
 
 install:
 	mkdir -p $(INSTALL_DIR)
-	cp -R bin $(INSTALL_DIR)
+	mkdir -p $(BIN_DIR)
+	cp bin/*.sh $(BIN_DIR)
 	mkdir -p $(CORBA_IDL_DIR)
 	cp `find . -name '*.idl'` $(CORBA_IDL_DIR)
 	mkdir -p $(CORE_DIR)

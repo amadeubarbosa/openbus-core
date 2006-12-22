@@ -16,7 +16,7 @@ oil.loadidlfile (idlfile)
 
 local sessionService = SessionServiceComponent:new()
 
-sessionService = oil.newobject (sessionService, "IDL:SCS/SS/SessionServiceComponent:1.0")
+sessionService = oil.newobject (sessionService, "IDL:OpenBus/SS/SessionServiceComponent:1.0")
 
 sessionService:startup()
 

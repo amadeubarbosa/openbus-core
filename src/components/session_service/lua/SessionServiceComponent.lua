@@ -14,7 +14,7 @@ SessionServiceComponent = IComponent:new{
         self.credentialResource = accessControlService:login()
 
         local serviceOffer = {
-            description = "Serviço de Sessões",
+            description = "Servico de Sessoes",
             type = "OpenBus/SS/SessionService",
             iComponent = self,
         }
@@ -25,8 +25,8 @@ SessionServiceComponent = IComponent:new{
     shutdown = function(self)
         local accessControlService = self:getAccessControlService()
         local registryService = accessControlService:getRegistryService()
-        registryService:unregister(self.identifierResource:getIdentifier())
 
+        registryService:unregister(self.identifierResource.identifier)
         accessControlService:logout(self.credentialResource:getIdentifier())
 
         self.facets = {}

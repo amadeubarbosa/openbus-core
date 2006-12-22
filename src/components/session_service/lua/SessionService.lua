@@ -6,10 +6,11 @@ SessionService = Object:new{
     createSession = function(self, credential)
         local session = {}
         self.sessions[credential] = session
+        return session
     end,
 
     removeSession = function(self, credential)
-        self.session[crential] = nil
+        self.sessions[credential] = nil
     end,
 
     getSession = function(self, credential)
