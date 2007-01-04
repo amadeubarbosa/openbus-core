@@ -1,7 +1,8 @@
 INSTALL_DIR=install
 
-CORBA_IDL_DIR=$(INSTALL_DIR)/corba_idl
 BIN_DIR=$(INSTALL_DIR)/bin
+CONF_DIR=$(INSTALL_DIR)/conf
+CORBA_IDL_DIR=$(INSTALL_DIR)/corba_idl
 
 CORE_DIR=$(INSTALL_DIR)/core
 
@@ -14,6 +15,8 @@ install:
 	mkdir -p $(INSTALL_DIR)
 	mkdir -p $(BIN_DIR)
 	cp bin/*.sh $(BIN_DIR)
+	mkdir -p $(CONF_DIR)
+	cp `find conf -name '*.lua'` $(CONF_DIR)
 	mkdir -p $(CORBA_IDL_DIR)
 	cp `find . -name '*.idl'` $(CORBA_IDL_DIR)
 	mkdir -p $(CORE_DIR)
@@ -27,3 +30,5 @@ install:
 
 clean:
 	rm -rf $(INSTALL_DIR)
+
+reinstall:	clean	install
