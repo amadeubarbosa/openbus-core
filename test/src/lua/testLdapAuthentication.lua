@@ -1,6 +1,6 @@
 require "lualdap"
 
-if table.getn(arg) ~= 3 then
+if #arg ~= 3 then
     print("Parametros invalidos !!!")
     print("Use testLdapAuthentication.lua <host>[:port] <user> <password>")
     os.exit(0)

@@ -1,0 +1,9 @@
+#ifndef CORE_IDL
+#define CORE_IDL
+
+module OpenBus {
+   typedef string UUID;
+   typedef UUID Identifier;
+};
+
+#endif

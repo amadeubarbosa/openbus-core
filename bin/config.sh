@@ -1,6 +1,7 @@
 set OPENBUS_HOME=..
 
 setenv CORBA_IDL_DIR ${OPENBUS_HOME}/corba_idl
+setenv CONF_DIR ${OPENBUS_HOME}/conf
 
 set CORE_DIR=${OPENBUS_HOME}/core
 

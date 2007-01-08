@@ -4,90 +4,107 @@ require "uuid"
 require "OOP"
 
 AccessControlService = Object:new{
-    hostname = "segall.tecgraf.puc-rio.br",
-    beatTime = 10,
     entriesByName = {},
-    credentialsByIdentifier = {},
+    entriesByIdentifier = {},
     observers = {},
 
-    loginByCredential = function(self, credential, heart)
-        if self:isValid(credential) == false then
-            return nil
+    getToken = function(self, name)
+        return ""
+    end,
+
+    loginByCertificate = function(self, name, answer)
+        if name ~= "RegistryService" and name ~= "SessionService" then
+            return {credential = {identifier = "", entityName = ""}, loginIdentifier = ""}
         end
 
-        local loginIdentifier = self:generateLoginIdentifier()
-        self.credentialsByIdentifier[loginIdentifier] = credential
+        local entry = self.entriesByName[name]
+        if not entry then
+            entry = self:addEntry(name)
+        end
+        local loginIdentifier = self:addLoginIdentifier(entry)
+        return {credential = entry.credential, loginIdentifier = loginIdentifier}
+    end,
 
+    loginByCredential = function(self, credential, heart)
+        if not self:isValid(credential) then
+            return ""
+        end
         local entry = self.entriesByName[credential.entityName]
-
-        table.insert(entry.identifiers, loginIdentifier)
+        local loginIdentifier = self:addLoginIdentifier(entry)
         entry.heartsByIdentifier[loginIdentifier] = heart
-
         return loginIdentifier
     end,
 
-    generateLoginIdentifier = function(self)
-        return uuid.new("time")
-    end,
-
     loginByPassword = function(self, name, password)
-        local connection = lualdap.open_simple(self.hostname, name, password, false)
-        if connection == nil then
-            return {credential = nil, identifier = nil}
+        local connection, errorMessage = lualdap.open_simple(self.ldapHost, name, password, false)
+        if not connection then
+            return {credential = {identifier = "", entityName = ""}, loginIdentifier = ""}
         end
         connection:close()
-
         local entry = self.entriesByName[name]
-        local credential = nil
-        if entry == nil then
-            credential = {id = self:generateCredentialIdentifier(), entityName = name}
-            self.entriesByName[name] = {credential = credential, time = os.time(), identifiers = {}, heartsByIdentifier = {}}
-        else
-            credential = entry.credential
+        if not entry then
+            entry = self:addEntry(name)
         end
-
-        table.insert()
-        local loginIdentifier = self:generateLoginIdentifier()
-        self.credentialsByIdentifier[loginIdentifier] = credential
-
-        return {beatTime = self.beatTime, credential = credential, identifier = loginIdentifier}
-    end,
-
-    generateCredentialIdentifier = function(self)
-        return uuid.new("time")
+        local loginIdentifier = self:addLoginIdentifier(entry)
+        return {credential = entry.credential, loginIdentifier = loginIdentifier}
     end,
 
     logout = function(self, identifier)
-        local credential = self.credentialsByIdentifier[identifier]
-        if credential == nil then
-            return
-        end
-        self.credentialsByIdentifier[identifier] = nil
-        local entry = self.entriesByName[credential.entityName]
-        if entry.identifiers == nil then
-            self.entriesByName[credential.entityName] = nil
-            self:notifyCredentialWasDeleted(credential)
-        end
-    end,
-
-    isValid = function(self, credential)
-        local entry = self.entries[credential.entityName]
-        if entry == nil then
+        local entry = self.entriesByIdentifier[identifier]
+        if not entry then
             return false
         end
+        self.entriesByIdentifier[identifier] = nil
 
-        if entry.credential.entityName ~= credential.entityName then
-            return false
+        local index
+        for bufferedIndex, bufferedIdentifier in ipairs(entry.identifiers) do
+            if identifier == bufferedIdentifier then
+                index = bufferedIndex
+                break
+            end
         end
-        if entry.credential.id ~= credential.id then
-            return false
+        table.remove(entry.identifiers, index)
+        if #entry.identifiers == 0 then
+            self.entriesByName[entry.credential.entityName] = nil
+            return true
         end
 
+        if index == 1 then
+            for _, bufferedIdentifier in ipairs(entry.identifiers) do
+                local heart = entry.heartsByIdentifier[bufferedIdentifier]
+                if heart then
+                    heart.start(self.beatTime)
+                    heartsByIdentifier[bufferedIdentifier] = nil
+                    break
+                end
+            end
+        else
+            entry.heartsByIdentifier[identifier] = nil
+        end
         return true
     end,
 
+    isValid = function(self, credential)
+        local entry = self.entriesByName[credential.entityName]
+        if not entry then
+            return false
+        end
+        if entry.credential.identifier ~= credential.identifier then
+            return false
+        end
+        return true
+    end,
+
+    setRegistryService = function(self, credential, registryService)
+        if self:isValid(credential) and credential.entityName == "RegistryService" then
+            self.registryService = registryService
+            return true
+        end
+        return false
+    end,
+
     getRegistryService = function(self, credential)
-        if self:isValid(credential) == false then
+        if not self:isValid(credential) then
             return nil
         end
         return self.registryService
@@ -95,18 +112,11 @@ AccessControlService = Object:new{
 
     beat = function(self, credential)
         local entry = self.entriesByName[credential.entityName]
-        if entry == nil then
+        if not entry then
             return false
+        end
         entry.time = os.time()
         return true
-    end,
-
-    removeDeadCredentials = function(self)
-        for _, entry in pairs(self.entriesByName) do
-            if (entry.time + beatTime) < os.time() then
-                entry.
-            end
-        end
     end,
 
     addObserver = function (self, observer)
@@ -117,9 +127,44 @@ AccessControlService = Object:new{
         self.observers[observer] = nil
     end,
 
+    addEntry = function(self, name)
+        local credential = {identifier = self:generateCredentialIdentifier(), entityName = name}
+        entry = {credential = credential, time = os.time(), identifiers = {}, heartsByIdentifier = {}}
+        self.entriesByName[name] = entry
+        return entry
+    end,
+
+    addLoginIdentifier = function(self, entry)
+        local loginIdentifier = self:generateLoginIdentifier()
+        self.entriesByIdentifier[loginIdentifier] = entry
+        table.insert(entry.identifiers, loginIdentifier)
+        return loginIdentifier
+    end,
+
+    generateCredentialIdentifier = function(self)
+        return uuid.new("time")
+    end,
+
+    generateLoginIdentifier = function(self)
+        return uuid.new("time")
+    end,
+
+    removeDeadCredentials = function(self)
+        for entityName, entry in pairs(self.entriesByName) do
+            if (entry.time + beatTime) < os.time() then
+                self.entriesByName[entityName] = nil
+                for _, identifier in ipairs(entry.identifiers) do
+                    self.credentialsByIdentifier[identifier] = nil
+                end
+            end
+        end
+    end,
+
     notifyCredentialWasDeleted = function(self, credential)
-        for observer in pairs(self.observers) do
-            observer:credentialWasDeleted(credential)
+        for observer, valid in pairs(self.observers) do
+            if valid then
+                observer:credentialWasDeleted(credential)
+            end
         end
     end,
 }

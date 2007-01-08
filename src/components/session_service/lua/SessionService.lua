@@ -4,9 +4,12 @@ SessionService = Object:new{
     sessions = {},
 
     createSession = function(self, credential)
-        local session = {}
-        self.sessions[credential] = session
-        return session
+        if self.accessControlService:isValid(credential) then
+            local session = {}
+            self.sessions[credential] = session
+            return session
+        end
+        return nil
     end,
 
     removeSession = function(self, credential)
@@ -16,4 +19,4 @@ SessionService = Object:new{
     getSession = function(self, credential)
         return self.sessions[credential]
     end,
-};
+}

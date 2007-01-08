@@ -10,13 +10,33 @@ if CORBA_IDL_DIR == nil then
     os.exit(1)
 end
 
+local CONF_DIR = os.getenv("CONF_DIR")
+if CONF_DIR == nil then
+    io.stderr:write("A variavel CONF_DIR nao foi definida.\n")
+    os.exit(1)
+end
+
+local serverConfiguration = {}
+function AccessControlServerConfiguration (accessControlServerConfiguration)
+    serverConfiguration.hostName = accessControlServerConfiguration.hostName
+    serverConfiguration.hostPort = accessControlServerConfiguration.hostPort
+    serverConfiguration.ldapHost = accessControlServerConfiguration.ldapHostName..":"..accessControlServerConfiguration.ldapHostPort
+end
+
+local config = loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua")
+config()
+
 local idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
 
 oil.loadidlfile (idlfile)
 
-local accessControlService = AccessControlService:new()
+oil.init{host = serverConfiguration.hostName, port = serverConfiguration.hostPort,}
 
-accessControlService = oil.newobject (accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
+local accessControlService = AccessControlService:new{
+    ldapHost = serverConfiguration.ldapHost,
+}
+
+accessControlService = oil.newobject (accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0", "ACS")
 
 print(accessControlService:_ior())
 

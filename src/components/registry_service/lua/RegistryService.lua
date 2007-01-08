@@ -5,9 +5,12 @@ require "OOP"
 RegistryService = Object:new {
     serviceOffers = {},
 
+    start = function(self)
+    end,
+
     register = function(self, serviceOffer)
         local identifier = self:generateIdentifier()
-        self.serviceOffers[identifier] = serviceOffer
+        self.serviceOffers[identifier] = {offer = serviceOffer, time = os.gettime()}
         return identifier
     end,
 
@@ -34,5 +37,8 @@ RegistryService = Object:new {
 
     generateIdentifier = function(self)
         return uuid.new("time")
-    end
+    end,
+
+    removeDeadServiceOffers = function(self)
+    end,
 };

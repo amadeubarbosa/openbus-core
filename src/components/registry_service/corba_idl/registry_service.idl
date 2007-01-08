@@ -2,7 +2,7 @@
 #define RS_IDL
 
 #include "scs.idl"
-#include "life_cycle.idl"
+#include "core.idl"
 
 module OpenBus {
 
@@ -20,16 +20,12 @@ struct Criterion {
 };
 typedef sequence<Criterion> Criteria;
 
-typedef long Identifier;
-
-interface IdentifierResource : LifeCycle::Resource {
-    Identifier getIdentifier();
-};
+typedef Identifier RegistryIdentifier;
 
 interface RegistryService {
-    IdentifierResource register(in ServiceOffer serviceOffer);
-    void unregister(in Identifier identifier);
-    void refresh(in Identifier identifier, in ServiceOffer serviceOffer);
+    RegistryIdentifier register(in ServiceOffer serviceOffer);
+    void unregister(in RegistryIdentifier identifier);
+    void refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
     SCS::IComponent find (in Criteria criteria, in string type);
 };
 

@@ -2,16 +2,17 @@
 #define SS_IDL
 
 #include "scs.idl"
+#include "core.idl"
 #include "access_control_service.idl"
 
 module OpenBus {
 
 module SS {
 
-typedef long Identifier;
+typedef Identifier SessionIdentifier;
 
 struct Session {
-    Identifier identifier;
+    SessionIdentifier identifier;
 };
 
 interface SessionService {
