@@ -54,6 +54,13 @@ function assertFalse(actual)
     assertEquals(false, actual, 1)
 end
 
+function assertNotEquals(expected, actual)
+    local isEqual = pcall(assertEquals, expected, actual)
+    if isEqual then
+	error( "No error generated", 2 )
+    end
+end
+
 function assertEquals(expected, actual, level)
 	-- assert that two values are equal and calls error else
 	if  actual ~= expected  then
@@ -72,7 +79,6 @@ function assertEquals(expected, actual, level)
 		else
 			errorMsg = "expected: "..wrapValue(expected)..", actual: "..wrapValue(actual)
 		end
-		print (errorMsg)
                 level = level or 0
 		error( errorMsg, 2 + level)
 	end
