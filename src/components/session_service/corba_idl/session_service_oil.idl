@@ -1,0 +1,7 @@
+#ifndef SS_OIL_IDL
+#define SS_OIL_IDL
+
+#include "session_service.idl"
+#include "access_control_service_oil.idl"
+
+#endif
