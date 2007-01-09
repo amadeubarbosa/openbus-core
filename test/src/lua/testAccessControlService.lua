@@ -13,7 +13,7 @@ if CORBA_IDL_DIR == nil then
     io.stderr:write("A variavel CORBA_IDL_DIR nao foi definida.\n")
     os.exit(1)
 end
-local idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
+local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
 oil.loadidlfile(idlfile)
 
@@ -21,7 +21,14 @@ local host = arg[1]
 local user = arg[2]
 local password = arg[3]
 
-local accessControlService = oil.newproxy("corbaloc::"..host.."/ACS", "IDL:OpenBus/AS/AccessControlService:1.0")
+local accessControlServiceComponent = oil.newproxy("corbaloc::"..host.."/ACS", "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
+
+local accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
+accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
+assertNotNil(accessControlService)
+
+accessControlService = accessControlServiceComponent:getFacetByName("accessControlService")
+accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
 
 local credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
 

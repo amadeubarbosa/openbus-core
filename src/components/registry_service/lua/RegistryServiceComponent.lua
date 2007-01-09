@@ -2,26 +2,31 @@ require "IComponent"
 
 require "RegistryService"
 
-RegistryServiceComponent = IComponent:new{
-    startup = function(self)
-        self.accessControlService = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/AS/AccessControlService:1.0")
+RegistryServiceComponent = createClass(IComponent)
 
-        local registryService = RegistryService:new{accessControlService = self.accessControlService}
-        local registryServiceInterface = "IDL:OpenBus/RS/RegistryService:1.0"
+function RegistryServiceComponent:startup()
+    
+    local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
 
-        registryService = oil.newobject(registryService, registryServiceInterface)
+    local accessControlServiceInterface = "IDL:OpenBus/AS/AccessControlService:1.0"
+    self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
+    self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
-        self.facets[registryServiceInterface] = registryService
-        self.facetsByName["registryService"] = registryService
+    local registryService = RegistryService:new{accessControlService = self.accessControlService}
+    local registryServiceInterface = "IDL:OpenBus/RS/RegistryService:1.0"
 
-        self.credentialLoginIdentifier = self.accessControlService:loginByCertificate("RegistryService", "")
-        self.accessControlService:setRegistryService(self.credentialLoginIdentifier.credential, self)
-    end,
+    registryService = oil.newobject(registryService, registryServiceInterface)
 
-    shutdown = function(self)
-        self.accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+    self.facets[registryServiceInterface] = registryService
+    self.facetsByName["registryService"] = registryService
 
-        self.facets = {}
-        self.facetsByName = {}
-    end,
-}
+    self.credentialLoginIdentifier = self.accessControlService:loginByCertificate("RegistryService", "")
+    self.accessControlService:setRegistryService(self.credentialLoginIdentifier.credential, registryService)
+end
+
+function RegistryServiceComponent:shutdown()
+    self.accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+
+    self.facets = {}
+    self.facetsByName = {}
+end

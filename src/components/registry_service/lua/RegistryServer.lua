@@ -26,16 +26,15 @@ local config = loadfile(CONF_DIR.."/RegistryServerConfiguration.lua")
 config()
 
 local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
-
 oil.loadidlfile (idlfile)
 
-local registryService = RegistryServiceComponent:new{
+local registryServiceComponent = RegistryServiceComponent:new{
     accessControlServerHost = serverConfiguration.accessControlServerHost,
     accessControlServerKey = serverConfiguration.accessControlServerKey,
 }
 
-registryService = oil.newobject (registryService, "IDL:OpenBus/RS/RegistryServiceComponent:1.0")
+registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus/RS/RegistryServiceComponent:1.0")
 
-registryService:startup()
+registryServiceComponent:startup()
 
 oil.run()

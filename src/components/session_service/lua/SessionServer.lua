@@ -25,17 +25,17 @@ end
 local config = loadfile(CONF_DIR.."/SessionServerConfiguration.lua")
 config()
 
-local idlfile = CORBA_IDL_DIR.."/session_service.idl"
+local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
 
 oil.loadidlfile (idlfile)
 
-local sessionService = SessionServiceComponent:new{
+local sessionServiceComponent = SessionServiceComponent:new{
     accessControlServerHost = serverConfiguration.accessControlServerHost,
     accessControlServerKey = serverConfiguration.accessControlServerKey,
 }
 
-sessionService = oil.newobject (sessionService, "IDL:OpenBus/SS/SessionServiceComponent:1.0")
+sessionServiceComponent = oil.newobject (sessionServiceComponent, "IDL:OpenBus/SS/SessionServiceComponent:1.0")
 
-sessionService:startup()
+sessionServiceComponent:startup()
 
 oil.run()

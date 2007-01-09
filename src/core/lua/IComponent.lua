@@ -1,15 +1,14 @@
 require "OOP"
 
-IComponent = Object:new{
-    facets = {},
+IComponent = createClass()
 
-    facetsByName = {},
+IComponent.facets = {}
+IComponent.facetsByName = {}
 
-    getFacet = function(self, facet_interface)
-        return self.facets[facet_interface]
-    end,
+function IComponent:getFacet(facet_interface)
+    return self.facets[facet_interface]
+end
 
-    getFacetByName = function(self, facet)
-        return self.facetsByName[facet]
-    end,
-}
+function IComponent:getFacetByName(facet)
+    return self.facetsByName[facet]
+end

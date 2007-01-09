@@ -1,6 +1,6 @@
 require "oil"
 
-require "AccessControlService"
+require "AccessControlServiceComponent"
 
 oil.verbose.level(3)
 
@@ -26,18 +26,18 @@ end
 local config = loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua")
 config()
 
-local idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
+local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
 oil.loadidlfile (idlfile)
 
 oil.init{host = serverConfiguration.hostName, port = serverConfiguration.hostPort,}
 
-local accessControlService = AccessControlService:new{
+local accessControlServiceComponent = AccessControlServiceComponent:new{
     ldapHost = serverConfiguration.ldapHost,
 }
 
-accessControlService = oil.newobject (accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0", "ACS")
+accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/AS/AccessControlServiceComponent:1.0", "ACS")
 
-print(accessControlService:_ior())
+accessControlServiceComponent:startup()
 
 oil.run()

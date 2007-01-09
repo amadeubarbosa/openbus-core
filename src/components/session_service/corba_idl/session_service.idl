@@ -21,7 +21,7 @@ interface SessionService {
     boolean removeSession(in AS::Credential credential);
 };
 
-interface SessionServiceComponent : SCS::IComponent{
+interface SessionServiceComponent : SCS::IComponent, SCS::IMetaInterface{
 };
 
 };

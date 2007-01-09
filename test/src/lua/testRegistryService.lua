@@ -21,8 +21,12 @@ local host = arg[1]
 local user = arg[2]
 local password = arg[3]
 
-local accessControlService = oil.newproxy("corbaloc::"..host.."/ACS", "IDL:OpenBus/AS/AccessControlService:1.0")
+local accessControlServiceComponent = oil.newproxy("corbaloc::"..host.."/ACS", "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
+local accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
+accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
 
 local credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
-assertNotNil(accessControlService:getRegistryService(credentialLoginIdentifier.credential))
+local registryService = accessControlService:getRegistryService(credentialLoginIdentifier.credential)
+assertNotNil(registryService)
+
 assertTrue(accessControlService:logout(credentialLoginIdentifier.loginIdentifier))

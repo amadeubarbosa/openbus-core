@@ -3,9 +3,12 @@
 
 #include "scs.idl"
 #include "core.idl"
-#include "registry_service.idl"
 
 module OpenBus {
+
+module RS {
+    interface RegistryService;
+};
 
 module AS {
 
@@ -26,12 +29,7 @@ interface CredentialManagerObserver {
     void credentialWasDeleted(in Credential credential);
 };
 
-interface CredentialManagerObservable {
-    void addObserver(in CredentialManagerObserver observer);
-    void removeObserver(in CredentialManagerObserver observer);
-};
-
-interface AccessControlService : CredentialManagerObservable {
+interface AccessControlService {
     LoginIdentifier loginByCredential (in Credential credential);
     CredentialLoginIdentifier loginByPassword (in string name, in string password);
     string getToken(in string name);
@@ -40,6 +38,11 @@ interface AccessControlService : CredentialManagerObservable {
     boolean isValid (in Credential credential);
     RS::RegistryService getRegistryService (in Credential credential);
     boolean setRegistryService (in Credential credential, in RS::RegistryService registryService);
+    void addObserver(in CredentialManagerObserver observer);
+    void removeObserver(in CredentialManagerObserver observer);
+};
+
+interface AccessControlServiceComponent : SCS::IComponent {
 };
 
 };
