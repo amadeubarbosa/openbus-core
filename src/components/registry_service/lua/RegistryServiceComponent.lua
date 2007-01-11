@@ -5,8 +5,10 @@ require "RegistryService"
 RegistryServiceComponent = createClass(IComponent)
 
 function RegistryServiceComponent:startup()
-    
     local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
+    if accessControlServiceComponent:_non_existent() then
+        error{"IDL:SCS/StartupFailed:1.0"}
+    end
 
     local accessControlServiceInterface = "IDL:OpenBus/AS/AccessControlService:1.0"
     self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
@@ -25,7 +27,11 @@ function RegistryServiceComponent:startup()
 end
 
 function RegistryServiceComponent:shutdown()
+    if not self.accessControlService then
+        error{"IDL:SCS/ShutdownFailed:1.0"}
+    end
     self.accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+    self.accessControlService = nil
 
     self.facets = {}
     self.facetsByName = {}

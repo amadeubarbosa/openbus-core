@@ -27,27 +27,37 @@ accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessCo
 
 local credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
 local registryService = accessControlService:getRegistryService(credentialLoginIdentifier.credential)
-assertNotNil(registryService)
+
 local sessionServiceComponent = registryService:find({}, "OpenBus/SS/SessionService")
-assertNotNil(sessionServiceComponent)
-
 local sessionService = sessionServiceComponent:getFacet("IDL:OpenBus/SS/SessionService:1.0")
-assertNotNil(sessionService)
-
 sessionService = oil.narrow(sessionService, "IDL:OpenBus/SS/SessionService:1.0")
-assertNotNil(sessionService)
 
-local session = sessionService:createSession(credentialLoginIdentifier.credential)
-assertNotEquals("", session.identifier)
 
-local session2 = sessionService:getSession(credentialLoginIdentifier.credential)
-assertNotEquals("", session2.identifier)
+TestSessionService = {}
 
-assertEquals(session.identifier, session2.identifier)
+function TestSessionService:testCreateSession()
+    local session = sessionService:createSession(credentialLoginIdentifier.credential)
+    assertNotEquals("", session.identifier)
+    sessionService:removeSession(credentialLoginIdentifier.credential)
+end
 
-assertTrue(sessionService:removeSession(credentialLoginIdentifier.credential))
-local session3 = sessionService:getSession(credentialLoginIdentifier.credential)
-assertEquals("", session3.identifier)
-assertFalse(sessionService:removeSession(credentialLoginIdentifier.credential))
+function TestSessionService:testGetSession()
+    local session = sessionService:createSession(credentialLoginIdentifier.credential)
+    local session2 = sessionService:getSession(credentialLoginIdentifier.credential)
+    assertNotEquals("", session2.identifier)
+    assertEquals(session.identifier, session2.identifier)
+    sessionService:removeSession(credentialLoginIdentifier.credential)
+end
 
-assertTrue(accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
+
+function TestSessionService:testGetSession()
+    sessionService:createSession(credentialLoginIdentifier.credential)
+    assertTrue(sessionService:removeSession(credentialLoginIdentifier.credential))
+    local session = sessionService:getSession(credentialLoginIdentifier.credential)
+    assertEquals("", session.identifier)
+    assertFalse(sessionService:removeSession(credentialLoginIdentifier.credential))
+end
+
+LuaUnit:run("TestSessionService")
+
+accessControlService:logout(credentialLoginIdentifier.loginIdentifier)

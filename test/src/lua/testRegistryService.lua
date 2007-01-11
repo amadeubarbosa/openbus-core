@@ -25,8 +25,6 @@ local accessControlServiceComponent = oil.newproxy("corbaloc::"..host.."/ACS", "
 local accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
 accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
 
-local credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
-local registryService = accessControlService:getRegistryService(credentialLoginIdentifier.credential)
-assertNotNil(registryService)
+TestRegistryService = {}
 
-assertTrue(accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
+LuaUnit:run("TestRegistryService")

@@ -36,6 +36,10 @@ local sessionServiceComponent = SessionServiceComponent:new{
 
 sessionServiceComponent = oil.newobject (sessionServiceComponent, "IDL:OpenBus/SS/SessionServiceComponent:1.0")
 
-sessionServiceComponent:startup()
+local success, startupFailed = pcall(sessionServiceComponent.startup, sessionServiceComponent)
+if not success then
+    print("ERRO !!!")
+    os.exit(1)
+end
 
 oil.run()

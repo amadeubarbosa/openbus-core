@@ -30,30 +30,44 @@ assertNotNil(accessControlService)
 accessControlService = accessControlServiceComponent:getFacetByName("accessControlService")
 accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
 
-local credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
+TestAccessControlService1 = {}
 
-assertTrue(accessControlService:isValid(credentialLoginIdentifier.credential))
-assertFalse(accessControlService:isValid({entityName=user, identifier = "123"}))
-assertFalse(accessControlService:logout("abcd"))
+function TestAccessControlService1:testLoginByPassword()
+    local credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
+    local credentialLoginIdentifier2 = accessControlService:loginByPassword(user, password)
+    assertEquals(credentialLoginIdentifier.credential.identifier, credentialLoginIdentifier2.credential.identifier)
+    assertNotEquals(credentialLoginIdentifier.loginIdentifier, credentialLoginIdentifier2.loginIdentifier)
+    accessControlService:logout(credentialLoginIdentifier.loginIdentifier)
+    accessControlService:logout(credentialLoginIdentifier2.loginIdentifier)
+end
 
-local registryService = accessControlService:getRegistryService(credentialLoginIdentifier.credential)
-assertNil(registryService)
+function TestAccessControlService1:testLogout()
+    local credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
+    assertFalse(accessControlService:logout("abcd"))
+    assertTrue(accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
+    assertFalse(accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
+end
 
-assertTrue(accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
+TestAccessControlService2 = {}
 
-assertFalse(accessControlService:isValid(credentialLoginIdentifier.credential))
-assertFalse(accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
+function TestAccessControlService2:setUp()
+    self.credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
+end
 
-registryService = accessControlService:getRegistryService(credentialLoginIdentifier.credential)
-assertNil(registryService)
+function TestAccessControlService2:tearDown()
+    accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+end
 
-credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
-assertTrue(accessControlService:isValid(credentialLoginIdentifier.credential))
+function TestAccessControlService2:testIsValid()
+    assertTrue(accessControlService:isValid(self.credentialLoginIdentifier.credential))
+    assertFalse(accessControlService:isValid({entityName=user, identifier = "123"}))
+    accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+    assertFalse(accessControlService:isValid(self.credentialLoginIdentifier.credential))
+end
 
+function TestAccessControlService2:testGetRegistryService()
+    assertNil(accessControlService:getRegistryService(self.credentialLoginIdentifier.credential))
+end
 
-local credentialLoginIdentifier2 = accessControlService:loginByPassword(user, password)
-
-assertTrue(accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
-assertTrue(accessControlService:isValid(credentialLoginIdentifier.credential))
-assertTrue(accessControlService:logout(credentialLoginIdentifier2.loginIdentifier))
-assertFalse(accessControlService:isValid(credentialLoginIdentifier.credential))
+LuaUnit:run("TestAccessControlService1")
+LuaUnit:run("TestAccessControlService2")

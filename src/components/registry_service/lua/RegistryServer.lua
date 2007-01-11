@@ -35,6 +35,10 @@ local registryServiceComponent = RegistryServiceComponent:new{
 
 registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus/RS/RegistryServiceComponent:1.0")
 
-registryServiceComponent:startup()
+local success, startupFailed = pcall (registryServiceComponent.startup, registryServiceComponent)
+if not success then
+    print("O servico de controle de acesso nao foi encontrado em "..serverConfiguration.accessControlServerHost..".")
+    os.exit(1)
+end
 
 oil.run()

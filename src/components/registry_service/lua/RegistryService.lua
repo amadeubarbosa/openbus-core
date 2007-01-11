@@ -14,12 +14,16 @@ function RegistryService:register(credential, serviceOffer)
     end
     local identifier = self:generateIdentifier()
     local entry = {serviceOffer = serviceOffer, credential = credential, time = os.time()}
-    self.entries[identifier] = entry
-    if not self.entriesByType[serviceOffer.type] then
-        self.entriesByType[serviceOffer.type] = {}
-    end
-    table.insert(self.entriesByType[serviceOffer.type], identifier) 
+    self:addEntry(identifier, entry)
     return identifier
+end
+
+function RegistryService:addEntry(identifier, entry)
+    self.entries[identifier] = entry
+    if not self.entriesByType[entry.serviceOffer.type] then
+        self.entriesByType[entry.serviceOffer.type] = {}
+    end
+    table.insert(self.entriesByType[entry.serviceOffer.type], identifier) 
 end
 
 function RegistryService:generateIdentifier()
@@ -31,8 +35,23 @@ function RegistryService:unregister(identifier)
     if not entry then
         return false
     end
-    self.entries[identifier] = nil
+    self:removeEntry(identifier, entry)
     return true
+end
+
+function RegistryService:removeEntry(identifier, entry)
+    local identifierIndex
+    for index, cachedIdentifier in ipairs(self.entriesByType[entry.servieOffer.type]) do
+        if identifier == cachedIdentifier then
+            identifierIndex = index
+            break
+        end
+    end
+    table.remove(self.entriesByType[entry.serviceOffer.type], identifierIndex)
+    if #(self.entriesByType[entry.serviceOffer.type]) == 0 then
+        self.entriesByType[entry.serviceOffer.type] = nil
+    end
+    self.entries[identifier] = nil
 end
 
 function RegistryService:refresh(identifier, serviceOffer)
@@ -40,7 +59,9 @@ function RegistryService:refresh(identifier, serviceOffer)
     if not entry then
         return false
     end
-    self.entries[identifier] = serviceOffer
+    self:removeEntry(identifier, entry)
+    local newEntry = {serviceOffer = serviceOffer, credential = credential, time = os.time()}
+    self:addEntry(identifier, newEntry)
     return true
 end
 
@@ -48,12 +69,10 @@ function RegistryService:find(criteria, type)
     if not self.entriesByType[type] then
         return nil
     end
-
     local identifier = self.entriesByType[type][1]
     if not identifier then
         return nil
     end
-
     return self.entries[identifier].serviceOffer.metaInterface
 end
 
