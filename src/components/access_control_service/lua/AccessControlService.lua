@@ -5,19 +5,18 @@ require "OOP"
 
 AccessControlService = createClass()
 
+AccessControlService.invalidCredential = {identifier = "", memberName = ""}
+AccessControlService.invalidLoginIdentifier = ""
 AccessControlService.entriesByName = {}
 AccessControlService.entriesByIdentifier = {}
 AccessControlService.observers = {}
 
 function AccessControlService:loginByCertificate(name, answer)
     if name ~= "RegistryService" and name ~= "SessionService" then
-        return {credential = {identifier = "", entityName = ""}, loginIdentifier = ""}
+        return {credential = self.invalidCredential, loginIdentifier = self.invalidLoginIdentifier}
     end
 
-    local entry = self.entriesByName[name]
-    if not entry then
-        entry = self:addEntry(name)
-    end
+    local entry = self:addEntry(name)
     local loginIdentifier = self:addLoginIdentifier(entry)
     return {credential = entry.credential, loginIdentifier = loginIdentifier}
 end
@@ -26,7 +25,7 @@ function AccessControlService:loginByCredential(credential, heart)
     if not self:isValid(credential) then
         return ""
     end
-    local entry = self.entriesByName[credential.entityName]
+    local entry = self.entriesByName[credential.memberName]
     local loginIdentifier = self:addLoginIdentifier(entry)
     entry.heartsByIdentifier[loginIdentifier] = heart
     return loginIdentifier
@@ -35,13 +34,10 @@ end
 function AccessControlService:loginByPassword(name, password)
     local connection, errorMessage = lualdap.open_simple(self.ldapHost, name, password, false)
     if not connection then
-        return {credential = {identifier = "", entityName = ""}, loginIdentifier = ""}
+        return {credential = self.invalidCredential, loginIdentifier = self.invalidLoginIdentifier}
     end
     connection:close()
-    local entry = self.entriesByName[name]
-    if not entry then
-        entry = self:addEntry(name)
-    end
+    local entry = self:addEntry(name)
     local loginIdentifier = self:addLoginIdentifier(entry)
     return {credential = entry.credential, loginIdentifier = loginIdentifier}
 end
@@ -62,7 +58,7 @@ function AccessControlService:logout(identifier)
     end
     table.remove(entry.identifiers, index)
     if #entry.identifiers == 0 then
-        self.entriesByName[entry.credential.entityName] = nil
+        self.entriesByName[entry.credential.memberName] = nil
         return true
     end
 
@@ -82,7 +78,7 @@ function AccessControlService:logout(identifier)
 end
 
 function AccessControlService:isValid(credential)
-    local entry = self.entriesByName[credential.entityName]
+    local entry = self.entriesByName[credential.memberName]
     if not entry then
         return false
     end
@@ -93,7 +89,7 @@ function AccessControlService:isValid(credential)
 end
 
 function AccessControlService:setRegistryService(credential, registryService)
-    if self:isValid(credential) and credential.entityName == "RegistryService" then
+    if self:isValid(credential) and credential.memberName == "RegistryService" then
         self.registryService = registryService
         return true
     end
@@ -108,7 +104,7 @@ function AccessControlService:getRegistryService(credential)
 end
 
 function AccessControlService:beat(credential)
-    local entry = self.entriesByName[credential.entityName]
+    local entry = self.entriesByName[credential.memberName]
     if not entry then
         return false
     end
@@ -125,7 +121,7 @@ function AccessControlService:removeObserver(observer)
 end
 
 function AccessControlService:addEntry(name)
-    local credential = {identifier = self:generateCredentialIdentifier(), entityName = name}
+    local credential = {identifier = self:generateCredentialIdentifier(), memberName = name}
     entry = {credential = credential, time = os.time(), identifiers = {}, heartsByIdentifier = {}}
     self.entriesByName[name] = entry
     return entry
@@ -147,9 +143,9 @@ function AccessControlService:generateLoginIdentifier()
 end
 
 function AccessControlService:removeDeadCredentials()
-    for entityName, entry in pairs(self.entriesByName) do
+    for memberName, entry in pairs(self.entriesByName) do
         if (entry.time + beatTime) < os.time() then
-            self.entriesByName[entityName] = nil
+            self.entriesByName[memberName] = nil
             for _, identifier in ipairs(entry.identifiers) do
                 self.credentialsByIdentifier[identifier] = nil
             end

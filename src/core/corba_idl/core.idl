@@ -1,9 +1,16 @@
 #ifndef CORE_IDL
 #define CORE_IDL
 
+#include "scs.idl"
+
 module OpenBus {
-   typedef string UUID;
-   typedef UUID Identifier;
+    typedef string UUID;
+    typedef UUID Identifier;
+
+    interface Member : SCS::IComponent, SCS::IMetaInterface {
+        string getName();
+    };
+    typedef sequence<Member> Members;
 };
 
 #endif

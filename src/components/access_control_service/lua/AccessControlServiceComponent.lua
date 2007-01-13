@@ -1,8 +1,10 @@
-require "IComponent"
+require "OOP"
+
+require "Member"
 
 require "AccessControlService"
 
-AccessControlServiceComponent = createClass(IComponent)
+AccessControlServiceComponent = createClass(Member)
 
 function AccessControlServiceComponent:startup()
     local accessControlService = AccessControlService:new{

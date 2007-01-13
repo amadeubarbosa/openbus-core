@@ -1,7 +1,6 @@
 #ifndef SS_IDL
 #define SS_IDL
 
-#include "scs.idl"
 #include "core.idl"
 #include "access_control_service.idl"
 
@@ -10,18 +9,25 @@ module OpenBus {
 module SS {
 
 typedef Identifier SessionIdentifier;
+typedef Identifier MemberIdentifier;
 
-struct Session {
-    SessionIdentifier identifier;
+interface Session {
+    SessionIdentifier getIdentifier();
+    MemberIdentifier addMember(in Member member);
+    boolean removeMember(in MemberIdentifier memberIdentifier);
+    Member getMember(in string memberName);
+    Members getMembers();
 };
+typedef sequence<Session> Sessions;
 
 interface SessionService {
     Session createSession(in AS::Credential credential);
-    Session getSession(in AS::Credential credential);
     boolean removeSession(in AS::Credential credential);
+    Session getSession(in AS::Credential credential);
+    Sessions getSessions(in string memberName);
 };
 
-interface SessionServiceComponent : SCS::IComponent, SCS::IMetaInterface{
+interface SessionServiceComponent : Member{
 };
 
 };

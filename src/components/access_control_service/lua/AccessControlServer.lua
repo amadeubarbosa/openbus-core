@@ -2,8 +2,6 @@ require "oil"
 
 require "AccessControlServiceComponent"
 
-oil.verbose.level(3)
-
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
     io.stderr:write("A variavel CORBA_IDL_DIR nao foi definida.\n")
@@ -21,10 +19,15 @@ function AccessControlServerConfiguration (accessControlServerConfiguration)
     serverConfiguration.hostName = accessControlServerConfiguration.hostName
     serverConfiguration.hostPort = accessControlServerConfiguration.hostPort
     serverConfiguration.ldapHost = accessControlServerConfiguration.ldapHostName..":"..accessControlServerConfiguration.ldapHostPort
+    serverConfiguration.oilVerboseLevel = accessControlServerConfiguration.oilVerboseLevel
+
+    serverConfiguration.oilVerboseLevel = serverConfiguration.oilVerboseLevel or 1
 end
 
 local config = loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua")
 config()
+
+oil.verbose.level(serverConfiguration.oilVerboseLevel)
 
 local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 

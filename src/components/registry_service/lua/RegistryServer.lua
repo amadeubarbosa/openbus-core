@@ -2,8 +2,6 @@ require "oil"
 
 require "RegistryServiceComponent"
 
-oil.verbose.level(3)
-
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
     io.stderr:write("A variavel CORBA_IDL_DIR nao foi definida.\n")
@@ -20,10 +18,15 @@ local serverConfiguration = {}
 function RegistryServerConfiguration (registryServerConfiguration)
     serverConfiguration.accessControlServerHost = registryServerConfiguration.accessControlServerHostName..":"..registryServerConfiguration.accessControlServerHostPort
     serverConfiguration.accessControlServerKey = registryServerConfiguration.accessControlServerKey
+    serverConfiguration.oilVerboseLevel = registryServerConfiguration.oilVerboseLevel
+
+    serverConfiguration.oilVerboseLevel = serverConfiguration.oilVerboseLevel or 1
 end
 
 local config = loadfile(CONF_DIR.."/RegistryServerConfiguration.lua")
 config()
+
+oil.verbose.level(serverConfiguration.oilVerboseLevel)
 
 local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile (idlfile)

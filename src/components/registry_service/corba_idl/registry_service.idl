@@ -1,7 +1,6 @@
 #ifndef RS_IDL
 #define RS_IDL
 
-#include "scs.idl"
 #include "core.idl"
 #include "access_control_service.idl"
 
@@ -12,7 +11,7 @@ module RS {
 struct ServiceOffer {
     string description;
     string type;
-    SCS::IMetaInterface metaInterface;
+    Member member;
 };
 
 struct Criterion {
@@ -27,10 +26,10 @@ interface RegistryService {
     RegistryIdentifier register(in AS::Credential credential, in ServiceOffer serviceOffer);
     void unregister(in RegistryIdentifier identifier);
     void refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
-    SCS::IComponent find (in Criteria criteria, in string type);
+    Members find (in Criteria criteria);
 };
 
-interface RegistryServiceComponent : SCS::IComponent {
+interface RegistryServiceComponent : Member {
 };
 
 };

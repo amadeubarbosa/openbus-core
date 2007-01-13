@@ -1,17 +1,19 @@
-require "IComponent"
-require "IMetaInterface"
+require "OOP"
+
+require "Member"
 
 require "SessionService"
 
-SessionServiceComponent = createClass(IMetaInterface, IComponent)
+SessionServiceComponent = createClass(Member)
 
 function SessionServiceComponent:startup()
     local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
     if accessControlServiceComponent:_non_existent() then
         error{"IDL:SCS/StartupFailed:1.0"}
     end
-    self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
-    self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
+    local accessControlServiceInterface = "IDL:OpenBus/AS/AccessControlService:1.0"
+    self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
+    self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
     local sessionServiceInterface = "IDL:OpenBus/SS/SessionService:1.0"
     local sessionServiceName = "sessionService"
@@ -25,11 +27,10 @@ function SessionServiceComponent:startup()
     self.facetDescriptionsByName[sessionServiceName] = {name = sessionServiceName, interface_name = sessionServiceInterface, facet_ref = sessionService}
 
     self.credentialLoginIdentifier = self.accessControlService:loginByCertificate("SessionService", "")
-
     local serviceOffer = {
         description = "Servico de Sessoes",
         type = "OpenBus/SS/SessionService",
-        metaInterface = self,
+        member = self,
     }
     local registryService = self.accessControlService:getRegistryService(self.credentialLoginIdentifier.credential)
     if not registryService then

@@ -1,7 +1,6 @@
 #ifndef AS_IDL
 #define AS_IDL
 
-#include "scs.idl"
 #include "core.idl"
 
 module OpenBus {
@@ -14,10 +13,13 @@ module AS {
 
 typedef Identifier CredentialIdentifier;
 typedef Identifier LoginIdentifier;
+typedef Identifier CredentialObserverIdentifier;
+
+typedef sequence<CredentialIdentifier> CredentialIdentifiers;
 
 struct Credential {
     CredentialIdentifier identifier;
-    string entityName;
+    string memberName;
 };
 
 struct CredentialLoginIdentifier {
@@ -38,11 +40,13 @@ interface AccessControlService {
     boolean isValid (in Credential credential);
     RS::RegistryService getRegistryService (in Credential credential);
     boolean setRegistryService (in Credential credential, in RS::RegistryService registryService);
-    void addObserver(in CredentialManagerObserver observer);
-    void removeObserver(in CredentialManagerObserver observer);
+    CredentialObserverIdentifier addObserver(in CredentialManagerObserver observer, in CredentialIdentifiers credentialIdentifiers);
+    boolean removeObserver(in CredentialObserverIdentifier identifier);
+    boolean addCredentialToObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);
+    boolean removeCredentialFromObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);
 };
 
-interface AccessControlServiceComponent : SCS::IComponent {
+interface AccessControlServiceComponent : Member {
 };
 
 };

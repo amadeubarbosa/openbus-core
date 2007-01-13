@@ -1,5 +1,6 @@
 RegistryServerConfiguration{
-    accessControlServerHostName = "bica.tecgraf.puc-rio.br",
+    accessControlServerHostName = "localhost",
     accessControlServerHostPort = 2089,
     accessControlServerKey = "ACS",
+    oilVerboseLevel = 3,
 }

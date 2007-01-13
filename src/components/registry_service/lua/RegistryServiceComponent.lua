@@ -1,15 +1,16 @@
-require "IComponent"
+require "OOP"
+
+require "Member"
 
 require "RegistryService"
 
-RegistryServiceComponent = createClass(IComponent)
+RegistryServiceComponent = createClass(Member)
 
 function RegistryServiceComponent:startup()
     local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
     if accessControlServiceComponent:_non_existent() then
         error{"IDL:SCS/StartupFailed:1.0"}
     end
-
     local accessControlServiceInterface = "IDL:OpenBus/AS/AccessControlService:1.0"
     self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
     self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
