@@ -1,3 +1,5 @@
+require "oil"
+
 require "uuid"
 
 require "OOP"
@@ -14,7 +16,8 @@ function SessionService:createSession(credential)
     if self.sessions[credential.identifier] then
         return self.sessions[credential.identifier]
     end
-    local session = { identifier = self:generateIdentifier() }
+    local session = Session:new{identifier = self:generateIdentifier()}
+    session = oil.newobject(session, "IDL:OpenBus/SS/Session:1.0")
     self.sessions[credential.identifier] = session
     return session
 end
