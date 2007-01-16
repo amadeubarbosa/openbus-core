@@ -97,7 +97,9 @@ function wrapFunctions(...)
 		testFunction = _G[testName]
 		testClass[testName] = testFunction
 	end
-	table.foreachi( arg, storeAsMethod )
+        for i, v in ipairs(arg) do
+	        storeAsMethod(i, v)
+        end
 	return testClass
 end
 
@@ -192,7 +194,9 @@ UnitResult = { -- class
 		if table.getn( self.errorList ) == 0 then return end
 		print("Failed tests:")
 		print("-------------")
-		table.foreachi( self.errorList, self.displayOneFailedTest )
+                for i, v in ipairs(self.errorList) do
+                        self:displayOneFailedTest(v)
+                end
 		print()
 	end
 
@@ -359,11 +363,15 @@ LuaUnit = {
 		--
 		-- If arguments are passed, they must be strings of the class names 
 		-- that you want to run
-		if arg.n > 0 then
-			table.foreachi( arg, LuaUnit.runTestClassByName )
+		if #arg > 0 then
+                       for i, v in ipairs(arg) do
+			   LuaUnit:runTestClassByName(v)
+                       end
 		else 
 			if argv and #argv > 0 then
-				table.foreachi(argv, LuaUnit.runTestClassByName )
+                                for i, v in ipairs(argv) do
+				        LuaUnit:runTestClassByName(v)
+                                end
 			else
 				-- create the list before. If you do not do it now, you
 				-- get undefined result because you modify _G while iterating
