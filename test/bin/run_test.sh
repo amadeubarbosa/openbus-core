@@ -2,6 +2,6 @@
 
 source config.sh
 
-setenv LUA_PATH "${LUA_PATH};${CORE_DIR}/?.lua;${ACCESS_CONTROL_SERVICE_DIR}/?.lua;"
+setenv LUA_PATH "${LUA_PATH};${CORE_DIR}/?.lua"
 
 lua $*

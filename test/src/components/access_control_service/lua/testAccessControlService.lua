@@ -30,12 +30,13 @@ assertNotNil(accessControlService)
 accessControlService = accessControlServiceComponent:getFacetByName("accessControlService")
 accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
 
+
 TestAccessControlService1 = {}
 
 function TestAccessControlService1:testLoginByPassword()
     local credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
     local credentialLoginIdentifier2 = accessControlService:loginByPassword(user, password)
-    assertEquals(credentialLoginIdentifier.credential.identifier, credentialLoginIdentifier2.credential.identifier)
+    assertNotEquals(credentialLoginIdentifier.credential.identifier, credentialLoginIdentifier2.credential.identifier)
     assertNotEquals(credentialLoginIdentifier.loginIdentifier, credentialLoginIdentifier2.loginIdentifier)
     accessControlService:logout(credentialLoginIdentifier.loginIdentifier)
     accessControlService:logout(credentialLoginIdentifier2.loginIdentifier)
@@ -60,7 +61,7 @@ end
 
 function TestAccessControlService2:testIsValid()
     assertTrue(accessControlService:isValid(self.credentialLoginIdentifier.credential))
-    assertFalse(accessControlService:isValid({entityName=user, identifier = "123"}))
+    assertFalse(accessControlService:isValid({memberName=user, identifier = "123"}))
     accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
     assertFalse(accessControlService:isValid(self.credentialLoginIdentifier.credential))
 end

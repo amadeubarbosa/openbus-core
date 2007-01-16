@@ -2,6 +2,8 @@ require "luaunit"
 
 require "oil"
 
+require "Member"
+
 if #arg ~= 3 then
     print("Parametros invalidos !!!")
     print("Use testRegistryServer.lua <access_control_server_host> <user> <password>")
@@ -26,5 +28,27 @@ local accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus
 accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
 
 TestRegistryService = {}
+
+function TestRegistryService:setUp()
+    self.credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
+    self.registryService = accessControlService:getRegistryService(self.credentialLoginIdentifier.credential)
+end
+
+function TestRegistryService:tearDown()
+    accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+    self.credentialLoginIdentifier = nil
+end
+
+function TestRegistryService:testRegister1()
+    local member = Member:new{name = "Membro Mock"}
+    member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+    assertEquals("", self.registryService:register({identifier = "", memberName = "", }, {description = "", type = "", member = member, }))
+end
+
+function TestRegistryService:testRegister2()
+    local member = Member:new{name = "Membro Mock"}
+    member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+    assertNotEquals("", self.registryService:register(self.credentialLoginIdentifier.credential, {description = "", type = "", member = member, }))
+end
 
 LuaUnit:run("TestRegistryService")

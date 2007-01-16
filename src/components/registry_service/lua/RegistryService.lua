@@ -25,7 +25,7 @@ function RegistryService:addEntry(identifier, entry)
         self.identifiersByType[entry.serviceOffer.type] = {}
     end
     self.identifiersByType[entry.serviceOffer.type][identifier] = true
-    local facetDescriptions = entry.serviceOffer.metaInterface:getFacets()
+    local facetDescriptions = entry.serviceOffer.member:getFacets()
     for _, facetDescription in ipairs(facetDescriptions) do
         if not self.identifiersByFacet[facetDescription.interface_name] then
             self.identifiersByFacet[facetDescription.interface_name] = {}
