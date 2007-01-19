@@ -7,27 +7,19 @@ AccessControlService = createClass()
 
 AccessControlService.invalidCredential = {identifier = "", memberName = ""}
 AccessControlService.invalidLoginIdentifier = ""
+
 AccessControlService.entriesByName = {}
-AccessControlService.entriesByIdentifier = {}
-AccessControlService.observers = {}
+AccessControlService.entriesByLoginIdentifier = {}
 
-function AccessControlService:loginByCertificate(name, answer)
-    if name ~= "RegistryService" and name ~= "SessionService" then
-        return {credential = self.invalidCredential, loginIdentifier = self.invalidLoginIdentifier}
-    end
+AccessControlService.observersByIdentifier = {}
+AccessControlService.observersByCredentialIdentifier = {}
 
-    local entry = self:addEntry(name)
-    local loginIdentifier = self:addLoginIdentifier(entry)
-    return {credential = entry.credential, loginIdentifier = loginIdentifier}
-end
-
-function AccessControlService:loginByCredential(credential, heart)
+function AccessControlService:loginByCredential(credential)
     if not self:isValid(credential) then
-        return ""
+        return self.invalidLoginIdentifier
     end
     local entry = self.entriesByName[credential.memberName]
     local loginIdentifier = self:addLoginIdentifier(entry)
-    entry.heartsByIdentifier[loginIdentifier] = heart
     return loginIdentifier
 end
 
@@ -42,37 +34,35 @@ function AccessControlService:loginByPassword(name, password)
     return {credential = entry.credential, loginIdentifier = loginIdentifier}
 end
 
-function AccessControlService:logout(identifier)
-    local entry = self.entriesByIdentifier[identifier]
+function AccessControlService:loginByCertificate(name, answer)
+    if name ~= "RegistryService" and name ~= "SessionService" then
+        return {credential = self.invalidCredential, loginIdentifier = self.invalidLoginIdentifier}
+    end
+    local entry = self:addEntry(name)
+    local loginIdentifier = self:addLoginIdentifier(entry)
+    return {credential = entry.credential, loginIdentifier = loginIdentifier}
+end
+
+function AccessControlService:getToken(name)
+    return ""
+end
+
+function AccessControlService:logout(loginIdentifier)
+    local entry = self.entriesByLoginIdentifier[loginIdentifier]
     if not entry then
         return false
     end
-    self.entriesByIdentifier[identifier] = nil
-
+    self.entriesByLoginIdentifier[loginIdentifier] = nil
     local index
     for bufferedIndex, bufferedIdentifier in ipairs(entry.identifiers) do
-        if identifier == bufferedIdentifier then
+        if loginIdentifier == bufferedIdentifier then
             index = bufferedIndex
             break
         end
     end
     table.remove(entry.identifiers, index)
     if #entry.identifiers == 0 then
-        self.entriesByName[entry.credential.memberName] = nil
-        return true
-    end
-
-    if index == 1 then
-        for _, bufferedIdentifier in ipairs(entry.identifiers) do
-            local heart = entry.heartsByIdentifier[bufferedIdentifier]
-            if heart then
-                heart.start(self.beatTime)
-                heartsByIdentifier[bufferedIdentifier] = nil
-                break
-            end
-        end
-    else
-        entry.heartsByIdentifier[identifier] = nil
+        self:removeEntry(entry)
     end
     return true
 end
@@ -88,6 +78,13 @@ function AccessControlService:isValid(credential)
     return true
 end
 
+function AccessControlService:getRegistryService(credential)
+    if not self:isValid(credential) then
+        return nil
+    end
+    return self.registryService
+end
+
 function AccessControlService:setRegistryService(credential, registryService)
     if self:isValid(credential) and credential.memberName == "RegistryService" then
         self.registryService = registryService
@@ -96,11 +93,61 @@ function AccessControlService:setRegistryService(credential, registryService)
     return false
 end
 
-function AccessControlService:getRegistryService(credential)
-    if not self:isValid(credential) then
-        return nil
+function AccessControlService:addObserver(observer, credentialIdentifiers)
+    local observerIdentifier = self:generateCredentialObserverIdentifier()
+    self.observersByIdentifier[observerIdentifier] = {observer = observer, identifier = observerIdentifier, credentialIdentifiers = {}}
+    for _, credentialIdentifier in ipairs(credentialIdentifiers) do
+        self:addCredentialToObserver(observerIdentifier, credentialIdentifier)
     end
-    return self.registryService
+    return observerIdentifier
+end
+
+function AccessControlService:removeObserver(observerIdentifier)
+    local observerEntry = self.observersByIdentifier[observerIdentifier]
+    if not observerEntry then
+        return false
+    end
+    for _, credentialIdentifier in ipairs(observerEntry.credentialIdentifiers) do
+        self:removeCredentialFromObserver(observerIdentifier, credentialIdentifier)
+    end
+    self.observersByIdentifier[observerIdentifier] = nil
+    return true
+end
+
+function AccessControlService:addCredentialToObserver(observerIdentifier, credentialIdentifier)
+    local observerEntry = self.observersByIdentifier[observerIdentifier]
+    if not observerEntry then
+        return false
+    end
+    table.insert(observerEntry.credentialIdentifiers, credentialIdentifier)
+    if not self.observersByCredentialIdentifier[credentialIdentifier] then
+        self.observersByCredentialIdentifier[credentialIdentifier] = {}
+    end
+    table.insert(self.observersByCredentialIdentifier[credentialIdentifier], observer)
+    return true
+end
+
+function AccessControlService:removeCredentialFromObserver(observerIdentifier, credentialIdentifier)
+    local observerEntry = self.observersByIdentifier[observerIdentifier]
+    if not observerEntry then
+        return false
+    end
+    local credentialIdentifierIndex
+    for i, bufferedCredentialIdentifier in ipairs(observerEntry.credentialIdentifiers) do
+        if bufferedCredentialIdentifier == credentialIdentifier then
+            credentialIdentifierIndex = i
+            break
+        end
+    end
+    table.remove(observerEntry.credentialIdentifiers, credentialIdentifierIndex)
+    local observerIndex
+    for i, observer in ipairs(self.observersByCredentialIdentifier[credentialIdentifier]) do
+        if observer.identifier == observerIdentifier then
+            observerIndex = i
+        end
+    end
+    table.remove(self.observersByCredentialIdentifier[credentialIdentifier], observerIndex)
+    return true
 end
 
 function AccessControlService:beat(credential)
@@ -112,24 +159,16 @@ function AccessControlService:beat(credential)
     return true
 end
 
-function AccessControlService:addObserver(observer)
-    self.observers[observer] = true
-end
-
-function AccessControlService:removeObserver(observer)
-    self.observers[observer] = nil
-end
-
 function AccessControlService:addEntry(name)
     local credential = {identifier = self:generateCredentialIdentifier(), memberName = name}
-    entry = {credential = credential, time = os.time(), identifiers = {}, heartsByIdentifier = {}}
+    entry = {credential = credential, time = os.time(), identifiers = {}}
     self.entriesByName[name] = entry
     return entry
 end
 
 function AccessControlService:addLoginIdentifier(entry)
     local loginIdentifier = self:generateLoginIdentifier()
-    self.entriesByIdentifier[loginIdentifier] = entry
+    self.entriesByLoginIdentifier[loginIdentifier] = entry
     table.insert(entry.identifiers, loginIdentifier)
     return loginIdentifier
 end
@@ -142,21 +181,32 @@ function AccessControlService:generateLoginIdentifier()
     return uuid.new("time")
 end
 
+function AccessControlService:generateCredentialObserverIdentifier()
+    return uuid.new("time")
+end
+
 function AccessControlService:removeDeadCredentials()
-    for memberName, entry in pairs(self.entriesByName) do
+    for _, entry in pairs(self.entriesByName) do
         if (entry.time + beatTime) < os.time() then
-            self.entriesByName[memberName] = nil
-            for _, identifier in ipairs(entry.identifiers) do
-                self.credentialsByIdentifier[identifier] = nil
-            end
+            self:removeEntry(entry)
         end
     end
 end
 
+function AccessControlService:removeEntry(entry)
+    for _, loginIdentifier in ipairs(entry.identifiers) do
+        self.entriesByLoginIdentifiers[loginIdentifier] = nil
+    end
+    self.entriesByName[entry.credential.memberName] = nil
+    self:notifyCredentialWasDeleted(entry.credential)
+end
+
 function AccessControlService:notifyCredentialWasDeleted(credential)
-    for observer, valid in pairs(self.observers) do
-        if valid then
-            observer:credentialWasDeleted(credential)
-        end
+    local observers = self.observersByCredentialIdentifier[credential.identifier]
+    if not observers then
+        return
+    end
+    for observer in pairs(observers) do
+        observer:credentialWasDeleted(credential)
     end
 end

@@ -10,15 +10,13 @@ function AccessControlServiceComponent:startup()
     local accessControlService = AccessControlService:new{
         ldapHost = self.ldapHost,
     }
-    local accessControlServiceInterface = "IDL:OpenBus/AS/AccessControlService:1.0"
 
+    local accessControlServiceInterface = "IDL:OpenBus/AS/AccessControlService:1.0"
     accessControlService = oil.newobject(accessControlService, accessControlServiceInterface)
 
-    self.facets[accessControlServiceInterface] = accessControlService
-    self.facetsByName["accessControlService"] = accessControlService
+    self:addFacet("accessControlService", accessControlServiceInterface, accessControlService)
 end
 
 function AccessControlServiceComponent:shutdown()
-    self.facets = {}
-    self.facetsByName = {}
+    self:removeFacets()
 end

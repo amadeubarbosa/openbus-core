@@ -45,7 +45,43 @@ end
 function TestRegistryService:testRegister2()
   local member = Member:new{name = "Membro Mock"}
   member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
-  assertNotEquals("", self.registryService:register(self.credentialLoginIdentifier.credential, {description = "", type = "", member = member, }))
+  local registryIdentifier = self.registryService:register(self.credentialLoginIdentifier.credential, {description = "", type = "", member = member, })
+  assertNotEquals("", registryIdentifier)
+  self.registryService:unregister(registryIdentifier)
+end
+
+function TestRegistryService:testUnregister()
+  local member = Member:new{name = "Membro Mock"}
+  member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+  local registryIdentifier = self.registryService:register(self.credentialLoginIdentifier.credential, {description = "", type = "", member = member, })
+  assertNotEquals("", registryIdentifier)
+  assertTrue(self.registryService:unregister(registryIdentifier))
+  assertFalse(self.registryService:unregister(registryIdentifier))
+end
+
+function TestRegistryService:testFind()
+  local member = Member:new{name = "Membro Mock"}
+  member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+  local registryIdentifier = self.registryService:register(self.credentialLoginIdentifier.credential, {description = "", type = "X", member = member, })
+  assertNotEquals("", registryIdentifier)
+  local members = self.registryService:find({ { name = "type", value= "X", }, })
+  assertNotEquals(0, #members)
+  members = self.registryService:find({ { name = "type", value= "Y", }, })
+  assertEquals(0, #members)
+  self.registryService:unregister(registryIdentifier)
+end
+
+function TestRegistryService:testRefresh()
+  local member = Member:new{name = "Membro Mock"}
+  member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+  local serviceOffer = {description = "", type = "X", member = member, }
+  assertFalse(self.registryService:refresh("", serviceOffer))
+  local registryIdentifier = self.registryService:register(self.credentialLoginIdentifier.credential, serviceOffer)
+  serviceOffer.type = "Y"
+  assertTrue(self.registryService:refresh(registryIdentifier, serviceOffer))
+  local members = self.registryService:find({ { name = "type", value= "Y", }, })
+  assertEquals(members[1]:getName(), member:getName())
+  self.registryService:unregister(registryIdentifier)
 end
 
 function main()

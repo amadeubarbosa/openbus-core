@@ -33,6 +33,7 @@ local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
 oil.loadidlfile (idlfile)
 
 local sessionServiceComponent = SessionServiceComponent:new{
+    name = "SessionService",
     accessControlServerHost = serverConfiguration.accessControlServerHost,
     accessControlServerKey = serverConfiguration.accessControlServerKey,
 }

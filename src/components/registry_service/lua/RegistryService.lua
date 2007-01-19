@@ -50,7 +50,7 @@ end
 function RegistryService:removeEntry(identifier, entry)
     self.entries[identifier] = nil
     self.identifiersByType[entry.serviceOffer.type][identifier] = nil
-    local facetDescriptions = entry.serviceOffer.metaInterface:getFacets()
+    local facetDescriptions = entry.serviceOffer.member:getFacets()
     for _, facetDescription in ipairs(facetDescriptions) do
         self.identifiersByFacet[facetDescription.interface_name][identifier] = nil
     end
@@ -70,7 +70,7 @@ end
 function RegistryService:find(criteria)
     local typeValue
     local facets = {}
-    for i, criterion in ipairs(criteria) do
+    for _, criterion in ipairs(criteria) do
         if criterion.name == "type" then
             typeValue = criterion.value
         elseif criterion.name == "facet" then
@@ -87,9 +87,11 @@ function RegistryService:find(criteria)
             end
         end
     end
-    local metaInterfaces = {}
-    table.insert(self.entries[identifier].serviceOffer.metaInterface)
-    return metaInterfaces
+    local members = {}
+    for _, identifier in ipairs(identifiers) do
+        table.insert(members, self.entries[identifier].serviceOffer.member)
+    end
+    return members
 end
 
 function RegistryService:credentialWasDeleted(credential)
@@ -97,5 +99,17 @@ function RegistryService:credentialWasDeleted(credential)
         if entry.credential == credential then
             self:unregister(identifier)
         end
+    end
+end
+
+function RegistryService:deleteOffersFromCredential(credential)
+    local identifiers = {}
+    for identifier, entry in pairs(self.entries) do
+        if entry.credential == credential then
+            table.insert(identifiers, identifier)
+        end
+    end
+    for _, identifier in ipairs(identifiers) do
+        self:unregister(identifier)
     end
 end

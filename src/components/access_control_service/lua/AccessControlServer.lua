@@ -36,6 +36,7 @@ oil.loadidlfile (idlfile)
 oil.init{host = serverConfiguration.hostName, port = serverConfiguration.hostPort,}
 
 local accessControlServiceComponent = AccessControlServiceComponent:new{
+    name = "AccessControlService",
     ldapHost = serverConfiguration.ldapHost,
 }
 

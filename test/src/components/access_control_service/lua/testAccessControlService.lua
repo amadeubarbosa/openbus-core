@@ -15,6 +15,7 @@ if CORBA_IDL_DIR == nil then
 end
 local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
+oil.verbose.level(3)
 oil.loadidlfile(idlfile)
 
 local host = arg[1]
@@ -22,14 +23,8 @@ local user = arg[2]
 local password = arg[3]
 
 local accessControlServiceComponent = oil.newproxy("corbaloc::"..host.."/ACS", "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
-
 local accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
 accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
-assertNotNil(accessControlService)
-
-accessControlService = accessControlServiceComponent:getFacetByName("accessControlService")
-accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
-
 
 TestAccessControlService1 = {}
 
@@ -70,5 +65,17 @@ function TestAccessControlService2:testGetRegistryService()
     assertNil(accessControlService:getRegistryService(self.credentialLoginIdentifier.credential))
 end
 
-LuaUnit:run("TestAccessControlService1")
-LuaUnit:run("TestAccessControlService2")
+function TestAccessControlService2:testObservers()
+    local credentialObserver = { credential = self.credentialLoginIdentifier.credential}
+    function credentialObserver:credentialWasDeleted(credential)
+        assertEquals(self.credential, credential)
+    end
+    credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/AS/CredentialObserver:1.0")
+    local observerIdentifier = accessControlService:addObserver(credentialObserver, {self.credentialLoginIdentifier.credential.identifier,})
+    assertNotEquals("", observerIdentifier)
+    accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+    assertTrue(accessControlService:removeObserver(observerIdentifier))
+    assertFalse(accessControlService:removeObserver(observerIdentifier))
+end
+
+LuaUnit:run("TestAccessControlService1", "TestAccessControlService2")

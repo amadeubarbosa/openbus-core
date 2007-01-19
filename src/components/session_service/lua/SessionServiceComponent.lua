@@ -16,15 +16,12 @@ function SessionServiceComponent:startup()
     self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
     local sessionServiceInterface = "IDL:OpenBus/SS/SessionService:1.0"
-    local sessionServiceName = "sessionService"
     local sessionService = SessionService:new{
         accessControlService = self.accessControlService
     }
     sessionService = oil.newobject(sessionService, sessionServiceInterface)
 
-    self.facets[sessionServiceInterface] = sessionService
-    self.facetsByName[sessionServiceName] = sessionService
-    self.facetDescriptionsByName[sessionServiceName] = {name = sessionServiceName, interface_name = sessionServiceInterface, facet_ref = sessionService}
+    self:addFacet("sessionService", sessionServiceInterface, sessionService)
 
     self.credentialLoginIdentifier = self.accessControlService:loginByCertificate("SessionService", "")
     local serviceOffer = {
@@ -47,7 +44,6 @@ function SessionServiceComponent:shutdown()
     registryService:unregister(self.registryIdentifier)
     self.accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
     self.accessControlService = nil
-    self.facets = {}
-    self.facetsByName = {}
-    self.facetDescriptionsByName = {}
+
+    self:removeFacets()
 end

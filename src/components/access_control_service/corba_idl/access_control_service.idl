@@ -27,20 +27,20 @@ struct CredentialLoginIdentifier {
     LoginIdentifier loginIdentifier;
 };
 
-interface CredentialManagerObserver {
+interface CredentialObserver {
     void credentialWasDeleted(in Credential credential);
 };
 
 interface AccessControlService {
     LoginIdentifier loginByCredential (in Credential credential);
     CredentialLoginIdentifier loginByPassword (in string name, in string password);
-    string getToken(in string name);
     CredentialLoginIdentifier loginByCertificate (in string name, in string answer);
+    string getToken(in string name);
     boolean logout (in LoginIdentifier identifier);
     boolean isValid (in Credential credential);
     RS::RegistryService getRegistryService (in Credential credential);
     boolean setRegistryService (in Credential credential, in RS::RegistryService registryService);
-    CredentialObserverIdentifier addObserver(in CredentialManagerObserver observer, in CredentialIdentifiers credentialIdentifiers);
+    CredentialObserverIdentifier addObserver(in CredentialObserver observer, in CredentialIdentifiers credentialIdentifiers);
     boolean removeObserver(in CredentialObserverIdentifier identifier);
     boolean addCredentialToObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);
     boolean removeCredentialFromObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);

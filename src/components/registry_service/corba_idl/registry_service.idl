@@ -24,8 +24,8 @@ typedef Identifier RegistryIdentifier;
 
 interface RegistryService {
     RegistryIdentifier register(in AS::Credential credential, in ServiceOffer serviceOffer);
-    void unregister(in RegistryIdentifier identifier);
-    void refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
+    boolean unregister(in RegistryIdentifier identifier);
+    boolean refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
     Members find (in Criteria criteria);
 };
 

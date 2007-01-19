@@ -32,6 +32,7 @@ local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile (idlfile)
 
 local registryServiceComponent = RegistryServiceComponent:new{
+    name = "RegistryService",
     accessControlServerHost = serverConfiguration.accessControlServerHost,
     accessControlServerKey = serverConfiguration.accessControlServerKey,
 }

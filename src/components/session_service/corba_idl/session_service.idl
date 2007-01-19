@@ -27,7 +27,7 @@ interface SessionService {
     Sessions getSessions(in string memberName);
 };
 
-interface SessionServiceComponent : Member{
+interface SessionServiceComponent : Member {
 };
 
 };
