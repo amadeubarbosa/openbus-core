@@ -34,4 +34,4 @@ clean:
 reinstall:	clean	install
 
 doc:
-	(cd docs/idl; doxygen openbus.dox)
+	cd docs/idl; doxygen openbus.dox
