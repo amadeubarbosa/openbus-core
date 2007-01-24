@@ -32,3 +32,6 @@ clean:
 	rm -rf $(INSTALL_DIR)
 
 reinstall:	clean	install
+
+doc:
+	(cd docs/idl; doxygen openbus.dox)

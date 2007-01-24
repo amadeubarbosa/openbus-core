@@ -8,7 +8,7 @@ openbus.pdf : *.tex figs/*.pdf
 	@$(LATEX) openbus.tex
 
 clean:
-	@rm -f *.swp *.log *.aux *.bbl *.blg >& /dev/null
+	@rm -f *.swp *.log *.aux *.bbl *.blg
 
 clobber: clean
 	@-rm openbus.pdf
