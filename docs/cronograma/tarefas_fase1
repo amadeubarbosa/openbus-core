@@ -1,0 +1,105 @@
+FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
+-----------------------------------------
+
+DOCUMENTAÇÂO DO PROTÒTIPO (FASE 1)
+==================================
+
+- Descrever a arquitetura e funcionalidade dos serviços básicos, a funcionalidade
+  comum a serviços de dados, e elaborar casos de uso.
+
+INFRAESTRUTURA BÁSICA (dependente, em parte, de recursos externos)
+=====================
+
+- Implementação do SCS (funcionalidade básica IComponent, IMetaInterface)
+    - Java
+    - C++
+    - Lua
+
+- Implementação da biblioteca Lua para openSSL
+
+- Tutorial LOOP?
+
+- Implementação (complementação) de PI para o OiL
+
+MECANISMO DE INTERCEPTADORES PARA "autenticação" e "autorização"
+==================================================================
+
+- Mecanismo de interceptador no cliente:
+    - definição do mecanismo de interceptação para inclusão da credencial no contexto
+      da requisição
+
+- Mecanismo de interceptador nos serviços:
+    - definição do mecanismo de interceptação para:
+        -> obtenção e validação da credencial
+        -> repasse da credencial para "Current" (thread de invocação do serviço)
+
+MECANISMO DE LEASING
+====================
+
+- Definição do mecanismo de leasing (cliente/renovador e servidor/mantenedor)
+
+SERVIÇO DE ACESSO
+=================
+
+- Incorporar o mecanismo de leasing
+- Mecanismo de persistência de credenciais
+- Alterar interface e implementação para compatibilizar com uso de sessões
+- Incorporar a biblioteca (Lua) do openSSL
+- Mecanismo de cadastro e persistencia de certificados
+- Incorporar interceptadores (para operações getRegistryService e logout)
+- Documentação
+
+SERVIÇO DE REGISTRO
+===================
+
+- Mecanismo de persistência de ofertas de serviço
+- Preparar o repositório de ofertas para permitir o uso de um BD
+- Incorporar interceptadores
+- Documentação
+
+SERVIÇO DE SESSÂO
+=================
+
+- Redefinição (ampliação) da interface do serviço
+- Incorporar mecanismo de leasing (cliente/servidor)
+- Manutenção de sessão + credencial
+- Definição e implementação do mecanismo de troca de mensagens entre membros de sessão
+- Documentação
+
+SERVIÇO DE PROJETOS
+===================
+
+- Definir a IDL básica de um serviço de dados
+- Definir a IDL do serviço de projetos
+
+- Implementação:
+   - procedimento comum a todos os serviços: autenticação (+leasing credencial)
+                                             exportação do serviço
+                                             incorporação de interceptadores
+
+   - implementação do serviço propriamente dito (JAVA/CSBASE)
+
+CLIENTES BÀSICOS
+================
+
+- Procedimento comum a todos os clientes: autenticação
+                                          incorporação de interceptadores
+                                          importação de oferta de serviço
+
+- Teste de uso do serviço de dados sem uso de sessão
+    - C++, JAVA, LUA? 
+
+- Procedimento de criação/formação de sessão envolvendo múltiplos clientes
+- Teste de uso do serviço de dados com uso de sessão
+    - C++, JAVA, LUA? 
+
+
+CRIAÇÂO DE BIBLIOTECAS
+======================
+
+- Construir bibliotecas para clientes: C++, Java, Lua(?)
+   - procedimento comum a todos os clientes
+   - acesso ao serviço de projetos
+  
+- Construir bibliotecas para serviços: Java, Lua(?)
+    -  procedimento comum a todos os serviços
