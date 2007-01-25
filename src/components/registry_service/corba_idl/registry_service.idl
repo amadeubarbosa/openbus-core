@@ -6,29 +6,80 @@
 
 module OpenBus {
 
+/**
+ * \brief Módulo do Serviço de Registro.
+ */
 module RS {
 
+/**
+ * \brief Representa uma oferta de serviço.
+ */
 struct ServiceOffer {
-    string description;
-    string type;
-    Member member;
+    string description; /**< \brief A descrição do serviço. */
+    string type; /**< \brief O tipo do serviço. */
+    Member member; /**< \brief O membro que está ofertando o serviço. */
 };
 
-struct Criterion {
-    string name;
-    string value;
-};
-typedef sequence<Criterion> Criteria;
-
+/** \brief O identificador do registro de um serviço. */
 typedef Identifier RegistryIdentifier;
 
+/** \brief Critério para a busca de um serviço. */
+struct Criterion {
+    string name; /**< \brief Nome do critério. */
+    string value; /**< \brief Valor do critério. */
+};
+/** \brief Representa uma sequência de critérios. */
+typedef sequence<Criterion> Criteria;
+
+/**
+ * \brief Representa o serviço de registro.
+ */
 interface RegistryService {
+    /**
+     * \brief Registra uma oferta de serviço.
+     *
+     * \param credential A credencial de quem está registrando a oferta.
+     * \param serviceOffer A oferta de serviço.
+     *
+     * \return Um identificador para o registro.
+     */
     RegistryIdentifier register(in AS::Credential credential, in ServiceOffer serviceOffer);
+    /**
+     * \brief Remove uma oferta de serviço.
+     *
+     * \param identifier O identificador do registro da oferta do serviço.
+     *
+     * \return \c true, caso a oferta de serviço seja removida, ou \c false,
+     * caso contrário.
+     */
     boolean unregister(in RegistryIdentifier identifier);
+    /**
+     * \brief Atualiza uma oferta de serviço.
+     *
+     * \param identifier O identificador do registro da oferta do serviço.
+     * \param serviceOffer A nova oferta de serviço.
+     *
+     * \return \c true, caso a oferta de serviço seja atualizada, ou \c false,
+     * caso contrário.
+     */
     boolean refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
+    /**
+     * \brief Realiza uma busca por membros que satisfaçam um determinado
+     * critério.
+     *
+     * \param criteria O critério da busca.
+     *
+     * \return Os membros encontrados.
+     */
     Members find (in Criteria criteria);
 };
 
+/**
+ * \brief Membro que representa o serviço de registro.
+ *
+ * Facetas:
+ * - RegistryService
+ */
 interface RegistryServiceComponent : Member {
 };
 

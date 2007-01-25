@@ -9,35 +9,81 @@ module RS {
     interface RegistryService;
 };
 
-module AS {
+/**
+ * \brief Módulo do Serviço de Controle de Acesso.
+ */
+module ACS {
 
+/** \brief Representa o identificador de uma credencial. */
 typedef Identifier CredentialIdentifier;
-typedef Identifier LoginIdentifier;
+/** \brief Representa uma sequência de identificadores de credenciais. */
+typedef sequence<CredentialIdentifier> CredentialIdentifiers;
+/** \brief Representa o identificador de um observador de credencial. */
 typedef Identifier CredentialObserverIdentifier;
 
-typedef sequence<CredentialIdentifier> CredentialIdentifiers;
-
+/**
+ * \brief Representa a credencial de um membro.
+ */
 struct Credential {
-    CredentialIdentifier identifier;
-    string memberName;
+    CredentialIdentifier identifier; /**< \brief Identificador único. */
+    string entityName; /**< \brief Nome da entidade. */
 };
 
-struct CredentialLoginIdentifier {
-    Credential credential;
-    LoginIdentifier loginIdentifier;
-};
-
+/**
+ * \brief Representa um observador de credenciais. Esse observador será
+ * notificado quando acontecerem alterações nas credenciais que ele observa.
+ */
 interface CredentialObserver {
+    /**
+     * \brief Notifica que uma credencial foi removida.
+     *
+     * \param credential A credencial que foi removida.
+     */
     void credentialWasDeleted(in Credential credential);
 };
 
+/**
+ * \brief Representa o serviço de controle de acesso.
+ */
 interface AccessControlService {
-    LoginIdentifier loginByCredential (in Credential credential);
-    CredentialLoginIdentifier loginByPassword (in string name, in string password);
-    CredentialLoginIdentifier loginByCertificate (in string name, in string answer);
+    /**
+     * \brief Autentica uma entidade através de um nome e uma senha.
+     *
+     * \param name O nome.
+     * \param password A senha.
+     *
+     * \return Uma credencial para a entidade. Caso a autenticação falhe, será
+     * retornada uma credencial com identificador vazio ("").
+     */
+    Credential loginByPassword (in string name, in string password);
+    Credential loginByCertificate (in string name, in string answer);
     string getToken(in string name);
-    boolean logout (in LoginIdentifier identifier);
+    /**
+     * \brief Efetua o \c logout de uma entidade.
+     *
+     * \param credential A credencial da entidade.
+     *
+     * \return \c true, caso o \c logout seja realizado, ou \c false, caso
+     * contrário.
+     */
+    boolean logout (in Credential credential);
+    /**
+     * \brief Verifica se uma determinada credencial está válida.
+     *
+     * \param credential A credencial.
+     *
+     * \return \c true, caso a credencial esteja válida, ou \c false, caso
+     * contrário.
+     */
     boolean isValid (in Credential credential);
+    /**
+     * \brief Obtém o serviço de registro.
+     *
+     * \param credential A credencial de quem está solicitando o serviço.
+     *
+     * \return O serviço de registro ou \c nil, caso a credencial esteja
+     * inválida.
+     */
     RS::RegistryService getRegistryService (in Credential credential);
     boolean setRegistryService (in Credential credential, in RS::RegistryService registryService);
     CredentialObserverIdentifier addObserver(in CredentialObserver observer, in CredentialIdentifiers credentialIdentifiers);
@@ -46,6 +92,12 @@ interface AccessControlService {
     boolean removeCredentialFromObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);
 };
 
+/**
+ * \brief Membro que representa o serviço de controle de acesso.
+ * 
+ * Facetas:
+ * - AccessControlService
+ */
 interface AccessControlServiceComponent : Member {
 };
 

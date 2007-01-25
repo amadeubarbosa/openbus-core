@@ -6,27 +6,64 @@
 
 module OpenBus {
 
+/**
+ * \brief Módulo do Serviço de Sessão.
+ */
 module SS {
 
+/** \brief Representa o identificador de uma sessão. */
 typedef Identifier SessionIdentifier;
+/** \brief Representa o identificador do membro de uma sessão. */
 typedef Identifier MemberIdentifier;
 
+/**
+ * \brief Representa uma sessão.
+ */
 interface Session {
+    /**
+     * \brief Obtém o identificador da sessão.
+     *
+     * \return O identificador da sessão.
+     */
     SessionIdentifier getIdentifier();
+    /**
+     * \brief Adiciona um membro à sessão.
+     *
+     * \param member O membro.
+     *
+     * \return O identificador do membro.
+     */
     MemberIdentifier addMember(in Member member);
     boolean removeMember(in MemberIdentifier memberIdentifier);
     Member getMember(in string memberName);
     Members getMembers();
 };
+/** \brief Representa uma sequência de sessões. */
 typedef sequence<Session> Sessions;
 
+/**
+ * \brief Representa o serviço de sessão.
+ */
 interface SessionService {
+    /**
+     * \brief Cria uma sessão.
+     *
+     * \param credential A credencial associada à sessão.
+     *
+     * \return A sessão criada ou \c nil, caso a credencial esteja inválida.
+     */
     Session createSession(in AS::Credential credential);
     boolean removeSession(in AS::Credential credential);
     Session getSession(in AS::Credential credential);
     Sessions getSessions(in string memberName);
 };
 
+/**
+ * \brief Membro que representa o serviço de sessão.
+ *
+ * Facetas:
+ * - SessionService
+ */
 interface SessionServiceComponent : Member {
 };
 

@@ -18,7 +18,7 @@ install:
 	mkdir -p $(CONF_DIR)
 	cp `find conf -name '*.lua'` $(CONF_DIR)
 	mkdir -p $(CORBA_IDL_DIR)
-	cp `find . -name '*.idl'` $(CORBA_IDL_DIR)
+	cp `find src -name '*.idl'` $(CORBA_IDL_DIR)
 	mkdir -p $(CORE_DIR)
 	cp `find src/core -name '*.lua'` $(CORE_DIR)
 	mkdir -p $(ACCESS_CONTROL_SERVICE_DIR)

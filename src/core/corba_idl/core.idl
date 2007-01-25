@@ -1,15 +1,32 @@
+/**
+ * \mainpage Documentação da IDL
+ */
 #ifndef CORE_IDL
 #define CORE_IDL
 
 #include "scs.idl"
 
+/**
+ * \brief Módulo principal
+ */
 module OpenBus {
+    /** \brief Representa um identificador universalmente único. */
     typedef string UUID;
+    /** \brief Representa um identificador único. */
     typedef UUID Identifier;
 
+    /**
+     * \brief Representa um membro do OpenBus.
+     */
     interface Member : SCS::IComponent, SCS::IMetaInterface {
+        /**
+         * Obtém o nome do membro.
+         *
+         * \return O nome do membro.
+         */
         string getName();
     };
+    /** \brief Representa uma sequência de membros. */
     typedef sequence<Member> Members;
 };
 
