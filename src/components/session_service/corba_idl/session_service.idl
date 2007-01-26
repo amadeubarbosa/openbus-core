@@ -52,9 +52,9 @@ interface SessionService {
      *
      * \return A sessão criada ou \c nil, caso a credencial esteja inválida.
      */
-    Session createSession(in AS::Credential credential);
-    boolean removeSession(in AS::Credential credential);
-    Session getSession(in AS::Credential credential);
+    Session createSession(in ACS::Credential credential);
+    boolean removeSession(in ACS::Credential credential);
+    Session getSession(in ACS::Credential credential);
     Sessions getSessions(in string memberName);
 };
 

@@ -5,70 +5,46 @@ require "OOP"
 
 AccessControlService = createClass()
 
-AccessControlService.invalidCredential = {identifier = "", memberName = ""}
-AccessControlService.invalidLoginIdentifier = ""
+AccessControlService.invalidCredential = {identifier = "", entityName = ""}
 
 AccessControlService.entriesByName = {}
-AccessControlService.entriesByLoginIdentifier = {}
 
 AccessControlService.observersByIdentifier = {}
 AccessControlService.observersByCredentialIdentifier = {}
 
-function AccessControlService:loginByCredential(credential)
-    if not self:isValid(credential) then
-        return self.invalidLoginIdentifier
-    end
-    local entry = self.entriesByName[credential.memberName]
-    local loginIdentifier = self:addLoginIdentifier(entry)
-    return loginIdentifier
-end
-
 function AccessControlService:loginByPassword(name, password)
     local connection, errorMessage = lualdap.open_simple(self.ldapHost, name, password, false)
     if not connection then
-        return {credential = self.invalidCredential, loginIdentifier = self.invalidLoginIdentifier}
+        return self.invalidCredential
     end
     connection:close()
     local entry = self:addEntry(name)
-    local loginIdentifier = self:addLoginIdentifier(entry)
-    return {credential = entry.credential, loginIdentifier = loginIdentifier}
+    return entry.credential
 end
 
 function AccessControlService:loginByCertificate(name, answer)
     if name ~= "RegistryService" and name ~= "SessionService" then
-        return {credential = self.invalidCredential, loginIdentifier = self.invalidLoginIdentifier}
+        return self.invalidCredential
     end
     local entry = self:addEntry(name)
-    local loginIdentifier = self:addLoginIdentifier(entry)
-    return {credential = entry.credential, loginIdentifier = loginIdentifier}
+    return entry.credential
 end
 
 function AccessControlService:getToken(name)
     return ""
 end
 
-function AccessControlService:logout(loginIdentifier)
-    local entry = self.entriesByLoginIdentifier[loginIdentifier]
+function AccessControlService:logout(credential)
+    local entry = self.entriesByName[credential.entityName]
     if not entry then
         return false
     end
-    self.entriesByLoginIdentifier[loginIdentifier] = nil
-    local index
-    for bufferedIndex, bufferedIdentifier in ipairs(entry.identifiers) do
-        if loginIdentifier == bufferedIdentifier then
-            index = bufferedIndex
-            break
-        end
-    end
-    table.remove(entry.identifiers, index)
-    if #entry.identifiers == 0 then
-        self:removeEntry(entry)
-    end
+    self:removeEntry(entry)
     return true
 end
 
 function AccessControlService:isValid(credential)
-    local entry = self.entriesByName[credential.memberName]
+    local entry = self.entriesByName[credential.entityName]
     if not entry then
         return false
     end
@@ -86,7 +62,7 @@ function AccessControlService:getRegistryService(credential)
 end
 
 function AccessControlService:setRegistryService(credential, registryService)
-    if self:isValid(credential) and credential.memberName == "RegistryService" then
+    if self:isValid(credential) and credential.entityName == "RegistryService" then
         self.registryService = registryService
         return true
     end
@@ -150,34 +126,14 @@ function AccessControlService:removeCredentialFromObserver(observerIdentifier, c
     return true
 end
 
-function AccessControlService:beat(credential)
-    local entry = self.entriesByName[credential.memberName]
-    if not entry then
-        return false
-    end
-    entry.time = os.time()
-    return true
-end
-
 function AccessControlService:addEntry(name)
-    local credential = {identifier = self:generateCredentialIdentifier(), memberName = name}
-    entry = {credential = credential, time = os.time(), identifiers = {}}
+    local credential = {identifier = self:generateCredentialIdentifier(), entityName = name}
+    entry = {credential = credential, time = os.time()}
     self.entriesByName[name] = entry
     return entry
 end
 
-function AccessControlService:addLoginIdentifier(entry)
-    local loginIdentifier = self:generateLoginIdentifier()
-    self.entriesByLoginIdentifier[loginIdentifier] = entry
-    table.insert(entry.identifiers, loginIdentifier)
-    return loginIdentifier
-end
-
 function AccessControlService:generateCredentialIdentifier()
-    return uuid.new("time")
-end
-
-function AccessControlService:generateLoginIdentifier()
     return uuid.new("time")
 end
 
@@ -185,19 +141,8 @@ function AccessControlService:generateCredentialObserverIdentifier()
     return uuid.new("time")
 end
 
-function AccessControlService:removeDeadCredentials()
-    for _, entry in pairs(self.entriesByName) do
-        if (entry.time + beatTime) < os.time() then
-            self:removeEntry(entry)
-        end
-    end
-end
-
 function AccessControlService:removeEntry(entry)
-    for _, loginIdentifier in ipairs(entry.identifiers) do
-        self.entriesByLoginIdentifiers[loginIdentifier] = nil
-    end
-    self.entriesByName[entry.credential.memberName] = nil
+    self.entriesByName[entry.credential.entityName] = nil
     self:notifyCredentialWasDeleted(entry.credential)
 end
 

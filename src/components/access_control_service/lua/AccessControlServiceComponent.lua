@@ -11,7 +11,7 @@ function AccessControlServiceComponent:startup()
         ldapHost = self.ldapHost,
     }
 
-    local accessControlServiceInterface = "IDL:OpenBus/AS/AccessControlService:1.0"
+    local accessControlServiceInterface = "IDL:OpenBus/ACS/AccessControlService:1.0"
     accessControlService = oil.newobject(accessControlService, accessControlServiceInterface)
 
     self:addFacet("accessControlService", accessControlServiceInterface, accessControlService)

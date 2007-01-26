@@ -40,7 +40,7 @@ local accessControlServiceComponent = AccessControlServiceComponent:new{
     ldapHost = serverConfiguration.ldapHost,
 }
 
-accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/AS/AccessControlServiceComponent:1.0", "ACS")
+accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0", "ACS")
 
 accessControlServiceComponent:startup()
 

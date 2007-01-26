@@ -7,11 +7,11 @@ require "SessionService"
 SessionServiceComponent = createClass(Member)
 
 function SessionServiceComponent:startup()
-    local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
+    local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
     if accessControlServiceComponent:_non_existent() then
         error{"IDL:SCS/StartupFailed:1.0"}
     end
-    local accessControlServiceInterface = "IDL:OpenBus/AS/AccessControlService:1.0"
+    local accessControlServiceInterface = "IDL:OpenBus/ACS/AccessControlService:1.0"
     self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
     self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
@@ -23,17 +23,17 @@ function SessionServiceComponent:startup()
 
     self:addFacet("sessionService", sessionServiceInterface, sessionService)
 
-    self.credentialLoginIdentifier = self.accessControlService:loginByCertificate("SessionService", "")
+    self.credential = self.accessControlService:loginByCertificate("SessionService", "")
     local serviceOffer = {
         description = "Servico de Sessoes",
         type = "OpenBus/SS/SessionService",
         member = self,
     }
-    local registryService = self.accessControlService:getRegistryService(self.credentialLoginIdentifier.credential)
+    local registryService = self.accessControlService:getRegistryService(self.credential)
     if not registryService then
         error{"IDL:SCS/StartupFailed:1.0"}
     end
-    self.identifierIdentifier = registryService:register(self.credentialLoginIdentifier.credential, serviceOffer);
+    self.identifierIdentifier = registryService:register(self.credential, serviceOffer);
 end
 
 function SessionServiceComponent:shutdown()
@@ -42,7 +42,7 @@ function SessionServiceComponent:shutdown()
     end
     local registryService = self.accessControlService:getRegistryService()
     registryService:unregister(self.registryIdentifier)
-    self.accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+    self.accessControlService:logout(self.credential)
     self.accessControlService = nil
 
     self:removeFacets()

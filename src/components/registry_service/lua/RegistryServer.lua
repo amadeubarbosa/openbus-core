@@ -32,17 +32,16 @@ local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile (idlfile)
 
 local registryServiceComponent = RegistryServiceComponent:new{
-    name = "RegistryService",
-    accessControlServerHost = serverConfiguration.accessControlServerHost,
-    accessControlServerKey = serverConfiguration.accessControlServerKey,
+  name = "RegistryService",
+  accessControlServerHost = serverConfiguration.accessControlServerHost,
+  accessControlServerKey = serverConfiguration.accessControlServerKey,
 }
-
 registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus/RS/RegistryServiceComponent:1.0")
 
 local success, startupFailed = pcall (registryServiceComponent.startup, registryServiceComponent)
 if not success then
-    print("O servico de controle de acesso nao foi encontrado em "..serverConfiguration.accessControlServerHost..".")
-    os.exit(1)
+  print("O servico de controle de acesso nao foi encontrado em "..serverConfiguration.accessControlServerHost..".")
+  os.exit(1)
 end
 
 oil.run()

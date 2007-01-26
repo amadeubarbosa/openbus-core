@@ -1,5 +1,5 @@
-#ifndef AS_IDL
-#define AS_IDL
+#ifndef ACS_IDL
+#define ACS_IDL
 
 #include "core.idl"
 

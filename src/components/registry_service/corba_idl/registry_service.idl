@@ -43,7 +43,7 @@ interface RegistryService {
      *
      * \return Um identificador para o registro.
      */
-    RegistryIdentifier register(in AS::Credential credential, in ServiceOffer serviceOffer);
+    RegistryIdentifier register(in ACS::Credential credential, in ServiceOffer serviceOffer);
     /**
      * \brief Remove uma oferta de serviço.
      *
