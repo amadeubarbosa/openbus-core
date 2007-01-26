@@ -15,9 +15,9 @@ function Check.assertEquals(expected, actual)
   end
 end
 
-function Check.assertNotEquals(expected, atual)
+function Check.assertNotEquals(expected, actual)
   if expected == actual then
-    error()
+    error("The expected value ("..expected..") shouldn't be equal the actual value ("..actual..").")
   end
 end
 

@@ -33,14 +33,14 @@ function SessionServiceComponent:startup()
     if not registryService then
         error{"IDL:SCS/StartupFailed:1.0"}
     end
-    self.identifierIdentifier = registryService:register(self.credential, serviceOffer);
+    self.registryIdentifier = registryService:register(self.credential, serviceOffer);
 end
 
 function SessionServiceComponent:shutdown()
     if not self.accessControlService then
         error{"IDL:SCS/ShutdownFailed:1.0"}
     end
-    local registryService = self.accessControlService:getRegistryService()
+    local registryService = self.accessControlService:getRegistryService(self.credential)
     registryService:unregister(self.registryIdentifier)
     self.accessControlService:logout(self.credential)
     self.accessControlService = nil

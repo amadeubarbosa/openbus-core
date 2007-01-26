@@ -3,8 +3,6 @@ require "oil"
 require "Check"
 
 Suite = {
-  name = "AccessControlService",
-
   Test1 = {
     beforeTestCase = function(self)
       local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
@@ -20,25 +18,24 @@ Suite = {
       self.user = "csbase"
       self.password = "csbLDAPtest"
 
-      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
-      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
-      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
+      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/ACS/AccessControlService:1.0")
+      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/ACS/AccessControlService:1.0")
     end,
 
     testLoginByPassword = function(self)
-      local credentialLoginIdentifier = self.accessControlService:loginByPassword(self.user, self.password)
-      local credentialLoginIdentifier2 = self.accessControlService:loginByPassword(self.user, self.password)
-      Check.assertNotEquals(credentialLoginIdentifier.credential.identifier, credentialLoginIdentifier2.credential.identifier)
-      Check.assertNotEquals(credentialLoginIdentifier.loginIdentifier, credentialLoginIdentifier2.loginIdentifier)
-      Check.assertTrue(self.accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
-      Check.assertFalse(self.accessControlService:logout(credentialLoginIdentifier2.loginIdentifier))
+      local credential = self.accessControlService:loginByPassword(self.user, self.password)
+      local credential2 = self.accessControlService:loginByPassword(self.user, self.password)
+      Check.assertNotEquals(credential.identifier, credential2.identifier)
+      Check.assertTrue(self.accessControlService:logout(credential))
+      Check.assertFalse(self.accessControlService:logout(credential2))
     end,
 
     testLogout = function(self)
-      local credentialLoginIdentifier = self.accessControlService:loginByPassword(self.user, self.password)
-      Check.assertFalse(self.accessControlService:logout("abcd"))
-      Check.assertTrue(self.accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
-      Check.assertFalse(self.accessControlService:logout(credentialLoginIdentifier.loginIdentifier))
+      local credential = self.accessControlService:loginByPassword(self.user, self.password)
+      Check.assertFalse(self.accessControlService:logout({identifier = "", entityName = "abcd", }))
+      Check.assertTrue(self.accessControlService:logout(credential))
+      Check.assertFalse(self.accessControlService:logout(credential))
     end,
   },
 
@@ -57,39 +54,39 @@ Suite = {
       self.user = "csbase"
       self.password = "csbLDAPtest"
 
-      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
-      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
-      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
+      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/ACS/AccessControlService:1.0")
+      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/ACS/AccessControlService:1.0")
     end,
 
     beforeEachTest = function(self)
-      self.credentialLoginIdentifier = self.accessControlService:loginByPassword(self.user, self.password)
+      self.credential = self.accessControlService:loginByPassword(self.user, self.password)
     end,
 
     afterEachTest = function(self)
-      self.accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+      self.accessControlService:logout(self.credential)
     end,
 
     testGetRegistryService = function(self)
-      Check.assertNil(self.accessControlService:getRegistryService(self.credentialLoginIdentifier.credential))
+      Check.assertNil(self.accessControlService:getRegistryService(self.credential))
     end,
 
     testIsValid = function(self)
-      Check.assertTrue(self.accessControlService:isValid(self.credentialLoginIdentifier.credential))
-      Check.assertFalse(self.accessControlService:isValid({memberName=user, identifier = "123"}))
-      self.accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
-      Check.assertFalse(self.accessControlService:isValid(self.credentialLoginIdentifier.credential))
+      Check.assertTrue(self.accessControlService:isValid(self.credential))
+      Check.assertFalse(self.accessControlService:isValid({entityName=self.user, identifier = "123"}))
+      self.accessControlService:logout(self.credential)
+      Check.assertFalse(self.accessControlService:isValid(self.credential))
     end,
 
     testObservers = function(self)
-      local credentialObserver = { credential = self.credentialLoginIdentifier.credential}
+      local credentialObserver = { credential = self.credential }
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential, credential)
       end
-      credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/AS/CredentialObserver:1.0")
-      local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credentialLoginIdentifier.credential.identifier,})
+      credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/ACS/CredentialObserver:1.0")
+      local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       Check.assertNotEquals("", observerIdentifier)
-      self.accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
+      self.accessControlService:logout(self.credential)
       Check.assertTrue(self.accessControlService:removeObserver(observerIdentifier))
       Check.assertFalse(self.accessControlService:removeObserver(observerIdentifier))
     end,

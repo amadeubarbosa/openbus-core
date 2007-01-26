@@ -4,6 +4,8 @@ require "uuid"
 
 require "OOP"
 
+require "Session"
+
 SessionService = createClass()
 
 SessionService.invalidSession = { identifier = "", }

@@ -1,54 +1,51 @@
-require "luaunit"
-
-require "scheduler"
 require "oil"
+
+require "Check"
 
 require "Member"
 
-if #arg ~= 3 then
-    print("Parametros invalidos !!!")
-    print("Use testRegistryServer.lua <access_control_server_host> <user> <password>")
-    os.exit(0)
-end
+Suite = {
+  Test1 = {
+    beforeTestCase = function(self)
+      local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
+      if CORBA_IDL_DIR == nil then
+        io.stderr:write("A variavel CORBA_IDL_DIR nao foi definida.\n")
+        os.exit(1)
+      end
+      local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 
-local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
-if CORBA_IDL_DIR == nil then
-    io.stderr:write("A variavel CORBA_IDL_DIR nao foi definida.\n")
-    os.exit(1)
-end
-local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
+      oil.verbose.level(1)
+      oil.loadidlfile(idlfile)
 
-oil.loadidlfile(idlfile)
+      local user = "csbase"
+      local password = "csbLDAPtest"
 
-local host = arg[1]
-local user = arg[2]
-local password = arg[3]
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
+      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/ACS/AccessControlService:1.0")
+      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/ACS/AccessControlService:1.0")
+      self.credential = self.accessControlService:loginByPassword(user, password)
+      self.registryService = self.accessControlService:getRegistryService(self.credential)
+    end,
 
-TestRegistryService = {}
+    testRegister1 = function(self)
+      local member = Member:new{name = "Membro Mock"}
+      member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+      Check.assertEquals("", self.registryService:register({identifier = "", entityName = "", }, {description = "", type = "", member = member, }))
+    end,
 
-function TestRegistryService:setUp()
-  self.credentialLoginIdentifier = accessControlService:loginByPassword(user, password)
-  self.registryService = accessControlService:getRegistryService(self.credentialLoginIdentifier.credential)
-end
-
-function TestRegistryService:tearDown()
-  accessControlService:logout(self.credentialLoginIdentifier.loginIdentifier)
-  self.credentialLoginIdentifier = nil
-end
-
-function TestRegistryService:testRegister1()
-  local member = Member:new{name = "Membro Mock"}
-  member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
-  assertEquals("", self.registryService:register({identifier = "", memberName = "", }, {description = "", type = "", member = member, }))
-end
-
-function TestRegistryService:testRegister2()
-  local member = Member:new{name = "Membro Mock"}
-  member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
-  local registryIdentifier = self.registryService:register(self.credentialLoginIdentifier.credential, {description = "", type = "", member = member, })
-  assertNotEquals("", registryIdentifier)
-  self.registryService:unregister(registryIdentifier)
-end
+    afterTestCase = function(self)
+      self.accessControlService:logout(self.credential)
+    end,
+  }
+}
+--[[
+    testRegister2 = function(self)
+      local member = Member:new{name = "Membro Mock"}
+      member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+      local registryIdentifier = self.registryService:register(self.credential, {description = "", type = "", member = member, })
+      Check.assertNotEquals("", registryIdentifier)
+      self.registryService:unregister(registryIdentifier)
+    end,
 
 function TestRegistryService:testUnregister()
   local member = Member:new{name = "Membro Mock"}
@@ -84,6 +81,9 @@ function TestRegistryService:testRefresh()
   self.registryService:unregister(registryIdentifier)
 end
 
+--]]
+
+--[[
 function main()
   local accessControlServiceComponent = oil.newproxy("corbaloc::"..host.."/ACS", "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
   accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
@@ -112,3 +112,4 @@ xpcall = function (func, errorHandler)
 scheduler.new(oil.run)
 scheduler.new(main)
 scheduler.run()
+--]]
