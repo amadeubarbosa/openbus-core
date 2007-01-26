@@ -64,10 +64,9 @@ interface RegistryService {
      */
     boolean refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
     /**
-     * \brief Realiza uma busca por membros que satisfaçam um determinado
-     * critério.
+     * \brief Realiza uma busca por membros que satisfaçam a determinados critérios.
      *
-     * \param criteria O critério da busca.
+     * \param criteria Os critérios da busca.
      *
      * \return Os membros encontrados.
      */

@@ -56,8 +56,29 @@ interface AccessControlService {
      * retornada uma credencial com identificador vazio ("").
      */
     Credential loginByPassword (in string name, in string password);
+    /**
+     * \brief Autentica uma entidade através de um nome e de uma resposta para um desafio
+     * previamente obtido.
+     *
+     * \param name O nome.
+     * \param password A reposta para o desafio.
+     *
+     * \return Uma credencial para a entidade. Caso a autenticação falhe, será
+     * retornada uma credencial com identificador vazio ("").
+     *
+     * \see getChallenge
+     */
     Credential loginByCertificate (in string name, in string answer);
-    string getToken(in string name);
+    /**
+     * \brief Obtém um desafio para uma entidade.
+     *
+     * \param name O nome da entidade.
+     *
+     * \return O desafio.
+     *
+     * \see loginByCertificate
+     */
+    string getChallenge(in string name);
     /**
      * \brief Efetua o \c logout de uma entidade.
      *
@@ -85,10 +106,56 @@ interface AccessControlService {
      * inválida.
      */
     RS::RegistryService getRegistryService (in Credential credential);
+    /**
+     * \brief Define o serviço de registro que poderá ser obtido pelos membros autenticados.
+     *
+     * \param credential A credencial de quem está registrando o serviço (deve ser a credencial
+     * do próprio serviço de registro).
+     * \param registryService O serviço de registro.
+     *
+     * \return \c true caso a credencial seja do serviço de registro, ou \c false, caso
+     * contrário.
+     */
     boolean setRegistryService (in Credential credential, in RS::RegistryService registryService);
+    /**
+     * \brief Adiciona um observador de credenciais. Esse observador será notificado apenas sobre
+     * eventos ocorridos numa sequência de credenciais.
+     *
+     * \param observer O observador.
+     * \param credentialIdentifiers A sequência de credenciais.
+     *
+     * \return Um identificador para o observador.
+     */
     CredentialObserverIdentifier addObserver(in CredentialObserver observer, in CredentialIdentifiers credentialIdentifiers);
+    /**
+     * \brief Remove um observador de credenciais.
+     *
+     * \param identifier O identificador do observador.
+     *
+     * \return \c true caso o observador tenha sido removido, ou \c false, caso contrário.
+     */
     boolean removeObserver(in CredentialObserverIdentifier identifier);
+    /**
+     * \brief Adiciona uma credencial à sequência de credenciais nas quais um determinado
+     * observador está interessado.
+     *
+     * \param observerIdentifier O identificador do observador.
+     * \param credentialIdentifier O identificador da credencial.
+     *
+     * \return \c true caso a credencial tenha sido adicionada à sequência de credenciais do
+     * observador, ou \c false, caso contrário.
+     */
     boolean addCredentialToObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);
+    /**
+     * \brief Remove uma credencial da sequência de credenciais nas quais um determinado
+     * observador está interessado.
+     *
+     * \param observerIdentifier O identificador do observador.
+     * \param credentialIdentifier O identificador da credencial.
+     *
+     * \return \c true caso a credencial tenha sido removida da sequência de credenciais do
+     * observador, ou \c false, caso contrário.
+     */
     boolean removeCredentialFromObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);
 };
 

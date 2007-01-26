@@ -34,8 +34,28 @@ interface Session {
      * \return O identificador do membro.
      */
     MemberIdentifier addMember(in Member member);
+    /**
+     * \brief Remove um membro da sessão.
+     *
+     * \param memberIdentifier O identificador do membro.
+     *
+     * \return \c true caso o membro tenha sido removido, ou \c false, caso contrário.
+     */
     boolean removeMember(in MemberIdentifier memberIdentifier);
+    /**
+     * \brief Obtém um membro da sessão.
+     *
+     * \param memberName O nome do membro.
+     *
+     * \return O membro ou \c nil, caso o membro não esteja participando da sessão.
+     */
     Member getMember(in string memberName);
+    /**
+     * \brief Obtém todos os membros da sessão.
+     *
+     * \return A sequência de membros. Pode estar vazia caso não existam membros participando da
+     * sessão.
+     */
     Members getMembers();
 };
 /** \brief Representa uma sequência de sessões. */
@@ -46,15 +66,38 @@ typedef sequence<Session> Sessions;
  */
 interface SessionService {
     /**
-     * \brief Cria uma sessão.
+     * \brief Cria uma sessão associada a uma credencial.
      *
-     * \param credential A credencial associada à sessão.
+     * \param credential A credencial.
      *
      * \return A sessão criada ou \c nil, caso a credencial esteja inválida.
      */
     Session createSession(in ACS::Credential credential);
+    /**
+     * \brief Remove a sessão associada a uma credencial.
+     *
+     * \param credential A credencial à qual a sessão está ligada.
+     *
+     * \return \c true caso a sessão tenha sido removida, ou \c false, caso contrário.
+     */
     boolean removeSession(in ACS::Credential credential);
+    /**
+     * \brief Obtém a sessão associada a uma credencial.
+     *
+     * \param credential A credencial à qual a sessão está ligada.
+     *
+     * \return A sessão ou \c nil, caso a credencial esteja inválida ou não exista sessão
+     * associada à credencial.
+     */
     Session getSession(in ACS::Credential credential);
+    /**
+     * \brief Obtém todas as sessões nas quais o membro participa.
+     *
+     * \param memberName O nome do membro.
+     *
+     * \return As sessões nas quais o membro participa. Caso o membro não esteja participando
+     * de nenhuma sessão, a sequência estará vazia.
+     */
     Sessions getSessions(in string memberName);
 };
 

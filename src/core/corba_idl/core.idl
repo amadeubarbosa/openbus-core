@@ -16,11 +16,11 @@ module OpenBus {
     typedef UUID Identifier;
 
     /**
-     * \brief Representa um membro do OpenBus.
+     * \brief Representa um membro do barramento.
      */
     interface Member : SCS::IComponent, SCS::IMetaInterface {
         /**
-         * Obtém o nome do membro.
+         * \brief Obtém o nome do membro.
          *
          * \return O nome do membro.
          */
