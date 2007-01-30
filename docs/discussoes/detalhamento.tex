@@ -1,0 +1,330 @@
+\documentclass[12pt]{article}
+
+%% Estilos e Plug-Ins
+\usepackage{a4wide}
+\usepackage{times}
+\usepackage[latin1]{inputenc}
+\usepackage[brazil]{babel}
+
+% ===================
+% Início do documento
+% ===================
+\begin{document}
+
+\title{OpenBUS\\Detalhamento do Protótipo}
+\author{}
+\date{}
+\maketitle
+
+\begin{abstract}
+Isso é um resumo das nossas várias discussões.
+A idéia é que fique registrado o que foi discutido
+para servir de base para os que vão implementar o projeto.
+(Em especial pra mim que ando esquecendo de tudo! :-)
+
+Ainda está tudo misturado. Escrevi umas coisas e peguei outras
+de um texto da Ana em prototipo1.txt, mas ainda não juntei as
+partes direito.
+
+--Cris
+\end{abstract}
+
+Para implementar o protótipo do sistema, dividimos
+as tarefas em três etapas (que não necessáriamente serão implementadas
+em paralelo): os serviços básicos, um ambiente de teste
+desses serviços básicos simulando um caso de uso, de onde pretendemos
+extrair alguns módulos comuns aos componentes; e um ambiente de caso de 
+uso para a BR, que será o protótipo propriamente dito.
+
+\section{Serviços Básicos}
+
+Na primeira fase do projeto, o OpenBUS será composto dos seguintes
+serviços básicos: serviço de acesso, serviço de registro e 
+serviço de sessão.
+
+\subsection{Serviço de Acesso}
+
+O serviço de acesso é o ponto de entrada no OpenBUS. Sua
+referência é conhecida por todos. 
+Ele é responsável por válidar os componentes
+que querem fazer parte do barramento, seja como clientes ou como
+servidores. Essa válidação pode ser feita através de um par
+\textit{usuário,senha} ou através de um \textit{certificado}.
+Esse serviço é implementado em Lua e usa as bibliotecas OiL,
+openSSL e luaLDAP.
+
+Após fazer uma validação, o serviço de acesso emite uma
+credencial que deverá ser usada pelo componente para
+acessar os demais serviços do barramento (básicos ou não).
+Essa credencial tem um ciclo de vida e deve ser renovada pelo 
+componente para que não expire (mecanismo de leasing).
+Quando a validade de uma
+credencial expira, o componente perde o acesso ao barramento.
+Qualquer componente (isso é verdade?!?!?!) pode pedir ao serviço
+de acesso para ser notificado quando uma determinada credencial
+expirar.
+
+Como é feita a ``limpeza'' desses observadores? Quando a credencial
+deles expira eles são retirados da lista?!
+
+Um componente pode, porém, entregar sua credencial a outro
+componente e dessa forma, conferir a ele o acesso ao barramento.
+É como entregar sua senha a outro usuário. Nesse caso, o outro
+componente acessa o barramento com os direitos do componente que
+obteve a credencial do serviço de acesso.
+
+É através do serviço de acesso que o componente obtém
+a referência para os demais serviços básicos. Já os serviços
+não-básicos, devem ser obtidos através do serviço de registro.
+
+Como funciona a credencial? Somente o serviço de acesso
+sabe "abrí-la" e obter o usuário que a gerou?
+Como será feita a persistência?
+
+Falar dos interceptadores: a credencial vai junto com cada 
+chamada de método e a validação é feita de forma "automática".
+
+Cabe explicar o mecanismo de certificado? Que um administrador
+deve gerar o par de chaves, que é gerado um "desafio", etc?
+
+\footnotesize
+\begin{verbatim}
+  CONEXÂO DE SERVIDORES
+  ========================================================
+
+  1) Não há distinção entre clientes e servidores (provedores de serviço).
+     Todos são membros do barramento, autenticados na conexão, e estão
+     no registro.  (diretório).
+
+  2) Ao invés de usuário e senha, um servidor pode se autenticar no barramento 
+     de forma semelhante ao de um servidor csbase local (par de chaves)
+    
+     => Exige serviço de administração para o cadastramento da chave do 
+        servidor.
+       (chave fica no registro? o registro indica se o membro está conectado?)
+\end{verbatim}
+\normalsize
+
+\subsection{Serviço de Registro}
+
+O serviço de registro é responsável por controlar as ofertas de
+serviços disponíveis no barramento. Um componente que queira
+oferecer um serviço deve explicitamente registrar-se neste 
+serviço. Os componentes que não oferecem um serviço mas que
+queiram ser encontrados por outros componentes também devem
+registrar-se.
+
+Assim como os demais componentes, o serviço de registro também
+deve se autenticar no serviço de acesso. Para isso, ele usa
+um certificado que já o identifica como o serviço de registro.
+(É verdade? Um certificado específico é emitido pra ele, certo?)
+Ele deve ainda manter ``ativa'' a sua credencial.
+
+Para cada componente registrado, este serviço cadastra um observador
+no serviço de acesso de modo que ele seja notificado quando
+a credencial do componente não for mais válida. Dessa forma ele
+pode retirar o componente se seu repositório sem que este 
+tenha feito um ``logout'' de forma explícita.
+
+Este serviço também é implementado em Lua. Num primeiro momento,
+as ofertas serão armazenadas em memória, mas devemos considerar
+uma estrutura de implementação que permita que em outra etapa
+do projeto seja utilizado um BD.
+
+Como será feita a busca pelas ofertas de serviço? Consultas aa tabelas
+Lua?
+
+\footnotesize
+\begin{verbatim}
+  PUBLICAÇÂO DE OFERTAS DE SERVIÇO
+  ========================================================
+
+  3) Um membro pode publicar ofertas de serviço. Pode alterar suas ofertas de 
+     serviço e pode também retirá-las.
+  
+     Recebe uma identificação para o registro de sua oferta (para alterá-la, 
+     removê-la...)
+
+     Se é detectada a ausência DEFINITIVA de um membro (falha na validação da 
+     entrada relativa à sua autenticação/conexão), suas ofertas devem ser 
+     retiradas
+     (atenção para o caso de problemas de comunicação temporarios, com ofertas 
+      não sendo republicadas...)
+
+    => Uma oferta de serviço contém referência para um membro ou para uma 
+      faceta desse membro? Ou para as duas coisas? 
+
+    => O nome de uma oferta de serviço é o nome de uma faceta?
+
+  4) Por que o repositório de ofertas não é apenas o registro?
+
+     => Porque queremos que as ofertas de serviço possam ser 
+        controladas/gerenciadas pelos provedores. A oferta não pode ser 
+        automatica (p.ex. oferecimento "automatico" das facetas de um membro)
+
+  => VAMOS IMPLEMENTAR PESQUISA DE OFERTAS "A la trading" ?
+     Critérios simples (por exemplo, o "tipo" que distingue poços em produção 
+     e poços na base...)
+     Constraints mais sofisticados...
+\end{verbatim}
+\normalsize
+
+\subsection{Serviço de Sessão}
+
+Assim como o serviço de registro, o serviço de sessão usa um
+certificado para se autenticar no serviço de acesso e deve manter
+``ativa'' a sua credencial. 
+
+O serviço de sessão é responsável por ``agrupar'' componentes através
+de uma mesma credencial. Ele assume a responsabilidade de renovar
+a credencial deste grupo junto ao serviço de acesso
+e oferece um mecanismo de troca de mensagens entre seus componentes.
+
+Para os membros do grupo, o serviço de sessão passa a responder pelo
+serviço de acesso. Um dos componentes é ``eleito'' pelo serviço
+para manter a credencial ativa. Se o serviço de sessão nota que
+a credencial expirou, ele eleje outro componente para a tarefa, mas
+enquanto isso, renova a credencial no serviço de acesso.
+Apenas quando não há mais membros no grupo ele deixa a credencial
+expirar.
+
+\section{Caso de Uso 1 -- Teste do Ambiente}
+
+No primeiro caso de uso vamos implementar dois clientes e um serviço
+de dados que será o serviço de projetos.
+O cliente 1 será implementado em C++, simulando o cliente v3o2
+do caso de uso 2. O cliente 2 será implementado em Java,
+simulando o cliente VGE do caso de uso 2.
+
+A idéia é que seja possível executar a seguinte seqüência:
+\begin{itemize}
+\item cliente 1 se autentica no serviço de acesso através de 
+      um par \textit{usuário,senha} e obtém uma credencial.
+\item cliente 1 obtém, através do serviço de acesso, a referência
+      para o serviço de sessão e cria uma sessão para sua credencial.
+\item Nesse momento, o cliente 1 passa a manter sua credencial
+      no serviço de sessão e é o serviço de sessão quem mantém esta credencial
+      no serviço de acesso.
+\item cliente 1 entrega sua credencial para o cliente 2.
+\item cliente 2 não precisa manter a credencial.
+\item cliente 2 obtém as referências aos serviços básicos, através do
+      serviço de acesso.
+\item cliente 2 se inclui na sessão da credencial fornecida pelo cliente 1
+\item cliente 2 obtém, através do serviço de registro, um serviço de dados.
+\item cliente 2 obtém do serviço de dado, um determinado dado de seu
+      interesse.
+\item cliente 2 avisa, através de troca de mensagem, ao cliente 1, que
+      já obteve o dado desejado.
+\item ??
+\end{itemize}
+
+Deste caso de uso, pretendemos extrair os procedimentos comuns a todos
+os clientes (autenticação, leasing, acesso aos serviços básicos através
+do serviço de acesso, acesso aos demais serviços, etc)
+e criar bibliotecas em C++ e Java. Da mesma forma, pretendemos criar
+bibliotecas em C++ e Java para os serviços não-básicos.
+
+\section{Caso de Uso 2 -- Protótipo para BR}
+
+Incorporar as aplicações v3o2 e VGE ao barramento e criar um serviço de
+acesso à base integrada.
+
+\footnotesize
+\begin{verbatim}
+Cenário: Aplicação v3O2 utiliza serviço(s) de "dados de poço" para obter 
+(num primeiro momento) trajetórias de poços.
+
+  1) Usuário executa aplicação v3o2. Através de um menu, inicia procedimento 
+     para obter a trajetória de um poço.
+
+  a) Nesse momento a aplicação v3o2 se conecta ao barramento OpenBUS. 
+     É necessário autenticá-la. Para isso, serão pedidas identificação e senha 
+     do usuário.
+     O componente responsável pela autenticação/conexão ao barramento é um
+     serviço "bem conhecido".
+
+     Uma vez conectada ao barramento, a aplicação v3o2 recebe uma credencial
+     relativa a sua autenticacão, e a referência para o componente que oferece
+     acesso aos serviços básicos do barramento (esse componente "fachada"
+     oferece as facetas correspondentes a esses serviços).
+
+     Será mantida no serviço de diretórios uma entrada relativa a essa
+     autenticação/credencial. Essa entrada deverá ser periodicamente
+     "validada" através de mecanismo de heartbeat/leasing (RODRIGO)
+     A falha na validação dessa entrada invalida a autenticação/credencial
+     associada.
+
+     A conexão ao barramento envolve a criação de uma "sessão", que é
+     associada à credencial.
+
+     É possivel obter (via serviço de diretorio) a sessão associada a uma
+     credencial.
+
+     A posse da credencial permite a obtenção da referência para o componente
+     que dá acesso aos serviços básicos do barramento (ou seja, um membro
+     autenticado poderá repassar sua credencial a outra aplicação, que
+     compartilhará então essa autenticação e a sessão associada).
+
+  b) A uma sessão será associado um canal (simples) de eventos. Os membros de 
+     uma sessão são, potencialmente, produtores e consumidores de eventos 
+     encaminhados por esse canal.
+
+     => MODELAGEM DOS EVENTOS QUE TRAFEGAM NO CANAL ASSOCIADO A UMA SESSÂO !!
+
+
+  c) A conexão de um membro ao barramento não é suficiente para permitir sua
+     "localização" (por exemplo, para encontrar membros de um determinado
+     "tipo", convidá-los para uma colaboração...)
+     A conexão permite apenas que se estabeleça uma sessão e que esse membro
+     seja capaz de utilizar os serviços básicos do barramento, e também
+     serviços "exportados" por outros membros (localizaveis através do serviço
+     de diretórios)
+
+     Um membro se tornará "identificável/localizável" se "exportar" uma
+     interface (faceta?) específica para isso.
+     Procedimento semelhante ao de uma oferta de serviço...
+
+  2) Assumindo que o identificador do poço não é conhecido, mas sim sua 
+     localização (geográfica?), usuário pode lançar mão das facilidades de 
+     navegação do VGE para identificar o poço desejado.
+
+  a) Nesse momento, a aplicação v3o2 comanda a execução do VGE (via webstart). 
+     O VGE receberá a credencial para permitir sua conexão (uso do barramento)
+
+     Se o cliente VGE é assinado (provavelmente será), pode conectar-se 
+     diretamente ao barramento.
+
+  b) O VGE deve disponibilizar (ao localizar um poço) uma opção de 
+     "enviar evento" através de sua sessão. O evento é o identificador do poço.
+     A partir de sua credencial, pode obter a referência para a sessão
+     (canal).
+     Se a aplicação VGE termina, pode se desconectar do barramento.
+
+     A aplicação v3o2 estava aguardando o evento com o identificador do poço.
+
+       => o usuário pode "cancelar" essa espera e finalizar todo o processo
+
+  4) v3o2 de posse do identificador do poço (obtido via VGE ou do próprio 
+     usuário, pulando etapa anterior) pode iniciar o procedimento de obtenção 
+    do dado propriamente dito (trajetória)
+
+     Membro v3o2 pesquisa no serviço de diretório ofertas de serviço de dados de poço 
+     com trajetória
+      (trajetória é uma faceta? ou o serviço de poço é uma faceta, e ter
+       trajetória é uma característica ?)
+
+     Pode haver "tipos" diferentes para essa oferta: poço em perfuração 
+     (acesso a arquivos EXATA), poço ... (trajetoria está na base)
+
+     => Como identificar esses tipos na publicação da oferta de serviço?
+
+     Escolhida uma implementação (oferta) do serviço, v3o2 obtém os dados da
+     trajetória do poço, fornecendo identificador do poço.
+
+     => Detalhar variante para identificação e acesso aos dados do poço via 
+        OpenSpirit
+
+\end{verbatim}
+\normalsize
+
+\end{document}
