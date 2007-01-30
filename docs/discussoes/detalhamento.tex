@@ -46,15 +46,22 @@ serviço de sessão.
 
 O serviço de acesso é o ponto de entrada no OpenBUS. Sua
 referência é conhecida por todos. 
-Ele é responsável por válidar os componentes
+Ele é responsável por autenticar os componentes
 que querem fazer parte do barramento, seja como clientes ou como
-servidores. Essa válidação pode ser feita através de um par
-\textit{usuário,senha} ou através de um \textit{certificado}.
-Esse serviço é implementado em Lua e usa as bibliotecas OiL,
-openSSL e luaLDAP.
+servidores (ou como ambos).
 
-Após fazer uma validação, o serviço de acesso emite uma
-credencial que deverá ser usada pelo componente para
+A autenticação pode ser feita através de um par
+\textit{usuário,senha} ou através de um \textit{certificado}.
+Tipicamente, aplicações "clientes" se autenticam com um par 
+\textit{usuário,senha} --- a identificação e senha do usuário que 
+iniciou a aplicação. Servidores tipicamente se autenticam através de um 
+\textit{certificado}.
+
+Esse serviço é implementado em Lua e usa as bibliotecas OiL,
+openSSL e luaLDAP (para a validação do par usuário/senha).
+
+Após autenticar o componente, o serviço de acesso emite uma
+credencial que deverá ser usada pelo mesmo para
 acessar os demais serviços do barramento (básicos ou não).
 Essa credencial tem um ciclo de vida e deve ser renovada pelo 
 componente para que não expire (mecanismo de leasing).
@@ -74,8 +81,8 @@ componente acessa o barramento com os direitos do componente que
 obteve a credencial do serviço de acesso.
 
 É através do serviço de acesso que o componente obtém
-a referência para os demais serviços básicos. Já os serviços
-não-básicos, devem ser obtidos através do serviço de registro.
+a referência para o serviço de registro. Qualquer outro serviço
+(incluindo o de sessão) deve ser obtido através do serviço de registro.
 
 Como funciona a credencial? Somente o serviço de acesso
 sabe "abrí-la" e obter o usuário que a gerou?
@@ -87,24 +94,6 @@ chamada de método e a validação é feita de forma "automática".
 Cabe explicar o mecanismo de certificado? Que um administrador
 deve gerar o par de chaves, que é gerado um "desafio", etc?
 
-\footnotesize
-\begin{verbatim}
-  CONEXÂO DE SERVIDORES
-  ========================================================
-
-  1) Não há distinção entre clientes e servidores (provedores de serviço).
-     Todos são membros do barramento, autenticados na conexão, e estão
-     no registro.  (diretório).
-
-  2) Ao invés de usuário e senha, um servidor pode se autenticar no barramento 
-     de forma semelhante ao de um servidor csbase local (par de chaves)
-    
-     => Exige serviço de administração para o cadastramento da chave do 
-        servidor.
-       (chave fica no registro? o registro indica se o membro está conectado?)
-\end{verbatim}
-\normalsize
-
 \subsection{Serviço de Registro}
 
 O serviço de registro é responsável por controlar as ofertas de
@@ -113,6 +102,19 @@ oferecer um serviço deve explicitamente registrar-se neste
 serviço. Os componentes que não oferecem um serviço mas que
 queiram ser encontrados por outros componentes também devem
 registrar-se.
+
+Uma oferta de serviço tem um "tipo", uma descrição e a referência
+para o componente (membro) que o implementa.
+O conjunto de facetas do componente (consultado pelo serviço de registro)
+representa o conjunto de funcionalidades (interfaces) disponibilizadas pela
+oferta.
+
+A busca de ofertas de serviço é realizada com base em um conjunto de
+critérios (pares nome/valor). Um desses critérios é o tipo do serviço,
+Outro critério (opcional) são as facetas disponibilizadas (nomes).
+
+(dúvida: onde entra a descrição do tipo do serviço? A interface atual está
+retornando um conjunto de membros...)
 
 Assim como os demais componentes, o serviço de registro também
 deve se autenticar no serviço de acesso. Para isso, ele usa
@@ -123,7 +125,7 @@ Ele deve ainda manter ``ativa'' a sua credencial.
 Para cada componente registrado, este serviço cadastra um observador
 no serviço de acesso de modo que ele seja notificado quando
 a credencial do componente não for mais válida. Dessa forma ele
-pode retirar o componente se seu repositório sem que este 
+pode retirar o componente de seu repositório sem que este 
 tenha feito um ``logout'' de forma explícita.
 
 Este serviço também é implementado em Lua. Num primeiro momento,
@@ -181,12 +183,19 @@ a credencial deste grupo junto ao serviço de acesso
 e oferece um mecanismo de troca de mensagens entre seus componentes.
 
 Para os membros do grupo, o serviço de sessão passa a responder pelo
-serviço de acesso. Um dos componentes é ``eleito'' pelo serviço
-para manter a credencial ativa. Se o serviço de sessão nota que
+serviço de acesso. O componente "gerador" do grupo é responsável por criar
+uma sessão. Ao receber uma credencial, ao invés de se autenticar no serviço de
+acesso, o componente pede sua adição à sessâo.
+Componentes de um grupo, ao invés de se desconectarem do serviço de acesso
+({\em logout}) pedem a sua desconexão da sessão.
+
+Um dos componentes é ``eleito'' pelo serviço
+para manter a credencial ativa (inicialmente, quem criou a sessão).
+Se o serviço de sessão nota que
 a credencial expirou, ele eleje outro componente para a tarefa, mas
 enquanto isso, renova a credencial no serviço de acesso.
-Apenas quando não há mais membros no grupo ele deixa a credencial
-expirar.
+Apenas quando não há mais membros no grupo (dispostos a renovar a credencial) ele
+deixa a credenciali expirar.
 
 \section{Caso de Uso 1 -- Teste do Ambiente}
 
@@ -201,14 +210,15 @@ A idéia é que seja possível executar a seguinte seqüência:
 \item cliente 1 se autentica no serviço de acesso através de 
       um par \textit{usuário,senha} e obtém uma credencial.
 \item cliente 1 obtém, através do serviço de acesso, a referência
-      para o serviço de sessão e cria uma sessão para sua credencial.
+      para o serviço de registro, e nele a referência para o de sessão,
+      e cria uma sessão para sua credencial.
 \item Nesse momento, o cliente 1 passa a manter sua credencial
       no serviço de sessão e é o serviço de sessão quem mantém esta credencial
       no serviço de acesso.
 \item cliente 1 entrega sua credencial para o cliente 2.
 \item cliente 2 não precisa manter a credencial.
 \item cliente 2 obtém as referências aos serviços básicos, através do
-      serviço de acesso.
+      serviços de acesso/registro.
 \item cliente 2 se inclui na sessão da credencial fornecida pelo cliente 1
 \item cliente 2 obtém, através do serviço de registro, um serviço de dados.
 \item cliente 2 obtém do serviço de dado, um determinado dado de seu
