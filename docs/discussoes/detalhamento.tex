@@ -103,73 +103,90 @@ serviço. Os componentes que não oferecem um serviço mas que
 queiram ser encontrados por outros componentes também devem
 registrar-se.
 
-Uma oferta de serviço tem um "tipo", uma descrição e a referência
-para o componente (membro) que o implementa.
-O conjunto de facetas do componente (consultado pelo serviço de registro)
-representa o conjunto de funcionalidades (interfaces) disponibilizadas pela
-oferta.
+Este serviço também é implementado em Lua
+
+\subsubsection{Ofertas de Serviço}
+Uma oferta de serviço tem um "tipo", uma descrição, um conjunto (opcional) de
+propriedades e a referência para o componente (membro) que o implementa.
+
+"Tipo" define qual o serviço oferecido (por exemplo, serviço de projetos,
+serviço de dados de poço, etc...)
+
+Dúvida: O tipo é só um nome arbitrário, ou deveria, de alguma forma, indicar 
+a interface implementada? Por exemplo, no caso do serviço de sessão, discutiu-se
+que sua funcionalidade
+seria implementada por uma interface "não faceta"?
+Neste caso, por exemplo, só um nome arbitrário é uma "amarração" suficiente para 
+a interface do serviço oferecido?
+
+No caso de um serviço de poço, a funcionalidade estaria implementada via suas
+facetas. Neste caso, uma faceta é amarrada com uma interface...
+
+E um serviço de projetos? Oferece funcionalidade apenas via facetas?
+
+"Descrição" é um texto que pode ser exibido em uma interface para que um
+usuário possa, por exemplo, decidir entre ofertas de serviço que tenham o 
+mesmo tipo e propriedades equivalentes.
+
+Propriedades de uma oferta de serviço são pares nome X valor.
+Um exemplo de propriedade é o conjunto de facetas que o serviço oferece.
+(nome = facets, valor = sequência de strings com os nomes das facetas).
+
+Uma outra propriedade possível é o tipo de "fonte" dos dados (Base integrada,
+OpenSpirit). Essa propriedade permitiria uma seleção "programática" de uma
+oferta de serviço de dados com base na fonte desses dados.
 
 A busca de ofertas de serviço é realizada com base em um conjunto de
 critérios (pares nome/valor). Um desses critérios é o tipo do serviço,
-Outro critério (opcional) são as facetas disponibilizadas (nomes).
+Outro critério (opcional) são valores das propriedades. Neste caso,
+temos dois filtros para uma oferta: a existência da propriedade,
+e, se existir a propriedade, se o seu valor atende ao critério de busca.
 
-(dúvida: onde entra a descrição do tipo do serviço? A interface atual está
-retornando um conjunto de membros...)
+Inicialmente, estamos prevendo apenas strings para valores de propriedades.
+Se, e quando, precisarmos de tipos de valores diferentes, é necessário podermos
+checar casamento do tipo fornecido pelo importador da oferta com o tipo
+fornecido pelo exportador. Será necessário, então, prever um "cadastramento" de
+tipos de serviço, com descrição de propriedades, como o trader faz?
 
-Assim como os demais componentes, o serviço de registro também
-deve se autenticar no serviço de acesso. Para isso, ele usa
-um certificado que já o identifica como o serviço de registro.
-(É verdade? Um certificado específico é emitido pra ele, certo?)
-Ele deve ainda manter ``ativa'' a sua credencial.
+O resultado de uma busca é o conjunto de ofertas que o atende (conforme cadastrado
+pelos exportadores dessas ofertas)
 
+Dúvida: Como será feita a busca pelas ofertas de serviço? Consultas a tabelas
+Lua?
+
+Um exportador de oferta de serviço pode alterar suas ofertas (alterar
+propriedades, por exemplo?) e também removê-las integralmentes.
+O serviço de registro associará um identificador para uma oferta;
+esse identificador será usado pelo exportador para alterar/remover sua oferta.
+
+\subsubsection{Amarração de ofertas com validade da credencial do exportador}
 Para cada componente registrado, este serviço cadastra um observador
 no serviço de acesso de modo que ele seja notificado quando
 a credencial do componente não for mais válida. Dessa forma ele
 pode retirar o componente de seu repositório sem que este 
 tenha feito um ``logout'' de forma explícita.
 
-Este serviço também é implementado em Lua. Num primeiro momento,
+\subsubsection{Persistência de ofertas de serviço}
+Num primeiro momento,
 as ofertas serão armazenadas em memória, mas devemos considerar
 uma estrutura de implementação que permita que em outra etapa
 do projeto seja utilizado um BD.
 
-Como será feita a busca pelas ofertas de serviço? Consultas aa tabelas
-Lua?
+A discutir: o que fazer se o serviço de registro cair?
+Persistimos as ofertas (como as credenciais) e as restauramos?
+Uso de arquivos (antes da etapa BD)?
+Neste caso, devemos, ao restaurar ofertas verificar a validade das credenciais
+de seus exportadores (para não restaurar indevidamente ofertas de serviço).
 
-\footnotesize
-\begin{verbatim}
-  PUBLICAÇÂO DE OFERTAS DE SERVIÇO
-  ========================================================
+E os observadores que ficaram no serviço de acesso?
 
-  3) Um membro pode publicar ofertas de serviço. Pode alterar suas ofertas de 
-     serviço e pode também retirá-las.
-  
-     Recebe uma identificação para o registro de sua oferta (para alterá-la, 
-     removê-la...)
 
-     Se é detectada a ausência DEFINITIVA de um membro (falha na validação da 
-     entrada relativa à sua autenticação/conexão), suas ofertas devem ser 
-     retiradas
-     (atenção para o caso de problemas de comunicação temporarios, com ofertas 
-      não sendo republicadas...)
-
-    => Uma oferta de serviço contém referência para um membro ou para uma 
-      faceta desse membro? Ou para as duas coisas? 
-
-    => O nome de uma oferta de serviço é o nome de uma faceta?
-
-  4) Por que o repositório de ofertas não é apenas o registro?
-
-     => Porque queremos que as ofertas de serviço possam ser 
-        controladas/gerenciadas pelos provedores. A oferta não pode ser 
-        automatica (p.ex. oferecimento "automatico" das facetas de um membro)
-
-  => VAMOS IMPLEMENTAR PESQUISA DE OFERTAS "A la trading" ?
-     Critérios simples (por exemplo, o "tipo" que distingue poços em produção 
-     e poços na base...)
-     Constraints mais sofisticados...
-\end{verbatim}
-\normalsize
+\subsubsection{Outras questões}
+Assim como os demais componentes, o serviço de registro também
+deve se autenticar no serviço de acesso. Para isso, ele usa
+um certificado que já o identifica como o serviço de registro.
+(É verdade? Um certificado específico é emitido pra ele, certo?)
+Ele deve ainda manter ``ativa'' a sua credencial.
 
 \subsection{Serviço de Sessão}
 
@@ -189,13 +206,33 @@ acesso, o componente pede sua adição à sessâo.
 Componentes de um grupo, ao invés de se desconectarem do serviço de acesso
 ({\em logout}) pedem a sua desconexão da sessão.
 
-Um dos componentes é ``eleito'' pelo serviço
-para manter a credencial ativa (inicialmente, quem criou a sessão).
-Se o serviço de sessão nota que
-a credencial expirou, ele eleje outro componente para a tarefa, mas
-enquanto isso, renova a credencial no serviço de acesso.
+A renovação da credencial associada a uma sessão junto ao serviço de acesso é feita 
+pela sessão.
+É a própria sessão quem implementa (para os membros do grupo) a interface
+de renovação do leasing.
 Apenas quando não há mais membros no grupo (dispostos a renovar a credencial) ele
-deixa a credenciali expirar.
+deixa a credencial expirar. Neste caso, a sessão é destruída.
+O mecanismo de temporização do scheduler do OiL pode ser utilizado para "ativar"
+a renovação da credencial de cada sessão junto ao serviço de acesso.
+Isso partindo da premissa que esse mecanismo (implementado com corotinas) não é
+custoso, e é escalável...
+
+Um dos componentes do grupo é ``eleito'' pelo serviço
+para manter a credencial ativa (inicialmente, quem criou a sessão).
+Se o serviço de sessão nota que este componente deixou de manter
+a credencial, ele eleje outro componente para a tarefa.
+
+A discutir: como proceder se a sessão (serviço de sessão) cair?
+
+Um componente de uma sessão deve, obrigatoriamente, implementar (faceta?)
+uma interface que permita responder à uma solicitação para assumir a 
+renovação da credencial/sessão e para receber mensagens enviadas pela 
+sessão.
+
+Em princípio, estamos assumindo que as mensagens que trafegam em uma sessão
+são "broadcast".
+
+A definir: estrutura das mensagens enviadas via sessão.
 
 \section{Caso de Uso 1 -- Teste do Ambiente}
 
