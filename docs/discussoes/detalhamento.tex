@@ -231,12 +231,11 @@ para manter a credencial ativa (inicialmente, quem criou a sessão).
 Se o serviço de sessão nota que este componente deixou de manter
 a credencial, ele eleje outro componente para a tarefa.
 
-A discutir: como proceder se a sessão (serviço de sessão) cair?
 
 Um componente de uma sessão deve, obrigatoriamente, implementar (faceta?)
 uma interface que permita responder à uma solicitação para assumir a 
-renovação da credencial/sessão e para receber mensagens enviadas pela 
-sessão.
+renovação da credencial/sessão, para receber mensagens enviadas pela 
+sessão e para ser avisado do "fechamento" da sessão.
 
 Em princípio, estamos assumindo que as mensagens que trafegam em uma sessão
 são "broadcast".
@@ -284,6 +283,7 @@ A idéia é que seja possível executar a seguinte seqüência:
       dado a partir da chave fornecida pelo cliente 2.
 \item Cliente 1 obtém o conteúdo do dado.
 \item Cliente 1 finaliza a sessão
+\item Serviço de sessão (sessão) avisa ao Cliente 2 que sessão será encerrada
 \item Serviço de sessão (sessão) faz o "logout" da credencial junto ao serviço de acesso
 \end{itemize}
 
