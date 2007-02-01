@@ -1,0 +1,35 @@
+#ifndef DS_IDL
+#define DS_IDL
+
+module OpenBus {
+
+/**
+ * Módulo do Serviço de Dados
+ */
+module DS {
+
+typedef string AttributeName;
+typedef string AttributeValue;
+struct Attribute {
+  AttributeName name;
+  AttributeValue value;
+};
+typedef sequence<Attribute> Attributes;
+
+typedef string Key;
+struct Node {
+  Key key;
+  Attributes attributes;
+};
+typedef sequence<Node> Nodes;
+
+interface DataService {
+  Node getRootNode();
+  Nodes getChildren(in Key key);
+};
+
+};
+
+};
+
+#endif
