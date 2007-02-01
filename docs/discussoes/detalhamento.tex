@@ -38,6 +38,9 @@ uso para a BR, que será o protótipo propriamente dito.
 
 \section{Membros do OpenBus}
 
+Explicar hierarquia.
+Presta serviço através de facetas.
+
 \section{Mecanismos Básicos}
 
 \subsection{Leasing}
@@ -70,15 +73,15 @@ Esse serviço é implementado em Lua e usa as bibliotecas OiL,
 openSSL e luaLDAP (para a validação do par usuário/senha).
 
 Após autenticar o componente, o serviço de acesso emite uma
-credencial que deverá ser usada pelo mesmo para
-acessar os demais serviços do barramento (básicos ou não).
+credencial que deverá ser usada pelo mesmo para acessar os demais
+serviços do barramento (básicos ou não). A credencial
+possui um identificador e o nome da entidade à qual está associada, que
+pode ser um usuário ou um serviço.
 Essa credencial tem um ciclo de vida e deve ser renovada pelo 
 componente para que não expire (mecanismo de leasing).
-Quando a validade de uma
-credencial expira, o componente perde o acesso ao barramento.
-Qualquer componente (isso é verdade?!?!?!) pode pedir ao serviço
-de acesso para ser notificado quando uma determinada credencial
-expirar.
+Quando a validade de uma credencial expira, o componente perde o
+acesso ao barramento. Qualquer componente pode pedir ao serviço de acesso
+para ser notificado quando uma determinada credencial expirar.
 
 Como é feita a ``limpeza'' desses observadores? Quando a credencial
 deles expira eles são retirados da lista?!
@@ -93,15 +96,34 @@ obteve a credencial do serviço de acesso.
 a referência para o serviço de registro. Qualquer outro serviço
 (incluindo o de sessão) deve ser obtido através do serviço de registro.
 
-Como funciona a credencial? Somente o serviço de acesso
-sabe "abrí-la" e obter o usuário que a gerou?
 Como será feita a persistência?
 
 Falar dos interceptadores: a credencial vai junto com cada 
 chamada de método e a validação é feita de forma "automática".
 
-Cabe explicar o mecanismo de certificado? Que um administrador
-deve gerar o par de chaves, que é gerado um "desafio", etc?
+\subsubsection{Procedimento para a autenticação usando certificados digitais}
+
+\begin{itemize}
+
+\item A entidade obtém o Serviço de Controle de Acesso e executa o método \textit{getChallenge}, passando o seu nome.
+
+\item O desafio recebido está criptografado com a chave pública da entidade. O Serviço de Controle de Acesso obtém essa chave a partir do certificado digital da entidade que foi cadastrado anteriormente. O cadastro de certificados digitais deve ser realizado externamente, pelo administrador.
+
+\item Ao receber o desafio, a entidade deve abrí-lo com sua chave privada e criptografá-lo com a chave pública do Serviço de Controle de Acesso, gerando uma resposta.
+
+\item A entidade deve executar o método \textit{loginByCertificate} do Serviço de Controle de Acesso e passa a reposta obtida no item anterior.
+
+\end{itemize}
+
+Observações:
+
+\begin{itemize}
+
+\item Os serviços básicos são autenticados através de certificados e estes certificados são bem conhecidos pelo Serviço de Controle de Acesso. Em princípio, serão cadastrados pelo administrador no momento da instalação do barramento.
+
+\item O Serviço de Controle de Acesso deve possuir um certificado digital acessível por todos os membros.
+
+\begin{itemize}
 
 \subsection{Serviço de Registro}
 
@@ -231,11 +253,12 @@ para manter a credencial ativa (inicialmente, quem criou a sessão).
 Se o serviço de sessão nota que este componente deixou de manter
 a credencial, ele eleje outro componente para a tarefa.
 
+A discutir: como proceder se a sessão (serviço de sessão) cair?
 
 Um componente de uma sessão deve, obrigatoriamente, implementar (faceta?)
 uma interface que permita responder à uma solicitação para assumir a 
-renovação da credencial/sessão, para receber mensagens enviadas pela 
-sessão e para ser avisado do "fechamento" da sessão.
+renovação da credencial/sessão e para receber mensagens enviadas pela 
+sessão.
 
 Em princípio, estamos assumindo que as mensagens que trafegam em uma sessão
 são "broadcast".
@@ -283,7 +306,6 @@ A idéia é que seja possível executar a seguinte seqüência:
       dado a partir da chave fornecida pelo cliente 2.
 \item Cliente 1 obtém o conteúdo do dado.
 \item Cliente 1 finaliza a sessão
-\item Serviço de sessão (sessão) avisa ao Cliente 2 que sessão será encerrada
 \item Serviço de sessão (sessão) faz o "logout" da credencial junto ao serviço de acesso
 \end{itemize}
 
