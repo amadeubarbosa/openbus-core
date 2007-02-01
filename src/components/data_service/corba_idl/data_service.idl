@@ -4,7 +4,7 @@
 module OpenBus {
 
 /**
- * Módulo do Serviço de Dados
+ * \brief Módulo do Serviço de Dados
  */
 module DS {
 

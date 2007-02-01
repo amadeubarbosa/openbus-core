@@ -1,0 +1,36 @@
+#ifndef PS_IDL
+#define PS_IDL
+
+module OpenBus {
+
+/**
+ * \brief Módulo do Serviço de Projetos.
+ */
+module PS {
+
+interface Project {
+  File getRootFile();
+};
+typedef sequence<Project> Projects;
+
+interface File {
+  DataChannel openDataChannel();
+  boolean closeDataChannel(in DataChannel channel);
+};
+
+interface ProjectService {
+  Projects getProjects();
+  Project getProject (in string name);
+  File getFile(in string path);
+
+  boolean createFile(in File father, in string name);
+  boolean deleteFile(in File file);
+  boolean moveFile(in File source, in File newFather);
+  boolean copyFile(in File source, in File newFather);
+};
+
+};
+
+};
+
+#endif
