@@ -36,6 +36,15 @@ desses serviços básicos simulando um caso de uso, de onde pretendemos
 extrair alguns módulos comuns aos componentes; e um ambiente de caso de 
 uso para a BR, que será o protótipo propriamente dito.
 
+\section{Membros do OpenBus}
+
+\section{Mecanismos Básicos}
+
+\subsection{Leasing}
+
+\subsection{Autenticação via Interceptadores}
+
+
 \section{Serviços Básicos}
 
 Na primeira fase do projeto, o OpenBUS será composto dos seguintes
@@ -234,6 +243,10 @@ são "broadcast".
 
 A definir: estrutura das mensagens enviadas via sessão.
 
+\section{Serviço de Dados}
+
+\section{Serviço de Projetos}
+
 \section{Caso de Uso 1 -- Teste do Ambiente}
 
 No primeiro caso de uso vamos implementar dois clientes e um serviço
@@ -244,25 +257,34 @@ simulando o cliente VGE do caso de uso 2.
 
 A idéia é que seja possível executar a seguinte seqüência:
 \begin{itemize}
-\item cliente 1 se autentica no serviço de acesso através de 
+\item Cliente 1 se autentica no serviço de acesso através de 
       um par \textit{usuário,senha} e obtém uma credencial.
-\item cliente 1 obtém, através do serviço de acesso, a referência
-      para o serviço de registro, e nele a referência para o de sessão,
-      e cria uma sessão para sua credencial.
+\item Cliente 1 obtém, através do serviço de acesso, a referência
+      para o serviço de registro, e nele a referência para o de sessão.
+\item Cliente cria uma sessão para sua credencial.
 \item Nesse momento, o cliente 1 passa a manter sua credencial
       no serviço de sessão e é o serviço de sessão quem mantém esta credencial
       no serviço de acesso.
-\item cliente 1 entrega sua credencial para o cliente 2.
-\item cliente 2 não precisa manter a credencial.
-\item cliente 2 obtém as referências aos serviços básicos, através do
-      serviços de acesso/registro.
-\item cliente 2 se inclui na sessão da credencial fornecida pelo cliente 1
-\item cliente 2 obtém, através do serviço de registro, um serviço de dados.
-\item cliente 2 obtém do serviço de dado, um determinado dado de seu
-      interesse.
-\item cliente 2 avisa, através de troca de mensagem, ao cliente 1, que
-      já obteve o dado desejado.
-\item ??
+\item Cliente 1 entrega sua credencial para o cliente 2.
+\item Cliente 2 obtém a referência para o serviço de registro através do
+      serviço de acesso
+\item Cliente 2 obtém a referência para o serviço de sessão através do
+      serviços de registro.
+\item Cliente 2 solicita ao serviço de sessão sua inclusão na sessão da credencial 
+      fornecida pelo cliente 1
+\item Cliente 2 obtém, através do serviço de registro, um serviço de projetos,
+      especificando seu tipo, e a presença de facetas de dados (navegação) e
+      arquivo (acesso a conteúdo)
+\item Cliente 2, utilizando a faceta de dados/navegação obtém a chave de um determinado
+      dado de seu interesse.
+\item Cliente 2 repassa, através de troca de mensagem, ao cliente 1, a chave do
+      dado desejado.
+\item Cliente 1 obtém via serviço de registro a referência para o serviço de projeto,
+\item Cliente 1 solicita ao serviço de projeto a obtenção da referência para o
+      dado a partir da chave fornecida pelo cliente 2.
+\item Cliente 1 obtém o conteúdo do dado.
+\item Cliente 1 finaliza a sessão
+\item Serviço de sessão (sessão) faz o "logout" da credencial junto ao serviço de acesso
 \end{itemize}
 
 Deste caso de uso, pretendemos extrair os procedimentos comuns a todos
