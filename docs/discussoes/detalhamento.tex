@@ -136,6 +136,12 @@ Quando a validade de uma credencial expira, o componente perde o
 acesso ao barramento. Qualquer componente pode pedir ao serviço de acesso
 para ser notificado quando uma determinada credencial expirar.
 
+Para evitar a perda de credenciais válidas, em caso de falha no serviço de
+controle de acesso, as credenciais são persistidas em um repositório de
+credenciais. Quando o serviço de controle de acesso é iniciado, carrega todas
+as credenciais do repositório. Este repositório é atualizado pelo serviço de
+controle de acesso sempre que uma credencial é criada ou removida.
+
 Como é feita a ``limpeza'' desses observadores? Quando a credencial
 deles expira eles são retirados da lista?!
 
@@ -149,8 +155,6 @@ obteve a credencial do serviço de acesso.
 a referência para o serviço de registro. Qualquer outro serviço
 (incluindo o de sessão) deve ser obtido através do serviço de registro.
 
-Como será feita a persistência?
-
 Falar dos interceptadores: a credencial vai junto com cada 
 chamada de método e a validação é feita de forma "automática".
 
@@ -158,13 +162,20 @@ chamada de método e a validação é feita de forma "automática".
 
 \begin{itemize}
 
-\item A entidade obtém o Serviço de Controle de Acesso e executa o método \textit{getChallenge}, passando o seu nome.
+\item A entidade obtém o Serviço de Controle de Acesso e executa o método
+\textit{getChallenge}, passando o seu nome.
 
-\item O desafio recebido está criptografado com a chave pública da entidade. O Serviço de Controle de Acesso obtém essa chave a partir do certificado digital da entidade que foi cadastrado anteriormente. O cadastro de certificados digitais deve ser realizado externamente, pelo administrador.
+\item O desafio recebido está criptografado com a chave pública da entidade. O
+Serviço de Controle de Acesso obtém essa chave a partir do certificado digital
+da entidade que foi cadastrado anteriormente. O cadastro de certificados
+digitais deve ser realizado externamente, pelo administrador.
 
-\item Ao receber o desafio, a entidade deve abrí-lo com sua chave privada e criptografá-lo com a chave pública do Serviço de Controle de Acesso, gerando uma resposta.
+\item Ao receber o desafio, a entidade deve abrí-lo com sua chave privada e
+criptografá-lo com a chave pública do Serviço de Controle de Acesso, gerando
+uma resposta.
 
-\item A entidade deve executar o método \textit{loginByCertificate} do Serviço de Controle de Acesso e passa a reposta obtida no item anterior.
+\item A entidade deve executar o método \textit{loginByCertificate} do Serviço
+de Controle de Acesso e passa a reposta obtida no item anterior.
 
 \end{itemize}
 
@@ -172,9 +183,13 @@ Observações:
 
 \begin{itemize}
 
-\item Os serviços básicos são autenticados através de certificados e estes certificados são bem conhecidos pelo Serviço de Controle de Acesso. Em princípio, serão cadastrados pelo administrador no momento da instalação do barramento.
+\item Os serviços básicos são autenticados através de certificados e estes
+certificados são bem conhecidos pelo Serviço de Controle de Acesso. Em
+princípio, serão cadastrados pelo administrador no momento da instalação do
+barramento.
 
-\item O Serviço de Controle de Acesso deve possuir um certificado digital acessível por todos os membros.
+\item O Serviço de Controle de Acesso deve possuir um certificado digital
+acessível por todos os membros.
 
 \end{itemize}
 
