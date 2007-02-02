@@ -9,13 +9,38 @@ module OpenBus {
 module PS {
 
 interface Project {
+  string getId();
+  string getName();
+  string getOwner();
   File getRootFile();
+  boolean exists(in string path);
+
+  boolean createFile(in File parent, in string name, in string type);
+  boolean createDirectory (in File parent, in string name);
+  boolean deleteFile(in File file);
+  boolean renameFile (in File file, in string newName);
+  boolean moveFile(in File currentParent, in File newParent);
+  boolean copyFile(in File currentParent, in File newParent);
+
+  void deactivate();
 };
 typedef sequence<Project> Projects;
 
 interface File {
+  string getName();
+  string getPath();
+  string getDescription();
+  string getType();
+  long long getSize();
+  long getCreationDate();
+  boolean canRead();
+  boolean canWrite();
+  boolean isDirectory();
+  boolean isUnderConstruction();
+  Project getProject();
   DataChannel openDataChannel();
   boolean closeDataChannel(in DataChannel channel);
+  void deactivate();
 };
 
 interface ProjectService {
@@ -23,10 +48,8 @@ interface ProjectService {
   Project getProject (in string name);
   File getFile(in string path);
 
-  boolean createFile(in File father, in string name);
-  boolean deleteFile(in File file);
-  boolean moveFile(in File source, in File newFather);
-  boolean copyFile(in File source, in File newFather);
+  Project createProject(in string name);
+  boolean deleteProject(in Project project);
 };
 
 };
