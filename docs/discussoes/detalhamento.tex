@@ -17,18 +17,12 @@
 \maketitle
 
 \begin{abstract}
-Isso é um resumo das nossas várias discussões.
+O objetivo desse documento é resumir nossas várias discussões.
 A idéia é que fique registrado o que foi discutido
 para servir de base para os que vão implementar o projeto.
-(Em especial pra mim que ando esquecendo de tudo! :-)
-
-Ainda está tudo misturado. Escrevi umas coisas e peguei outras
-de um texto da Ana em prototipo1.txt, mas ainda não juntei as
-partes direito.
-
---Cris
 \end{abstract}
 
+\section{Objetivo do Protótipo}
 Para implementar o protótipo do sistema, dividimos
 as tarefas em três etapas (que não necessáriamente serão implementadas
 em paralelo): os serviços básicos, um ambiente de teste
@@ -47,6 +41,65 @@ Presta serviço através de facetas.
 
 \subsection{Autenticação via Interceptadores}
 
+O mecanismo de interceptadores disponibilizado pela arquitetura CORBA permite a
+atuação sobre sequências ``requisição/resposta" de pedidos de serviço.
+Essa atuação é realizada por procedimentos especiais cadastrados 
+junto ao ORB (interceptadores),
+em pontos específicos do tratamento dessa sequência (pontos de interceptação).
+No lado cliente, por exemplo, o ponto de interceptação {\bf send-request} 
+permite a atuação de um interceptador imediatamente antes do envio da requisição
+ao servidor. No lado servidor, os pontos de interceptação 
+{\bf receive-request-service-contexts} e {\bf receive-request} permitem que
+interceptadores atuem sobre uma requisição antes que esta seja entregue a seu
+destinatário ({\em servant}).
+Apesar de não poder alterar os parâmetros de uma operação, interceptadores
+podem, por exemplo, levantar exceções e realizar invocações de serviço.
+
+Um exemplo típico de atuação sobre uma requisição de serviço é a propagação
+de informações ({\em service contexts}) entre clientes e servidores.
+Essas informações podem, por exemplo, ser inseridas na requisição por 
+interceptadores no lado cliente e removidas, e tratadas, por interceptadores no 
+lado servidor.
+
+Na arquitetura OpenBUS, pretendemos utilizar interceptadores como mecanismo 
+básico de suporte à autenticação e autorização de componentes.
+Conforme veremos adiante, para acessar os serviços oferecidos no barramento,
+os componentes deverão prover, em cada requisição de serviço, uma credencial
+que lhes é fornecida no momento de sua autenticação junto ao Serviço de Acesso.
+
+Interceptadores registrados no ambiente de clientes de serviço serão 
+responsáveis pela inserção automática da credencial desses clientes 
+(como um {\em service context})
+em todas as requisições de serviço emitidas pelos mesmos.
+Para isso, é necessário disponibilizar a esses interceptadores o acesso à
+credencial fornecida pelo serviço de acesso.
+Uma forma de disponibilizar essa informação é através do objeto {\bf PICurrent}.
+A credencial associada ao cliente pode ser armazenada em um {\em slot} 
+desse objeto, previamente alocado para esse propósito.
+
+Interceptadores registrados no ambiente de provedores de serviço serão 
+responsáveis por extrair a credencial de uma requisição, e validá-la.
+Caso a credencial fornecida não seja válida, o tratamento da requisição será
+abortado pelo interceptador, possivelmente através do levantamento de uma 
+exceção.
+
+O procedimento de validação de credenciais será 
+transparente à implementação do serviço propriamente dita.
+Esse procedimento envolverá consultas ao serviço de acesso e,
+provavelmente,  a manutenção de uma ''cache" de credenciais para minimizar a 
+frequência dessas consultas\footnote{O mecanismo de validação de credenciais 
+implementado pelos interceptadores do lado
+servidor ainda será discutido e posteriormente descrito neste documento.}.
+
+Além de validar a credencial, o mecanismo de interceptação deve também
+disponibilizá-la ao destinatário da requisição de serviço.
+Essa disponibilização é necessária para permitir 
+uma eventual autorização do cliente para o atendimento a
+um determinado pedido de serviço. Novamente, a disponibilização
+da credencial pode ser realizada através do objeto {\bf PICurrent}.
+O armazenamento da credencial nesse objeto permitirá que,
+caso o atendimento a uma requisição envolva o uso de um outro serviço,
+a credencial do cliente original seja enviada a esse segundo serviço.
 
 \section{Serviços Básicos}
 
