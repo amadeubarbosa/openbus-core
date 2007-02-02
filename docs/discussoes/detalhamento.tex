@@ -117,7 +117,7 @@ servidores (ou como ambos).
 
 A autenticação pode ser feita através de um par
 \textit{usuário,senha} ou através de um \textit{certificado}.
-Tipicamente, aplicações "clientes" se autenticam com um par 
+Tipicamente, aplicações ``clientes" se autenticam com um par 
 \textit{usuário,senha} --- a identificação e senha do usuário que 
 iniciou a aplicação. Servidores tipicamente se autenticam através de um 
 \textit{certificado}.
@@ -154,9 +154,6 @@ obteve a credencial do serviço de acesso.
 É através do serviço de acesso que o componente obtém
 a referência para o serviço de registro. Qualquer outro serviço
 (incluindo o de sessão) deve ser obtido através do serviço de registro.
-
-Falar dos interceptadores: a credencial vai junto com cada 
-chamada de método e a validação é feita de forma "automática".
 
 \subsubsection{Procedimento para a autenticação usando certificados digitais}
 
@@ -197,73 +194,90 @@ acessível por todos os membros.
 
 O serviço de registro é responsável por controlar as ofertas de
 serviços disponíveis no barramento. Um componente que queira
-oferecer um serviço deve explicitamente registrar-se neste 
-serviço. Os componentes que não oferecem um serviço mas que
-queiram ser encontrados por outros componentes também devem
+oferecer um serviço deve explicitamente registrar sua oferta
+no serviço de registro.
+Componentes que desejam utilizar um serviço obtém a localização
+e características/propriedades de provedores desse serviço através
+de consultas ao serviço de registro.
+Os componentes que não oferecem um serviço mas que
+queiram ser encontrados por outros componentes --- por exemplo,
+para permitir sua participação em em ambiente de colaboração --- devem também
 registrar-se.
 
-Este serviço também é implementado em Lua
+Assim como os demais componentes, o serviço de registro também
+deve se autenticar no serviço de acesso. Para isso, ele usa
+um certificado que já o identifica como o serviço de registro.
+Ele deve ainda manter ``ativa'' a sua credencial, utilizando,
+para isso, o mecanismo de renovação de {\em leasing}.
+
+A referência para o serviço de registro é obtida através do serviço de 
+acesso. Para obter essa referência, é necessário que o componente possua
+uma credencial válida (obtida por uma autenticação direta no serviço de acesso
+ou repassada por algum componente que tenha sido autenticado por esse serviço).
+
+O serviço de registro também é implementado em Lua, e utiliza a biblioteca OiL.
 
 \subsubsection{Ofertas de Serviço}
-Uma oferta de serviço tem um "tipo", uma descrição, um conjunto (opcional) de
-propriedades e a referência para o componente (membro) que o implementa.
+Uma oferta de serviço é composta por um tipo, uma descrição, um conjunto 
+(opcional) de propriedades e a referência para o componente (membro) que o 
+implementa.
 
-"Tipo" define qual o serviço oferecido (por exemplo, serviço de projetos,
-serviço de dados de poço, etc...)
+O elemento {\bf tipo} define qual a categoria do serviço que está sendo 
+oferecido 
+ao barramento (por exemplo, um serviço de projetos, um serviço de dados de poço,
+etc...). É um ``nome" que representa um conjunto de funcionalidades que, 
+na verdade, é disponibilizada através de facetas implementadas
+pelo componente que oferece o serviço.
 
-Dúvida: O tipo é só um nome arbitrário, ou deveria, de alguma forma, indicar 
-a interface implementada? Por exemplo, no caso do serviço de sessão, discutiu-se
-que sua funcionalidade
-seria implementada por uma interface "não faceta"?
-Neste caso, por exemplo, só um nome arbitrário é uma "amarração" suficiente para 
-a interface do serviço oferecido?
-
-No caso de um serviço de poço, a funcionalidade estaria implementada via suas
-facetas. Neste caso, uma faceta é amarrada com uma interface...
-
-E um serviço de projetos? Oferece funcionalidade apenas via facetas?
-
-"Descrição" é um texto que pode ser exibido em uma interface para que um
+O elemento {\bf descrição} é um texto que pode ser exibido em uma interface 
+para que um
 usuário possa, por exemplo, decidir entre ofertas de serviço que tenham o 
 mesmo tipo e propriedades equivalentes.
+Uma questão em aberto é a ``localização" dessa descrição (ou seja, sua
+tradução para o idioma adequado ao usuário).
 
-Propriedades de uma oferta de serviço são pares nome X valor.
+As propriedades de uma oferta de serviço são pares nome X valor.
 Um exemplo de propriedade é o conjunto de facetas que o serviço oferece.
 (nome = facets, valor = sequência de strings com os nomes das facetas).
 
-Uma outra propriedade possível é o tipo de "fonte" dos dados (Base integrada,
-OpenSpirit). Essa propriedade permitiria uma seleção "programática" de uma
-oferta de serviço de dados com base na fonte desses dados.
+Uma outra propriedade possível é o tipo de ``fonte" dos dados (por exemplo,
+Base integrada, OpenSpirit). O uso dessa propriedade permitiria uma seleção 
+``programática" de 
+uma oferta de serviço de dados com base na fonte desses dados.
 
-A busca de ofertas de serviço é realizada com base em um conjunto de
+Um exportador de oferta de serviço pode alterar sua oferta (alterar
+propriedades) e também removê-la integralmente.
+O serviço de registro associará um identificador para cada oferta exportada;
+esse identificador será usado pelo exportador para alterar/remover sua oferta.
+
+\subsubsection{Busca de ofertas de serviço}
+A busca de oferta de serviços é realizada com base em um conjunto de
 critérios (pares nome/valor). Um desses critérios é o tipo do serviço,
-Outro critério (opcional) são valores das propriedades. Neste caso,
-temos dois filtros para uma oferta: a existência da propriedade,
+Outro critério são valores de propriedades relacionadas na oferta 
+de serviço. Neste caso, teremos dois filtros na busca de uma oferta:
+a existência da propriedade,
 e, se existir a propriedade, se o seu valor atende ao critério de busca.
 
 Inicialmente, estamos prevendo apenas strings para valores de propriedades.
-Se, e quando, precisarmos de tipos de valores diferentes, é necessário podermos
-checar casamento do tipo fornecido pelo importador da oferta com o tipo
-fornecido pelo exportador. Será necessário, então, prever um "cadastramento" de
-tipos de serviço, com descrição de propriedades, como o trader faz?
+Se, e quando, precisarmos de tipos de valores diferentes, talvez seja necessário
+checar o tipo do valor fornecido pelo importador da oferta com o tipo do
+valor fornecido pelo exportador da oferta de serviço
+\footnote{Seria conveniente, então, prever um ``cadastramento" de
+tipos de serviço, com descrição de propriedades, como o trader faz?}.
 
-O resultado de uma busca é o conjunto de ofertas que o atende (conforme cadastrado
-pelos exportadores dessas ofertas)
+O resultado de uma busca de ofertas de serviço é o conjunto de ofertas que 
+atende os critérios especificados. Esse resultado deverá expor todos os
+elementos que compõem a oferta de serviço (tipo, descrição, propriedades,
+referência para o provedor do serviço).
 
-Dúvida: Como será feita a busca pelas ofertas de serviço? Consultas a tabelas
-Lua?
-
-Um exportador de oferta de serviço pode alterar suas ofertas (alterar
-propriedades, por exemplo?) e também removê-las integralmentes.
-O serviço de registro associará um identificador para uma oferta;
-esse identificador será usado pelo exportador para alterar/remover sua oferta.
 
 \subsubsection{Amarração de ofertas com validade da credencial do exportador}
-Para cada componente registrado, este serviço cadastra um observador
+Para cada componente registrado, o serviço de registro cadastrará um observador
 no serviço de acesso de modo que ele seja notificado quando
-a credencial do componente não for mais válida. Dessa forma ele
-pode retirar o componente de seu repositório sem que este 
-tenha feito um ``logout'' de forma explícita.
+a credencial do componente não for mais válida. 
+Ao ser notificado da perda de validade de uma credencial,
+o serviço de registro removerá de seu repositório a(s) oferta(s) de
+serviço associadas à credencial.
 
 \subsubsection{Persistência de ofertas de serviço}
 Num primeiro momento,
@@ -273,19 +287,14 @@ do projeto seja utilizado um BD.
 
 A discutir: o que fazer se o serviço de registro cair?
 Persistimos as ofertas (como as credenciais) e as restauramos?
-Uso de arquivos (antes da etapa BD)?
 Neste caso, devemos, ao restaurar ofertas verificar a validade das credenciais
-de seus exportadores (para não restaurar indevidamente ofertas de serviço).
+de seus exportadores (para não restaurar indevidamente ofertas de serviço
+de componentes sem credencial válida no barramento).
 
-E os observadores que ficaram no serviço de acesso?
+Uso de arquivos (antes da etapa BD)?
 
-
-\subsubsection{Outras questões}
-Assim como os demais componentes, o serviço de registro também
-deve se autenticar no serviço de acesso. Para isso, ele usa
-um certificado que já o identifica como o serviço de registro.
-(É verdade? Um certificado específico é emitido pra ele, certo?)
-Ele deve ainda manter ``ativa'' a sua credencial.
+Se o serviço de registro cair, o que acontece com os observadores que ficaram 
+no serviço de acesso?
 
 \subsection{Serviço de Sessão}
 
@@ -299,7 +308,7 @@ a credencial deste grupo junto ao serviço de acesso
 e oferece um mecanismo de troca de mensagens entre seus componentes.
 
 Para os membros do grupo, o serviço de sessão passa a responder pelo
-serviço de acesso. O componente "gerador" do grupo é responsável por criar
+serviço de acesso. O componente ``gerador" do grupo é responsável por criar
 uma sessão. Ao receber uma credencial, ao invés de se autenticar no serviço de
 acesso, o componente pede sua adição à sessâo.
 Componentes de um grupo, ao invés de se desconectarem do serviço de acesso
@@ -311,7 +320,7 @@ pela sessão.
 de renovação do leasing.
 Apenas quando não há mais membros no grupo (dispostos a renovar a credencial) ele
 deixa a credencial expirar. Neste caso, a sessão é destruída.
-O mecanismo de temporização do scheduler do OiL pode ser utilizado para "ativar"
+O mecanismo de temporização do scheduler do OiL pode ser utilizado para ``ativar"
 a renovação da credencial de cada sessão junto ao serviço de acesso.
 Isso partindo da premissa que esse mecanismo (implementado com corotinas) não é
 custoso, e é escalável...
@@ -329,13 +338,107 @@ renovação da credencial/sessão e para receber mensagens enviadas pela
 sessão.
 
 Em princípio, estamos assumindo que as mensagens que trafegam em uma sessão
-são "broadcast".
+são ``broadcast".
 
 A definir: estrutura das mensagens enviadas via sessão.
 
 \section{Serviço de Dados}
 
+A interface do Serviço de Dados (IDL) é a apresentada a seguir:
+
+\footnotesize
+\begin{verbatim}
+module OpenBus {
+
+/**
+ * Módulo do Serviço de Dados
+ */
+module DS {
+
+typedef string AttributeName;
+typedef string AttributeValue;
+struct Attribute {
+  AttributeName name;
+  AttributeValue value;
+};
+typedef sequence<Attribute> Attributes;
+
+typedef string Key;
+struct Node {
+  Key key;
+  Attributes attributes;
+};
+typedef sequence<Node> Nodes;
+
+interface DataService {
+  Node getRootNode();
+  Nodes getChildren(in Key key);
+};
+};
+};
+\end{verbatim}
+\normalsize
+
 \section{Serviço de Projetos}
+
+A interface do Serviço de Dados (IDL) é a apresentada a seguir:
+
+\footnotesize
+\begin{verbatim}
+module OpenBus {
+
+/**
+ * Módulo do Serviço de Projetos.
+ */
+module PS {
+
+interface Project {
+  string getId();
+  string getName();
+  string getOwner();
+  File getRootFile();
+  boolean exists(in string path);
+
+  boolean createFile(in File parent, in string name, in string type);
+  boolean createDirectory (in File parent, in string name);
+  boolean deleteFile(in File file);
+  boolean renameFile (in File file, in string newName);
+  boolean moveFile(in File currentParent, in File newParent);
+  boolean copyFile(in File currentParent, in File newParent);
+
+  void deactivate();
+};
+typedef sequence<Project> Projects;
+
+interface File {
+  string getName();
+  string getPath();
+  string getDescription();
+  string getType();
+  long long getSize();
+  long getCreationDate();
+  boolean canRead();
+  boolean canWrite();
+  boolean isDirectory();
+  boolean isUnderConstruction();
+  Project getProject();
+  DataChannel openDataChannel();
+  boolean closeDataChannel(in DataChannel channel);
+  void deactivate();
+};
+
+interface ProjectService {
+  Projects getProjects();
+  Project getProject (in string name);
+  File getFile(in string path);
+
+  Project createProject(in string name);
+  boolean deleteProject(in Project project);
+};
+};
+};
+\end{verbatim}
+\normalsize
 
 \section{Caso de Uso 1 -- Teste do Ambiente}
 
@@ -374,7 +477,7 @@ A idéia é que seja possível executar a seguinte seqüência:
       dado a partir da chave fornecida pelo cliente 2.
 \item Cliente 1 obtém o conteúdo do dado.
 \item Cliente 1 finaliza a sessão
-\item Serviço de sessão (sessão) faz o "logout" da credencial junto ao serviço de acesso
+\item Serviço de sessão (sessão) faz o ``logout" da credencial junto ao serviço de acesso
 \end{itemize}
 
 Deste caso de uso, pretendemos extrair os procedimentos comuns a todos
