@@ -296,6 +296,104 @@ Uso de arquivos (antes da etapa BD)?
 Se o serviço de registro cair, o que acontece com os observadores que ficaram 
 no serviço de acesso?
 
+\subsubsection{Interface do Serviço de Registro}
+A interface do Serviço de Registro (IDL) é a apresentada a seguir:
+
+\footnotesize
+\begin{verbatim}
+module OpenBus {
+
+/**
+ * Módulo do Serviço de Registro.
+ */
+module RS {
+
+typedef sequence<string> PropertyValue;
+
+/**
+ * Representa uma propriedade.
+ */
+struct Property {
+    string name;
+    PropertyValue value;
+}
+typedef sequence<Property> Properties;
+
+/**
+ * Representa uma oferta de serviço.
+ */
+struct ServiceOffer {
+    string type; /**< \brief O tipo do serviço. */
+    string description; /**< \brief A descrição do serviço. */
+    Properties properties; /**< \brief Propriedades. */
+    Member member; /**< \brief O membro que está ofertando o serviço. */
+};
+typedef sequence<ServiceOffer> ServiceOffers;
+
+/** O identificador do registro de um serviço. */
+typedef Identifier RegistryIdentifier;
+
+/**
+ * Representa o serviço de registro.
+ */
+interface RegistryService {
+    /**
+     * Registra uma oferta de serviço.
+     *
+     * \param credential A credencial de quem está registrando a oferta.
+     * \param serviceOffer A oferta de serviço.
+     *
+     * \return Um identificador para o registro.
+     */
+    RegistryIdentifier register(in ACS::Credential credential, in ServiceOffer serviceOffer);
+
+    /**
+     * Remove uma oferta de serviço.
+     *
+     * \param identifier O identificador do registro da oferta do serviço.
+     *
+     * \return true, caso a oferta de serviço seja removida, ou false,
+     * caso contrário.
+     */
+    boolean unregister(in RegistryIdentifier identifier);
+
+    /**
+     * Atualiza uma oferta de serviço.
+     *
+     * \param identifier O identificador do registro da oferta do serviço.
+     * \param serviceOffer A nova oferta de serviço.
+     *
+     * \return true, caso a oferta de serviço seja atualizada, ou false,
+     * caso contrário.
+     */
+    boolean refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
+
+    /**
+     * Realiza uma busca por ofertas que satisfaçam a determinados critérios.
+     *
+     * \param type O tipo de serviço
+     * \param criteria Os critérios da busca.
+     *
+     * \return As ofertas encontradas.
+     */
+    ServiceOffers find (in string type, in Properties criteria);
+};
+
+/**
+ * Membro que representa o serviço de registro.
+ *
+ * Facetas:
+ * - RegistryService
+ */
+interface RegistryServiceComponent : Member {
+};
+};
+};
+
+#endif
+\end{verbatim}
+\normalsize
+
 \subsection{Serviço de Sessão}
 
 Assim como o serviço de registro, o serviço de sessão usa um
@@ -381,7 +479,7 @@ interface DataService {
 
 \section{Serviço de Projetos}
 
-A interface do Serviço de Dados (IDL) é a apresentada a seguir:
+A interface do Serviço de Projetos (IDL) é a apresentada a seguir:
 
 \footnotesize
 \begin{verbatim}
