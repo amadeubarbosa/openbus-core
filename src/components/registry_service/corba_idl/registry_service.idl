@@ -11,25 +11,30 @@ module OpenBus {
  */
 module RS {
 
+typedef sequence<string> PropertyValue;
+
+/**
+ * \brief Representa uma propriedade.
+ */
+struct Property {
+    string name;
+    PropertyValue value;
+}
+typedef sequence<Property> Properties;
+
 /**
  * \brief Representa uma oferta de serviço.
  */
 struct ServiceOffer {
-    string description; /**< \brief A descrição do serviço. */
     string type; /**< \brief O tipo do serviço. */
+    string description; /**< \brief A descrição do serviço. */
+    Properties properties; /**< \brief Propriedades. */
     Member member; /**< \brief O membro que está ofertando o serviço. */
 };
+typedef sequence<ServiceOffer> ServiceOffers;
 
 /** \brief O identificador do registro de um serviço. */
 typedef Identifier RegistryIdentifier;
-
-/** \brief Critério para a busca de um serviço. */
-struct Criterion {
-    string name; /**< \brief Nome do critério. */
-    string value; /**< \brief Valor do critério. */
-};
-/** \brief Representa uma sequência de critérios. */
-typedef sequence<Criterion> Criteria;
 
 /**
  * \brief Representa o serviço de registro.
@@ -44,6 +49,7 @@ interface RegistryService {
      * \return Um identificador para o registro.
      */
     RegistryIdentifier register(in ACS::Credential credential, in ServiceOffer serviceOffer);
+
     /**
      * \brief Remove uma oferta de serviço.
      *
@@ -53,6 +59,7 @@ interface RegistryService {
      * caso contrário.
      */
     boolean unregister(in RegistryIdentifier identifier);
+
     /**
      * \brief Atualiza uma oferta de serviço.
      *
@@ -63,14 +70,16 @@ interface RegistryService {
      * caso contrário.
      */
     boolean refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
+
     /**
-     * \brief Realiza uma busca por membros que satisfaçam a determinados critérios.
+     * \brief Realiza uma busca por ofertas que satisfaçam a determinados critérios.
      *
+     * \param type O tipo de serviço
      * \param criteria Os critérios da busca.
      *
      * \return Os membros encontrados.
      */
-    Members find (in Criteria criteria);
+    ServiceOffers find (in string type, in Properties criteria);
 };
 
 /**
@@ -81,9 +90,7 @@ interface RegistryService {
  */
 interface RegistryServiceComponent : Member {
 };
-
 };
-
 };
 
 #endif
