@@ -440,8 +440,51 @@ são ``broadcast".
 
 A definir: estrutura das mensagens enviadas via sessão.
 
-\section{Serviço de Dados}
+\section{Serviço de Projetos}
+Na primeira fase do protótipo do OpenBUS, implementaremos um Serviço de
+Projetos, que será composto por duas facetas: uma interface de navegação
+(Serviço de Dados) e uma interface de arquivos (Serviço de Arquivos).
 
+A faceta de navegação, ou Serviço de Dados, representa uma funcionalidade
+``genérica", que permitirá a um cliente navegar através da hierarquia
+de um repositório de dados qualquer, obtendo, durante essa navegação,
+propriedades, ou atributos, dos elementos (nós) que compõem essa hierarquia.
+Um atributo de um elemento é um par nome X valor. Inicialmente,
+por simplicidade, valores serão {\em strings}.
+Também por simplicidade, não oferecemos, nesta fase, facilidades de ``query"
+para obtenção de elementos a partir de critérios aplicados sobre seus 
+conjuntos de propriedades. Contudo, poderemos mais tarde incluir esse
+tipo de funcionalidade.
+
+Para cada tipo de repositório de dados, será definido, e documentado, o 
+conjunto de propriedades associada a cada um de seus elementos.
+Esses conjuntos de propriedades representam o modelo de dados oferecido
+pelo repositório.
+
+Cada elemento possuirá uma propriedade especial --- uma chave, ou {\bf Key} ---
+que representa seu identificador. A partir desse identificador será possível
+obter, junto à faceta do serviço que disponibiliza o conteúdo dos dados
+do repositório, a referência para o objeto que provê acesso
+ao conteúdo do elemento respectivo.
+Essa chave será utilizada também para navegação no repositório (obtenção
+dos descendentes de um elemento).
+
+No caso do serviço de projetos, será utilizada como ``chave" de um elemento/nó
+o seu {\em caminho} no repositório, a partir da raiz.
+
+A faceta de arquivos será responsável por disponibilizar o acesso ao
+conteúdo dos dados (projetos e arquivos) mantidos pelo serviço de projetos.
+A interface implementada por essa faceta é representa um subconjunto da
+funcionalidade atualmente provida pelo serviço {\bf WIO} implementado
+no {\bf CSBase}.
+
+É importante notar que o acesso ao conteúdo de um repositório de projetos
+é independente da utilização da interface de navegação, ou seja,
+é possível utilizar diretamente a faceta da interface de arquivos
+ou obter um de seus objetos através de uma chave obtida através da
+faceta de navegação.
+
+\subsection{Serviço de Dados}
 A interface do Serviço de Dados (IDL) é a apresentada a seguir:
 
 \footnotesize
@@ -477,9 +520,9 @@ interface DataService {
 \end{verbatim}
 \normalsize
 
-\section{Serviço de Projetos}
+\subsection{Serviço de Arquivos}
 
-A interface do Serviço de Projetos (IDL) é a apresentada a seguir:
+A interface do Serviço de Arquivos (IDL) é a apresentada a seguir:
 
 \footnotesize
 \begin{verbatim}
@@ -537,6 +580,13 @@ interface ProjectService {
 };
 \end{verbatim}
 \normalsize
+
+Dúvidas: 
+\begin{itemize}
+\item O método {\bf getProjects} não poderia retornar apenas o nome dos 
+projetos, sem que seja necessário criar os objetos correspondentes?
+\item é necessário o método {\bf isUnderConstruction} para um arquivo?
+\end{itemize}
 
 \section{Caso de Uso 1 -- Teste do Ambiente}
 
