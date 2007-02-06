@@ -32,8 +32,18 @@ uso para a BR, que será o protótipo propriamente dito.
 
 \section{Membros do OpenBus}
 
-Explicar hierarquia.
-Presta serviço através de facetas.
+A classe OpenBus.Member define um membro do OpenBus e é uma especialização das
+classes SCS.IComponent e SCS.IMetaInterface.
+Através da interface OpenBus.Member podemos descobrir as facetas que um membro
+disponibiliza e obter referências para estas facetas. Tipicamente, um membro
+disponibilizará seus serviços através destas facetas. Além disso, alguns
+comportamentos opcionais dos membros serão implementados sob a forma de faceta
+como, por exemplo, a habilidade de participar de sessões.
+
+Dúvidas: 
+\begin{itemize}
+\item Vale a pena colocar o que é o SCS?
+\end{itemize}
 
 \section{Mecanismos Básicos}
 
@@ -585,7 +595,9 @@ Dúvidas:
 \begin{itemize}
 \item O método {\bf getProjects} não poderia retornar apenas o nome dos 
 projetos, sem que seja necessário criar os objetos correspondentes?
+Depende. Não vamos utilizar um Servant Activator, ou Locator, como fez o Nery?
 \item é necessário o método {\bf isUnderConstruction} para um arquivo?
+Não vamos deixar um cliente saber que um arquivo está em construção?
 \end{itemize}
 
 \section{Caso de Uso 1 -- Teste do Ambiente}
