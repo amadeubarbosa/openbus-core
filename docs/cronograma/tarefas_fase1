@@ -11,28 +11,23 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 
   1.3 Implementação (complementação) de PI para o OiL
 
-  - Tutorial LOOP?
-
 2) DOCUMENTAÇÂO DO PROTÓTIPO (FASE 1)
    ==================================
 
-  2.1 Serviços Básicos: Acesso, Registro, Sessão
-  2.2 Serviços de Dados (funcionalidade comum)
-      -> dependência: 7.1 
+  2.1 Finalizar Documentação Preliminar:
+      - Mecanismos e Serviços Básicos, Serviço de Projetos, Casos de Usos
 
-  2.3 Casos de uso
-
-  2.4 Complementação da Documentação
+  2.2 Complementação da Documentação
       -> várias dependências (implementação de serviços)
    
 
-3) DEFINIÇÃO DE MECANISMOS BÁSICOS
+3) MECANISMOS BÁSICOS
    ===============================
 
   3.1 Mecanismo de leasing
 
-  3.2 Mecanismo de Interceptação de Requisições
-      - definição do mecanismo para inclusão da credencial na requisição
+  3.2 Interceptação de Requisições
+      - mecanismo para inclusão da credencial na requisição
       - obtenção e validação da credencial
       - repasse da credencial para "Current" (thread de invocação do serviço)
 
@@ -67,11 +62,11 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 6) SERVIÇO DE SESSÃO
    =================
 
-  6.1 Incorporar mecanismo de leasing (cliente/servidor)
+  6.1 Mecanismo de troca de mensagens entre membros de sessão
+
+  6.2 Incorporar mecanismo de leasing (cliente/servidor)
       - manutenção de sessão + credencial
       -> dependência: 3.1
-
-  6.2 Mecanismo de troca de mensagens entre membros de sessão
 
   6.3 Incorporar interceptadores
        -> dependências: 1.3 e 3.2
@@ -83,15 +78,14 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 7) SERVIÇO DE PROJETOS
    ===================
 
-  7.1 Definir a IDL básica de um serviço de dados
-  7.2 Definir a IDL do serviço de projetos
-
-  7.3 Implementação do procedimento comum a todos os serviços
+  7.1 Implementação do procedimento comum a todos os serviços
       - autenticação (+leasing credencial)
       - exportação do serviço
       - incorporação de interceptadores
 
-  7.4 Implementação do serviço propriamente dito (JAVA/CSBASE)
+  7.2 Implementação do serviço propriamente dito (JAVA/CSBASE)
+      - Serviço de Dados
+      - Serviço de Projetos
 
 8) CLIENTES BÁSICOS (C++, Java, Lua)
    ================
