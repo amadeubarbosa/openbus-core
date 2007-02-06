@@ -14,14 +14,12 @@ interface Project {
   string getOwner();
   File getRootFile();
   boolean exists(in string path);
-
   boolean createFile(in File parent, in string name, in string type);
   boolean createDirectory (in File parent, in string name);
   boolean deleteFile(in File file);
   boolean renameFile (in File file, in string newName);
   boolean moveFile(in File currentParent, in File newParent);
   boolean copyFile(in File currentParent, in File newParent);
-
   void deactivate();
 };
 typedef sequence<Project> Projects;
@@ -37,17 +35,18 @@ interface File {
   boolean canWrite();
   boolean isDirectory();
   boolean isUnderConstruction();
+  Files getChildren();
   Project getProject();
   DataChannel openDataChannel();
   boolean closeDataChannel(in DataChannel channel);
   void deactivate();
 };
+typedef sequence<File> Files;
 
 interface ProjectService {
   Projects getProjects();
   Project getProject (in string name);
   File getFile(in string path);
-
   Project createProject(in string name);
   boolean deleteProject(in Project project);
 };
