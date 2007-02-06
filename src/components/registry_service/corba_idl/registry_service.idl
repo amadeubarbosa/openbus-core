@@ -19,7 +19,7 @@ typedef sequence<string> PropertyValue;
 struct Property {
     string name;
     PropertyValue value;
-}
+};
 typedef sequence<Property> Properties;
 
 /**
