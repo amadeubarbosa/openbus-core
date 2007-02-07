@@ -67,31 +67,26 @@ function RegistryService:refresh(identifier, serviceOffer)
     return true
 end
 
-function RegistryService:find(criteria)
-    local typeValue
+function RegistryService:find(typeValue, criteria)
     local facets = {}
     for _, criterion in ipairs(criteria) do
-        if criterion.name == "type" then
-            typeValue = criterion.value
-        elseif criterion.name == "facet" then
+       if criterion.name == "facet" then
             table.insert(facets, criterion.value)
         end
     end
     local identifiers = {}
-    if typeValue then
-        if self.identifiersByType[typeValue] then
-            for identifier, exists in pairs(self.identifiersByType[typeValue]) do
-                if exists then
-                    table.insert(identifiers, identifier)
-                end
+    if self.identifiersByType[typeValue] then
+        for identifier, exists in pairs(self.identifiersByType[typeValue]) do
+            if exists then
+                table.insert(identifiers, identifier)
             end
         end
     end
-    local members = {}
+    local serviceOffers = {}
     for _, identifier in ipairs(identifiers) do
-        table.insert(members, self.entries[identifier].serviceOffer.member)
+        table.insert(serviceOffers, self.entries[identifier].serviceOffer)
     end
-    return members
+    return serviceOffers
 end
 
 function RegistryService:credentialWasDeleted(credential)
