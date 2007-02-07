@@ -1,6 +1,6 @@
 require "oil"
 
-require "Check"
+local Check = require "latt.Check"
 
 Suite = {
   Test1 = {
@@ -24,10 +24,9 @@ Suite = {
       self.credential = self.accessControlService:loginByPassword(user, password)
       local registryService = self.accessControlService:getRegistryService(self.credential)
 
-      local criteria = { { name = "type", value = "OpenBus/SS/SessionService", }, }
-      local members = registryService:find(criteria)
-      Check.assertNotEquals(#members, 0)
-      local sessionServiceComponent = oil.narrow(members[1], "IDL:OpenBus/SS/SessionServiceComponent:1.0")
+      local serviceOffers = registryService:find("OpenBus/SS/SessionService", {})
+      Check.assertNotEquals(#serviceOffers, 0)
+      local sessionServiceComponent = oil.narrow(serviceOffers[1].member, "IDL:OpenBus/SS/SessionServiceComponent:1.0")
       self.sessionService = sessionServiceComponent:getFacet("IDL:OpenBus/SS/SessionService:1.0")
       self.sessionService = oil.narrow(self.sessionService, "IDL:OpenBus/SS/SessionService:1.0")
     end,

@@ -1,6 +1,6 @@
 require "oil"
 
-require "Check"
+local Check = require "latt.Check"
 
 Suite = {
   Test1 = {

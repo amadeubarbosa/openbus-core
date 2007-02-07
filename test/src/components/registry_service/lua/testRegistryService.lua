@@ -1,8 +1,8 @@
 require "oil"
 
-require "Check"
-
 require "Member"
+
+local Check = require "latt.Check"
 
 Suite = {
   Test1 = {
@@ -14,7 +14,6 @@ Suite = {
       end
       local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 
-      oil.verbose.level(1)
       oil.loadidlfile(idlfile)
 
       local user = "csbase"
@@ -28,9 +27,17 @@ Suite = {
     end,
 
     testRegister1 = function(self)
-      local member = Member:new{name = "Membro Mock"}
+      local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
-      Check.assertEquals("", self.registryService:register({identifier = "", entityName = "", }, {description = "", type = "", member = member, }))
+      Check.assertEquals("", self.registryService:register({identifier = "", entityName = "", }, {type = "", description = "", properties = {}, member = member,}))
+    end,
+
+    testRegister2 = function(self)
+      local member = Member{name = "Membro Mock"}
+      member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+      local registryIdentifier = self.registryService:register(self.credential, {type = "", description = "", properties = {}, member = member, })
+      Check.assertNotEquals("", registryIdentifier)
+      self.registryService:unregister(registryIdentifier)
     end,
 
     afterTestCase = function(self)
@@ -39,13 +46,6 @@ Suite = {
   }
 }
 --[[
-    testRegister2 = function(self)
-      local member = Member:new{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
-      local registryIdentifier = self.registryService:register(self.credential, {description = "", type = "", member = member, })
-      Check.assertNotEquals("", registryIdentifier)
-      self.registryService:unregister(registryIdentifier)
-    end,
 
 function TestRegistryService:testUnregister()
   local member = Member:new{name = "Membro Mock"}
