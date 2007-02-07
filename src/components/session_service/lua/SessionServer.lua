@@ -34,7 +34,7 @@ local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
 oil.loadidlfile (idlfile)
 
 function main()
-  local sessionServiceComponent = SessionServiceComponent:new{
+  local sessionServiceComponent = SessionServiceComponent{
     name = "SessionService",
     accessControlServerHost = serverConfiguration.accessControlServerHost,
     accessControlServerKey = serverConfiguration.accessControlServerKey,
@@ -43,6 +43,7 @@ function main()
 
   local success, startupFailed = scheduler.pcall(sessionServiceComponent.startup, sessionServiceComponent)
   if not success then
+    print(startupFailed)
     print("O servico de controle de acesso nao foi encontrado em "..serverConfiguration.accessControlServerHost..".")
     os.exit(1)
   end

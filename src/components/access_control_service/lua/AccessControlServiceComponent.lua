@@ -1,13 +1,13 @@
-require "OOP"
-
 require "Member"
 
 require "AccessControlService"
 
-AccessControlServiceComponent = createClass(Member)
+local oop = require "loop.simple"
+
+AccessControlServiceComponent = oop.class({}, Member)
 
 function AccessControlServiceComponent:startup()
-    local accessControlService = AccessControlService:new{
+    local accessControlService = AccessControlService{
         ldapHost = self.ldapHost,
     }
 

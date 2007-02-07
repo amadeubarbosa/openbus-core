@@ -1,6 +1,6 @@
-require "OOP"
+local oop = require "loop.base"
 
-IMetaInterface = createClass()
+IMetaInterface = oop.class()
 
 function IMetaInterface:getFacets()
     local facetDescriptionArray = {}

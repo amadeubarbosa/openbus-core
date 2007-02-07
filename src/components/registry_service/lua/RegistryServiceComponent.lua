@@ -1,10 +1,10 @@
-require "OOP"
-
 require "Member"
 
 require "RegistryService"
 
-RegistryServiceComponent = createClass(Member)
+local oop = require "loop.simple"
+
+RegistryServiceComponent = oop.class({}, Member)
 
 function RegistryServiceComponent:startup()
     local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
@@ -17,7 +17,7 @@ function RegistryServiceComponent:startup()
 
     self.credential = self.accessControlService:loginByCertificate("RegistryService", "")
 
-    local registryService = RegistryService:new{accessControlService = self.accessControlService}
+    local registryService = RegistryService{accessControlService = self.accessControlService}
     local registryServiceInterface = "IDL:OpenBus/RS/RegistryService:1.0"
     registryService = oil.newobject(registryService, registryServiceInterface)
 

@@ -1,13 +1,13 @@
 require "uuid"
 
-require "OOP"
+local oop = require "loop.base"
 
-RegistryService = createClass()
-
-RegistryService.invalidIdentifier = ""
-RegistryService.entries = {}
-RegistryService.identifiersByType = {}
-RegistryService.identifiersByFacet = {}
+RegistryService = oop.class{
+  invalidIdentifier = "",
+  entries = {},
+  identifiersByType = {},
+  identifiersByFacet = {},
+}
 
 function RegistryService:register(credential, serviceOffer)
     if not self.accessControlService:isValid(credential) then

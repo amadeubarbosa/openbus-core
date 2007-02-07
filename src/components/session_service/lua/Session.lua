@@ -1,11 +1,11 @@
 require "uuid"
 
-require "OOP"
+local oop = require "loop.base"
 
-Session = createClass()
-
-Session.membersByIdentifier = {}
-Session.membersByName = {}
+Session = oop.class{
+  membersByIdentifier = {},
+  membersByName = {},
+}
 
 function Session:getIdentifier()
     return self.identifier

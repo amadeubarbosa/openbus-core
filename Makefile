@@ -11,16 +11,29 @@ ACCESS_CONTROL_SERVICE_DIR=$(COMPONENTS_DIR)/access_control_service
 REGISTRY_SERVICE_DIR=$(COMPONENTS_DIR)/registry_service
 SESSION_SERVICE_DIR=$(COMPONENTS_DIR)/session_service
 
-install:
-	mkdir -p $(INSTALL_DIR)
+install: install_bin \
+         install_conf \
+         install_corba_idl \
+         install_core \
+         install_components
+
+install_bin:
 	mkdir -p $(BIN_DIR)
 	cp bin/*.sh $(BIN_DIR)
+
+install_conf:
 	mkdir -p $(CONF_DIR)
-	cp `find conf -name '*.lua'` $(CONF_DIR)
+	cp conf/*.lua $(CONF_DIR)
+
+install_corba_idl:
 	mkdir -p $(CORBA_IDL_DIR)
 	cp `find src -name '*.idl'` $(CORBA_IDL_DIR)
+
+install_core:
 	mkdir -p $(CORE_DIR)
-	cp `find src/core -name '*.lua'` $(CORE_DIR)
+	cp src/core/lua/*.lua $(CORE_DIR)
+
+install_components:
 	mkdir -p $(ACCESS_CONTROL_SERVICE_DIR)
 	cp `find src/components/access_control_service -name '*.lua'` $(ACCESS_CONTROL_SERVICE_DIR)
 	mkdir -p $(REGISTRY_SERVICE_DIR)

@@ -1,16 +1,14 @@
 require "lualdap"
 require "uuid"
 
-require "OOP"
+local oop = require "loop.base"
 
-AccessControlService = createClass()
-
-AccessControlService.invalidCredential = {identifier = "", entityName = ""}
-
-AccessControlService.entriesByName = {}
-
-AccessControlService.observersByIdentifier = {}
-AccessControlService.observersByCredentialIdentifier = {}
+AccessControlService = oop.class{
+  invalidCredential = {identifier = "", entityName = ""},
+  entriesByName = {},
+  observersByIdentifier = {},
+  observersByCredentialIdentifier = {},
+}
 
 function AccessControlService:loginByPassword(name, password)
     local connection, errorMessage = lualdap.open_simple(self.ldapHost, name, password, false)

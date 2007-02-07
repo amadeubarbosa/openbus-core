@@ -1,8 +1,8 @@
-require "OOP"
+local oop = require "loop.base"
 
-IComponent = createClass()
-
-IComponent.facetDescriptionsByName = {}
+IComponent = oop.class{
+  facetDescriptionsByName = {},
+}
 
 function IComponent:getFacet(facet_interface)
     for _, facetDescription in pairs(self.facetDescriptionsByName) do

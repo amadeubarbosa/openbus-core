@@ -1,10 +1,10 @@
-require "OOP"
-
 require "Member"
 
 require "SessionService"
 
-SessionServiceComponent = createClass(Member)
+local oop = require "loop.simple"
+
+SessionServiceComponent = oop.class({}, Member)
 
 function SessionServiceComponent:startup()
     local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
@@ -16,7 +16,7 @@ function SessionServiceComponent:startup()
     self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
     local sessionServiceInterface = "IDL:OpenBus/SS/SessionService:1.0"
-    local sessionService = SessionService:new{
+    local sessionService = SessionService{
         accessControlService = self.accessControlService
     }
     sessionService = oil.newobject(sessionService, sessionServiceInterface)
@@ -25,8 +25,9 @@ function SessionServiceComponent:startup()
 
     self.credential = self.accessControlService:loginByCertificate("SessionService", "")
     local serviceOffer = {
-        description = "Servico de Sessoes",
         type = "OpenBus/SS/SessionService",
+        description = "Servico de Sessoes",
+        properties = {},
         member = self,
     }
     local registryService = self.accessControlService:getRegistryService(self.credential)

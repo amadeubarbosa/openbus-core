@@ -5,12 +5,12 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-require "OOP"
-
 require "IComponent"
 require "IMetaInterface"
 
-Member = createClass(IComponent, IMetaInterface)
+local oop = require "loop.multiple"
+
+Member = oop.class({}, IComponent, IMetaInterface)
 
 function Member:getName()
   return self.name
