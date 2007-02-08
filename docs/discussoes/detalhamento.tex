@@ -32,18 +32,22 @@ uso para a BR, que será o protótipo propriamente dito.
 
 \section{Membros do OpenBus}
 
-A classe OpenBus.Member define um membro do OpenBus e é uma especialização das
-classes SCS.IComponent e SCS.IMetaInterface.
-Através da interface OpenBus.Member podemos descobrir as facetas que um membro
-disponibiliza e obter referências para estas facetas. Tipicamente, um membro
-disponibilizará seus serviços através destas facetas. Além disso, alguns
-comportamentos opcionais dos membros serão implementados sob a forma de faceta
-como, por exemplo, a habilidade de participar de sessões.
+Os componentes do OpenBus são implementados sobre um sistema de componentes
+para CORBA chamado SCS (Sistema de Componentes de Software). No SCS, os
+componentes são compostos por facetas que representam as interfaces que estes
+componentes oferecem.
 
-Dúvidas: 
-\begin{itemize}
-\item Vale a pena colocar o que é o SCS?
-\end{itemize}
+As duas interfaces principais do SCS, do ponto de vista do OpenBus, são
+IComponent e IMetaInterface. A interface IComponent representa um componente no
+SCS e possui métodos para iniciar e finalizar um componente, bem como obter
+alguma faceta implementada por este componente. A interface IMetaInterface
+permite inspecionar um componente através de métodos para obter todas as
+facetas oferecidas por este componente.
+
+A classe OpenBus.Member define um membro do OpenBus e é uma especialização das
+classes SCS.IComponent e SCS.IMetaInterface. Tipicamente, um membro
+disponibilizará, através de facetas, seus serviços e alguns comportamentos
+opcionais como, por exemplo, a habilidade de participar de sessões.
 
 \section{Mecanismos Básicos}
 
