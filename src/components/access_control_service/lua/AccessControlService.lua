@@ -1,6 +1,8 @@
 require "lualdap"
 require "uuid"
 
+require "CredentialDB"
+
 local oop = require "loop.base"
 
 AccessControlService = oop.class{
@@ -9,6 +11,15 @@ AccessControlService = oop.class{
   observersByIdentifier = {},
   observersByCredentialIdentifier = {},
 }
+
+function AccessControlService:__init(object)
+  object = object or {}
+  local entries = CredentialDB:selectAll()
+  for _, entry in ipairs(entries) do
+    self.entriesByName[entry.credential.entityName] = entry
+  end
+  return oop.rawnew(self, object)
+end
 
 function AccessControlService:loginByPassword(name, password)
     local connection, errorMessage = lualdap.open_simple(self.ldapHost, name, password, false)
@@ -128,6 +139,7 @@ function AccessControlService:addEntry(name)
     local credential = {identifier = self:generateCredentialIdentifier(), entityName = name}
     entry = {credential = credential, time = os.time()}
     self.entriesByName[name] = entry
+    CredentialDB:insert(entry.credential, entry.time)
     return entry
 end
 
@@ -142,6 +154,7 @@ end
 function AccessControlService:removeEntry(entry)
     self.entriesByName[entry.credential.entityName] = nil
     self:notifyCredentialWasDeleted(entry.credential)
+    CredentialDB:delete(entry.credential)
 end
 
 function AccessControlService:notifyCredentialWasDeleted(credential)
