@@ -5,13 +5,12 @@ require "posix"
 local FILE_SUFFIX = ".credential"
 local FILE_SEPARATOR = "/"
 
-CredentialDB = oop.class{
-  entries = {},
-}
+CredentialDB = oop.class({})
 
 function CredentialDB:__init(databaseDirectory)
+  print(databaseDirectory)
   local entries = {}
-  for _, fileName in posix.dir(databaseDirectory) do
+  for _, fileName in pairs(posix.dir(databaseDirectory)) do
     if string.sub(fileName, -(#FILE_SUFFIX)) == FILE_SUFFIX then
       local file = io.open(self.databaseDirectory..FILE_SEPARATOR..fileName, "r")
       if file then

@@ -14,30 +14,30 @@ if CONF_DIR == nil then
     os.exit(1)
 end
 
-local serverConfiguration = {}
+ServerConfiguration = {}
 function AccessControlServerConfiguration (accessControlServerConfiguration)
-    serverConfiguration.hostName = accessControlServerConfiguration.hostName
-    serverConfiguration.hostPort = accessControlServerConfiguration.hostPort
-    serverConfiguration.ldapHost = accessControlServerConfiguration.ldapHostName..":"..accessControlServerConfiguration.ldapHostPort
-    serverConfiguration.oilVerboseLevel = accessControlServerConfiguration.oilVerboseLevel
+    ServerConfiguration.hostName = accessControlServerConfiguration.hostName
+    ServerConfiguration.hostPort = accessControlServerConfiguration.hostPort
+    ServerConfiguration.ldapHost = accessControlServerConfiguration.ldapHostName..":"..accessControlServerConfiguration.ldapHostPort
+    ServerConfiguration.databaseDirectory = accessControlServerConfiguration.databaseDirectory
+    ServerConfiguration.oilVerboseLevel = accessControlServerConfiguration.oilVerboseLevel
 
-    serverConfiguration.oilVerboseLevel = serverConfiguration.oilVerboseLevel or 1
+    ServerConfiguration.oilVerboseLevel = ServerConfiguration.oilVerboseLevel or 1
 end
 
 local config = loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua")
 config()
 
-oil.verbose.level(serverConfiguration.oilVerboseLevel)
+oil.verbose.level(ServerConfiguration.oilVerboseLevel)
 
 local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
 oil.loadidlfile (idlfile)
 
-oil.init{host = serverConfiguration.hostName, port = serverConfiguration.hostPort,}
+oil.init{host = ServerConfiguration.hostName, port = ServerConfiguration.hostPort,}
 
 local accessControlServiceComponent = AccessControlServiceComponent{
     name = "AccessControlService",
-    ldapHost = serverConfiguration.ldapHost,
 }
 
 accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0", "ACS")

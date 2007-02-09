@@ -7,9 +7,7 @@ local oop = require "loop.simple"
 AccessControlServiceComponent = oop.class({}, Member)
 
 function AccessControlServiceComponent:startup()
-    local accessControlService = AccessControlService{
-        ldapHost = self.ldapHost,
-    }
+    local accessControlService = AccessControlService()
 
     local accessControlServiceInterface = "IDL:OpenBus/ACS/AccessControlService:1.0"
     accessControlService = oil.newobject(accessControlService, accessControlServiceInterface)
