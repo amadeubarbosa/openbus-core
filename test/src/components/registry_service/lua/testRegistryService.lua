@@ -19,22 +19,26 @@ Suite = {
       local user = "csbase"
       local password = "csbLDAPtest"
 
-      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
-      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/ACS/AccessControlService:1.0")
-      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/ACS/AccessControlService:1.0")
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
+      local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
+      self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
+      self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
       self.credential = self.accessControlService:loginByPassword(user, password)
       self.registryService = self.accessControlService:getRegistryService(self.credential)
+      local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
+      self.registryService = self.registryService:getFacet(registryServiceInterface)
+      self.registryService = oil.narrow(self.registryService, registryServiceInterface)
     end,
 
     testRegister1 = function(self)
       local member = Member{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+      member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
       Check.assertEquals("", self.registryService:register({identifier = "", entityName = "", }, {type = "", description = "", properties = {}, member = member,}))
     end,
 
     testRegister2 = function(self)
       local member = Member{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
+      member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
       local registryIdentifier = self.registryService:register(self.credential, {type = "", description = "", properties = {}, member = member, })
       Check.assertNotEquals("", registryIdentifier)
       self.registryService:unregister(registryIdentifier)

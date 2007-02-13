@@ -19,7 +19,7 @@ typedef Identifier MemberIdentifier;
 /**
  * \brief Representa uma sessão.
  */
-interface Session {
+interface ISession {
     /**
      * \brief Obtém o identificador da sessão.
      *
@@ -33,7 +33,7 @@ interface Session {
      *
      * \return O identificador do membro.
      */
-    MemberIdentifier addMember(in Member member);
+    MemberIdentifier addMember(in IMember member);
     /**
      * \brief Remove um membro da sessão.
      *
@@ -49,47 +49,47 @@ interface Session {
      *
      * \return O membro ou \c nil, caso o membro não esteja participando da sessão.
      */
-    Member getMember(in string memberName);
+    IMember getMember(in string memberName);
     /**
      * \brief Obtém todos os membros da sessão.
      *
      * \return A sequência de membros. Pode estar vazia caso não existam membros participando da
      * sessão.
      */
-    Members getMembers();
+    MemberList getMembers();
 };
 /** \brief Representa uma sequência de sessões. */
-typedef sequence<Session> Sessions;
+typedef sequence<ISession> SessionList;
 
 /**
  * \brief Representa o serviço de sessão.
  */
-interface SessionService {
+interface ISessionService {
     /**
      * \brief Cria uma sessão associada a uma credencial.
      *
-     * \param credential A credencial.
+     * \param aCredential A credencial.
      *
      * \return A sessão criada ou \c nil, caso a credencial esteja inválida.
      */
-    Session createSession(in ACS::Credential credential);
+    ISession createSession(in ACS::Credential aCredential);
     /**
      * \brief Remove a sessão associada a uma credencial.
      *
-     * \param credential A credencial à qual a sessão está ligada.
+     * \param aCredential A credencial à qual a sessão está ligada.
      *
      * \return \c true caso a sessão tenha sido removida, ou \c false, caso contrário.
      */
-    boolean removeSession(in ACS::Credential credential);
+    boolean removeSession(in ACS::Credential aCredential);
     /**
      * \brief Obtém a sessão associada a uma credencial.
      *
-     * \param credential A credencial à qual a sessão está ligada.
+     * \param aCredential A credencial à qual a sessão está ligada.
      *
      * \return A sessão ou \c nil, caso a credencial esteja inválida ou não exista sessão
      * associada à credencial.
      */
-    Session getSession(in ACS::Credential credential);
+    ISession getSession(in ACS::Credential aCredential);
     /**
      * \brief Obtém todas as sessões nas quais o membro participa.
      *
@@ -98,7 +98,7 @@ interface SessionService {
      * \return As sessões nas quais o membro participa. Caso o membro não esteja participando
      * de nenhuma sessão, a sequência estará vazia.
      */
-    Sessions getSessions(in string memberName);
+    SessionList getSessions(in string memberName);
 };
 
 /**
@@ -107,7 +107,7 @@ interface SessionService {
  * Facetas:
  * - SessionService
  */
-interface SessionServiceComponent : Member {
+interface ISessionServiceComponent : IMember {
 };
 
 };

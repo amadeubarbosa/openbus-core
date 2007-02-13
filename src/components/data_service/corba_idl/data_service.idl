@@ -8,24 +8,24 @@ module OpenBus {
  */
 module DS {
 
-typedef string AttributeName;
-typedef string AttributeValue;
-struct Attribute {
-  AttributeName name;
-  AttributeValue value;
+typedef string PropertyName;
+typedef string PropertyValue;
+struct Property {
+  PropertyName name;
+  PropertyValue value;
 };
-typedef sequence<Attribute> Attributes;
+typedef sequence<Property> PropertyList;
 
-typedef string Key;
+typedef string NodeKey;
 struct Node {
-  Key key;
-  Attributes attributes;
+  NodeKey key;
+  PropertyList properties;
 };
-typedef sequence<Node> Nodes;
+typedef sequence<Node> NodeList;
 
 interface DataService {
   Node getRootNode();
-  Nodes getChildren(in Key key);
+  NodeList getChildren(in NodeKey key);
 };
 
 };

@@ -40,7 +40,7 @@ local accessControlServiceComponent = AccessControlServiceComponent{
     name = "AccessControlService",
 }
 
-accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0", "ACS")
+accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
 
 accessControlServiceComponent:startup()
 

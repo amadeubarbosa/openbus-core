@@ -5,10 +5,6 @@
 
 module OpenBus {
 
-module RS {
-    interface RegistryService;
-};
-
 /**
  * \brief Módulo do Serviço de Controle de Acesso.
  */
@@ -17,7 +13,7 @@ module ACS {
 /** \brief Representa o identificador de uma credencial. */
 typedef Identifier CredentialIdentifier;
 /** \brief Representa uma sequência de identificadores de credenciais. */
-typedef sequence<CredentialIdentifier> CredentialIdentifiers;
+typedef sequence<CredentialIdentifier> CredentialIdentifierList;
 /** \brief Representa o identificador de um observador de credencial. */
 typedef Identifier CredentialObserverIdentifier;
 
@@ -33,19 +29,19 @@ struct Credential {
  * \brief Representa um observador de credenciais. Esse observador será
  * notificado quando acontecerem alterações nas credenciais que ele observa.
  */
-interface CredentialObserver {
+interface ICredentialObserver {
     /**
      * \brief Notifica que uma credencial foi removida.
      *
-     * \param credential A credencial que foi removida.
+     * \param aCredential A credencial que foi removida.
      */
-    void credentialWasDeleted(in Credential credential);
+    void credentialWasDeleted(in Credential aCredential);
 };
 
 /**
  * \brief Representa o serviço de controle de acesso.
  */
-interface AccessControlService {
+interface IAccessControlService {
     /**
      * \brief Autentica uma entidade através de um nome e uma senha.
      *
@@ -82,51 +78,52 @@ interface AccessControlService {
     /**
      * \brief Efetua o \c logout de uma entidade.
      *
-     * \param credential A credencial da entidade.
+     * \param aCredential A credencial da entidade.
      *
      * \return \c true, caso o \c logout seja realizado, ou \c false, caso
      * contrário.
      */
-    boolean logout (in Credential credential);
+    boolean logout (in Credential aCredential);
     /**
      * \brief Verifica se uma determinada credencial está válida.
      *
-     * \param credential A credencial.
+     * \param aCredential A credencial.
      *
      * \return \c true, caso a credencial esteja válida, ou \c false, caso
      * contrário.
      */
-    boolean isValid (in Credential credential);
+    boolean isValid (in Credential aCredential);
+    /**
+     * \brief Define o serviço de registro que poderá ser obtido pelos membros
+     * autenticados.
+     *
+     * \param aCredential A credencial de quem está registrando o serviço (deve
+     * ser a credencial do próprio serviço de registro).
+     * \param member O membro que representa o serviço de registro.
+     *
+     * \return \c true caso a credencial seja do serviço de registro, ou
+     * \c false, caso contrário.
+     */
+    boolean setRegistryService(in Credential aCredential, in IMember member);
     /**
      * \brief Obtém o serviço de registro.
      *
-     * \param credential A credencial de quem está solicitando o serviço.
+     * \param aCredential A credencial de quem está solicitando o serviço.
      *
      * \return O serviço de registro ou \c nil, caso a credencial esteja
      * inválida.
      */
-    RS::RegistryService getRegistryService (in Credential credential);
-    /**
-     * \brief Define o serviço de registro que poderá ser obtido pelos membros autenticados.
-     *
-     * \param credential A credencial de quem está registrando o serviço (deve ser a credencial
-     * do próprio serviço de registro).
-     * \param registryService O serviço de registro.
-     *
-     * \return \c true caso a credencial seja do serviço de registro, ou \c false, caso
-     * contrário.
-     */
-    boolean setRegistryService (in Credential credential, in RS::RegistryService registryService);
+    IMember getRegistryService (in Credential aCredential);
     /**
      * \brief Adiciona um observador de credenciais. Esse observador será notificado apenas sobre
      * eventos ocorridos numa sequência de credenciais.
      *
      * \param observer O observador.
-     * \param credentialIdentifiers A sequência de credenciais.
+     * \param someCredentialIdentifiers A sequência de credenciais.
      *
      * \return Um identificador para o observador.
      */
-    CredentialObserverIdentifier addObserver(in CredentialObserver observer, in CredentialIdentifiers credentialIdentifiers);
+    CredentialObserverIdentifier addObserver(in ICredentialObserver observer, in CredentialIdentifierList someCredentialIdentifiers);
     /**
      * \brief Remove um observador de credenciais.
      *
@@ -140,23 +137,23 @@ interface AccessControlService {
      * observador está interessado.
      *
      * \param observerIdentifier O identificador do observador.
-     * \param credentialIdentifier O identificador da credencial.
+     * \param aCredentialIdentifier O identificador da credencial.
      *
      * \return \c true caso a credencial tenha sido adicionada à sequência de credenciais do
      * observador, ou \c false, caso contrário.
      */
-    boolean addCredentialToObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);
+    boolean addCredentialToObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier aCredentialIdentifier);
     /**
      * \brief Remove uma credencial da sequência de credenciais nas quais um determinado
      * observador está interessado.
      *
      * \param observerIdentifier O identificador do observador.
-     * \param credentialIdentifier O identificador da credencial.
+     * \param aCredentialIdentifier O identificador da credencial.
      *
      * \return \c true caso a credencial tenha sido removida da sequência de credenciais do
      * observador, ou \c false, caso contrário.
      */
-    boolean removeCredentialFromObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier credentialIdentifier);
+    boolean removeCredentialFromObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier aCredentialIdentifier);
 };
 
 /**
@@ -165,7 +162,7 @@ interface AccessControlService {
  * Facetas:
  * - AccessControlService
  */
-interface AccessControlServiceComponent : Member {
+interface IAccessControlServiceComponent : IMember {
 };
 
 };

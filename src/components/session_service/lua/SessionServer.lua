@@ -39,7 +39,7 @@ function main()
     accessControlServerHost = serverConfiguration.accessControlServerHost,
     accessControlServerKey = serverConfiguration.accessControlServerKey,
   }
-  sessionServiceComponent = oil.newobject (sessionServiceComponent, "IDL:OpenBus/SS/SessionServiceComponent:1.0")
+  sessionServiceComponent = oil.newobject (sessionServiceComponent, "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
 
   local success, startupFailed = scheduler.pcall(sessionServiceComponent.startup, sessionServiceComponent)
   if not success then

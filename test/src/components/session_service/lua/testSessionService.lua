@@ -18,17 +18,22 @@ Suite = {
       local user = "csbase"
       local password = "csbLDAPtest"
 
-      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
-      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/ACS/AccessControlService:1.0")
-      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/ACS/AccessControlService:1.0")
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
+      local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
+      self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
+      self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
       self.credential = self.accessControlService:loginByPassword(user, password)
       local registryService = self.accessControlService:getRegistryService(self.credential)
+      local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
+      registryService = registryService:getFacet(registryServiceInterface)
+      registryService = oil.narrow(registryService, registryServiceInterface)
 
-      local serviceOffers = registryService:find("OpenBus/SS/SessionService", {})
+      local serviceOffers = registryService:find("OpenBus/SS/ISessionService", {})
       Check.assertNotEquals(#serviceOffers, 0)
-      local sessionServiceComponent = oil.narrow(serviceOffers[1].member, "IDL:OpenBus/SS/SessionServiceComponent:1.0")
-      self.sessionService = sessionServiceComponent:getFacet("IDL:OpenBus/SS/SessionService:1.0")
-      self.sessionService = oil.narrow(self.sessionService, "IDL:OpenBus/SS/SessionService:1.0")
+      local sessionServiceComponent = oil.narrow(serviceOffers[1].member, "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
+      local sessionServiceInterface = "IDL:OpenBus/SS/ISessionService:1.0"
+      self.sessionService = sessionServiceComponent:getFacet(sessionServiceInterface)
+      self.sessionService = oil.narrow(self.sessionService, sessionServiceInterface)
     end,
 
     testCreateSession = function(self)

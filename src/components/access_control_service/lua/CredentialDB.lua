@@ -12,7 +12,7 @@ function CredentialDB:__init(databaseDirectory)
   local entries = {}
   for _, fileName in pairs(posix.dir(databaseDirectory)) do
     if string.sub(fileName, -(#FILE_SUFFIX)) == FILE_SUFFIX then
-      local file = io.open(self.databaseDirectory..FILE_SEPARATOR..fileName, "r")
+      local file = io.open(databaseDirectory..FILE_SEPARATOR..fileName, "r")
       if file then
         local credentialIdentifier = file:read()
         local credentialEntityName = file:read()
@@ -76,5 +76,5 @@ function CredentialDB:writeCredential(credential)
 end
 
 function CredentialDB:removeCredential(credential)
-  return os.delete(self.databaseDirectory..FILE_SEPARATOR..credential.identifier..FILE_SUFFIX)
+  return os.remove(self.databaseDirectory..FILE_SEPARATOR..credential.identifier..FILE_SUFFIX)
 end

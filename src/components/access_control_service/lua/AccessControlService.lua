@@ -74,9 +74,9 @@ function AccessControlService:getRegistryService(credential)
     return self.registryService
 end
 
-function AccessControlService:setRegistryService(credential, registryService)
+function AccessControlService:setRegistryService(credential, member)
     if self:isValid(credential) and credential.entityName == "RegistryService" then
-        self.registryService = registryService
+        self.registryService = member
         return true
     end
     return false

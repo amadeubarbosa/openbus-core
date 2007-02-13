@@ -19,7 +19,7 @@ function SessionService:createSession(credential)
         return self.sessions[credential.identifier]
     end
     local session = Session{identifier = self:generateIdentifier()}
-    session = oil.newobject(session, "IDL:OpenBus/SS/Session:1.0")
+    session = oil.newobject(session, "IDL:OpenBus/SS/ISession:1.0")
     self.sessions[credential.identifier] = session
     return session
 end

@@ -8,6 +8,9 @@ module OpenBus {
  */
 module PS {
 
+interface File;
+typedef sequence<File> Files;
+
 interface Project {
   string getId();
   string getName();
@@ -16,14 +19,16 @@ interface Project {
   boolean exists(in string path);
   boolean createFile(in File parent, in string name, in string type);
   boolean createDirectory (in File parent, in string name);
-  boolean deleteFile(in File file);
-  boolean renameFile (in File file, in string newName);
+  boolean deleteFile(in File aFile);
+  boolean renameFile (in File aFile, in string newName);
   boolean moveFile(in File currentParent, in File newParent);
   boolean copyFile(in File currentParent, in File newParent);
   void deactivate();
 };
 typedef sequence<Project> Projects;
 
+interface DataChannel {
+};
 interface File {
   string getName();
   string getPath();
@@ -41,14 +46,13 @@ interface File {
   boolean closeDataChannel(in DataChannel channel);
   void deactivate();
 };
-typedef sequence<File> Files;
 
 interface ProjectService {
   Projects getProjects();
   Project getProject (in string name);
   File getFile(in string path);
   Project createProject(in string name);
-  boolean deleteProject(in Project project);
+  boolean deleteProject(in Project aProject);
 };
 
 };

@@ -20,7 +20,7 @@ struct Property {
     string name;
     PropertyValue value;
 };
-typedef sequence<Property> Properties;
+typedef sequence<Property> PropertyList;
 
 /**
  * \brief Representa uma oferta de serviço.
@@ -28,10 +28,10 @@ typedef sequence<Property> Properties;
 struct ServiceOffer {
     string type; /**< \brief O tipo do serviço. */
     string description; /**< \brief A descrição do serviço. */
-    Properties properties; /**< \brief Propriedades. */
-    Member member; /**< \brief O membro que está ofertando o serviço. */
+    PropertyList properties; /**< \brief Propriedades. */
+    IMember member; /**< \brief O membro que está ofertando o serviço. */
 };
-typedef sequence<ServiceOffer> ServiceOffers;
+typedef sequence<ServiceOffer> ServiceOfferList;
 
 /** \brief O identificador do registro de um serviço. */
 typedef Identifier RegistryIdentifier;
@@ -39,16 +39,16 @@ typedef Identifier RegistryIdentifier;
 /**
  * \brief Representa o serviço de registro.
  */
-interface RegistryService {
+interface IRegistryService {
     /**
      * \brief Registra uma oferta de serviço.
      *
-     * \param credential A credencial de quem está registrando a oferta.
-     * \param serviceOffer A oferta de serviço.
+     * \param aCredential A credencial de quem está registrando a oferta.
+     * \param aServiceOffer A oferta de serviço.
      *
      * \return Um identificador para o registro.
      */
-    RegistryIdentifier register(in ACS::Credential credential, in ServiceOffer serviceOffer);
+    RegistryIdentifier register(in ACS::Credential aCredential, in ServiceOffer aServiceOffer);
 
     /**
      * \brief Remove uma oferta de serviço.
@@ -64,12 +64,12 @@ interface RegistryService {
      * \brief Atualiza uma oferta de serviço.
      *
      * \param identifier O identificador do registro da oferta do serviço.
-     * \param serviceOffer A nova oferta de serviço.
+     * \param aServiceOffer A nova oferta de serviço.
      *
      * \return \c true, caso a oferta de serviço seja atualizada, ou \c false,
      * caso contrário.
      */
-    boolean refresh(in RegistryIdentifier identifier, in ServiceOffer serviceOffer);
+    boolean refresh(in RegistryIdentifier identifier, in ServiceOffer aServiceOffer);
 
     /**
      * \brief Realiza uma busca por ofertas que satisfaçam a determinados critérios.
@@ -79,7 +79,7 @@ interface RegistryService {
      *
      * \return Os membros encontrados.
      */
-    ServiceOffers find (in string type, in Properties criteria);
+    ServiceOfferList find (in string type, in PropertyList criteria);
 };
 
 /**
@@ -88,7 +88,7 @@ interface RegistryService {
  * Facetas:
  * - RegistryService
  */
-interface RegistryServiceComponent : Member {
+interface IRegistryServiceComponent : IMember {
 };
 };
 };

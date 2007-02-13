@@ -12,15 +12,15 @@ Suite = {
       end
       local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
-      oil.verbose.level(1)
       oil.loadidlfile(idlfile)
 
       self.user = "csbase"
       self.password = "csbLDAPtest"
 
-      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
-      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/ACS/AccessControlService:1.0")
-      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/ACS/AccessControlService:1.0")
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
+      local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
+      self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
+      self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
     end,
 
     testLoginByPassword = function(self)
@@ -28,7 +28,7 @@ Suite = {
       local credential2 = self.accessControlService:loginByPassword(self.user, self.password)
       Check.assertNotEquals(credential.identifier, credential2.identifier)
       Check.assertTrue(self.accessControlService:logout(credential))
-      Check.assertFalse(self.accessControlService:logout(credential2))
+      Check.assertTrue(self.accessControlService:logout(credential2))
     end,
 
     testLogout = function(self)
@@ -54,9 +54,10 @@ Suite = {
       self.user = "csbase"
       self.password = "csbLDAPtest"
 
-      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
-      self.accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/ACS/AccessControlService:1.0")
-      self.accessControlService = oil.narrow(self.accessControlService, "IDL:OpenBus/ACS/AccessControlService:1.0")
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
+      local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
+      self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
+      self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
     end,
 
     beforeEachTest = function(self)
@@ -83,7 +84,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential, credential)
       end
-      credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/ACS/CredentialObserver:1.0")
+      credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/ACS/ICredentialObserver:1.0")
       local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       Check.assertNotEquals("", observerIdentifier)
       self.accessControlService:logout(self.credential)

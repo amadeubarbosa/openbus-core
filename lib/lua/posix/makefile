@@ -1,7 +1,7 @@
 # makefile for POSIX library for Lua
 
 # change these to reflect your Lua installation
-LUA= /usr/local
+LUA= ${LUA_HOME}
 LUAINC= $(LUA)/include
 LUALIB= $(LUA)/lib
 LUABIN= $(LUA)/bin

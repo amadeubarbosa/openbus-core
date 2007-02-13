@@ -7,30 +7,30 @@ local oop = require "loop.simple"
 RegistryServiceComponent = oop.class({}, Member)
 
 function RegistryServiceComponent:startup()
-    local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/ACS/AccessControlServiceComponent:1.0")
+    local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
     if accessControlServiceComponent:_non_existent() then
         error{"IDL:SCS/StartupFailed:1.0"}
     end
-    local accessControlServiceInterface = "IDL:OpenBus/ACS/AccessControlService:1.0"
+    local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
     self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
     self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
     self.credential = self.accessControlService:loginByCertificate("RegistryService", "")
 
     local registryService = RegistryService{accessControlService = self.accessControlService}
-    local registryServiceInterface = "IDL:OpenBus/RS/RegistryService:1.0"
+    local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
     registryService = oil.newobject(registryService, registryServiceInterface)
 
     self:addFacet("registryService", registryServiceInterface, registryService)
+
+    self.accessControlService:setRegistryService(self.credential, self)
 
     local credentialObserver = {registryService = registryService}
     function credentialObserver:credentialWasDeleted(credential)
         self.registryService:deleteOffersFromCredential(credential)
     end
-    credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/ACS/CredentialObserver:1.0")
+    credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/ACS/ICredentialObserver:1.0")
     self.observerIdentifier = self.accessControlService:addObserver(credentialObserver, {})
-
-    self.accessControlService:setRegistryService(self.credential, registryService)
 end
 
 function RegistryServiceComponent:shutdown()

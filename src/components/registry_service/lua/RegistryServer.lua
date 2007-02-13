@@ -36,11 +36,12 @@ local registryServiceComponent = RegistryServiceComponent{
   accessControlServerHost = serverConfiguration.accessControlServerHost,
   accessControlServerKey = serverConfiguration.accessControlServerKey,
 }
-registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus/RS/RegistryServiceComponent:1.0")
+registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
 
 local success, startupFailed = pcall (registryServiceComponent.startup, registryServiceComponent)
 if not success then
   print("O servico de controle de acesso nao foi encontrado em "..serverConfiguration.accessControlServerHost..".")
+  print(startupFailed)
   os.exit(1)
 end
 
