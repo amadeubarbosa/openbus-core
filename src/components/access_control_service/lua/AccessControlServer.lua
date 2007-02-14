@@ -42,6 +42,10 @@ local accessControlServiceComponent = AccessControlServiceComponent{
 
 accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
 
-accessControlServiceComponent:startup()
+local success, startupFailed = pcall(accessControlServiceComponent.startup, accessControlServiceComponent)
+if not success then
+  print(startupFailed)
+  os.exit(1)
+end
 
 oil.run()

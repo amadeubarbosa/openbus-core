@@ -5,12 +5,17 @@ require "posix"
 local FILE_SUFFIX = ".credential"
 local FILE_SEPARATOR = "/"
 
-CredentialDB = oop.class({})
+CredentialDB = oop.class{
+  entries = {},
+}
 
 function CredentialDB:__init(databaseDirectory)
-  print(databaseDirectory)
-  local entries = {}
-  for _, fileName in pairs(posix.dir(databaseDirectory)) do
+  local credentialFiles = posix.dir(databaseDirectory)
+  if credentialFiles == nil then
+    error("O diretÛrio "..databaseDirectory.." n„o foi encontrado.")
+  end
+  self = oop.rawnew(self, {databaseDirectory = databaseDirectory,})
+  for _, fileName in ipairs(credentialFiles) do
     if string.sub(fileName, -(#FILE_SUFFIX)) == FILE_SUFFIX then
       local file = io.open(databaseDirectory..FILE_SEPARATOR..fileName, "r")
       if file then
@@ -18,47 +23,46 @@ function CredentialDB:__init(databaseDirectory)
         local credentialEntityName = file:read()
         if credentialIdentifier and credentialEntityName then
           local credential = { identifier = credentialIdentifier, entityName = credentialEntityName, }
-          entries[credential] = true
+          self.entries[credential.identifier] = {credential = credential,}
         end
       end
     end
   end
-  return oop.rawnew(self, { databaseDirectory = databaseDirectory, entries = entries, })
+  return self
 end
 
 function CredentialDB:insert(credential)
-  if self.entries[credential] then
-    return false, "A credencial especificada j√° existe."
+  if self.entries[credential.identifier] then
+    return false, "A credencial especificada ja existe."
   end
   local status, errorMessage = self:writeCredential(credential)
   if not status then
     return false, errorMessage
   end
-  self.entries[credential] = true
+  self.entries[credential.identifier] = {credential = credential,}
   return true
 end
 
 function CredentialDB:update(credential)
-  if not self.entries[credential] then
-    return false, "A credencial especificada n√£o existe."
+  if not self.entries[credential.identifier] then
+    return false, "A credencial especificada nao existe."
   end
   return self:writeCredential(credential)
 end
 
 function CredentialDB:delete(credential)
-  if not self.entries[credential] then
+  if not self.entries[credential.identifier] then
     return false, "A credencial especificada n√£o existe."
   end
   local status, errorMessage = self:removeCredential(credential)
   if not status then
     return false, errorMessage
   end
-  self.entries[credential] = false
+  self.entries[credential.identifier] = nil
   return true
 end
 
 function CredentialDB:selectAll()
-  -- Vale a pena recarregar tudo aqui?
   return self.entries
 end
 

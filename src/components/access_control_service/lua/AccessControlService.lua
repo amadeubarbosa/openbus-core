@@ -7,22 +7,20 @@ local oop = require "loop.base"
 
 AccessControlService = oop.class{
   invalidCredential = {identifier = "", entityName = ""},
+  entries = {},
   observersByIdentifier = {},
   observersByCredentialIdentifier = {},
 }
 
 function AccessControlService:__init(object)
-  object = object or {}
-  local credentialDB = CredentialDB(ServerConfiguration.databaseDirectory)
-  local entriesByName = {}
-  local entries = credentialDB:selectAll()
-  for _, entry in ipairs(entries) do
-    entriesByName[entry.credential.entityName] = entry
+  self = oop.rawnew(self, object)
+  self.ldapHost = ServerConfiguration.ldapHost
+  self.credentialDB = CredentialDB(ServerConfiguration.databaseDirectory)
+  local entriesDB = self.credentialDB:selectAll()
+  for _, entry in pairs(entriesDB) do
+    self.entries[credential.identifier] = {credential = entry.credential,}
   end
-  object.entriesByName = entriesByName
-  object.ldapHost = ServerConfiguration.ldapHost
-  object.credentialDB = credentialDB
-  return oop.rawnew(self, object)
+  return self
 end
 
 function AccessControlService:loginByPassword(name, password)
@@ -48,7 +46,7 @@ function AccessControlService:getToken(name)
 end
 
 function AccessControlService:logout(credential)
-    local entry = self.entriesByName[credential.entityName]
+    local entry = self.entries[credential.identifier]
     if not entry then
         return false
     end
@@ -57,7 +55,7 @@ function AccessControlService:logout(credential)
 end
 
 function AccessControlService:isValid(credential)
-    local entry = self.entriesByName[credential.entityName]
+    local entry = self.entries[credential.identifier]
     if not entry then
         return false
     end
@@ -142,8 +140,8 @@ end
 function AccessControlService:addEntry(name)
     local credential = {identifier = self:generateCredentialIdentifier(), entityName = name}
     entry = {credential = credential, time = os.time()}
-    self.entriesByName[name] = entry
     self.credentialDB:insert(entry.credential, entry.time)
+    self.entries[entry.credential.identifier] = entry
     return entry
 end
 
@@ -156,7 +154,7 @@ function AccessControlService:generateCredentialObserverIdentifier()
 end
 
 function AccessControlService:removeEntry(entry)
-    self.entriesByName[entry.credential.entityName] = nil
+    self.entries[entry.credential.identifier] = nil
     self:notifyCredentialWasDeleted(entry.credential)
     self.credentialDB:delete(entry.credential)
 end
