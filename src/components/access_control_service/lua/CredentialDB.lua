@@ -12,7 +12,14 @@ CredentialDB = oop.class{
 function CredentialDB:__init(databaseDirectory)
   local credentialFiles = posix.dir(databaseDirectory)
   if credentialFiles == nil then
-    error("O diretório "..databaseDirectory.." não foi encontrado.")
+    print("O diretorio ["..databaseDirectory.."] nao foi encontrado. Criando...")
+    local status, errorMessage = posix.mkdir(databaseDirectory)
+    if not status then
+      print("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
+      error(errorMessage)
+    else
+      credentialFiles = {}
+    end
   end
   self = oop.rawnew(self, {databaseDirectory = databaseDirectory,})
   for _, fileName in ipairs(credentialFiles) do
