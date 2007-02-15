@@ -18,7 +18,7 @@ function AccessControlService:__init(object)
   self.credentialDB = CredentialDB(ServerConfiguration.databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
   for _, entry in pairs(entriesDB) do
-    self.entries[credential.identifier] = {credential = entry.credential,}
+    self.entries[entry.credential.identifier] = {credential = entry.credential,}
   end
   return self
 end
