@@ -1,7 +1,7 @@
-#!/bin/csh
+#!/bin/ksh
 
-source config.sh
+. ../conf/config
 
-setenv LUA_PATH "${LUA_PATH};${CORE_DIR}/?.lua;${SESSION_SERVICE_DIR}/?.lua"
+export LUA_PATH="${LUA_PATH};${CORE_DIR}/?.lua;${SESSION_SERVICE_DIR}/?.lua"
 
-lua ${SESSION_SERVICE_DIR}/SessionServer.lua
+${LUA} ${SESSION_SERVICE_DIR}/SessionServer.lua

@@ -1,7 +1,7 @@
-#!/bin/csh
+#!/bin/ksh
 
-source config.sh
+. ../conf/config
 
-setenv LUA_PATH "${LUA_PATH};${CORE_DIR}/?.lua;${ACCESS_CONTROL_SERVICE_DIR}/?.lua"
+export LUA_PATH="${LUA_PATH};${CORE_DIR}/?.lua;${ACCESS_CONTROL_SERVICE_DIR}/?.lua"
 
-lua ${ACCESS_CONTROL_SERVICE_DIR}/AccessControlServer.lua
+${LUA} ${ACCESS_CONTROL_SERVICE_DIR}/AccessControlServer.lua

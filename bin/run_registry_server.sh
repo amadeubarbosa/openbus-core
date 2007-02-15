@@ -1,7 +1,7 @@
-#!/bin/csh
+#!/bin/ksh
 
-source config.sh
+. ../conf/config
 
-setenv LUA_PATH "${LUA_PATH};${CORE_DIR}/?.lua;${REGISTRY_SERVICE_DIR}/?.lua"
+export LUA_PATH="${LUA_PATH};${CORE_DIR}/?.lua;${REGISTRY_SERVICE_DIR}/?.lua"
 
-lua ${REGISTRY_SERVICE_DIR}/RegistryServer.lua
+${LUA} ${REGISTRY_SERVICE_DIR}/RegistryServer.lua
