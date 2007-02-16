@@ -43,8 +43,9 @@ SESSION_SERVICE_DIR=$(COMPONENTS_DIR)/session_service
 
 all:
 	@echo "Nenhum alvo definido"
-clean:
-	rm -rf $(CORBA_IDL_DIR)
+clean: clean-libs
+	@rm -rf ${OPENBUS_HOME}/libpath
+	@rm -rf $(CORBA_IDL_DIR)
 
 #reinstall:	clean	install
 
@@ -58,16 +59,15 @@ idl:
       ln -s $$idl_file . ; \
     done)
 
+clean-libs:
+	@(for lib_dir in lib/lua/* ; do \
+      ( cd $$lib_dir/src ; tecmake clean); \
+    done)
+
 libs:
 #	@ls lib/lua | xargs -I ksh -c "cd lib/lua/{}; echo 'Compilando {}...'; make" 
 	@(for lib_dir in lib/lua/* ; do \
       echo ; echo "Compilando $$lib_dir " ; \
-      ( cd $$lib_dir ; make ); \
+      ( cd $$lib_dir/src ; tecmake ); \
     done)
 
-libs_install:
-#	@ls lib/lua | xargs -I ksh -c "cd lib/lua/{}; echo 'Gerando a biblioteca {}...'; make install"
-	@(for lib_dir in lib/lua/* ; do \
-      echo ; echo "Instalando $$lib_dir " ; \
-      ( cd $$lib_dir ; make install ); \
-    done)
