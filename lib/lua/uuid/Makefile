@@ -1,10 +1,12 @@
 # makefile for uuid library for Lua
 
 # change these to reflect your Lua installation
-LUA= /tmp/lhf/lua-5.0
-LUAINC= $(LUA)/include
-LUALIB= $(LUA)/lib
-LUABIN= $(LUA)/bin
+#LUA_HOME= /usr/local
+# System's libraries directory (where binary libraries are installed)
+LUA_LIBDIR= ${LUA_HOME}/lib/lua/5.1
+LUAINC= $(LUA_HOME)/include
+LUALIB= $(LUA_HOME)/lib
+LUABIN= $(LUA_HOME)/bin
 
 # no need to change anything below here
 CFLAGS= $(INCS) $(WARN) -O2 $G
@@ -17,7 +19,7 @@ T= $(MYLIB).so
 OBJS= $(MYLIB).o
 TEST= test.lua
 
-all:	test
+all:	$T
 
 test:	$T
 	$(LUABIN)/lua -l$(MYNAME) $(TEST)
@@ -53,5 +55,9 @@ distr:	tar
 diff:	clean
 	tar zxf $(FTP)/$A
 	diff $D .
+
+install: $T
+	mkdir -p $(LUA_LIBDIR)
+	cp $T $(LUA_LIBDIR)
 
 # eof

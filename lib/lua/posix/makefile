@@ -1,6 +1,9 @@
 # makefile for POSIX library for Lua
 
 # change these to reflect your Lua installation
+#LUA_HOME=/usr/local
+# System's libraries directory (where binary libraries are installed)
+LUA_LIBDIR= ${LUA_HOME}/lib/lua/5.1
 LUA= ${LUA_HOME}
 LUAINC= $(LUA)/include
 LUALIB= $(LUA)/lib
@@ -18,7 +21,7 @@ OBJS= $(MYLIB).o
 
 T= $(MYLIB).so
 
-all:	test
+all:	$T
 
 test:	$T
 	$(LUABIN)/lua -l$(MYNAME) test.lua
@@ -61,5 +64,9 @@ diff:	clean
 
 .stamp:	$(FTP)/$A
 	touch --reference=$(FTP)/$A $@
+
+install: $T
+	mkdir -p $(LUA_LIBDIR)
+	cp $T $(LUA_LIBDIR)
 
 # eof

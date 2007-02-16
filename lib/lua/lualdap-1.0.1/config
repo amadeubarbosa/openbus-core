@@ -1,4 +1,5 @@
 # Installation directories
+#LUA_HOME=/usr/local
 # System's libraries directory (where binary libraries are installed)
 LUA_LIBDIR= ${LUA_HOME}/lib/lua/5.1
 # Lua includes directory

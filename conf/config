@@ -1,7 +1,7 @@
 LUA=lua
 #LUA=lua5.1
 
-OPENBUS_HOME=/local/prod/rodrigoh/projetos/openbus/principal
+OPENBUS_HOME=..
 export CONF_DIR=${OPENBUS_HOME}/conf
 
 export CORBA_IDL_DIR=${OPENBUS_HOME}/corba_idl
