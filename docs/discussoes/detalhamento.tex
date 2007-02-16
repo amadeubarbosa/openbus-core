@@ -382,7 +382,7 @@ struct Property {
     string name;
     PropertyValue value;
 }
-typedef sequence<Property> Properties;
+typedef sequence<Property> PropertyList;
 
 /**
  * Representa uma oferta de serviço.
@@ -390,10 +390,10 @@ typedef sequence<Property> Properties;
 struct ServiceOffer {
     string type; /**< \brief O tipo do serviço. */
     string description; /**< \brief A descrição do serviço. */
-    Properties properties; /**< \brief Propriedades. */
-    Member member; /**< \brief O membro que está ofertando o serviço. */
+    PropertyList properties; /**< \brief Propriedades. */
+    IMember member; /**< \brief O membro que está ofertando o serviço. */
 };
-typedef sequence<ServiceOffer> ServiceOffers;
+typedef sequence<ServiceOffer> ServiceOfferList;
 
 /** O identificador do registro de um serviço. */
 typedef Identifier RegistryIdentifier;
@@ -401,17 +401,17 @@ typedef Identifier RegistryIdentifier;
 /**
  * Representa o serviço de registro.
  */
-interface RegistryService {
+interface IRegistryService {
     /**
      * Registra uma oferta de serviço.
      *
-     * \param credential A credencial de quem está registrando a oferta.
-     * \param serviceOffer A oferta de serviço.
+     * \param aCredential A credencial de quem está registrando a oferta.
+     * \param aServiceOffer A oferta de serviço.
      *
      * \return Um identificador para o registro.
      */
-    RegistryIdentifier register(in ACS::Credential credential,
-      in ServiceOffer serviceOffer);
+    RegistryIdentifier register(in ACS::Credential aCredential,
+      in ServiceOffer aServiceOffer);
 
     /**
      * Remove uma oferta de serviço.
@@ -427,13 +427,13 @@ interface RegistryService {
      * Atualiza uma oferta de serviço.
      *
      * \param identifier O identificador do registro da oferta do serviço.
-     * \param serviceOffer A nova oferta de serviço.
+     * \param aserviceOffer A nova oferta de serviço.
      *
      * \return true, caso a oferta de serviço seja atualizada, ou false,
      * caso contrário.
      */
     boolean refresh(in RegistryIdentifier identifier,
-      in ServiceOffer serviceOffer);
+      in ServiceOffer aServiceOffer);
 
     /**
      * Realiza uma busca por ofertas que satisfaçam a determinados critérios.
@@ -443,7 +443,7 @@ interface RegistryService {
      *
      * \return As ofertas encontradas.
      */
-    ServiceOffers find (in string type, in Properties criteria);
+    ServiceOfferList find (in string type, in PropertyList criteria);
 };
 
 /**
@@ -452,7 +452,7 @@ interface RegistryService {
  * Facetas:
  * - RegistryService
  */
-interface RegistryServiceComponent : Member {
+interface IRegistryServiceComponent : IMember {
 };
 };
 };
@@ -516,8 +516,8 @@ Projetos, que será composto por duas facetas: uma interface de navegação
 A faceta de navegação, ou serviço de Dados, representa uma funcionalidade
 ``genérica'', que permitirá a um cliente navegar através da hierarquia
 de um repositório de dados qualquer, obtendo, durante essa navegação,
-propriedades, ou atributos, dos elementos (nós) que compõem essa hierarquia.
-Um atributo de um elemento é um par nome X valor. Inicialmente,
+propriedades dos elementos (nós) que compõem essa hierarquia.
+Uma propriedade de um elemento é um par nome X valor. Inicialmente,
 por simplicidade, valores serão {\em strings}.
 Também por simplicidade, não oferecemos, nesta fase, facilidades de ``query''
 para obtenção de elementos a partir de critérios aplicados sobre seus 
@@ -564,24 +564,24 @@ module OpenBus {
  */
 module DS {
 
-typedef string AttributeName;
-typedef string AttributeValue;
-struct Attribute {
-  AttributeName name;
-  AttributeValue value;
+typedef string PropertyName;
+typedef string PropertyValue;
+struct Property {
+  PropertyName name;
+  PropertyValue value;
 };
-typedef sequence<Attribute> Attributes;
+typedef sequence<Property> PropertyList;
 
-typedef string Key;
+typedef string NodeKey;
 struct Node {
-  Key key;
-  Attributes attributes;
+  NodeKey key;
+  Property properties;
 };
-typedef sequence<Node> Nodes;
+typedef sequence<Node> NodeList;
 
 interface DataService {
   Node getRootNode();
-  Nodes getChildren(in Key key);
+  Nodes getChildren(in NodeKey key);
 };
 };
 };
@@ -600,6 +600,9 @@ module OpenBus {
  * Módulo do Serviço de Projetos.
  */
 module PS {
+
+interface File;
+typedef sequence<File> Files;
 
 interface Project {
   string getId();
@@ -630,6 +633,7 @@ interface File {
   boolean canWrite();
   boolean isDirectory();
   boolean isUnderConstruction();
+  Files getChildren();
   Project getProject();
   DataChannel openDataChannel();
   boolean closeDataChannel(in DataChannel channel);
