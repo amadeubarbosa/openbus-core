@@ -31,6 +31,7 @@ SESSION_SERVICE_DIR=$(COMPONENTS_DIR)/session_service
 #
 #install_core:
 #	mkdir -p $(CORE_DIR)
+#	cp conf/config $(CONF_DIR)
 #	cp src/core/lua/*.lua $(CORE_DIR)
 #
 #install_components:
