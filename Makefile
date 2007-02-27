@@ -42,8 +42,8 @@ SESSION_SERVICE_DIR=$(COMPONENTS_DIR)/session_service
 #	mkdir -p $(SESSION_SERVICE_DIR)
 #	cp `find src/components/session_service -name '*.lua'` $(SESSION_SERVICE_DIR)
 
-all:
-	@echo "Nenhum alvo definido"
+all: clean libs idl
+
 clean: clean-libs
 	@rm -rf ${OPENBUS_HOME}/libpath
 	@rm -rf $(CORBA_IDL_DIR)
@@ -57,18 +57,17 @@ idl:
 	@mkdir -p $(CORBA_IDL_DIR)
 #	@cd $(CORBA_IDL_DIR) ; find ../src -type f -name "*.idl" | xargs -I{} echo {}
 	@cd $(CORBA_IDL_DIR) ; (for idl_file in `find ../src -name '*.idl'` ; do \
-      ln -s $$idl_file . ; \
-    done)
+		ln -sf $$idl_file . ; \
+	done)
 
 clean-libs:
 	@(for lib_dir in lib/lua/* ; do \
-      ( cd $$lib_dir/src ; tecmake clean); \
-    done)
+		( cd $$lib_dir/src ; tecmake clean ); \
+	done)
 
 libs:
 #	@ls lib/lua | xargs -I ksh -c "cd lib/lua/{}; echo 'Compilando {}...'; make" 
 	@(for lib_dir in lib/lua/* ; do \
-      echo ; echo "Compilando $$lib_dir " ; \
-      ( cd $$lib_dir/src ; tecmake ); \
-    done)
-
+		echo ; echo "Compilando $$lib_dir " ; \
+		( cd $$lib_dir/src ; tecmake ; tecmake lib ); \
+	done)

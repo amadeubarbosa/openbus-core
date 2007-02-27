@@ -5,7 +5,7 @@ LUA=lua5.1
 set TECLIBS=/home/t/tecgraf/libpath/${TEC_UNAME}
 
 export LUA_PATH="${LUA_HOME}/share/lua/5.1/?.lua;${LUA_HOME}/share/lua/5.1/?/init.lua;${OPENBUS_HOME}/libpath/lua/?.lua;${OPENBUS_HOME}/libpath/lua/?/init.lua;${TECLIBS}/?.lua;${TECLIBS}/?/init.lua;${LUA_PATH}"
-export LUA_CPATH="${LUA_HOME}/lib/lua/5.1/?.so;${OPENBUS_HOME}/libpath/${TEC_UNAME}/?.so;${TECLIBS}/?.so;${LUA_CPATH}"
+export LUA_CPATH="${LUA_HOME}/lib/lua/5.1/lib?.so;${OPENBUS_HOME}/libpath/${TEC_UNAME}/lib?.so;${TECLIBS}/lib?.so;${LUA_CPATH}"
 export LUA_SOPATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}/" 
 
 export CONF_DIR=${OPENBUS_HOME}/conf

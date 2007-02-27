@@ -1,9 +1,11 @@
 #!/bin/ksh
 
+PARAMS=$*
+
 . ../../conf/config
 
-LATT_HOME=${LUA_HOME}/share/lua/5.1/latt
+LATT_HOME=${OPENBUS_HOME}/libpath/lua/latt
 
 export LUA_PATH="${LUA_PATH};${CORE_DIR}/?.lua"
 
-${LUA} ${LATT_HOME}/ConsoleTestRunner.lua $*
+${LUA} ${LATT_HOME}/ConsoleTestRunner.lua ${PARAMS}

@@ -4,7 +4,7 @@
 
 local function so(x)
 	local SOPATH= os.getenv"LUA_SOPATH" or "./"
-	assert(package.loadlib(SOPATH.."l"..x..".so","luaopen_"..x))()
+	assert(package.loadlib(SOPATH.."lib"..x..".so","luaopen_"..x))()
 end
 
 so"posix"
