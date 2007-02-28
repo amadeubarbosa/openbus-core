@@ -45,26 +45,28 @@ interface IAccessControlService {
     /**
      * \brief Autentica uma entidade através de um nome e uma senha.
      *
-     * \param name O nome.
-     * \param password A senha.
+     * \param[in] name O nome.
+     * \param[in] password A senha.
+     * \param[out] aCredential Uma credencial para a entidade.
      *
-     * \return Uma credencial para a entidade. Caso a autenticação falhe, será
-     * retornada uma credencial com identificador vazio ("").
+     * \return \c true, caso o login seja realizado com sucesso, ou \c false,
+     * caso contrário.
      */
-    Credential loginByPassword (in string name, in string password);
+    boolean loginByPassword (in string name, in string password, out Credential aCredential);
     /**
      * \brief Autentica uma entidade através de um nome e de uma resposta para um desafio
      * previamente obtido.
      *
-     * \param name O nome.
-     * \param password A reposta para o desafio.
+     * \param[in] name O nome.
+     * \param[in] answer A reposta para o desafio.
+     * \param[out] aCredential Uma credencial para a entidade.
      *
-     * \return Uma credencial para a entidade. Caso a autenticação falhe, será
-     * retornada uma credencial com identificador vazio ("").
+     * \return \c true, caso o login seja realizado com sucesso, ou \c false,
+     * caso contrário.
      *
      * \see getChallenge
      */
-    Credential loginByCertificate (in string name, in string answer);
+    boolean loginByCertificate (in string name, in string answer, out Credential aCredential);
     /**
      * \brief Obtém um desafio para uma entidade.
      *

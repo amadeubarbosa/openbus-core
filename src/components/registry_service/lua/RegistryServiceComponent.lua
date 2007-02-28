@@ -15,7 +15,7 @@ function RegistryServiceComponent:startup()
     self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
     self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
-    self.credential = self.accessControlService:loginByCertificate("RegistryService", "")
+    _, self.credential = self.accessControlService:loginByCertificate("RegistryService", "")
 
     local registryService = RegistryService{accessControlService = self.accessControlService}
     local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"

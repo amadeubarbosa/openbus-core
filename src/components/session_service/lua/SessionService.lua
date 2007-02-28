@@ -7,21 +7,20 @@ require "Session"
 local oop = require "loop.base"
 
 SessionService = oop.class{
-  invalidSession = { identifier = "", },
   sessions = {},
 }
 
 function SessionService:createSession(credential)
     if not self.accessControlService:isValid(credential) then
-        return self.invalidSession
+        return false
     end
     if self.sessions[credential.identifier] then
-        return self.sessions[credential.identifier]
+        return true, self.sessions[credential.identifier]
     end
     local session = Session{identifier = self:generateIdentifier()}
     session = oil.newobject(session, "IDL:OpenBus/SS/ISession:1.0")
     self.sessions[credential.identifier] = session
-    return session
+    return true, session
 end
 
 function SessionService:generateIdentifier()
@@ -37,8 +36,5 @@ function SessionService:removeSession(credential)
 end
 
 function SessionService:getSession(credential)
-    if not self.sessions[credential.identifier] then
-        return self.invalidSession
-    end
     return self.sessions[credential.identifier]
 end

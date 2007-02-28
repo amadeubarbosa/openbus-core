@@ -23,7 +23,7 @@ function SessionServiceComponent:startup()
 
     self:addFacet("sessionService", sessionServiceInterface, sessionService)
 
-    self.credential = self.accessControlService:loginByCertificate("SessionService", "")
+    _, self.credential = self.accessControlService:loginByCertificate("SessionService", "")
     local serviceOffer = {
         type = "OpenBus/SS/ISessionService",
         description = "Servico de Sessoes",

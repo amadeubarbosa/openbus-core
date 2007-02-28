@@ -24,15 +24,23 @@ Suite = {
     end,
 
     testLoginByPassword = function(self)
-      local credential = self.accessControlService:loginByPassword(self.user, self.password)
-      local credential2 = self.accessControlService:loginByPassword(self.user, self.password)
+      local success, credential = self.accessControlService:loginByPassword(self.user, self.password)
+      Check.assertTrue(success)
+      local success, credential2 = self.accessControlService:loginByPassword(self.user, self.password)
+      Check.assertTrue(success)
       Check.assertNotEquals(credential.identifier, credential2.identifier)
       Check.assertTrue(self.accessControlService:logout(credential))
       Check.assertTrue(self.accessControlService:logout(credential2))
     end,
 
+    testLoginByPassword2 = function(self)
+      local success, credential = self.accessControlService:loginByPassword("INVALID", "INVALID")
+      Check.assertFalse(success)
+      Check.assertEquals("", credential.identifier)
+    end,
+
     testLogout = function(self)
-      local credential = self.accessControlService:loginByPassword(self.user, self.password)
+      local _, credential = self.accessControlService:loginByPassword(self.user, self.password)
       Check.assertFalse(self.accessControlService:logout({identifier = "", entityName = "abcd", }))
       Check.assertTrue(self.accessControlService:logout(credential))
       Check.assertFalse(self.accessControlService:logout(credential))
@@ -61,7 +69,7 @@ Suite = {
     end,
 
     beforeEachTest = function(self)
-      self.credential = self.accessControlService:loginByPassword(self.user, self.password)
+      _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
     end,
 
     afterEachTest = function(self)

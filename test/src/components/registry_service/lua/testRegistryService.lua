@@ -23,7 +23,8 @@ Suite = {
       local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
-      self.credential = self.accessControlService:loginByPassword(user, password)
+      _, self.credential = self.accessControlService:loginByPassword(user, password)
+
       self.registryService = self.accessControlService:getRegistryService(self.credential)
       local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
       self.registryService = self.registryService:getFacet(registryServiceInterface)

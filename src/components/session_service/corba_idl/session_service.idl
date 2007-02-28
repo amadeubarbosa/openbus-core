@@ -68,11 +68,12 @@ interface ISessionService {
     /**
      * \brief Cria uma sessão associada a uma credencial.
      *
-     * \param aCredential A credencial.
+     * \param[in] aCredential A credencial.
+     * \param[out] session A sessão criada.
      *
-     * \return A sessão criada ou \c nil, caso a credencial esteja inválida.
+     * \return \c true, caso a sessão tenha sido criada, ou \c false, caso contrário.
      */
-    ISession createSession(in ACS::Credential aCredential);
+    boolean createSession(in ACS::Credential aCredential, out ISession session);
     /**
      * \brief Remove a sessão associada a uma credencial.
      *

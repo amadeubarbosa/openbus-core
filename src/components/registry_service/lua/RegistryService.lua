@@ -11,12 +11,12 @@ RegistryService = oop.class{
 
 function RegistryService:register(credential, serviceOffer)
     if not self.accessControlService:isValid(credential) then
-        return self.invalidIdentifier
+        return false, self.invalidIdentifier
     end
     local identifier = self:generateIdentifier()
     local entry = {serviceOffer = serviceOffer, credential = credential, time = os.time()}
     self:addEntry(identifier, entry)
-    return identifier
+    return true, identifier
 end
 
 function RegistryService:addEntry(identifier, entry)

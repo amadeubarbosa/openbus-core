@@ -26,19 +26,19 @@ end
 function AccessControlService:loginByPassword(name, password)
     local connection, errorMessage = lualdap.open_simple(self.ldapHost, name, password, false)
     if not connection then
-        return self.invalidCredential
+        return false, self.invalidCredential
     end
     connection:close()
     local entry = self:addEntry(name)
-    return entry.credential
+    return true, entry.credential
 end
 
 function AccessControlService:loginByCertificate(name, answer)
     if name ~= "RegistryService" and name ~= "SessionService" then
-        return self.invalidCredential
+        return false, self.invalidCredential
     end
     local entry = self:addEntry(name)
-    return entry.credential
+    return true, entry.credential
 end
 
 function AccessControlService:getToken(name)

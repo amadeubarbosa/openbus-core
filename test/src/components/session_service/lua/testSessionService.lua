@@ -22,7 +22,7 @@ Suite = {
       local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
-      self.credential = self.accessControlService:loginByPassword(user, password)
+      _, self.credential = self.accessControlService:loginByPassword(user, password)
       local registryService = self.accessControlService:getRegistryService(self.credential)
       local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
       registryService = registryService:getFacet(registryServiceInterface)
@@ -37,15 +37,15 @@ Suite = {
     end,
 
     testCreateSession = function(self)
-      local session = self.sessionService:createSession(self.credential)
-      Check.assertNotEquals("", session.identifier)
+      local success, session = self.sessionService:createSession(self.credential)
+      Check.assertTrue(success)
       self.sessionService:removeSession(self.credential)
     end,
 
     testGetSession = function(self)
-      local session = self.sessionService:createSession(self.credential)
+      local success, session = self.sessionService:createSession(self.credential)
+      Check.assertTrue(success)
       local session2 = self.sessionService:getSession(self.credential)
-      Check.assertNotEquals("", session2.identifier)
       Check.assertEquals(session.identifier, session2.identifier)
       self.sessionService:removeSession(self.credential)
     end,
@@ -54,7 +54,7 @@ Suite = {
       self.sessionService:createSession(self.credential)
       Check.assertTrue(self.sessionService:removeSession(self.credential))
       local session = self.sessionService:getSession(self.credential)
-      Check.assertEquals("", session.identifier)
+      Check.assertNil(session)
       Check.assertFalse(self.sessionService:removeSession(self.credential))
     end,
 
