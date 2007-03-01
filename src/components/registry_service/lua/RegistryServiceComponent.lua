@@ -9,13 +9,19 @@ RegistryServiceComponent = oop.class({}, Member)
 function RegistryServiceComponent:startup()
     local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
     if accessControlServiceComponent:_non_existent() then
+        print("Servico de controle de acesso nao encontrado.")
         error{"IDL:SCS/StartupFailed:1.0"}
     end
     local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
     self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
     self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
-    _, self.credential = self.accessControlService:loginByCertificate("RegistryService", "")
+    local success
+    success, self.credential = self.accessControlService:loginByCertificate("RegistryService", "")
+    if not success then
+        print("Nao foi possivel logar no servico de controle de acesso.")
+        error{"IDL:SCS/StartupFailed:1.0"}
+    end
 
     local registryService = RegistryService{accessControlService = self.accessControlService}
     local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
@@ -35,6 +41,7 @@ end
 
 function RegistryServiceComponent:shutdown()
     if not self.accessControlService then
+        print("Servico ja foi finalizado.")
         error{"IDL:SCS/ShutdownFailed:1.0"}
     end
 

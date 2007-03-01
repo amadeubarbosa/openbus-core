@@ -40,8 +40,7 @@ registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus
 
 local success, startupFailed = pcall (registryServiceComponent.startup, registryServiceComponent)
 if not success then
-  print("O servico de controle de acesso nao foi encontrado em "..serverConfiguration.accessControlServerHost..".")
-  print(startupFailed)
+  print("Erro ao iniciar o serviço de registro.")
   os.exit(1)
 end
 

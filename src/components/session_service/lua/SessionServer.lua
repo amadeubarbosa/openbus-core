@@ -43,8 +43,7 @@ function main()
 
   local success, startupFailed = scheduler.pcall(sessionServiceComponent.startup, sessionServiceComponent)
   if not success then
-    print(startupFailed)
-    print("O servico de controle de acesso nao foi encontrado em "..serverConfiguration.accessControlServerHost..".")
+    print("Erro ao iniciar o serviço de sessão.")
     os.exit(1)
   end
 end
