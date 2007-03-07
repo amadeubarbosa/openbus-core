@@ -8,15 +8,11 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   1.1 Implementação do SCS (funcionalidade básica IComponent, IMetaInterface)
       - Java, C++, Lua
 
-  1.2 Implementação da biblioteca Lua para openSSL
+  1.2 Implementação da biblioteca Lua para OpenSSL
 
-  1.3 Implementação (complementação) de PI para o OiL
+---> Rodrigo?
 
----> Está sendo usada uma versão modificada do OiL com suporte não padronizado 
-    para interceptadores.
-    Será necessário adicionar um mecanismo (simples) para prover funcionalidade 
-    semelhante ao PICurrent (salvamento de info associada ao contexto da 
-    corotina corrente)
+  1.3 Nova implementação do OiL, com suporte a interceptadores
 
 2) DOCUMENTAÇÂO DO PROTÓTIPO (FASE 1)
    ==================================
@@ -24,19 +20,27 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   2.1 Finalizar Documentação Preliminar:
       - Mecanismos e Serviços Básicos, Serviço de Projetos, Casos de Usos
 
+---> Podemos considerar fechado?
+
   2.2 Complementação da Documentação
-      -> várias dependências (implementação de serviços)
+      -> várias dependências
    
 
 3) MECANISMOS BÁSICOS
    ===============================
 
   3.1 Mecanismo de leasing
+      - implementar o mecanismo de renovação para membro
+      - implementar o mecanismo de renovação para serviço
 
   3.2 Interceptação de Requisições
       - mecanismo para inclusão da credencial na requisição
       - obtenção e validação da credencial
       - repasse da credencial para "Current" (thread de invocação do serviço)
+
+        Será necessário adicionar um mecanismo (simples) para prover 
+        funcionalidade semelhante ao PICurrent (salvamento de info associada ao
+        contexto da corotina corrente) para serviços em Lua
 
 ---> No momento estamos realizando testes do mecanismo de interceptação em 
      diferentes linguagens/ORBs (Java/Jacorb, Lua/OiL por enquanto) e a 
@@ -54,6 +58,8 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 
   4.1 Mecanismo de persistência de credenciais
 
+---> Podemos considerar fechado?
+
   4.2 Incorporar o mecanismo de leasing
        -> dependência: 3.1
 
@@ -63,7 +69,8 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
         -> dependência: 1.2
 
   4.4 Incorporar interceptadores (para operações getRegistryService e logout)
-       -> dependências: 1.3 e 3.2
+       -> dependências: 3.2
+
 
 5) SERVIÇO DE REGISTRO
    ===================
@@ -84,10 +91,10 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 
   6.2 Incorporar mecanismo de leasing (cliente/servidor)
       - manutenção de sessão + credencial
-      -> dependência: 3.1
+      -> dependências: 3.1 e 4.2
 
   6.3 Incorporar interceptadores
-       -> dependências: 1.3 e 3.2
+       -> dependências: 3.2
 
   6.4 Autenticação via certificado
       -> dependência: 4.3
@@ -101,9 +108,13 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
       - exportação do serviço
       - incorporação de interceptadores
 
+      -> dependências: 4, 5, 3.2, 3.1
+
   7.2 Implementação do serviço propriamente dito (JAVA/CSBASE)
       - Serviço de Dados
       - Serviço de Projetos
+
+      -> dependência 7.1
 
 8) CLIENTES BÁSICOS (C++, Java, Lua)
    ================
@@ -114,16 +125,18 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
       - incorporação de interceptadores
       - importação de oferta de serviço
 
+      -> dependências: 4, 5, 3.2, 3.1
+
   8.2 Teste de uso do serviço de projetos sem uso de sessão
-      -> dependência: 7
+      -> dependência: 8.1, 7
 
 9) TESTES DE USO DE SESSÃO
    =======================
   9.1 Procedimento de criação/formação de sessão envolvendo múltiplos clientes
-      -> dependências: clientes básicos, serviço de sessão
+      -> dependências: 8 , 6
 
   9.2 Teste de uso do serviço de projetos com uso de sessão
-      -> dependências: serviço de projetos
+      -> dependências: 9.1 e 7
 
 
 9) CRIAÇÂO DE BIBLIOTECAS
@@ -132,6 +145,10 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   9.1 Construir bibliotecas para clientes: C++, Java
      - procedimento comum a todos os clientes
      - acesso ao serviço de projetos
+
+     -> dependências: 8
   
   9.2 Construir bibliotecas para serviços: Java, C++
       - procedimento comum a todos os serviços
+
+     -> dependências: 7
