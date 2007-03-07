@@ -62,12 +62,12 @@ idl:
 
 clean-libs:
 	@(for lib_dir in lib/lua/* ; do \
-		( cd $$lib_dir/src ; tecmake clean ); \
+		( cd $$lib_dir ; make clean ); \
 	done)
 
 libs:
 #	@ls lib/lua | xargs -I ksh -c "cd lib/lua/{}; echo 'Compilando {}...'; make" 
 	@(for lib_dir in lib/lua/* ; do \
 		echo ; echo "Compilando $$lib_dir " ; \
-		( cd $$lib_dir/src ; tecmake ; tecmake lib ); \
+		( cd $$lib_dir ; make ); \
 	done)
