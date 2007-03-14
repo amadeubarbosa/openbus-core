@@ -4,5 +4,5 @@ AccessControlServerConfiguration{
     ldapHostName = "segall.tecgraf.puc-rio.br",
     ldapHostPort = 389,
     databaseDirectory = "../credentials",
-    oilVerboseLevel = 3,
+    oilVerboseLevel = 2,
 }

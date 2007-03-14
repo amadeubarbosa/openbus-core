@@ -39,14 +39,20 @@ function SessionServiceComponent:startup()
     }
     local registryService = self.accessControlService:getRegistryService(self.credential)
     if not registryService then
-        print("Servico de controle de acesso nao encontrado.")
+        print("Servico de registro nao encontrado.")
         self.accessControlService:logout(self.credential)
         error{"IDL:SCS/StartupFailed:1.0"}
     end
     local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
     registryService = registryService:getFacet(registryServiceInterface)
     registryService = oil.narrow(registryService, registryServiceInterface)
-    self.registryIdentifier = registryService:register(self.credential, serviceOffer);
+    local success
+    success, self.registryIdentifier = registryService:register(self.credential, serviceOffer);
+    if not success then
+      print("Erro ao registrar o servico de sessao.")
+      self.accessControlService:logout(self.credential)
+      error{"IDL:SCS/StartupFailed:1.0"}
+    end
 end
 
 function SessionServiceComponent:shutdown()

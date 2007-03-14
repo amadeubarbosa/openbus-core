@@ -14,6 +14,7 @@ Suite = {
       end
       local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 
+      oil.verbose:level(0)
       oil.loadidlfile(idlfile)
 
       local user = "csbase"
@@ -34,13 +35,13 @@ Suite = {
     testRegister1 = function(self)
       local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
-      Check.assertEquals("", self.registryService:register({identifier = "", entityName = "", }, {type = "", description = "", properties = {}, member = member,}))
+      Check.assertEquals(false, (self.registryService:register({identifier = "", entityName = "", }, {type = "", description = "", properties = {}, member = member,})))
     end,
 
     testRegister2 = function(self)
       local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
-      local registryIdentifier = self.registryService:register(self.credential, {type = "", description = "", properties = {}, member = member, })
+      local success, registryIdentifier = self.registryService:register(self.credential, {type = "", description = "", properties = {}, member = member, })
       Check.assertNotEquals("", registryIdentifier)
       self.registryService:unregister(registryIdentifier)
     end,

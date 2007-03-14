@@ -1,4 +1,3 @@
-require "scheduler"
 require "oil"
 
 require "SessionServiceComponent"
@@ -27,13 +26,15 @@ end
 local config = loadfile(CONF_DIR.."/SessionServerConfiguration.lua")
 config()
 
-oil.verbose.level(serverConfiguration.oilVerboseLevel)
+oil.verbose:level(serverConfiguration.oilVerboseLevel)
 
 local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
 
 oil.loadidlfile (idlfile)
 
 function main()
+  oil.newthread(oil.run)
+
   local sessionServiceComponent = SessionServiceComponent{
     name = "SessionService",
     accessControlServerHost = serverConfiguration.accessControlServerHost,
@@ -41,13 +42,10 @@ function main()
   }
   sessionServiceComponent = oil.newobject (sessionServiceComponent, "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
 
-  local success, startupFailed = scheduler.pcall(sessionServiceComponent.startup, sessionServiceComponent)
+  local success, startupFailed = oil.pcall(sessionServiceComponent.startup, sessionServiceComponent)
   if not success then
-    print("Erro ao iniciar o serviço de sessão.")
     os.exit(1)
   end
 end
 
-scheduler.new(oil.run)
-scheduler.new(main)
-scheduler.run()
+oil.main(main)

@@ -12,6 +12,7 @@ Suite = {
       end
       local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
+      oil.verbose:level(0)
       oil.loadidlfile(idlfile)
 
       self.user = "csbase"
@@ -56,7 +57,7 @@ Suite = {
       end
       local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
-      oil.verbose.level(1)
+      oil.verbose:level(0)
       oil.loadidlfile(idlfile)
 
       self.user = "csbase"

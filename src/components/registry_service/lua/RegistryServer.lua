@@ -26,22 +26,26 @@ end
 local config = loadfile(CONF_DIR.."/RegistryServerConfiguration.lua")
 config()
 
-oil.verbose.level(serverConfiguration.oilVerboseLevel)
+oil.verbose:level(serverConfiguration.oilVerboseLevel)
 
 local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile (idlfile)
 
-local registryServiceComponent = RegistryServiceComponent{
-  name = "RegistryService",
-  accessControlServerHost = serverConfiguration.accessControlServerHost,
-  accessControlServerKey = serverConfiguration.accessControlServerKey,
-}
-registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
+function main()
+  oil.newthread(oil.run)
 
-local success, startupFailed = pcall (registryServiceComponent.startup, registryServiceComponent)
-if not success then
-  print("Erro ao iniciar o serviço de registro.")
-  os.exit(1)
+  local registryServiceComponent = RegistryServiceComponent{
+    name = "RegistryService",
+    accessControlServerHost = serverConfiguration.accessControlServerHost,
+    accessControlServerKey = serverConfiguration.accessControlServerKey,
+  }
+  registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
+
+  local success, startupFailed = oil.pcall (registryServiceComponent.startup, registryServiceComponent)
+  if not success then
+    print("Erro ao iniciar o serviço de registro.")
+    os.exit(1)
+  end
 end
 
-oil.run()
+oil.main(main)

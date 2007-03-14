@@ -28,7 +28,7 @@ end
 local config = loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua")
 config()
 
-oil.verbose.level(ServerConfiguration.oilVerboseLevel)
+oil.verbose:level(ServerConfiguration.oilVerboseLevel)
 
 local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
@@ -36,16 +36,18 @@ oil.loadidlfile (idlfile)
 
 oil.init{host = ServerConfiguration.hostName, port = ServerConfiguration.hostPort,}
 
-local accessControlServiceComponent = AccessControlServiceComponent{
+function main()
+  oil.newthread(oil.run)
+
+  local accessControlServiceComponent = AccessControlServiceComponent{
     name = "AccessControlService",
-}
+  }
+  accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
 
-accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
-
-local success, startupFailed = pcall(accessControlServiceComponent.startup, accessControlServiceComponent)
-if not success then
-  print(startupFailed)
-  os.exit(1)
+  local success, startupFailed = oil.pcall(accessControlServiceComponent.startup, accessControlServiceComponent)
+  if not success then
+    os.exit(1)
+  end
 end
 
-oil.run()
+oil.main(main)
