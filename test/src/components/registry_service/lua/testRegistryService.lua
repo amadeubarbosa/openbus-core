@@ -24,7 +24,8 @@ Suite = {
       local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
-      _, self.credential = self.accessControlService:loginByPassword(user, password)
+      local success
+      success, self.credential = self.accessControlService:loginByPassword(user, password)
 
       self.registryService = self.accessControlService:getRegistryService(self.credential)
       local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
@@ -46,76 +47,45 @@ Suite = {
       self.registryService:unregister(registryIdentifier)
     end,
 
+    testUnregister = function(self)
+      local member = Member{name = "Membro Mock"}
+      member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
+      local success, registryIdentifier = self.registryService:register(self.credential, {type = "", description = "", properties = {}, member = member, })
+      Check.assertTrue(success)
+      Check.assertNotEquals("", registryIdentifier)
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+      Check.assertFalse(self.registryService:unregister(registryIdentifier))
+    end,
+
+    testFind = function(self)
+      local member = Member{name = "Membro Mock"}
+      member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
+      local success, registryIdentifier = self.registryService:register(self.credential, {type = "X", description = "", properties = {}, member = member, })
+      Check.assertTrue(success)
+      Check.assertNotEquals("", registryIdentifier)
+      local members = self.registryService:find("X", {})
+      Check.assertNotEquals(0, #members)
+      members = self.registryService:find("Y", {})
+      Check.assertEquals(0, #members)
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    end,
+
+    testRefresh = function(self)
+      local member = Member{name = "Membro Mock"}
+      member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
+      local serviceOffer = {type = "X", description = "", properties = {}, member = member, }
+      Check.assertFalse(self.registryService:refresh("", serviceOffer))
+      local success, registryIdentifier = self.registryService:register(self.credential, serviceOffer)
+      Check.assertTrue(success)
+      serviceOffer.type = "Y"
+      Check.assertTrue(self.registryService:refresh(registryIdentifier, serviceOffer))
+      local members = self.registryService:find("Y", {})
+      Check.assertEquals(members[1].member:getName(), member:getName())
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    end,
+
     afterTestCase = function(self)
       self.accessControlService:logout(self.credential)
     end,
   }
 }
---[[
-
-function TestRegistryService:testUnregister()
-  local member = Member:new{name = "Membro Mock"}
-  member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
-  local registryIdentifier = self.registryService:register(self.credentialLoginIdentifier.credential, {description = "", type = "", member = member, })
-  assertNotEquals("", registryIdentifier)
-  assertTrue(self.registryService:unregister(registryIdentifier))
-  assertFalse(self.registryService:unregister(registryIdentifier))
-end
-
-function TestRegistryService:testFind()
-  local member = Member:new{name = "Membro Mock"}
-  member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
-  local registryIdentifier = self.registryService:register(self.credentialLoginIdentifier.credential, {description = "", type = "X", member = member, })
-  assertNotEquals("", registryIdentifier)
-  local members = self.registryService:find({ { name = "type", value= "X", }, })
-  assertNotEquals(0, #members)
-  members = self.registryService:find({ { name = "type", value= "Y", }, })
-  assertEquals(0, #members)
-  self.registryService:unregister(registryIdentifier)
-end
-
-function TestRegistryService:testRefresh()
-  local member = Member:new{name = "Membro Mock"}
-  member = oil.newobject(member, "IDL:OpenBus/Member:1.0")
-  local serviceOffer = {description = "", type = "X", member = member, }
-  assertFalse(self.registryService:refresh("", serviceOffer))
-  local registryIdentifier = self.registryService:register(self.credentialLoginIdentifier.credential, serviceOffer)
-  serviceOffer.type = "Y"
-  assertTrue(self.registryService:refresh(registryIdentifier, serviceOffer))
-  local members = self.registryService:find({ { name = "type", value= "Y", }, })
-  assertEquals(members[1]:getName(), member:getName())
-  self.registryService:unregister(registryIdentifier)
-end
-
---]]
-
---[[
-function main()
-  local accessControlServiceComponent = oil.newproxy("corbaloc::"..host.."/ACS", "IDL:OpenBus/AS/AccessControlServiceComponent:1.0")
-  accessControlService = accessControlServiceComponent:getFacet("IDL:OpenBus/AS/AccessControlService:1.0")
-  accessControlService = oil.narrow(accessControlService, "IDL:OpenBus/AS/AccessControlService:1.0")
-
-  LuaUnit:run("TestRegistryService")
-  os.exit()
-end
-
-pcall = function(func, ...)
-          return scheduler.pcall(func, arg)
-        end
-
-xpcall = function (func, errorHandler)
-           local f = function(result, ...)
-             if result then 
-               return true, unpack(arg)
-             else
-               return false, errorHandler(arg[1])
-             end
-           end
-           return f(pcall(func))
-         end
-
-
-scheduler.new(oil.run)
-scheduler.new(main)
-scheduler.run()
---]]
