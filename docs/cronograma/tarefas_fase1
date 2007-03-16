@@ -8,19 +8,20 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   1.1 Implementação do SCS (funcionalidade básica IComponent, IMetaInterface)
       - Java, C++, Lua
 
-  1.2 Implementação da biblioteca Lua para OpenSSL
+    --> Verificar com Renato a alocação de alunos e prazos
 
----> Rodrigo?
+  1.2 Nova implementação do OiL, com suporte a interceptadores
 
-  1.3 Nova implementação do OiL, com suporte a interceptadores
+    --> FECHADO. Estamos usando a nova versão
 
 2) DOCUMENTAÇÂO DO PROTÓTIPO (FASE 1)
    ==================================
 
-  2.1 Finalizar Documentação Preliminar:
+  2.1 Finalizar Documentação Preliminar (Ana, Cris, Rodrigo)
       - Mecanismos e Serviços Básicos, Serviço de Projetos, Casos de Usos
 
----> Podemos considerar fechado?
+    --> FECHADO. O documento pode ir sendo atualizada à medida que as
+        implementações forem sendo desenvolvidas
 
   2.2 Complementação da Documentação
       -> várias dependências
@@ -29,47 +30,61 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 3) MECANISMOS BÁSICOS
    ===============================
 
-  3.1 Mecanismo de leasing
+  3.0 Implementação da biblioteca Lua para OpenSSL (Rodrigo)
+    --> Está usando a nova versão da OpenSSL. Prazo estimado de duas (tres?)
+        semanas para termos o binding para Lua
+
+  3.1 Mecanismo de leasing (Cris)
+      - definir o mecanismo
       - implementar o mecanismo de renovação para membro
       - implementar o mecanismo de renovação para serviço
 
-  3.2 Interceptação de Requisições
-      - mecanismo para inclusão da credencial na requisição
-      - obtenção e validação da credencial
+  3.2 Interceptação de Requisições (Ana)
+      - mecanismo para inclusão da credencial na requisição 
+         --> OK (lua/java)
+      - obtenção e validação da credencial, com geração de exceção de sistema
+         "NO PERMISSION" para credenciais invalidas, abortando o request
+         --> OK (lua/java)
+
+      - mecanismo de cache para credenciais válidas
+
       - repasse da credencial para "Current" (thread de invocação do serviço)
 
-        Será necessário adicionar um mecanismo (simples) para prover 
+        No caso do OiL é necessário adicionar um mecanismo para prover 
         funcionalidade semelhante ao PICurrent (salvamento de info associada ao
-        contexto da corotina corrente) para serviços em Lua
+        contexto da corotina corrente) para serviços em Lua.
+        Por enquanto, esse mecanismo não é necessário, pois os serviços básicos
+        não necessitam autorizar (apenas autenticar).
 
----> No momento estamos realizando testes do mecanismo de interceptação em 
-     diferentes linguagens/ORBs (Java/Jacorb, Lua/OiL por enquanto) e a 
-     compatibilidade entre eles (cliente/servidor em linguagens diferentes)
+        Por enquanto, esse mecanismo é necessário para os serviços de dados
+        (desenvolvidos, no prototipo, em Java)
 
-     Desses testes sairá o código para as bibliotecas a serem adicionadas a
-     servidores e clientes.
 
-     Estágio atual: transferência/recuperação de info via service context.
-     Próximo passo: integração do mecanismo de controle de acesso/validação
-                    de credenciais
+  3.3 Mecanismo de log
  
+
 4) SERVIÇO DE ACESSO
    =================
 
-  4.1 Mecanismo de persistência de credenciais
+  4.1 Mecanismo de persistência de credenciais (Rodrigo)
 
----> Podemos considerar fechado?
+    --> FECHADO
 
   4.2 Incorporar o mecanismo de leasing
        -> dependência: 3.1
 
   4.3 Login via Certificado:
-      - mecanismo de cadastro e persistencia de certificados
-      - incorporar a biblioteca (Lua) do openSSL
+      - mecanismo de cadastro de certificados (Rodrigo)
+      - incorporar a biblioteca (Lua) do openSSL (Rodrigo)
         -> dependência: 1.2
 
-  4.4 Incorporar interceptadores (para operações getRegistryService e logout)
-       -> dependências: 3.2
+  4.4 Incorporar interceptador servidor (Ana)
+      - serviço de acesso deve implementar um interceptador próprio, que
+        atua apenas nas operações getRegistryService e logout.
+        É diferente dos outros interceptadores servidores porque valida
+        credenciais "localmente" e não implementa cache.
+
+        Não há dependência, portanto, para esse item.
 
 
 5) SERVIÇO DE REGISTRO
@@ -77,26 +92,30 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 
   5.1 Mecanismo de persistência de ofertas de serviço
       - preparar o repositório de ofertas para permitir o uso de um BD
+  
+      --> tarefa menos prioritaria, no momento
 
-  5.2 Incorporar interceptadores
-       -> dependências: 1.3 e 3.2
+  5.2 Incorporar mecanismo de leasing (cliente) (Cris ?)
 
-  5.3 Autenticação via certificado
+  5.3 Incorporar interceptadores (Ana)
+       -> dependência: 3.2
+
+  5.4 Autenticação via certificado
       -> dependência: 4.3
 
 6) SERVIÇO DE SESSÃO
    =================
 
-  6.1 Mecanismo de troca de mensagens entre membros de sessão
+  6.1 Mecanismo de troca de mensagens entre membros de sessão (Ana)
 
   6.2 Incorporar mecanismo de leasing (cliente/servidor)
       - manutenção de sessão + credencial
       -> dependências: 3.1 e 4.2
 
-  6.3 Incorporar interceptadores
+  6.3 Incorporar interceptadores (Ana)
        -> dependências: 3.2
 
-  6.4 Autenticação via certificado
+  6.4 Autenticação via certificado (Rodrigo)
       -> dependência: 4.3
      
 
