@@ -2,5 +2,5 @@ RegistryServerConfiguration{
     accessControlServerHostName = "localhost",
     accessControlServerHostPort = 2089,
     accessControlServerKey = "ACS",
-    oilVerboseLevel = 2,
+    oilVerboseLevel = 1,
 }
