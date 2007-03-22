@@ -35,19 +35,32 @@ local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 oil.loadidlfile (idlfile)
 
 oil.init{host = ServerConfiguration.hostName, port = ServerConfiguration.hostPort,}
+print "ORB inicializado"
 
 function main()
-  oil.newthread(oil.run)
+  local success, res  = oil.pcall(oil.newthread,oil.run)
+  if not success then
+    print("Falha na execução da thread do orb: ", res)
+    os.exit(1)
+  end
 
   local accessControlServiceComponent = AccessControlServiceComponent{
     name = "AccessControlService",
   }
-  accessControlServiceComponent = oil.newobject (accessControlServiceComponent, "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
-
-  local success, startupFailed = oil.pcall(accessControlServiceComponent.startup, accessControlServiceComponent)
+  success, res  = 
+    oil.pcall(oil.newobject ,accessControlServiceComponent, 
+              "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
   if not success then
+    print("Falha na criação do AcessControlServiceComponent: ", res)
+    os.exit(1)
+  end
+  accessControlServiceComponent = res
+
+  success, res = oil.pcall(accessControlServiceComponent.startup, accessControlServiceComponent)
+  if not success then
+    print("Falha na inicialização do AcessControlServiceComponent: ", res)
     os.exit(1)
   end
 end
 
-oil.main(main)
+print(oil.pcall(oil.main,main))
