@@ -4,7 +4,7 @@ LUA=lua5.1
 #set TECLIBS=/home/t/tecgraf/libpath/${TEC_UNAME}
 set TECLIBS=/home/t/tecgraf/libpath/${TEC_UNAME}
 
-export LUA_PATH="${LUA_HOME}/share/lua/5.1/?.lua;${LUA_HOME}/share/lua/5.1/?/init.lua;${OPENBUS_HOME}/libpath/lua/?.lua;${OPENBUS_HOME}/libpath/lua/?/init.lua;${TECLIBS}/?.lua;${TECLIBS}/?/init.lua;${LUA_PATH}"
+export LUA_PATH="${OPENBUS_HOME}/libpath/lua/?.lua;${OPENBUS_HOME}/libpath/lua/?/init.lua;${LUA_HOME}/share/lua/5.1/?.lua;${LUA_HOME}/share/lua/5.1/?/init.lua;${TECLIBS}/?.lua;${TECLIBS}/?/init.lua;${LUA_PATH}"
 export LUA_CPATH="${LUA_HOME}/lib/lua/5.1/lib?.so;${OPENBUS_HOME}/libpath/${TEC_UNAME}/lib?.so;${TECLIBS}/lib?.so;${LUA_CPATH}"
 export LUA_SOPATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}/" 
 
@@ -18,3 +18,7 @@ COMPONENTS_DIR=${OPENBUS_HOME}/src/components
 REGISTRY_SERVICE_DIR=${COMPONENTS_DIR}/registry_service/lua
 ACCESS_CONTROL_SERVICE_DIR=${COMPONENTS_DIR}/access_control_service/lua
 SESSION_SERVICE_DIR=${COMPONENTS_DIR}/session_service/lua
+
+COMMON_DIR=${COMPONENTS_DIR}/common
+export LUA_PATH="${LUA_PATH};${COMMON_DIR}/?.lua"
+
