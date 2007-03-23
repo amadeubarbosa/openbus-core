@@ -62,7 +62,7 @@ function receiverequest(self, request)
   end
 
   if credential then
-    if accessControlService:isValid(credential) then
+    if self.accessControlService:isValid(credential) then
       print "CREDENCIAL VALIDADA"
     else
       print "CREDENCIAL INVALIDA"
