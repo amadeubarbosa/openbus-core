@@ -21,15 +21,20 @@ function IComponent:getFacetByName(facet)
     return facetDescription.facet_ref
 end
 
-function IComponent:addFacet(name, interface_name, facet_ref)
+function IComponent:addFacet(name, interface_name, facet_object)
+    local facet_ref = oil.newobject(facet_object, interface_name)
     local facetDescription = {
         name = name,
         interface_name = interface_name,
         facet_ref = facet_ref,
     }
     self.facetDescriptionsByName[name] = facetDescription
+    return facet_ref
 end
 
 function IComponent:removeFacets()
+    for _, facetDescription in pairs(self.facetDescriptionsByName) do
+      facetDescription.facet_ref:_deactivate()
+    end
     self.facetDescriptionsByName = {}
 end

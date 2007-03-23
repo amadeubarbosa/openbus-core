@@ -17,8 +17,6 @@ function AccessControlServiceComponent:startup()
 
     -- cria e instala a faceta de controle de acesso
     local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
-    accessControlService = oil.newobject(accessControlService, accessControlServiceInterface)
-
     self:addFacet("accessControlService", accessControlServiceInterface, accessControlService)
 end
 

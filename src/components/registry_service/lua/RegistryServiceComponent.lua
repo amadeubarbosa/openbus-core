@@ -25,9 +25,8 @@ function RegistryServiceComponent:startup()
 
     local registryService = RegistryService{accessControlService = self.accessControlService}
     local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
-    registryService = oil.newobject(registryService, registryServiceInterface)
 
-    self:addFacet("registryService", registryServiceInterface, registryService)
+    registryService = self:addFacet("registryService", registryServiceInterface, registryService)
 
     self.accessControlService:setRegistryService(self.credential, self)
 

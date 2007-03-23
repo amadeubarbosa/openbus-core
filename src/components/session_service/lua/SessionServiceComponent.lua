@@ -20,7 +20,6 @@ function SessionServiceComponent:startup()
     local sessionService = SessionService{
         accessControlService = self.accessControlService
     }
-    sessionService = oil.newobject(sessionService, sessionServiceInterface)
 
     self:addFacet("sessionService", sessionServiceInterface, sessionService)
 
