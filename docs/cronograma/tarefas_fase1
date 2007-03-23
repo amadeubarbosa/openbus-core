@@ -8,7 +8,9 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   1.1 Implementação do SCS (funcionalidade básica IComponent, IMetaInterface)
       - Java, C++, Lua
 
-    --> Verificar com Renato a alocação de alunos e prazos
+    --> Verificar com Renato a alocação de alunos e prazos:
+        Rodrigo vai verificar com Maia a compatibilização da nossa implementação
+        de SCS Lua com a "oficial"
 
   1.2 Nova implementação do OiL, com suporte a interceptadores
 
@@ -47,17 +49,16 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
          --> OK (lua/java)
 
       - mecanismo de cache para credenciais válidas
+         --> Para serviços básicos, não implementaremos ?
 
       - repasse da credencial para "Current" (thread de invocação do serviço)
 
         No caso do OiL é necessário adicionar um mecanismo para prover 
         funcionalidade semelhante ao PICurrent (salvamento de info associada ao
         contexto da corotina corrente) para serviços em Lua.
-        Por enquanto, esse mecanismo não é necessário, pois os serviços básicos
-        não necessitam autorizar (apenas autenticar).
+         --> OK
 
-        Por enquanto, esse mecanismo é necessário para os serviços de dados
-        (desenvolvidos, no prototipo, em Java)
+        Será necessário implementar mecanismo para Java (uso PICurrent) e C++
 
 
   3.3 Mecanismo de log
@@ -79,12 +80,8 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
         -> dependência: 1.2
 
   4.4 Incorporar interceptador servidor (Ana)
-      - serviço de acesso deve implementar um interceptador próprio, que
-        atua apenas nas operações getRegistryService e logout.
-        É diferente dos outros interceptadores servidores porque valida
-        credenciais "localmente" e não implementa cache.
-
-        Não há dependência, portanto, para esse item.
+      --> FECHADO (aguardando outros serviços e testes para gerar exceção
+                   quando não há credencial no contexto)
 
 
 5) SERVIÇO DE REGISTRO
@@ -98,7 +95,6 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   5.2 Incorporar mecanismo de leasing (cliente) (Cris ?)
 
   5.3 Incorporar interceptadores (Ana)
-       -> dependência: 3.2
 
   5.4 Autenticação via certificado
       -> dependência: 4.3
@@ -113,7 +109,6 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
       -> dependências: 3.1 e 4.2
 
   6.3 Incorporar interceptadores (Ana)
-       -> dependências: 3.2
 
   6.4 Autenticação via certificado (Rodrigo)
       -> dependência: 4.3
