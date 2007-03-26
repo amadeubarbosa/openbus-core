@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[a4paper,11pt]{article}
 
 %% Estilos e Plug-Ins
 \usepackage{a4wide}
@@ -11,7 +11,7 @@
 % ===================
 \begin{document}
 
-\title{OpenBUS\\Detalhamento do Protótipo}
+\title{OpenBus\\Detalhamento do Protótipo}
 \author{}
 \date{}
 \maketitle
@@ -24,7 +24,7 @@ para servir de base para os que vão implementar o projeto.
 
 \section{Objetivo do Protótipo}
 Para implementar o protótipo do sistema, dividimos
-as tarefas em três etapas (que não necessáriamente serão implementadas
+as tarefas em três etapas (que não necessariamente serão implementadas
 em paralelo): os serviços básicos, um ambiente de teste
 desses serviços básicos simulando um caso de uso, de onde pretendemos
 extrair alguns módulos comuns aos componentes; e um ambiente de caso de 
@@ -177,7 +177,7 @@ Número de Componentes	& Validade Mínima (ms)	& Validade Máxima (ms)\\
 $>$ 100 				& 1200 					& 1800 
 \end{tabular}
 \end{center}
-\caption{Exempo de um mapa de validade de leases.}
+\caption{Exemplo de um mapa de validade de leases.}
 \label{leasemap}
 \end{table}%
 
@@ -489,12 +489,12 @@ destruída.
 O mecanismo de temporização do scheduler do OiL pode ser utilizado para
 ``ativar'' a renovação da credencial de cada sessão junto ao serviço de
 acesso.  Isso partindo da premissa que esse mecanismo (implementado com
-corotinas) não é custoso, e é escalável...
+co-rotinas) não é custoso, e é escalável...
 
 Um dos componentes do grupo é ``eleito'' pelo serviço
 para manter a credencial ativa (inicialmente, quem criou a sessão).
 Se o serviço de sessão nota que este componente deixou de manter
-a credencial, ele eleje outro componente para a tarefa.
+a credencial, ele elege outro componente para a tarefa.
 
 A discutir: como proceder se a sessão (serviço de sessão) cair?
 
@@ -728,7 +728,7 @@ obter (num primeiro momento) trajetórias de poços.
      e senha do usuário.
 
      Uma vez conectada ao barramento, a aplicação v3o2 recebe uma
-     credencial relativa a sua autenticacão e pode obter a referência
+     credencial relativa a sua autenticação e pode obter a referência
      para o serviço de registro. Através do serviço de registro, ela tem
      acesso aos serviços básicos do barramento.
 
@@ -754,7 +754,7 @@ obter (num primeiro momento) trajetórias de poços.
      de um determinado ``tipo'', convidá-los para uma colaboração...) A
      conexão permite apenas que se estabeleça uma sessão e que esse
      membro seja capaz de utilizar os serviços básicos do barramento, e
-     também serviços ``exportados'' por outros membros (localizaveis
+     também serviços ``exportados'' por outros membros (localizáveis
      através do serviço de registro)
 
      Um membro se tornará ``identificável/localizável'' se ``exportar''
@@ -796,7 +796,7 @@ obter (num primeiro momento) trajetórias de poços.
      de poço é uma faceta, e ter trajetória é uma característica ?)
 
      Pode haver ``tipos'' diferentes para essa oferta: poço em
-     perfuração (acesso a arquivos EXATA), poço ... (trajetoria está na
+     perfuração (acesso a arquivos EXATA), poço ... (trajetória está na
      base)
 
      -- Como identificar esses tipos na publicação da oferta de serviço?
