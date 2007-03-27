@@ -12,8 +12,7 @@ local ipairs = ipairs
 module("ServerInterceptor", oop.class)
 
 -- Constrói o interceptador
-function __init(self, config, accessControlService)
-
+function __init(self, config, picurrent, accessControlService)
   print("Construindo interceptador para serviço")
   local lir = oil.getLIR()
   -- obtém as operações que devem ser verificadas, se assim configurado
@@ -36,6 +35,7 @@ function __init(self, config, accessControlService)
                     { checkedOperations = checkedOperations,
                       credentialType = lir:lookup_id(config.credential_type).type,
                       contextID = config.contextID,
+                      picurrent = picurrent,
                       accessControlService = accessControlService })
 end
 
@@ -64,6 +64,7 @@ function receiverequest(self, request)
   if credential then
     if self.accessControlService:isValid(credential) then
       print "CREDENCIAL VALIDADA"
+      self.picurrent:setValue(credential)
     else
       print "CREDENCIAL INVALIDA"
       request.success = false

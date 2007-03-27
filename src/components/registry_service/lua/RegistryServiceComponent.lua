@@ -1,12 +1,17 @@
 require "Member"
-
 require "RegistryService"
+
+require "oil"
+require "ClientInterceptor"
+require "CredentialHolder"
 
 local oop = require "loop.simple"
 
 RegistryServiceComponent = oop.class({}, Member)
 
 function RegistryServiceComponent:startup()
+
+    -- obtém a referência para o Serviço de Controle de Acesso
     local accessControlServiceComponent = oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..self.accessControlServerKey, "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
     if accessControlServiceComponent:_non_existent() then
         print("Servico de controle de acesso nao encontrado.")
@@ -16,6 +21,7 @@ function RegistryServiceComponent:startup()
     self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
     self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
+    -- autenticação junto ao serviço de controle de acesso
     local success
     success, self.credential = self.accessControlService:loginByCertificate("RegistryService", "")
     if not success then
@@ -23,12 +29,21 @@ function RegistryServiceComponent:startup()
         error{"IDL:SCS/StartupFailed:1.0"}
     end
 
+    -- instala o interceptador cliente
+    local CONF_DIR = os.getenv("CONF_DIR")
+    local interceptorsConfig = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+    self.credentialHolder = CredentialHolder()
+    self.credentialHolder:setValue(self.credential)
+print(self.credentialHolder:getValue().entityName)
+    oil.setclientinterceptor(ClientInterceptor(interceptorsConfig, self.credentialHolder))
+
+    -- cria e instala a faceta servidora
     local registryService = RegistryService{accessControlService = self.accessControlService}
     local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
 
     registryService = self:addFacet("registryService", registryServiceInterface, registryService)
 
-    self.accessControlService:setRegistryService(self.credential, self)
+    self.accessControlService:setRegistryService(self)
 
     local credentialObserver = {registryService = registryService}
     function credentialObserver:credentialWasDeleted(credential)
@@ -46,6 +61,7 @@ function RegistryServiceComponent:shutdown()
 
     self.accessControlService:removeObserver(self.observerIdentifier)
     self.accessControlService:logout(self.credential)
+    self.credentialHolder:invalidate()
 
     self.observerIdentifier = nil
     self.credential = nil

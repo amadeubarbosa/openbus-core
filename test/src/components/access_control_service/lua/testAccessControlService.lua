@@ -1,8 +1,13 @@
 require "oil"
+require "ClientInterceptor"
+require "CredentialHolder"
 
 local Check = require "latt.Check"
 
 Suite = {
+  --
+  -- este teste não precisa inserir credencial no contexto das requisições
+  -- 
   Test1 = {
     beforeTestCase = function(self)
       local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
@@ -27,6 +32,7 @@ Suite = {
     testLoginByPassword = function(self)
       local success, credential = self.accessControlService:loginByPassword(self.user, self.password)
       Check.assertTrue(success)
+
       local success, credential2 = self.accessControlService:loginByPassword(self.user, self.password)
       Check.assertTrue(success)
       Check.assertNotEquals(credential.identifier, credential2.identifier)
@@ -48,6 +54,9 @@ Suite = {
     end,
   },
 
+  --
+  -- Este teste utiliza o interceptador do cliente
+  --
   Test2 = {
     beforeTestCase = function(self)
       local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
@@ -67,25 +76,42 @@ Suite = {
       local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
+
+      -- instala o interceptador de cliente
+      local CONF_DIR = os.getenv("CONF_DIR")
+      local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+      self.credentialHolder = CredentialHolder()
+      oil.setclientinterceptor(ClientInterceptor(config, self.credentialHolder))
     end,
 
     beforeEachTest = function(self)
       _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
+    self.credentialHolder:setValue(self.credential)
     end,
 
     afterEachTest = function(self)
-      self.accessControlService:logout(self.credential)
+      if (self.credentialHolder:hasValue()) then
+        self.accessControlService:logout(self.credential)
+        self.credentialHolder:invalidate()
+      end
     end,
 
     testGetRegistryService = function(self)
-      Check.assertNil(self.accessControlService:getRegistryService(self.credential))
+      Check.assertNil(self.accessControlService:getRegistryService())
+    end,
+
+    testSetRegistryService = function(self)
+      Check.assertFalse(self.accessControlService:setRegistryService(self.accessControlService))
     end,
 
     testIsValid = function(self)
       Check.assertTrue(self.accessControlService:isValid(self.credential))
       Check.assertFalse(self.accessControlService:isValid({entityName=self.user, identifier = "123"}))
       self.accessControlService:logout(self.credential)
-      Check.assertFalse(self.accessControlService:isValid(self.credential))
+
+      -- neste caso o proprio interceptador do serviço rejeita o request
+      Check.assertError(self.accessControlService.isValid,self.accessControlService,self.credential)
+      self.credentialHolder:invalidate()
     end,
 
     testObservers = function(self)
@@ -96,7 +122,6 @@ Suite = {
       credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/ACS/ICredentialObserver:1.0")
       local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       Check.assertNotEquals("", observerIdentifier)
-      self.accessControlService:logout(self.credential)
       Check.assertTrue(self.accessControlService:removeObserver(observerIdentifier))
       Check.assertFalse(self.accessControlService:removeObserver(observerIdentifier))
     end,

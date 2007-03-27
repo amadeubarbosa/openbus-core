@@ -12,8 +12,8 @@ AccessControlService = oop.class{
   observersByCredentialIdentifier = {},
 }
 
-function AccessControlService:__init(object)
-  self = oop.rawnew(self, object)
+function AccessControlService:__init(picurrent)
+  self.picurrent = picurrent
   self.ldapHost = ServerConfiguration.ldapHost
   self.credentialDB = CredentialDB(ServerConfiguration.databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
@@ -65,15 +65,13 @@ function AccessControlService:isValid(credential)
     return true
 end
 
-function AccessControlService:getRegistryService(credential)
-    if not self:isValid(credential) then
-        return nil
-    end
+function AccessControlService:getRegistryService()
     return self.registryService
 end
 
-function AccessControlService:setRegistryService(credential, member)
-    if self:isValid(credential) and credential.entityName == "RegistryService" then
+function AccessControlService:setRegistryService(member)
+    local credential = self.picurrent:getValue()
+    if credential.entityName == "RegistryService" then
         self.registryService = member
         return true
     end
