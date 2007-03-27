@@ -9,11 +9,15 @@ RegistryService = oop.class{
   identifiersByFacet = {},
 }
 
-function RegistryService:register(credential, serviceOffer)
-    if not self.accessControlService:isValid(credential) then
-        return false, self.invalidIdentifier
-    end
+function RegistryService:__init(picurrent)
+  self.picurrent = picurrent
+  return self
+end
+
+function RegistryService:register(serviceOffer)
     local identifier = self:generateIdentifier()
+    local credential = self.picurrent:getValue()
+print("peguei credencial de "..credential.entityName.." do current")
     local entry = {serviceOffer = serviceOffer, credential = credential, time = os.time()}
     self:addEntry(identifier, entry)
     return true, identifier

@@ -1,4 +1,6 @@
 require "oil"
+require "ClientInterceptor"
+require "CredentialHolder"
 
 require "Member"
 
@@ -24,25 +26,28 @@ Suite = {
       local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
+
+      -- instala o interceptador de cliente
+      local CONF_DIR = os.getenv("CONF_DIR")
+      local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+      self.credentialHolder = CredentialHolder()
+      oil.setclientinterceptor(ClientInterceptor(config, self.credentialHolder))
+
       local success
       success, self.credential = self.accessControlService:loginByPassword(user, password)
+      self.credentialHolder:setValue(self.credential)
 
-      self.registryService = self.accessControlService:getRegistryService(self.credential)
+      self.registryService = self.accessControlService:getRegistryService()
       local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
       self.registryService = self.registryService:getFacet(registryServiceInterface)
       self.registryService = oil.narrow(self.registryService, registryServiceInterface)
-    end,
-
-    testRegister1 = function(self)
-      local member = Member{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
-      Check.assertEquals(false, (self.registryService:register({identifier = "", entityName = "", }, {type = "", description = "", properties = {}, member = member,})))
+print("autenticou o obteve o registryService")
     end,
 
     testRegister2 = function(self)
       local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
-      local success, registryIdentifier = self.registryService:register(self.credential, {type = "", description = "", properties = {}, member = member, })
+      local success, registryIdentifier = self.registryService:register({type = "", description = "", properties = {}, member = member, })
       Check.assertNotEquals("", registryIdentifier)
       self.registryService:unregister(registryIdentifier)
     end,
@@ -50,7 +55,7 @@ Suite = {
     testUnregister = function(self)
       local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
-      local success, registryIdentifier = self.registryService:register(self.credential, {type = "", description = "", properties = {}, member = member, })
+      local success, registryIdentifier = self.registryService:register({type = "", description = "", properties = {}, member = member, })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
@@ -60,7 +65,7 @@ Suite = {
     testFind = function(self)
       local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
-      local success, registryIdentifier = self.registryService:register(self.credential, {type = "X", description = "", properties = {}, member = member, })
+      local success, registryIdentifier = self.registryService:register({type = "X", description = "", properties = {}, member = member, })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
       local members = self.registryService:find("X", {})
@@ -75,7 +80,7 @@ Suite = {
       member = oil.newobject(member, "IDL:OpenBus/IMember:1.0")
       local serviceOffer = {type = "X", description = "", properties = {}, member = member, }
       Check.assertFalse(self.registryService:refresh("", serviceOffer))
-      local success, registryIdentifier = self.registryService:register(self.credential, serviceOffer)
+      local success, registryIdentifier = self.registryService:register(serviceOffer)
       Check.assertTrue(success)
       serviceOffer.type = "Y"
       Check.assertTrue(self.registryService:refresh(registryIdentifier, serviceOffer))

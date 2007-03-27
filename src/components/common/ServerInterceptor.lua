@@ -63,7 +63,7 @@ function receiverequest(self, request)
 
   if credential then
     if self.accessControlService:isValid(credential) then
-      print "CREDENCIAL VALIDADA"
+      print ("CREDENCIAL VALIDADA PARA "..request.operation)
       self.picurrent:setValue(credential)
     else
       print "CREDENCIAL INVALIDA"

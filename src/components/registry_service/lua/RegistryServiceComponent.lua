@@ -3,7 +3,9 @@ require "RegistryService"
 
 require "oil"
 require "ClientInterceptor"
+require "ServerInterceptor"
 require "CredentialHolder"
+require "PICurrent"
 
 local oop = require "loop.simple"
 
@@ -37,14 +39,21 @@ function RegistryServiceComponent:startup()
 print(self.credentialHolder:getValue().entityName)
     oil.setclientinterceptor(ClientInterceptor(interceptorsConfig, self.credentialHolder))
 
-    -- cria e instala a faceta servidora
-    local registryService = RegistryService{accessControlService = self.accessControlService}
-    local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
+    -- instala o interceptador servidor
+print"vou instalar o interceptador servidor"
 
+    local picurrent = PICurrent()
+
+    oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, picurrent, self.accessControlService))
+
+    -- cria e instala a faceta servidora
+    local registryService = RegistryService(picurrent)
+    local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
     registryService = self:addFacet("registryService", registryServiceInterface, registryService)
 
     self.accessControlService:setRegistryService(self)
 
+    -- instala um observador para deleção de credenciais
     local credentialObserver = {registryService = registryService}
     function credentialObserver:credentialWasDeleted(credential)
         self.registryService:deleteOffersFromCredential(credential)

@@ -43,14 +43,13 @@ interface IRegistryService {
     /**
      * \brief Registra uma oferta de serviço.
      *
-     * \param aCredential A credencial de quem está registrando a oferta.
      * \param aServiceOffer A oferta de serviço.
      * \param[out] identifier Um identificador para o registro.
      *
      * \return \c true, caso a oferta de serviço tenha sido registrada, ou
      * \c false, caso contrário.
      */
-    boolean register(in ACS::Credential aCredential, in ServiceOffer aServiceOffer, out RegistryIdentifier identifier);
+    boolean register(in ServiceOffer aServiceOffer, out RegistryIdentifier identifier);
 
     /**
      * \brief Remove uma oferta de serviço.
