@@ -32,20 +32,32 @@ local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile (idlfile)
 
 function main()
-  oil.newthread(oil.run)
+  local success, res = oil.pcall(oil.newthread,oil.run)
+  if not success then
+    print("Falha na execução da thread do orb: ",res)
+    os.exit(1)
+  end
 
   local registryServiceComponent = RegistryServiceComponent{
     name = "RegistryService",
     accessControlServerHost = serverConfiguration.accessControlServerHost,
     accessControlServerKey = serverConfiguration.accessControlServerKey,
   }
-  registryServiceComponent = oil.newobject (registryServiceComponent, "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
 
-  local success, startupFailed = oil.pcall (registryServiceComponent.startup, registryServiceComponent)
+  success, res = oil.pcall(oil.newobject, registryServiceComponent, 
+                           "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
   if not success then
-    print("Erro ao iniciar o serviço de registro.")
+    print("Falha na criação do RegistryServiceComponent: ",res)
+    os.exit(1)
+  end
+
+  registryServiceComponent = res
+
+  success, res = oil.pcall (registryServiceComponent.startup, registryServiceComponent)
+  if not success then
+    print("Erro ao iniciar o serviço de registro: ", res)
     os.exit(1)
   end
 end
 
-oil.main(main)
+print(oil.pcall(oil.main,main))
