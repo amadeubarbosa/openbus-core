@@ -61,20 +61,21 @@ function receiverequest(self, request)
     end
   end
 
-  if credential then
-    if self.accessControlService:isValid(credential) then
+  if credential and self.accessControlService:isValid(credential) then
       print ("CREDENCIAL VALIDADA PARA "..request.operation)
       self.picurrent:setValue(credential)
-    else
-      print "CREDENCIAL INVALIDA"
-      request.success = false
-      request.count = 1
-      request[1] = oil.newexcept{"NO_PERMISSION", minor_code_value = 0}
-    end
-  else
-    print "NÂO TEM CREDENCIAL"
-    -- mandar exceção quando interceptadores clientes forem implementados !!!
+      return
   end
+
+  -- Credencial inválida ou sem credencial
+  if credential then
+    print "\n ***CREDENCIAL INVALIDA ***\n"
+  else
+    print "\n***NÂO TEM CREDENCIAL ***\n"
+  end
+  request.success = false
+  request.count = 1
+  request[1] = oil.newexcept{"NO_PERMISSION", minor_code_value = 0}
 end
 
 --

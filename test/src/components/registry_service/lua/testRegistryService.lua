@@ -89,6 +89,12 @@ print("autenticou o obteve o registryService")
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 
+    testNoCredential = function(self)
+      self.credentialHolder:invalidate()
+      Check.assertError(self.registryService.find,self.registryService,"Y",{})
+      self.credentialHolder:setValue(self.credential)
+    end,
+
     afterTestCase = function(self)
       self.accessControlService:logout(self.credential)
       self.credentialHolder:invalidate()

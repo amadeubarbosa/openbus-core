@@ -80,8 +80,7 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
         -> dependência: 1.2
 
   4.4 Incorporar interceptador servidor (Ana)
-      --> FECHADO (aguardando outros serviços e testes para gerar exceção
-                   quando não há credencial no contexto)
+      --> FECHADO 
 
 
 5) SERVIÇO DE REGISTRO
@@ -95,6 +94,7 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   5.2 Incorporar mecanismo de leasing (cliente) (Cris ?)
 
   5.3 Incorporar interceptadores (Ana)
+    --> FECHADO
 
   5.4 Autenticação via certificado
       -> dependência: 4.3
@@ -109,6 +109,7 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
       -> dependências: 3.1 e 4.2
 
   6.3 Incorporar interceptadores (Ana)
+    --> FECHADO
 
   6.4 Autenticação via certificado (Rodrigo)
       -> dependência: 4.3
