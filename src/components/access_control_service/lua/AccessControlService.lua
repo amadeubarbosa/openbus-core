@@ -12,10 +12,10 @@ AccessControlService = oop.class{
   observersByCredentialIdentifier = {},
 }
 
-function AccessControlService:__init(picurrent)
+function AccessControlService:__init(ldapHost, databaseDirectory, picurrent)
   self.picurrent = picurrent
-  self.ldapHost = ServerConfiguration.ldapHost
-  self.credentialDB = CredentialDB(ServerConfiguration.databaseDirectory)
+  self.ldapHost = ldapHost
+  self.credentialDB = CredentialDB(databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
   for _, entry in pairs(entriesDB) do
     self.entries[entry.credential.identifier] = {credential = entry.credential,}

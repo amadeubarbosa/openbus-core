@@ -56,7 +56,7 @@ function main()
   end
   accessControlServiceComponent = res
 
-  success, res = oil.pcall(accessControlServiceComponent.startup, accessControlServiceComponent)
+  success, res = oil.pcall(accessControlServiceComponent.startup, accessControlServiceComponent, ServerConfiguration.ldapHost, ServerConfiguration.databaseDirectory)
   if not success then
     print("Falha na inicialização do AcessControlServiceComponent: ", res)
     os.exit(1)

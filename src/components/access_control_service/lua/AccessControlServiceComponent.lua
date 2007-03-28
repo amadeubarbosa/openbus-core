@@ -7,10 +7,10 @@ local PICurrent = require "PICurrent"
 
 AccessControlServiceComponent = oop.class({}, Member)
 
-function AccessControlServiceComponent:startup()
+function AccessControlServiceComponent:startup(ldapHost, databaseDirectory)
     
     local picurrent = PICurrent()
-    local accessControlService = AccessControlService(picurrent)
+    local accessControlService = AccessControlService(ldapHost, databaseDirectory, picurrent)
 
     -- instala o interceptador do serviço de controle de acesso
     local CONF_DIR = os.getenv("CONF_DIR")
