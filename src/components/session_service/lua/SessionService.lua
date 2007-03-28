@@ -10,10 +10,12 @@ SessionService = oop.class{
   sessions = {},
 }
 
+function SessionService:__init(picurrent)
+  self.picurrent = picurrent
+  return self
+end
+
 function SessionService:createSession(credential)
-    if not self.accessControlService:isValid(credential) then
-        return false
-    end
     if self.sessions[credential.identifier] then
         return true, self.sessions[credential.identifier]
     end

@@ -1,4 +1,6 @@
 require "oil"
+require "ClientInterceptor"
+require "CredentialHolder"
 
 local Check = require "latt.Check"
 
@@ -22,8 +24,17 @@ Suite = {
       local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
+
+      -- instala o interceptador de cliente
+      local CONF_DIR = os.getenv("CONF_DIR")
+      local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+      self.credentialHolder = CredentialHolder()
+      oil.setclientinterceptor(ClientInterceptor(config, self.credentialHolder))
+
       _, self.credential = self.accessControlService:loginByPassword(user, password)
-      local registryService = self.accessControlService:getRegistryService(self.credential)
+      self.credentialHolder:setValue(self.credential)
+
+      local registryService = self.accessControlService:getRegistryService()
       local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
       registryService = registryService:getFacet(registryServiceInterface)
       registryService = oil.narrow(registryService, registryServiceInterface)
@@ -60,6 +71,7 @@ Suite = {
 
     afterTestCase = function(self)
       self.accessControlService:logout(self.credential)
+      self.credentialHolder:invalidate()
     end,
   }
 }
