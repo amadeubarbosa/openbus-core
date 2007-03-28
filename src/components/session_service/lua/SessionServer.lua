@@ -1,5 +1,9 @@
+--
+-- Inicialização do Serviço de Sessão
+--
+-- $Id$
+--
 require "oil"
-
 require "SessionServiceComponent"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
@@ -14,42 +18,47 @@ if CONF_DIR == nil then
   os.exit(1)
 end
 
+-- Obtém a configuração do serviço
 local config = assert(loadfile(CONF_DIR.."/SessionServerConfiguration.lua"))()
 oil.verbose:level(SessionServerConfiguration.oilVerboseLevel or 1)
 SessionServerConfiguration.accessControlServerHost = 
   SessionServerConfiguration.accessControlServerHostName..":"..
   SessionServerConfiguration.accessControlServerHostPort
 
-
+-- Carrega a interface do serviço
 local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
 oil.loadidlfile (idlfile)
 
 function main()
+  -- Aloca uma thread para o orb
   local success, res = oil.pcall(oil.newthread, oil.run)
   if not success then
-    print("Falha na execução da thread do orb: ",res)
+    io.stderr:write("Falha na execução da thread do orb: ",res)
     os.exit(1)
   end
 
+  -- Cria o componente responsável pelo Serviço de Sessão
   local sessionServiceComponent = SessionServiceComponent{
     name = "SessionService",
-    accessControlServerHost = SessionServerConfiguration.accessControlServerHost,
-    accessControlServerKey = SessionServerConfiguration.accessControlServerKey,
+    accessControlServerHost = 
+      SessionServerConfiguration.accessControlServerHost,
+    accessControlServerKey = 
+      SessionServerConfiguration.accessControlServerKey,
   }
 
   success, res = oil.pcall(oil.newobject, sessionServiceComponent, 
                            "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
 
   if not success then
-    print("Façha na criação do SessionServiceComponent: ",res)
+    io.stderr:write("Falha na criação do SessionServiceComponent: ",res)
     os.exit(1)
   end
   sessionServiceComponent = res
 
-
-  success, res = oil.pcall(sessionServiceComponent.startup, sessionServiceComponent)
+  success, res = oil.pcall(sessionServiceComponent.startup, 
+                           sessionServiceComponent)
   if not success then
-    print("Erro ao iniciar o serviço de sessão: ",res)
+    io.stderr:write("Erro ao iniciar o serviço de sessão: ",res)
     os.exit(1)
   end
 end
