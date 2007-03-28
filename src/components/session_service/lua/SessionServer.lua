@@ -29,23 +29,36 @@ config()
 oil.verbose:level(serverConfiguration.oilVerboseLevel)
 
 local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
-
 oil.loadidlfile (idlfile)
 
 function main()
-  oil.newthread(oil.run)
+  local success, res = oil.pcall(oil.newthread, oil.run)
+  if not success then
+    print("Falha na execução da thread do orb: ",res)
+    os.exit(1)
+  end
 
   local sessionServiceComponent = SessionServiceComponent{
     name = "SessionService",
     accessControlServerHost = serverConfiguration.accessControlServerHost,
     accessControlServerKey = serverConfiguration.accessControlServerKey,
   }
-  sessionServiceComponent = oil.newobject (sessionServiceComponent, "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
 
-  local success, startupFailed = oil.pcall(sessionServiceComponent.startup, sessionServiceComponent)
+  success, res = oil.pcall(oil.newobject, sessionServiceComponent, 
+                           "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
+
   if not success then
+    print("Façha na criação do SessionServiceComponent: ",res)
+    os.exit(1)
+  end
+  sessionServiceComponent = res
+
+
+  success, res = oil.pcall(sessionServiceComponent.startup, sessionServiceComponent)
+  if not success then
+    print("Erro ao iniciar o serviço de sessão: ",res)
     os.exit(1)
   end
 end
 
-oil.main(main)
+print(oil.pcall(oil.main,main))
