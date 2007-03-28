@@ -14,19 +14,12 @@ if CONF_DIR == nil then
   os.exit(1)
 end
 
-local serverConfiguration = {}
-function SessionServerConfiguration (sessionServerConfiguration)
-  serverConfiguration.accessControlServerHost = sessionServerConfiguration.accessControlServerHostName..":"..sessionServerConfiguration.accessControlServerHostPort
-  serverConfiguration.accessControlServerKey = sessionServerConfiguration.accessControlServerKey
-  serverConfiguration.oilVerboseLevel = sessionServerConfiguration.oilVerboseLevel
+local config = assert(loadfile(CONF_DIR.."/SessionServerConfiguration.lua"))()
+oil.verbose:level(SessionServerConfiguration.oilVerboseLevel or 1)
+SessionServerConfiguration.accessControlServerHost = 
+  SessionServerConfiguration.accessControlServerHostName..":"..
+  SessionServerConfiguration.accessControlServerHostPort
 
-  serverConfiguration.oilVerboseLevel = serverConfiguration.oilVerboseLevel or 1
-end
-
-local config = loadfile(CONF_DIR.."/SessionServerConfiguration.lua")
-config()
-
-oil.verbose:level(serverConfiguration.oilVerboseLevel)
 
 local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
 oil.loadidlfile (idlfile)
@@ -40,8 +33,8 @@ function main()
 
   local sessionServiceComponent = SessionServiceComponent{
     name = "SessionService",
-    accessControlServerHost = serverConfiguration.accessControlServerHost,
-    accessControlServerKey = serverConfiguration.accessControlServerKey,
+    accessControlServerHost = SessionServerConfiguration.accessControlServerHost,
+    accessControlServerKey = SessionServerConfiguration.accessControlServerKey,
   }
 
   success, res = oil.pcall(oil.newobject, sessionServiceComponent, 

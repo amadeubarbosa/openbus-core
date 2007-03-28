@@ -14,27 +14,15 @@ if CONF_DIR == nil then
     os.exit(1)
 end
 
-ServerConfiguration = {}
-function AccessControlServerConfiguration (accessControlServerConfiguration)
-    ServerConfiguration.hostName = accessControlServerConfiguration.hostName
-    ServerConfiguration.hostPort = accessControlServerConfiguration.hostPort
-    ServerConfiguration.ldapHost = accessControlServerConfiguration.ldapHostName..":"..accessControlServerConfiguration.ldapHostPort
-    ServerConfiguration.databaseDirectory = accessControlServerConfiguration.databaseDirectory
-    ServerConfiguration.oilVerboseLevel = accessControlServerConfiguration.oilVerboseLevel
-
-    ServerConfiguration.oilVerboseLevel = ServerConfiguration.oilVerboseLevel or 1
-end
-
-local config = loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua")
-config()
-
-oil.verbose:level(ServerConfiguration.oilVerboseLevel)
+local config = 
+  assert(loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua"))()
+oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel or 1)
 
 local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
 
 oil.loadidlfile (idlfile)
 
-oil.init{host = ServerConfiguration.hostName, port = ServerConfiguration.hostPort,}
+oil.init{host = AccessControlServerConfiguration.hostName, port = AccessControlServerConfiguration.hostPort,}
 print "ORB inicializado"
 
 function main()
@@ -56,7 +44,7 @@ function main()
   end
   accessControlServiceComponent = res
 
-  success, res = oil.pcall(accessControlServiceComponent.startup, accessControlServiceComponent, ServerConfiguration.ldapHost, ServerConfiguration.databaseDirectory)
+  success, res = oil.pcall(accessControlServiceComponent.startup, accessControlServiceComponent, AccessControlServerConfiguration.ldapHostName, AccessControlServerConfiguration.databaseDirectory)
   if not success then
     print("Falha na inicialização do AcessControlServiceComponent: ", res)
     os.exit(1)

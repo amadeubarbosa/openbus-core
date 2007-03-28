@@ -14,19 +14,11 @@ if CONF_DIR == nil then
     os.exit(1)
 end
 
-local serverConfiguration = {}
-function RegistryServerConfiguration (registryServerConfiguration)
-    serverConfiguration.accessControlServerHost = registryServerConfiguration.accessControlServerHostName..":"..registryServerConfiguration.accessControlServerHostPort
-    serverConfiguration.accessControlServerKey = registryServerConfiguration.accessControlServerKey
-    serverConfiguration.oilVerboseLevel = registryServerConfiguration.oilVerboseLevel
-
-    serverConfiguration.oilVerboseLevel = serverConfiguration.oilVerboseLevel or 1
-end
-
-local config = loadfile(CONF_DIR.."/RegistryServerConfiguration.lua")
-config()
-
-oil.verbose:level(serverConfiguration.oilVerboseLevel)
+local config = assert(loadfile(CONF_DIR.."/RegistryServerConfiguration.lua"))()
+oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel or 1)
+RegistryServerConfiguration.accessControlServerHost = 
+  RegistryServerConfiguration.accessControlServerHostName..":"..
+  RegistryServerConfiguration.accessControlServerHostPort
 
 local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile (idlfile)
@@ -40,8 +32,8 @@ function main()
 
   local registryServiceComponent = RegistryServiceComponent{
     name = "RegistryService",
-    accessControlServerHost = serverConfiguration.accessControlServerHost,
-    accessControlServerKey = serverConfiguration.accessControlServerKey,
+    accessControlServerHost = RegistryServerConfiguration.accessControlServerHost,
+    accessControlServerKey = RegistryServerConfiguration.accessControlServerKey,
   }
 
   success, res = oil.pcall(oil.newobject, registryServiceComponent, 
