@@ -91,6 +91,7 @@ print("autenticou o obteve o registryService")
 
     afterTestCase = function(self)
       self.accessControlService:logout(self.credential)
+      self.credentialHolder:invalidate()
     end,
   }
 }
