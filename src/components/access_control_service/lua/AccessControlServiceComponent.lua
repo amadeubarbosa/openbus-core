@@ -33,5 +33,5 @@ function AccessControlServiceComponent:startup(ldapHost, databaseDirectory)
 end
 
 function AccessControlServiceComponent:shutdown()
-    self:removeFacets()
+  self:removeFacets()
 end

@@ -57,8 +57,7 @@ function main()
                            AccessControlServerConfiguration.ldapHostName, 
                            AccessControlServerConfiguration.databaseDirectory)
   if not success then
-    print("Falha na inicialização do AcessControlServiceComponent: ",
-                    res)
+    print("Falha na inicialização do AcessControlServiceComponent: ", res)
     os.exit(1)
   end
 end
