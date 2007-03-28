@@ -27,6 +27,12 @@ Suite = {
       local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
+
+      -- instala o interceptador de cliente
+      local CONF_DIR = os.getenv("CONF_DIR")
+      local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+      self.credentialHolder = CredentialHolder()
+      oil.setclientinterceptor(ClientInterceptor(config, self.credentialHolder))
     end,
 
     testLoginByPassword = function(self)
@@ -36,8 +42,12 @@ Suite = {
       local success, credential2 = self.accessControlService:loginByPassword(self.user, self.password)
       Check.assertTrue(success)
       Check.assertNotEquals(credential.identifier, credential2.identifier)
+
+      self.credentialHolder:setValue(credential) 
       Check.assertTrue(self.accessControlService:logout(credential))
+      self.credentialHolder:setValue(credential2) 
       Check.assertTrue(self.accessControlService:logout(credential2))
+      self.credentialHolder:invalidate()
     end,
 
     testLoginByPassword2 = function(self)
@@ -48,15 +58,14 @@ Suite = {
 
     testLogout = function(self)
       local _, credential = self.accessControlService:loginByPassword(self.user, self.password)
+      self.credentialHolder:setValue(credential) 
       Check.assertFalse(self.accessControlService:logout({identifier = "", entityName = "abcd", }))
       Check.assertTrue(self.accessControlService:logout(credential))
-      Check.assertFalse(self.accessControlService:logout(credential))
+      self.credentialHolder:invalidate(credential) 
+      Check.assertError(self.accessControlService.logout,self.accessControlService,credential)
     end,
   },
 
-  --
-  -- Este teste utiliza o interceptador do cliente
-  --
   Test2 = {
     beforeTestCase = function(self)
       local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
