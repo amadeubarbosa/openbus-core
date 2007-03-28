@@ -16,6 +16,9 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 
     --> FECHADO. Estamos usando a nova versão
 
+  1.3 Incorporar mecanismo de "verbose" para os serviços em Lua utilizando a 
+      infraestrutura provida pelo OiL
+
 2) DOCUMENTAÇÂO DO PROTÓTIPO (FASE 1)
    ==================================
 
