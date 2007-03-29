@@ -24,7 +24,7 @@ function RegistryServiceComponent:startup()
                   self.accessControlServerKey,
                "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
   if accessControlServiceComponent:_non_existent() then
-    print("Servico de controle de acesso nao encontrado.")
+    io.stderr:write("Servico de controle de acesso nao encontrado.\n")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local accessControlServiceInterface = 
@@ -39,8 +39,8 @@ function RegistryServiceComponent:startup()
   success, self.credential = 
     self.accessControlService:loginByCertificate("RegistryService", "")
   if not success then
-      print("Nao foi possivel logar no servico de controle de acesso.")
-      error{"IDL:SCS/StartupFailed:1.0"}
+    io.stderr:write("Nao foi possivel logar no servico de controle de acesso.\n")
+    error{"IDL:SCS/StartupFailed:1.0"}
   end
 
   -- instala o interceptador cliente
@@ -80,7 +80,7 @@ end
 
 function RegistryServiceComponent:shutdown()
   if not self.started then
-    print("Servico ja foi finalizado.")
+    io.stderr:write("Servico ja foi finalizado.\n")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false

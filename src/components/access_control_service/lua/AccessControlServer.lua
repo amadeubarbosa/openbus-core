@@ -35,7 +35,7 @@ function main()
   -- Aloca uma thread para o orb
   local success, res  = oil.pcall(oil.newthread,oil.run)
   if not success then
-    print("Falha na execução da thread do orb: ", res)
+    io.stderr:write("Falha na execução da thread do orb: "..tostring(res).."\n")
     os.exit(1)
   end
 
@@ -47,7 +47,8 @@ function main()
     oil.pcall(oil.newobject ,accessControlServiceComponent, 
               "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
   if not success then
-    print("Falha na criação do AcessControlServiceComponent: ", res)
+    io.stderr:write("Falha criando do AcessControlServiceComponent: "..
+                     tostring(res).."\n")
     os.exit(1)
   end
   accessControlServiceComponent = res
@@ -57,7 +58,8 @@ function main()
                            AccessControlServerConfiguration.ldapHostName, 
                            AccessControlServerConfiguration.databaseDirectory)
   if not success then
-    print("Falha na inicialização do AcessControlServiceComponent: ", res)
+    io.stderr:write("Falha ao iniciar o serviço de controle de acesso: "..
+                    tostring(res).."\n")
     os.exit(1)
   end
 end

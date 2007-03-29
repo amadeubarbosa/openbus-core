@@ -24,7 +24,7 @@ function SessionServiceComponent:startup()
                     self.accessControlServerKey, 
                  "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
   if accessControlServiceComponent:_non_existent() then
-    print("Servico de controle de acesso nao encontrado.")
+    io.stderr:write("Servico de controle de acesso nao encontrado.\n")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local accessControlServiceInterface = 
@@ -39,7 +39,7 @@ function SessionServiceComponent:startup()
   success, self.credential = 
     self.accessControlService:loginByCertificate("SessionService", "")
   if not success then
-    print("Nao foi possivel logar no servico de controle de acesso.")
+    io.stderr:write("Nao foi possivel logar no servico de controle de acesso.\n")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
@@ -71,7 +71,7 @@ function SessionServiceComponent:startup()
   }
   local registryService = self.accessControlService:getRegistryService()
   if not registryService then
-    print("Servico de registro nao encontrado.")
+    io.stderr:write("Servico de registro nao encontrado.\n")
     self.accessControlService:logout(self.credential)
     error{"IDL:SCS/StartupFailed:1.0"}
   end
@@ -81,7 +81,7 @@ function SessionServiceComponent:startup()
 
   success, self.registryIdentifier = registryService:register(serviceOffer);
   if not success then
-    print("Erro ao registrar o servico de sessao.")
+    io.stderr:write("Erro ao registrar o servico de sessao.\n")
     self.accessControlService:logout(self.credential)
     error{"IDL:SCS/StartupFailed:1.0"}
   end
@@ -91,7 +91,7 @@ end
 
 function SessionServiceComponent:shutdown()
   if not self.started then
-    print("Servico ja foi finalizado.")
+    io.stderr:write("Servico ja foi finalizado.\n")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false

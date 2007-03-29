@@ -33,7 +33,7 @@ function main()
   -- Aloca uma thread para o orb
   local success, res = oil.pcall(oil.newthread,oil.run)
   if not success then
-    print("Falha na execução da thread do orb: ",res)
+    io.stderr:write("Falha na execução da thread do orb: "..tostring(res).."\n")
     os.exit(1)
   end
 
@@ -49,7 +49,8 @@ function main()
   success, res = oil.pcall(oil.newobject, registryServiceComponent, 
                            "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
   if not success then
-    print("Falha na criação do RegistryServiceComponent: ",res)
+    io.stderr:write("Falha criando RegistryServiceComponent: "..
+                     tostring(res).."\n")
     os.exit(1)
   end
   registryServiceComponent = res
@@ -57,7 +58,8 @@ function main()
   success, res = oil.pcall (registryServiceComponent.startup, 
                             registryServiceComponent)
   if not success then
-    print("Erro ao iniciar o serviço de registro: ", res)
+    io.stderr:write("Falha ao iniciar o serviço de registro: "..
+                     tostring(res).."\n")
     os.exit(1)
   end
 end

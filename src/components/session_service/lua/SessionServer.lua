@@ -33,7 +33,7 @@ function main()
   -- Aloca uma thread para o orb
   local success, res = oil.pcall(oil.newthread, oil.run)
   if not success then
-    print("Falha na execução da thread do orb: ",res)
+    io.stderr:write("Falha na execução da thread do orb: "..tostring(res).."\n")
     os.exit(1)
   end
 
@@ -50,7 +50,8 @@ function main()
                            "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
 
   if not success then
-    print("Falha na criação do SessionServiceComponent: ",res)
+    io.stderr:write("Falha criando SessionServiceComponent: "..
+                    tostring(res).."\n") 
     os.exit(1)
   end
   sessionServiceComponent = res
@@ -58,7 +59,8 @@ function main()
   success, res = oil.pcall(sessionServiceComponent.startup, 
                            sessionServiceComponent)
   if not success then
-    print("Erro ao iniciar o serviço de sessão: ",res)
+    io.stderr:write("Falha ao iniciar o serviço de sessão: "..
+                    tostring(res).."\n")
     os.exit(1)
   end
 end
