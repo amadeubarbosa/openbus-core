@@ -5,6 +5,7 @@
 --
 require "oil"
 require "SessionServiceComponent"
+local verbose = require "Verbose"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
@@ -20,10 +21,17 @@ end
 
 -- Obtém a configuração do serviço
 local config = assert(loadfile(CONF_DIR.."/SessionServerConfiguration.lua"))()
-oil.verbose:level(SessionServerConfiguration.oilVerboseLevel or 1)
 SessionServerConfiguration.accessControlServerHost = 
   SessionServerConfiguration.accessControlServerHostName..":"..
   SessionServerConfiguration.accessControlServerHostPort
+
+-- Seta os níveis de verbose para o openbus e para o oil
+if SessionServerConfiguration.verboseLevel then
+  verbose:level(SessionServerConfiguration.verboseLevel)
+end
+if SessionServerConfiguration.oilVerboseLevel then
+  oil.verbose:level(SessionServerConfiguration.oilVerboseLevel)
+end
 
 -- Carrega a interface do serviço
 local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"

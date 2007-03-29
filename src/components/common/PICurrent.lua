@@ -5,13 +5,11 @@
 local oil = require "oil"
 local oop = require "loop.base"
 local setmetatable = setmetatable
-local print = print
 
 module("PICurrent", oop.class)
 
 -- Constrói o objeto
 function __init(self)
-  print"Criando objeto current"
 
   -- Os valores transferidos serão armazenados em uma tabela de chaves fracas.
   -- As chaves dessa tabela são as corotinas associadas às requisições.

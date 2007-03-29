@@ -4,15 +4,14 @@
 --
 local oil = require "oil"
 local oop = require "loop.base"
-
-local print = print
+local verbose = require "Verbose"
 
 module("ClientInterceptor", oop.class)
 
 -- Constrói o interceptador
 function __init(self, config, credentialHolder)
 
-  print("Construindo interceptador para cliente")
+  verbose:interceptor("Construindo interceptador para cliente")
   local lir = oil.getLIR()
   return oop.rawnew(self, 
                     {credentialHolder = credentialHolder,
@@ -22,14 +21,14 @@ end
 
 -- Intercepta o request para envio da informação de contexto (credencial)
 function sendrequest(self, request)
-  print ("INTERCEPTAÇÂO CLIENTE OP: "..request.operation)
+  verbose:interceptor("INTERCEPTAÇÂO CLIENTE OP: "..request.operation)
 
   -- Verifica de existe credencial para envio
   if not self.credentialHolder:hasValue() then
-    print "SEM CREDENCIAL !"
+    verbose:interceptor "SEM CREDENCIAL !"
     return
   end
-  print "TEM CREDENCIAL!"
+  verbose:interceptor("TEM CREDENCIAL!")
 
   -- Insere a credencial no contexto do serviço
   local encoder = oil.newencoder()
@@ -38,7 +37,7 @@ function sendrequest(self, request)
   request.service_context =  {
     { context_id = self.contextID, context_data = encoder:getdata() }
   }
-  print "INSERI CREDENCIAL"
+  verbose:interceptor("INSERI CREDENCIAL")
 end
 
 function receivereply(reply)

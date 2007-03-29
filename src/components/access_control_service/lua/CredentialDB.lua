@@ -1,4 +1,5 @@
 local oop = require "loop.base"
+local verbose = require "Verbose"
 
 require "posix"
 
@@ -12,10 +13,10 @@ CredentialDB = oop.class{
 function CredentialDB:__init(databaseDirectory)
   local credentialFiles = posix.dir(databaseDirectory)
   if credentialFiles == nil then
-    print("O diretorio ["..databaseDirectory.."] nao foi encontrado. Criando...")
+    verbose:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. Criando...")
     local status, errorMessage = posix.mkdir(databaseDirectory)
     if not status then
-      print("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
+      verbose:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
       error(errorMessage)
     else
       credentialFiles = {}

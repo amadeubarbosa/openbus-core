@@ -4,8 +4,8 @@
 --
 local oil = require "oil"
 local oop = require "loop.base"
+local verbose = require "Verbose" 
 
-local print = print
 local pairs = pairs
 local ipairs = ipairs
 
@@ -13,7 +13,7 @@ module("ServerInterceptor", oop.class)
 
 -- Constrói o interceptador
 function __init(self, config, picurrent, accessControlService)
-  print("Construindo interceptador para serviço")
+  verbose:interceptor("Construindo interceptador para serviço")
   local lir = oil.getLIR()
   -- obtém as operações que devem ser verificadas, se assim configurado
   local checkedOperations = {}
@@ -23,12 +23,12 @@ function __init(self, config, picurrent, accessControlService)
     for op, member in pairs(iface.members) do
       if member._type == "operation" and not excluded_ops[op] then
         checkedOperations[op] = true
-        print("  checar "..op)
+        verbose:interceptor("  checar "..op)
       end
     end
   else
     checkedOperations.all = true
-    print("  checar todas as operações")
+    verbose:interceptor("  checar todas as operações")
   end
 
   return oop.rawnew(self, 
@@ -41,37 +41,37 @@ end
 
 -- Intercepta o request para obtenção da informação de contexto (credencial)
 function receiverequest(self, request)
-  print "INTERCEPTAÇÂO SERVIDOR!"
+  verbose:interceptor "INTERCEPTAÇÂO SERVIDOR!"
 
   if not (self.checkedOperations.all or 
           self.checkedOperations[request.operation]) then
-    print ("OPERAÇÂO "..request.operation.." NÂO È CHECADA")
+    verbose:interceptor ("OPERAÇÂO "..request.operation.." NÂO È CHECADA")
     return
   end
-  print ("OPERAÇÂO "..request.operation.." É CHECADA")
+  verbose:interceptor ("OPERAÇÂO "..request.operation.." É CHECADA")
 
   local credential
   for _, context in ipairs(request.service_context) do
     if context.context_id == self.contextID then
-      print "TEM CREDENCIAL!"
+      verbose:interceptor "TEM CREDENCIAL!"
       local decoder = oil.newdecoder(context.context_data)
       credential = decoder:get(self.credentialType)
-      print("CREDENCIAL: "..credential.identifier..","..credential.entityName)
+      verbose:interceptor("CREDENCIAL: "..credential.identifier..","..credential.entityName)
       break
     end
   end
 
   if credential and self.accessControlService:isValid(credential) then
-      print ("CREDENCIAL VALIDADA PARA "..request.operation)
+      verbose:interceptor("CREDENCIAL VALIDADA PARA "..request.operation)
       self.picurrent:setValue(credential)
       return
   end
 
   -- Credencial inválida ou sem credencial
   if credential then
-    print "\n ***CREDENCIAL INVALIDA ***\n"
+    verbose:interceptor("\n ***CREDENCIAL INVALIDA ***\n")
   else
-    print "\n***NÂO TEM CREDENCIAL ***\n"
+    verbose:interceptor("\n***NÂO TEM CREDENCIAL ***\n")
   end
   request.success = false
   request.count = 1

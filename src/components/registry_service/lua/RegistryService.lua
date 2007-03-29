@@ -1,6 +1,7 @@
 require "uuid"
 
 local oop = require "loop.base"
+local verbose = require "Verbose"
 
 RegistryService = oop.class{
   invalidIdentifier = "",
@@ -17,7 +18,9 @@ end
 function RegistryService:register(serviceOffer)
     local identifier = self:generateIdentifier()
     local credential = self.picurrent:getValue()
-print("peguei credencial de "..credential.entityName.." do current")
+
+    verbose:service("register: recuperei credencial "..credential.entityName)
+
     local entry = {serviceOffer = serviceOffer, credential = credential, time = os.time()}
     self:addEntry(identifier, entry)
     return true, identifier

@@ -5,6 +5,7 @@
 --
 require "oil"
 require "RegistryServiceComponent"
+local verbose = require "Verbose"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
@@ -20,10 +21,17 @@ end
 
 -- Obtém a configuração do serviço
 local config = assert(loadfile(CONF_DIR.."/RegistryServerConfiguration.lua"))()
-oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel or 1)
 RegistryServerConfiguration.accessControlServerHost = 
   RegistryServerConfiguration.accessControlServerHostName..":"..
   RegistryServerConfiguration.accessControlServerHostPort
+
+-- Seta os níveis de verbose para o openbus e para o oil
+if RegistryServerConfiguration.verboseLevel then
+  verbose:level(RegistryServerConfiguration.verboseLevel)
+end
+if RegistryServerConfiguration.oilVerboseLevel then
+  oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
+end
 
 -- Carrega a interface do serviço
 local idlfile = CORBA_IDL_DIR.."/registry_service.idl"
