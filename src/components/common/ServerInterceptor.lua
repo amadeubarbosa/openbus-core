@@ -15,20 +15,26 @@ module("ServerInterceptor", oop.class)
 function __init(self, config, picurrent, accessControlService)
   verbose:interceptor("Construindo interceptador para serviço")
   local lir = oil.getLIR()
-  -- obtém as operações que devem ser verificadas, se assim configurado
+
+  -- Obtém as operações das interfaces que devem ser verificadas
   local checkedOperations = {}
-  local excluded_ops = config.excluded_ops or {}
-  if config.interface then
-    local iface = lir:resolve(config.interface)
-    for op, member in pairs(iface.members) do
-      if member._type == "operation" and not excluded_ops[op] then
-        checkedOperations[op] = true
-        verbose:interceptor("  checar "..op)
+  if config.interfaces then
+    for _, iconfig in ipairs(config.interfaces) do
+      local iface = lir:resolve(iconfig.interface)
+      verbose:interceptor(true, "checar interface: "..iconfig.interface)
+      local excluded_ops = iconfig.excluded_ops or {}
+      for op, member in pairs(iface.members) do
+        if member._type == "operation" and not excluded_ops[op] then
+          checkedOperations[op] = true
+          verbose:interceptor("checar operação: "..op)
+        end
       end
+      verbose:interceptor(false)
     end
   else
+    -- Se nenhuma interface especificada, checa todas as operações
     checkedOperations.all = true
-    verbose:interceptor("  checar todas as operações")
+    verbose:interceptor("checar todas as operações de qualquer interface")
   end
 
   return oop.rawnew(self, 

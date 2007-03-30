@@ -46,7 +46,7 @@ function RegistryServiceComponent:startup()
   -- instala o interceptador cliente
   local CONF_DIR = os.getenv("CONF_DIR")
   local interceptorsConfig = 
-    assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+    assert(loadfile(CONF_DIR.."/advanced/RSInterceptorsConfiguration.lua"))()
   self.credentialHolder = CredentialHolder()
   self.credentialHolder:setValue(self.credential)
   oil.setclientinterceptor(ClientInterceptor(interceptorsConfig, 
