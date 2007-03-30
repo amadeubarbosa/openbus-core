@@ -71,6 +71,7 @@ function main()
                     tostring(res).."\n")
     os.exit(1)
   end
+  verbose:init("Serviço de sessão iniciado com sucesso")
 end
 
 print(oil.pcall(oil.main,main))
