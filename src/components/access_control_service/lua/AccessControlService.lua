@@ -7,14 +7,16 @@ local oop = require "loop.base"
 
 AccessControlService = oop.class{
   invalidCredential = {identifier = "", entityName = ""},
-  entries = {},
-  observersByIdentifier = {},
-  observersByCredentialIdentifier = {},
 }
 
 function AccessControlService:__init(ldapHost, databaseDirectory, picurrent)
+  self = oop.rawnew(self, {
+    entries = {},
+    observersByIdentifier = {},
+    observersByCredentialIdentifier = {},
+    ldapHost = ldapHost,
+  })
   self.picurrent = picurrent
-  self.ldapHost = ldapHost
   self.credentialDB = CredentialDB(databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
   for _, entry in pairs(entriesDB) do
@@ -34,15 +36,15 @@ function AccessControlService:loginByPassword(name, password)
 end
 
 function AccessControlService:loginByCertificate(name, answer)
-    if name ~= "RegistryService" and name ~= "SessionService" then
-        return false, self.invalidCredential
-    end
-    local entry = self:addEntry(name)
-    return true, entry.credential
+  if name ~= "RegistryService" and name ~= "SessionService" then
+    return false, self.invalidCredential
+  end
+  local entry = self:addEntry(name)
+  return true, entry.credential
 end
 
-function AccessControlService:getToken(name)
-    return ""
+function AccessControlService:getChallenge(name)
+  return ""
 end
 
 function AccessControlService:logout(credential)

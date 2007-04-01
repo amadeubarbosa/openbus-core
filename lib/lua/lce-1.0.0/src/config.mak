@@ -1,10 +1,16 @@
 PROJNAME = lce
-LIBNAME = lce-1.0.0
+LIBNAME = ${PROJNAME}
 
-SRC = lce.c lce_x509.c lce_key.c lce_cipher.c
+TARGETROOT= ${OPENBUS_HOME}/libpath
 
-INCLUDES = ../include /local/prod/rodrigoh/software/openssl-SNAP-20070314/include ${LUA_HOME}/include
+OPENSSL_HOME= /local/prod/rodrigoh/software/openssl
+OPENSSL_INC= ${OPENSSL_HOME}/include
+OPENSSL_LIB= ${OPENSSL_HOME}
+OPENSSL_LIBS = crypto dl
 
-LDIR = /local/prod/rodrigoh/software/openssl-SNAP-20070314
+INCLUDES= ../include ${OPENSSL_INC}
+LDIR= ${OPENSSL_LIB}
+LIBS= ${OPENSSL_LIBS}
+SRC= lce.c lce_x509.c lce_key.c lce_cipher.c
 
-LIBS = crypto dl
+USE_LUA51=YES
