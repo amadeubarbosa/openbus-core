@@ -1,7 +1,10 @@
 require "lualdap"
 require "uuid"
+require "lce"
 
 require "CredentialDB"
+
+local verbose = require "Verbose"
 
 local oop = require "loop.base"
 
@@ -9,15 +12,17 @@ AccessControlService = oop.class{
   invalidCredential = {identifier = "", entityName = ""},
 }
 
-function AccessControlService:__init(ldapHost, databaseDirectory, picurrent)
+function AccessControlService:__init(picurrent)
   self = oop.rawnew(self, {
     entries = {},
     observersByIdentifier = {},
-    observersByCredentialIdentifier = {},
-    ldapHost = ldapHost,
+    observersByCredential = {},
+    challenges = {},
+    config = AccessControlServerConfiguration,
+    picurrent = picurrent,
   })
-  self.picurrent = picurrent
-  self.credentialDB = CredentialDB(databaseDirectory)
+  self.privateKey = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
+  self.credentialDB = CredentialDB(self.config.databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
   for _, entry in pairs(entriesDB) do
     self.entries[entry.credential.identifier] = {credential = entry.credential,}
@@ -26,9 +31,11 @@ function AccessControlService:__init(ldapHost, databaseDirectory, picurrent)
 end
 
 function AccessControlService:loginByPassword(name, password)
-    local connection, errorMessage = lualdap.open_simple(self.ldapHost, name, password, false)
+    local ldapHost = self.config.ldapHostName..":"..self.config.ldapHostPort
+    local connection, errorMessage = lualdap.open_simple(ldapHost, name, password, false)
     if not connection then
-        return false, self.invalidCredential
+      verbose:error("Erro ao conectar com o servidor LDAP.\n"..errorMessage)
+      return false, self.invalidCredential
     end
     connection:close()
     local entry = self:addEntry(name)
@@ -36,7 +43,16 @@ function AccessControlService:loginByPassword(name, password)
 end
 
 function AccessControlService:loginByCertificate(name, answer)
-  if name ~= "RegistryService" and name ~= "SessionService" then
+  local challenge = self.challenges[name]
+  if not challenge then
+    verbose:error("Nao existe desafio para "..name)
+    return false, self.invalidCredential
+  end
+  local errorMessage
+  answer, errorMessage = lce.cipher.decrypt(self.privateKey, answer)
+  if answer ~= challenge then
+    verbose:error("Erro ao obter a resposta de "..name)
+    verbose:error(errorMessage)
     return false, self.invalidCredential
   end
   local entry = self:addEntry(name)
@@ -44,13 +60,34 @@ function AccessControlService:loginByCertificate(name, answer)
 end
 
 function AccessControlService:getChallenge(name)
-  return ""
+  local certificate, errorMessage = self:getCertificate(name)
+  if not certificate then
+    verbose:error("Nao foi encontrado o certificado de "..name)
+    verbose:error(errorMessage)
+    return ""
+  end
+  local challenge = self:generateChallenge(name, certificate)
+  certificate:release()
+  return challenge
+end
+
+function AccessControlService:getCertificate(name)
+  local certificateFile = self.config.certificatesDirectory.."/"..name..".crt"
+  return lce.x509.readfromderfile(certificateFile)
+end
+
+function AccessControlService:generateChallenge(name, certificate)
+  local currentTime = tostring(os.time())
+  self.challenges[name] = currentTime
+  return lce.cipher.encrypt(certificate:getpublickey(), currentTime)
 end
 
 function AccessControlService:logout(credential)
     local entry = self.entries[credential.identifier]
     if not entry then
-        return false
+      verbose:warn("Tentativa de logout com credencial inexistente: "..
+        credential.identifier)
+      return false
     end
     self:removeEntry(entry)
     return true
@@ -81,21 +118,28 @@ function AccessControlService:setRegistryService(member)
 end
 
 function AccessControlService:addObserver(observer, credentialIdentifiers)
-    local observerIdentifier = self:generateCredentialObserverIdentifier()
-    self.observersByIdentifier[observerIdentifier] = {observer = observer, identifier = observerIdentifier, credentialIdentifiers = {}}
-    for _, credentialIdentifier in ipairs(credentialIdentifiers) do
-        self:addCredentialToObserver(observerIdentifier, credentialIdentifier)
+    local observerId = self:generateObserverIdentifier()
+    local observerEntry = {observer = observer, credentials = {}}
+    self.observersByIdentifier[observerId] = observerEntry
+    for _, credentialId in ipairs(credentialIdentifiers) do
+      observerEntry.credentials[credentialId] = true
+      if not self.observersByCredential[credentialId] then
+        self.observersByCredential[credentialId] = {}
+      end
+      self.observersByCredential[credentialId][observerId] = observerEntry
     end
-    return observerIdentifier
+    return observerId
 end
 
 function AccessControlService:removeObserver(observerIdentifier)
     local observerEntry = self.observersByIdentifier[observerIdentifier]
     if not observerEntry then
-        return false
+      return false
     end
-    for _, credentialIdentifier in ipairs(observerEntry.credentialIdentifiers) do
-        self:removeCredentialFromObserver(observerIdentifier, credentialIdentifier)
+    for credentialId in pairs(observerEntry.credentials) do
+      if self.observersByCredential[credentialId] then
+        self.observersByCredential[credentialId][observerIdentifier] = nil
+      end
     end
     self.observersByIdentifier[observerIdentifier] = nil
     return true
@@ -104,36 +148,28 @@ end
 function AccessControlService:addCredentialToObserver(observerIdentifier, credentialIdentifier)
     local observerEntry = self.observersByIdentifier[observerIdentifier]
     if not observerEntry then
-        return false
+      return false
     end
-    table.insert(observerEntry.credentialIdentifiers, credentialIdentifier)
-    if not self.observersByCredentialIdentifier[credentialIdentifier] then
-        self.observersByCredentialIdentifier[credentialIdentifier] = {}
+    observerEntry.credentials[credentialIdentifier] = true
+    if not self.observersByCredential[credentialIdentifier] then
+      self.observersByCredential[credentialIdentifier] = {}
     end
-    table.insert(self.observersByCredentialIdentifier[credentialIdentifier], observer)
+    self.observersByCredential[credentialIdentifier][observerIdentifier] =
+      observerEntry
     return true
 end
 
-function AccessControlService:removeCredentialFromObserver(observerIdentifier, credentialIdentifier)
+function AccessControlService:removeCredentialFromObserver(observerIdentifier,
+    credentialIdentifier)
+    verbose:service("che")
     local observerEntry = self.observersByIdentifier[observerIdentifier]
     if not observerEntry then
-        return false
+      return false
     end
-    local credentialIdentifierIndex
-    for i, bufferedCredentialIdentifier in ipairs(observerEntry.credentialIdentifiers) do
-        if bufferedCredentialIdentifier == credentialIdentifier then
-            credentialIdentifierIndex = i
-            break
-        end
+    observerEntry.credentials[credentialIdentifier] = false
+    if self.observersByCredential[credentialIdentifier] then
+      self.observersByCredential[credentialIdentifier][observerIdentifier] = nil
     end
-    table.remove(observerEntry.credentialIdentifiers, credentialIdentifierIndex)
-    local observerIndex
-    for i, observer in ipairs(self.observersByCredentialIdentifier[credentialIdentifier]) do
-        if observer.identifier == observerIdentifier then
-            observerIndex = i
-        end
-    end
-    table.remove(self.observersByCredentialIdentifier[credentialIdentifier], observerIndex)
     return true
 end
 
@@ -149,22 +185,28 @@ function AccessControlService:generateCredentialIdentifier()
     return uuid.new("time")
 end
 
-function AccessControlService:generateCredentialObserverIdentifier()
+function AccessControlService:generateObserverIdentifier()
     return uuid.new("time")
 end
 
 function AccessControlService:removeEntry(entry)
     self.entries[entry.credential.identifier] = nil
+    verbose:service("Vai notificar aos observadores...")
     self:notifyCredentialWasDeleted(entry.credential)
+    verbose:service("Observadores notificados...")
     self.credentialDB:delete(entry.credential)
 end
 
 function AccessControlService:notifyCredentialWasDeleted(credential)
-    local observers = self.observersByCredentialIdentifier[credential.identifier]
+    local observers = self.observersByCredential[credential.identifier]
     if not observers then
         return
     end
-    for observer in pairs(observers) do
-        observer:credentialWasDeleted(credential)
+    for _, observerEntry in pairs(observers) do
+      local success, err = oil.pcall(observerEntry.observer.credentialWasDeleted, observerEntry.observer, credential)
+      if not success then
+        verbose:warn("Erro ao notificar um observador.")
+        verbose:warn(err)
+      end
     end
 end

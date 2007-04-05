@@ -7,24 +7,36 @@ require "Member"
 require "RegistryService"
 
 require "oil"
+
+require "lce"
+
 require "ClientInterceptor"
 require "ServerInterceptor"
 require "CredentialHolder"
 require "PICurrent"
 
+local verbose = require "Verbose"
+
 local oop = require "loop.simple"
 
 RegistryServiceComponent = oop.class({}, Member)
 
-function RegistryServiceComponent:startup()
+function RegistryServiceComponent:__init(name)
+  self = oop.rawnew(self, {
+    name = name,
+    config = RegistryServerConfiguration,
+  })
+  return self
+end
 
+function RegistryServiceComponent:startup()
   -- obtém a referência para o Serviço de Controle de Acesso
   local accessControlServiceComponent = 
-  oil.newproxy("corbaloc::"..self.accessControlServerHost.."/"..
-                  self.accessControlServerKey,
+  oil.newproxy("corbaloc::"..self.config.accessControlServerHost.."/"..
+                  self.config.accessControlServerKey,
                "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
   if accessControlServiceComponent:_non_existent() then
-    io.stderr:write("Servico de controle de acesso nao encontrado.\n")
+    verbose:error("Servico de controle de acesso nao encontrado.")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local accessControlServiceInterface = 
@@ -35,11 +47,27 @@ function RegistryServiceComponent:startup()
     oil.narrow(self.accessControlService, accessControlServiceInterface)
 
   -- autenticação junto ao serviço de controle de acesso
+  local challenge = self.accessControlService:getChallenge(self.name)
+  if not challenge then
+    verbose:error("O desafio nao foi obtido junto ao Servico de Controle de Acesso.")
+    error{"IDL:SCS/StartupFailed:1.0"}
+  end
+  local privateKey, errorMessage = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
+  if not privateKey then
+    verbose:error("Erro ao obter a chave privada.")
+    verbose:error(errorMessage)
+    error{"IDL:SCS/StartupFailed:1.0"}
+  end
+  local answer = lce.cipher.decrypt(privateKey, challenge)
+  privateKey:release()
+  local accessControlServiceCertificate = lce.x509.readfromderfile(self.config.accessControlServiceCertificateFile)
+  answer = lce.cipher.encrypt(accessControlServiceCertificate:getpublickey(), answer)
+  accessControlServiceCertificate:release()
   local success
   success, self.credential = 
-    self.accessControlService:loginByCertificate("RegistryService", "")
+    self.accessControlService:loginByCertificate(self.name, answer)
   if not success then
-    io.stderr:write("Nao foi possivel logar no servico de controle de acesso.\n")
+    verbose:error("Nao foi possivel logar no servico de controle de acesso.")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
@@ -80,7 +108,7 @@ end
 
 function RegistryServiceComponent:shutdown()
   if not self.started then
-    io.stderr:write("Servico ja foi finalizado.\n")
+    verbose:error("Servico ja foi finalizado.")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false
