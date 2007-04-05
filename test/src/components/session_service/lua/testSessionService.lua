@@ -14,7 +14,7 @@ Suite = {
       end
       local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
 
-      oil.verbose:level(0)
+      oil.verbose:level(2)
       oil.loadidlfile(idlfile)
 
       local user = "csbase"
@@ -48,25 +48,10 @@ Suite = {
     end,
 
     testCreateSession = function(self)
-      local success, session = self.sessionService:createSession(self.credential)
+      local success, session = self.sessionService:createSession()
       Check.assertTrue(success)
-      self.sessionService:removeSession(self.credential)
-    end,
-
-    testGetSession = function(self)
-      local success, session = self.sessionService:createSession(self.credential)
-      Check.assertTrue(success)
-      local session2 = self.sessionService:getSession(self.credential)
+      local session2 = self.sessionService:getSession()
       Check.assertEquals(session.identifier, session2.identifier)
-      self.sessionService:removeSession(self.credential)
-    end,
-
-    testRemoveSession = function(self)
-      self.sessionService:createSession(self.credential)
-      Check.assertTrue(self.sessionService:removeSession(self.credential))
-      local session = self.sessionService:getSession(self.credential)
-      Check.assertNil(session)
-      Check.assertFalse(self.sessionService:removeSession(self.credential))
     end,
 
     afterTestCase = function(self)

@@ -58,7 +58,7 @@ function SessionServiceComponent:startup()
                                              self.accessControlService))
 
   -- cria e instala a faceta servidora
-  local sessionService = SessionService(picurrent)
+  local sessionService = SessionService(self.accessControlService, picurrent)
   local sessionServiceInterface = "IDL:OpenBus/SS/ISessionService:1.0"
   self:addFacet("sessionService", sessionServiceInterface, sessionService)
 

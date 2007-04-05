@@ -1,44 +1,42 @@
+--
+-- Sessão compartilhada pelos membros associados a uma mesma credencial
+--
+-- $Id$
+--
 require "uuid"
-
 local oop = require "loop.base"
 
 Session = oop.class{
-  membersByIdentifier = {},
-  membersByName = {},
+  sessionMembers = {},
 }
 
+-- Obtém o identificador da sessão
 function Session:getIdentifier()
-    return self.identifier
+  return self.identifier
 end
 
+-- Adiciona um membro à sessão
 function Session:addMember(member)
-    local memberName = member:getName()
-    local memberIdentifier = self:generateMemberIdentifier()
-    self.membersByIdentifier[memberIdentifier] = member
-    self.membersByName[memberName] = member
+  local memberIdentifier = self:generateMemberIdentifier()
+  self.sessionMembers[memberIdentifier] = member
 end
 
+-- Remove um membro da sessão
 function Session:removeMember(memberIdentifier)
-    local member = self.membersByIdentifier[memberIdentifier]
-    if not member then
-        return false
-    end
-    local memberName = member:getName()
-    self.membersByIdentifier[memberIdentifier] = nil
-    self.membersByName[memberName] = nil
-    return true
+  if not self.sessionMembers[memberIdentifier] then
+    return false
+  end
+  self.sessionMembers[memberIdentifier] = nil
+  return true
 end
 
-function Session:getMember(memberName)
-    return self.membersByName[memberName]
-end
-
+-- Obtém a lista de membros de uma sessão
 function Session:getMembers()
-    local members = {}
-    for _, member in pairs(self.membersByIdentifier) do
-        table.insert(members, member)
-    end
-    return members
+  local members = {}
+  for _, member in pairs(self.sessionMembers) do
+    table.insert(members, member)
+  end
+  return members
 end
 
 function Session:generateMemberIdentifier()
