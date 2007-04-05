@@ -13,10 +13,17 @@ local oop = require "loop.simple"
 
 AccessControlServiceComponent = oop.class({}, Member)
 
-function AccessControlServiceComponent:startup(ldapHost, databaseDirectory)
+function AccessControlServiceComponent:__init(name)
+  self = oop.rawnew(self, {
+    name = name,
+    config = AccessControlServerConfiguration,
+  })
+  return self
+end
+
+function AccessControlServiceComponent:startup()
   local picurrent = PICurrent()
-  local accessControlService = 
-    AccessControlService(ldapHost, databaseDirectory, picurrent)
+  local accessControlService = AccessControlService(picurrent)
 
   -- instala o interceptador do serviço de controle de acesso
   local CONF_DIR = os.getenv("CONF_DIR")
