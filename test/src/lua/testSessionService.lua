@@ -57,7 +57,7 @@ Suite = {
       local success, session = self.sessionService:createSession()
       Check.assertTrue(success)
       local session2 = self.sessionService:getSession()
-      Check.assertEquals(session.identifier, session2.identifier)
+      Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
     end,
 
     afterTestCase = function(self)
