@@ -54,11 +54,7 @@ doc:
 	cd docs/idl; doxygen openbus.dox
 
 idl:
-	@mkdir -p $(CORBA_IDL_DIR)
-#	@cd $(CORBA_IDL_DIR) ; find ../src -type f -name "*.idl" | xargs -I{} echo {}
-	@cd $(CORBA_IDL_DIR) ; (for idl_file in `find ../src -name '*.idl'` ; do \
-		ln -sf $$idl_file . ; \
-	done)
+	@ln -s src/corba_idl
 
 clean-libs:
 	@(for lib_dir in lib/lua/* ; do \
