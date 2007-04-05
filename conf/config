@@ -1,7 +1,6 @@
 #LUA=lua
 LUA=lua5.1
 
-#set TECLIBS=/home/t/tecgraf/libpath/${TEC_UNAME}
 TECLIBS=/home/t/tecgraf/libpath/${TEC_UNAME}
 OILLIBS=/home/t/tecgraf/lib/oil04/lib/${TEC_UNAME}
 OILLUALIBS=/home/t/tecgraf/lib/oil04/lua
