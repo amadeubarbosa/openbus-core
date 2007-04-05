@@ -8,7 +8,7 @@ require "uuid"
 
 local verbose = require "openbus.common.Log"
 
-require "openbus.services.session.Session"
+local Session = require "openbus.services.session.Session"
 
 local oop = require "loop.base"
 

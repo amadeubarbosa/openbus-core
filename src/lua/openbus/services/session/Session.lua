@@ -7,23 +7,23 @@ require "uuid"
 
 local oop = require "loop.base"
 
-Session = oop.class{
-  sessionMembers = {},
-}
+module("openbus.services.session.Session", oop.class)
+
+sessionMembers = {}
 
 -- Obtém o identificador da sessão
-function Session:getIdentifier()
+function getIdentifier(self)
   return self.identifier
 end
 
 -- Adiciona um membro à sessão
-function Session:addMember(member)
+function addMember(self, member)
   local memberIdentifier = self:generateMemberIdentifier()
   self.sessionMembers[memberIdentifier] = member
 end
 
 -- Remove um membro da sessão
-function Session:removeMember(memberIdentifier)
+function removeMember(self, memberIdentifier)
   if not self.sessionMembers[memberIdentifier] then
     return false
   end
@@ -32,7 +32,7 @@ function Session:removeMember(memberIdentifier)
 end
 
 -- Obtém a lista de membros de uma sessão
-function Session:getMembers()
+function getMembers(self)
   local members = {}
   for _, member in pairs(self.sessionMembers) do
     table.insert(members, member)
@@ -40,6 +40,6 @@ function Session:getMembers()
   return members
 end
 
-function Session:generateMemberIdentifier()
+function generateMemberIdentifier(self)
     return uuid.new("time")
 end
