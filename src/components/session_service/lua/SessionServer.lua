@@ -46,15 +46,7 @@ function main()
   end
 
   -- Cria o componente responsável pelo Serviço de Sessão
-  local sessionServiceComponent = SessionServiceComponent{
-    name = "SessionService",
-    accessControlServerHost = 
-      SessionServerConfiguration.accessControlServerHost,
-    accessControlServerKey = 
-      SessionServerConfiguration.accessControlServerKey,
-  }
-
-  success, res = oil.pcall(oil.newobject, sessionServiceComponent, 
+  success, res = oil.pcall(oil.newobject, SessionServiceComponent("SessionService"), 
                            "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
 
   if not success then
@@ -62,7 +54,7 @@ function main()
                     tostring(res).."\n") 
     os.exit(1)
   end
-  sessionServiceComponent = res
+  local sessionServiceComponent = res
 
   success, res = oil.pcall(sessionServiceComponent.startup, 
                            sessionServiceComponent)

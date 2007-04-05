@@ -48,23 +48,19 @@ function main()
   end
 
   -- Cria o componente responsável pelo Serviço de Controle de Acesso
-  local accessControlServiceComponent = AccessControlServiceComponent{
-    name = "AccessControlService",
-  }
   success, res  = 
-    oil.pcall(oil.newobject ,accessControlServiceComponent, 
-              "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
+    oil.pcall(oil.newobject,
+    AccessControlServiceComponent("AccessControlService"), 
+    "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
   if not success then
     io.stderr:write("Falha criando do AcessControlServiceComponent: "..
                      tostring(res).."\n")
     os.exit(1)
   end
-  accessControlServiceComponent = res
 
+  local accessControlServiceComponent = res
   success, res = oil.pcall(accessControlServiceComponent.startup, 
-                           accessControlServiceComponent, 
-                           AccessControlServerConfiguration.ldapHostName, 
-                           AccessControlServerConfiguration.databaseDirectory)
+                           accessControlServiceComponent)
   if not success then
     io.stderr:write("Falha ao iniciar o serviço de controle de acesso: "..
                     tostring(res).."\n")

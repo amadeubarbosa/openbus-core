@@ -5,6 +5,7 @@
 --
 require "oil"
 require "RegistryServiceComponent"
+
 local verbose = require "Verbose"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
@@ -46,23 +47,16 @@ function main()
   end
 
   -- Cria o componente responsável pelo Serviço de Registro
-  local registryServiceComponent = RegistryServiceComponent{
-    name = "RegistryService",
-    accessControlServerHost = 
-      RegistryServerConfiguration.accessControlServerHost,
-    accessControlServerKey = 
-      RegistryServerConfiguration.accessControlServerKey,
-  }
-
-  success, res = oil.pcall(oil.newobject, registryServiceComponent, 
-                           "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
+  success, res = oil.pcall(oil.newobject,
+    RegistryServiceComponent("RegistryService"), 
+    "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
   if not success then
     io.stderr:write("Falha criando RegistryServiceComponent: "..
                      tostring(res).."\n")
     os.exit(1)
   end
-  registryServiceComponent = res
 
+  local registryServiceComponent = res
   success, res = oil.pcall (registryServiceComponent.startup, 
                             registryServiceComponent)
   if not success then
