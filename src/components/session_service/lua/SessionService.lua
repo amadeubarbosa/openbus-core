@@ -25,7 +25,6 @@ end
 -- do serviço, e repassada através do objeto PICurrent
 function SessionService:createSession()
   local credential = self.picurrent:getValue()
-  verbose:service("Criar sessão para "..credential.identifier)
   if self.sessions[credential.identifier] then
     verbose:err("Tentativa de criar sessão já existente")
     return false
@@ -37,18 +36,21 @@ function SessionService:createSession()
 
   -- A credencial deve ser observada!
   if not self.observerId then
-    verbose:service("Criando observador de credenciais")
-    self.observer = oil.newobject(self, 
+    local observer = {
+      sessionService = self,
+      credentialWasDeleted = 
+        function(self, credential)
+          self.sessionService:credentialWasDeleted(credential)
+        end
+    }
+    self.observer = oil.newobject(observer, 
                                   "IDL:OpenBus/ACS/ICredentialObserver:1.0",
                                   "SessionServiceCredentialObserver")
-    verbose:service("Adicionando observador de credenciais ao controle acesso")
     self.observerId = 
       self.accessControlService:addObserver(self.observer, 
                                             {credential.identifier})
-    verbose:service("Observador de credenciais adicionado")
   else
-    verbose:service("Inserindo credencial ao observador")
-    self.accessControlSevice:addCredentialToObserver(self.observerId,
+    self.accessControlService:addCredentialToObserver(self.observerId,
                                                      credential.identifier)
   end
   return true, session
@@ -57,9 +59,7 @@ end
 -- Notificação de deleção de credencial (logout)
 function SessionService:credentialWasDeleted(credential)
   if self.sessions[credential.identifier] then
-    verbose:service("Removendo sessão de "..credential.identifier)
     self.sessions[credential.identifier] = nil
-    verbose:service("Removendo credencial do observador")
     self.accessControlService:removeCredentialFromObserver(self.observerId,
                                                         credential.identifier)
   end
@@ -74,6 +74,9 @@ end
 -- do serviço, e repassada através do objeto PICurrent
 function SessionService:getSession()
   local credential = self.picurrent:getValue()
-  verbose:service("Obter sessão de "..credential.identifier)
-  return self.sessions[credential.identifier]
+  local session = self.sessions[credential.identifier]
+  if not session then
+   verbose:warn("Não há sessão para "..credential.identifier)
+  end
+  return session
 end
