@@ -10,6 +10,8 @@ module OpenBus {
  */
 module ACS {
 
+/** \brief Representa uma sequência de bytes. */
+typedef sequence<octet> OctetSeq;
 /** \brief Representa o identificador de uma credencial. */
 typedef Identifier CredentialIdentifier;
 /** \brief Representa uma sequência de identificadores de credenciais. */
@@ -66,7 +68,7 @@ interface IAccessControlService {
      *
      * \see getChallenge
      */
-    boolean loginByCertificate (in string name, in string answer, out Credential aCredential);
+    boolean loginByCertificate (in string name, in OctetSeq answer, out Credential aCredential);
     /**
      * \brief Obtém um desafio para uma entidade.
      *
@@ -76,7 +78,7 @@ interface IAccessControlService {
      *
      * \see loginByCertificate
      */
-    string getChallenge(in string name);
+    OctetSeq getChallenge(in string name);
     /**
      * \brief Efetua o \c logout de uma entidade.
      *
