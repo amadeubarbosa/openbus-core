@@ -11,17 +11,20 @@ RegistryService = oop.class{
 }
 
 function RegistryService:__init(picurrent)
-  self.picurrent = picurrent
+  self = oop.rawnew(self, {
+    picurrent = picurrent,
+  })
   return self
 end
 
 function RegistryService:register(serviceOffer)
     local identifier = self:generateIdentifier()
     local credential = self.picurrent:getValue()
-
-    verbose:service("register: recuperei credencial "..credential.entityName)
-
-    local entry = {serviceOffer = serviceOffer, credential = credential, time = os.time()}
+    local entry = {
+      serviceOffer = serviceOffer,
+      credential = credential,
+      time = os.time()
+    }
     self:addEntry(identifier, entry)
     return true, identifier
 end
