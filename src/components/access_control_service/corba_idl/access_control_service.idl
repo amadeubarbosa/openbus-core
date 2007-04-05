@@ -3,6 +3,8 @@
 
 #include "core.idl"
 
+#include "registry_service.idl"
+
 module OpenBus {
 
 /**

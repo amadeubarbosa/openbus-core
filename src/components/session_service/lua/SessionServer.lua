@@ -34,7 +34,11 @@ if SessionServerConfiguration.oilVerboseLevel then
 end
 
 -- Carrega a interface do serviço
-local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
+local idlfile = CORBA_IDL_DIR.."/session_service.idl"
+oil.loadidlfile (idlfile)
+idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
+oil.loadidlfile (idlfile)
+idlfile = CORBA_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile (idlfile)
 
 function main()

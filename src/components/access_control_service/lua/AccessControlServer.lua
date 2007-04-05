@@ -32,7 +32,7 @@ if AccessControlServerConfiguration.oilVerboseLevel then
 end
 
 -- Carrega a interface do serviço
-local idlfile = CORBA_IDL_DIR.."/access_control_service_oil.idl"
+local idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
 oil.loadidlfile (idlfile)
 
 -- Inicializa o ORB, fixando a localização do serviço em porta específica

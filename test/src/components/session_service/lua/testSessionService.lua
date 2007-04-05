@@ -12,9 +12,14 @@ Suite = {
         io.stderr:write("A variavel CORBA_IDL_DIR nao foi definida.\n")
         os.exit(1)
       end
-      local idlfile = CORBA_IDL_DIR.."/session_service_oil.idl"
-
+      
       oil.verbose:level(2)
+
+      local idlfile = CORBA_IDL_DIR.."/session_service.idl"
+      oil.loadidlfile(idlfile)
+      idlfile = CORBA_IDL_DIR.."/registry_service.idl"
+      oil.loadidlfile(idlfile)
+      idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
       oil.loadidlfile(idlfile)
 
       local user = "csbase"

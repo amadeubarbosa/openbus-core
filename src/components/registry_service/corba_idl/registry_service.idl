@@ -2,7 +2,6 @@
 #define RS_IDL
 
 #include "core.idl"
-#include "access_control_service.idl"
 
 module OpenBus {
 

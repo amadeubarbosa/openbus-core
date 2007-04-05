@@ -1,7 +1,0 @@
-#ifndef ACS_OIL_IDL
-#define ACS_OIL_IDL
-
-#include "access_control_service.idl"
-#include "registry_service.idl"
-
-#endif
