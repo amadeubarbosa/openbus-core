@@ -14,7 +14,7 @@ Suite = {
         os.exit(1)
       end
       
-      oil.verbose:level(2)
+      oil.verbose:level(0)
 
       local idlfile = CORBA_IDL_DIR.."/session_service.idl"
       oil.loadidlfile(idlfile)
