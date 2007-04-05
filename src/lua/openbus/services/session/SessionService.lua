@@ -31,7 +31,8 @@ function SessionService:createSession()
     verbose:err("Tentativa de criar sessão já existente")
     return false
   end
-  local session = Session{identifier = self:generateIdentifier()}
+  verbose:service("Vou criar sessão")
+  local session = Session(self:generateIdentifier())
   session = oil.newobject(session, "IDL:OpenBus/SS/ISession:1.0")
   self.sessions[credential.identifier] = session
   verbose:service("Sessão criada!")

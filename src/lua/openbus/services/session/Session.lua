@@ -5,11 +5,17 @@
 --
 require "uuid"
 
+local log = require "openbus.common.Log"
+
 local oop = require "loop.base"
 
 module("openbus.services.session.Session", oop.class)
 
-sessionMembers = {}
+-- Constrói a sessão
+function __init(self, identifier)
+  log:service("Construindo sessão com id "..tostring(identifier))
+  return oop.rawnew(self, {identifier = identifier, sessionMembers = {}})
+end
 
 -- Obtém o identificador da sessão
 function getIdentifier(self)
