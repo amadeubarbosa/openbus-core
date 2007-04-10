@@ -5,6 +5,8 @@
 --
 require "uuid"
 
+local tostring = tostring
+
 local log = require "openbus.common.Log"
 
 local oop = require "loop.base"
