@@ -12,13 +12,14 @@ local Session = require "openbus.services.session.Session"
 
 local oop = require "loop.base"
 
-SessionService = oop.class{
-  sessions = {},
-}
+SessionService = oop.class{}
 
 function SessionService:__init(accessControlService, picurrent)
-  self.picurrent = picurrent
-  self.accessControlService = accessControlService
+  self = oop.rawnew(self, {
+    sessions = {}
+    picurrent = picurrent
+    accessControlService = accessControlService
+  })
   return self
 end
 
