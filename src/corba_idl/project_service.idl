@@ -1,12 +1,12 @@
 #ifndef PS_IDL
 #define PS_IDL
 
-module OpenBus {
+module openbusidl {
 
 /**
  * \brief Módulo do Serviço de Projetos.
  */
-module PS {
+module ps {
 
 interface File;
 typedef sequence<File> Files;

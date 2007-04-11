@@ -7,7 +7,7 @@ local config =
 
 -- Acrescenta informação sobre a(s) interface(s) a ser(em) checada(s)
 config.interfaces = {
-  { interface = "IDL:OpenBus/SS/ISessionService:1.0",
+  { interface = "IDL:openbusidl/ss/ISessionService:1.0",
     excluded_ops = { }
   }
 }

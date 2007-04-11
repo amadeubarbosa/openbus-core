@@ -5,12 +5,12 @@
 
 #include "registry_service.idl"
 
-module OpenBus {
+module openbusidl {
 
 /**
  * \brief Módulo do Serviço de Controle de Acesso.
  */
-module ACS {
+module acs {
 
 /** \brief Representa uma sequência de bytes. */
 typedef sequence<octet> OctetSeq;

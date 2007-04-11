@@ -3,12 +3,12 @@
 
 #include "core.idl"
 
-module OpenBus {
+module openbusidl {
 
 /**
  * \brief Módulo do Serviço de Registro.
  */
-module RS {
+module rs {
 
 typedef sequence<string> PropertyValue;
 

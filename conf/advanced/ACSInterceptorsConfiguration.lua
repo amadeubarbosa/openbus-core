@@ -7,7 +7,7 @@ local config =
 
 -- Acrescenta informação sobre a(s) interface(s) a ser(em) checada(s)
 config.interfaces = {
-  { interface = "IDL:OpenBus/ACS/IAccessControlService:1.0",
+  { interface = "IDL:openbusidl/acs/IAccessControlService:1.0",
     excluded_ops = { loginByPassword = true, 
                      loginByCertificate = true,
                      getChallenge = true

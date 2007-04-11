@@ -1,12 +1,12 @@
 #ifndef DS_IDL
 #define DS_IDL
 
-module OpenBus {
+module openbusidl {
 
 /**
  * \brief Módulo do Serviço de Dados
  */
-module DS {
+module ds {
 
 typedef string PropertyName;
 typedef string PropertyValue;

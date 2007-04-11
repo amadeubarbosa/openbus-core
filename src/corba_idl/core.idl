@@ -9,7 +9,7 @@
 /**
  * \brief Módulo principal
  */
-module OpenBus {
+module openbusidl {
     /** \brief Representa um identificador universalmente único. */
     typedef string UUID;
     /** \brief Representa um identificador único. */

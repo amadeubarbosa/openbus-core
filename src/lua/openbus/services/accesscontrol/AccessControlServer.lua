@@ -53,7 +53,7 @@ function main()
   success, res  = 
     oil.pcall(oil.newobject,
     AccessControlServiceComponent("AccessControlService"), 
-    "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0", "ACS")
+    "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0", "ACS")
   if not success then
     io.stderr:write("Falha criando do AcessControlServiceComponent: "..
                      tostring(res).."\n")

@@ -52,7 +52,7 @@ function main()
   -- Cria o componente responsável pelo Serviço de Registro
   success, res = oil.pcall(oil.newobject,
     RegistryServiceComponent("RegistryService"), 
-    "IDL:OpenBus/RS/IRegistryServiceComponent:1.0")
+    "IDL:openbusidl/rs/IRegistryServiceComponent:1.0")
   if not success then
     io.stderr:write("Falha criando RegistryServiceComponent: "..
                      tostring(res).."\n")

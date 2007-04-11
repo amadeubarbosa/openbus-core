@@ -1,9 +1,9 @@
 #ifndef LC_IDL
 #define LC_IDL
 
-module OpenBus {
+module openbusidl {
 
-module LifeCycle {
+module lifecycle {
 
 interface Resource {
     long getDelay();

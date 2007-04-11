@@ -33,13 +33,13 @@ function SessionServiceComponent:startup()
   local accessControlServiceComponent = 
     oil.newproxy("corbaloc::"..self.config.accessControlServerHost.."/"..
                     self.config.accessControlServerKey, 
-                 "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
+                 "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0")
   if accessControlServiceComponent:_non_existent() then
     io.stderr:write("Servico de controle de acesso nao encontrado.\n")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local accessControlServiceInterface = 
-      "IDL:OpenBus/ACS/IAccessControlService:1.0"
+      "IDL:openbusidl/acs/IAccessControlService:1.0"
   self.accessControlService = 
     accessControlServiceComponent:getFacet(accessControlServiceInterface)
   self.accessControlService = 
@@ -87,12 +87,12 @@ function SessionServiceComponent:startup()
 
   -- cria e instala a faceta servidora
   local sessionService = SessionService(self.accessControlService, picurrent)
-  local sessionServiceInterface = "IDL:OpenBus/SS/ISessionService:1.0"
+  local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
   self:addFacet("sessionService", sessionServiceInterface, sessionService)
 
   -- registra sua oferta de serviço junto ao Serviço de Registro
   local serviceOffer = {
-    type = "OpenBus/SS/ISessionService",
+    type = "openbusidl/ss/ISessionService",
     description = "Servico de Sessoes",
     properties = {},
     member = self,
@@ -103,7 +103,7 @@ function SessionServiceComponent:startup()
     self.accessControlService:logout(self.credential)
     error{"IDL:SCS/StartupFailed:1.0"}
   end
-  local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
+  local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
   registryService = registryService:getFacet(registryServiceInterface)
   registryService = oil.narrow(registryService, registryServiceInterface)
 

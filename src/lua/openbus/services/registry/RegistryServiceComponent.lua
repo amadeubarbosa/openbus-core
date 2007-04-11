@@ -33,13 +33,13 @@ function RegistryServiceComponent:startup()
   local accessControlServiceComponent = 
   oil.newproxy("corbaloc::"..self.config.accessControlServerHost.."/"..
                   self.config.accessControlServerKey,
-               "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
+               "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0")
   if accessControlServiceComponent:_non_existent() then
     verbose:error("Servico de controle de acesso nao encontrado.")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local accessControlServiceInterface = 
-    "IDL:OpenBus/ACS/IAccessControlService:1.0"
+    "IDL:openbusidl/acs/IAccessControlService:1.0"
   self.accessControlService = 
     accessControlServiceComponent:getFacet(accessControlServiceInterface)
   self.accessControlService = 
@@ -86,7 +86,7 @@ function RegistryServiceComponent:startup()
 
   -- cria e instala a faceta servidora
   local registryService = RegistryService(picurrent)
-  local registryServiceInterface = "IDL:OpenBus/RS/IRegistryService:1.0"
+  local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
   registryService = self:addFacet("registryService", registryServiceInterface,
                                   registryService)
   self.accessControlService:setRegistryService(self)
@@ -98,7 +98,7 @@ function RegistryServiceComponent:startup()
   end
   credentialObserver = 
     oil.newobject(credentialObserver, 
-                  "IDL:OpenBus/ACS/ICredentialObserver:1.0")
+                  "IDL:openbusidl/acs/ICredentialObserver:1.0")
   self.observerIdentifier = 
     self.accessControlService:addObserver(credentialObserver, {})
 

@@ -34,7 +34,7 @@ function AccessControlServiceComponent:startup()
 
   -- cria e instala a faceta de controle de acesso
   local accessControlServiceInterface = 
-    "IDL:OpenBus/ACS/IAccessControlService:1.0"
+    "IDL:openbusidl/acs/IAccessControlService:1.0"
   self:addFacet("accessControlService", accessControlServiceInterface, 
                 accessControlService)
 end

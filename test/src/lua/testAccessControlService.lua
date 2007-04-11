@@ -24,8 +24,8 @@ Suite = {
       self.user = "csbase"
       self.password = "csbLDAPtest"
 
-      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
-      local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0")
+      local accessControlServiceInterface = "IDL:openbusidl/acs/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
@@ -82,8 +82,8 @@ Suite = {
       self.user = "csbase"
       self.password = "csbLDAPtest"
 
-      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:OpenBus/ACS/IAccessControlServiceComponent:1.0")
-      local accessControlServiceInterface = "IDL:OpenBus/ACS/IAccessControlService:1.0"
+      local accessControlServiceComponent = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0")
+      local accessControlServiceInterface = "IDL:openbusidl/acs/IAccessControlService:1.0"
       self.accessControlService = accessControlServiceComponent:getFacet(accessControlServiceInterface)
       self.accessControlService = oil.narrow(self.accessControlService, accessControlServiceInterface)
 
@@ -129,7 +129,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential, credential)
       end
-      credentialObserver = oil.newobject(credentialObserver, "IDL:OpenBus/ACS/ICredentialObserver:1.0")
+      credentialObserver = oil.newobject(credentialObserver, "IDL:openbusidl/acs/ICredentialObserver:1.0")
       local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       Check.assertNotEquals("", observerIdentifier)
       Check.assertTrue(self.accessControlService:removeObserver(observerIdentifier))

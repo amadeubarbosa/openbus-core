@@ -34,7 +34,7 @@ function SessionService:createSession()
   end
   verbose:service("Vou criar sessão")
   local session = Session(self:generateIdentifier())
-  session = oil.newobject(session, "IDL:OpenBus/SS/ISession:1.0")
+  session = oil.newobject(session, "IDL:openbusidl/ss/ISession:1.0")
   self.sessions[credential.identifier] = session
   verbose:service("Sessão criada!")
 
@@ -48,7 +48,7 @@ function SessionService:createSession()
         end
     }
     self.observer = oil.newobject(observer, 
-                                  "IDL:OpenBus/ACS/ICredentialObserver:1.0",
+                                  "IDL:openbusidl/acs/ICredentialObserver:1.0",
                                   "SessionServiceCredentialObserver")
     self.observerId = 
       self.accessControlService:addObserver(self.observer, 

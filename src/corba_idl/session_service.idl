@@ -3,12 +3,12 @@
 
 #include "core.idl"
 
-module OpenBus {
+module openbusidl {
 
 /**
  * \brief Módulo do Serviço de Sessão.
  */
-module SS {
+module ss {
 
 /** \brief Representa o identificador de uma sessão. */
 typedef Identifier SessionIdentifier;

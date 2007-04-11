@@ -53,7 +53,7 @@ function main()
 
   -- Cria o componente responsável pelo Serviço de Sessão
   success, res = oil.pcall(oil.newobject, SessionServiceComponent("SessionService"), 
-                           "IDL:OpenBus/SS/ISessionServiceComponent:1.0")
+                           "IDL:openbusidl/ss/ISessionServiceComponent:1.0")
 
   if not success then
     io.stderr:write("Falha criando SessionServiceComponent: "..
