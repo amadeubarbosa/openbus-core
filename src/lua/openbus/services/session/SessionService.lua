@@ -16,9 +16,9 @@ SessionService = oop.class{}
 
 function SessionService:__init(accessControlService, picurrent)
   self = oop.rawnew(self, {
-    sessions = {}
-    picurrent = picurrent
-    accessControlService = accessControlService
+    sessions = {},
+    picurrent = picurrent,
+    accessControlService = accessControlService,
   })
   return self
 end
