@@ -22,8 +22,7 @@ if CONF_DIR == nil then
 end
 
 -- Obtém a configuração do serviço
-local config = 
-  assert(loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua"))()
+assert(loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua"))()
 
 -- Seta os níveis de verbose para o openbus e para o oil
 if AccessControlServerConfiguration.verboseLevel then

@@ -22,7 +22,8 @@ if CONF_DIR == nil then
 end
 
 -- Obtém a configuração do serviço
-local config = assert(loadfile(CONF_DIR.."/SessionServerConfiguration.lua"))()
+assert(loadfile(CONF_DIR.."/SessionServerConfiguration.lua"))()
+
 SessionServerConfiguration.accessControlServerHost = 
   SessionServerConfiguration.accessControlServerHostName..":"..
   SessionServerConfiguration.accessControlServerHostPort
