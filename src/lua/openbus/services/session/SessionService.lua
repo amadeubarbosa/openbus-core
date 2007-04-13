@@ -62,11 +62,15 @@ end
 
 -- Notificação de deleção de credencial (logout)
 function SessionService:credentialWasDeleted(credential)
+
+  -- Remove a sessão
   if self.sessions[credential.identifier] then
     self.sessions[credential.identifier] = nil
-    self.accessControlService:removeCredentialFromObserver(self.observerId,
-                                                        credential.identifier)
   end
+
+  -- Remove a credencial do conjunto observado
+  self.accessControlService:removeCredentialFromObserver(self.observerId,
+                                                        credential.identifier)
 end
 
 function SessionService:generateIdentifier()
