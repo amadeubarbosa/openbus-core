@@ -48,48 +48,41 @@ Suite = {
 print("autenticou o obteve o registryService")
     end,
 
-    testRegister2 = function(self)
+    testRegister = function(self)
       local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
-      local success, registryIdentifier = self.registryService:register({type = "", description = "", properties = {}, member = member, })
-      Check.assertNotEquals("", registryIdentifier)
-      self.registryService:unregister(registryIdentifier)
-    end,
-
-    testUnregister = function(self)
-      local member = Member{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
-      local success, registryIdentifier = self.registryService:register({type = "", description = "", properties = {}, member = member, })
+      local success, registryIdentifier = self.registryService:register({type = "type1", description = "bla bla bla", properties = {}, member = member, })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
-      Check.assertFalse(self.registryService:unregister(registryIdentifier))
     end,
 
     testFind = function(self)
       local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
-      local success, registryIdentifier = self.registryService:register({type = "X", description = "", properties = {}, member = member, })
+      local success, registryIdentifier = self.registryService:register({type = "X", description = "bla", properties = {}, member = member, })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
-      local members = self.registryService:find("X", {})
-      Check.assertNotEquals(0, #members)
-      members = self.registryService:find("Y", {})
-      Check.assertEquals(0, #members)
+      local offers = self.registryService:find("X", {})
+      Check.assertEquals(1, #offers)
+      Check.assertEquals("bla", offers[1].description)
+      offers = self.registryService:find("Y", {})
+      Check.assertEquals(0, #offers)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 
-    testRefresh = function(self)
+    testUpdate = function(self)
       local member = Member{name = "Membro Mock"}
       member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
-      local serviceOffer = {type = "X", description = "", properties = {}, member = member, }
-      Check.assertFalse(self.registryService:refresh("", serviceOffer))
+      local serviceOffer = {type = "X", description = "bla", properties = {}, member = member, }
+      Check.assertFalse(self.registryService:update("", {}))
       local success, registryIdentifier = self.registryService:register(serviceOffer)
       Check.assertTrue(success)
-      serviceOffer.type = "Y"
-      Check.assertTrue(self.registryService:refresh(registryIdentifier, serviceOffer))
-      local members = self.registryService:find("Y", {})
-      Check.assertEquals(members[1].member:getName(), member:getName())
+      local newProps = {{name = "p1", value = {"c", "a", "b"}}}
+      Check.assertTrue(self.registryService:update(registryIdentifier, newProps))
+      local offers = self.registryService:find("X", {{name = "p1", value = {"b"}}})
+      Check.assertEquals(1, #offers)
+      Check.assertEquals(offers[1].member:getName(), member:getName())
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 

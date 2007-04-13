@@ -64,12 +64,12 @@ interface IRegistryService {
      * \brief Atualiza uma oferta de serviço.
      *
      * \param identifier O identificador do registro da oferta do serviço.
-     * \param aServiceOffer A nova oferta de serviço.
+     * \param newProperties O novo conjunto de propriedades associado à oferta
      *
      * \return \c true, caso a oferta de serviço seja atualizada, ou \c false,
      * caso contrário.
      */
-    boolean refresh(in RegistryIdentifier identifier, in ServiceOffer aServiceOffer);
+    boolean update(in RegistryIdentifier identifier, in PropertyList newProperties);
 
     /**
      * \brief Realiza uma busca por ofertas que satisfaçam a determinados critérios.

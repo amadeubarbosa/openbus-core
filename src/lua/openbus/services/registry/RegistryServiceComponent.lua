@@ -85,7 +85,7 @@ function RegistryServiceComponent:startup()
                                              self.accessControlService))
 
   -- cria e instala a faceta servidora
-  local registryService = RegistryService(picurrent)
+  local registryService = RegistryService(self.accessControlService, picurrent)
   local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
   registryService = self:addFacet("registryService", registryServiceInterface,
                                   registryService)
