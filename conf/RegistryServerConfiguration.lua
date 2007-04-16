@@ -1,3 +1,8 @@
+--
+-- Configuração do Serviço de Registro
+--
+-- $Id$
+--
 RegistryServerConfiguration = {
   accessControlServerHostName = "localhost",
   accessControlServerHostPort = 2089,

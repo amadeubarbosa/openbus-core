@@ -1,3 +1,8 @@
+--
+-- Configuração do Serviço de Controle de Acesso
+--
+-- $Id$
+--
 AccessControlServerConfiguration = {
   hostName = "localhost",
   hostPort = 2089,

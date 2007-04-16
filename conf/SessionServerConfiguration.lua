@@ -1,3 +1,8 @@
+--
+-- Configuração do Serviço de Sessão
+--
+-- $Id$
+--
 SessionServerConfiguration = {
   accessControlServerHostName = "localhost",
   accessControlServerHostPort = 2089,
