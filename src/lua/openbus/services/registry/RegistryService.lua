@@ -37,7 +37,8 @@ function RegistryService:register(serviceOffer)
 
   local offerEntry = {
     offer = serviceOffer,
-    properties = self:createPropertyIndex(serviceOffer.properties),
+    properties = self:createPropertyIndex(serviceOffer.properties,
+                                          serviceOffer.member),
     credential = credential,
     identifier = identifier
   }
@@ -69,7 +70,8 @@ function RegistryService:register(serviceOffer)
     local observer = {
       registryService = self,
       credentialWasDeleted = function(self, credential)
-        log:service("Observador chamado para credencial "..credential.identifier)
+        log:service("Observador notificado para credencial "..
+                    credential.identifier)
         self.registryService:credentialWasDeleted(credential)
       end
     }
@@ -91,13 +93,30 @@ end
 
 -- Constrói um conjunto com os valores das propriedades, para acelerar a busca
 -- procedimento válido enquanto propriedade for lista de strings !!!
-function RegistryService:createPropertyIndex(offerProperties)
+function RegistryService:createPropertyIndex(offerProperties, member)
   local properties = {}
   for _, property in ipairs(offerProperties) do
     properties[property.name] = {}
     for _, val in ipairs(property.value) do
       properties[property.name][val] = true
     end 
+  end
+
+  -- se não foi definida uma propriedade "facets", discriminando as facetas
+  -- disponibilizadas, assume que todas as facetas do membro são oferecidas
+  if not properties["facets"] then
+    log:service("Oferta de serviço sem facetas para o membro "..
+                 member:getName())
+    local facet_descriptions = member:getFacets()
+    if #facet_descriptions == 0 then
+      log:service("Membro "..member:getName().." não possui facetas")
+    else
+      log:service("Membro "..member:getName().." possui facetas")
+      properties["facets"] = {}
+      for _,facet in ipairs(facet_descriptions) do
+        properties["facets"][facet.name] = true
+      end
+    end
   end
   return properties
 end
@@ -123,13 +142,11 @@ function RegistryService:unregister(identifier)
 
   -- Remove oferta do índice por identificador
   self.offersByIdentifier[identifier] = nil
-  log:service("Removi oferta do indice por id")
 
   -- Remove oferta do índice por tipo
   local type = offerEntry.offer.type
   if self.offersByType[type] then
     self.offersByType[type][identifier] = nil
-    log:service("Removi oferta do indice por type ("..type..")")
     if not next(self.offersByType[type]) then
       -- Não há mais ofertas desse tipo
       log:service("Última oferta do tipo "..type.." removida")
@@ -138,13 +155,13 @@ function RegistryService:unregister(identifier)
   end
 
   -- Remove oferta do índice por credencial
-  log:service("Remover oferta do indice por credencial "..credential.identifier)
   local credentialOffers = self.offersByCredential[credential.identifier]
   if credentialOffers then
-    log:service("Removi oferta do indice por credencial")
     credentialOffers[identifier] = nil
   else
-    log:service("Não há ofertas com essa credencial")
+    log:service("Não há ofertas a remover com credencial "..
+                credential.identifier)
+    return true
   end
   if not next(credentialOffers) then
     -- Não há mais ofertas associadas à credencial
@@ -152,8 +169,6 @@ function RegistryService:unregister(identifier)
     log:service("Última oferta da credencial: remove credencial do observador")
     self.accessControlService:removeCredentialFromObserver(self.observerId,
                                                          credential.identifier)
-  else
-    log:service("Ainda há ofertas com essa credencial")
   end
   return true
 end
@@ -181,7 +196,8 @@ function RegistryService:update(identifier, properties)
 
   -- Atualiza as propriedades da oferta de serviço
   offerEntry.offer.properties = properties
-  offerEntry.properties = self:createPropertyIndex(properties)
+  offerEntry.properties = self:createPropertyIndex(properties,
+                                                   offerEntry.offer.member)
   return true
 end
 
@@ -210,6 +226,7 @@ function RegistryService:find(type, criteria)
           table.insert(selectedOffers, offerEntry.offer)
         end
       end
+     log:service("Com critério, encontrei "..#selectedOffers.." ofertas")
     end
   else
     log:service("Não há ofertas para o tipo "..type)
@@ -239,19 +256,27 @@ end
 
 --
 -- Notificação de deleção de credencial
+-- As ofertas de serviço relacionadas deverão ser removidas
 --
 function RegistryService:credentialWasDeleted(credential)
+  log:service("Remover ofertas da credencial deletada "..credential.identifier)
   local credentialOffers = self.offersByCredential[credential.identifier]
   self.offersByCredential[credential.identifier] = nil
 
-  log:service("Remover ofertas da credencial "..credential.identifier)
-  --  Ofertas de serviço relacionadas deverão ser removidas
   if credentialOffers then
     for identifier, offerEntry in pairs(credentialOffers) do
       self.offersByIdentifier[identifier] = nil
+      log:service("Removida oferta "..identifier.." do índice por id")
+
       local type = offerEntry.offer.type
       if self.offersByType[type] then
         self.offersByType[type][identifier] = nil
+        log:service("Removida oferta "..identifier..
+                     " do índice por tipo "..type)
+        if not next(self.offersByType[type]) then -- fim das ofertas desse tipo
+          log:service("Última oferta do tipo "..type.." removida")
+          self.offersByType[type] = nil
+        end
       end
     end
   else

@@ -45,7 +45,6 @@ Suite = {
       local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
       self.registryService = self.registryService:getFacet(registryServiceInterface)
       self.registryService = oil.narrow(self.registryService, registryServiceInterface)
-print("autenticou o obteve o registryService")
     end,
 
     testRegister = function(self)
@@ -78,11 +77,59 @@ print("autenticou o obteve o registryService")
       Check.assertFalse(self.registryService:update("", {}))
       local success, registryIdentifier = self.registryService:register(serviceOffer)
       Check.assertTrue(success)
+      local offers = self.registryService:find("X", {{name = "p1", value = {"b"}}})
+      Check.assertEquals(0, #offers)
       local newProps = {{name = "p1", value = {"c", "a", "b"}}}
       Check.assertTrue(self.registryService:update(registryIdentifier, newProps))
-      local offers = self.registryService:find("X", {{name = "p1", value = {"b"}}})
+      offers = self.registryService:find("X", {{name = "p1", value = {"b"}}})
       Check.assertEquals(1, #offers)
       Check.assertEquals(offers[1].member:getName(), member:getName())
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    end,
+
+    testNoUnregister = function(self)
+      local member = Member{name = "Membro Mock"}
+      member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
+      local serviceOffer = {type = "FICA", description = "bla", properties = {}, member = member, }
+      local success, registryIdentifier = self.registryService:register(serviceOffer)
+      Check.assertTrue(success)
+    end,
+
+    testFacets = function(self)
+      local member = Member{name = "Membro Com Facetas"}
+      member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
+      local dummyObserver = {
+        credentialWasDeleted = function(self, credential) end
+      }
+      member:addFacet("facet1", "IDL:openbusidl/acs/ICredentialObserver:1.0",
+                      dummyObserver)
+      member:addFacet("facet2", "IDL:openbusidl/acs/ICredentialObserver:1.0",
+                      dummyObserver)
+      local serviceOffer = {type = "WithFacets", description = "bla", 
+                            properties = {{name = "p1", value = {"b"}}}, 
+                            member = member, }
+      local success, registryIdentifier = self.registryService:register(serviceOffer)
+      Check.assertTrue(success)
+      local offers = self.registryService:find("WithFacets", 
+                                       {{name = "p1", value = {"b"}}})
+      Check.assertEquals(1, #offers)
+      offers = self.registryService:find("WithFacets", 
+                                       {{name = "p1", value = {"b"}},
+                                        {name = "facets", value = {"facet2"}}})
+      Check.assertEquals(1, #offers)
+      offers = self.registryService:find("WithFacets", 
+                                       {{name = "facets", value = {"facet3"}}})
+      Check.assertEquals(0, #offers)
+      local newProps = {{name = "p1", value = {"b"}},
+                        {name = "facets", value = {"facet1"}}}
+      Check.assertTrue(self.registryService:update(registryIdentifier, newProps))
+      offers = self.registryService:find("WithFacets", 
+                                       {{name = "p1", value = {"b"}},
+                                        {name = "facets", value = {"facet2"}}})
+      Check.assertEquals(0, #offers)
+      offers = self.registryService:find("WithFacets", 
+                                       {{name = "facets", value = {"facet1"}}})
+      Check.assertEquals(1, #offers)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 
