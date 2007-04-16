@@ -1,8 +1,12 @@
 local oop = require "loop.base"
 
-IComponent = oop.class{
-  facetDescriptionsByName = {},
-}
+IComponent = oop.class{}
+
+function IComponent:__init(obj)
+  obj = obj or {}
+  obj.facetDescriptionsByName = {}
+  return oop.rawnew(self, obj)
+end
 
 function IComponent:getFacet(facet_interface)
     for _, facetDescription in pairs(self.facetDescriptionsByName) do

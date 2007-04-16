@@ -14,11 +14,11 @@ local oop = require "loop.simple"
 AccessControlServiceComponent = oop.class({}, Member)
 
 function AccessControlServiceComponent:__init(name)
-  self = oop.rawnew(self, {
-    name = name,
-    config = AccessControlServerConfiguration,
-  })
-  return self
+  local obj = { name = name,
+                config = AccessControlServerConfiguration,
+              }
+  Member:__init(obj)
+  return oop.rawnew(self, obj)
 end
 
 function AccessControlServiceComponent:startup()

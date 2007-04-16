@@ -12,6 +12,11 @@ local oop = require "loop.multiple"
 
 Member = oop.class({}, IComponent, IMetaInterface)
 
+function Member:__init(obj)
+  IComponent:__init(obj)
+  return oop.rawnew(self, obj)
+end
+
 function Member:getName()
   return self.name
 end

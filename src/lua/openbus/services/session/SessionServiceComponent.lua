@@ -21,11 +21,11 @@ local oop = require "loop.simple"
 SessionServiceComponent = oop.class({}, Member)
 
 function SessionServiceComponent:__init(name)
-  self = oop.rawnew(self, {
-    name = name,
-    config = SessionServerConfiguration,
-  })
-  return self
+  local obj = { name = name,
+                config = SessionServerConfiguration,
+              }
+  Member:__init(obj)
+  return oop.rawnew(self, obj)
 end
 
 function SessionServiceComponent:startup()

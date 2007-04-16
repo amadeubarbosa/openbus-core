@@ -21,11 +21,11 @@ local oop = require "loop.simple"
 RegistryServiceComponent = oop.class({}, Member)
 
 function RegistryServiceComponent:__init(name)
-  self = oop.rawnew(self, {
-    name = name,
-    config = RegistryServerConfiguration,
-  })
-  return self
+  local obj = { name = name,
+                config = RegistryServerConfiguration,
+              }
+  Member:__init(obj)
+  return oop.rawnew(self, obj)
 end
 
 function RegistryServiceComponent:startup()
@@ -90,17 +90,6 @@ function RegistryServiceComponent:startup()
   registryService = self:addFacet("registryService", registryServiceInterface,
                                   registryService)
   self.accessControlService:setRegistryService(self)
-
-  -- instala um observador para deleção de credenciais
-  local credentialObserver = {registryService = registryService}
-  function credentialObserver:credentialWasDeleted(credential)
-    self.registryService:deleteOffersFromCredential(credential)
-  end
-  credentialObserver = 
-    oil.newobject(credentialObserver, 
-                  "IDL:openbusidl/acs/ICredentialObserver:1.0")
-  self.observerIdentifier = 
-    self.accessControlService:addObserver(credentialObserver, {})
 
   self.started = true
 end
