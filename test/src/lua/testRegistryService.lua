@@ -1,3 +1,8 @@
+--
+-- Testes unitários do Serviço de Registro
+--
+-- $Id$
+--
 require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
