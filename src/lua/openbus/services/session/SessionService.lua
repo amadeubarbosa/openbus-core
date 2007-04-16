@@ -1,8 +1,9 @@
---
+-----------------------------------------------------------------------------
 -- Faceta que disponibiliza a funcionalidade básica do serviço de sessão
 --
--- $Id$
---
+-- Última alteração:
+--   $Id$
+-----------------------------------------------------------------------------
 require "oil"
 require "uuid"
 

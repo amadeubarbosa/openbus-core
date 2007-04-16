@@ -1,3 +1,9 @@
+-----------------------------------------------------------------------------
+-- Mecanismo de persistência de credenciais
+--
+-- Última alteração:
+--   $Id$
+-----------------------------------------------------------------------------
 local oop = require "loop.base"
 local verbose = require "openbus.common.Log"
 

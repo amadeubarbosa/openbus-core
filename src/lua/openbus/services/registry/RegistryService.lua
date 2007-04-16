@@ -1,8 +1,9 @@
---
+-----------------------------------------------------------------------------
 -- Faceta que disponibiliza a funcionalidade básica do serviço de registro
 --
--- $Id$
---
+-- Última alteração:
+--   $Id$
+-----------------------------------------------------------------------------
 require "uuid"
 
 local oop = require "loop.base"

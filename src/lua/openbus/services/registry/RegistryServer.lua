@@ -1,8 +1,9 @@
---
+-----------------------------------------------------------------------------
 -- Inicialização do Serviço de Registro
 --
--- $Id$
---
+-- Última alteração:
+--   $Id$
+-----------------------------------------------------------------------------
 require "oil"
 
 require "openbus.services.registry.RegistryServiceComponent"

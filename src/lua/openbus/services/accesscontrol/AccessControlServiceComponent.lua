@@ -1,8 +1,9 @@
---
+-----------------------------------------------------------------------------
 -- Componente (membro) responsável pelo Serviço de Controle de Acesso
 --
--- $Id$
---
+-- Última alteração:
+--   $Id$
+-----------------------------------------------------------------------------
 require "openbus.Member"
 require "openbus.services.accesscontrol.AccessControlService"
 

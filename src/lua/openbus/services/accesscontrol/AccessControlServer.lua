@@ -1,8 +1,9 @@
---
+-----------------------------------------------------------------------------
 -- Inicialização do Serviço de Controle de Acesso
 --
--- $Id$
---
+-- Última alteração:
+--   $Id$
+-----------------------------------------------------------------------------
 require "oil"
 
 require "openbus.services.accesscontrol.AccessControlServiceComponent"

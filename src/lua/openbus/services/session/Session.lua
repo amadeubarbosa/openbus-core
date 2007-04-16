@@ -1,8 +1,9 @@
---
+-----------------------------------------------------------------------------
 -- Sessão compartilhada pelos membros associados a uma mesma credencial
 --
--- $Id$
---
+-- Última alteração:
+--   $Id$
+-----------------------------------------------------------------------------
 require "uuid"
 
 local tostring = tostring

@@ -1,3 +1,10 @@
+-----------------------------------------------------------------------------
+-- Faceta que disponibiliza a funcionalidade básica do serviço de controle
+-- de acesso
+--
+-- Última alteração:
+--   $Id$
+-----------------------------------------------------------------------------
 require "lualdap"
 require "uuid"
 require "lce"
