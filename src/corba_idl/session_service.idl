@@ -59,11 +59,13 @@ interface ISessionService {
     /**
      * \brief Cria uma sessão associada a uma credencial.
      *
+     * \param[in] member referência para o membro que está criando a sessão
      * \param[out] session A sessão criada.
+     * \param[out] memberIdentifier A identificação do membro para a sessão
      *
      * \return \c true, caso a sessão tenha sido criada, ou \c false, caso contrário.
      */
-    boolean createSession(out ISession session);
+    boolean createSession(in IMember member, out ISession session, out MemberIdentifier memberIdentifier);
     /**
      * \brief Obtém a sessão associada a uma credencial.
      *

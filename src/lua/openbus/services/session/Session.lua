@@ -4,7 +4,7 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-require "uuid"
+local uuid = require "uuid"
 
 local tostring = tostring
 
@@ -15,9 +15,10 @@ local oop = require "loop.base"
 module("openbus.services.session.Session", oop.class)
 
 -- Constrói a sessão
-function __init(self, identifier)
+function __init(self, identifier, credential)
   log:service("Construindo sessão com id "..tostring(identifier))
-  return oop.rawnew(self, {identifier = identifier, sessionMembers = {}})
+  return oop.rawnew(self, {identifier = identifier, credential = credential,
+                           sessionMembers = {}})
 end
 
 -- Obtém o identificador da sessão
@@ -27,15 +28,19 @@ end
 
 -- Adiciona um membro à sessão
 function addMember(self, member)
+  log:service("Membro "..member:getName().." adicionado à sessão")
   local memberIdentifier = self:generateMemberIdentifier()
   self.sessionMembers[memberIdentifier] = member
+  return memberIdentifier
 end
 
 -- Remove um membro da sessão
 function removeMember(self, memberIdentifier)
-  if not self.sessionMembers[memberIdentifier] then
+  member = self.sessionMembers[memberIdentifier]
+  if not member then
     return false
   end
+  log:service("Membro "..member:getName().." removido da sessão")
   self.sessionMembers[memberIdentifier] = nil
   return true
 end

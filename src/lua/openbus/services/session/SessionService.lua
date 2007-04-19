@@ -27,14 +27,14 @@ end
 -- Cria uma sessão associada a uma credencial.
 -- A credencial em questão é recuperada da requisição pelo interceptador 
 -- do serviço, e repassada através do objeto PICurrent
-function SessionService:createSession()
+function SessionService:createSession(member)
   local credential = self.picurrent:getValue()
   if self.sessions[credential.identifier] then
     log:err("Tentativa de criar sessão já existente")
     return false
   end
   log:service("Vou criar sessão")
-  local session = Session(self:generateIdentifier())
+  local session = Session(self:generateIdentifier(), credential)
   session = oil.newobject(session, "IDL:openbusidl/ss/ISession:1.0")
   self.sessions[credential.identifier] = session
   log:service("Sessão criada!")
@@ -58,7 +58,10 @@ function SessionService:createSession()
     self.accessControlService:addCredentialToObserver(self.observerId,
                                                      credential.identifier)
   end
-  return true, session
+
+  -- Adiciona o membro à sessão
+  local memberID = session:addMember(member)
+  return true, session, memberID
 end
 
 -- Notificação de deleção de credencial (logout)

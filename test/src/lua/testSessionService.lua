@@ -8,6 +8,8 @@ require "oil"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 
+require "openbus.Member"
+
 local Check = require "latt.Check"
 
 Suite = {
@@ -59,13 +61,23 @@ Suite = {
     end,
 
     testCreateSession = function(self)
-      local success, session = self.sessionService:createSession()
+      local member1 = Member{name = "membro1"}
+      member1 = oil.newobject(member1, "IDL:openbusidl/IMember:1.0")
+      local success, session, id1 = self.sessionService:createSession(member1)
       Check.assertTrue(success)
+      local member2 = Member{name = "membro2"}
+      member2 = oil.newobject(member2, "IDL:openbusidl/IMember:1.0")
       local session2 = self.sessionService:getSession()
       Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
+      local id2 = session:addMember(member2)
+      Check.assertNotEquals(id1, id2)
+      session:removeMember(id1)
+      session:removeMember(id2)
+print("FIM TESTE")
     end,
 
     afterTestCase = function(self)
+print("FIM TUDO")
       self.accessControlService:logout(self.credential)
       self.credentialHolder:invalidate()
     end,
