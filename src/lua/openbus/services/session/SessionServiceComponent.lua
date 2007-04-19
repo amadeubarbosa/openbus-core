@@ -13,7 +13,7 @@ local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 local PICurrent = require "openbus.common.PICurrent"
-local verbose = require "openbus.common.Log"
+local log = require "openbus.common.Log"
 
 require "openbus.services.session.SessionService"
 
@@ -49,13 +49,13 @@ function SessionServiceComponent:startup()
   -- autenticação junto ao Serviço de Controle de Acesso
   local challenge = self.accessControlService:getChallenge(self.name)
   if not challenge then
-    verbose:error("O desafio nao foi obtido junto ao Servico de Controle de Acesso.")
+    log:error("O desafio nao foi obtido junto ao Servico de Controle de Acesso.")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local privateKey, errorMessage = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
   if not privateKey then
-    verbose:error("Erro ao obter a chave privada.")
-    verbose:error(errorMessage)
+    log:error("Erro ao obter a chave privada.")
+    log:error(errorMessage)
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local answer = lce.cipher.decrypt(privateKey, challenge)

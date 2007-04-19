@@ -13,7 +13,7 @@ local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 local PICurrent = require "openbus.common.PICurrent"
-local verbose = require "openbus.common.Log"
+local log = require "openbus.common.Log"
 
 require "openbus.services.registry.RegistryService"
 
@@ -36,7 +36,7 @@ function RegistryServiceComponent:startup()
                   self.config.accessControlServerKey,
                "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0")
   if accessControlServiceComponent:_non_existent() then
-    verbose:error("Servico de controle de acesso nao encontrado.")
+    log:error("Servico de controle de acesso nao encontrado.")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local accessControlServiceInterface = 
@@ -49,13 +49,13 @@ function RegistryServiceComponent:startup()
   -- autenticação junto ao serviço de controle de acesso
   local challenge = self.accessControlService:getChallenge(self.name)
   if not challenge then
-    verbose:error("O desafio nao foi obtido junto ao Servico de Controle de Acesso.")
+    log:error("O desafio nao foi obtido junto ao Servico de Controle de Acesso.")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local privateKey, errorMessage = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
   if not privateKey then
-    verbose:error("Erro ao obter a chave privada.")
-    verbose:error(errorMessage)
+    log:error("Erro ao obter a chave privada.")
+    log:error(errorMessage)
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local answer = lce.cipher.decrypt(privateKey, challenge)
@@ -67,7 +67,7 @@ function RegistryServiceComponent:startup()
   success, self.credential = 
     self.accessControlService:loginByCertificate(self.name, answer)
   if not success then
-    verbose:error("Nao foi possivel logar no servico de controle de acesso.")
+    log:error("Nao foi possivel logar no servico de controle de acesso.")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
@@ -97,7 +97,7 @@ end
 
 function RegistryServiceComponent:shutdown()
   if not self.started then
-    verbose:error("Servico ja foi finalizado.")
+    log:error("Servico ja foi finalizado.")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false

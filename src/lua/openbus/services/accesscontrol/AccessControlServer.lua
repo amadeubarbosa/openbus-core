@@ -8,7 +8,7 @@ require "oil"
 
 require "openbus.services.accesscontrol.AccessControlServiceComponent"
 
-local verbose = require "openbus.common.Log"
+local log = require "openbus.common.Log"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
@@ -26,8 +26,8 @@ end
 assert(loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua"))()
 
 -- Seta os níveis de verbose para o openbus e para o oil
-if AccessControlServerConfiguration.verboseLevel then
-  verbose:level(AccessControlServerConfiguration.verboseLevel)
+if AccessControlServerConfiguration.logLevel then
+  log:level(AccessControlServerConfiguration.logLevel)
 end
 if AccessControlServerConfiguration.oilVerboseLevel then
   oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
@@ -68,7 +68,7 @@ function main()
                     tostring(res).."\n")
     os.exit(1)
   end
-  verbose:init("Serviço de controle de acesso iniciado com sucesso")
+  log:init("Serviço de controle de acesso iniciado com sucesso")
 end
 
 print(oil.pcall(oil.main,main))

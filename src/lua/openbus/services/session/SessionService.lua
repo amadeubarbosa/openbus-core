@@ -7,7 +7,7 @@
 require "oil"
 require "uuid"
 
-local verbose = require "openbus.common.Log"
+local log = require "openbus.common.Log"
 
 local Session = require "openbus.services.session.Session"
 
@@ -30,14 +30,14 @@ end
 function SessionService:createSession()
   local credential = self.picurrent:getValue()
   if self.sessions[credential.identifier] then
-    verbose:err("Tentativa de criar sessão já existente")
+    log:err("Tentativa de criar sessão já existente")
     return false
   end
-  verbose:service("Vou criar sessão")
+  log:service("Vou criar sessão")
   local session = Session(self:generateIdentifier())
   session = oil.newobject(session, "IDL:openbusidl/ss/ISession:1.0")
   self.sessions[credential.identifier] = session
-  verbose:service("Sessão criada!")
+  log:service("Sessão criada!")
 
   -- A credencial deve ser observada!
   if not self.observerId then
@@ -85,7 +85,7 @@ function SessionService:getSession()
   local credential = self.picurrent:getValue()
   local session = self.sessions[credential.identifier]
   if not session then
-   verbose:warn("Não há sessão para "..credential.identifier)
+   log:warn("Não há sessão para "..credential.identifier)
   end
   return session
 end

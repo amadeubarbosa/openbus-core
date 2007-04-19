@@ -9,6 +9,6 @@ SessionServerConfiguration = {
   accessControlServerKey = "ACS",
   privateKeyFile = "../certificates/SessionService.key",
   accessControlServiceCertificateFile = "../certificates/AccessControlService.crt",
-  verboseLevel = 3,
+  logLevel = 3,
   oilVerboseLevel = 1,
 }

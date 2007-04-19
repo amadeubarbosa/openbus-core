@@ -6,7 +6,7 @@
 -----------------------------------------------------------------------------
 require "oil"
 
-local verbose = require "openbus.common.Log"
+local log = require "openbus.common.Log"
 
 require "openbus.services.session.SessionServiceComponent"
 
@@ -30,8 +30,8 @@ SessionServerConfiguration.accessControlServerHost =
   SessionServerConfiguration.accessControlServerHostPort
 
 -- Seta os níveis de verbose para o openbus e para o oil
-if SessionServerConfiguration.verboseLevel then
-  verbose:level(SessionServerConfiguration.verboseLevel)
+if SessionServerConfiguration.logLevel then
+  log:level(SessionServerConfiguration.logLevel)
 end
 if SessionServerConfiguration.oilVerboseLevel then
   oil.verbose:level(SessionServerConfiguration.oilVerboseLevel)
@@ -71,7 +71,7 @@ function main()
                     tostring(res).."\n")
     os.exit(1)
   end
-  verbose:init("Serviço de sessão iniciado com sucesso")
+  log:init("Serviço de sessão iniciado com sucesso")
 end
 
 print(oil.pcall(oil.main,main))

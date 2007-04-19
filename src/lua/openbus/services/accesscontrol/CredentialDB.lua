@@ -5,7 +5,7 @@
 --   $Id$
 -----------------------------------------------------------------------------
 local oop = require "loop.base"
-local verbose = require "openbus.common.Log"
+local log = require "openbus.common.Log"
 
 require "posix"
 
@@ -19,10 +19,10 @@ CredentialDB = oop.class{
 function CredentialDB:__init(databaseDirectory)
   local credentialFiles = posix.dir(databaseDirectory)
   if credentialFiles == nil then
-    verbose:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. Criando...")
+    log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. Criando...")
     local status, errorMessage = posix.mkdir(databaseDirectory)
     if not status then
-      verbose:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
+      log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
       error(errorMessage)
     else
       credentialFiles = {}

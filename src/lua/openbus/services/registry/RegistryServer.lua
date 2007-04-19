@@ -8,7 +8,7 @@ require "oil"
 
 require "openbus.services.registry.RegistryServiceComponent"
 
-local verbose = require "openbus.common.Log"
+local log = require "openbus.common.Log"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
@@ -30,8 +30,8 @@ RegistryServerConfiguration.accessControlServerHost =
   RegistryServerConfiguration.accessControlServerHostPort
 
 -- Seta os níveis de verbose para o openbus e para o oil
-if RegistryServerConfiguration.verboseLevel then
-  verbose:level(RegistryServerConfiguration.verboseLevel)
+if RegistryServerConfiguration.logLevel then
+  log:level(RegistryServerConfiguration.logLevel)
 end
 if RegistryServerConfiguration.oilVerboseLevel then
   oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
@@ -69,7 +69,7 @@ function main()
                      tostring(res).."\n")
     os.exit(1)
   end
-  verbose:init("Serviço de registro iniciado com sucesso")
+  log:init("Serviço de registro iniciado com sucesso")
 end
 
 print(oil.pcall(oil.main,main))

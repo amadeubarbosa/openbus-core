@@ -11,7 +11,7 @@ require "lce"
 
 require "openbus.services.accesscontrol.CredentialDB"
 
-local verbose = require "openbus.common.Log"
+local log = require "openbus.common.Log"
 
 local oop = require "loop.base"
 
@@ -41,7 +41,7 @@ function AccessControlService:loginByPassword(name, password)
     local ldapHost = self.config.ldapHostName..":"..self.config.ldapHostPort
     local connection, errorMessage = lualdap.open_simple(ldapHost, name, password, false)
     if not connection then
-      verbose:error("Erro ao conectar com o servidor LDAP.\n"..errorMessage)
+      log:error("Erro ao conectar com o servidor LDAP.\n"..errorMessage)
       return false, self.invalidCredential
     end
     connection:close()
@@ -52,14 +52,14 @@ end
 function AccessControlService:loginByCertificate(name, answer)
   local challenge = self.challenges[name]
   if not challenge then
-    verbose:error("Nao existe desafio para "..name)
+    log:error("Nao existe desafio para "..name)
     return false, self.invalidCredential
   end
   local errorMessage
   answer, errorMessage = lce.cipher.decrypt(self.privateKey, answer)
   if answer ~= challenge then
-    verbose:error("Erro ao obter a resposta de "..name)
-    verbose:error(errorMessage)
+    log:error("Erro ao obter a resposta de "..name)
+    log:error(errorMessage)
     return false, self.invalidCredential
   end
   local entry = self:addEntry(name)
@@ -69,8 +69,8 @@ end
 function AccessControlService:getChallenge(name)
   local certificate, errorMessage = self:getCertificate(name)
   if not certificate then
-    verbose:error("Nao foi encontrado o certificado de "..name)
-    verbose:error(errorMessage)
+    log:error("Nao foi encontrado o certificado de "..name)
+    log:error(errorMessage)
     return ""
   end
   local challenge = self:generateChallenge(name, certificate)
@@ -92,7 +92,7 @@ end
 function AccessControlService:logout(credential)
     local entry = self.entries[credential.identifier]
     if not entry then
-      verbose:warn("Tentativa de logout com credencial inexistente: "..
+      log:warn("Tentativa de logout com credencial inexistente: "..
         credential.identifier)
       return false
     end
@@ -168,7 +168,6 @@ end
 
 function AccessControlService:removeCredentialFromObserver(observerIdentifier,
     credentialIdentifier)
-    verbose:service("che")
     local observerEntry = self.observersByIdentifier[observerIdentifier]
     if not observerEntry then
       return false
@@ -198,9 +197,9 @@ end
 
 function AccessControlService:removeEntry(entry)
     self.entries[entry.credential.identifier] = nil
-    verbose:service("Vai notificar aos observadores...")
+    log:service("Vai notificar aos observadores...")
     self:notifyCredentialWasDeleted(entry.credential)
-    verbose:service("Observadores notificados...")
+    log:service("Observadores notificados...")
     self.credentialDB:delete(entry.credential)
 end
 
@@ -212,8 +211,8 @@ function AccessControlService:notifyCredentialWasDeleted(credential)
     for _, observerEntry in pairs(observers) do
       local success, err = oil.pcall(observerEntry.observer.credentialWasDeleted, observerEntry.observer, credential)
       if not success then
-        verbose:warn("Erro ao notificar um observador.")
-        verbose:warn(err)
+        log:warn("Erro ao notificar um observador.")
+        log:warn(err)
       end
     end
 end

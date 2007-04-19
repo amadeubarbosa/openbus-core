@@ -9,6 +9,6 @@ RegistryServerConfiguration = {
   accessControlServerKey = "ACS",
   privateKeyFile = "../certificates/RegistryService.key",
   accessControlServiceCertificateFile = "../certificates/AccessControlService.crt",
-  verboseLevel = 3,
+  logLevel = 3,
   oilVerboseLevel = 1,
 }
