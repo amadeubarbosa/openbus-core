@@ -11,6 +11,7 @@ require "openbus.Member"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
+local LeaseHolder = require "openbus.common.LeaseHolder"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 local PICurrent = require "openbus.common.PICurrent"
 local log = require "openbus.common.Log"
@@ -63,8 +64,8 @@ function RegistryServiceComponent:startup()
   local accessControlServiceCertificate = lce.x509.readfromderfile(self.config.accessControlServiceCertificateFile)
   answer = lce.cipher.encrypt(accessControlServiceCertificate:getpublickey(), answer)
   accessControlServiceCertificate:release()
-  local success
-  success, self.credential = 
+  local success, lease
+  success, self.credential, lease = 
     self.accessControlService:loginByCertificate(self.name, answer)
   if not success then
     log:error("Nao foi possivel logar no servico de controle de acesso.")
@@ -84,6 +85,11 @@ function RegistryServiceComponent:startup()
   local picurrent = PICurrent()
   oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, picurrent, 
                                              self.accessControlService))
+
+  -- Cria o LeaseHolder que vai renovar o lease junto ao serviço de acesso.
+  self.leaseHolder = LeaseHolder(lease, self.credential,
+    self.accessControlService)
+  self.leaseHolder:startRenew()
 
   -- cria e instala a faceta servidora
   local registryService = RegistryService(self.accessControlService, picurrent)

@@ -17,6 +17,8 @@ local oop = require "loop.base"
 
 AccessControlService = oop.class{
   invalidCredential = {identifier = "", entityName = ""},
+  invalidLease = -1,
+  deltaT = 30, -- lease fixo (por enquanto) em segundos
 }
 
 function AccessControlService:__init(picurrent)
@@ -32,7 +34,11 @@ function AccessControlService:__init(picurrent)
   self.credentialDB = CredentialDB(self.config.databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
   for _, entry in pairs(entriesDB) do
-    self.entries[entry.credential.identifier] = {credential = entry.credential,}
+    local duration = self.deltaT
+    local lease = { expirationTime = os.time() + duration, duration = duration}
+    self.entries[entry.credential.identifier] = {
+      credential = entry.credential,
+      lease = lease}
   end
   return self
 end
@@ -42,28 +48,28 @@ function AccessControlService:loginByPassword(name, password)
     local connection, errorMessage = lualdap.open_simple(ldapHost, name, password, false)
     if not connection then
       log:error("Erro ao conectar com o servidor LDAP.\n"..errorMessage)
-      return false, self.invalidCredential
+      return false, self.invalidCredential, self.invalidLease
     end
     connection:close()
     local entry = self:addEntry(name)
-    return true, entry.credential
+    return true, entry.credential, entry.lease.duration
 end
 
 function AccessControlService:loginByCertificate(name, answer)
   local challenge = self.challenges[name]
   if not challenge then
     log:error("Nao existe desafio para "..name)
-    return false, self.invalidCredential
+    return false, self.invalidCredential, self.invalidLease
   end
   local errorMessage
   answer, errorMessage = lce.cipher.decrypt(self.privateKey, answer)
   if answer ~= challenge then
     log:error("Erro ao obter a resposta de "..name)
     log:error(errorMessage)
-    return false, self.invalidCredential
+    return false, self.invalidCredential, self.invalidLease
   end
   local entry = self:addEntry(name)
-  return true, entry.credential
+  return true, entry.credential, entry.lease.duration
 end
 
 function AccessControlService:getChallenge(name)
@@ -87,6 +93,12 @@ function AccessControlService:generateChallenge(name, certificate)
   local currentTime = tostring(os.time())
   self.challenges[name] = currentTime
   return lce.cipher.encrypt(certificate:getpublickey(), currentTime)
+end
+
+function AccessControlService:renewLease(credential)
+  log:lease(credential.entityName .. " renovando lease.")
+  -- Por enquanto sempre renova e deixa o lease com tempo fixo
+  return true, self.deltaT
 end
 
 function AccessControlService:logout(credential)
@@ -181,8 +193,11 @@ end
 
 function AccessControlService:addEntry(name)
     local credential = {identifier = self:generateCredentialIdentifier(), entityName = name}
-    entry = {credential = credential, time = os.time()}
-    self.credentialDB:insert(entry.credential, entry.time)
+    local duration = self.deltaT
+    local lease = { expirationTime = os.time() + duration, duration = duration}
+    entry = {credential = credential, lease = lease}
+    -- Por enquanto o insert ignora o segundo parâmetro.
+    self.credentialDB:insert(entry.credential, entry.lease)
     self.entries[entry.credential.identifier] = entry
     return entry
 end

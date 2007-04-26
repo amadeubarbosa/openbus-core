@@ -57,7 +57,7 @@ function main()
     AccessControlServiceComponent("AccessControlService"), 
     "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0", "ACS")
   if not success then
-    io.stderr:write("Falha criando do AcessControlServiceComponent: "..
+    io.stderr:write("Falha criando o AcessControlServiceComponent: "..
                      tostring(res).."\n")
     os.exit(1)
   end
