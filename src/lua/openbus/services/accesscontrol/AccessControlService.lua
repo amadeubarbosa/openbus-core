@@ -112,13 +112,13 @@ function AccessControlService:isValid(credential)
 end
 
 function AccessControlService:getRegistryService()
-    return self.registryService
+    return self.registryServiceComponent
 end
 
-function AccessControlService:setRegistryService(member)
+function AccessControlService:setRegistryService(registryServiceComponent)
     local credential = self.picurrent:getValue()
     if credential.entityName == "RegistryService" then
-        self.registryService = member
+        self.registryServiceComponent = registryServiceComponent
         return true
     end
     return false

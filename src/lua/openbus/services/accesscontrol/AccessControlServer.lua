@@ -36,6 +36,8 @@ end
 -- Carrega a interface do serviço
 local idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
 oil.loadidlfile (idlfile)
+idlfile = CORBA_IDL_DIR.."/registry_service.idl"
+oil.loadidlfile (idlfile)
 
 -- Inicializa o ORB, fixando a localização do serviço em porta específica
 oil.init{host = AccessControlServerConfiguration.hostName, 

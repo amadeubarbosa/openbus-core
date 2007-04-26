@@ -103,18 +103,20 @@ interface IAccessControlService {
      * \brief Define o serviço de registro que poderá ser obtido pelos membros
      * autenticados.
      *
-     * \param member O membro que representa o serviço de registro.
+     * \param registryServiceComponent O componente do serviço de registro.
      *
      * \return \c true caso a credencial seja do serviço de registro, ou
      * \c false, caso contrário.
      */
-    boolean setRegistryService(in IMember member);
+    boolean setRegistryService(in rs::IRegistryServiceComponent registryServiceComponent);
+
     /**
      * \brief Obtém o serviço de registro.
      *
      * \return O serviço de registro
      */
-    IMember getRegistryService ();
+    rs::IRegistryServiceComponent getRegistryService ();
+
     /**
      * \brief Adiciona um observador de credenciais. Esse observador será notificado apenas sobre
      * eventos ocorridos numa sequência de credenciais.
