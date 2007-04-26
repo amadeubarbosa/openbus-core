@@ -23,7 +23,7 @@ struct Node {
 };
 typedef sequence<Node> NodeList;
 
-interface DataService {
+interface IDataService {
   Node getRootNode();
   NodeList getChildren(in NodeKey key);
 };

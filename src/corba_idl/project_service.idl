@@ -1,6 +1,8 @@
 #ifndef PS_IDL
 #define PS_IDL
 
+#include "core.idl"
+
 module openbusidl {
 
 /**
@@ -8,51 +10,51 @@ module openbusidl {
  */
 module ps {
 
-interface File;
-typedef sequence<File> Files;
+interface IFile;
+typedef sequence<IFile> FileList;
 
-interface Project {
+interface IProject {
   string getId();
   string getName();
   string getOwner();
-  File getRootFile();
+  IFile getRootFile();
   boolean exists(in string path);
-  boolean createFile(in File parent, in string name, in string type);
-  boolean createDirectory (in File parent, in string name);
-  boolean deleteFile(in File aFile);
-  boolean renameFile (in File aFile, in string newName);
-  boolean moveFile(in File currentParent, in File newParent);
-  boolean copyFile(in File currentParent, in File newParent);
+  boolean createFile(in IFile parent, in string name, in string type);
+  boolean createDirectory (in IFile parent, in string name);
+  boolean deleteFile(in IFile aFile);
+  boolean renameFile (in IFile aFile, in string newName);
+  boolean moveFile(in IFile currentParent, in IFile newParent);
+  boolean copyFile(in IFile currentParent, in IFile newParent);
   void deactivate();
 };
-typedef sequence<Project> Projects;
+typedef sequence<IProject> ProjectList;
 
-interface DataChannel {
+interface IDataChannel {
 };
-interface File {
+
+interface IFile {
   string getName();
   string getPath();
-  string getDescription();
-  string getType();
   long long getSize();
-  long getCreationDate();
   boolean canRead();
   boolean canWrite();
   boolean isDirectory();
-  boolean isUnderConstruction();
-  Files getChildren();
-  Project getProject();
-  DataChannel openDataChannel();
-  boolean closeDataChannel(in DataChannel channel);
+  FileList getChildren();
+  IProject getProject();
+  IDataChannel openDataChannel();
+  boolean closeDataChannel(in IDataChannel channel);
   void deactivate();
 };
 
-interface ProjectService {
-  Projects getProjects();
-  Project getProject (in string name);
-  File getFile(in string path);
-  Project createProject(in string name);
-  boolean deleteProject(in Project aProject);
+interface IProjectService {
+  ProjectList getProjects();
+  IProject getProject (in string name);
+  IFile getFile(in string path);
+  IProject createProject(in string name);
+  boolean deleteProject(in IProject aProject);
+};
+
+interface IProjectServiceComponent : IMember {
 };
 
 };
