@@ -9,6 +9,9 @@ local config =
 config.interfaces = {
   { interface = "IDL:openbusidl/ss/ISessionService:1.0",
     excluded_ops = { }
+  },
+  { interface = "IDL:openbusidl/ss/ISession:1.0",
+    excluded_ops = { }
   }
 }
 return config
