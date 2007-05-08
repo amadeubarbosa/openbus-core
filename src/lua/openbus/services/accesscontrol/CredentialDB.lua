@@ -31,44 +31,41 @@ function CredentialDB:__init(databaseDirectory)
   self = oop.rawnew(self, {databaseDirectory = databaseDirectory,})
   for _, fileName in ipairs(credentialFiles) do
     if string.sub(fileName, -(#FILE_SUFFIX)) == FILE_SUFFIX then
-      local file = io.open(databaseDirectory..FILE_SEPARATOR..fileName, "r")
-      if file then
-        local credentialIdentifier = file:read()
-        local credentialEntityName = file:read()
-        if credentialIdentifier and credentialEntityName then
-          local credential = { identifier = credentialIdentifier, entityName = credentialEntityName, }
-          self.entries[credential.identifier] = {credential = credential,}
-        end
-      end
+      local entry = dofile(databaseDirectory..FILE_SEPARATOR..fileName)
+      local credential = entry.credential
+      self.entries[credential.identifier] = entry
     end
   end
   return self
 end
 
-function CredentialDB:insert(credential)
+function CredentialDB:insert(entry)
+  local credential = entry.credential
   if self.entries[credential.identifier] then
     return false, "A credencial especificada ja existe."
   end
-  local status, errorMessage = self:writeCredential(credential)
+  local status, errorMessage = self:writeCredential(entry)
   if not status then
     return false, errorMessage
   end
-  self.entries[credential.identifier] = {credential = credential,}
+  self.entries[credential.identifier] = self:dupEntry(entry)
   return true
 end
 
-function CredentialDB:update(credential)
+function CredentialDB:update(entry)
+  local credential = entry.credential
   if not self.entries[credential.identifier] then
     return false, "A credencial especificada nao existe."
   end
-  return self:writeCredential(credential)
+  return self:writeCredential(entry)
 end
 
-function CredentialDB:delete(credential)
+function CredentialDB:delete(entry)
+  local credential = entry.credential
   if not self.entries[credential.identifier] then
     return false, "A credencial especificada n√£o existe."
   end
-  local status, errorMessage = self:removeCredential(credential)
+  local status, errorMessage = self:removeCredential(entry)
   if not status then
     return false, errorMessage
   end
@@ -80,19 +77,58 @@ function CredentialDB:selectAll()
   return self.entries
 end
 
-function CredentialDB:writeCredential(credential)
+---------------------------------------------------------------------
+-- Serializa os elementos de Lua em uma string
+-- XXX N„o tem nada pronto pra usar?!
+---------------------------------------------------------------------
+function CredentialDB:toString(val)
+  local t = type(val)
+  if t == "table" then
+    local str = '{'
+    for f, s in pairs(val) do
+      if not tonumber(f) then
+        str = str .. "[\"" .. f .. "\"]="
+      else
+        str = str .. "["   .. f .. "]="
+      end
+      str = str .. self:toString(s) .. ","
+    end
+    return str .. '}'
+  elseif t == "string" then
+    return "[[" .. val .. "]]"
+  elseif t == "number" then
+    return val
+  else -- if not tab then
+    return "nil"
+  end
+end
+
+---------------------------------------------------------------------
+-- Duplica uma entrada
+---------------------------------------------------------------------
+function CredentialDB:dupEntry(entry)
+  if type(entry) ~= "table" then
+    return entry
+  end
+  local new_entry = {}
+  for i, v in pairs(entry) do
+    new_entry[i] = self:dupEntry(v)
+  end
+  return new_entry
+end
+
+function CredentialDB:writeCredential(entry)
+  local credential = entry.credential
   local credentialFile, errorMessage = io.open(self.databaseDirectory..FILE_SEPARATOR..credential.identifier..FILE_SUFFIX, "w")
   if not credentialFile then
     return false, errorMessage
   end
-  credentialFile:write(credential.identifier)
-  credentialFile:write("\n")
-  credentialFile:write(credential.entityName)
-  credentialFile:write("\n")
+  credentialFile:write("return ".. self:toString(entry))
   credentialFile:close()
   return true
 end
 
-function CredentialDB:removeCredential(credential)
+function CredentialDB:removeCredential(entry)
+  local credential = entry.credential
   return os.remove(self.databaseDirectory..FILE_SEPARATOR..credential.identifier..FILE_SUFFIX)
 end

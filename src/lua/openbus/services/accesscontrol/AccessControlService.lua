@@ -34,11 +34,8 @@ function AccessControlService:__init(picurrent)
   self.credentialDB = CredentialDB(self.config.databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
   for _, entry in pairs(entriesDB) do
-    local duration = self.deltaT  -- Mudar isso. Deve vir do arquivo
-    local lease = { lastUpdate = os.time(), duration = duration}
-    self.entries[entry.credential.identifier] = {
-      credential = entry.credential,
-      lease = lease}
+    entry.lease.lastUpdate = os.time()
+    self.entries[entry.credential.identifier] = entry -- Deveria fazer uma cópia?
   end
   self.checkExpiredLeases = function()
     -- Uma corotina só percorre a tabela de tempos em tempos
@@ -227,8 +224,7 @@ function AccessControlService:addEntry(name)
     local duration = self.deltaT
     local lease = { lastUpdate = os.time(), duration = duration}
     entry = {credential = credential, lease = lease}
-    -- Por enquanto o insert ignora o segundo parâmetro.
-    self.credentialDB:insert(entry.credential, entry.lease)
+    self.credentialDB:insert(entry)
     self.entries[entry.credential.identifier] = entry
     return entry
 end
@@ -246,7 +242,7 @@ function AccessControlService:removeEntry(entry)
     log:service("Vai notificar aos observadores...")
     self:notifyCredentialWasDeleted(entry.credential)
     log:service("Observadores notificados...")
-    self.credentialDB:delete(entry.credential)
+    self.credentialDB:delete(entry)
 end
 
 function AccessControlService:notifyCredentialWasDeleted(credential)
