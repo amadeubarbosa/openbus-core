@@ -12,8 +12,8 @@ require "lce"
 require "openbus.services.accesscontrol.CredentialDB"
 
 local log = require "openbus.common.Log"
-
 local oop = require "loop.base"
+local LeaseProvider = require "openbus.common.LeaseProvider"
 
 AccessControlService = oop.class{
   invalidCredential = {identifier = "", entityName = ""},
@@ -34,12 +34,29 @@ function AccessControlService:__init(picurrent)
   self.credentialDB = CredentialDB(self.config.databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
   for _, entry in pairs(entriesDB) do
-    local duration = self.deltaT
-    local lease = { expirationTime = os.time() + duration, duration = duration}
+    local duration = self.deltaT  -- Mudar isso. Deve vir do arquivo
+    local lease = { lastUpdate = os.time(), duration = duration}
     self.entries[entry.credential.identifier] = {
       credential = entry.credential,
       lease = lease}
   end
+  self.checkExpiredLeases = function()
+    -- Uma corotina só percorre a tabela de tempos em tempos
+    -- ou precisamos acordar na hora "exata" que cada lease expira
+    -- pra verificar?
+    for id, entry in pairs(self.entries) do
+      log:lease("Verificando a credencial de "..id)
+      local credential = entry.credential
+      local lastUpdate = entry.lease.lastUpdate
+      local duration = entry.lease.duration
+      local now = os.time()
+      if (os.difftime (now, lastUpdate) > duration ) then
+        log:warn(credential.entityName .. " lease expirado: LOGOUT.")
+        self:logout(credential) -- you may clear existing fields.
+      end
+    end
+  end
+  self.leaseProvider = LeaseProvider(self.checkExpiredLeases, self.deltaT)
   return self
 end
 
@@ -97,7 +114,21 @@ end
 
 function AccessControlService:renewLease(credential)
   log:lease(credential.entityName .. " renovando lease.")
-  -- Por enquanto sempre renova e deixa o lease com tempo fixo
+  if not self:isValid(credential) then
+    log:warn(credential.entityName .. " credencial inválida.")
+    return false, self.invalidLease
+  end
+  local lease = self.entries[credential.identifier].lease
+  local lastUpdate = lease.lastUpdate
+  local duration = lease.duration
+  local now = os.time()
+  if (os.difftime (now, lastUpdate) > duration ) then
+    log:warn(credential.entityName .. " lease expirado: LOGOUT.")
+    self:logout(credential)
+    return false, self.invalidLease
+  end
+  self.entries[credential.identifier].lease.lastUpdate = now
+  -- Por enquanto deixa o lease com tempo fixo
   return true, self.deltaT
 end
 
@@ -194,7 +225,7 @@ end
 function AccessControlService:addEntry(name)
     local credential = {identifier = self:generateCredentialIdentifier(), entityName = name}
     local duration = self.deltaT
-    local lease = { expirationTime = os.time() + duration, duration = duration}
+    local lease = { lastUpdate = os.time(), duration = duration}
     entry = {credential = credential, lease = lease}
     -- Por enquanto o insert ignora o segundo parâmetro.
     self.credentialDB:insert(entry.credential, entry.lease)
