@@ -6,7 +6,7 @@
 -----------------------------------------------------------------------------
 require "oil"
 
-require "openbus.services.accesscontrol.AccessControlServiceComponent"
+require "openbus.services.accesscontrol.AccessControlService"
 
 local log = require "openbus.common.Log"
 
@@ -54,17 +54,17 @@ function main()
   -- Cria o componente responsável pelo Serviço de Controle de Acesso
   success, res  = 
     oil.pcall(oil.newobject,
-    AccessControlServiceComponent("AccessControlService"), 
-    "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0", "ACS")
+    AccessControlService("AccessControlService"), 
+    "IDL:openbusidl/acs/IAccessControlService:1.0", "ACS")
   if not success then
-    io.stderr:write("Falha criando o AcessControlServiceComponent: "..
+    io.stderr:write("Falha criando o AcessControlService: "..
                      tostring(res).."\n")
     os.exit(1)
   end
 
-  local accessControlServiceComponent = res
-  success, res = oil.pcall(accessControlServiceComponent.startup, 
-                           accessControlServiceComponent)
+  local accessControlService = res
+  success, res = oil.pcall(accessControlService.startup, 
+                           accessControlService)
   if not success then
     io.stderr:write("Falha ao iniciar o serviço de controle de acesso: "..
                     tostring(res).."\n")

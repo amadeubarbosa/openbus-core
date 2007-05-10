@@ -1,6 +1,5 @@
 -----------------------------------------------------------------------------
--- Faceta que disponibiliza a funcionalidade básica do serviço de controle
--- de acesso
+-- Componente responsável pelo Serviço de Controle de Acesso
 --
 -- Última alteração:
 --   $Id$
@@ -8,34 +7,54 @@
 require "lualdap"
 require "uuid"
 require "lce"
+require "oil"
 
+require "openbus.Member"
 require "openbus.services.accesscontrol.CredentialDB"
+
+local ServerInterceptor = require "openbus.common.ServerInterceptor"
+local PICurrent = require "openbus.common.PICurrent"
 
 local log = require "openbus.common.Log"
 local oop = require "loop.base"
 local LeaseProvider = require "openbus.common.LeaseProvider"
 
-AccessControlService = oop.class{
+AccessControlService = oop.class({
   invalidCredential = {identifier = "", entityName = ""},
   invalidLease = -1,
   deltaT = 30, -- lease fixo (por enquanto) em segundos
-}
+}, Member)
 
-function AccessControlService:__init(picurrent)
-  self = oop.rawnew(self, {
-    entries = {},
-    observersByIdentifier = {},
-    observersByCredential = {},
-    challenges = {},
-    config = AccessControlServerConfiguration,
-    picurrent = picurrent,
-  })
+-- Constrói a implementação do componente
+function AccessControlService:__init(name)
+  local obj = { name = name,
+                config = AccessControlServerConfiguration,
+                entries = {},
+                observersByIdentifier = {},
+                observersByCredential = {},
+                challenges = {},
+                picurrent = PICurrent(),
+              }
+  Member:__init(obj)
+  return oop.rawnew(self, obj)
+end
+
+-- Inicia o componente
+function AccessControlService:startup()
+
+  -- instala o interceptador do serviço
+  local CONF_DIR = os.getenv("CONF_DIR")
+  local iconfig = 
+    assert(loadfile(CONF_DIR.."/advanced/ACSInterceptorsConfiguration.lua"))()
+  oil.setserverinterceptor(ServerInterceptor(iconfig, self.picurrent, self))
+  
+  -- inicializa repositorio de credenciais
   self.privateKey = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
   self.credentialDB = CredentialDB(self.config.databaseDirectory)
   local entriesDB = self.credentialDB:selectAll()
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
-    self.entries[entry.credential.identifier] = entry -- Deveria fazer uma cópia?
+    self.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
   end
   self.checkExpiredLeases = function()
     -- Uma corotina só percorre a tabela de tempos em tempos
@@ -257,4 +276,8 @@ function AccessControlService:notifyCredentialWasDeleted(credential)
         log:warn(err)
       end
     end
+end
+
+-- Shutdown do componente: ainda a implementar!!!
+function AccessControlService:shutdown()
 end

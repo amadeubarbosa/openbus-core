@@ -32,20 +32,14 @@ end
 
 function RegistryServiceComponent:startup()
   -- obtém a referência para o Serviço de Controle de Acesso
-  local accessControlServiceComponent = 
+  self.accessControlService = 
   oil.newproxy("corbaloc::"..self.config.accessControlServerHost.."/"..
                   self.config.accessControlServerKey,
-               "IDL:openbusidl/acs/IAccessControlServiceComponent:1.0")
-  if accessControlServiceComponent:_non_existent() then
+               "IDL:openbusidl/acs/IAccessControlService:1.0")
+  if self.accessControlService:_non_existent() then
     log:error("Servico de controle de acesso nao encontrado.")
     error{"IDL:SCS/StartupFailed:1.0"}
   end
-  local accessControlServiceInterface = 
-    "IDL:openbusidl/acs/IAccessControlService:1.0"
-  self.accessControlService = 
-    accessControlServiceComponent:getFacet(accessControlServiceInterface)
-  self.accessControlService = 
-    oil.narrow(self.accessControlService, accessControlServiceInterface)
 
   -- autenticação junto ao serviço de controle de acesso
   local challenge = self.accessControlService:getChallenge(self.name)
