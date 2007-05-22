@@ -1,4 +1,3 @@
 #!/bin/csh
 
-#ant -lib ${JACORB_HOME}/lib:${OPENBUS_HOME}/lib/commons-codec-1.3/commons-codec-1.3.jar $*
-ant -lib /local/prod/rodrigoh/projetos/csgrid/principal/csbase/libs/jacorb2.2:${OPENBUS_HOME}/lib/commons-codec-1.3/commons-codec-1.3.jar $*
+ant -lib ${OPENBUS_HOME}/lib/jacorb2.2.4:${OPENBUS_HOME}/lib/commons-codec-1.3/commons-codec-1.3.jar $*
