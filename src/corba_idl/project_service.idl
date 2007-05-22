@@ -18,14 +18,7 @@ interface IProject {
   string getName();
   string getOwner();
   IFile getRootFile();
-  boolean exists(in string path);
-  boolean createFile(in IFile parent, in string name, in string type);
-  boolean createDirectory (in IFile parent, in string name);
-  boolean deleteFile(in IFile aFile);
-  boolean renameFile (in IFile aFile, in string newName);
-  boolean moveFile(in IFile currentParent, in IFile newParent);
-  boolean copyFile(in IFile currentParent, in IFile newParent);
-  void deactivate();
+  void close();
 };
 typedef sequence<IProject> ProjectList;
 
@@ -39,11 +32,17 @@ interface IFile {
   boolean canRead();
   boolean canWrite();
   boolean isDirectory();
-  FileList getChildren();
+  FileList getFiles();
   IProject getProject();
+  boolean createFile(in string name, in string type);
+  boolean createDirectory (in string name);
+  boolean delete();
+  boolean rename (in string newName);
+  boolean moveFile(in IFile newParent);
+  boolean copyFile(in IFile newParent);
   IDataChannel openDataChannel();
   boolean closeDataChannel(in IDataChannel channel);
-  void deactivate();
+  void close();
 };
 
 interface IProjectService {
