@@ -64,11 +64,18 @@ function AccessControlService:startup()
       log:lease("Verificando a credencial de "..id)
       local credential = entry.credential
       local lastUpdate = entry.lease.lastUpdate
+      local secondChance = entry.lease.secondChance
       local duration = entry.lease.duration
       local now = os.time()
       if (os.difftime (now, lastUpdate) > duration ) then
-        log:warn(credential.entityName .. " lease expirado: LOGOUT.")
-        self:logout(credential) -- you may clear existing fields.
+        if secondChance then
+          log:warn(credential.entityName .. " lease expirado: LOGOUT.")
+          self:logout(credential) -- you may clear existing fields.
+        else
+          entry.lease.secondChance = true
+        end
+      else
+        entry.lease.secondChance = false
       end
     end
   end
