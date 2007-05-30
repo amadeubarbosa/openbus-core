@@ -3,9 +3,9 @@
 
 #include <lauxlib.h>
 
-#define X509_MODULE "lce.x509"
+#define X509_MODULE "x509"
 
-#define META_X509 "LCE.x509"
+#define META_X509 "LCE_x509"
 
 #define X509_FIELD "__x509"
 

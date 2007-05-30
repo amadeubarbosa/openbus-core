@@ -5,9 +5,9 @@
 
 #include <openssl/evp.h>
 
-#define KEY_MODULE "lce.key"
+#define KEY_MODULE "key"
 
-#define META_KEY "LCE.key"
+#define META_KEY "LCE_key"
 
 #define KEY_FIELD "__key"
 #define KEY_TYPE_FIELD "type"

@@ -3,7 +3,7 @@
 
 #include <lauxlib.h>
 
-#define CIPHER_MODULE "lce.cipher"
+#define CIPHER_MODULE "cipher"
 
 int lce_cipher_encrypt(lua_State *L);
 int lce_cipher_decrypt(lua_State *L);

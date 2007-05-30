@@ -4,6 +4,8 @@
 #include <lce_key.h>
 #include <lce_cipher.h>
 
+#define LCE_TABLENAME "lce"
+
 static const struct luaL_reg lce_x509[] = {
   {"readfromderfile", lce_x509_readfromderfile},
   {NULL, NULL}
@@ -31,6 +33,10 @@ static const struct luaL_reg lce_cipher[] = {
   {NULL, NULL}
 };
 
+static const struct luaL_reg lce_top[] = {
+  {NULL, NULL}
+};
+
 void lce_createmeta(lua_State *L, const char *tname, const struct luaL_reg methods[]) {
   luaL_newmetatable(L, tname);
   luaL_register(L, NULL, methods);
@@ -45,9 +51,22 @@ int luaopen_lce(lua_State *L) {
   lce_createmeta(L, META_KEY, lce_key_methods);
   lce_createmeta(L, META_X509, lce_x509_methods);
 
-  luaL_register(L, X509_MODULE, lce_x509);
-  luaL_register(L, KEY_MODULE, lce_key);
-  luaL_register(L, CIPHER_MODULE, lce_cipher);
+  luaL_register(L, LCE_TABLENAME, lce_top);
+
+  lua_pushliteral(L, X509_MODULE);
+  lua_newtable(L);
+  luaL_register(L, NULL, lce_x509);
+  lua_settable(L, -3);
+
+  lua_pushliteral(L, KEY_MODULE);
+  lua_newtable(L);
+  luaL_register(L, NULL, lce_key);
+  lua_settable(L, -3);
+
+  lua_pushliteral(L, CIPHER_MODULE);
+  lua_newtable(L);
+  luaL_register(L, NULL, lce_cipher);
+  lua_settable(L, -3);
 
   return 1;
 }
