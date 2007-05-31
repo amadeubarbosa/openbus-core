@@ -5,16 +5,14 @@
 --   $Id$
 -----------------------------------------------------------------------------
 require "oil"
-require "lce"
-
 require "openbus.Member"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local LeaseHolder = require "openbus.common.LeaseHolder"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 local PICurrent = require "openbus.common.PICurrent"
 local log = require "openbus.common.Log"
+local ServiceConnectionManager = require "openbus.common.ServiceConnectionManager"
 
 require "openbus.services.session.SessionService"
 
@@ -41,50 +39,29 @@ function SessionServiceComponent:startup()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
-  -- autenticação junto ao Serviço de Controle de Acesso
-  local challenge = self.accessControlService:getChallenge(self.name)
-  if not challenge then
-    log:error("O desafio nao foi obtido junto ao Servico de Controle de Acesso.")
-    error{"IDL:SCS/StartupFailed:1.0"}
-  end
-  local privateKey, errorMessage = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
-  if not privateKey then
-    log:error("Erro ao obter a chave privada.")
-    log:error(errorMessage)
-    error{"IDL:SCS/StartupFailed:1.0"}
-  end
-  local answer = lce.cipher.decrypt(privateKey, challenge)
-  privateKey:release()
-  local accessControlServiceCertificate = lce.x509.readfromderfile(self.config.accessControlServiceCertificateFile)
-  answer = lce.cipher.encrypt(accessControlServiceCertificate:getpublickey(), answer)
-  accessControlServiceCertificate:release()
-
-  local success, lease
-  success, self.credential, lease = 
-    self.accessControlService:loginByCertificate(self.name, answer)
-  if not success then
-    io.stderr:write("Nao foi possivel logar no servico de controle de acesso.\n")
-    error{"IDL:SCS/StartupFailed:1.0"}
-  end
-
   -- instala o interceptador cliente
+  local credentialHolder = CredentialHolder()
   local CONF_DIR = os.getenv("CONF_DIR")
   local interceptorsConfig = 
     assert(loadfile(CONF_DIR.."/advanced/SSInterceptorsConfiguration.lua"))()
-  self.credentialHolder = CredentialHolder()
-  self.credentialHolder:setValue(self.credential)
-  oil.setclientinterceptor(ClientInterceptor(interceptorsConfig, 
-                           self.credentialHolder))
+  oil.setclientinterceptor(
+    ClientInterceptor(interceptorsConfig, credentialHolder))
 
   -- instala o interceptador servidor
   local picurrent = PICurrent()
   oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, picurrent, 
                                              self.accessControlService))
 
-  -- Cria o LeaseHolder que vai renovar o lease junto ao serviço de acesso.
-  self.leaseHolder = LeaseHolder(lease, self.credential,
-    self.accessControlService)
-  self.leaseHolder:startRenew()
+  -- autentica o serviço, conectando-o ao barramento
+  self.connectionManager = 
+    ServiceConnectionManager:__init(self.accessControlService,
+      credentialHolder, self.config.privateKeyFile,
+      self.config.accessControlServiceCertificateFile)
+
+  local success = self.connectionManager:connect(self.name)
+  if not success then
+    error{"IDL:SCS/StartupFailed:1.0"}
+  end
 
   -- cria e instala a faceta servidora
   local sessionService = SessionService(self.accessControlService, picurrent)
@@ -127,11 +104,11 @@ function SessionServiceComponent:shutdown()
 
   local registryService = self.accessControlService:getRegistryService()
   registryService:unregister(self.registryIdentifier)
-  self.accessControlService:logout(self.credential)
-  self.credentialHolder:invalidate()
+
+  self.connectionManager:disconnect()
 
   self.accessControlService = nil
-  self.credential = nil
+  self.connectionManager = nil
 
   self:removeFacets()
 end
