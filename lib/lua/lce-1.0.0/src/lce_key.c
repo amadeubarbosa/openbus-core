@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -12,21 +13,16 @@ static const char * readPEMPrivateKey(const char *filePath, EVP_PKEY **privateKe
 int lce_key_release(lua_State* L) {
   EVP_PKEY *key;
 
-  luaL_argcheck(L, lua_istable(L, 1) == 1, 1, "key expected");
-  lua_pushstring(L, KEY_FIELD);
-  lua_gettable(L, 1);
-
-  key = (EVP_PKEY *)lua_touserdata(L, -1);
-  luaL_argcheck(L, key != NULL, 1, "key expected");
-
-  EVP_PKEY_free(key);
-
+  key = *((EVP_PKEY **)lua_touserdata(L, -1));
+  if (key)
+    EVP_PKEY_free(key);
   return 0;
 }
 
 int lce_key_readprivatefrompemfile(lua_State* L) {
   const char *filePath;
   EVP_PKEY *privateKey;
+  EVP_PKEY **privateKeyUD;
   const char *errorMessage;
 
   filePath = luaL_checkstring(L, -1);
@@ -41,7 +37,13 @@ int lce_key_readprivatefrompemfile(lua_State* L) {
 
   lua_newtable(L);
   lua_pushstring(L, KEY_FIELD);
-  lua_pushlightuserdata(L, privateKey);
+
+  //lua_pushlightuserdata(L, privateKey);
+  privateKeyUD = (EVP_PKEY **)lua_newuserdata(L, sizeof(EVP_PKEY **));
+  *privateKeyUD = privateKey;
+  luaL_getmetatable(L, META_KEYUD);
+  lua_setmetatable(L, -2);
+
   lua_settable(L, -3);
 
   lua_pushstring(L, KEY_TYPE_FIELD);
@@ -51,9 +53,6 @@ int lce_key_readprivatefrompemfile(lua_State* L) {
   lua_pushstring(L, KEY_ALGORITHM_FIELD);
   lua_pushstring(L, getKeyAlgorithm(privateKey));
   lua_settable(L, -3);
-
-  luaL_getmetatable(L, META_KEY);
-  lua_setmetatable(L, -2);
 
   return 1;
 }

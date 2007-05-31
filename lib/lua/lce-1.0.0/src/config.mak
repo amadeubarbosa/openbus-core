@@ -3,7 +3,7 @@ LIBNAME = ${PROJNAME}
 
 TARGETROOT= ${OPENBUS_HOME}/libpath
 
-OPENSSL_HOME= /local/prod/rodrigoh/software/openssl
+OPENSSL_HOME= /home/msv/rodrigoh/public/openssl
 OPENSSL_INC= ${OPENSSL_HOME}/include
 OPENSSL_LIB= ${OPENSSL_HOME}
 OPENSSL_LIBS = crypto dl

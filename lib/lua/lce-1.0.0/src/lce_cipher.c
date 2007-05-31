@@ -28,7 +28,7 @@ int lce_cipher_encrypt(lua_State *L) {
   lua_pushstring(L, KEY_FIELD);
   lua_gettable(L, 1);
 
-  publicKey = (EVP_PKEY *)lua_touserdata(L, -1);
+  publicKey = *((EVP_PKEY **)lua_touserdata(L, -1));
   luaL_argcheck(L, publicKey != NULL, 1, "key expected 2");
 
   plainText = luaL_checklstring(L, 2, &plainTextSize);
@@ -57,7 +57,7 @@ int lce_cipher_decrypt(lua_State *L) {
   lua_pushstring(L, KEY_FIELD);
   lua_gettable(L, 1);
 
-  privateKey = (EVP_PKEY *)lua_touserdata(L, -1);
+  privateKey = *((EVP_PKEY **)lua_touserdata(L, -1));
   luaL_argcheck(L, privateKey != NULL, 1, "key expected");
 
   cryptedText = luaL_checklstring(L, 2, &cryptedTextSize);

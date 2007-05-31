@@ -7,7 +7,7 @@
 
 #define KEY_MODULE "key"
 
-#define META_KEY "LCE_key"
+#define META_KEYUD "LCE_keyUD"
 
 #define KEY_FIELD "__key"
 #define KEY_TYPE_FIELD "type"

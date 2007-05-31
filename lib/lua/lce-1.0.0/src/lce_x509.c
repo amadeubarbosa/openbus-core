@@ -56,6 +56,7 @@ int lce_x509_release(lua_State *L) {
 int lce_x509_getpublickey(lua_State *L) {
   X509 *x509;
   EVP_PKEY *publicKey;
+  EVP_PKEY **publicKeyUD;
   const char *errorMessage;
 
   luaL_argcheck(L, lua_istable(L, -1) == 1, 1, "certificate expected");
@@ -74,7 +75,13 @@ int lce_x509_getpublickey(lua_State *L) {
 
   lua_newtable(L);
   lua_pushstring(L, KEY_FIELD);
-  lua_pushlightuserdata(L, publicKey);
+
+  //lua_pushlightuserdata(L, publicKey);
+  publicKeyUD = (EVP_PKEY **)lua_newuserdata(L, sizeof(EVP_PKEY **));
+  *publicKeyUD = publicKey;
+  luaL_getmetatable(L, META_KEYUD);
+  lua_setmetatable(L, -2);
+
   lua_settable(L, -3);
 
   lua_pushstring(L, KEY_TYPE_FIELD);
@@ -84,9 +91,6 @@ int lce_x509_getpublickey(lua_State *L) {
   lua_pushstring(L, KEY_ALGORITHM_FIELD);
   lua_pushstring(L, getKeyAlgorithm(publicKey));
   lua_settable(L, -3);
-
-  luaL_getmetatable(L, META_KEY);
-  lua_setmetatable(L, -2);
 
   return 1;
 }
