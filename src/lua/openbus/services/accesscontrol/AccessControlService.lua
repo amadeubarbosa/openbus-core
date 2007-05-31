@@ -120,7 +120,6 @@ function AccessControlService:getChallenge(name)
     return ""
   end
   local challenge = self:generateChallenge(name, certificate)
-  certificate:release()
   return challenge
 end
 
