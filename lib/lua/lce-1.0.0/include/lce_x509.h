@@ -6,6 +6,7 @@
 #define X509_MODULE "x509"
 
 #define META_X509 "LCE_x509"
+#define META_X509UD "LCE_x509UD"
 
 #define X509_FIELD "__x509"
 

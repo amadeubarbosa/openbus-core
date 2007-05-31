@@ -15,7 +15,6 @@ static const struct luaL_reg lce_x509[] = {
 
 static const struct luaL_reg lce_x509_methods[] = {
   {"getpublickey", lce_x509_getpublickey},
-  {"release", lce_x509_release},
   {NULL, NULL}
 };
 
@@ -53,6 +52,7 @@ int luaopen_lce(lua_State *L) {
   ERR_load_crypto_strings();
 
   lce_createmetaUD(L, META_KEYUD, lce_key_release);
+  lce_createmetaUD(L, META_X509UD, lce_x509_release);
 
   lce_createmeta(L, META_X509, lce_x509_methods);
 

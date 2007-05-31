@@ -38,7 +38,6 @@ int lce_key_readprivatefrompemfile(lua_State* L) {
   lua_newtable(L);
   lua_pushstring(L, KEY_FIELD);
 
-  //lua_pushlightuserdata(L, privateKey);
   privateKeyUD = (EVP_PKEY **)lua_newuserdata(L, sizeof(EVP_PKEY **));
   *privateKeyUD = privateKey;
   luaL_getmetatable(L, META_KEYUD);

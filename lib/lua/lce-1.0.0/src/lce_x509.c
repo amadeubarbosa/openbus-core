@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <openssl/x509.h>
 #include <openssl/evp.h>
@@ -15,6 +16,7 @@ static const char * getPublicKey(X509 * x509, EVP_PKEY **publicKey);
 int lce_x509_readfromderfile(lua_State *L) {
   const char *filePath;
   X509 *x509;
+  X509 **x509UD;
   const char *errorMessage;
 
   filePath = luaL_checkstring(L, -1);
@@ -29,7 +31,12 @@ int lce_x509_readfromderfile(lua_State *L) {
 
   lua_newtable(L);
   lua_pushstring(L, X509_FIELD);
-  lua_pushlightuserdata(L, x509);
+
+  x509UD = (X509 **)lua_newuserdata(L, sizeof(X509 **));
+  *x509UD = x509;
+  luaL_getmetatable(L, META_X509UD);
+  lua_setmetatable(L, -2);
+
   lua_settable(L, -3);
 
   luaL_getmetatable(L, META_X509);
@@ -41,15 +48,9 @@ int lce_x509_readfromderfile(lua_State *L) {
 int lce_x509_release(lua_State *L) {
   X509 *x509;
 
-  luaL_argcheck(L, lua_istable(L, -1) == 1, 1, "certificate expected");
-  lua_pushstring(L, X509_FIELD);
-  lua_gettable(L, -2);
-
-  x509 = (X509 *)lua_touserdata(L, -1);
-  luaL_argcheck(L, x509 != NULL, 1, "certificate expected");
-
-  X509_free(x509);
-
+  x509 = *((X509 **)lua_touserdata(L, -1));
+  if (x509)
+    X509_free(x509);
   return 0;
 }
 
@@ -63,7 +64,7 @@ int lce_x509_getpublickey(lua_State *L) {
   lua_pushstring(L, X509_FIELD);
   lua_gettable(L, -2);
 
-  x509 = (X509 *)lua_touserdata(L, -1);
+  x509 = *((X509 **)lua_touserdata(L, -1));
   luaL_argcheck(L, x509 != NULL, 1, "certificate expected");
 
   errorMessage = getPublicKey(x509, &publicKey);
@@ -76,7 +77,6 @@ int lce_x509_getpublickey(lua_State *L) {
   lua_newtable(L);
   lua_pushstring(L, KEY_FIELD);
 
-  //lua_pushlightuserdata(L, publicKey);
   publicKeyUD = (EVP_PKEY **)lua_newuserdata(L, sizeof(EVP_PKEY **));
   *publicKeyUD = publicKey;
   luaL_getmetatable(L, META_KEYUD);
