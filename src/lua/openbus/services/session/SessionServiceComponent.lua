@@ -29,18 +29,19 @@ function SessionServiceComponent:__init(name)
 end
 
 function SessionServiceComponent:startup()
+  local credentialHolder = CredentialHolder()
+  self.connectionManager = 
+    ServiceConnectionManager:__init(self.config.accessControlServerHost,
+      credentialHolder, self.config.privateKeyFile,
+      self.config.accessControlServiceCertificateFile)
+
   -- obtém a referência para o Serviço de Controle de Acesso
-  self.accessControlService = 
-    oil.newproxy("corbaloc::"..self.config.accessControlServerHost.."/"..
-                    self.config.accessControlServerKey, 
-                 "IDL:openbusidl/acs/IAccessControlService:1.0")
-  if self.accessControlService:_non_existent() then
-    io.stderr:write("Servico de controle de acesso nao encontrado.\n")
+  self.accessControlService = self.connectionManager:getAccessControlService()
+  if self.accessControlService == nil then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
   -- instala o interceptador cliente
-  local credentialHolder = CredentialHolder()
   local CONF_DIR = os.getenv("CONF_DIR")
   local interceptorsConfig = 
     assert(loadfile(CONF_DIR.."/advanced/SSInterceptorsConfiguration.lua"))()
@@ -53,11 +54,6 @@ function SessionServiceComponent:startup()
                                              self.accessControlService))
 
   -- autentica o serviço, conectando-o ao barramento
-  self.connectionManager = 
-    ServiceConnectionManager:__init(self.accessControlService,
-      credentialHolder, self.config.privateKeyFile,
-      self.config.accessControlServiceCertificateFile)
-
   local success = self.connectionManager:connect(self.name)
   if not success then
     error{"IDL:SCS/StartupFailed:1.0"}
