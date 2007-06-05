@@ -36,8 +36,8 @@ function SessionServiceComponent:startup()
       self.config.accessControlServiceCertificateFile)
 
   -- obtém a referência para o Serviço de Controle de Acesso
-  self.accessControlService = self.connectionManager:getAccessControlService()
-  if self.accessControlService == nil then
+  local accessControlService = self.connectionManager:getAccessControlService()
+  if accessControlService == nil then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
@@ -51,7 +51,7 @@ function SessionServiceComponent:startup()
   -- instala o interceptador servidor
   local picurrent = PICurrent()
   oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, picurrent, 
-                                             self.accessControlService))
+                                             accessControlService))
 
   -- autentica o serviço, conectando-o ao barramento
   local success = self.connectionManager:connect(self.name)
@@ -60,21 +60,22 @@ function SessionServiceComponent:startup()
   end
 
   -- cria e instala a faceta servidora
-  local sessionService = SessionService(self.accessControlService, picurrent)
+  local sessionService = SessionService(accessControlService, picurrent)
   local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
   self:addFacet("sessionService", sessionServiceInterface, sessionService)
 
   -- registra sua oferta de serviço junto ao Serviço de Registro
+  local offerType = self.config.sessionServiceOfferType
   local serviceOffer = {
-    type = "openbusidl/ss/ISessionService",
+    type = offerType,
     description = "Servico de Sessoes",
     properties = {},
     member = self,
   }
-  local registryService = self.accessControlService:getRegistryService()
+  local registryService = accessControlService:getRegistryService()
   if not registryService then
-    io.stderr:write("Servico de registro nao encontrado.\n")
-    self.accessControlService:logout(self.credential)
+    log:error("Servico de registro nao encontrado.\n")
+    self.connectionManager:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
@@ -83,8 +84,8 @@ function SessionServiceComponent:startup()
 
   success, self.registryIdentifier = registryService:register(serviceOffer);
   if not success then
-    io.stderr:write("Erro ao registrar o servico de sessao.\n")
-    self.accessControlService:logout(self.credential)
+    log:error("Erro ao registrar oferta do servico de sessao.\n")
+    self.connectionManager:disconntect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
@@ -98,12 +99,11 @@ function SessionServiceComponent:shutdown()
   end
   self.started = false
 
-  local registryService = self.accessControlService:getRegistryService()
+  local accessControlService = self.connectionManager:getAccessControlService()
+  local registryService = accessControlService:getRegistryService()
   registryService:unregister(self.registryIdentifier)
 
   self.connectionManager:disconnect()
-
-  self.accessControlService = nil
   self.connectionManager = nil
 
   self:removeFacets()
