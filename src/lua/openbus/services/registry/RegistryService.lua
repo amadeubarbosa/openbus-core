@@ -103,16 +103,17 @@ function RegistryService:createPropertyIndex(offerProperties, member)
     end 
   end
 
+  local memberName = member:getName()
+
   -- se não foi definida uma propriedade "facets", discriminando as facetas
   -- disponibilizadas, assume que todas as facetas do membro são oferecidas
   if not properties["facets"] then
-    log:service("Oferta de serviço sem facetas para o membro "..
-                 member:getName())
+    log:service("Oferta de serviço sem facetas para o membro "..memberName)
     local facet_descriptions = member:getFacets()
     if #facet_descriptions == 0 then
-      log:service("Membro "..member:getName().." não possui facetas")
+      log:service("Membro "..memberName.." não possui facetas")
     else
-      log:service("Membro "..member:getName().." possui facetas")
+      log:service("Membro "..memberName.." possui facetas")
       properties["facets"] = {}
       for _,facet in ipairs(facet_descriptions) do
         properties["facets"][facet.name] = true
@@ -290,6 +291,16 @@ function RegistryService:credentialWasDeleted(credential)
 end
 --
 -- Gera uma identificação de oferta de serviço
+--
 function RegistryService:generateIdentifier()
     return uuid.new("time")
+end
+
+--
+-- Finaliza o serviço
+--
+function RegistryService:shutdown()
+  if self.observerId then
+    self.observer:_deactivate()
+  end
 end

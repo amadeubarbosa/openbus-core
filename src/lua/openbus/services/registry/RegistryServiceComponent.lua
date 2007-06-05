@@ -29,6 +29,7 @@ function RegistryServiceComponent:__init(name)
 end
 
 function RegistryServiceComponent:startup()
+  log:service("Pedido de startup para serviço de registro")
   local credentialHolder = CredentialHolder()
   self.connectionManager = 
     ServiceConnectionManager(self.config.accessControlServerHost,
@@ -61,24 +62,29 @@ function RegistryServiceComponent:startup()
   end
 
   -- cria e instala a faceta servidora
-  local registryService = RegistryService(accessControlService, picurrent)
+  self.registryService = RegistryService(accessControlService, picurrent)
   local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
-  registryService = self:addFacet("registryService", registryServiceInterface,
-                                  registryService)
+  self:addFacet("registryService", registryServiceInterface,
+                self.registryService)
   accessControlService:setRegistryService(self)
 
   self.started = true
+  log:service("Serviço de registro iniciado")
 end
 
 function RegistryServiceComponent:shutdown()
+  log:service("Pedido de shutdown para serviço de registro")
   if not self.started then
     log:error("Servico ja foi finalizado.")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false
+ 
+  self.registryService:shutdown()
 
   self.connectionManager:disconnect()
   self.connectionManager = nil
 
   self:removeFacets()
+  log:service("Serviço de registro finalizado")
 end
