@@ -162,6 +162,9 @@ function AccessControlService:logout(credential)
       return false
     end
     self:removeEntry(entry)
+    if credential.entityName == "RegistryService" then
+      self.registryServiceComponent = nil
+    end
     return true
 end
 
