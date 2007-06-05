@@ -74,8 +74,6 @@ function AccessControlService:startup()
         else
           entry.lease.secondChance = true
         end
-      else
-        entry.lease.secondChance = false
       end
     end
   end
@@ -140,16 +138,10 @@ function AccessControlService:renewLease(credential)
     log:warn(credential.entityName .. " credencial inválida.")
     return false, self.invalidLease
   end
-  local lease = self.entries[credential.identifier].lease
-  local lastUpdate = lease.lastUpdate
-  local duration = lease.duration
   local now = os.time()
-  if (os.difftime (now, lastUpdate) > duration ) then
-    log:warn(credential.entityName .. " lease expirado: LOGOUT.")
-    self:logout(credential)
-    return false, self.invalidLease
-  end
-  self.entries[credential.identifier].lease.lastUpdate = now
+  local lease = self.entries[credential.identifier].lease
+  lease.lastUpdate = now
+  lease.secondChance = false
   -- Por enquanto deixa o lease com tempo fixo
   return true, self.deltaT
 end
