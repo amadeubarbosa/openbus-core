@@ -36,8 +36,8 @@ function RegistryServiceComponent:startup()
       self.config.accessControlServiceCertificateFile)
   
   -- obtém a referência para o Serviço de Controle de Acesso
-  self.accessControlService = self.connectionManager:getAccessControlService()
-  if self.accessControlService == nil then
+  local accessControlService = self.connectionManager:getAccessControlService()
+  if accessControlService == nil then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
@@ -51,7 +51,7 @@ function RegistryServiceComponent:startup()
   -- instala o interceptador servidor
   local picurrent = PICurrent()
   oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, picurrent, 
-                                             self.accessControlService))
+                                             accessControlService))
 
   -- autentica o serviço, conectando-o ao barramento
 
@@ -61,11 +61,11 @@ function RegistryServiceComponent:startup()
   end
 
   -- cria e instala a faceta servidora
-  local registryService = RegistryService(self.accessControlService, picurrent)
+  local registryService = RegistryService(accessControlService, picurrent)
   local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
   registryService = self:addFacet("registryService", registryServiceInterface,
                                   registryService)
-  self.accessControlService:setRegistryService(self)
+  accessControlService:setRegistryService(self)
 
   self.started = true
 end
@@ -78,8 +78,6 @@ function RegistryServiceComponent:shutdown()
   self.started = false
 
   self.connectionManager:disconnect()
-
-  self.accessControlService = nil
   self.connectionManager = nil
 
   self:removeFacets()
