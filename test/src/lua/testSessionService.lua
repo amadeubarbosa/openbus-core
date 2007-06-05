@@ -49,7 +49,7 @@ Suite = {
       registryService = registryService:getFacet(registryServiceInterface)
       registryService = oil.narrow(registryService, registryServiceInterface)
 
-      local serviceOffers = registryService:find("openbusidl/ss/ISessionService", {})
+      local serviceOffers = registryService:find("SessionService", {})
       Check.assertNotEquals(#serviceOffers, 0)
       local sessionServiceComponent = oil.narrow(serviceOffers[1].member, "IDL:openbusidl/ss/ISessionServiceComponent:1.0")
       local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
