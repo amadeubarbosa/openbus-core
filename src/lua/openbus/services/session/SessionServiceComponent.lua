@@ -31,7 +31,7 @@ end
 function SessionServiceComponent:startup()
   local credentialHolder = CredentialHolder()
   self.connectionManager = 
-    ServiceConnectionManager:__init(self.config.accessControlServerHost,
+    ServiceConnectionManager(self.config.accessControlServerHost,
       credentialHolder, self.config.privateKeyFile,
       self.config.accessControlServiceCertificateFile)
 
