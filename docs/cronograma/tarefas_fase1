@@ -136,6 +136,14 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 
       -> dependência 7.1
 
+  7.3 Serviço de Projetos (CSBASE)
+      - Permitir a navegação pelos componentes de um projeto sem a
+        necessidade de abrir este projeto. Deve ser possível também obter
+        informações sobre estes componentes (tamanho, tipo, permissões, etc.).
+      - Definir a forma de transferência dos dados de um arquivo.
+        Como exportar os dados de forma estruturada?
+        Devem ser criados canais específicos para cada tipo?
+
 8) CLIENTES BÁSICOS (C++, Java, Lua)
    ================
 
