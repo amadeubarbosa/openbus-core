@@ -12,6 +12,8 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
         Rodrigo vai verificar com Maia a compatibilização da nossa implementação
         de SCS Lua com a "oficial"
 
+    --> Previsão é fim de julho
+
   1.2 Nova implementação do OiL, com suporte a interceptadores
 
     --> FECHADO. Estamos usando a nova versão
@@ -20,6 +22,8 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
       infraestrutura provida pelo OiL
 
     --> FECHADO.
+
+  1.4 Geração de executáveis com bibliotecas estáticas para serviços Lua.
 
 2) DOCUMENTAÇÂO DO PROTÓTIPO (FASE 1)
    ==================================
@@ -40,11 +44,17 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   3.0 Implementação da biblioteca Lua para OpenSSL (Rodrigo)
     --> Está usando a nova versão da OpenSSL. Prazo estimado de duas (tres?)
         semanas para termos o binding para Lua
+    --> FECHADO
+    --> verificar status da versão 0.9.9.da OpenSSL (Rodrigo)
 
   3.1 Mecanismo de leasing (Cris)
       - definir o mecanismo
       - implementar o mecanismo de renovação para membro
       - implementar o mecanismo de renovação para serviço
+    --> FECHADO
+
+      - mecanismo para callback na falha de renovação (Cris)
+        --> em Lua, dependendo de solução de bug do OiL (Renato Maia)
 
   3.2 Interceptação de Requisições (Ana)
       - mecanismo para inclusão da credencial na requisição 
@@ -64,25 +74,28 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
          --> OK
 
         Será necessário implementar mecanismo para Java (uso PICurrent) e C++
+         --> Fechado para Java
 
 
   3.3 Mecanismo de log
- 
+      - equivalente ao "verbose" de Lua para Java (Rodrigo)
+      - C++ ?
 
 4) SERVIÇO DE ACESSO
    =================
 
   4.1 Mecanismo de persistência de credenciais (Rodrigo)
-
     --> FECHADO
 
   4.2 Incorporar o mecanismo de leasing
        -> dependência: 3.1
+       -> FECHADO (Versão preliminar, sem adaptação)
 
   4.3 Login via Certificado:
       - mecanismo de cadastro de certificados (Rodrigo)
       - incorporar a biblioteca (Lua) do openSSL (Rodrigo)
         -> dependência: 1.2
+      -> FECHADO
 
   4.4 Incorporar interceptador servidor (Ana)
       --> FECHADO 
@@ -92,32 +105,42 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
    ===================
 
   5.1 Mecanismo de persistência de ofertas de serviço
-      - preparar o repositório de ofertas para permitir o uso de um BD
-  
-      --> tarefa menos prioritaria, no momento
+      - persitência de ofertas semelhante à de credenciais (arquivo)
+        --> pensar em como persistir as referências a Membros
 
-  5.2 Incorporar mecanismo de leasing (cliente) (Cris ?)
+      - preparar o repositório de ofertas para permitir o uso de um BD
+        --> tarefa menos prioritaria, no momento
+
+  5.2 Incorporar mecanismo de leasing (cliente) (Cris)
+      --> FECHADO
 
   5.3 Incorporar interceptadores (Ana)
     --> FECHADO
 
   5.4 Autenticação via certificado
       -> dependência: 4.3
+      --> FECHADO
+
+  5.5 Transformar faceta RegistryService em interface do componente
 
 6) SERVIÇO DE SESSÃO
    =================
 
   6.1 Mecanismo de troca de mensagens entre membros de sessão (Ana)
+      --> Avaliar o serviço de eventos do SCS e sua interface
 
   6.2 Incorporar mecanismo de leasing (cliente/servidor)
       - manutenção de sessão + credencial
       -> dependências: 3.1 e 4.2
+
+    --> Avaliar se será feito nessa etapa
 
   6.3 Incorporar interceptadores (Ana)
     --> FECHADO
 
   6.4 Autenticação via certificado (Rodrigo)
       -> dependência: 4.3
+    --> FECHADO
      
 
 7) SERVIÇO DE PROJETOS
@@ -129,6 +152,7 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
       - incorporação de interceptadores
 
       -> dependências: 4, 5, 3.2, 3.1
+      --> FECHADO, extrair procedimento para biblioteca
 
   7.2 Implementação do serviço propriamente dito (JAVA/CSBASE)
       - Serviço de Dados
@@ -177,6 +201,12 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
      -> dependências: 8
   
   9.2 Construir bibliotecas para serviços: Java, C++
-      - procedimento comum a todos os serviços
+      - procedimento comum a todos os serviços:
+        ServerConnectionManager
+        Exportação de serviços
 
      -> dependências: 7
+
+10) TESTES GERAIS
+  10.1 Testes de "stress" dos serviços
+  10.2 Testes de falhas
