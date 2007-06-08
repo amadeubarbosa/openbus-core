@@ -154,8 +154,11 @@ function AccessControlService:logout(credential)
       return false
     end
     self:removeEntry(entry)
-    if credential.entityName == "RegistryService" then
-      self.registryServiceComponent = nil
+    if self.registryService then
+      if credential.entityName == "RegistryService" and
+          credential == self.registryService.credential then
+        self.registryService = nil
+      end
     end
     return true
 end
@@ -172,13 +175,16 @@ function AccessControlService:isValid(credential)
 end
 
 function AccessControlService:getRegistryService()
-    return self.registryServiceComponent
+    return self.registryService.component
 end
 
 function AccessControlService:setRegistryService(registryServiceComponent)
     local credential = self.picurrent:getValue()
     if credential.entityName == "RegistryService" then
-        self.registryServiceComponent = registryServiceComponent
+        self.registryService = {
+          credential = credential,
+          component = registryServiceComponent
+        }
         return true
     end
     return false
