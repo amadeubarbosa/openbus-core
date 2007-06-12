@@ -115,7 +115,14 @@ function SessionServiceComponent:shutdown()
 
   local accessControlService = self.connectionManager:getAccessControlService()
   local registryService = accessControlService:getRegistryService()
-  registryService:unregister(self.registryIdentifier)
+  if not registryService then
+    log:error("Serviço de registro não encontrado")
+  else
+    local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
+    registryService = registryService:getFacet(registryServiceInterface)
+    registryService = oil.narrow(registryService, registryServiceInterface)
+    registryService:unregister(self.registryIdentifier)
+  end
 
   self.sessionService:shutdown()
 
