@@ -29,29 +29,40 @@ function SessionServiceComponent:__init(name)
 end
 
 function SessionServiceComponent:startup()
-  local credentialHolder = CredentialHolder()
-  self.connectionManager = 
-    ServiceConnectionManager(self.config.accessControlServerHost,
-      credentialHolder, self.config.privateKeyFile,
-      self.config.accessControlServiceCertificateFile)
+  log:service("Pedido de startup para o serviço de sessão")
 
-  -- obtém a referência para o Serviço de Controle de Acesso
-  local accessControlService = self.connectionManager:getAccessControlService()
-  if accessControlService == nil then
-    error{"IDL:SCS/StartupFailed:1.0"}
+  -- Se é o primeiro startup, deve instanciar ConnectionManager e
+  -- instalar interceptadores
+  if not self.initialized then
+    log:service("Serviço de sessão está inicializando")      
+    local credentialHolder = CredentialHolder()
+    self.connectionManager = 
+      ServiceConnectionManager(self.config.accessControlServerHost,
+        credentialHolder, self.config.privateKeyFile,
+        self.config.accessControlServiceCertificateFile)
+
+    -- obtém a referência para o Serviço de Controle de Acesso
+    self.accessControlService = self.connectionManager:getAccessControlService()
+    if self.accessControlService == nil then
+      error{"IDL:SCS/StartupFailed:1.0"}
+    end
+
+    -- instala o interceptador cliente
+    local CONF_DIR = os.getenv("CONF_DIR")
+    local interceptorsConfig = 
+      assert(loadfile(CONF_DIR.."/advanced/SSInterceptorsConfiguration.lua"))()
+    oil.setclientinterceptor(
+      ClientInterceptor(interceptorsConfig, credentialHolder))
+
+    -- instala o interceptador servidor
+    self.picurrent = PICurrent()
+    oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, 
+                                               self.picurrent, 
+                                               self.accessControlService))
+    self.initialized = true
+  else
+    log:service("Serviço de sessão já foi inicializado")
   end
-
-  -- instala o interceptador cliente
-  local CONF_DIR = os.getenv("CONF_DIR")
-  local interceptorsConfig = 
-    assert(loadfile(CONF_DIR.."/advanced/SSInterceptorsConfiguration.lua"))()
-  oil.setclientinterceptor(
-    ClientInterceptor(interceptorsConfig, credentialHolder))
-
-  -- instala o interceptador servidor
-  local picurrent = PICurrent()
-  oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, picurrent, 
-                                             accessControlService))
 
   -- autentica o serviço, conectando-o ao barramento
   local success = self.connectionManager:connect(self.name)
@@ -60,9 +71,10 @@ function SessionServiceComponent:startup()
   end
 
   -- cria e instala a faceta servidora
-  local sessionService = SessionService(accessControlService, picurrent)
+  self.sessionService = SessionService(self.accessControlService, 
+                                       self.picurrent)
   local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
-  self:addFacet("sessionService", sessionServiceInterface, sessionService)
+  self:addFacet("sessionService", sessionServiceInterface, self.sessionService)
 
   -- registra sua oferta de serviço junto ao Serviço de Registro
   local offerType = self.config.sessionServiceOfferType
@@ -72,7 +84,7 @@ function SessionServiceComponent:startup()
     properties = {},
     member = self,
   }
-  local registryService = accessControlService:getRegistryService()
+  local registryService = self.accessControlService:getRegistryService()
   if not registryService then
     log:error("Servico de registro nao encontrado.\n")
     self.connectionManager:disconnect()
@@ -90,11 +102,13 @@ function SessionServiceComponent:startup()
   end
 
   self.started = true
+  log:service("Serviço de sessão iniciado")
 end
 
 function SessionServiceComponent:shutdown()
+  log:service("Pedido de shutdown para o serviço de sessão")
   if not self.started then
-    io.stderr:write("Servico ja foi finalizado.\n")
+    log:error("Servico ja foi finalizado.\n")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false
@@ -103,8 +117,10 @@ function SessionServiceComponent:shutdown()
   local registryService = accessControlService:getRegistryService()
   registryService:unregister(self.registryIdentifier)
 
+  self.sessionService:shutdown()
+
   self.connectionManager:disconnect()
-  self.connectionManager = nil
 
   self:removeFacets()
+  log:service("Serviço de sessão finalizado")
 end

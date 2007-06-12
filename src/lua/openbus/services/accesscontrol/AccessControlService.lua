@@ -238,7 +238,7 @@ function AccessControlService:removeCredentialFromObserver(observerIdentifier,
     if not observerEntry then
       return false
     end
-    observerEntry.credentials[credentialIdentifier] = false
+    observerEntry.credentials[credentialIdentifier] = nil
     if self.observersByCredential[credentialIdentifier] then
       self.observersByCredential[credentialIdentifier][observerIdentifier] = nil
     end
@@ -277,12 +277,14 @@ function AccessControlService:notifyCredentialWasDeleted(credential)
         return
     end
     for _, observerEntry in pairs(observers) do
+      observerEntry.credentials[credential.identifier] = nil
       local success, err = oil.pcall(observerEntry.observer.credentialWasDeleted, observerEntry.observer, credential)
       if not success then
         log:warn("Erro ao notificar um observador.")
         log:warn(err)
       end
     end
+    self.observersByCredential[credential.identifier] = nil
 end
 
 -- Shutdown do componente: ainda a implementar!!!

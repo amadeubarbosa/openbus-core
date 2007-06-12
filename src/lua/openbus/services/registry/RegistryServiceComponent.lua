@@ -30,43 +30,53 @@ end
 
 function RegistryServiceComponent:startup()
   log:service("Pedido de startup para serviço de registro")
-  local credentialHolder = CredentialHolder()
-  self.connectionManager = 
-    ServiceConnectionManager(self.config.accessControlServerHost,
-      credentialHolder, self.config.privateKeyFile, 
-      self.config.accessControlServiceCertificateFile)
+
+  -- Se é o primeiro startup, deve instanciar ConnectionManager e
+  -- instalar interceptadores
+  if not self.initialized then
+    log:service("Serviço de registro está inicializando")
+    local credentialHolder = CredentialHolder()
+    self.connectionManager = 
+      ServiceConnectionManager(self.config.accessControlServerHost,
+        credentialHolder, self.config.privateKeyFile, 
+        self.config.accessControlServiceCertificateFile)
   
-  -- obtém a referência para o Serviço de Controle de Acesso
-  local accessControlService = self.connectionManager:getAccessControlService()
-  if accessControlService == nil then
-    error{"IDL:SCS/StartupFailed:1.0"}
+    -- obtém a referência para o Serviço de Controle de Acesso
+    self.accessControlService = self.connectionManager:getAccessControlService()
+    if self.accessControlService == nil then
+      error{"IDL:SCS/StartupFailed:1.0"}
+    end
+
+    -- instala o interceptador cliente
+    local CONF_DIR = os.getenv("CONF_DIR")
+    local interceptorsConfig = 
+      assert(loadfile(CONF_DIR.."/advanced/RSInterceptorsConfiguration.lua"))()
+    oil.setclientinterceptor(
+      ClientInterceptor(interceptorsConfig, credentialHolder))
+
+    -- instala o interceptador servidor
+    self.picurrent = PICurrent()
+    oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, 
+                                               self.picurrent,
+                                               self.accessControlService))
+    self.initialized = true
+  else
+    log:service("Serviço de registro já foi inicializado")
   end
 
-  -- instala o interceptador cliente
-  local CONF_DIR = os.getenv("CONF_DIR")
-  local interceptorsConfig = 
-    assert(loadfile(CONF_DIR.."/advanced/RSInterceptorsConfiguration.lua"))()
-  oil.setclientinterceptor(
-    ClientInterceptor(interceptorsConfig, credentialHolder))
-
-  -- instala o interceptador servidor
-  local picurrent = PICurrent()
-  oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, picurrent, 
-                                             accessControlService))
-
   -- autentica o serviço, conectando-o ao barramento
-
   local success = self.connectionManager:connect(self.name)
   if not success then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
   -- cria e instala a faceta servidora
-  self.registryService = RegistryService(accessControlService, picurrent)
+  self.registryService = RegistryService(self.accessControlService, 
+                                         self.picurrent)
   local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
   self:addFacet("registryService", registryServiceInterface,
                 self.registryService)
-  accessControlService:setRegistryService(self)
+  self.accessControlService:setRegistryService(self)
 
   self.started = true
   log:service("Serviço de registro iniciado")
@@ -83,7 +93,6 @@ function RegistryServiceComponent:shutdown()
   self.registryService:shutdown()
 
   self.connectionManager:disconnect()
-  self.connectionManager = nil
 
   self:removeFacets()
   log:service("Serviço de registro finalizado")

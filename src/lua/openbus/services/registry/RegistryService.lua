@@ -284,10 +284,6 @@ function RegistryService:credentialWasDeleted(credential)
   else
     log:service("Não havia ofertas da credencial "..credential.identifier)
   end
-
-  -- Remove a credencial do conjunto observado
-  self.accessControlService:removeCredentialFromObserver(self.observerId,
-                                                         credential.identifier)
 end
 --
 -- Gera uma identificação de oferta de serviço
@@ -301,6 +297,7 @@ end
 --
 function RegistryService:shutdown()
   if self.observerId then
+    self.accessControlService:removeObserver(self.observerId)
     self.observer:_deactivate()
   end
 end

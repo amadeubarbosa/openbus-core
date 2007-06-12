@@ -71,10 +71,6 @@ function SessionService:credentialWasDeleted(credential)
   if self.sessions[credential.identifier] then
     self.sessions[credential.identifier] = nil
   end
-
-  -- Remove a credencial do conjunto observado
-  self.accessControlService:removeCredentialFromObserver(self.observerId,
-                                                        credential.identifier)
 end
 
 function SessionService:generateIdentifier()
@@ -91,4 +87,14 @@ function SessionService:getSession()
    log:warn("Não há sessão para "..credential.identifier)
   end
   return session
+end
+
+--
+-- Finaliza o serviço
+--
+function SessionService:shutdown()
+  if self.observerId then
+    self.accessControlService:removeObserver(self.observerId)
+    self.observer:_deactivate()
+  end
 end
