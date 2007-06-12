@@ -38,7 +38,7 @@ typedef Identifier RegistryIdentifier;
 /**
  * \brief Representa o serviço de registro.
  */
-interface IRegistryService {
+interface IRegistryService : IMember {
     /**
      * \brief Registra uma oferta de serviço.
      *
@@ -82,14 +82,6 @@ interface IRegistryService {
     ServiceOfferList find (in string type, in PropertyList criteria);
 };
 
-/**
- * \brief Membro que representa o serviço de registro.
- *
- * Facetas:
- * - RegistryService
- */
-interface IRegistryServiceComponent : IMember {
-};
 };
 };
 

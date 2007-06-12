@@ -44,9 +44,6 @@ Suite = {
       self.credentialHolder:setValue(self.credential)
 
       self.registryService = self.accessControlService:getRegistryService()
-      local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
-      self.registryService = self.registryService:getFacet(registryServiceInterface)
-      self.registryService = oil.narrow(self.registryService, registryServiceInterface)
     end,
 
     testRegister = function(self)

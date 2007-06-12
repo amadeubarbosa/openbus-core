@@ -45,9 +45,6 @@ Suite = {
       self.credentialHolder:setValue(self.credential)
 
       local registryService = self.accessControlService:getRegistryService()
-      local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
-      registryService = registryService:getFacet(registryServiceInterface)
-      registryService = oil.narrow(registryService, registryServiceInterface)
 
       local serviceOffers = registryService:find("SessionService", {})
       Check.assertNotEquals(#serviceOffers, 0)

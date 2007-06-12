@@ -90,9 +90,6 @@ function SessionServiceComponent:startup()
     self.connectionManager:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
-  local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
-  registryService = registryService:getFacet(registryServiceInterface)
-  registryService = oil.narrow(registryService, registryServiceInterface)
 
   success, self.registryIdentifier = registryService:register(serviceOffer);
   if not success then
@@ -118,9 +115,6 @@ function SessionServiceComponent:shutdown()
   if not registryService then
     log:error("Serviço de registro não encontrado")
   else
-    local registryServiceInterface = "IDL:openbusidl/rs/IRegistryService:1.0"
-    registryService = registryService:getFacet(registryServiceInterface)
-    registryService = oil.narrow(registryService, registryServiceInterface)
     registryService:unregister(self.registryIdentifier)
   end
 
