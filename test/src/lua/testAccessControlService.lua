@@ -94,7 +94,7 @@ Suite = {
 
     beforeEachTest = function(self)
       _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
-    self.credentialHolder:setValue(self.credential)
+      self.credentialHolder:setValue(self.credential)
     end,
 
     afterEachTest = function(self)
@@ -132,6 +132,25 @@ Suite = {
       Check.assertNotEquals("", observerIdentifier)
       Check.assertTrue(self.accessControlService:removeObserver(observerIdentifier))
       Check.assertFalse(self.accessControlService:removeObserver(observerIdentifier))
+    end,
+
+    testObserversLogout = function(self)
+      local credentialObserver = { credential = self.credential }
+      function credentialObserver:credentialWasDeleted(credential)
+        Check.assertEquals(self.credential, credential)
+      end
+      credentialObserver = oil.newobject(credentialObserver, "IDL:openbusidl/acs/ICredentialObserver:1.0")
+      local observersId = {}
+      for i=1,3 do
+        observersId[i] = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
+      end
+      self.accessControlService:logout(self.credential)
+      self.credentialHolder:invalidate()
+      _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
+      self.credentialHolder:setValue(self.credential)
+      for i=1,3 do
+        Check.assertFalse(self.accessControlService:removeObserver(observersId[i]))
+      end
     end,
   },
 }

@@ -175,7 +175,10 @@ function AccessControlService:isValid(credential)
 end
 
 function AccessControlService:getRegistryService()
-  return self.registryService.component
+  if self.registryService then
+    return self.registryService.component
+  end
+  return nil
 end
 
 function AccessControlService:setRegistryService(registryServiceComponent)
@@ -271,7 +274,18 @@ function AccessControlService:removeEntry(entry)
   log:service("Vai notificar aos observadores...")
   self:notifyCredentialWasDeleted(entry.credential)
   log:service("Observadores notificados...")
+  self:removeObservers(entry.credential)
   self.credentialDB:delete(entry)
+end
+
+function AccessControlService:removeObservers(credential)
+  local observers = self.observersByCredential[credential.identifier]
+  if not observers then
+    return
+  end
+  for observerId in pairs(observers) do
+    self:removeObserver(observerId)
+  end
 end
 
 function AccessControlService:notifyCredentialWasDeleted(credential)
@@ -289,7 +303,6 @@ function AccessControlService:notifyCredentialWasDeleted(credential)
       log:warn(err)
     end
   end
-  self.observersByCredential[credential.identifier] = nil
 end
 
 -- Shutdown do componente: ainda a implementar!!!
