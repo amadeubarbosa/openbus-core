@@ -1,5 +1,3 @@
-SHELL := bash
-
 all:
 	@(cd src; tecmake)
 

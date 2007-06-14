@@ -11,9 +11,15 @@
 #define lua_c
 
 #include "lua.h"
-
-#include "lauxlib.h"
 #include "lualib.h"
+#include "lauxlib.h"
+#include "luasocket.h"
+#include "oilall.h"
+#include "luuid.h"
+#ifdef ACCESS_CONTROL_SERVICE
+  #include "lposix.h"
+  #include "lualdap.h"
+#endif
 
 static lua_State *globalL = NULL;
 
@@ -106,6 +112,14 @@ static int pmain (lua_State *L) {
   if (argv[0] && argv[0][0]) progname = argv[0];
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   luaL_openlibs(L);  /* open libraries */
+  /* Inicialização do OiL */
+  luaopen_socket_core(L);
+  luapreload_oilall(L);
+  luaopen_uuid(L);
+#ifdef ACCESS_CONTROL_SERVICE
+  luaopen_posix(L);
+  luaopen_lualdap(L);
+#endif
   lua_gc(L, LUA_GCRESTART, 0);
   dofile(L, LUA_FILE);
   return 0;
