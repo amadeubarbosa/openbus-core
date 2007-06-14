@@ -153,5 +153,19 @@ Suite = {
         Check.assertFalse(self.accessControlService:removeCredentialFromObserver(observersId[i], oldCredential.identifier))
       end
     end,
+
+    testObserversLogout2 = function(self)
+      local credentialObserver = { credential = self.credential }
+      function credentialObserver:credentialWasDeleted(credential)
+        Check.assertEquals(self.credential.identifier, credential.identifier)
+      end
+      credentialObserver = oil.newobject(credentialObserver, "IDL:openbusidl/acs/ICredentialObserver:1.0")
+      local observerId = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
+      self.accessControlService:logout(self.credential)
+      self.credentialHolder:invalidate()
+      _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
+      self.credentialHolder:setValue(self.credential)
+      Check.assertFalse(self.accessControlService:removeObserver(observerId))
+    end,
   },
 }

@@ -197,22 +197,12 @@ function AccessControlService:addObserver(observer, credentialIdentifiers)
   local observerEntry = {observer = observer, credentials = {}}
   self.observers[observerId] = observerEntry
   for _, credentialId in ipairs(credentialIdentifiers) do
-    self.entries[credentialId].observers[observerId] = true
+    self.entries[credentialId].observedBy[observerId] = true
     observerEntry.credentials[credentialId] = true
   end
+  local credential = self.picurrent:getValue()
+  self.entries[credential.identifier].observers[observerId] = true
   return observerId
-end
-
-function AccessControlService:removeObserver(observerIdentifier)
-  local observerEntry = self.observers[observerIdentifier]
-  if not observerEntry then
-    return false
-  end
-  for credentialId in pairs(observerEntry.credentials) do
-    self.entries[credentialId].observers[observerIdentifier] = nil
-  end
-  self.observers[observerIdentifier] = nil
-  return true
 end
 
 function AccessControlService:addCredentialToObserver(observerIdentifier, credentialIdentifier)
@@ -221,7 +211,21 @@ function AccessControlService:addCredentialToObserver(observerIdentifier, creden
     return false
   end
   observerEntry.credentials[credentialIdentifier] = true
-  self.entries[credentialIdentifier].observers[observerIdentifier] = true
+  self.entries[credentialIdentifier].observedBy[observerIdentifier] = true
+  return true
+end
+
+function AccessControlService:removeObserver(observerIdentifier, credential)
+  local observerEntry = self.observers[observerIdentifier]
+  if not observerEntry then
+    return false
+  end
+  for credentialId in pairs(observerEntry.credentials) do
+    self.entries[credentialId].observedBy[observerIdentifier] = nil
+  end
+  self.observers[observerIdentifier] = nil
+  credential = credential or self.picurrent:getValue()
+  self.entries[credential.identifier].observers[observerIdentifier] = nil
   return true
 end
 
@@ -236,7 +240,7 @@ function AccessControlService:removeCredentialFromObserver(observerIdentifier,
   if not entry then
     return false
   end
-  entry.observers[observerIdentifier] = nil
+  entry.observedBy[observerIdentifier] = nil
   return true
 end
 
@@ -246,8 +250,12 @@ function AccessControlService:addEntry(name)
     entityName = name
   }
   local duration = self.deltaT
-  local lease = { lastUpdate = os.time(), duration = duration}
-  entry = {credential = credential, lease = lease, observers = {}}
+  local lease = { lastUpdate = os.time(), duration = duration }
+  entry = { credential = credential,
+            lease = lease,
+            observers = {},
+            observedBy = {}
+  }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
   return entry
@@ -262,20 +270,20 @@ function AccessControlService:generateObserverIdentifier()
 end
 
 function AccessControlService:removeEntry(entry)
-  self:notifyCredentialWasDeleted(entry.credential)
-  self:removeObservers(entry.credential)
-  self.entries[entry.credential.identifier] = nil
+  local credential = entry.credential
+  self:notifyCredentialWasDeleted(credential)
+  for observerId in pairs(self.entries[credential.identifier].observers) do
+    self:removeObserver(observerId, credential)
+  end
+  for observerId in pairs(self.entries[credential.identifier].observedBy) do
+    self:removeCredentialFromObserver(observerId, credential.identifier)
+  end
+  self.entries[credential.identifier] = nil
   self.credentialDB:delete(entry)
 end
 
-function AccessControlService:removeObservers(credential)
-  for observerId in pairs(self.entries[credential.identifier].observers) do
-    self:removeCredentialFromObserver(observerId, credential.identifier)
-  end
-end
-
 function AccessControlService:notifyCredentialWasDeleted(credential)
-  for observerId in pairs(self.entries[credential.identifier].observers) do
+  for observerId in pairs(self.entries[credential.identifier].observedBy) do
     local observerEntry = self.observers[observerId]
     local success, err =
       oil.pcall(observerEntry.observer.credentialWasDeleted, 
