@@ -30,8 +30,7 @@ function AccessControlService:__init(name)
   local obj = { name = name,
                 config = AccessControlServerConfiguration,
                 entries = {},
-                observersByIdentifier = {},
-                observersByCredential = {},
+                observers = {},
                 challenges = {},
                 picurrent = PICurrent(),
               }
@@ -156,7 +155,7 @@ function AccessControlService:logout(credential)
   self:removeEntry(entry)
   if self.registryService then
     if credential.entityName == "RegistryService" and
-        credential == self.registryService.credential then
+        credential.identifier == self.registryService.credential.identifier then
       self.registryService = nil
     end
   end
@@ -196,55 +195,48 @@ end
 function AccessControlService:addObserver(observer, credentialIdentifiers)
   local observerId = self:generateObserverIdentifier()
   local observerEntry = {observer = observer, credentials = {}}
-  self.observersByIdentifier[observerId] = observerEntry
+  self.observers[observerId] = observerEntry
   for _, credentialId in ipairs(credentialIdentifiers) do
+    self.entries[credentialId].observers[observerId] = true
     observerEntry.credentials[credentialId] = true
-    if not self.observersByCredential[credentialId] then
-      self.observersByCredential[credentialId] = {}
-    end
-    self.observersByCredential[credentialId][observerId] = observerEntry
   end
   return observerId
 end
 
 function AccessControlService:removeObserver(observerIdentifier)
-  local observerEntry = self.observersByIdentifier[observerIdentifier]
+  local observerEntry = self.observers[observerIdentifier]
   if not observerEntry then
     return false
   end
   for credentialId in pairs(observerEntry.credentials) do
-    if self.observersByCredential[credentialId] then
-      self.observersByCredential[credentialId][observerIdentifier] = nil
-    end
+    self.entries[credentialId].observers[observerIdentifier] = nil
   end
-  self.observersByIdentifier[observerIdentifier] = nil
+  self.observers[observerIdentifier] = nil
   return true
 end
 
 function AccessControlService:addCredentialToObserver(observerIdentifier, credentialIdentifier)
-  local observerEntry = self.observersByIdentifier[observerIdentifier]
+  local observerEntry = self.observers[observerIdentifier]
   if not observerEntry then
     return false
   end
   observerEntry.credentials[credentialIdentifier] = true
-  if not self.observersByCredential[credentialIdentifier] then
-    self.observersByCredential[credentialIdentifier] = {}
-  end
-  self.observersByCredential[credentialIdentifier][observerIdentifier] =
-    observerEntry
+  self.entries[credentialIdentifier].observers[observerIdentifier] = true
   return true
 end
 
 function AccessControlService:removeCredentialFromObserver(observerIdentifier,
                                                            credentialIdentifier)
-  local observerEntry = self.observersByIdentifier[observerIdentifier]
+  local observerEntry = self.observers[observerIdentifier]
   if not observerEntry then
     return false
   end
   observerEntry.credentials[credentialIdentifier] = nil
-  if self.observersByCredential[credentialIdentifier] then
-    self.observersByCredential[credentialIdentifier][observerIdentifier] = nil
+  local entry = self.entries[credentialIdentifier]
+  if not entry then
+    return false
   end
+  entry.observers[observerIdentifier] = nil
   return true
 end
 
@@ -255,7 +247,7 @@ function AccessControlService:addEntry(name)
   }
   local duration = self.deltaT
   local lease = { lastUpdate = os.time(), duration = duration}
-  entry = {credential = credential, lease = lease}
+  entry = {credential = credential, lease = lease, observers = {}}
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
   return entry
@@ -270,32 +262,22 @@ function AccessControlService:generateObserverIdentifier()
 end
 
 function AccessControlService:removeEntry(entry)
-  self.entries[entry.credential.identifier] = nil
-  log:service("Vai notificar aos observadores...")
   self:notifyCredentialWasDeleted(entry.credential)
-  log:service("Observadores notificados...")
   self:removeObservers(entry.credential)
+  self.entries[entry.credential.identifier] = nil
   self.credentialDB:delete(entry)
 end
 
 function AccessControlService:removeObservers(credential)
-  local observers = self.observersByCredential[credential.identifier]
-  if not observers then
-    return
-  end
-  for observerId in pairs(observers) do
-    self:removeObserver(observerId)
+  for observerId in pairs(self.entries[credential.identifier].observers) do
+    self:removeCredentialFromObserver(observerId, credential.identifier)
   end
 end
 
 function AccessControlService:notifyCredentialWasDeleted(credential)
-  local observers = self.observersByCredential[credential.identifier]
-  if not observers then
-    return
-  end
-  for _, observerEntry in pairs(observers) do
-    observerEntry.credentials[credential.identifier] = nil
-    local success, err = 
+  for observerId in pairs(self.entries[credential.identifier].observers) do
+    local observerEntry = self.observers[observerId]
+    local success, err =
       oil.pcall(observerEntry.observer.credentialWasDeleted, 
                 observerEntry.observer, credential)
     if not success then
