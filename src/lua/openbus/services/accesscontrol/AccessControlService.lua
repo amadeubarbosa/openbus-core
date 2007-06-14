@@ -50,7 +50,7 @@ function AccessControlService:startup()
   -- inicializa repositorio de credenciais
   self.privateKey = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
   self.credentialDB = CredentialDB(self.config.databaseDirectory)
-  local entriesDB = self.credentialDB:selectAll()
+  local entriesDB = self.credentialDB:retrieveAll()
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
     self.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?

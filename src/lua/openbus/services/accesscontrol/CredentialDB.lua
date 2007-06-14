@@ -13,68 +13,68 @@ local FILE_SUFFIX = ".credential"
 local FILE_SEPARATOR = "/"
 
 CredentialDB = oop.class{
-  entries = {},
+  credentials = {},
 }
 
 function CredentialDB:__init(databaseDirectory)
-  local credentialFiles = posix.dir(databaseDirectory)
-  if credentialFiles == nil then
+  self = oop.rawnew(self, {databaseDirectory = databaseDirectory,})
+  if not posix.dir(databaseDirectory) then
     log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. Criando...")
     local status, errorMessage = posix.mkdir(databaseDirectory)
     if not status then
       log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
       error(errorMessage)
-    else
-      credentialFiles = {}
-    end
-  end
-  self = oop.rawnew(self, {databaseDirectory = databaseDirectory,})
-  for _, fileName in ipairs(credentialFiles) do
-    if string.sub(fileName, -(#FILE_SUFFIX)) == FILE_SUFFIX then
-      local entry = dofile(databaseDirectory..FILE_SEPARATOR..fileName)
-      local credential = entry.credential
-      self.entries[credential.identifier] = entry
     end
   end
   return self
 end
 
+function CredentialDB:retrieveAll()
+  local credentialFiles = posix.dir(self.databaseDirectory)
+  local entries = {}
+  for _, fileName in ipairs(credentialFiles) do
+    if string.sub(fileName, -(#FILE_SUFFIX)) == FILE_SUFFIX then
+      local entry = dofile(self.databaseDirectory..FILE_SEPARATOR..fileName)
+      local credential = entry.credential
+      self.credentials[credential.identifier] = true
+      entries[credential.identifier] = entry
+    end
+  end
+  return entries
+end
+
 function CredentialDB:insert(entry)
   local credential = entry.credential
-  if self.entries[credential.identifier] then
+  if self.credentials[credential.identifier] then
     return false, "A credencial especificada ja existe."
   end
   local status, errorMessage = self:writeCredential(entry)
   if not status then
     return false, errorMessage
   end
-  self.entries[credential.identifier] = self:dupEntry(entry)
+  self.credentials[credential.identifier] = true
   return true
 end
 
 function CredentialDB:update(entry)
   local credential = entry.credential
-  if not self.entries[credential.identifier] then
-    return false, "A credencial especificada nao existe."
+  if not self.credentials[credential.identifier] then
+    return false, "A credencial especificada n„o existe."
   end
   return self:writeCredential(entry)
 end
 
 function CredentialDB:delete(entry)
   local credential = entry.credential
-  if not self.entries[credential.identifier] then
-    return false, "A credencial especificada n√£o existe."
+  if not self.credentials[credential.identifier] then
+    return false, "A credencial especificada n„o existe."
   end
   local status, errorMessage = self:removeCredential(entry)
   if not status then
     return false, errorMessage
   end
-  self.entries[credential.identifier] = nil
+  self.credentials[credential.identifier] = nil
   return true
-end
-
-function CredentialDB:selectAll()
-  return self.entries
 end
 
 ---------------------------------------------------------------------
@@ -101,20 +101,6 @@ function CredentialDB:toString(val)
   else -- if not tab then
     return "nil"
   end
-end
-
----------------------------------------------------------------------
--- Duplica uma entrada
----------------------------------------------------------------------
-function CredentialDB:dupEntry(entry)
-  if type(entry) ~= "table" then
-    return entry
-  end
-  local new_entry = {}
-  for i, v in pairs(entry) do
-    new_entry[i] = self:dupEntry(v)
-  end
-  return new_entry
 end
 
 function CredentialDB:writeCredential(entry)
