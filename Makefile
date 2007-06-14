@@ -11,41 +11,13 @@ ACCESS_CONTROL_SERVICE_DIR=$(COMPONENTS_DIR)/access_control_service
 REGISTRY_SERVICE_DIR=$(COMPONENTS_DIR)/registry_service
 SESSION_SERVICE_DIR=$(COMPONENTS_DIR)/session_service
 
-#install: install_bin \
-#         install_conf \
-#         install_corba_idl \
-#         install_core \
-#         install_components
-#
-#install_bin:
-#	mkdir -p $(BIN_DIR)
-#	cp bin/*.sh $(BIN_DIR)
-#
-#install_conf:
-#	mkdir -p $(CONF_DIR)
-#	cp conf/*.lua $(CONF_DIR)
-#
-#install_corba_idl:
-#	mkdir -p $(CORBA_IDL_DIR)
-#	cp `find src -name '*.idl'` $(CORBA_IDL_DIR)
-#
-#install_core:
-#	mkdir -p $(CORE_DIR)
-#	cp conf/config $(CONF_DIR)
-#	cp src/core/lua/*.lua $(CORE_DIR)
-#
-#install_components:
-#	mkdir -p $(ACCESS_CONTROL_SERVICE_DIR)
-#	cp `find src/components/access_control_service -name '*.lua'` $(ACCESS_CONTROL_SERVICE_DIR)
-#	mkdir -p $(REGISTRY_SERVICE_DIR)
-#	cp `find src/components/registry_service -name '*.lua'` $(REGISTRY_SERVICE_DIR)
-#	mkdir -p $(SESSION_SERVICE_DIR)
-#	cp `find src/components/session_service -name '*.lua'` $(SESSION_SERVICE_DIR)
+all: libs bins idl
 
-all: clean libs idl
+rebuild: clean libs bins idl
 
-clean: clean-libs
+clean: clean-libs clean-bins
 	@rm -rf ${OPENBUS_HOME}/libpath
+#	@rm -rf ${OPENBUS_HOME}/bin
 	@rm -rf $(CORBA_IDL_DIR)
 
 #reinstall:	clean	install
@@ -66,4 +38,24 @@ libs:
 	@(for lib_dir in lib/lua/* ; do \
 		echo ; echo "Compilando $$lib_dir " ; \
 		( cd $$lib_dir ; make ); \
+	done)
+
+clean-bins:
+	@cd src ; (for service in lua/openbus/services/* ; do \
+        export mkfile=`echo $$service | cut -d/ -f4` ; \
+		if  test -e $$mkfile.mak ;  then \
+			echo ; echo "Limpando serviço $$service" ; \
+#			tecmake MF=$$mkfile clean ; \
+			`which tecmake` MF=$$mkfile clean ; \
+        fi \
+	done)
+
+bins:
+	@cd src ; (for service in lua/openbus/services/* ; do \
+        export mkfile=`echo $$service | cut -d/ -f4` ; \
+		if  test -e $$mkfile.mak ;  then \
+			echo ; echo "Compilando serviço $$service" ; \
+#			tecmake MF=$$mkfile; \
+			`which tecmake` MF=$$mkfile; \
+        fi \
 	done)
