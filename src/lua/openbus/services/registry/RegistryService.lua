@@ -8,6 +8,7 @@ require "oil"
 require "uuid"
 
 require "openbus.Member"
+require "openbus.services.registry.OffersDB"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
@@ -65,6 +66,9 @@ function RegistryService:startup()
     oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, 
                                                self.picurrent,
                                                self.accessControlService))
+
+    -- instancia mecanismo de persistencia
+    self.offersDB = OffersDB(self.config.databaseDirectory)
     self.initialized = true
   else
     log:service("Serviço de registro já foi inicializado")
@@ -83,6 +87,29 @@ function RegistryService:startup()
 
   -- atualiza a referência junto ao serviço de controle de acesso
   self.accessControlService:setRegistryService(self)
+
+  -- registra um observador de credenciais
+  local observer = {
+    registryService = self,
+    credentialWasDeleted = function(self, credential)
+      log:service("Observador notificado para credencial "..
+                  credential.identifier)
+      self.registryService:credentialWasDeleted(credential)
+    end
+  }
+  self.observer = oil.newobject(observer,
+                                "IDL:openbusidl/acs/ICredentialObserver:1.0",
+                                "RegistryServiceCredentialObserver")
+  self.observerId =
+    self.accessControlService:addObserver(self.observer, {})
+  log:service("Cadastrado observador para a credencial")
+
+  -- recupera ofertas persistidas
+  log:service("Recuperando ofertas persistidas")
+  local offerEntriesDB = self.offersDB:retrieveAll()
+  for _, offerEntry in pairs(offerEntriesDB) do
+    self:addOffer(offerEntry)
+  end
 
   self.started = true
   log:service("Serviço de registro iniciado")
@@ -112,8 +139,19 @@ function RegistryService:register(serviceOffer)
   log:service("Registrando oferta com tipo "..serviceOffer.type..
               " id "..identifier)
 
+  self:addOffer(offerEntry)
+  self.offersDB:insert(offerEntry)
+
+  return true, identifier
+end
+
+--
+-- Adiciona uma oferta ao repositório
+--
+function RegistryService:addOffer(offerEntry)
+  
   -- Índice de ofertas por identificador
-  self.offersByIdentifier[identifier] = offerEntry
+  self.offersByIdentifier[offerEntry.identifier] = offerEntry
 
   -- Índice de ofertas por tipo
   local type = offerEntry.offer.type
@@ -121,40 +159,22 @@ function RegistryService:register(serviceOffer)
     log:service("Primeira oferta do tipo "..type)
     self.offersByType[type] = {}
   end
-  self.offersByType[type][identifier] = offerEntry
+  self.offersByType[type][offerEntry.identifier] = offerEntry
 
   -- Índice de ofertas por credencial
+  local credential = offerEntry.credential
   if not self.offersByCredential[credential.identifier] then
     log:service("Primeira oferta da credencial "..credential.identifier)
     self.offersByCredential[credential.identifier] = {}
   end
-  self.offersByCredential[credential.identifier][identifier] = offerEntry
+  self.offersByCredential[credential.identifier][offerEntry.identifier] = 
+    offerEntry
 
   -- A credencial deve ser observada, porque se for deletada as
   -- ofertas a ela relacionadas devem ser removidas
-  if not self.observerId then
-    local observer = {
-      registryService = self,
-      credentialWasDeleted = function(self, credential)
-        log:service("Observador notificado para credencial "..
-                    credential.identifier)
-        self.registryService:credentialWasDeleted(credential)
-      end
-    }
-    self.observer = oil.newobject(observer,
-                                  "IDL:openbusidl/acs/ICredentialObserver:1.0",
-                                  "RegistryServiceCredentialObserver")
-    self.observerId =
-      self.accessControlService:addObserver(self.observer,
-                                            {credential.identifier})
-    log:service("Cadastrado observador para a credencial")
-  else
-    self.accessControlService:addCredentialToObserver(self.observerId,
-                                                      credential.identifier)
-    log:service("Adicionada credencial no observador")
-  end
-
-  return true, identifier
+  self.accessControlService:addCredentialToObserver(self.observerId,
+                                                    credential.identifier)
+  log:service("Adicionada credencial no observador")
 end
 
 -- Constrói um conjunto com os valores das propriedades, para acelerar a busca
@@ -237,6 +257,7 @@ function RegistryService:unregister(identifier)
     self.accessControlService:removeCredentialFromObserver(self.observerId,
                                                          credential.identifier)
   end
+  self.offersDB:delete(offerEntry)
   return true
 end
 
@@ -265,6 +286,7 @@ function RegistryService:update(identifier, properties)
   offerEntry.offer.properties = properties
   offerEntry.properties = self:createPropertyIndex(properties,
                                                    offerEntry.offer.member)
+  self.offersDB:update(offerEntry)
   return true
 end
 
@@ -345,6 +367,7 @@ function RegistryService:credentialWasDeleted(credential)
           self.offersByType[type] = nil
         end
       end
+      self.offersDB:delete(offerEntry)
     end
   else
     log:service("Não havia ofertas da credencial "..credential.identifier)
