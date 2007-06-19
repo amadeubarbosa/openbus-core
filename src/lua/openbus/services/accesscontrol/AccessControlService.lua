@@ -206,6 +206,10 @@ function AccessControlService:addObserver(observer, credentialIdentifiers)
 end
 
 function AccessControlService:addCredentialToObserver(observerIdentifier, credentialIdentifier)
+  if not self.entries[credentialIdentifier] then
+    return false
+  end
+
   local observerEntry = self.observers[observerIdentifier]
   if not observerEntry then
     return false
