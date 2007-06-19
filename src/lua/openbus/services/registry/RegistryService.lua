@@ -108,7 +108,13 @@ function RegistryService:startup()
   log:service("Recuperando ofertas persistidas")
   local offerEntriesDB = self.offersDB:retrieveAll()
   for _, offerEntry in pairs(offerEntriesDB) do
-    self:addOffer(offerEntry)
+    -- somente recupera ofertas de credenciais válidas
+    if self.accessControlService:isValid(offerEntry.credential) then
+      self:addOffer(offerEntry)
+    else
+      log:service("Oferta de "..offerEntry.credential.identifier.." descartada")
+      self.offersDB:delete(offerEntry)
+    end
   end
 
   self.started = true
