@@ -90,6 +90,31 @@ function SessionService:getSession()
 end
 
 --
+-- Procedimento após a reconexão do serviço
+--
+function SessionService:wasReconnected()
+
+  -- registra novamente o observador de credenciais
+  self.observerId = self.accessControlService:addObserver(self.observer, {})
+  log:service("Observador recadastrado")
+
+  -- Mantém apenas as sessões com credenciais válidas
+  local invalidCredentials = {}
+  for credentialId, session in pairs(self.sessions) do
+    if not self.accessService.addCredentialToObserver(self.observerId,
+                                                      credentialId) then
+      log:service("Sessão para "..credentialId.." será removida")
+      table.insert(invalidCredentials, credentialId)
+    else
+      log:service("Sessão para "..credentialId.." será mantida")
+    end
+  end
+  for _, credentialId in ipairs(invalidCredentials) do
+    self.sessions[credentialId] = nil
+  end
+end
+
+--
 -- Finaliza o serviço
 --
 function SessionService:shutdown()

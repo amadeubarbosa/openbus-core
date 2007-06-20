@@ -80,7 +80,8 @@ function RegistryService:startup()
   self. offersByCredential = {}  -- credencial -> id -> oferta
 
   -- autentica o serviço, conectando-o ao barramento
-  local success = self.connectionManager:connect(self.name)
+  local success = self.connectionManager:connect(self.name,
+    function() self.wasReconnected(self) end)
   if not success then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
@@ -385,6 +386,40 @@ end
 --
 function RegistryService:generateIdentifier()
     return uuid.new("time")
+end
+
+--
+-- Procedimento após reconexão do serviço
+--
+function RegistryService:wasReconnected()
+ log:service("Serviço de registro foi reconectado")
+ -- atualiza a referência junto ao serviço de controle de acesso
+  self.accessControlService:setRegistryService(self)
+
+  -- registra novamente o observador de credenciais
+  self.observerId =
+    self.accessControlService:addObserver(self.observer, {})
+ log:service("Observador recadastrado")
+
+  -- Mantem no repositorio apenas ofertas com credenciais válidas
+  local offerEntries = self.offersByIdentifier
+  local credentials = {}
+  for _, offerEntry in pairs(offerEntries) do
+    credentials[offerEntry.credential.identifier] = offerEntry.credential
+  end
+  local invalidCredentials = {}
+  for credentialId, credential in pairs(credentials) do
+    if not self.accessControlService:addCredentialToObserver(self.observerId,
+                                                            credentialId) then
+      log:service("Ofertas de "..credentialId.." serão removidas")
+      table.insert(invalidCredentials, credential)
+    else
+      log:service("Ofertas de "..credentialId.." serão mantidas")
+    end
+  end
+  for _, credential in ipairs(invalidCredentials) do
+    self:credentialWasDeleted(credential)
+  end
 end
 
 --
