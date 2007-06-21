@@ -1,4 +1,3 @@
-
 FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 -----------------------------------------
 
@@ -8,33 +7,32 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   1.1 Implementação do SCS (funcionalidade básica IComponent, IMetaInterface)
       - Java, C++, Lua
 
-    --> Verificar com Renato a alocação de alunos e prazos:
-        Rodrigo vai verificar com Maia a compatibilização da nossa implementação
-        de SCS Lua com a "oficial"
+    --> Temos a nossa implementação (simplificada) para Lua e Java (Rodrigo)
+*       --> Em aberto C++
 
-    --> Previsão é fim de julho
+    --> Segundo Renato Cerq previsão para implementação de seus alunos é
+        fim de julho
 
-  1.2 Nova implementação do OiL, com suporte a interceptadores
-
+  1.2 Nova implementação do OiL, com suporte a interceptadores (Maia)
     --> FECHADO. Estamos usando a nova versão
 
   1.3 Incorporar mecanismo de "verbose" para os serviços em Lua utilizando a 
-      infraestrutura provida pelo OiL
-
+      infraestrutura provida pelo OiL (Ana)
     --> FECHADO.
 
-  1.4 Geração de executáveis com bibliotecas estáticas para serviços Lua.
+  1.4 Geração de executáveis com bibliotecas estáticas para serviços Lua (Cris)
+    --> FECHADO.
 
 2) DOCUMENTAÇÂO DO PROTÓTIPO (FASE 1)
    ==================================
 
-  2.1 Finalizar Documentação Preliminar (Ana, Cris, Rodrigo)
+* 2.1 Finalizar Documentação Preliminar (Ana, Cris, Rodrigo)
       - Mecanismos e Serviços Básicos, Serviço de Projetos, Casos de Usos
 
     --> FECHADO. O documento pode ir sendo atualizada à medida que as
         implementações forem sendo desenvolvidas
 
-  2.2 Complementação da Documentação
+* 2.2 Complementação da Documentação
       -> várias dependências
    
 
@@ -42,44 +40,55 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
    ===============================
 
   3.0 Implementação da biblioteca Lua para OpenSSL (Rodrigo)
-    --> Está usando a nova versão da OpenSSL. Prazo estimado de duas (tres?)
-        semanas para termos o binding para Lua
+    --> Está usando a nova versão da OpenSSL.
     --> FECHADO
-    --> verificar status da versão 0.9.9.da OpenSSL (Rodrigo)
 
-  3.1 Mecanismo de leasing (Cris)
+    --> verificar status da versão 0.9.9.da OpenSSL
+    --> Ainda não é oficial
+
+  3.1 Mecanismo de leasing
       - definir o mecanismo
-      - implementar o mecanismo de renovação para membro
-      - implementar o mecanismo de renovação para serviço
-    --> FECHADO
+        --> FECHADO
 
-      - mecanismo para callback na falha de renovação (Cris)
-        --> em Lua, dependendo de solução de bug do OiL (Renato Maia)
+      - implementar o mecanismo de renovação (LeaseHolder)
+        --> FECHADO para Lua (Cris) e Java (Rodrigo)
+*       --> Em aberto C++
+
+      - mecanismo para invocação de callback na falha de renovação
+        --> FECHADO para Lua (Cris) e Java (Rodrigo)
+*       --> Em aberto C++
 
   3.2 Interceptação de Requisições (Ana)
-      - mecanismo para inclusão da credencial na requisição 
-         --> OK (lua/java)
-      - obtenção e validação da credencial, com geração de exceção de sistema
-         "NO PERMISSION" para credenciais invalidas, abortando o request
-         --> OK (lua/java)
 
-      - mecanismo de cache para credenciais válidas
-         --> Para serviços básicos, não implementaremos ?
+      3.2.1 Interceptador cliente: mecanismo para inclusão da credencial 
+            na requisição 
+        --> FECHADO para Lua e Java (Ana)
+*       --> Em aberto C++
+
+      3.2.1 Interceptador servidor
+       - obtenção e validação da credencial, com geração de exceção de sistema
+         "NO PERMISSION" para credenciais invalidas, abortando o request
+         --> FECHADO para Lua e Java (Ana)
+*        --> Em aberto C++
+
+*      - mecanismo de cache para credenciais válidas
+         --> Para serviços básicos (Lua) não implementaremos ?
+         --> definição e implementação da cache para serviços Java e C++
 
       - repasse da credencial para "Current" (thread de invocação do serviço)
 
-        No caso do OiL é necessário adicionar um mecanismo para prover 
-        funcionalidade semelhante ao PICurrent (salvamento de info associada ao
-        contexto da corotina corrente) para serviços em Lua.
-         --> OK
+        - no caso do OiL é necessário adicionar um mecanismo para prover 
+          funcionalidade semelhante ao PICurrent (salvamento de info associada 
+          ao contexto da corotina corrente) para serviços em Lua
+         --> FECHADO (Ana)
 
-        Será necessário implementar mecanismo para Java (uso PICurrent) e C++
-         --> Fechado para Java
+        - será necessário implementar mecanismo para Java (uso PICurrent) e C++
+         --> FECHADO para Java (Ana)
+*        --> Em aberto C++
 
-
-  3.3 Mecanismo de log
-      - equivalente ao "verbose" de Lua para Java (Rodrigo)
-      - C++ ?
+  3.3 Mecanismo de log equivalente ao "verbose" de Lua
+         --> FECHADO para Java (Rodrigo)
+*        --> Em aberto C++
 
 4) SERVIÇO DE ACESSO
    =================
@@ -87,26 +96,29 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   4.1 Mecanismo de persistência de credenciais (Rodrigo)
     --> FECHADO
 
-  4.2 Incorporar o mecanismo de leasing
-       -> dependência: 3.1
-       -> FECHADO (Versão preliminar, sem adaptação)
+  4.2 Incorporar o mecanismo de leasing (Cris)
+      --> FECHADO (Versão preliminar, sem adaptação)
 
   4.3 Login via Certificado:
       - mecanismo de cadastro de certificados (Rodrigo)
       - incorporar a biblioteca (Lua) do openSSL (Rodrigo)
-        -> dependência: 1.2
-      -> FECHADO
+      --> FECHADO
 
   4.4 Incorporar interceptador servidor (Ana)
       --> FECHADO 
 
+* 4.5 Implementar persistencia do IOR do Serviço de Registro
+      --> Previsão: 1/2 dia
+
+  4.6 Analisar conveniência de unir serviço de controle de acesso ao
+      serviço de registro (Cris, Rodrigo, Renato Cerqueira)
 
 5) SERVIÇO DE REGISTRO
    ===================
 
   5.1 Mecanismo de persistência de ofertas de serviço
-      - persitência de ofertas semelhante à de credenciais (arquivo)
-        --> pensar em como persistir as referências a Membros
+      - persistência de ofertas semelhante à de credenciais (arquivo)
+      --> FECHADO (Ana)
 
       - preparar o repositório de ofertas para permitir o uso de um BD
         --> tarefa menos prioritaria, no momento
@@ -117,78 +129,108 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   5.3 Incorporar interceptadores (Ana)
     --> FECHADO
 
-  5.4 Autenticação via certificado
-      -> dependência: 4.3
+  5.4 Autenticação via certificado (Rodrigo)
       --> FECHADO
 
-  5.5 Transformar faceta RegistryService em interface do componente
+  5.5 Transformar faceta RegistryService em interface do componente (Ana)
+      --> FECHADO
 
+  5.6 Implementar procedimento de reconexão após expiração de Lease (Ana)
+*      --> FECHADO PARCIALMENTE (ver Issue JIRA [OPENBUS-22] e item 4.6)
+ 
 6) SERVIÇO DE SESSÃO
    =================
 
-  6.1 Mecanismo de troca de mensagens entre membros de sessão (Ana)
+*  6.1 Mecanismo de troca de mensagens entre membros de sessão (Ana)
       --> Avaliar o serviço de eventos do SCS e sua interface
+      --> Será implementada uma versão simplificada: Session e faceta de
+          Member implementarão interface EventSink
+      --> Previsão: 1 dia
 
   6.2 Incorporar mecanismo de leasing (cliente/servidor)
-      - manutenção de sessão + credencial
-      -> dependências: 3.1 e 4.2
-
-    --> Avaliar se será feito nessa etapa
+      - manutenção de sessão + credencial com eleição de novo "responsável"
+        pela sessão/credencial caso seu criador se desconecte
+*    --> Avaliar se será feito nessa etapa. Na implementação atual, o
+         criador da sessão é resonsável pela manutenção da credencial
+         junto ao serviço de controle de acesso.
 
   6.3 Incorporar interceptadores (Ana)
     --> FECHADO
 
   6.4 Autenticação via certificado (Rodrigo)
-      -> dependência: 4.3
     --> FECHADO
      
+  6.5 Implementar procedimento de reconexão após expiração de Lease (Ana)
+*      --> FECHADO PARCIALMENTE (ver Issue JIRA [OPENBUS-22] e item 4.6)
 
 7) SERVIÇO DE PROJETOS
    ===================
 
-  7.1 Implementação do procedimento comum a todos os serviços
+  7.1 Implementação do procedimento comum a todos os serviços Java
       - autenticação (+leasing credencial)
+      --> FECHADO, biblioteca ServiceConnectionManager em Lua (Ana) e
+          Java (Rodrigo)
       - exportação do serviço
       - incorporação de interceptadores
 
-      -> dependências: 4, 5, 3.2, 3.1
-      --> FECHADO, extrair procedimento para biblioteca
+      --> FECHADO, extrair procedimentos para biblioteca
 
   7.2 Implementação do serviço propriamente dito (JAVA/CSBASE)
-      - Serviço de Dados
-      - Serviço de Projetos
 
-      -> dependência 7.1
+      Já foi integrada ao CSBASE (branch do CSGRID) uma implementação de
+      serviço "openbus" que disponibiliza o acesso ao Serviço de Projetos.
 
-  7.3 Serviço de Projetos (CSBASE)
-      - Permitir a navegação pelos componentes de um projeto sem a
-        necessidade de abrir este projeto. Deve ser possível também obter
-        informações sobre estes componentes (tamanho, tipo, permissões, etc.).
-      - Definir a forma de transferência dos dados de um arquivo.
-        Como exportar os dados de forma estruturada?
-        Devem ser criados canais específicos para cada tipo?
+      7.2.2 Serviço (faceta) de Navegação
+      --> A funcionalidade básica está implementada.
+*         Falta definir e implementar a obtenção das propriedades dos
+          componentes do projeto (arquivos e diretórios): tamanho, tipo,
+          permissões.
+       --> Rodrigo, previsão 2 dias
 
-8) CLIENTES BÁSICOS (C++, Java, Lua)
-   ================
+*     7.2.3 Serviço (faceta) de Projetos
+      --> Implementar tipos de acesso ao conteúdo de arquivos como facetas
+          do "objeto" FILE. O usuário poderá escolher uma dessas facetas
+          para acessar o conteudoi de um arquivo, de forma estruturada ou 
+          como uma transferência "raw".
+          As facetas disponibilizadas serão descritas em uma propriedade
+          do objeto (7.2.2)
 
+      --> Para o prototipo será implementada inicialmente a transferência
+          "raw", através de um "canal de dados" (via socket).
+          O protocolo utilizado no CSBASE será utilizado.
+       --> Rodrigo, previsão 2 semanas
+
+
+8) APLICAÇÂO (CLIENTES) DE TESTE DO PROTÓTIPO
+   ==========================================
   8.1 Procedimento comum a todos os clientes
-      - autenticação
-      - leasing
+      - autenticação e leasing
+        --> FECHADO, biblioteca ClientConnectionManager em Lua (Ana)
+            e Java (Rodrigo)
+*       --> Em aberto C++
+
+      - reconexão após expiração de lease (ClientConnectionManager)
+        --> FECHADO para Lua (Ana) 
+*       --> Em aberto para Java (Rodrigo) : 1/2 dia
+*       --> Em aberto C++
+
       - incorporação de interceptadores
       - importação de oferta de serviço
 
-      -> dependências: 4, 5, 3.2, 3.1
+        --> Não há biblioteca, porem o procedimento está codificado em testes
 
-  8.2 Teste de uso do serviço de projetos sem uso de sessão
-      -> dependência: 8.1, 7
+* 8.1 Aplicação de navegação em projetos (IUP/Lua) com criação de sessão
+      e ativação de aplicação de recuperação de dados repassando a
+      "chave" de um arquivo selecionado (Cris)
+      --> dependências: 6.1 e 7.2.2
+      --> previsão: 1 semana (paralela com 8.2)
 
-9) TESTES DE USO DE SESSÃO
-   =======================
-  9.1 Procedimento de criação/formação de sessão envolvendo múltiplos clientes
-      -> dependências: 8 , 6
-
-  9.2 Teste de uso do serviço de projetos com uso de sessão
-      -> dependências: 9.1 e 7
+  8.2 Aplicação de recuperação de um arquivo (Java) usando canal de comunicação
+      (Rodrigo)
+      Essa aplicação será iniciada pela outra, e receberá via sessão a
+      identificação do arquivo a ser recuperado
+      -> dependências: 6.1 e 7.2.3
+      --> previsão: 1 semana (paralela com 8.1)
 
 
 9) CRIAÇÂO DE BIBLIOTECAS
@@ -201,8 +243,7 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
      -> dependências: 8
   
   9.2 Construir bibliotecas para serviços: Java, C++
-      - procedimento comum a todos os serviços:
-        ServerConnectionManager
+      - procedimento comum a todos os serviços
         Exportação de serviços
 
      -> dependências: 7
