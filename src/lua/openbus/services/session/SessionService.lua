@@ -68,7 +68,11 @@ end
 function SessionService:credentialWasDeleted(credential)
 
   -- Remove a sessão
-  if self.sessions[credential.identifier] then
+  local session = self.sessions[credential.identifier]
+  if session then
+  log:service("Removendo sessão de credencial deletada ("..
+              credential.identifier..")")
+    session:_deactivate()
     self.sessions[credential.identifier] = nil
   end
 end
@@ -121,5 +125,7 @@ function SessionService:shutdown()
   if self.observerId then
     self.accessControlService:removeObserver(self.observerId)
     self.observer:_deactivate()
+    self.observer = nil
+    self.observerId = nil
   end
 end
