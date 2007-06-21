@@ -15,10 +15,33 @@ typedef Identifier SessionIdentifier;
 /** \brief Representa o identificador do membro de uma sessão. */
 typedef Identifier MemberIdentifier;
 
+/** \brief Representa um evento trocado entre membros de uma sessão */
+struct SessionEvent {
+  string type;
+  any value;
+};
+
+/**
+ * \brief Representa um receptor de eventos.
+ */
+interface SessionEventSink {
+    /**
+     * \brief Recebe um evento.
+     *
+     * \param ev O evento enviado
+     */
+  void push(in SessionEvent ev);
+
+    /**
+     * \brief Notificação de finalização do canal de comunicação.
+     */
+  void disconnect();
+};
+
 /**
  * \brief Representa uma sessão.
  */
-interface ISession {
+interface ISession : SessionEventSink {
     /**
      * \brief Obtém o identificador da sessão.
      *
