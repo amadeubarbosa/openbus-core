@@ -113,6 +113,19 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
   4.6 Analisar conveniência de unir serviço de controle de acesso ao
       serviço de registro (Cris, Rodrigo, Renato Cerqueira)
 
+*  4.7 Analisar se devem ser persistidos os observadores (referências)
+       cadastrados no serviço de controle de acesso.
+
+       Atualmente as credenciais de membros conectados são persistidas pelo
+       Serviço de Controle de Acesso. Caso o serviço "caia", e seja reiniciado,
+       essas credenciais serão recuperadas.
+       Porém não são persistidos os observadores dessas credenciais.
+       Dessa forma, a desconexão dos membros correspondentes a essas credenciais
+       não será avisada aos componentes que cadastraram observadores no
+       Serviço de Controle de Acesso (antes de sua "queda").
+
+       Lembrar que qualquer modificação em observadores deverá ser persistida.
+
 5) SERVIÇO DE REGISTRO
    ===================
 
@@ -141,11 +154,15 @@ FASE 1: PROTÓTIPO COM SERVIÇO DE PROJETOS
 6) SERVIÇO DE SESSÃO
    =================
 
-*  6.1 Mecanismo de troca de mensagens entre membros de sessão (Ana)
+  6.1 Mecanismo de troca de mensagens entre membros de sessão (Ana)
       --> Avaliar o serviço de eventos do SCS e sua interface
       --> Será implementada uma versão simplificada: Session e faceta de
           Member implementarão interface EventSink
-      --> Previsão: 1 dia
+      --> Previsão: 1 dia (ok, não integral)
+      --> FECHADO (ver item JIRA [OPENBUS-23]
+            O procedimento para habilitar um membro a receber mensagens 
+            (eventos) e enviá-los está exemplificado em programa de teste
+            (testEvents)
 
   6.2 Incorporar mecanismo de leasing (cliente/servidor)
       - manutenção de sessão + credencial com eleição de novo "responsável"
