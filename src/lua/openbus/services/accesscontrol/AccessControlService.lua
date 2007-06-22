@@ -289,12 +289,14 @@ end
 function AccessControlService:notifyCredentialWasDeleted(credential)
   for observerId in pairs(self.entries[credential.identifier].observedBy) do
     local observerEntry = self.observers[observerId]
-    local success, err =
-      oil.pcall(observerEntry.observer.credentialWasDeleted, 
-                observerEntry.observer, credential)
-    if not success then
-      log:warn("Erro ao notificar um observador.")
-      log:warn(err)
+    if observerEntry then
+      local success, err =
+        oil.pcall(observerEntry.observer.credentialWasDeleted, 
+                  observerEntry.observer, credential)
+      if not success then
+        log:warn("Erro ao notificar um observador.")
+        log:warn(err)
+      end
     end
   end
 end
