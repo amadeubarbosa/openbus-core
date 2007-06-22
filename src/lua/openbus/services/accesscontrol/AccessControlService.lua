@@ -50,6 +50,7 @@ function AccessControlService:startup()
   -- inicializa repositorio de credenciais
   self.privateKey = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
   self.credentialDB = CredentialDB(self.config.databaseDirectory)
+  self.registryService = self.credentialDB:retrieveRegistryService()
   local entriesDB = self.credentialDB:retrieveAll()
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
@@ -157,6 +158,7 @@ function AccessControlService:logout(credential)
     if credential.entityName == "RegistryService" and
         credential.identifier == self.registryService.credential.identifier then
       self.registryService = nil
+      self.credentialDB:deleteRegistryService()
     end
   end
   return true
@@ -187,6 +189,11 @@ function AccessControlService:setRegistryService(registryServiceComponent)
       credential = credential,
       component = registryServiceComponent
     }
+    local suc, err = 
+      self.credentialDB:writeRegistryService(self.registryService)
+    if not suc then
+      log:error("Erro persistindo referencia registry service: "..err)
+    end
     return true
   end
   return false

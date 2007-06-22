@@ -8,6 +8,7 @@ local oop = require "loop.base"
 local log = require "openbus.common.Log"
 
 require "posix"
+require "oil"
 
 local FILE_SUFFIX = ".credential"
 local FILE_SEPARATOR = "/"
@@ -86,18 +87,24 @@ function CredentialDB:toString(val)
   if t == "table" then
     local str = '{'
     for f, s in pairs(val) do
-      if not tonumber(f) then
-        str = str .. "[\"" .. f .. "\"]="
+
+      -- caso especial para referencia a componente
+      if type(f) == "string" and f == "component" then
+        str = str .. f .. "=[[" .. oil.tostring(s) .. "]],"
       else
-        str = str .. "["   .. f .. "]="
+        if not tonumber(f) then
+          str = str .. f .. "="
+        end
+        str = str .. self:toString(s) .. ","
       end
-      str = str .. self:toString(s) .. ","
     end
     return str .. '}'
   elseif t == "string" then
     return "[[" .. val .. "]]"
   elseif t == "number" then
     return val
+  elseif t == "boolean" then
+    return tostring(val)
   else -- if not tab then
     return "nil"
   end
@@ -117,4 +124,36 @@ end
 function CredentialDB:removeCredential(entry)
   local credential = entry.credential
   return os.remove(self.databaseDirectory..FILE_SEPARATOR..credential.identifier..FILE_SUFFIX)
+end
+
+function CredentialDB:retrieveRegistryService()
+  local regFileName = self.databaseDirectory..FILE_SEPARATOR.."registryservice"
+  local f = io.open(regFileName)
+  if not f then
+    log:service("Referencia ao RegistryService não persistida")
+    return nil
+  end
+  f:close()
+  local registryEntry = dofile(self.databaseDirectory..FILE_SEPARATOR..
+                               "registryservice")
+  -- recupera referência ao componente
+  local regIOR = registryEntry.component
+  registryEntry.component = oil.newproxy(regIOR)
+  log:service("Referencia ao RegistryService recuperada")
+  return registryEntry
+end
+
+function CredentialDB:writeRegistryService(registryEntry)
+  local regFile, errorMessage = 
+    io.open(self.databaseDirectory..FILE_SEPARATOR.."registryservice","w")
+  if not regFile then
+    return false, errorMessage
+  end
+  regFile:write("return ".. self:toString(registryEntry))
+  regFile:close()
+  return true
+end
+
+function CredentialDB:deleteRegistryService()
+  return os.remove(self.databaseDirectory..FILE_SEPARATOR.."registryservice")
 end
