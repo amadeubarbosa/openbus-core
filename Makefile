@@ -41,8 +41,8 @@ libs:
 	done)
 
 clean-bins:
-	@cd src ; (for service in lua/openbus/services/* ; do \
-	export mkfile=`echo $$service | cut -d/ -f4` ; \
+	@cd src/c ; (for service in ../lua/openbus/services/* ; do \
+	export mkfile=`echo $$service | cut -d/ -f5` ; \
 		if  test -e $$mkfile.mak ;  then \
 			echo ; echo "Limpando serviço $$service" ; \
 			`which tecmake` MF=$$mkfile clean ; \
@@ -50,8 +50,8 @@ clean-bins:
 	done)
 
 bins:
-	@cd src ; (for service in lua/openbus/services/* ; do \
-	export mkfile=`echo $$service | cut -d/ -f4` ; \
+	@cd src/c ; (for service in ../lua/openbus/services/* ; do \
+	export mkfile=`echo $$service | cut -d/ -f5` ; \
 		if  test -e $$mkfile.mak ;  then \
 			echo ; echo "Compilando serviço $$service" ; \
 			`which tecmake` MF=$$mkfile; \

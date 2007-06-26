@@ -1,0 +1,3 @@
+#!/bin/csh
+if ( -r app.env ) source app.env
+exec ${OPENBUS_HOME}/bin/$TEC_UNAME/session_service $*
