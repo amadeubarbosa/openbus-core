@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<project name="openbus" default="jar">
+  <property name="java.source.dir" value="src/java"/>
+  <property name="idl.source.dir" value="corba_idl"/>
+  <property name="classes.dir" value="classes"/>
+  <property name="lib.dir" value="lib"/>
+  <property name="commons.codec.jar" value="${lib.dir}/commons-codec-1.3/commons-codec-1.3.jar"/>
+  <property name="jacorb.dir" value="${lib.dir}/jacorb2.2.4"/>
+
+  <taskdef name="jacidl" classname="org.jacorb.idl.JacIDL">
+    <classpath>
+      <pathelement location="${jacorb.dir}/idl.jar"/>
+      <pathelement location="${jacorb.dir}/logkit-1.2.jar"/>
+    </classpath>
+  </taskdef>
+
+  <target name="clean">
+    <delete dir="${classes.dir}"/>
+    <delete>
+      <fileset dir="${lib.dir}" includes="*.jar"/>
+    </delete>
+  </target>
+
+  <target name="map-idl">
+    <jacidl srcdir="${idl.source.dir}" destdir="${java.source.dir}"/>
+  </target>
+
+  <target name="compile" depends="map-idl">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${java.source.dir}"
+      destdir="${classes.dir}">
+      <classpath>
+        <pathelement location="${commons.codec.jar}"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile">
+    <jar destfile="${lib.dir}/openbus.jar"
+      basedir="${classes.dir}" includes="openbus/**"/>
+    <jar destfile="${lib.dir}/openbusidl.jar"
+      basedir="${classes.dir}" includes="openbusidl/**"/>
+    <jar destfile="${lib.dir}/scs.jar"
+      basedir="${classes.dir}" includes="SCS/**"/>
+  </target>
+
+</project>
