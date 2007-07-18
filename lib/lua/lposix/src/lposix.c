@@ -912,7 +912,7 @@ static const luaL_reg R[] =
 	{NULL,			NULL}
 };
 
-LUALIB_API int luaopen_posix (lua_State *L)
+LUALIB_API int luaopen_lposix (lua_State *L)
 {
 	luaL_openlib(L,MYNAME,R,0);
 	lua_pushliteral(L,"version");		/** version */

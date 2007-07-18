@@ -1,6 +1,6 @@
 #file "config.mak"
 
-PROJNAME = posix
+PROJNAME = lposix
 LIBNAME = ${PROJNAME}
 
 TARGETROOT= ${OPENBUS_HOME}/libpath

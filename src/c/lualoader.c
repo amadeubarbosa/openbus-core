@@ -115,9 +115,9 @@ static int pmain (lua_State *L) {
   /* Inicialização do OiL */
   luaopen_socket_core(L);
   luapreload_oilall(L);
-  luaopen_uuid(L);
+  luaopen_luuid(L);
 #ifdef ACCESS_CONTROL_SERVICE
-  luaopen_posix(L);
+  luaopen_lposix(L);
   luaopen_lualdap(L);
 #endif
   lua_gc(L, LUA_GCRESTART, 0);

@@ -7,7 +7,7 @@
 local oop = require "loop.base"
 local log = require "openbus.common.Log"
 
-require "posix"
+require "lposix"
 require "oil"
 
 local FILE_SUFFIX = ".credential"
