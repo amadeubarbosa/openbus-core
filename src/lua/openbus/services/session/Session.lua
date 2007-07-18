@@ -4,7 +4,7 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-local uuid = require "uuid"
+local uuid = require "luuid"
 
 local oil = require "oil"
 local log = require "openbus.common.Log"

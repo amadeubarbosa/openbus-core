@@ -5,7 +5,7 @@
 --   $Id$
 -----------------------------------------------------------------------------
 require "oil"
-require "uuid"
+require "luuid"
 
 require "openbus.Member"
 require "openbus.services.registry.OffersDB"

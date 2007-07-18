@@ -5,7 +5,7 @@
 --   $Id$
 -----------------------------------------------------------------------------
 require "oil"
-require "uuid"
+require "luuid"
 
 local log = require "openbus.common.Log"
 

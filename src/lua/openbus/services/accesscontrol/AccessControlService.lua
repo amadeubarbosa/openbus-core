@@ -5,7 +5,7 @@
 --   $Id$
 -----------------------------------------------------------------------------
 require "lualdap"
-require "uuid"
+require "luuid"
 require "lce"
 require "oil"
 
