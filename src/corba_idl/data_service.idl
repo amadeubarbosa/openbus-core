@@ -1,6 +1,8 @@
 #ifndef DS_IDL
 #define DS_IDL
 
+#include "scs.idl"
+
 module openbusidl {
 
 /**
@@ -26,6 +28,7 @@ typedef sequence<Node> NodeList;
 interface IDataService {
   NodeList getRoots();
   NodeList getChildren(in NodeKey key);
+  SCS::IComponent getComponent(in NodeKey key);
 };
 
 };
