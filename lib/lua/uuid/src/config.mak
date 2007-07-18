@@ -1,6 +1,6 @@
 #file "config.mak"
 
-PROJNAME = luuid
+PROJNAME = uuid
 LIBNAME = ${PROJNAME}
 
 TARGETROOT= ${OPENBUS_HOME}/libpath

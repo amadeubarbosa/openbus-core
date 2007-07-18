@@ -4,7 +4,7 @@
   <property name="java.source.dir" value="src/java"/>
   <property name="idl.source.dir" value="corba_idl"/>
   <property name="classes.dir" value="classes"/>
-  <property name="lib.dir" value="lib"/>
+  <property name="lib.dir" value="lib/java"/>
   <property name="commons.codec.jar" value="${lib.dir}/commons-codec-1.3/commons-codec-1.3.jar"/>
   <property name="jacorb.dir" value="${lib.dir}/jacorb2.2.4"/>
 
