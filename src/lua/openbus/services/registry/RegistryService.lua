@@ -98,7 +98,7 @@ function RegistryService:startup()
       self.registryService:credentialWasDeleted(credential)
     end
   }
-  self.observer = oil.newobject(observer,
+  self.observer = oil.newservant(observer,
                                 "IDL:openbusidl/acs/ICredentialObserver:1.0",
                                 "RegistryServiceCredentialObserver")
   self.observerId =

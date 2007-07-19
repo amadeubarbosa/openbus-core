@@ -35,7 +35,7 @@ function SessionService:createSession(member)
   end
   log:service("Vou criar sessão")
   local session = Session(self:generateIdentifier(), credential)
-  session = oil.newobject(session, "IDL:openbusidl/ss/ISession:1.0")
+  session = oil.newservant(session, "IDL:openbusidl/ss/ISession:1.0")
   self.sessions[credential.identifier] = session
   log:service("Sessão criada!")
 
@@ -48,7 +48,7 @@ function SessionService:createSession(member)
           self.sessionService:credentialWasDeleted(credential)
         end
     }
-    self.observer = oil.newobject(observer, 
+    self.observer = oil.newservant(observer, 
                                   "IDL:openbusidl/acs/ICredentialObserver:1.0",
                                   "SessionServiceCredentialObserver")
     self.observerId = 

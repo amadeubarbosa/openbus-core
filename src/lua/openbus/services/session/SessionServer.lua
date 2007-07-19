@@ -4,6 +4,8 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
+package.loaded["oil.component"] = require "loop.component.wrapped"
+package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
 
 local log = require "openbus.common.Log"
@@ -54,9 +56,9 @@ function main()
   end
 
   -- Cria o componente responsável pelo Serviço de Sessão
-  success, res = oil.pcall(oil.newobject, SessionServiceComponent("SessionService"), 
-                           "IDL:openbusidl/ss/ISessionServiceComponent:1.0")
-
+  success, res = oil.pcall(oil.newservant,
+      SessionServiceComponent("SessionService"),
+      "IDL:openbusidl/ss/ISessionServiceComponent:1.0")
   if not success then
     io.stderr:write("Falha criando SessionServiceComponent: "..
                     tostring(res).."\n") 

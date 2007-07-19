@@ -4,6 +4,8 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
+package.loaded["oil.component"] = require "loop.component.wrapped"
+package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
 
 require "openbus.services.registry.RegistryService"
@@ -52,7 +54,7 @@ function main()
   end
 
   -- Cria o componente responsável pelo Serviço de Registro
-  success, res = oil.pcall(oil.newobject,
+  success, res = oil.pcall(oil.newservant,
     RegistryService("RegistryService"), 
     "IDL:openbusidl/rs/IRegistryService:1.0")
   if not success then

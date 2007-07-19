@@ -3,6 +3,8 @@
 --
 -- $Id$
 --
+package.loaded["oil.component"] = require "loop.component.wrapped"
+package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"

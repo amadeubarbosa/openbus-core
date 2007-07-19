@@ -4,6 +4,8 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
+package.loaded["oil.component"] = require "loop.component.wrapped"
+package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
 
 require "openbus.services.accesscontrol.AccessControlService"
@@ -53,7 +55,7 @@ function main()
 
   -- Cria o componente responsável pelo Serviço de Controle de Acesso
   success, res  = 
-    oil.pcall(oil.newobject,
+    oil.pcall(oil.newservant,
     AccessControlService("AccessControlService"), 
     "IDL:openbusidl/acs/IAccessControlService:1.0", "ACS")
   if not success then

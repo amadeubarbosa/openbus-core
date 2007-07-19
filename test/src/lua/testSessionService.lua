@@ -56,11 +56,11 @@ Suite = {
 
     testCreateSession = function(self)
       local member1 = Member{name = "membro1"}
-      member1 = oil.newobject(member1, "IDL:openbusidl/IMember:1.0")
+      member1 = oil.newservant(member1, "IDL:openbusidl/IMember:1.0")
       local success, session, id1 = self.sessionService:createSession(member1)
       Check.assertTrue(success)
       local member2 = Member{name = "membro2"}
-      member2 = oil.newobject(member2, "IDL:openbusidl/IMember:1.0")
+      member2 = oil.newservant(member2, "IDL:openbusidl/IMember:1.0")
       local session2 = self.sessionService:getSession()
       Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
       local id2 = session:addMember(member2)

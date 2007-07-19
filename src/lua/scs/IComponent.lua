@@ -26,7 +26,7 @@ function IComponent:getFacetByName(facet)
 end
 
 function IComponent:addFacet(name, interface_name, facet_servant)
-    local facet_ref = oil.newobject(facet_servant, interface_name, name)
+    local facet_ref = oil.newservant(facet_servant, interface_name, name)
     local facetDescription = {
         name = name,
         interface_name = interface_name,
