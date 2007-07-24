@@ -1,12 +1,8 @@
 #LUA=lua
 LUA=lua5.1
 
-TECLIBS=/home/t/tecgraf/libpath/${TEC_UNAME}
-OILLIBS=/home/t/tecgraf/lib/oil04/lib/${TEC_UNAME}
-OILLUALIBS=/home/t/tecgraf/lib/oil04/lua
-
-export LUA_PATH="${OPENBUS_HOME}/libpath/lua/?.lua;${OPENBUS_HOME}/libpath/lua/?/init.lua;${LUA_HOME}/share/lua/5.1/?.lua;${LUA_HOME}/share/lua/5.1/?/init.lua;${OILLUALIBS}/?.lua;${OILLUALIBS}/?/init.lua;${TECLIBS}/?.lua;${TECLIBS}/?/init.lua"
-export LUA_CPATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}/lib?.so;${LUA_HOME}/lib/lua/5.1/lib?.so;${LUA_HOME}/lib/lua/5.1/?.so;${OILLIBS}/lib?.so;${OILLIBS}/?.so;${TECLIBS}/lib?.so;${LUA_CPATH}"
+export LUA_PATH="${OPENBUS_HOME}/libpath/lua/?.lua;${OPENBUS_HOME}/libpath/lua/?/init.lua;${LUA_HOME}/share/lua/5.1/?.lua;${LUA_HOME}/share/lua/5.1/?/init.lua;${LUA_PATH}"
+export LUA_CPATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}/lib?.so;${LUA_HOME}/lib/lua/5.1/lib?.so;${LUA_HOME}/lib/lua/5.1/?.so;${LUA_CPATH}"
 
 export CONF_DIR=${OPENBUS_HOME}/conf
 
