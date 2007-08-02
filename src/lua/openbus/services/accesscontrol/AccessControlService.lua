@@ -4,43 +4,49 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-require "lualdap"
-require "luuid"
-require "lce"
-require "oil"
+local os = os
 
-require "openbus.Member"
-require "openbus.services.accesscontrol.CredentialDB"
+local loadfile = loadfile
+local assert = assert
+local pairs = pairs
+local ipairs = ipairs
+local tostring = tostring
 
+local lualdap = require "lualdap"
+local luuid = require "luuid"
+local lce = require "lce"
+local oil = require "oil"
+
+local CredentialDB = require "openbus.services.accesscontrol.CredentialDB"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local PICurrent = require "openbus.common.PICurrent"
-
-local log = require "openbus.common.Log"
-local oop = require "loop.base"
 local LeaseProvider = require "openbus.common.LeaseProvider"
 
-AccessControlService = oop.class({
-  invalidCredential = {identifier = "", entityName = ""},
-  invalidLease = -1,
-  deltaT = 30, -- lease fixo (por enquanto) em segundos
-}, Member)
+local Log = require "openbus.common.Log"
+
+local IComponent = require "scs.core.IComponent"
+
+local oop = require "loop.simple"
+module("openbus.services.accesscontrol.AccessControlService")
+oop.class(_M, IComponent)
+
+invalidCredential = {identifier = "", entityName = ""}
+invalidLease = -1
+deltaT = 30 -- lease fixo (por enquanto) em segundos
 
 -- Constrói a implementação do componente
-function AccessControlService:__init(name)
-  local obj = { name = name,
-                config = AccessControlServerConfiguration,
-                entries = {},
-                observers = {},
-                challenges = {},
-                picurrent = PICurrent(),
-              }
-  Member:__init(obj)
-  return oop.rawnew(self, obj)
+function __init(self, name, config)
+  local component = IComponent:__init(name, 1)
+  component.config = config
+  component.entries = {}
+  component.observers = {}
+  component.challenges = {}
+  component.picurrent = PICurrent()
+  return oop.rawnew(self, component)
 end
 
 -- Inicia o componente
-function AccessControlService:startup()
-
+function startup(self)
   -- instala o interceptador do serviço
   local CONF_DIR = os.getenv("CONF_DIR")
   local iconfig = 
@@ -61,7 +67,7 @@ function AccessControlService:startup()
     -- ou precisamos acordar na hora "exata" que cada lease expira
     -- pra verificar?
     for id, entry in pairs(self.entries) do
-      log:lease("Verificando a credencial de "..id)
+      Log:lease("Verificando a credencial de "..id)
       local credential = entry.credential
       local lastUpdate = entry.lease.lastUpdate
       local secondChance = entry.lease.secondChance
@@ -69,7 +75,7 @@ function AccessControlService:startup()
       local now = os.time()
       if (os.difftime (now, lastUpdate) > duration ) then
         if secondChance then
-          log:warn(credential.entityName .. " lease expirado: LOGOUT.")
+          Log:warn(credential.entityName .. " lease expirado: LOGOUT.")
           self:logout(credential) -- you may clear existing fields.
         else
           entry.lease.secondChance = true
@@ -81,11 +87,11 @@ function AccessControlService:startup()
   return self
 end
 
-function AccessControlService:loginByPassword(name, password)
+function loginByPassword(self, name, password)
     local ldapHost = self.config.ldapHostName..":"..self.config.ldapHostPort
     local connection, errorMessage = lualdap.open_simple(ldapHost, name, password, false)
     if not connection then
-      log:error("Erro ao conectar com o servidor LDAP.\n"..errorMessage)
+      Log:error("Erro ao conectar com o servidor LDAP.\n"..errorMessage)
       return false, self.invalidCredential, self.invalidLease
     end
     connection:close()
@@ -93,49 +99,49 @@ function AccessControlService:loginByPassword(name, password)
     return true, entry.credential, entry.lease.duration
 end
 
-function AccessControlService:loginByCertificate(name, answer)
+function loginByCertificate(self, name, answer)
   local challenge = self.challenges[name]
   if not challenge then
-    log:error("Nao existe desafio para "..name)
+    Log:error("Nao existe desafio para "..name)
     return false, self.invalidCredential, self.invalidLease
   end
   local errorMessage
   answer, errorMessage = lce.cipher.decrypt(self.privateKey, answer)
   if answer ~= challenge then
-    log:error("Erro ao obter a resposta de "..name)
-    log:error(errorMessage)
+    Log:error("Erro ao obter a resposta de "..name)
+    Log:error(errorMessage)
     return false, self.invalidCredential, self.invalidLease
   end
   local entry = self:addEntry(name)
   return true, entry.credential, entry.lease.duration
 end
 
-function AccessControlService:getChallenge(name)
+function getChallenge(self, name)
   local certificate, errorMessage = self:getCertificate(name)
   if not certificate then
-    log:error("Nao foi encontrado o certificado de "..name)
-    log:error(errorMessage)
+    Log:error("Nao foi encontrado o certificado de "..name)
+    Log:error(errorMessage)
     return ""
   end
   local challenge = self:generateChallenge(name, certificate)
   return challenge
 end
 
-function AccessControlService:getCertificate(name)
+function getCertificate(self, name)
   local certificateFile = self.config.certificatesDirectory.."/"..name..".crt"
   return lce.x509.readfromderfile(certificateFile)
 end
 
-function AccessControlService:generateChallenge(name, certificate)
+function generateChallenge(self, name, certificate)
   local currentTime = tostring(os.time())
   self.challenges[name] = currentTime
   return lce.cipher.encrypt(certificate:getpublickey(), currentTime)
 end
 
-function AccessControlService:renewLease(credential)
-  log:lease(credential.entityName .. " renovando lease.")
+function renewLease(self, credential)
+  Log:lease(credential.entityName .. " renovando lease.")
   if not self:isValid(credential) then
-    log:warn(credential.entityName .. " credencial inválida.")
+    Log:warn(credential.entityName .. " credencial inválida.")
     return false, self.invalidLease
   end
   local now = os.time()
@@ -146,10 +152,10 @@ function AccessControlService:renewLease(credential)
   return true, self.deltaT
 end
 
-function AccessControlService:logout(credential)
+function logout(self, credential)
   local entry = self.entries[credential.identifier]
   if not entry then
-    log:warn("Tentativa de logout com credencial inexistente: "..
+    Log:warn("Tentativa de logout com credencial inexistente: "..
       credential.identifier)
     return false
   end
@@ -164,7 +170,7 @@ function AccessControlService:logout(credential)
   return true
 end
 
-function AccessControlService:isValid(credential)
+function isValid(self, credential)
   local entry = self.entries[credential.identifier]
   if not entry then
     return false
@@ -175,14 +181,14 @@ function AccessControlService:isValid(credential)
   return true
 end
 
-function AccessControlService:getRegistryService()
+function getRegistryService(self)
   if self.registryService then
     return self.registryService.component
   end
   return nil
 end
 
-function AccessControlService:setRegistryService(registryServiceComponent)
+function setRegistryService(self, registryServiceComponent)
   local credential = self.picurrent:getValue()
   if credential.entityName == "RegistryService" then
     self.registryService = {
@@ -192,14 +198,14 @@ function AccessControlService:setRegistryService(registryServiceComponent)
     local suc, err = 
       self.credentialDB:writeRegistryService(self.registryService)
     if not suc then
-      log:error("Erro persistindo referencia registry service: "..err)
+      Log:error("Erro persistindo referencia registry service: "..err)
     end
     return true
   end
   return false
 end
 
-function AccessControlService:addObserver(observer, credentialIdentifiers)
+function addObserver(self, observer, credentialIdentifiers)
   local observerId = self:generateObserverIdentifier()
   local observerEntry = {observer = observer, credentials = {}}
   self.observers[observerId] = observerEntry
@@ -212,7 +218,7 @@ function AccessControlService:addObserver(observer, credentialIdentifiers)
   return observerId
 end
 
-function AccessControlService:addCredentialToObserver(observerIdentifier, credentialIdentifier)
+function addCredentialToObserver(self, observerIdentifier, credentialIdentifier)
   if not self.entries[credentialIdentifier] then
     return false
   end
@@ -226,7 +232,7 @@ function AccessControlService:addCredentialToObserver(observerIdentifier, creden
   return true
 end
 
-function AccessControlService:removeObserver(observerIdentifier, credential)
+function removeObserver(self, observerIdentifier, credential)
   local observerEntry = self.observers[observerIdentifier]
   if not observerEntry then
     return false
@@ -240,8 +246,8 @@ function AccessControlService:removeObserver(observerIdentifier, credential)
   return true
 end
 
-function AccessControlService:removeCredentialFromObserver(observerIdentifier,
-                                                           credentialIdentifier)
+function removeCredentialFromObserver(self, observerIdentifier,
+    credentialIdentifier)
   local observerEntry = self.observers[observerIdentifier]
   if not observerEntry then
     return false
@@ -255,7 +261,7 @@ function AccessControlService:removeCredentialFromObserver(observerIdentifier,
   return true
 end
 
-function AccessControlService:addEntry(name)
+function addEntry(self, name)
   local credential = {
     identifier = self:generateCredentialIdentifier(), 
     entityName = name
@@ -272,15 +278,15 @@ function AccessControlService:addEntry(name)
   return entry
 end
 
-function AccessControlService:generateCredentialIdentifier()
-  return uuid.new("time")
+function generateCredentialIdentifier()
+  return luuid.new("time")
 end
 
-function AccessControlService:generateObserverIdentifier()
-  return uuid.new("time")
+function generateObserverIdentifier()
+  return luuid.new("time")
 end
 
-function AccessControlService:removeEntry(entry)
+function removeEntry(self, entry)
   local credential = entry.credential
   self:notifyCredentialWasDeleted(credential)
   for observerId in pairs(self.entries[credential.identifier].observers) do
@@ -293,7 +299,7 @@ function AccessControlService:removeEntry(entry)
   self.credentialDB:delete(entry)
 end
 
-function AccessControlService:notifyCredentialWasDeleted(credential)
+function notifyCredentialWasDeleted(self, credential)
   for observerId in pairs(self.entries[credential.identifier].observedBy) do
     local observerEntry = self.observers[observerId]
     if observerEntry then
@@ -301,13 +307,13 @@ function AccessControlService:notifyCredentialWasDeleted(credential)
         oil.pcall(observerEntry.observer.credentialWasDeleted, 
                   observerEntry.observer, credential)
       if not success then
-        log:warn("Erro ao notificar um observador.")
-        log:warn(err)
+        Log:warn("Erro ao notificar um observador.")
+        Log:warn(err)
       end
     end
   end
 end
 
 -- Shutdown do componente: ainda a implementar!!!
-function AccessControlService:shutdown()
+function shutdown(self)
 end

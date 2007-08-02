@@ -4,43 +4,48 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-require "oil"
-require "openbus.Member"
+local os = os
 
+local loadfile = loadfile
+local assert = assert
+
+local oil = require "oil"
+
+local SessionService = require "openbus.services.session.SessionService"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
 local PICurrent = require "openbus.common.PICurrent"
-local log = require "openbus.common.Log"
-local ServiceConnectionManager = require "openbus.common.ServiceConnectionManager"
+local CredentialHolder = require "openbus.common.CredentialHolder"
+local ServiceConnectionManager =
+    require "openbus.common.ServiceConnectionManager"
 
-require "openbus.services.session.SessionService"
+local Log = require "openbus.common.Log"
+
+local IComponent = require "scs.core.IComponent"
 
 local oop = require "loop.simple"
-
-SessionServiceComponent = oop.class({}, Member)
+module("openbus.services.session.SessionServiceComponent")
+oop.class(_M, IComponent)
 
 --
 -- Constroi a implementação do componente
 --
-function SessionServiceComponent:__init(name)
-  local obj = { name = name,
-                config = SessionServerConfiguration,
-              }
-  Member:__init(obj)
-  return oop.rawnew(self, obj)
+function __init(self, name, config)
+  local component = IComponent:__init(name, 1)
+  component.config = config
+  return oop.rawnew(self, component)
 end
 
 --
 -- Inicia o componente
 --
-function SessionServiceComponent:startup()
-  log:service("Pedido de startup para o serviço de sessão")
+function startup(self)
+  Log:service("Pedido de startup para o serviço de sessão")
 
   -- Se é o primeiro startup, deve instanciar ConnectionManager e
   -- instalar interceptadores
   if not self.initialized then
-    log:service("Serviço de sessão está inicializando")      
+    Log:service("Serviço de sessão está inicializando")      
     local credentialHolder = CredentialHolder()
     self.connectionManager = 
       ServiceConnectionManager(self.config.accessControlServerHost,
@@ -67,12 +72,12 @@ function SessionServiceComponent:startup()
                                                self.accessControlService))
     self.initialized = true
   else
-    log:service("Serviço de sessão já foi inicializado")
+    Log:service("Serviço de sessão já foi inicializado")
   end
 
   -- autentica o serviço, conectando-o ao barramento
-  local success = self.connectionManager:connect(self.name,
-    function() self.wasReconnected(self) end)
+  local success = self.connectionManager:connect(self.classId.name,
+      function() self.wasReconnected(self) end)
   if not success then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
@@ -93,27 +98,27 @@ function SessionServiceComponent:startup()
   }
   local registryService = self.accessControlService:getRegistryService()
   if not registryService then
-    log:error("Servico de registro nao encontrado.\n")
+    Log:error("Servico de registro nao encontrado.\n")
     self.connectionManager:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
   success, self.registryIdentifier = registryService:register(self.serviceOffer)
   if not success then
-    log:error("Erro ao registrar oferta do servico de sessao.\n")
+    Log:error("Erro ao registrar oferta do servico de sessao.\n")
     self.connectionManager:disconntect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
   self.started = true
-  log:service("Serviço de sessão iniciado")
+  Log:service("Serviço de sessão iniciado")
 end
 
 --
 -- Procedimento após a reconexão do serviço
 --
-function SessionServiceComponent:wasReconnected()
-log:service("Serviço de sessão foi reconectado")
+function wasReconnected(self)
+Log:service("Serviço de sessão foi reconectado")
 
   -- Procedimento realizado pela faceta
   self.sessionService:wasReconnected()
@@ -123,13 +128,13 @@ log:service("Serviço de sessão foi reconectado")
   local registryService = self.accessControlService:getRegistryService()
   if not registryService then
     self.registryIdentifier = nil
-    log:error("Servico de registro nao encontrado.\n")
+    Log:error("Servico de registro nao encontrado.\n")
     return
   end
 
   success, self.registryIdentifier = registryService:register(self.serviceOffer)
   if not success then
-    log:error("Erro ao registrar oferta do servico de sessao.\n")
+    Log:error("Erro ao registrar oferta do servico de sessao.\n")
     self.registryIdentifier = nil
     return
   end
@@ -138,10 +143,10 @@ end
 --
 -- Finaliza o serviço
 --
-function SessionServiceComponent:shutdown()
-  log:service("Pedido de shutdown para o serviço de sessão")
+function shutdown(self)
+  Log:service("Pedido de shutdown para o serviço de sessão")
   if not self.started then
-    log:error("Servico ja foi finalizado.\n")
+    Log:error("Servico ja foi finalizado.\n")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false
@@ -150,7 +155,7 @@ function SessionServiceComponent:shutdown()
     local accessControlService = self.connectionManager:getAccessControlService()
     local registryService = accessControlService:getRegistryService()
     if not registryService then
-      log:error("Serviço de registro não encontrado")
+      Log:error("Serviço de registro não encontrado")
     else
       registryService:unregister(self.registryIdentifier)
     end
@@ -162,5 +167,5 @@ function SessionServiceComponent:shutdown()
   self.connectionManager:disconnect()
 
   self:removeFacets()
-  log:service("Serviço de sessão finalizado")
+  Log:service("Serviço de sessão finalizado")
 end

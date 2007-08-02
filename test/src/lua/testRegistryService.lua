@@ -5,12 +5,12 @@
 --
 package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
-require "oil"
+local oil = require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 
-require "openbus.Member"
+local IComponent = require "scs.core.IComponent"
 
 local Check = require "latt.Check"
 
@@ -49,8 +49,8 @@ Suite = {
     end,
 
     testRegister = function(self)
-      local member = Member{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
+      local member = IComponent("Membro Mock", 1)
+      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
       local success, registryIdentifier = self.registryService:register({type = "type1", description = "bla bla bla", properties = {}, member = member, })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
@@ -58,8 +58,8 @@ Suite = {
     end,
 
     testFind = function(self)
-      local member = Member{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
+      local member = IComponent("Membro Mock", 1)
+      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
       local success, registryIdentifier = self.registryService:register({type = "X", description = "bla", properties = {}, member = member, })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
@@ -72,8 +72,8 @@ Suite = {
     end,
 
     testUpdate = function(self)
-      local member = Member{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
+      local member = IComponent("Membro Mock", 1)
+      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
       local serviceOffer = {type = "X", description = "bla", properties = {}, member = member, }
       Check.assertFalse(self.registryService:update("", {}))
       local success, registryIdentifier = self.registryService:register(serviceOffer)
@@ -84,21 +84,22 @@ Suite = {
       Check.assertTrue(self.registryService:update(registryIdentifier, newProps))
       offers = self.registryService:find("X", {{name = "p1", value = {"b"}}})
       Check.assertEquals(1, #offers)
-      Check.assertEquals(offers[1].member:getName(), member:getName())
+      Check.assertEquals(offers[1].member:getClassId().name,
+        member:getClassId().name)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 
     testNoUnregister = function(self)
-      local member = Member{name = "Membro Mock"}
-      member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
+      local member = IComponent("Membro Mock", 1)
+      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
       local serviceOffer = {type = "FICA", description = "bla", properties = {}, member = member, }
       local success, registryIdentifier = self.registryService:register(serviceOffer)
       Check.assertTrue(success)
     end,
 
     testFacets = function(self)
-      local member = Member{name = "Membro Com Facetas"}
-      member = oil.newobject(member, "IDL:openbusidl/IMember:1.0")
+      local member = IComponent("Membro Mock", 1)
+      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
       local dummyObserver = {
         credentialWasDeleted = function(self, credential) end
       }

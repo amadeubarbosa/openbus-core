@@ -6,34 +6,35 @@
 -----------------------------------------------------------------------------
 package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
-require "oil"
+local oil = require "oil"
 
-local log = require "openbus.common.Log"
+local Log = require "openbus.common.Log"
 
-require "openbus.services.session.SessionServiceComponent"
+local SessionServiceComponent =
+    require "openbus.services.session.SessionServiceComponent"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
-  io.stderr:write("A variavel CORBA_IDL_DIR nao foi definida.\n")
+  Log:error("A variavel CORBA_IDL_DIR nao foi definida.\n")
   os.exit(1)
 end
 
 local CONF_DIR = os.getenv("CONF_DIR")
 if CONF_DIR == nil then
-  io.stderr:write("A variavel CONF_DIR nao foi definida.\n")
+  Log:error("A variavel CONF_DIR nao foi definida.\n")
   os.exit(1)
 end
 
 -- Obtém a configuração do serviço
 assert(loadfile(CONF_DIR.."/SessionServerConfiguration.lua"))()
 
-SessionServerConfiguration.accessControlServerHost = 
-  SessionServerConfiguration.accessControlServerHostName..":"..
-  SessionServerConfiguration.accessControlServerHostPort
+SessionServerConfiguration.accessControlServerHost =
+    SessionServerConfiguration.accessControlServerHostName..":"..
+    SessionServerConfiguration.accessControlServerHostPort
 
 -- Seta os níveis de verbose para o openbus e para o oil
 if SessionServerConfiguration.logLevel then
-  log:level(SessionServerConfiguration.logLevel)
+  Log:level(SessionServerConfiguration.logLevel)
 end
 if SessionServerConfiguration.oilVerboseLevel then
   oil.verbose:level(SessionServerConfiguration.oilVerboseLevel)
@@ -51,29 +52,28 @@ function main()
   -- Aloca uma thread para o orb
   local success, res = oil.pcall(oil.newthread, oil.run)
   if not success then
-    io.stderr:write("Falha na execução da thread do orb: "..tostring(res).."\n")
+    Log:error("Falha na execução do ORB: "..tostring(res).."\n")
     os.exit(1)
   end
 
+  print("ABCD")
   -- Cria o componente responsável pelo Serviço de Sessão
   success, res = oil.pcall(oil.newservant,
-      SessionServiceComponent("SessionService"),
-      "IDL:openbusidl/ss/ISessionServiceComponent:1.0")
+      SessionServiceComponent("SessionService", SessionServerConfiguration),
+      "IDL:scs/core/IComponent:1.0")
+  print("EFGH")
   if not success then
-    io.stderr:write("Falha criando SessionServiceComponent: "..
-                    tostring(res).."\n") 
+    Log:error("Falha criando SessionServiceComponent: "..tostring(res).."\n")
     os.exit(1)
   end
   local sessionServiceComponent = res
-
-  success, res = oil.pcall(sessionServiceComponent.startup, 
-                           sessionServiceComponent)
+  success, res = oil.pcall(sessionServiceComponent.startup,
+      sessionServiceComponent)
   if not success then
-    io.stderr:write("Falha ao iniciar o serviço de sessão: "..
-                    tostring(res).."\n")
+    Log:error("Falha ao iniciar o serviço de sessão: "..tostring(res).."\n")
     os.exit(1)
   end
-  log:init("Serviço de sessão iniciado com sucesso")
+  Log:init("Serviço de sessão iniciado com sucesso")
 end
 
 print(oil.pcall(oil.main,main))

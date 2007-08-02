@@ -4,38 +4,52 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
+local io = io
+local string = string
+local os = os
+
+local ipairs = ipairs
+local type = type
+local dofile = dofile
+local pairs = pairs
+local tostring = tostring
+local tonumber = tonumber
+
+local lposix = require "lposix"
+local oil = require "oil"
+
+local Log = require "openbus.common.Log"
+
 local oop = require "loop.base"
-local log = require "openbus.common.Log"
 
-require "lposix"
-require "oil"
+module("openbus.services.accesscontrol.CredentialDB", oop.class)
 
-local FILE_SUFFIX = ".credential"
-local FILE_SEPARATOR = "/"
+FILE_SUFFIX = ".credential"
+FILE_SEPARATOR = "/"
 
-CredentialDB = oop.class{
-  credentials = {},
-}
-
-function CredentialDB:__init(databaseDirectory)
-  self = oop.rawnew(self, {databaseDirectory = databaseDirectory,})
-  if not posix.dir(databaseDirectory) then
-    log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. Criando...")
-    local status, errorMessage = posix.mkdir(databaseDirectory)
+function __init(self, databaseDirectory)
+  if not lposix.dir(databaseDirectory) then
+    Log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. "..
+        "Criando...")
+    local status, errorMessage = lposix.mkdir(databaseDirectory)
     if not status then
-      log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
+      Log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
       error(errorMessage)
     end
   end
-  return self
+  return oop.rawnew(self, {
+    databaseDirectory = databaseDirectory,
+    credentials = {},
+  })
 end
 
-function CredentialDB:retrieveAll()
-  local credentialFiles = posix.dir(self.databaseDirectory)
+function retrieveAll(self)
+  local credentialFiles = lposix.dir(self.databaseDirectory)
   local entries = {}
   for _, fileName in ipairs(credentialFiles) do
-    if string.sub(fileName, -(#FILE_SUFFIX)) == FILE_SUFFIX then
-      local entry = dofile(self.databaseDirectory..FILE_SEPARATOR..fileName)
+    if string.sub(fileName, -(#self.FILE_SUFFIX)) == self.FILE_SUFFIX then
+      local entry = dofile(self.databaseDirectory..self.FILE_SEPARATOR..
+          fileName)
       local credential = entry.credential
       self.credentials[credential.identifier] = true
       entries[credential.identifier] = entry
@@ -44,7 +58,7 @@ function CredentialDB:retrieveAll()
   return entries
 end
 
-function CredentialDB:insert(entry)
+function insert(self, entry)
   local credential = entry.credential
   if self.credentials[credential.identifier] then
     return false, "A credencial especificada ja existe."
@@ -57,7 +71,7 @@ function CredentialDB:insert(entry)
   return true
 end
 
-function CredentialDB:update(entry)
+function update(self, entry)
   local credential = entry.credential
   if not self.credentials[credential.identifier] then
     return false, "A credencial especificada não existe."
@@ -65,7 +79,7 @@ function CredentialDB:update(entry)
   return self:writeCredential(entry)
 end
 
-function CredentialDB:delete(entry)
+function delete(self, entry)
   local credential = entry.credential
   if not self.credentials[credential.identifier] then
     return false, "A credencial especificada não existe."
@@ -82,12 +96,11 @@ end
 -- Serializa os elementos de Lua em uma string
 -- XXX Não tem nada pronto pra usar?!
 ---------------------------------------------------------------------
-function CredentialDB:toString(val)
+function toString(self, val)
   local t = type(val)
   if t == "table" then
     local str = '{'
     for f, s in pairs(val) do
-
       -- caso especial para referencia a componente
       if type(f) == "string" and f == "component" then
         str = str .. f .. "=[[" .. oil.tostring(s) .. "]],"
@@ -110,42 +123,45 @@ function CredentialDB:toString(val)
   end
 end
 
-function CredentialDB:writeCredential(entry)
+function writeCredential(self, entry)
   local credential = entry.credential
-  local credentialFile, errorMessage = io.open(self.databaseDirectory..FILE_SEPARATOR..credential.identifier..FILE_SUFFIX, "w")
+  local credentialFile, errorMessage = io.open(self.databaseDirectory..
+      self.FILE_SEPARATOR..credential.identifier..self.FILE_SUFFIX, "w")
   if not credentialFile then
     return false, errorMessage
   end
-  credentialFile:write("return ".. self:toString(entry))
+  credentialFile:write("return "..self:toString(entry))
   credentialFile:close()
   return true
 end
 
-function CredentialDB:removeCredential(entry)
+function removeCredential(self, entry)
   local credential = entry.credential
-  return os.remove(self.databaseDirectory..FILE_SEPARATOR..credential.identifier..FILE_SUFFIX)
+  return os.remove(self.databaseDirectory..self.FILE_SEPARATOR..
+      credential.identifier..self.FILE_SUFFIX)
 end
 
-function CredentialDB:retrieveRegistryService()
-  local regFileName = self.databaseDirectory..FILE_SEPARATOR.."registryservice"
+function retrieveRegistryService(self)
+  local regFileName = self.databaseDirectory..self.FILE_SEPARATOR..
+      "registryservice"
   local f = io.open(regFileName)
   if not f then
-    log:service("Referencia ao RegistryService não persistida")
+    Log:service("Referencia ao RegistryService não persistida")
     return nil
   end
   f:close()
-  local registryEntry = dofile(self.databaseDirectory..FILE_SEPARATOR..
-                               "registryservice")
+  local registryEntry = dofile(self.databaseDirectory..self.FILE_SEPARATOR..
+      "registryservice")
   -- recupera referência ao componente
   local regIOR = registryEntry.component
   registryEntry.component = oil.newproxy(regIOR)
-  log:service("Referencia ao RegistryService recuperada")
+  Log:service("Referencia ao RegistryService recuperada")
   return registryEntry
 end
 
-function CredentialDB:writeRegistryService(registryEntry)
-  local regFile, errorMessage = 
-    io.open(self.databaseDirectory..FILE_SEPARATOR.."registryservice","w")
+function writeRegistryService(self, registryEntry)
+  local regFile, errorMessage = io.open(self.databaseDirectory..
+      self.FILE_SEPARATOR.."registryservice","w")
   if not regFile then
     return false, errorMessage
   end
@@ -154,6 +170,7 @@ function CredentialDB:writeRegistryService(registryEntry)
   return true
 end
 
-function CredentialDB:deleteRegistryService()
-  return os.remove(self.databaseDirectory..FILE_SEPARATOR.."registryservice")
+function deleteRegistryService(self)
+  return os.remove(self.databaseDirectory..self.FILE_SEPARATOR..
+      "registryservice")
 end

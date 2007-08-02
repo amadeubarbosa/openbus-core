@@ -2,6 +2,7 @@
 #define SS_IDL
 
 #include "core.idl"
+#include "scs.idl"
 
 module openbusidl {
 
@@ -55,7 +56,7 @@ interface ISession : SessionEventSink {
      *
      * \return O identificador do membro.
      */
-    MemberIdentifier addMember(in IMember member);
+    MemberIdentifier addMember(in scs::core::IComponent member);
     /**
      * \brief Remove um membro da sessão.
      *
@@ -70,7 +71,7 @@ interface ISession : SessionEventSink {
      * \return A sequência de membros. Pode estar vazia caso não existam membros participando da
      * sessão.
      */
-    MemberList getMembers();
+    scs::core::IComponentSeq getMembers();
 };
 /** \brief Representa uma sequência de sessões. */
 typedef sequence<ISession> SessionList;
@@ -88,7 +89,8 @@ interface ISessionService {
      *
      * \return \c true, caso a sessão tenha sido criada, ou \c false, caso contrário.
      */
-    boolean createSession(in IMember member, out ISession session, out MemberIdentifier memberIdentifier);
+    boolean createSession(in scs::core::IComponent member,
+        out ISession session, out MemberIdentifier memberIdentifier);
     /**
      * \brief Obtém a sessão associada a uma credencial.
      *
@@ -96,15 +98,6 @@ interface ISessionService {
      * associada à credencial.
      */
     ISession getSession();
-};
-
-/**
- * \brief Membro que representa o serviço de sessão.
- *
- * Facetas:
- * - SessionService
- */
-interface ISessionServiceComponent : IMember {
 };
 
 };

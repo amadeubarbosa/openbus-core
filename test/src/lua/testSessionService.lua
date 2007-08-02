@@ -3,12 +3,12 @@
 --
 -- $Id$
 --
-require "oil"
+local oil = require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 
-require "openbus.Member"
+local IComponent = require "scs.core.IComponent"
 
 local Check = require "latt.Check"
 
@@ -48,19 +48,19 @@ Suite = {
 
       local serviceOffers = registryService:find("SessionService", {})
       Check.assertNotEquals(#serviceOffers, 0)
-      local sessionServiceComponent = oil.narrow(serviceOffers[1].member, "IDL:openbusidl/ss/ISessionServiceComponent:1.0")
+      local sessionServiceComponent = oil.narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
       local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
       self.sessionService = sessionServiceComponent:getFacet(sessionServiceInterface)
       self.sessionService = oil.narrow(self.sessionService, sessionServiceInterface)
     end,
 
     testCreateSession = function(self)
-      local member1 = Member{name = "membro1"}
-      member1 = oil.newservant(member1, "IDL:openbusidl/IMember:1.0")
+      local member1 = IComponent("membro1", 1)
+      member1 = oil.newservant(member1, "IDL:scs/core/IComponent:1.0")
       local success, session, id1 = self.sessionService:createSession(member1)
       Check.assertTrue(success)
-      local member2 = Member{name = "membro2"}
-      member2 = oil.newservant(member2, "IDL:openbusidl/IMember:1.0")
+      local member2 = IComponent("membro2", 1)
+      member2 = oil.newservant(member2, "IDL:scs/core/IComponent:1.0")
       local session2 = self.sessionService:getSession()
       Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
       local id2 = session:addMember(member2)

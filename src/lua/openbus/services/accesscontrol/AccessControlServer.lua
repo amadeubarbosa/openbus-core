@@ -6,71 +6,67 @@
 -----------------------------------------------------------------------------
 package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
-require "oil"
+local oil = require "oil"
 
-require "openbus.services.accesscontrol.AccessControlService"
+local Log = require "openbus.common.Log"
 
-local log = require "openbus.common.Log"
+local AccessControlService =
+    require "openbus.services.accesscontrol.AccessControlService"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
-    log:error("A variavel CORBA_IDL_DIR nao foi definida.\n")
-    os.exit(1)
+  Log:error("A variavel CORBA_IDL_DIR nao foi definida.\n")
+  os.exit(1)
 end
 
 local CONF_DIR = os.getenv("CONF_DIR")
 if CONF_DIR == nil then
-    log:error("A variavel CONF_DIR nao foi definida.\n")
-    os.exit(1)
+  Log:error("A variavel CONF_DIR nao foi definida.\n")
+  os.exit(1)
 end
 
 -- Obtém a configuração do serviço
 assert(loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua"))()
 
--- Seta os níveis de verbose para o openbus e para o oil
+-- Define os níveis de verbose para o OpenBus e para o OiL.
 if AccessControlServerConfiguration.logLevel then
-  log:level(AccessControlServerConfiguration.logLevel)
+  Log:level(AccessControlServerConfiguration.logLevel)
 end
 if AccessControlServerConfiguration.oilVerboseLevel then
   oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
 end
 
--- Carrega a interface do serviço
-local idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
-oil.loadidlfile (idlfile)
-idlfile = CORBA_IDL_DIR.."/registry_service.idl"
-oil.loadidlfile (idlfile)
+oil.loadidlfile(CORBA_IDL_DIR.."/access_control_service.idl")
 
--- Inicializa o ORB, fixando a localização do serviço em porta específica
-oil.init{host = AccessControlServerConfiguration.hostName, 
-         port = AccessControlServerConfiguration.hostPort}
+-- Inicializa o ORB, fixando a localização do serviço em uma porta específica
+oil.init{host = AccessControlServerConfiguration.hostName,
+    port = AccessControlServerConfiguration.hostPort}
 
 function main()
-  -- Aloca uma thread para o orb
-  local success, res  = oil.pcall(oil.newthread,oil.run)
+  local success, res = oil.pcall(oil.newthread, oil.run)
   if not success then
-    log:error("Falha na execução da thread do orb: "..tostring(res).."\n")
+    Log:error("Falha na execução do ORB: "..tostring(res).."\n")
     os.exit(1)
   end
 
   -- Cria o componente responsável pelo Serviço de Controle de Acesso
-  success, res  = 
-    oil.pcall(oil.newservant,
-    AccessControlService("AccessControlService"), 
-    "IDL:openbusidl/acs/IAccessControlService:1.0", "ACS")
+  success, res  = oil.pcall(oil.newservant,
+      AccessControlService("AccessControlService",
+      AccessControlServerConfiguration),
+      "IDL:openbusidl/acs/IAccessControlService:1.0", "ACS")
   if not success then
-    log:error("Falha criando o AcessControlService: "..tostring(res).."\n")
+    Log:error("Falha criando o AcessControlService: "..tostring(res).."\n")
     os.exit(1)
   end
 
   local accessControlService = res
   success, res = oil.pcall(accessControlService.startup, accessControlService)
   if not success then
-    log:error("Falha ao iniciar o serviço de controle de acesso: "..
-               tostring(res).."\n")
+    Log:error("Falha ao iniciar o serviço de controle de acesso: "..
+        tostring(res).."\n")
     os.exit(1)
   end
-  log:init("Serviço de controle de acesso iniciado com sucesso")
+  Log:init("Serviço de controle de acesso iniciado com sucesso")
 end
 
 print(oil.pcall(oil.main,main))

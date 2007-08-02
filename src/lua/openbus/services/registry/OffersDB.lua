@@ -4,40 +4,51 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
+local io = io
+local string = string
+local os = os
+
+local ipairs = ipairs
+local pairs = pairs
+local dofile = dofile
+local type = type
+local tostring = tostring
+local tonumber = tonumber
+
+local lposix = require "lposix"
+local oil = require "oil"
+
+local Log = require "openbus.common.Log"
+
 local oop = require "loop.base"
-local log = require "openbus.common.Log"
+module("openbus.services.registry.OffersDB", oop.class)
 
-require "lposix"
-require "oil"
+FILE_SUFFIX = ".offer"
+FILE_SEPARATOR = "/"
 
-local FILE_SUFFIX = ".offer"
-local FILE_SEPARATOR = "/"
-
-OffersDB = oop.class{
-  dbOffers = {},
-}
-
-function OffersDB:__init(databaseDirectory)
-  self = oop.rawnew(self, {databaseDirectory = databaseDirectory,})
-  if not posix.dir(databaseDirectory) then
-    log:service("O diretorio ["..databaseDirectory..
-                "] nao foi encontrado. Criando...")
-    local status, errorMessage = posix.mkdir(databaseDirectory)
+function __init(self, databaseDirectory)
+  if not lposix.dir(databaseDirectory) then
+    Log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. "..
+        "Criando...")
+    local status, errorMessage = lposix.mkdir(databaseDirectory)
     if not status then
-      log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
+      Log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
       error(errorMessage)
     end
   end
-  return self
+  return oop.rawnew(self, {
+    databaseDirectory = databaseDirectory,
+    dbOffers = {},
+  })
 end
 
-function OffersDB:retrieveAll()
-  local offerFiles = posix.dir(self.databaseDirectory)
+function retrieveAll(self)
+  local offerFiles = lposix.dir(self.databaseDirectory)
   local offerEntries = {}
   for _, fileName in ipairs(offerFiles) do
-    if string.sub(fileName, -(#FILE_SUFFIX)) == FILE_SUFFIX then
-      local offerEntry = 
-        dofile(self.databaseDirectory..FILE_SEPARATOR..fileName)
+    if string.sub(fileName, -(#self.FILE_SUFFIX)) == self.FILE_SUFFIX then
+      local offerEntry = dofile(self.databaseDirectory..self.FILE_SEPARATOR..
+          fileName)
       self.dbOffers[offerEntry.identifier] = true
 
       -- caso especial para referencias a membros
@@ -50,7 +61,7 @@ function OffersDB:retrieveAll()
   return offerEntries
 end
 
-function OffersDB:insert(offerEntry)
+function insert(self, offerEntry)
   if self.dbOffers[offerEntry.identifier] then
     return false, "A oferta especificada ja existe."
   end
@@ -62,14 +73,14 @@ function OffersDB:insert(offerEntry)
   return true
 end
 
-function OffersDB:update(offerEntry)
+function update(self, offerEntry)
   if not self.dbOffers[offerEntry.identifier] then
     return false, "A oferta especificada não existe."
   end
   return self:writeOffer(offerEntry)
 end
 
-function OffersDB:delete(offerEntry)
+function delete(self, offerEntry)
   if not self.dbOffers[offerEntry.identifier] then
     return false, "A oferta especificada não existe."
   end
@@ -81,10 +92,7 @@ function OffersDB:delete(offerEntry)
   return true
 end
 
----------------------------------------------------------------------
--- Serializa as ofertas de serviço
----------------------------------------------------------------------
-function OffersDB:serialize(val)
+function serialize(self, val)
   local t = type(val)
   if t == "table" then
     local str = '{'
@@ -112,10 +120,9 @@ function OffersDB:serialize(val)
   end
 end
 
-function OffersDB:writeOffer(offerEntry)
-  local offerFile, errorMessage = 
-    io.open(self.databaseDirectory..FILE_SEPARATOR..offerEntry.identifier..
-            FILE_SUFFIX, "w")
+function writeOffer(self, offerEntry)
+  local offerFile, errorMessage =  io.open(self.databaseDirectory..
+      self.FILE_SEPARATOR..offerEntry.identifier..self.FILE_SUFFIX, "w")
   if not offerFile then
     return false, errorMessage
   end
@@ -124,7 +131,7 @@ function OffersDB:writeOffer(offerEntry)
   return true
 end
 
-function OffersDB:removeOffer(offerEntry)
-  return os.remove(self.databaseDirectory..FILE_SEPARATOR..
-                   offerEntry.identifier..FILE_SUFFIX)
+function removeOffer(self, offerEntry)
+  return os.remove(self.databaseDirectory..self.FILE_SEPARATOR..
+      offerEntry.identifier..self.FILE_SUFFIX)
 end

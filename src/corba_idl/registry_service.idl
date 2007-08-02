@@ -2,6 +2,7 @@
 #define RS_IDL
 
 #include "core.idl"
+#include "scs.idl"
 
 module openbusidl {
 
@@ -28,7 +29,7 @@ struct ServiceOffer {
     string type; /**< \brief O tipo do serviço. */
     string description; /**< \brief A descrição do serviço. */
     PropertyList properties; /**< \brief Propriedades. */
-    IMember member; /**< \brief O membro que está ofertando o serviço. */
+    scs::core::IComponent member; /**< \brief O membro que está ofertando o serviço. */
 };
 typedef sequence<ServiceOffer> ServiceOfferList;
 
@@ -38,7 +39,7 @@ typedef Identifier RegistryIdentifier;
 /**
  * \brief Representa o serviço de registro.
  */
-interface IRegistryService : IMember {
+interface IRegistryService : scs::core::IComponent {
     /**
      * \brief Registra uma oferta de serviço.
      *

@@ -4,48 +4,57 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-require "oil"
-require "luuid"
+local os = os
+local table = table
 
-require "openbus.Member"
-require "openbus.services.registry.OffersDB"
+local loadfile = loadfile
+local assert = assert
+local pairs = pairs
+local ipairs = ipairs
+local next = next
 
+local luuid = require "luuid"
+local oil = require "oil"
+
+local OffersDB = require "openbus.services.registry.OffersDB"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
 local PICurrent = require "openbus.common.PICurrent"
-local log = require "openbus.common.Log"
-local ServiceConnectionManager = require "openbus.common.ServiceConnectionManager"
+local CredentialHolder = require "openbus.common.CredentialHolder"
+local ServiceConnectionManager =
+    require "openbus.common.ServiceConnectionManager"
+
+local Log = require "openbus.common.Log"
+
+local IComponent = require "scs.core.IComponent"
 
 local oop = require "loop.simple"
-
-RegistryService = oop.class({}, Member)
+module("openbus.services.registry.RegistryService")
+oop.class(_M, IComponent)
 
 --
 -- Constrói a implementação do componente
 --
-function RegistryService:__init(name)
-  local obj = { name = name,
-                config = RegistryServerConfiguration,
-              }
-  Member:__init(obj)
-  return oop.rawnew(self, obj)
+function __init(self, name, config)
+  local component = IComponent:__init(name, 1)
+  component.config = config
+  return oop.rawnew(self, component)
 end
 
 --
 -- Inicia o componente
 --
-function RegistryService:startup()
-  log:service("Pedido de startup para serviço de registro")
+function startup(self)
+  Log:service("Pedido de startup para serviço de registro")
 
   -- Se é o primeiro startup, deve instanciar ConnectionManager e
   -- instalar interceptadores
   if not self.initialized then
-    log:service("Serviço de registro está inicializando")
+    Log:service("Serviço de registro está inicializando")
     local credentialHolder = CredentialHolder()
-    self.connectionManager = 
-      ServiceConnectionManager(self.config.accessControlServerHost,
-        credentialHolder, self.config.privateKeyFile, 
+    self.connectionManager =  ServiceConnectionManager(
+        self.config.accessControlServerHost, credentialHolder,
+        self.config.privateKeyFile,
         self.config.accessControlServiceCertificateFile)
   
     -- obtém a referência para o Serviço de Controle de Acesso
@@ -71,17 +80,17 @@ function RegistryService:startup()
     self.offersDB = OffersDB(self.config.databaseDirectory)
     self.initialized = true
   else
-    log:service("Serviço de registro já foi inicializado")
+    Log:service("Serviço de registro já foi inicializado")
   end
 
   -- Inicializa o repositório de ofertas
   self.offersByIdentifier = {}   -- id -> oferta
   self.offersByType = {}         -- tipo -> id -> oferta
-  self. offersByCredential = {}  -- credencial -> id -> oferta
+  self.offersByCredential = {}  -- credencial -> id -> oferta
 
   -- autentica o serviço, conectando-o ao barramento
-  local success = self.connectionManager:connect(self.name,
-    function() self.wasReconnected(self) end)
+  local success = self.connectionManager:connect(self.classId.name,
+      function() self.wasReconnected(self) end)
   if not success then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
@@ -93,7 +102,7 @@ function RegistryService:startup()
   local observer = {
     registryService = self,
     credentialWasDeleted = function(self, credential)
-      log:service("Observador notificado para credencial "..
+      Log:service("Observador notificado para credencial "..
                   credential.identifier)
       self.registryService:credentialWasDeleted(credential)
     end
@@ -103,23 +112,23 @@ function RegistryService:startup()
                                 "RegistryServiceCredentialObserver")
   self.observerId =
     self.accessControlService:addObserver(self.observer, {})
-  log:service("Cadastrado observador para a credencial")
+  Log:service("Cadastrado observador para a credencial")
 
   -- recupera ofertas persistidas
-  log:service("Recuperando ofertas persistidas")
+  Log:service("Recuperando ofertas persistidas")
   local offerEntriesDB = self.offersDB:retrieveAll()
   for _, offerEntry in pairs(offerEntriesDB) do
     -- somente recupera ofertas de credenciais válidas
     if self.accessControlService:isValid(offerEntry.credential) then
       self:addOffer(offerEntry)
     else
-      log:service("Oferta de "..offerEntry.credential.identifier.." descartada")
+      Log:service("Oferta de "..offerEntry.credential.identifier.." descartada")
       self.offersDB:delete(offerEntry)
     end
   end
 
   self.started = true
-  log:service("Serviço de registro iniciado")
+  Log:service("Serviço de registro iniciado")
 end
 
 --
@@ -131,7 +140,7 @@ end
 --               cada propriedade é um par nome/valor (lista de strings)
 --   member: referência para o membro que faz a oferta
 --
-function RegistryService:register(serviceOffer)
+function register(self, serviceOffer)
   local identifier = self:generateIdentifier()
   local credential = self.picurrent:getValue()
 
@@ -143,7 +152,7 @@ function RegistryService:register(serviceOffer)
     identifier = identifier
   }
 
-  log:service("Registrando oferta com tipo "..serviceOffer.type..
+  Log:service("Registrando oferta com tipo "..serviceOffer.type..
               " id "..identifier)
 
   self:addOffer(offerEntry)
@@ -155,7 +164,7 @@ end
 --
 -- Adiciona uma oferta ao repositório
 --
-function RegistryService:addOffer(offerEntry)
+function addOffer(self, offerEntry)
   
   -- Índice de ofertas por identificador
   self.offersByIdentifier[offerEntry.identifier] = offerEntry
@@ -163,7 +172,7 @@ function RegistryService:addOffer(offerEntry)
   -- Índice de ofertas por tipo
   local type = offerEntry.offer.type
   if not self.offersByType[type] then
-    log:service("Primeira oferta do tipo "..type)
+    Log:service("Primeira oferta do tipo "..type)
     self.offersByType[type] = {}
   end
   self.offersByType[type][offerEntry.identifier] = offerEntry
@@ -171,7 +180,7 @@ function RegistryService:addOffer(offerEntry)
   -- Índice de ofertas por credencial
   local credential = offerEntry.credential
   if not self.offersByCredential[credential.identifier] then
-    log:service("Primeira oferta da credencial "..credential.identifier)
+    Log:service("Primeira oferta da credencial "..credential.identifier)
     self.offersByCredential[credential.identifier] = {}
   end
   self.offersByCredential[credential.identifier][offerEntry.identifier] = 
@@ -181,12 +190,12 @@ function RegistryService:addOffer(offerEntry)
   -- ofertas a ela relacionadas devem ser removidas
   self.accessControlService:addCredentialToObserver(self.observerId,
                                                     credential.identifier)
-  log:service("Adicionada credencial no observador")
+  Log:service("Adicionada credencial no observador")
 end
 
 -- Constrói um conjunto com os valores das propriedades, para acelerar a busca
 -- procedimento válido enquanto propriedade for lista de strings !!!
-function RegistryService:createPropertyIndex(offerProperties, member)
+function createPropertyIndex(self, offerProperties, member)
   local properties = {}
   for _, property in ipairs(offerProperties) do
     properties[property.name] = {}
@@ -195,20 +204,25 @@ function RegistryService:createPropertyIndex(offerProperties, member)
     end 
   end
 
-  local memberName = member:getName()
+  local memberName = member:getClassId().name
 
   -- se não foi definida uma propriedade "facets", discriminando as facetas
   -- disponibilizadas, assume que todas as facetas do membro são oferecidas
   if not properties["facets"] then
-    log:service("Oferta de serviço sem facetas para o membro "..memberName)
-    local facet_descriptions = member:getFacets()
-    if #facet_descriptions == 0 then
-      log:service("Membro "..memberName.." não possui facetas")
-    else
-      log:service("Membro "..memberName.." possui facetas")
-      properties["facets"] = {}
-      for _,facet in ipairs(facet_descriptions) do
-        properties["facets"][facet.name] = true
+    Log:service("Oferta de serviço sem facetas para o membro "..memberName)
+    local metaInterface = member:getFacetByName("IMetaInterface")
+    if metaInterface then
+      metaInterface = oil.narrow(metaInterface,
+          "IDL:scs/core/IMetaInterface:1.0")
+      local facet_descriptions = metaInterface:getFacets()
+      if #facet_descriptions == 0 then
+        Log:service("Membro "..memberName.." não possui facetas")
+      else
+        Log:service("Membro "..memberName.." possui facetas")
+        properties["facets"] = {}
+        for _,facet in ipairs(facet_descriptions) do
+          properties["facets"][facet.name] = true
+        end
       end
     end
   end
@@ -218,18 +232,18 @@ end
 -- 
 -- Remove uma oferta de serviço
 --
-function RegistryService:unregister(identifier)
-  log:service("Removendo oferta "..identifier)
+function unregister(self, identifier)
+  Log:service("Removendo oferta "..identifier)
 
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
-    log:warning("Oferta a remover com id "..identifier.." não encontrada")
+    Log:warning("Oferta a remover com id "..identifier.." não encontrada")
     return false
   end
 
   local credential = self.picurrent:getValue()
   if credential.identifier ~= offerEntry.credential.identifier then
-    log:warning("Oferta a remover("..identifier..
+    Log:warning("Oferta a remover("..identifier..
                 ") não registrada com a credencial do chamador")
     return false -- esse tipo de erro merece uma exceção!
   end
@@ -243,7 +257,7 @@ function RegistryService:unregister(identifier)
     self.offersByType[type][identifier] = nil
     if not next(self.offersByType[type]) then
       -- Não há mais ofertas desse tipo
-      log:service("Última oferta do tipo "..type.." removida")
+      Log:service("Última oferta do tipo "..type.." removida")
       self.offersByType[type] = nil
     end
   end
@@ -253,14 +267,14 @@ function RegistryService:unregister(identifier)
   if credentialOffers then
     credentialOffers[identifier] = nil
   else
-    log:service("Não há ofertas a remover com credencial "..
+    Log:service("Não há ofertas a remover com credencial "..
                 credential.identifier)
     return true
   end
   if not next(credentialOffers) then
     -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
-    log:service("Última oferta da credencial: remove credencial do observador")
+    Log:service("Última oferta da credencial: remove credencial do observador")
     self.accessControlService:removeCredentialFromObserver(self.observerId,
                                                          credential.identifier)
   end
@@ -273,18 +287,18 @@ end
 -- Apenas as propriedades da oferta podem ser atualizadas
 --   (nessa versão, substituidas)
 --
-function RegistryService:update(identifier, properties)
-  log:service("Atualizando oferta "..identifier)
+function update(self, identifier, properties)
+  Log:service("Atualizando oferta "..identifier)
 
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
-    log:warning("Oferta a atualizar com id "..identifier.." não encontrada")
+    Log:warning("Oferta a atualizar com id "..identifier.." não encontrada")
     return false
   end
 
   local credential = self.picurrent:getValue()
   if credential.identifier ~= offerEntry.credential.identifier then
-    log:warning("Oferta a atualizar("..identifier..
+    Log:warning("Oferta a atualizar("..identifier..
                 ") não registrada com a credencial do chamador")
     return false -- esse tipo de erro merece uma exceção!
   end
@@ -302,18 +316,18 @@ end
 -- critérios (propriedades) especificados.
 -- A especificação de critérios é opcional.
 --
-function RegistryService:find(type, criteria)
-  log:service("Procurando oferta com tipo "..type)
+function find(self, type, criteria)
+  Log:service("Procurando oferta com tipo "..type)
 
   local selectedOffers = {}
   local candidateOfferEntries = self.offersByType[type]
   if candidateOfferEntries and next(candidateOfferEntries) then
-    log:service("Há ofertas para o tipo")
+    Log:service("Há ofertas para o tipo")
     -- Se não há critérios, retorna todas as ofertas
     if #criteria == 0 then
       for id, offerEntry in pairs(candidateOfferEntries) do
         table.insert(selectedOffers, offerEntry.offer)
-        log:service("Sem critério, encontrei "..#selectedOffers.." ofertas")
+        Log:service("Sem critério, encontrei "..#selectedOffers.." ofertas")
       end
     else
       -- Há critérios a verificar
@@ -322,10 +336,10 @@ function RegistryService:find(type, criteria)
           table.insert(selectedOffers, offerEntry.offer)
         end
       end
-     log:service("Com critério, encontrei "..#selectedOffers.." ofertas")
+     Log:service("Com critério, encontrei "..#selectedOffers.." ofertas")
     end
   else
-    log:service("Não há ofertas para o tipo "..type)
+    Log:service("Não há ofertas para o tipo "..type)
   end
 
   return selectedOffers
@@ -334,7 +348,7 @@ end
 --
 -- Verifica se uma oferta atende aos critérios de busca
 --
-function RegistryService:meetsCriteria(criteria, offerProperties)
+function meetsCriteria(self, criteria, offerProperties)
   for _, criterion in ipairs(criteria) do
     local offerProperty = offerProperties[criterion.name]
     if offerProperty then
@@ -354,52 +368,52 @@ end
 -- Notificação de deleção de credencial
 -- As ofertas de serviço relacionadas deverão ser removidas
 --
-function RegistryService:credentialWasDeleted(credential)
-  log:service("Remover ofertas da credencial deletada "..credential.identifier)
+function credentialWasDeleted(self, credential)
+  Log:service("Remover ofertas da credencial deletada "..credential.identifier)
   local credentialOffers = self.offersByCredential[credential.identifier]
   self.offersByCredential[credential.identifier] = nil
 
   if credentialOffers then
     for identifier, offerEntry in pairs(credentialOffers) do
       self.offersByIdentifier[identifier] = nil
-      log:service("Removida oferta "..identifier.." do índice por id")
+      Log:service("Removida oferta "..identifier.." do índice por id")
 
       local type = offerEntry.offer.type
       if self.offersByType[type] then
         self.offersByType[type][identifier] = nil
-        log:service("Removida oferta "..identifier..
+        Log:service("Removida oferta "..identifier..
                      " do índice por tipo "..type)
         if not next(self.offersByType[type]) then -- fim das ofertas desse tipo
-          log:service("Última oferta do tipo "..type.." removida")
+          Log:service("Última oferta do tipo "..type.." removida")
           self.offersByType[type] = nil
         end
       end
       self.offersDB:delete(offerEntry)
     end
   else
-    log:service("Não havia ofertas da credencial "..credential.identifier)
+    Log:service("Não havia ofertas da credencial "..credential.identifier)
   end
 end
 
 --
 -- Gera uma identificação de oferta de serviço
 --
-function RegistryService:generateIdentifier()
-    return uuid.new("time")
+function generateIdentifier()
+    return luuid.new("time")
 end
 
 --
 -- Procedimento após reconexão do serviço
 --
-function RegistryService:wasReconnected()
- log:service("Serviço de registro foi reconectado")
+function wasReconnected(self)
+ Log:service("Serviço de registro foi reconectado")
  -- atualiza a referência junto ao serviço de controle de acesso
   self.accessControlService:setRegistryService(self)
 
   -- registra novamente o observador de credenciais
   self.observerId =
     self.accessControlService:addObserver(self.observer, {})
- log:service("Observador recadastrado")
+ Log:service("Observador recadastrado")
 
   -- Mantem no repositorio apenas ofertas com credenciais válidas
   local offerEntries = self.offersByIdentifier
@@ -411,10 +425,10 @@ function RegistryService:wasReconnected()
   for credentialId, credential in pairs(credentials) do
     if not self.accessControlService:addCredentialToObserver(self.observerId,
                                                             credentialId) then
-      log:service("Ofertas de "..credentialId.." serão removidas")
+      Log:service("Ofertas de "..credentialId.." serão removidas")
       table.insert(invalidCredentials, credential)
     else
-      log:service("Ofertas de "..credentialId.." serão mantidas")
+      Log:service("Ofertas de "..credentialId.." serão mantidas")
     end
   end
   for _, credential in ipairs(invalidCredentials) do
@@ -425,10 +439,10 @@ end
 --
 -- Finaliza o serviço
 --
-function RegistryService:shutdown()
-  log:service("Pedido de shutdown para serviço de registro")
+function shutdown(self)
+  Log:service("Pedido de shutdown para serviço de registro")
   if not self.started then
-    log:error("Servico ja foi finalizado.")
+    Log:error("Servico ja foi finalizado.")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false
@@ -441,5 +455,5 @@ function RegistryService:shutdown()
 
   self.connectionManager:disconnect()
 
-  log:service("Serviço de registro finalizado")
+  Log:service("Serviço de registro finalizado")
 end
