@@ -24,8 +24,8 @@ oil.loadidlfile(idlfile)
 
 local host = "localhost"
 local port = 2089
-local user = "csbase"
-local password = "csbLDAPtest"
+local user = "tester"
+local password = "tester"
 
 function showNodes(nodes, depth, dataService)
   local prefix = ""

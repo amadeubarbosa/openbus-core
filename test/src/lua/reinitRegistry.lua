@@ -3,13 +3,13 @@
 --
 -- $Id$
 --
-require "oil"
+package.loaded["oil.component"] = require "loop.component.wrapped"
+package.loaded["oil.port"]      = require "loop.component.intercepted"
+local oil = require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 local ClientConnectionManager = require "openbus.common.ClientConnectionManager"
-
-require "openbus.Member"
 
 oil.verbose:level(3)
 
@@ -28,8 +28,8 @@ function main()
     error("ERRO: Falha na execução da thread do oil")
   end
 
-  local user = "csbase"
-  local password = "csbLDAPtest"
+  local user = "tester"
+  local password = "tester"
 
   -- Conecta o cliente ao barramento
   local credentialHolder = CredentialHolder()

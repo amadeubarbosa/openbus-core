@@ -25,8 +25,8 @@ Suite = {
       oil.verbose:level(0)
       oil.loadidlfile(idlfile)
 
-      self.user = "csbase"
-      self.password = "csbLDAPtest"
+      self.user = "tester"
+      self.password = "tester"
 
       self.accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
@@ -80,8 +80,8 @@ Suite = {
       oil.verbose:level(0)
       oil.loadidlfile(idlfile)
 
-      self.user = "csbase"
-      self.password = "csbLDAPtest"
+      self.user = "tester"
+      self.password = "tester"
 
       self.accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 

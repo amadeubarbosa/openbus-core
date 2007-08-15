@@ -25,8 +25,8 @@ oil.loadidlfile(idlfile)
 
 local host = "localhost"
 local port = 2089
-local user = "csbase"
-local password = "csbLDAPtest"
+local user = "tester"
+local password = "tester"
 
 function main()
   local accessControlServiceInterface = "IDL:openbusidl/acs/IAccessControlService:1.0"

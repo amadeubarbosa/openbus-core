@@ -12,7 +12,6 @@ local pairs = pairs
 local ipairs = ipairs
 local tostring = tostring
 
-local lualdap = require "lualdap"
 local luuid = require "luuid"
 local lce = require "lce"
 local oil = require "oil"
@@ -21,6 +20,11 @@ local CredentialDB = require "openbus.services.accesscontrol.CredentialDB"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local PICurrent = require "openbus.common.PICurrent"
 local LeaseProvider = require "openbus.common.LeaseProvider"
+
+local LDAPLoginPasswordValidator =
+    require "openbus.services.accesscontrol.LDAPLoginPasswordValidator"
+local TestLoginPasswordValidator =
+    require "openbus.services.accesscontrol.TestLoginPasswordValidator"
 
 local Log = require "openbus.common.Log"
 
@@ -42,6 +46,10 @@ function __init(self, name, config)
   component.observers = {}
   component.challenges = {}
   component.picurrent = PICurrent()
+  component.loginPasswordValidators = {
+    LDAPLoginPasswordValidator(config.ldapHostName..":"..config.ldapHostPort),
+    TestLoginPasswordValidator(),
+  }
   return oop.rawnew(self, component)
 end
 
@@ -88,15 +96,17 @@ function startup(self)
 end
 
 function loginByPassword(self, name, password)
-    local ldapHost = self.config.ldapHostName..":"..self.config.ldapHostPort
-    local connection, errorMessage = lualdap.open_simple(ldapHost, name, password, false)
-    if not connection then
-      Log:error("Erro ao conectar com o servidor LDAP.\n"..errorMessage)
-      return false, self.invalidCredential, self.invalidLease
+  for _, validator in ipairs(self.loginPasswordValidators) do
+    local result, err = validator:validate(name, password)
+    if result then
+      local entry = self:addEntry(name)
+      return true, entry.credential, entry.lease.duration
+    else
+      Log:warn("Erro ao validar o usuário "..name..".\n".. err)
     end
-    connection:close()
-    local entry = self:addEntry(name)
-    return true, entry.credential, entry.lease.duration
+  end
+  Log:error("Usuário "..name.." não pôde ser validado no sistema.")
+  return false, self.invalidCredential, self.invalidLease
 end
 
 function loginByCertificate(self, name, answer)

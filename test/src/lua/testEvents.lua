@@ -3,15 +3,15 @@
 --
 -- $Id$
 --
-require "oil"
+package.loaded["oil.component"] = require "loop.component.wrapped"
+package.loaded["oil.port"]      = require "loop.component.intercepted"
+local oil = require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 local ClientConnectionManager = require "openbus.common.ClientConnectionManager"
 
-require "openbus.Member"
-
---oil.verbose:level(1)
+local IComponent = require "scs.core.IComponent"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
 if CORBA_IDL_DIR == nil then
@@ -42,8 +42,8 @@ function main()
     error("ERRO: Falha na execução da thread do oil")
   end
 
-  local user = "csbase"
-  local password = "csbLDAPtest"
+  local user = "tester"
+  local password = "tester"
 
   -- Conecta o cliente ao barramento
   local credentialHolder = CredentialHolder()
@@ -80,7 +80,7 @@ function main()
     error("ERRO: Não obteve oferta de serviço de sessão")
   end
   local sessionServiceComponent = oil.narrow(offers[1].member, 
-                 "IDL:openbusidl/ss/ISessionServiceComponent:1.0")
+                 "IDL:scs/core/IComponent:1.0")
   local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
   local sessionService = 
     sessionServiceComponent:getFacet(sessionServiceInterface)
@@ -89,19 +89,19 @@ function main()
 
   -- cria sessão com membros receptores de eventos
   local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
-  local member1 = Member{name = "membro1"}
-  member1 = oil.newservant(member1, "IDL:openbusidl/IMember:1.0")
+  local member1 = IComponent("membro1", 1)
+  member1 = oil.newservant(member1, "IDL:scs/core/IComponent:1.0")
   member1:addFacet("sink1", eventSinkInterface, createSink("sink1"))
   local success, session, id1 = sessionService:createSession(member1)
 
-  local member2 = Member{name = "membro2"}
-  member2 = oil.newservant(member2, "IDL:openbusidl/IMember:1.0")
+  local member2 = IComponent("membro2", 1)
+  member2 = oil.newservant(member2, "IDL:scs/core/IComponent:1.0")
   member2:addFacet("sink2", eventSinkInterface, createSink("sink2"))
   local id2 = session:addMember(member2)
   
   -- adiciona membro não receptor
-  local member3 = Member{name = "membro3"}
-  member3 = oil.newservant(member3, "IDL:openbusidl/IMember:1.0")
+  local member3 = IComponent("membro3", 1)
+  member3 = oil.newservant(member3, "IDL:scs/core/IComponent:1.0")
   local id3 = session:addMember(member3)
 
   -- envio de eventos

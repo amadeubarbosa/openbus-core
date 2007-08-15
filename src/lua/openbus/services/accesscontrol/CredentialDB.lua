@@ -21,7 +21,6 @@ local oil = require "oil"
 local Log = require "openbus.common.Log"
 
 local oop = require "loop.base"
-
 module("openbus.services.accesscontrol.CredentialDB", oop.class)
 
 FILE_SUFFIX = ".credential"

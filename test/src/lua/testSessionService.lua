@@ -30,8 +30,8 @@ Suite = {
       idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
       oil.loadidlfile(idlfile)
 
-      local user = "csbase"
-      local password = "csbLDAPtest"
+      local user = "tester"
+      local password = "tester"
 
       self.accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
