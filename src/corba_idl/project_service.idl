@@ -22,7 +22,13 @@ interface IProject {
 };
 typedef sequence<IProject> ProjectList;
 
-interface IDataChannel {
+struct DataChannel {
+  string host;
+  unsigned short port;
+  Bytes accessKey;
+  Bytes fileIdentifier;
+  boolean writable;
+  long long fileSize;
 };
 
 interface IFile {
@@ -40,8 +46,7 @@ interface IFile {
   boolean rename (in string newName);
   boolean moveFile(in IFile newParent);
   boolean copyFile(in IFile newParent);
-  IDataChannel openDataChannel();
-  boolean closeDataChannel(in IDataChannel channel);
+  DataChannel getDataChannel();
   void close();
 };
 
