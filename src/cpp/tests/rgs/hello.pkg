@@ -1,0 +1,9 @@
+$#include "hello.hpp"
+
+class hello {
+	public:
+		hello() ;
+		~hello() ;
+		void say_hello() ;
+} ;
+

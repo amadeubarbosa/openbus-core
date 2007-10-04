@@ -1,0 +1,4 @@
+#!/bin/ksh
+
+export CORBA_IDL_DIR=${OPENBUS_HOME}/corba_idl
+export CONF_DIR=${OPENBUS_HOME}/conf
