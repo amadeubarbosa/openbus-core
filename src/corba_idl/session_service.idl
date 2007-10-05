@@ -13,6 +13,7 @@ module ss {
 
 /** \brief Representa o identificador de uma sessão. */
 typedef Identifier SessionIdentifier;
+
 /** \brief Representa o identificador do membro de uma sessão. */
 typedef Identifier MemberIdentifier;
 

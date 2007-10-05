@@ -12,12 +12,12 @@ module openbusidl {
  */
 module acs {
 
-/** \brief Representa uma sequência de bytes. */
-typedef sequence<octet> OctetSeq;
 /** \brief Representa o identificador de uma credencial. */
 typedef Identifier CredentialIdentifier;
+
 /** \brief Representa uma sequência de identificadores de credenciais. */
 typedef sequence<CredentialIdentifier> CredentialIdentifierList;
+
 /** \brief Representa o identificador de um observador de credencial. */
 typedef Identifier CredentialObserverIdentifier;
 
@@ -25,8 +25,8 @@ typedef Identifier CredentialObserverIdentifier;
  * \brief Representa a credencial de um membro.
  */
 struct Credential {
-    CredentialIdentifier identifier; /**< \brief Identificador único. */
-    string entityName; /**< \brief Nome da entidade. */
+  CredentialIdentifier identifier; /**< \brief Identificador único. */
+  string entityName; /**< \brief Nome da entidade. */
 };
 
 /**
