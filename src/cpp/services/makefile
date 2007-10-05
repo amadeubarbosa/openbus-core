@@ -1,8 +1,8 @@
 #
-# src/services/makefile
+# services/makefile
 #
 
-include ../../config
+include ../config
 
 RM= rm -rf
 
@@ -11,7 +11,7 @@ all:
 	IAccessControlService.cpp \
 	IRegistryService.cpp \
 	ISessionService.cpp \
-	-I${LUA_INC} \
+	-I${LUA_INC} -I../../../include \
 	${VERBOSE} ${VERBOSE2}
 
 clean:

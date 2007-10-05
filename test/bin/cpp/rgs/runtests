@@ -1,0 +1,6 @@
+#!/bin/ksh
+
+source ../env
+
+runner
+

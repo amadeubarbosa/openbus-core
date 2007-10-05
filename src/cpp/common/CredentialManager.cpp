@@ -2,7 +2,7 @@
 * common/CredentialManager.cpp
 */
 
-#include "CredentialManager.h"
+#include <common/CredentialManager.h>
 #include <stdio.h>
 #include <lua.hpp>
 

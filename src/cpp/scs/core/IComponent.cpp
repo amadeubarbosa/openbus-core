@@ -2,7 +2,7 @@
 * scs/core/IComponent.cpp
 */
 
-#include  "IComponent.h"
+#include <scs/core/IComponent.h>
 #include <lua.hpp>
 #include <tolua.h>
 

@@ -1,5 +1,5 @@
 /*
-* tests/rgs/RGSTestSuite.h
+* rgs/RGSTestSuite.h
 */
 
 #ifndef RGS_TESTSUITE_H
@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
-#include "../../src/openbus.h"
+#include <openbus.h>
 #include "hello.hpp"
 int  tolua_hello_open (lua_State*) ;
 

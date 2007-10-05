@@ -2,7 +2,7 @@
 * services/IRegistryService.cpp
 */
 
-#include "IRegistryService.h"
+#include <services/IRegistryService.h>
 #include <lua.hpp>
 #include <string.h>
 

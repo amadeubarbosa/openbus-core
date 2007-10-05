@@ -2,7 +2,7 @@
 * common/ClientInterceptor.cpp
 */
 
-#include "ClientInterceptor.h"
+#include <common/ClientInterceptor.h>
 #include <lua.hpp>
 
 namespace openbus {

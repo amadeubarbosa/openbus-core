@@ -5,7 +5,7 @@
 extern "C" {
   #include "auxiliar.h"
 }
-#include "openbus.h"
+#include <openbus.h>
 #include <lua.hpp>
 #include <stdio.h>
 #include <stdlib.h>

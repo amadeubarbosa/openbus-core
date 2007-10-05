@@ -1,5 +1,5 @@
 /*
-* tests/ses/SESTestSuite.h
+* ses/SESTestSuite.h
 */
 
 #ifndef SES_TESTSUITE_H
@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
-#include "../../src/openbus.h"
+#include <openbus.h>
 
 using namespace openbus ;
 
