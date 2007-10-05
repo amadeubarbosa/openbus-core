@@ -9,8 +9,6 @@ import openbus.common.ClientConnectionManager;
 import openbus.common.CredentialManager;
 import openbus.common.Utils;
 import openbusidl.acs.IAccessControlService;
-import openbusidl.ps.DataChannel;
-import openbusidl.ps.DataChannelHelper;
 import openbusidl.rs.IRegistryService;
 import openbusidl.ss.ISession;
 import openbusidl.ss.ISessionHolder;
@@ -105,16 +103,19 @@ public class TestEvents {
     component2.startup();
     session.addMember(component2);
 
-    session.push(new SessionEvent("type1", this.orb.create_any()));
-
     Any dataChannelAny = this.orb.create_any();
-    DataChannel dataChannel = new DataChannel("localhost", (short) 2049,
-      new byte[0], new byte[0], true, 1024L);
-    DataChannelHelper.insert(dataChannelAny, dataChannel);
+
+    /*
+     * DataChannel dataChannel = new DataChannel("localhost", (short) 2049, new
+     * byte[0], new byte[0], true, 1024L);
+     * DataChannelHelper.insert(dataChannelAny, dataChannel);
+     */
+    dataChannelAny.insert_long(100);
 
     SessionEvent ev = new SessionEvent("IDL:openbusidl/ps/DataChannel:1.0",
       dataChannelAny);
     session.push(ev);
+    session.disconnect();
   }
 
   /**
