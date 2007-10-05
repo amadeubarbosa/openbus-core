@@ -37,26 +37,14 @@ function addMember(self, member)
 
   -- verifica se o membro recebe eventos
   local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
-  local is_sink = false
-  local metaInterface = member:getFacetByName("IMetaInterface")
-  if metaInterface then
-    metaInterface = oil.narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
-    local facet_descriptions = metaInterface:getFacets()
-    if #facet_descriptions > 0 then
-      for _, facet in ipairs(facet_descriptions) do
-        if facet.interface_name == eventSinkInterface then
-          Log:service("Membro "..memberName.." receberá eventos")
-          self.eventSinks[memberIdentifier] = 
-            oil.narrow(facet.facet_ref, eventSinkInterface)
-          is_sink = true
-          break
-        end
-      end
-    end
-  end
-  if not is_sink then
+  local eventSink = member:getFacet(eventSinkInterface)
+  if eventSink then
+    Log:service("Membro "..memberName.." receberá eventos")
+    self.eventSinks[memberIdentifier] =  oil.narrow(eventSink,
+        eventSinkInterface)
+  else
     Log:service("Membro "..memberName.." não receberá eventos")
-   end
+  end
   return memberIdentifier
 end
 
