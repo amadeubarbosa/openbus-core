@@ -41,8 +41,6 @@
       basedir="${classes.dir}" includes="openbus/**"/>
     <jar destfile="${lib.dir}/openbusidl.jar"
       basedir="${classes.dir}" includes="openbusidl/**"/>
-    <jar destfile="${lib.dir}/scs.jar"
-      basedir="${classes.dir}" includes="SCS/**"/>
   </target>
 
 </project>
