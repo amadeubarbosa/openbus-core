@@ -68,6 +68,13 @@ function push(self, event)
   end
 end
 
+function disconnect(self)
+  Log:service("Desconectando os membros da sessão")
+  for _, sink in pairs(self.eventSinks) do
+    sink:disconnect()
+  end
+end
+
 -- Obtém a lista de membros de uma sessão
 function getMembers(self)
   local members = {}
