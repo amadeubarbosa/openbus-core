@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding=".svn|classes/|run_ant" kind="src" path="src/java"/>
+	<classpathentry kind="src" path="test/src/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/java/commons-codec-1.3/commons-codec-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/java/jacorb2.2.4/idl.jar"/>
 	<classpathentry kind="lib" path="lib/java/jacorb2.2.4/logkit-1.2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="lib/java/scs-0.1/core.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
