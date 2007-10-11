@@ -9,6 +9,7 @@
 #include <string.h>
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
+//#include <services/SessionEventSink.h>
 
 using namespace openbus ;
 
@@ -63,15 +64,34 @@ class SESTestSuite: public CxxTest::TestSuite {
               ( "IDL:openbusidl/ss/ISessionService:1.0" ) ;
           scs::core::IComponent* c1 = new scs::core::IComponent( "membro1" ) ;
           scs::core::IComponent* c2 = new scs::core::IComponent( "membro2" ) ;
+          class MySessionEventSink: public services::SessionEventSink {
+            void push( services::SessionEvent* ev )
+            {
+              printf( "\nEvento %s valor %s recebido por %s\n\n", ev->type, ev->value, "IMPLEMENTAR..." ) ;
+            }
+            void disconnect() {}
+          } ;
+          MySessionEventSink* ev = new MySessionEventSink() ;
+          c1->addFacet( "sink1", "IDL:openbusidl/ss/SessionEventSink:1.0", ev ) ;
+          MySessionEventSink* ev2 = new MySessionEventSink() ;
+          c2->addFacet( "sink2", "IDL:openbusidl/ss/SessionEventSink:1.0", ev2 ) ;
           char* mId ;
           services::ISession* s ;
           services::ISession* s2 ;
           ses->createSession( c1, s, mId ) ;
+          services::MemberIdentifier mId2 = s->addMember( c2 ) ;
+          services::SessionEvent* e = new services::SessionEvent ;
+          e->type = "tipo1" ;
+          e->value = "valor1" ;
+          s->push(e) ;
+          e->type = "tipo2" ;
+          e->value = "valor2" ;
+          s->push(e) ;
           s2 = ses->getSession() ;
           services::SessionIdentifier sId  = s->getIdentifier() ;
           services::SessionIdentifier sId2 = s2->getIdentifier() ;
           TS_ASSERT_SAME_DATA( sId, sId2, strlen( sId2 ) ) ;
-          services::MemberIdentifier mId2 = s->addMember( c2 ) ;
+//           services::MemberIdentifier mId2 = s->addMember( c2 ) ;
           s->getMembers() ;
           s->removeMember( mId ) ;
           s->removeMember( mId2 ) ;
@@ -81,9 +101,6 @@ class SESTestSuite: public CxxTest::TestSuite {
           delete c2 ;
           delete ses ;
       }
-        acs->logout( credential ) ;
-        delete acs ;
-        delete rgs ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;
       } /* try */

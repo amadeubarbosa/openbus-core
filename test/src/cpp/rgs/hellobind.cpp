@@ -1,6 +1,6 @@
 /*
 ** Lua binding: hello
-** Generated automatically by tolua 5.1b on Wed Sep 12 18:36:06 2007.
+** Generated automatically by tolua 5.1b on Tue Oct  9 15:36:12 2007.
 */
 
 #ifndef __cplusplus

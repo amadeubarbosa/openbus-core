@@ -17,6 +17,8 @@ namespace scs {
         IComponent( openbus::String name ) ;
         ~IComponent( void ) ;
 
+        void  addFacet ( openbus::String name, openbus::String interface_name, void * facet_servant) ;
+      /* ToLua Support */
         void  addFacet ( openbus::String name, openbus::String interface_name, \
                 char* constructor_name, void * facet_servant) ;
 

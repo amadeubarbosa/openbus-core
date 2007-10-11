@@ -15,7 +15,8 @@ OBJS= openbus.o \
 			scs/core/IComponent.o \
 			services/IAccessControlService.o \
 			services/IRegistryService.o \
-			services/ISessionService.o
+			services/ISessionService.o \
+			services/SessionEventSinkbind.o \
 
 OPENBUSLIB_A= openbus.a
 

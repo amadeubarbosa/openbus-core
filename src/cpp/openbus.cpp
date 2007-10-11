@@ -11,6 +11,8 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 
+int  tolua_SessionEventSink_open (lua_State*) ;
+
 namespace openbus {
 
     lua_State* Openbus::LuaVM = 0 ;
@@ -34,6 +36,7 @@ namespace openbus {
       lua_setglobal( LuaVM, "CPPsendrequest" ) ;
       luaopen_openbus( LuaVM ) ;
       lua_pop( LuaVM, 1 ) ;
+      tolua_SessionEventSink_open( LuaVM ) ;
     }
 
     Openbus::Openbus ( void )

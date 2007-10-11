@@ -15,7 +15,6 @@ namespace openbus {
 
     struct SessionEvent {
       String type ;
-//      any value; EH ISSO MESMO??
       String value ;
     } ;
 
@@ -34,6 +33,7 @@ namespace openbus {
       public:
         ISession() ;
         ~ISession() ;
+        void push( SessionEvent* ev ) ;
         SessionIdentifier getIdentifier( void ) ;
         MemberIdentifier  addMember( scs::core::IComponent* member ) ;
         bool              removeMember( MemberIdentifier memberIdentifier ) ;

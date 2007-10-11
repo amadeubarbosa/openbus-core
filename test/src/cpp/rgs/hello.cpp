@@ -4,6 +4,6 @@
 class hello {
 	hello() {}
 	~hello() {}
-	void say_hello() { printf( "HELLO\n" ) ; }
+	void say_hello() { printf( "HELLO WORLD!\n" ) ; }
 };
 

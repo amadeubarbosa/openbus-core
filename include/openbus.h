@@ -37,6 +37,7 @@ namespace openbus {
     class IRegistryService ;
     class ISession ;
     class ISessionService ;
+    class SessionEventSink ;
   }
 
   class Openbus;
@@ -72,6 +73,7 @@ namespace openbus {
       friend class services::IRegistryService ;
       friend class services::ISession ;
       friend class services::ISessionService ;
+      friend class services::SessionEventSink ;
       friend class common::CredentialManager ;
       friend class common::ClientInterceptor ;
   } ;

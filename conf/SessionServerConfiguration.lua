@@ -10,5 +10,5 @@ SessionServerConfiguration = {
   accessControlServiceCertificateFile = "../certificates/AccessControlService.crt",
   sessionServiceOfferType = "SessionService",
   logLevel = 3,
-  oilVerboseLevel = 1,
+  oilVerboseLevel = 3,
 }

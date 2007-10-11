@@ -9,6 +9,8 @@
 namespace scs {
   namespace core {
 
+  using namespace openbus ;
+
   /* ??? */
     IComponent::IComponent ()
     {
@@ -215,6 +217,68 @@ namespace scs {
     #if VERBOSE
       printf( "[Objeto IComponent(%p) destruido!]\n\n", this ) ;
     #endif
+    }
+
+    void  IComponent::addFacet ( openbus::String name, openbus::String interface_name, void * facet_servant)
+    {
+    #if VERBOSE
+      printf( "[IComponent::addFacet() COMECO]\n" ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+      printf( "  [Carregando proxy para IComponent]\n" ) ;
+    #endif
+      lua_pushlightuserdata( openbus::Openbus::LuaVM, this ) ;
+      lua_gettable( openbus::Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
+    #if VERBOSE
+      printf( "  [IComponent Lua:%p C:%p]\n", lua_topointer( openbus::Openbus::LuaVM, -1 ), this ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+    #endif
+      lua_getfield( openbus::Openbus::LuaVM, -1, "addFacet" ) ;
+      lua_insert( openbus::Openbus::LuaVM, -2 ) ;
+    #if VERBOSE
+      printf( "  [metodo addFacet empilhado]\n" ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+    #endif
+      lua_pushstring( openbus::Openbus::LuaVM, name ) ;
+    #if VERBOSE
+      printf( "  [name=%s empilhado]\n", name ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+    #endif
+      lua_pushstring( openbus::Openbus::LuaVM, interface_name ) ;
+    #if VERBOSE
+      printf( "  [interface_name=%s empilhado]\n", interface_name ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+    #endif
+      lua_pushlightuserdata( openbus::Openbus::LuaVM, facet_servant ) ;
+      lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
+    #if VERBOSE
+      printf( "  [facet_servant(%p) empilhado]\n", lua_topointer( openbus::Openbus::LuaVM, -1 ) ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+    #endif
+      if ( lua_pcall( openbus::Openbus::LuaVM, 4, 1, 0 ) != 0 ) {
+      #if VERBOSE
+        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+            lua_typename( openbus::Openbus::LuaVM, lua_type( openbus::Openbus::LuaVM, -1 ) ) ) ;
+      #endif
+        const char * returnValue ;
+        lua_getglobal( openbus::Openbus::LuaVM, "tostring" ) ;
+        lua_insert( openbus::Openbus::LuaVM, -2 ) ;
+        lua_pcall( openbus::Openbus::LuaVM, 1, 1, 0 ) ;
+        returnValue = lua_tostring( openbus::Openbus::LuaVM, -1 ) ;
+        lua_pop( openbus::Openbus::LuaVM, 1 ) ;
+      #if VERBOSE
+        printf( "  [lancando excecao %s]\nname", returnValue ) ;
+        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+        printf( "[IComponent::addFacet() FIM]\n\n" ) ;
+      #endif
+        throw returnValue ;
+      } /* if */
+      lua_pop( openbus::Openbus::LuaVM, 1 ) ;
+      #if VERBOSE
+        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( openbus::Openbus::LuaVM ) ) ;
+        printf( "[IComponent::addFacet() FIM]\n\n" ) ;
+      #endif
     }
 
     void IComponent::addFacet ( openbus::String name, openbus::String interface_name, \

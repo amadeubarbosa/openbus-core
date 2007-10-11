@@ -4,6 +4,7 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
+local print = print
 local tostring = tostring
 local ipairs = ipairs
 local pairs = pairs

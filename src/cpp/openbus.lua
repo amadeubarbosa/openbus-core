@@ -9,6 +9,8 @@ package.loaded["oil.port"]      = require "loop.component.intercepted"
 
 require 'oil'
 
+oilcorbaidlstring = oil.corba.idl.string
+
 oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/access_control_service.idl" )
 oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/registry_service.idl" )
 oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/session_service.idl" )
@@ -20,7 +22,7 @@ local lir = oil.getLIR()
 
 IComponent = require 'scs.core.IComponent'
 
-oil.verbose:level(0)
+oil.verbose:level(3)
 oil.tasks.verbose:level(0)
 --oil.tasks.verbose:flag("threads", true)
 

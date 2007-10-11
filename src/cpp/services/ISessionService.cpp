@@ -9,11 +9,93 @@
 namespace openbus {
   namespace services {
 
-    SessionEventSink::SessionEventSink() {}
+    SessionEventSink::SessionEventSink()
+    {
+    #if VERBOSE
+      printf( "[SessionEventSink::SessionEventSink() COMECO]\n" ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "  [Criando objeto SessionEventSink]\n" ) ;
+    #endif
+      lua_newtable( Openbus::LuaVM ) ;
+      ptr_luaimpl = (void*) lua_topointer( Openbus::LuaVM, -1 ) ;
+      lua_pushvalue( Openbus::LuaVM, -1 ) ;
+    #if VERBOSE
+      printf( "  [Objeto Lua SessionEventSink criado (%p)]\n", lua_topointer( Openbus::LuaVM, -1 ) ) ;
+    #endif
+      lua_pushlightuserdata( Openbus::LuaVM, this ) ;
+      lua_settable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
+      lua_pushstring( Openbus::LuaVM, "push" ) ;
+      lua_pushcfunction( Openbus::LuaVM, SessionEventSink::_push_bind ) ;
+      lua_settable( Openbus::LuaVM, -3 ) ;
+      lua_pushstring( Openbus::LuaVM, "disconnect" ) ;
+      lua_pushcfunction( Openbus::LuaVM, SessionEventSink::_disconnect_bind ) ;
+      lua_settable( Openbus::LuaVM, -3 ) ;
+    #if VERBOSE
+      const void* ptr = lua_topointer( Openbus::LuaVM, -1 ) ;
+    #endif
+      lua_pushlightuserdata( Openbus::LuaVM, this ) ;
+      lua_insert( Openbus::LuaVM, -2 ) ;
+      lua_settable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
+    #if VERBOSE
+      printf( "  [SessionEventSink Lua:%p C:%p]\n", \
+        ptr, this ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+          lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
+    #endif
+    #if VERBOSE
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "[SessionEventSink::SessionEventSink() FIM]\n\n" ) ;
+    #endif
+    }
     SessionEventSink::~SessionEventSink() {}
 
     int SessionEventSink::_push_bind( Lua_State* L )
     {
+      size_t size ;
+      char* str ;
+    #if VERBOSE
+      printf( "  [SessionEventSink::_push_bind() COMECO]\n" ) ;
+      printf( "    [Tamanho da pilha de Lua: %d]\n" , lua_gettop( L ) ) ;
+    #endif
+      lua_insert( L, 1 ) ;
+      lua_gettable( L, LUA_REGISTRYINDEX ) ;
+      SessionEventSink* sevsnk = (SessionEventSink*) lua_topointer( L, -1 ) ;
+    #if VERBOSE
+      printf( "    [SessionEventSink C++: %p]\n" , sevsnk ) ;
+    #endif
+      lua_pop( L, 1 ) ;
+    #if VERBOSE
+      printf( "    [Criando objeto SessionEvent...]\n" ) ;
+    #endif
+    /* quem faz delete desse cara?? */
+      SessionEvent* sev = new SessionEvent ;
+      lua_getfield( L, -1, "type" ) ;
+      const char * luastring = lua_tolstring( L, -1, &size ) ;
+      str = new char[ size + 1 ] ;
+      memcpy( str, luastring, size ) ;
+      str[ size ] = '\0' ;
+      sev->type = str ;
+    #if VERBOSE
+      printf( "    [SessionEvent->type=%s]\n", sev->type ) ;
+    #endif
+      lua_pop( L, 1 ) ;
+      lua_getfield( L, -1, "value" ) ;
+      lua_getfield( L, -1, "_anyval" ) ;
+      luastring = lua_tolstring( L, -1, &size ) ;
+      str = new char[ size + 1 ] ;
+      memcpy( str, luastring, size ) ;
+      str[ size ] = '\0' ;
+      sev->value = str ;
+    #if VERBOSE
+      printf( "    [SessionEvent->value=%s]\n",  sev->value ) ;
+    #endif
+      lua_pop( L, 3 ) ;
+      sevsnk->push( sev ) ;
+    #if VERBOSE
+      printf( "    [Tamanho da pilha de Lua: %d]\n" , lua_gettop( L ) ) ;
+      printf( "  [SessionEventSink::_push_bind() FIM]\n\n" ) ;
+    #endif
       return 0 ;
     }
 
@@ -42,6 +124,70 @@ namespace openbus {
     lua_settable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
       printf( "[Objeto ISession(%p) destruido!]\n\n", this ) ;
+    #endif
+    }
+
+    void ISession::push( SessionEvent* ev )
+    {
+    #if VERBOSE
+      printf( "[ISession::push() COMECO]\n" ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "  [Criando proxy para ISession]\n" ) ;
+    #endif
+      lua_getglobal( Openbus::LuaVM, "invoke" ) ;
+      lua_pushlightuserdata( Openbus::LuaVM, this ) ;
+      lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
+    #if VERBOSE
+      printf( "  [ISession Lua:%p C:%p]\n", lua_topointer( Openbus::LuaVM, -1 ), this ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+    #endif
+      lua_getfield( Openbus::LuaVM, -1, "push" ) ;
+      lua_insert( Openbus::LuaVM, -2 ) ;
+    #if VERBOSE
+      printf( "  [metodo push empilhado]\n" ) ;
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+    #endif
+      lua_newtable( Openbus::LuaVM ) ;
+    #if VERBOSE
+      printf( "  [SessionEvent empilhado...]\n" ) ;
+    #endif
+      lua_pushstring( Openbus::LuaVM, ev->type ) ;
+      lua_setfield( Openbus::LuaVM, -2, "type" ) ;
+    #if VERBOSE
+      printf( "  [SessionEvent.type=%s empilhado...]\n", ev->type ) ;
+    #endif
+      lua_newtable( Openbus::LuaVM ) ;
+      lua_pushstring( Openbus::LuaVM, ev->value ) ;
+      lua_setfield( Openbus::LuaVM, -2, "_anyval" ) ;
+    #if VERBOSE
+      printf( "  [SessionEvent.value._anyval=%s empilhado...]\n", ev->value ) ;
+    #endif
+      lua_getglobal( Openbus::LuaVM, "oilcorbaidlstring" ) ;
+      lua_setfield( Openbus::LuaVM, -2, "_anytype" ) ;
+      lua_setfield( Openbus::LuaVM, -2, "value" ) ;
+      if ( lua_pcall( Openbus::LuaVM, 3, 0, 0 ) != 0 ) {
+      #if VERBOSE
+        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+            lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
+      #endif
+        const char * returnValue ;
+        lua_getglobal( Openbus::LuaVM, "tostring" ) ;
+        lua_insert( Openbus::LuaVM, -2 ) ;
+        lua_pcall( Openbus::LuaVM, 1, 1, 0 ) ;
+        returnValue = lua_tostring( Openbus::LuaVM, -1 ) ;
+        lua_pop( Openbus::LuaVM, 1 ) ;
+      #if VERBOSE
+        printf( "  [lancando excecao %s]\n", returnValue ) ;
+        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "[ISession::push() FIM]\n\n" ) ;
+      #endif
+        throw returnValue ;
+      } /* if */
+    #if VERBOSE
+      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "[ISession::push() FIM]\n\n" ) ;
     #endif
     }
 
