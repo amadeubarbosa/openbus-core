@@ -22,7 +22,7 @@ local lir = oil.getLIR()
 
 IComponent = require 'scs.core.IComponent'
 
-oil.verbose:level(3)
+oil.verbose:level(0)
 oil.tasks.verbose:level(0)
 --oil.tasks.verbose:flag("threads", true)
 

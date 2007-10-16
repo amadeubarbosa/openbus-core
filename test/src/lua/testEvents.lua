@@ -29,7 +29,7 @@ local createSink = function(name)
               print("Evento "..event.type.." valor "..val..
                     " recebido por "..name)
             end,
-     disconnect = function(self) 
+     disconnect = function(self)
                     print("Aviso de desconexão para "..name)
                   end,
    }
@@ -61,14 +61,14 @@ function main()
   if CONF_DIR == nil then
     error("ERRO: A variavel CONF_DIR nao foi definida.\n")
   end
-    local config = 
+    local config =
       assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
     oil.setclientinterceptor(ClientInterceptor(config, credentialHolder))
-  
+
   -- autentica o cliente
   success = connectionManager:connect()
   print("Cliente autenticado!")
-  
+
   local registryService = accessControlService:getRegistryService()
   if not registryService then
     error("ERRO: Não obteve referência para serviço de registro")
@@ -79,10 +79,10 @@ function main()
   if #offers == 0 then
     error("ERRO: Não obteve oferta de serviço de sessão")
   end
-  local sessionServiceComponent = oil.narrow(offers[1].member, 
+  local sessionServiceComponent = oil.narrow(offers[1].member,
                  "IDL:scs/core/IComponent:1.0")
   local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
-  local sessionService = 
+  local sessionService =
     sessionServiceComponent:getFacet(sessionServiceInterface)
   sessionService = oil.narrow(sessionService, sessionServiceInterface)
   print("Obteve referencia para o serviço de sessão")
@@ -98,7 +98,7 @@ function main()
   member2 = oil.newservant(member2, "IDL:scs/core/IComponent:1.0")
   member2:addFacet("sink2", eventSinkInterface, createSink("sink2"))
   local id2 = session:addMember(member2)
-  
+
   -- adiciona membro não receptor
   local member3 = IComponent("membro3", 1)
   member3 = oil.newservant(member3, "IDL:scs/core/IComponent:1.0")
@@ -110,10 +110,11 @@ function main()
   session:push({type = "tipo1", value = my_any_value1})
   session:push({type = "tipo2", value = my_any_value2})
 
+  session:disconnect()
+
   -- remove o segundo e o terceiro membros do barramento
   session:removeMember(id2)
   session:removeMember(id3)
-
 
   -- desconecta o cliente do barramento
   connectionManager:disconnect()

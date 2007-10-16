@@ -34,6 +34,7 @@ namespace openbus {
         ISession() ;
         ~ISession() ;
         void push( SessionEvent* ev ) ;
+        void disconnect() ;
         SessionIdentifier getIdentifier( void ) ;
         MemberIdentifier  addMember( scs::core::IComponent* member ) ;
         bool              removeMember( MemberIdentifier memberIdentifier ) ;

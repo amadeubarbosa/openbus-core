@@ -9,7 +9,6 @@
 #include <string.h>
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
-//#include <services/SessionEventSink.h>
 
 using namespace openbus ;
 
@@ -69,7 +68,10 @@ class SESTestSuite: public CxxTest::TestSuite {
             {
               printf( "\nEvento %s valor %s recebido por %s\n\n", ev->type, ev->value, "IMPLEMENTAR..." ) ;
             }
-            void disconnect() {}
+            void disconnect()
+            {
+              printf( "\nAviso de desconexão para %s\n\n", "IMPLEMENTAR" ) ;
+            }
           } ;
           MySessionEventSink* ev = new MySessionEventSink() ;
           c1->addFacet( "sink1", "IDL:openbusidl/ss/SessionEventSink:1.0", ev ) ;
@@ -87,11 +89,11 @@ class SESTestSuite: public CxxTest::TestSuite {
           e->type = "tipo2" ;
           e->value = "valor2" ;
           s->push(e) ;
+          s->disconnect() ;
           s2 = ses->getSession() ;
           services::SessionIdentifier sId  = s->getIdentifier() ;
           services::SessionIdentifier sId2 = s2->getIdentifier() ;
           TS_ASSERT_SAME_DATA( sId, sId2, strlen( sId2 ) ) ;
-//           services::MemberIdentifier mId2 = s->addMember( c2 ) ;
           s->getMembers() ;
           s->removeMember( mId ) ;
           s->removeMember( mId2 ) ;
