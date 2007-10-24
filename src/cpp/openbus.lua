@@ -5,8 +5,6 @@
 package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
 
---OIL_FLAVOR="corba;typed;base"
-
 require 'oil'
 
 oilcorbaidlstring = oil.corba.idl.string
@@ -14,9 +12,6 @@ oilcorbaidlstring = oil.corba.idl.string
 oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/access_control_service.idl" )
 oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/registry_service.idl" )
 oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/session_service.idl" )
-
---temp
-oil.loadidl [[ interface hello { void say_hello() ; }; ]]
 
 local lir = oil.getLIR()
 
@@ -48,11 +43,4 @@ function invoke( func, ... )
     error( res[ 2 ] )
   end --if
   return select( 2, unpack( res ) )
-end
-
--- dumping function
-function dump(tab)
-print('## DUMPING ->', tab)
-for k,v in pairs(tab) do print(k,v) end
-return tab
 end

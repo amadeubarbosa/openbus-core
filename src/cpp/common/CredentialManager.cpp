@@ -3,7 +3,6 @@
 */
 
 #include <common/CredentialManager.h>
-#include <stdio.h>
 #include <lua.hpp>
 
 namespace openbus {
@@ -12,7 +11,7 @@ namespace openbus {
     CredentialManager::CredentialManager() {
     #if VERBOSE
       printf( "\n\n[CredentialManager::CredentialManager() COMECO]\n" ) ;
-      printf( "  [Criando instancia de CredentialManager]\n" ) ;
+      printf( "\t[Criando instancia de CredentialManager]\n" ) ;
     #endif
       credentialValue = NULL ;
     #if VERBOSE

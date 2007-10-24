@@ -16,7 +16,6 @@ OBJS= openbus.o \
 			services/IAccessControlService.o \
 			services/IRegistryService.o \
 			services/ISessionService.o \
-			services/SessionEventSinkbind.o \
 
 OPENBUSLIB_A= openbus.a
 
@@ -35,12 +34,6 @@ all:
 
 precompile:
 	${LUABIN} precompiler.lua -f auxiliar -p auxiliar openbus.lua
-
-# install:
-# 	${MKDIR} -p ${INSTALL_LIB} ${INSTALL_INC}
-# 	${CP} src/openbus.a ${INSTALL_LIB}
-# 	${CP} src/openbus.h ${INSTALL_INC}
-# 	${CP} lua/RemoteFileChannel ${INSTALL_LUA}
 
 clean:
 	${RM} ${OBJS} ../../lib/cpp

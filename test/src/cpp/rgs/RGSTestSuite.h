@@ -158,6 +158,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
       tolua_hello_open( Openbus::getLuaVM() ) ;
       hello* obj = new hello ;
       scs::core::IComponent* member = new scs::core::IComponent( "scs::core::IComponent" ) ;
+      member->loadidl( "interface hello { void say_hello() ; };" ) ;
       member->addFacet( "Faceta01", "IDL:hello:1.0", "hello", obj ) ;
       member->addFacet( "Faceta02", "IDL:hello:1.0", "hello", obj ) ;
       services::PropertyList* propertyList = new services::PropertyList ;

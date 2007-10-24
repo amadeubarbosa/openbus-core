@@ -11,14 +11,14 @@ namespace openbus {
       int ClientInterceptor::sendrequest( lua_State* L )
       {
       #if VERBOSE2
-        printf( "\n\n  [Lua chamando ClientInterceptor::sendrequest() COMECO]\n" ) ;
+        printf( "\n\n\t[Lua chamando ClientInterceptor::sendrequest() COMECO]\n" ) ;
       #endif
         lua_getfield( L, 1, "clientInterceptor" ) ;
         common::ClientInterceptor* clientInterceptor = (common::ClientInterceptor*) lua_topointer( L, -1 ) ;
         services::Credential* credential = clientInterceptor->credentialManager->getValue() ;
         lua_pop( L, 1 ) ;
       #if VERBOSE2
-        printf( "    [POP ponteiro para ClientInterceptor]\n" ) ;
+        printf( "\t\t[POP ponteiro para ClientInterceptor]\n" ) ;
       #endif
         lua_pushlightuserdata( L, clientInterceptor ) ;
         lua_insert( L, -2 ) ;
@@ -43,11 +43,11 @@ namespace openbus {
         lua_pushlightuserdata( Openbus::LuaVM, clientInterceptor ) ;
         lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
       #if VERBOSE2
-        printf( "    [Chamando em Lua sendrequest( credential, credentialType, contextID, request)]\n" ) ;
+        printf( "\t\t[Chamando em Lua sendrequest( credential, credentialType, contextID, request)]\n" ) ;
       #endif
         lua_pcall( Openbus::LuaVM, 4, 0, 0 ) ;
       #if VERBOSE2
-        printf( "  [Lua chamando ClientInterceptor::sendrequest FIM]\n\n\n" ) ;
+        printf( "\t[Lua chamando ClientInterceptor::sendrequest FIM]\n\n\n" ) ;
       #endif
         return 0 ;
       }
@@ -56,11 +56,11 @@ namespace openbus {
       {
       #if VERBOSE
         printf( "\n\n[ClientInterceptor::ClientInterceptor() COMECO]\n" ) ;
-        printf( "  [Criando instancia de ClientInterceptor]\n" ) ;
+        printf( "\t[Criando instancia de ClientInterceptor]\n" ) ;
       #endif
       #if VERBOSE
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Carregando arquivo de cofiguracao: %s]\n" , configPATH ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Carregando arquivo de cofiguracao: %s]\n" , configPATH ) ;
       #endif
         if ( luaL_dofile( Openbus::LuaVM, configPATH ) != 0 ) {
           const char * returnValue ;
@@ -77,23 +77,23 @@ namespace openbus {
         lua_getfield( Openbus::LuaVM, -1, "contextID" ) ;
         contextID = (Long) lua_tonumber( Openbus::LuaVM, -1 ) ;
       #if VERBOSE
-        printf( "  [contextID=%d]\n" , (int) contextID ) ;
+        printf( "\t[contextID=%d]\n" , (int) contextID ) ;
       #endif
         lua_pop( Openbus::LuaVM, 1 ) ;
         lua_getfield( Openbus::LuaVM, -1, "credential_type" ) ;
         credentialType = lua_tostring( Openbus::LuaVM, -1 ) ;
         credentialManager = pcredentialManager ;
       #if VERBOSE
-        printf( "  [credentialType=%s]\n" ,  credentialType ) ;
-        printf( "  [credentialManager=%p]\n" ,  credentialManager ) ;
+        printf( "\t[credentialType=%s]\n" ,  credentialType ) ;
+        printf( "\t[credentialManager=%p]\n" ,  credentialManager ) ;
       #endif
         lua_pop( Openbus::LuaVM, 2 ) ;
       #if VERBOSE
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[ClientInterceptor::ClientInterceptor() FIM]\n\n" ) ;
       #endif
       }
 
-      ClientInterceptor::~ClientInterceptor ( void ) {}
+      ClientInterceptor::~ClientInterceptor () {}
   }
 }

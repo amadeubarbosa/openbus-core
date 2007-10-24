@@ -17,9 +17,8 @@ namespace openbus {
         CredentialManager* credentialManager ;
       public:
         static int sendrequest( lua_State* L ) ;
-
         ClientInterceptor ( String configPATH, CredentialManager* pcredentialManager ) ;
-        ~ClientInterceptor( void ) ;
+        ~ClientInterceptor() ;
         friend class Openbus ;
     } ;
 

@@ -56,17 +56,17 @@ namespace openbus {
   class Openbus {
     private:
       static Openbus* pInstance ;
-      void initLuaVM( void ) ;
-      Openbus( void ) ;
-      Openbus( const Openbus& ) ;
       static Lua_State* LuaVM ;
+      void initLuaVM() ;
+      Openbus() ;
+      Openbus( const Openbus& ) ;
     public:
-      static Lua_State* getLuaVM( void ) ;
-      static Openbus* getInstance( void ) ;
+      ~Openbus() ;
+      static Lua_State* getLuaVM() ;
+      static Openbus* getInstance() ;
       void setclientinterceptor( common::ClientInterceptor* clientInterceptor ) ;
       services::IAccessControlService* getACS( String reference, String interface ) ;
       services::IRegistryService* getRGS( String reference, String interface ) ;
-      common::CredentialManager* createCredentialManager( void ) ;
       friend class scs::core::IComponent ;
       friend class services::ICredentialObserver ;
       friend class services::IAccessControlService ;

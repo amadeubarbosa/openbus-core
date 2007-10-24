@@ -13,8 +13,8 @@ namespace openbus {
     {
     #if VERBOSE
       printf( "[ICredentialObserver::ICredentialObserver() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-      printf( "  [Criando objeto ICredentialObserver]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Criando objeto ICredentialObserver]\n" ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "oil" ) ;
       lua_getfield( Openbus::LuaVM, -1, "newservant" ) ;
@@ -22,7 +22,7 @@ namespace openbus {
       ptr_luaimpl = (void*) lua_topointer( Openbus::LuaVM, -1 ) ;
       lua_pushvalue( Openbus::LuaVM, -1 ) ;
     #if VERBOSE
-      printf( "  [Objeto Lua ICredentialObserver criado (%p)]\n", lua_topointer( Openbus::LuaVM, -1 ) ) ;
+      printf( "\t[Objeto Lua ICredentialObserver criado (%p)]\n", lua_topointer( Openbus::LuaVM, -1 ) ) ;
     #endif
     /* Cria uma referencia para o objeto C++ atraves do objeto em Lua.
     *  Esta referencia sera utilizada pelo metodo _credentialWasDeleted_bind com o intuito
@@ -51,15 +51,15 @@ namespace openbus {
       lua_insert( Openbus::LuaVM, -2 ) ;
       lua_settable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [ICredentialObserver Lua:%p C:%p]\n", \
+      printf( "\t[ICredentialObserver Lua:%p C:%p]\n", \
         ptr, this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-      printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
           lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[ICredentialObserver::ICredentialObserver() FIM]\n\n" ) ;
     #endif
     }
@@ -92,18 +92,18 @@ namespace openbus {
       size_t size ;
       char* str ;
     #if VERBOSE
-      printf( "  [ICredentialObserver::_credentialWasDeleted_bind() COMECO]\n" ) ;
-      printf( "    [Tamanho da pilha de Lua: %d]\n" , lua_gettop( L ) ) ;
+      printf( "\t[ICredentialObserver::_credentialWasDeleted_bind() COMECO]\n" ) ;
+      printf( "\t\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( L ) ) ;
     #endif
       lua_insert( L, 1 ) ;
       lua_gettable( L, LUA_REGISTRYINDEX ) ;
       ICredentialObserver* co = (ICredentialObserver*) lua_topointer( L, -1 ) ;
     #if VERBOSE
-      printf( "    [ICredentialObserver C++: %p]\n" , co ) ;
+      printf( "\t\t[ICredentialObserver C++: %p]\n" , co ) ;
     #endif
       lua_pop( L, 1 ) ;
     #if VERBOSE
-      printf( "    [Criando objeto Credential...]\n" ) ;
+      printf( "\t\t[Criando objeto Credential...]\n" ) ;
     #endif
     /* quem faz delete desse cara?? */
       Credential* c = new Credential ;
@@ -114,7 +114,7 @@ namespace openbus {
       str[ size ] = '\0' ;
       c->entityName = str ;
     #if VERBOSE
-      printf( "    [credential->entityName=%s]\n", c->entityName ) ;
+      printf( "\t\t[credential->entityName=%s]\n", c->entityName ) ;
     #endif
       lua_pop( L, 1 ) ;
       lua_getfield( L, -1, "identifier" ) ;
@@ -124,13 +124,13 @@ namespace openbus {
       str[ size ] = '\0' ;
       c->identifier = str ;
     #if VERBOSE
-      printf( "    [credential->identifier=%s]\n",  c->identifier ) ;
+      printf( "\t\t[credential->identifier=%s]\n",  c->identifier ) ;
     #endif
       lua_pop( L, 2 ) ;
       co->credentialWasDeleted( c ) ;
     #if VERBOSE
-      printf( "    [Tamanho da pilha de Lua: %d]\n" , lua_gettop( L ) ) ;
-      printf( "  [ICredentialObserver::_credentialWasDeleted_bind() FIM]\n\n" ) ;
+      printf( "  \t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( L ) ) ;
+      printf( "\t[ICredentialObserver::_credentialWasDeleted_bind() FIM]\n\n" ) ;
     #endif
       return 0 ;
     }
@@ -140,20 +140,20 @@ namespace openbus {
       registryService = NULL ;
     #if VERBOSE
       printf( "[IAccessControlService::IAccessControlService() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-      printf( "  [Criando proxy para IAccessControlService]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Criando proxy para IAccessControlService]\n" ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "oil" ) ;
       lua_getfield( Openbus::LuaVM, -1, "newproxy" ) ;
       lua_pushstring( Openbus::LuaVM, reference ) ;
     #if VERBOSE
-      printf( "  [parametro reference=%s empilhado]\n", reference ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro reference=%s empilhado]\n", reference ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, interface ) ;
     #if VERBOSE
-      printf( "  [parametro interface=%s empilhado]\n", interface ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro interface=%s empilhado]\n", interface ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 2, 1, 0 ) != 0 ) {
         const char * returnValue ;
@@ -171,14 +171,14 @@ namespace openbus {
       lua_insert( Openbus::LuaVM, -2 ) ;
       lua_settable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", ptr, this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-      printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", ptr, this ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
           lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::IAccessControlService() FIM]\n\n" ) ;
     #endif
     }
@@ -209,21 +209,21 @@ namespace openbus {
       bool returnValue ;
     #if VERBOSE
       printf( "[IAccessControlService::renewLease() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "renewLease" ) ;
       lua_insert( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:renewLease empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:renewLease empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_newtable( Openbus::LuaVM ) ;
       lua_pushstring( Openbus::LuaVM, "identifier" ) ;
@@ -233,18 +233,18 @@ namespace openbus {
       lua_pushstring( Openbus::LuaVM, aCredential->entityName ) ;
       lua_settable( Openbus::LuaVM, -3 ) ;
     #if VERBOSE
-      printf( "  [parametro aCredential empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro aCredential empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
     #if VERBOSE
-      printf( "  [chamando metodo]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[chamando metodo]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 3, 2, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -254,25 +254,25 @@ namespace openbus {
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::renewLease() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
       *aLease = (Lease) lua_tonumber( Openbus::LuaVM, -1 ) ;
     #if VERBOSE
-      printf( "  [resultado aLease retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado aLease retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       returnValue = lua_toboolean( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [resultado do metodo retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado do metodo retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 2 ) ;
   #if VERBOSE
-    printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     printf( "[IAccessControlService::renewLease() FIM]\n\n" ) ;
   #endif
       return returnValue ;
@@ -283,37 +283,37 @@ namespace openbus {
       bool returnValue ;
     #if VERBOSE
       printf( "[IAccessControlService::loginByPassword() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "loginByPassword" ) ;
       lua_insert( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:loginByPassword empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:loginByPassword empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, name ) ;
     #if VERBOSE
-      printf( "  [parametro name=%s empilhado]\n", name ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro name=%s empilhado]\n", name ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, password ) ;
     #if VERBOSE
-      printf( "  [parametro password=%s empilhado]\n", password ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro password=%s empilhado]\n", password ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 4, 3, 0 ) != 0 ) {
     #if VERBOSE
-      printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-      printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+      printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
           lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
     #endif
         const char * errmsg ;
@@ -323,21 +323,21 @@ namespace openbus {
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::loginByPassword() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
       #if VERBOSE
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -3 ) ) ) ;
       #endif
       *aLease = (Lease) lua_tonumber( Openbus::LuaVM, -1 ) ;
     #if VERBOSE
-      printf( "  [resultado aLease retirado=%d]\n", (int) *aLease ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado aLease retirado=%d]\n", (int) *aLease ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
       lua_getfield( Openbus::LuaVM, -1, "identifier" ) ;
@@ -346,17 +346,17 @@ namespace openbus {
       lua_getfield( Openbus::LuaVM, -1, "entityName" ) ;
       aCredential->entityName = lua_tostring( Openbus::LuaVM, -1 ) ;
     #if VERBOSE
-      printf( "  [resultado aCredential retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado aCredential retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       returnValue = lua_toboolean( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [resultado do metodo retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado do metodo retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 3 ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::loginByPassword() FIM]\n\n" ) ;
     #endif
       return returnValue ;
@@ -368,38 +368,38 @@ namespace openbus {
       bool returnValue ;
     #if VERBOSE
       printf( "[IAccessControlService::loginByCertificate() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "loginByCertificate" ) ;
       lua_insert( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:loginByCertificate empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:loginByCertificate empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, name ) ;
     #if VERBOSE
-      printf( "  [parametro name=%s empilhado]\n", name ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro name=%s empilhado]\n", name ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushlightuserdata( Openbus::LuaVM, (void*) answer ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [parametro answer empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro answer empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 4, 3, 0 ) != 0 ) {
     #if VERBOSE
-      printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-      printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+      printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
           lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
     #endif
         const char * errmsg ;
@@ -409,21 +409,21 @@ namespace openbus {
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::loginByCertificate() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
       #if VERBOSE
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -3 ) ) ) ;
       #endif
       *aLease = (Lease) lua_tonumber( Openbus::LuaVM, -1 ) ;
     #if VERBOSE
-      printf( "  [resultado aLease retirado=%d]\n", (int) *aLease ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado aLease retirado=%d]\n", (int) *aLease ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
       lua_getfield( Openbus::LuaVM, -1, "identifier" ) ;
@@ -432,17 +432,17 @@ namespace openbus {
       lua_getfield( Openbus::LuaVM, -1, "entityName" ) ;
       aCredential->entityName = lua_tostring( Openbus::LuaVM, -1 ) ;
     #if VERBOSE
-      printf( "  [resultado aCredential retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado aCredential retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       returnValue = lua_toboolean( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [resultado do metodo retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado do metodo retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 3 ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::loginByCertificate() FIM]\n\n" ) ;
     #endif
       return returnValue ;
@@ -453,32 +453,32 @@ namespace openbus {
       char* returnValue ;
     #if VERBOSE
       printf( "[IAccessControlService::getChallenge() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "getChallenge" ) ;
     #if VERBOSE
-      printf( "  [metodo acs:getChallenge empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:getChallenge empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_insert( Openbus::LuaVM, -2 ) ;
       lua_pushstring( Openbus::LuaVM, name ) ;
     #if VERBOSE
-      printf( "  [parametro name=%s empilhado]\n", name ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro name=%s empilhado]\n", name ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 3, 1, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -488,8 +488,8 @@ namespace openbus {
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::getChallenge() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
@@ -500,7 +500,7 @@ namespace openbus {
       lua_insert( Openbus::LuaVM, -2 ) ;
       lua_settable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::getChallenge() FIM]\n\n" ) ;
     #endif
       return returnValue ;
@@ -511,21 +511,21 @@ namespace openbus {
       bool returnValue;
     #if VERBOSE
       printf( "[IAccessControlService::logout() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "logout" ) ;
       lua_insert( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:logout empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:logout empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_newtable( Openbus::LuaVM ) ;
       lua_pushstring( Openbus::LuaVM, "identifier" ) ;
@@ -535,19 +535,19 @@ namespace openbus {
       lua_pushstring( Openbus::LuaVM, aCredential->entityName ) ;
       lua_settable( Openbus::LuaVM, -3 ) ;
     #if VERBOSE
-      printf( "  [parametro aCredential empilhado\nidentifier:%s\nentityName:%s]\n",
+      printf( "\t[parametro aCredential empilhado\n\t\tidentifier:%s\n\t\tentityName:%s]\n",
           aCredential->identifier, aCredential->entityName ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
     #if VERBOSE
-      printf( "  [chamando metodo]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[chamando metodo]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 3, 1, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -557,20 +557,20 @@ namespace openbus {
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::logout() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
       returnValue = lua_toboolean( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [resultado do metodo retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado do metodo retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
   #if VERBOSE
-    printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     printf( "[IAccessControlService::logout() FIM]\n\n" ) ;
   #endif
       return returnValue ;
@@ -581,21 +581,21 @@ namespace openbus {
       bool returnValue;
     #if VERBOSE
       printf( "[IAccessControlService::isValid() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, "isValid" ) ;
       lua_gettable( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:isValid empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:isValid empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_insert( Openbus::LuaVM, -2 ) ;
       lua_newtable( Openbus::LuaVM ) ;
@@ -608,14 +608,14 @@ namespace openbus {
       lua_setglobal( Openbus::LuaVM , "aCredential" ) ;
       lua_getglobal( Openbus::LuaVM, "aCredential" ) ;
     #if VERBOSE
-      printf( "  [parametro aCredential empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro aCredential empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 3, 1, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -625,20 +625,20 @@ namespace openbus {
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::isValid() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
       returnValue = lua_toboolean( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [resultado do metodo retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado do metodo retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::isValid() FIM]\n\n" ) ;
     #endif
       return returnValue ;
@@ -648,27 +648,27 @@ namespace openbus {
     {
     #if VERBOSE
       printf( "[IAccessControlService::getRegistryService() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "getRegistryService" ) ;
     #if VERBOSE
-      printf( "  [metodo acs:getRegistryService empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:getRegistryService empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_insert( Openbus::LuaVM, -2 ) ;
       if ( lua_pcall( Openbus::LuaVM, 2, 1, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -678,8 +678,8 @@ namespace openbus {
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::isValid() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
@@ -695,11 +695,11 @@ namespace openbus {
       lua_insert( Openbus::LuaVM, -2 ) ;
       lua_settable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IRegistryService Lua:%p C:%p]\n", ptr, registryService ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[IRegistryService Lua:%p C:%p]\n", ptr, registryService ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::getRegistryService() FIM]\n\n" ) ;
     #endif
       return registryService ;
@@ -712,36 +712,36 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
       size_t size ;
     #if VERBOSE
       printf( "[IAccessControlService::addObserver() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "addObserver" ) ;
       lua_insert( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:addObserver empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:addObserver empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushlightuserdata( Openbus::LuaVM, observer ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [parametro observer]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro observer]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_newtable( Openbus::LuaVM ) ;
       if ( someCredentialIdentifiers != NULL )
       {
         luaidl::cpp::types::String str ;
       #if VERBOSE
-        printf( "  [Criando objeto someCredentialIdentifiers length=%d]\n", \
+        printf( "\t[Criando objeto someCredentialIdentifiers length=%d]\n", \
             someCredentialIdentifiers->length() ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       #endif
         for ( int y = 0; y < someCredentialIdentifiers->length(); y++ )
         {
@@ -750,21 +750,21 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
           lua_pushstring( Openbus::LuaVM, str ) ;
           lua_settable( Openbus::LuaVM, -3 ) ;
         #if VERBOSE
-          printf( "  [Criando objeto someCredentialIdentifiers[%d] = %s]\n", \
+          printf( "\t[Criando objeto someCredentialIdentifiers[%d] = %s]\n", \
               y, str ) ;
-          printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+          printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         #endif
         }
       } /* if */
     #if VERBOSE
-      printf( "  [parametro someCredentialIdentifiers empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro someCredentialIdentifiers empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 4, 1, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -774,8 +774,8 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::addObserver() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
@@ -786,8 +786,8 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
       returnValue[ size ] = '\0' ;
       lua_pop( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [retornando = %s]\n", returnValue ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[retornando = %s]\n", returnValue ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       return returnValue ;
     }
@@ -797,32 +797,32 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
       bool returnValue;
     #if VERBOSE
       printf( "[IAccessControlService::removeObserver() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "removeObserver" ) ;
       lua_insert( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:removeObserver empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:removeObserver empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, identifier ) ;
     #if VERBOSE
-      printf( "  [parametro CredentialObserverIdentifier=%s empilhado]\n", identifier ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro CredentialObserverIdentifier=%s empilhado]\n", identifier ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 3, 1, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -832,20 +832,20 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::removeObserver() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
       returnValue = lua_toboolean( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [resultado do metodo retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado do metodo retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::removeObserver() FIM]\n\n" ) ;
     #endif
       return returnValue ;
@@ -857,39 +857,39 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
       bool returnValue;
     #if VERBOSE
       printf( "[IAccessControlService::addCredentialToObserver() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-      printf( "  [Chamando remotamente: %s( %s , %s)]\n", \
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Chamando remotamente: %s( %s , %s)]\n", \
           "addCredentialToObserver", observerIdentifier, CredentialIdentifier ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "addCredentialToObserver" ) ;
       lua_insert( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:addCredentialToObserver empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:addCredentialToObserver empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, observerIdentifier ) ;
     #if VERBOSE
-      printf( "  [parametro observerIdentifier=%s empilhado]\n", observerIdentifier ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro observerIdentifier=%s empilhado]\n", observerIdentifier ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, CredentialIdentifier ) ;
     #if VERBOSE
-      printf( "  [parametro CredentialIdentifier=%s empilhado]\n", CredentialIdentifier ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro CredentialIdentifier=%s empilhado]\n", CredentialIdentifier ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 4, 1, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -899,20 +899,20 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::addCredentialToObserver() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
       returnValue = lua_toboolean( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [resultado do metodo retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado do metodo retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::addCredentialToObserver() FIM]\n\n" ) ;
     #endif
       return returnValue ;
@@ -924,37 +924,37 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
       bool returnValue;
     #if VERBOSE
       printf( "[IAccessControlService::removeCredentialFromObserver() COMECO]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getglobal( Openbus::LuaVM, "invoke" ) ;
       lua_pushlightuserdata( Openbus::LuaVM, this ) ;
       lua_gettable( Openbus::LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
-      printf( "  [IAccessControlService Lua:%p C:%p]\n", \
+      printf( "\t[IAccessControlService Lua:%p C:%p]\n", \
         lua_topointer( Openbus::LuaVM, -1 ), this ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_getfield( Openbus::LuaVM, -1, "removeCredentialFromObserver" ) ;
       lua_insert( Openbus::LuaVM, -2 ) ;
     #if VERBOSE
-      printf( "  [metodo acs:removeCredentialFromObserver empilhado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[metodo acs:removeCredentialFromObserver empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, observerIdentifier ) ;
     #if VERBOSE
-      printf( "  [parametro observerIdentifier=%s empilhado]\n", observerIdentifier ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro observerIdentifier=%s empilhado]\n", observerIdentifier ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pushstring( Openbus::LuaVM, CredentialIdentifier ) ;
     #if VERBOSE
-      printf( "  [parametro CredentialIdentifier=%s empilhado]\n", CredentialIdentifier ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[parametro CredentialIdentifier=%s empilhado]\n", CredentialIdentifier ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       if ( lua_pcall( Openbus::LuaVM, 4, 1, 0 ) != 0 ) {
       #if VERBOSE
-        printf( "  [ERRO ao realizar pcall do metodo]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "  [Tipo do elemento do TOPO: %s]\n" , \
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
             lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
       #endif
         const char * errmsg ;
@@ -964,20 +964,20 @@ observer, CredentialIdentifierList* someCredentialIdentifiers )
         errmsg = lua_tostring( Openbus::LuaVM, -1 ) ;
         lua_pop( Openbus::LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "  [lancando excecao]\n" ) ;
-        printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
         printf( "[IAccessControlService::removeCredentialFromObserver() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
       returnValue = lua_toboolean( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [resultado do metodo retirado]\n" ) ;
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[resultado do metodo retirado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
     #endif
       lua_pop( Openbus::LuaVM, 1 ) ;
     #if VERBOSE
-      printf( "  [Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
       printf( "[IAccessControlService::removeCredentialFromObserver() FIM]\n\n" ) ;
     #endif
       return returnValue ;

@@ -15,7 +15,7 @@ LUABIN=${LUA51}/bin/${TEC_UNAME}/lua5.1
 CXXTEST=/home/msv/rcosme/tools/cxxtest
 CXXTEST_INC=${CXXTEST}
 
-FLAGS=-Wall -ansi -O2
+FLAGS=-Wall -ansi -O3
 LIBS_PATH=-L${LUA_LIB} -L${LUASOCKET_LIB}
 
 LIBS=-llua5.1 -ldl -ltolua

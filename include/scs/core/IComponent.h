@@ -13,15 +13,15 @@ namespace scs {
     class IComponent {
         void _getFacet ( void* ptr, openbus::String facet_interface ) ;
       public:
-        IComponent( void ) ;
+        IComponent() ;
         IComponent( openbus::String name ) ;
-        ~IComponent( void ) ;
+        ~IComponent() ;
 
         void  addFacet ( openbus::String name, openbus::String interface_name, void * facet_servant) ;
       /* ToLua Support */
         void  addFacet ( openbus::String name, openbus::String interface_name, \
                 char* constructor_name, void * facet_servant) ;
-
+        void loadidl( openbus::String idl ) ;
         template <class T>
         T* getFacet ( openbus::String facet_interface )
         {
