@@ -1,10 +1,11 @@
 /*
-* acs/ACSTestSuite.h
+* acs/ACSTestSuite.cpp
 */
 
 #ifndef ACS_TESTSUITE_H
 #define ACS_TESTSUITE_H
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
@@ -148,7 +149,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
         credentialManager->setValue( credential ) ;
         credentialObserver* co = new credentialObserver;
         list->newmember( credential->identifier ) ;
-        const char* id = acs->addObserver( co, list ) ;
+        acs->addObserver( co, list ) ;
         TS_ASSERT( acs->logout( credential ) ) ;
         delete co ;
       } catch ( const char * errmsg ) {

@@ -4,6 +4,13 @@
 
 include config
 
+#Descomente a linha abaixo caso deseje ativar o VERBOSE
+VERBOSE=-DVERBOSE
+VERBOSE2=-DVERBOSE2
+
+#Pre-Compile options
+LUABIN=${LUA51}/bin/${TEC_UNAME}/lua5.1
+
 AR= ar rcu
 RANLIB= ranlib
 RM= rm -rf
@@ -17,7 +24,7 @@ OBJS= openbus.o \
 			services/IRegistryService.o \
 			services/ISessionService.o \
 
-OPENBUSLIB_A= openbus.a
+OPENBUSLIB_A= libopenbus.a
 
 all:
 	${MAKE} -C common
@@ -27,8 +34,7 @@ all:
 	g++ ${FLAGS} -c openbus.cpp \
 		-I${LUA_INC} -I../../include \
 		${VERBOSE} ${VERBOSE2}
-	${MKDIR} ../../lib
-	${MKDIR} ../../lib/cpp
+	${MKDIR} -p ../../lib/cpp
 	${AR} ../../lib/cpp/${OPENBUSLIB_A} ${OBJS}
 	${RANLIB} ../../lib/cpp/${OPENBUSLIB_A}
 

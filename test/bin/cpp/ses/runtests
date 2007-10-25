@@ -2,5 +2,5 @@
 
 source ../env
 
-runner
+${TEC_UNAME}/runner
 

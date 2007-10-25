@@ -2,6 +2,11 @@
 # config
 #
 
+#
+# OBS.: O ativamento do verbose deve ser feito dentro do makefile ou
+# config.mak no caso para o tecmake.
+#
+
 LUA_INC=${LUA51INC}
 LUA_LIB=${LUA51LIB}
 
@@ -9,17 +14,9 @@ TOLUA=/home/msv/rcosme/tools/tolua-5.1b
 TOLUA_INC=${TOLUA}/include
 TOLUA_LIB=${TOLUA}/lib
 
-#Pre-Compile options
-LUABIN=${LUA51}/bin/${TEC_UNAME}/lua5.1
-
+# Somente necessário para a execução da base de testes
 CXXTEST=/home/msv/rcosme/tools/cxxtest
 CXXTEST_INC=${CXXTEST}
 
 FLAGS=-Wall -ansi -O3
-LIBS_PATH=-L${LUA_LIB} -L${LUASOCKET_LIB}
 
-LIBS=-llua5.1 -ldl -ltolua
-
-#Descomente a linha abaixo caso deseje ativar o VERBOSE
-VERBOSE=-DVERBOSE
-VERBOSE2=-DVERBOSE2

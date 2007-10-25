@@ -1,5 +1,5 @@
 /*
-* rgs/RGSTestSuite.h
+* rgs/RGSTestSuite.cpp
 */
 
 #ifndef RGS_TESTSUITE_H
