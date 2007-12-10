@@ -22,6 +22,7 @@ namespace scs {
         void  addFacet ( openbus::String name, openbus::String interface_name, \
                 char* constructor_name, void * facet_servant) ;
         void loadidl( openbus::String idl ) ;
+        void loadidlfile( openbus::String idlfilename ) ;
         template <class T>
         T* getFacet ( openbus::String facet_interface )
         {

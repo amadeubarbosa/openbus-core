@@ -388,6 +388,51 @@ namespace scs {
       #endif
     }
 
+    void IComponent::loadidlfile( openbus::String idlfilename )
+    {
+    #if VERBOSE
+      printf( "[IComponent::loadidlfile() COMECO]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+      printf( "\t[Carregando proxy para IComponent]\n" ) ;
+    #endif
+      lua_getglobal( Openbus::LuaVM, "oil" ) ;
+      lua_getfield( Openbus::LuaVM, -1, "loadidlfile" ) ;
+      lua_remove( Openbus::LuaVM, 1 ) ;
+    #if VERBOSE
+      printf( "\t[metodo loadidlfile empilhado]\n" ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+    #endif
+      lua_pushstring( Openbus::LuaVM, idlfilename ) ;
+    #if VERBOSE
+      printf( "\t[idlfilename=%s empilhado]\n", idlfilename ) ;
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+    #endif
+      if ( lua_pcall( Openbus::LuaVM, 1, 0, 0 ) != 0 ) {
+      #if VERBOSE
+        printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
+            lua_typename( Openbus::LuaVM, lua_type( Openbus::LuaVM, -1 ) ) ) ;
+      #endif
+        const char * returnValue ;
+        lua_getglobal( Openbus::LuaVM, "tostring" ) ;
+        lua_insert( Openbus::LuaVM, -2 ) ;
+        lua_pcall( Openbus::LuaVM, 1, 1, 0 ) ;
+        returnValue = lua_tostring( Openbus::LuaVM, -1 ) ;
+        lua_pop( Openbus::LuaVM, 1 ) ;
+      #if VERBOSE
+        printf( "\t[lancando excecao %s]\nname", returnValue ) ;
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "[IComponent::loadidlfile() FIM]\n\n" ) ;
+      #endif
+        throw returnValue ;
+      } /* if */
+      #if VERBOSE
+        printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
+        printf( "[IComponent::loadidlfile() FIM]\n\n" ) ;
+      #endif
+    }
+
     void IComponent::_getFacet ( void* ptr, openbus::String facet_interface )
     {
     #if VERBOSE

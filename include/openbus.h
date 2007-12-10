@@ -66,7 +66,6 @@ namespace openbus {
       static Openbus* getInstance() ;
       void setclientinterceptor( common::ClientInterceptor* clientInterceptor ) ;
       services::IAccessControlService* getACS( String reference, String interface ) ;
-      services::IRegistryService* getRGS( String reference, String interface ) ;
       friend class scs::core::IComponent ;
       friend class services::ICredentialObserver ;
       friend class services::IAccessControlService ;

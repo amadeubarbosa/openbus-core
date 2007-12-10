@@ -119,9 +119,4 @@ namespace openbus {
       return new services::IAccessControlService( reference, interface ) ;
     }
 
-    services::IRegistryService* Openbus::getRGS( String reference, String interface )
-    {
-      return new services::IRegistryService( reference, interface ) ;
-    }
-
 }

@@ -30,7 +30,10 @@ function sendrequest(credential, credentialType, contextID, request)
    }
 end
 
-oil.tasks:register(coroutine.create(oil.run))
+if not oil.isrunning then
+  oil.isrunning = true
+  oil.tasks:register(coroutine.create(oil.run))
+end
 
 -- Invoke with concurrency
 function invoke( func, ... )
