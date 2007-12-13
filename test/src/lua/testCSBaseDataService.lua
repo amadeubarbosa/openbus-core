@@ -1,3 +1,5 @@
+package.loaded["oil.component"] = require "loop.component.wrapped"
+package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
 
 local CredentialHolder = require "openbus.common.CredentialHolder"
@@ -22,8 +24,10 @@ oil.loadidlfile(idlfile)
 idlfile = CORBA_IDL_DIR.."/project_service.idl"
 oil.loadidlfile(idlfile)
 
+-- Serviço de Acesso
 local host = "localhost"
 local port = 2089
+-- Este deve ser um usuário CSBase.
 local user = "tester"
 local password = "tester"
 
