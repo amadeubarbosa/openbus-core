@@ -14,19 +14,19 @@ local Log = require "openbus.common.Log"
 local oop = require "loop.base"
 module("openbus.services.session.SessionService", oop.class)
 
-function __init(self, accessControlService, picurrent)
+function __init(self, accessControlService, serverInterceptor)
   return oop.rawnew(self, {
     sessions = {},
-    picurrent = picurrent,
+    serverInterceptor = serverInterceptor,
     accessControlService = accessControlService,
   })
 end
 
 -- Cria uma sessão associada a uma credencial.
--- A credencial em questão é recuperada da requisição pelo interceptador 
+-- A credencial em questão é recuperada da requisição pelo interceptador
 -- do serviço, e repassada através do objeto PICurrent
 function createSession(self, member)
-  local credential = self.picurrent:getValue()
+  local credential = self.serverInterceptor:getCredential()
   if self.sessions[credential.identifier] then
     Log:err("Tentativa de criar sessão já existente")
     return false
@@ -41,16 +41,16 @@ function createSession(self, member)
   if not self.observerId then
     local observer = {
       sessionService = self,
-      credentialWasDeleted = 
+      credentialWasDeleted =
         function(self, credential)
           self.sessionService:credentialWasDeleted(credential)
         end
     }
-    self.observer = oil.newservant(observer, 
+    self.observer = oil.newservant(observer,
                                   "IDL:openbusidl/acs/ICredentialObserver:1.0",
                                   "SessionServiceCredentialObserver")
-    self.observerId = 
-      self.accessControlService:addObserver(self.observer, 
+    self.observerId =
+      self.accessControlService:addObserver(self.observer,
                                             {credential.identifier})
   else
     self.accessControlService:addCredentialToObserver(self.observerId,
@@ -80,10 +80,10 @@ function generateIdentifier()
 end
 
 -- Obtém a sessão associada a uma credencial.
--- A credencial em questão é recuperada da requisição pelo interceptador 
+-- A credencial em questão é recuperada da requisição pelo interceptador
 -- do serviço, e repassada através do objeto PICurrent
 function getSession(self)
-  local credential = self.picurrent:getValue()
+  local credential = self.serverInterceptor:getCredential()
   local session = self.sessions[credential.identifier]
   if not session then
    Log:warn("Não há sessão para "..credential.identifier)

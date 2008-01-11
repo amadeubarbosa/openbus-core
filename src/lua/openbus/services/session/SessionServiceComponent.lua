@@ -14,7 +14,6 @@ local oil = require "oil"
 local SessionService = require "openbus.services.session.SessionService"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local PICurrent = require "openbus.common.PICurrent"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 local ServiceConnectionManager =
     require "openbus.common.ServiceConnectionManager"
@@ -45,9 +44,9 @@ function startup(self)
   -- Se é o primeiro startup, deve instanciar ConnectionManager e
   -- instalar interceptadores
   if not self.initialized then
-    Log:service("Serviço de sessão está inicializando")      
+    Log:service("Serviço de sessão está inicializando")
     local credentialHolder = CredentialHolder()
-    self.connectionManager = 
+    self.connectionManager =
       ServiceConnectionManager(self.config.accessControlServerHost,
         credentialHolder, self.config.privateKeyFile,
         self.config.accessControlServiceCertificateFile)
@@ -60,16 +59,15 @@ function startup(self)
 
     -- instala o interceptador cliente
     local CONF_DIR = os.getenv("CONF_DIR")
-    local interceptorsConfig = 
+    local interceptorsConfig =
       assert(loadfile(CONF_DIR.."/advanced/SSInterceptorsConfiguration.lua"))()
     oil.setclientinterceptor(
       ClientInterceptor(interceptorsConfig, credentialHolder))
 
     -- instala o interceptador servidor
-    self.picurrent = PICurrent()
-    oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, 
-                                               self.picurrent, 
-                                               self.accessControlService))
+    self.serverInterceptor = ServerInterceptor(interceptorsConfig, self.accessControlService)
+    oil.setserverinterceptor(self.serverInterceptor)
+
     self.initialized = true
   else
     Log:service("Serviço de sessão já foi inicializado")
@@ -83,8 +81,8 @@ function startup(self)
   end
 
   -- cria e instala a faceta servidora
-  self.sessionService = SessionService(self.accessControlService, 
-                                       self.picurrent)
+  self.sessionService = SessionService(self.accessControlService,
+                                       self.serverInterceptor)
   local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
   self:addFacet("sessionService", sessionServiceInterface, self.sessionService)
 

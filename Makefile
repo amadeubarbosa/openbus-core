@@ -26,7 +26,7 @@ doc:
 	cd docs/idl; doxygen openbus.dox
 
 idl:
-	@ln -s src/corba_idl
+	@ln -fs src/corba_idl
 
 clean-libs:
 	@(for lib_dir in lib/lua/* ; do \
@@ -35,6 +35,7 @@ clean-libs:
 
 libs:
 #	@ls lib/lua | xargs -I ksh -c "cd lib/lua/{}; echo 'Compilando {}...'; make" 
+	cd src/cpp ; tecmake
 	@(for lib_dir in lib/lua/* ; do \
 		echo ; echo "Compilando $$lib_dir " ; \
 		( cd $$lib_dir ; make ); \
@@ -45,7 +46,7 @@ clean-bins:
 	export mkfile=`echo $$service | cut -d/ -f5` ; \
 		if  test -e $$mkfile.mak ;  then \
 			echo ; echo "Limpando serviço $$service" ; \
-			`which tecmake` MF=$$mkfile clean ; \
+			`which tecmake` MF=$$mkfile clean-all ; \
 	fi \
 	done)
 

@@ -19,7 +19,6 @@ local oil = require "oil"
 local OffersDB = require "openbus.services.registry.OffersDB"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local PICurrent = require "openbus.common.PICurrent"
 local CredentialHolder = require "openbus.common.CredentialHolder"
 local ServiceConnectionManager =
     require "openbus.common.ServiceConnectionManager"
@@ -56,7 +55,7 @@ function startup(self)
         self.config.accessControlServerHost, credentialHolder,
         self.config.privateKeyFile,
         self.config.accessControlServiceCertificateFile)
-  
+
     -- obtém a referência para o Serviço de Controle de Acesso
     self.accessControlService = self.connectionManager:getAccessControlService()
     if self.accessControlService == nil then
@@ -65,16 +64,14 @@ function startup(self)
 
     -- instala o interceptador cliente
     local CONF_DIR = os.getenv("CONF_DIR")
-    local interceptorsConfig = 
+    local interceptorsConfig =
       assert(loadfile(CONF_DIR.."/advanced/RSInterceptorsConfiguration.lua"))()
     oil.setclientinterceptor(
       ClientInterceptor(interceptorsConfig, credentialHolder))
 
     -- instala o interceptador servidor
-    self.picurrent = PICurrent()
-    oil.setserverinterceptor(ServerInterceptor(interceptorsConfig, 
-                                               self.picurrent,
-                                               self.accessControlService))
+    self.serverInterceptor = ServerInterceptor(interceptorsConfig, self.accessControlService)
+    oil.setserverinterceptor(self.serverInterceptor)
 
     -- instancia mecanismo de persistencia
     self.offersDB = OffersDB(self.config.databaseDirectory)
@@ -142,7 +139,7 @@ end
 --
 function register(self, serviceOffer)
   local identifier = self:generateIdentifier()
-  local credential = self.picurrent:getValue()
+  local credential = self.serverInterceptor:getCredential()
 
   local offerEntry = {
     offer = serviceOffer,
@@ -165,7 +162,7 @@ end
 -- Adiciona uma oferta ao repositório
 --
 function addOffer(self, offerEntry)
-  
+
   -- Índice de ofertas por identificador
   self.offersByIdentifier[offerEntry.identifier] = offerEntry
 
@@ -183,7 +180,7 @@ function addOffer(self, offerEntry)
     Log:service("Primeira oferta da credencial "..credential.identifier)
     self.offersByCredential[credential.identifier] = {}
   end
-  self.offersByCredential[credential.identifier][offerEntry.identifier] = 
+  self.offersByCredential[credential.identifier][offerEntry.identifier] =
     offerEntry
 
   -- A credencial deve ser observada, porque se for deletada as
@@ -201,7 +198,7 @@ function createPropertyIndex(self, offerProperties, member)
     properties[property.name] = {}
     for _, val in ipairs(property.value) do
       properties[property.name][val] = true
-    end 
+    end
   end
 
   local memberName = member:getClassId().name
@@ -229,7 +226,7 @@ function createPropertyIndex(self, offerProperties, member)
   return properties
 end
 
--- 
+--
 -- Remove uma oferta de serviço
 --
 function unregister(self, identifier)
@@ -241,7 +238,7 @@ function unregister(self, identifier)
     return false
   end
 
-  local credential = self.picurrent:getValue()
+  local credential = self.serverInterceptor:getCredential()
   if credential.identifier ~= offerEntry.credential.identifier then
     Log:warning("Oferta a remover("..identifier..
                 ") não registrada com a credencial do chamador")
@@ -296,7 +293,7 @@ function update(self, identifier, properties)
     return false
   end
 
-  local credential = self.picurrent:getValue()
+  local credential = self.serverInterceptor:getCredential()
   if credential.identifier ~= offerEntry.credential.identifier then
     Log:warning("Oferta a atualizar("..identifier..
                 ") não registrada com a credencial do chamador")
@@ -446,7 +443,7 @@ function shutdown(self)
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false
- 
+
   -- Remove o observador
   if self.observerId then
     self.accessControlService:removeObserver(self.observerId)

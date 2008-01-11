@@ -10,12 +10,12 @@
 LUA_INC=${LUA51INC}
 LUA_LIB=${LUA51LIB}
 
-TOLUA=/home/msv/rcosme/tools/tolua-5.1b
+TOLUA=${HOME}/tools/tolua-5.1b
 TOLUA_INC=${TOLUA}/include
 TOLUA_LIB=${TOLUA}/lib
 
 # Somente necessário para a execução da base de testes
-CXXTEST=/home/msv/rcosme/tools/cxxtest
+CXXTEST=${HOME}/tools/cxxtest
 CXXTEST_INC=${CXXTEST}
 
 FLAGS=-Wall -ansi -O3

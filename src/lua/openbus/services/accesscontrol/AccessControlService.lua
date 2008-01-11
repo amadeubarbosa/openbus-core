@@ -18,7 +18,6 @@ local oil = require "oil"
 
 local CredentialDB = require "openbus.services.accesscontrol.CredentialDB"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local PICurrent = require "openbus.common.PICurrent"
 local LeaseProvider = require "openbus.common.LeaseProvider"
 
 local LDAPLoginPasswordValidator =
@@ -45,7 +44,6 @@ function __init(self, name, config)
   component.entries = {}
   component.observers = {}
   component.challenges = {}
-  component.picurrent = PICurrent()
   component.loginPasswordValidators = {
     LDAPLoginPasswordValidator(config.ldapHostName..":"..config.ldapHostPort),
     TestLoginPasswordValidator(),
@@ -57,10 +55,11 @@ end
 function startup(self)
   -- instala o interceptador do serviço
   local CONF_DIR = os.getenv("CONF_DIR")
-  local iconfig = 
+  local iconfig =
     assert(loadfile(CONF_DIR.."/advanced/ACSInterceptorsConfiguration.lua"))()
-  oil.setserverinterceptor(ServerInterceptor(iconfig, self.picurrent, self))
-  
+  self.serverInterceptor = ServerInterceptor(iconfig, self)
+  oil.setserverinterceptor(self.serverInterceptor)
+
   -- inicializa repositorio de credenciais
   self.privateKey = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
   self.credentialDB = CredentialDB(self.config.databaseDirectory)
@@ -199,13 +198,13 @@ function getRegistryService(self)
 end
 
 function setRegistryService(self, registryServiceComponent)
-  local credential = self.picurrent:getValue()
+  local credential = self.serverInterceptor:getCredential()
   if credential.entityName == "RegistryService" then
     self.registryService = {
       credential = credential,
       component = registryServiceComponent
     }
-    local suc, err = 
+    local suc, err =
       self.credentialDB:writeRegistryService(self.registryService)
     if not suc then
       Log:error("Erro persistindo referencia registry service: "..err)
@@ -223,7 +222,7 @@ function addObserver(self, observer, credentialIdentifiers)
     self.entries[credentialId].observedBy[observerId] = true
     observerEntry.credentials[credentialId] = true
   end
-  local credential = self.picurrent:getValue()
+  local credential = self.serverInterceptor:getCredential()
   self.entries[credential.identifier].observers[observerId] = true
   return observerId
 end
@@ -251,7 +250,7 @@ function removeObserver(self, observerIdentifier, credential)
     self.entries[credentialId].observedBy[observerIdentifier] = nil
   end
   self.observers[observerIdentifier] = nil
-  credential = credential or self.picurrent:getValue()
+  credential = credential or self.serverInterceptor:getCredential()
   self.entries[credential.identifier].observers[observerIdentifier] = nil
   return true
 end
@@ -273,7 +272,7 @@ end
 
 function addEntry(self, name)
   local credential = {
-    identifier = self:generateCredentialIdentifier(), 
+    identifier = self:generateCredentialIdentifier(),
     entityName = name
   }
   local duration = self.deltaT
@@ -314,7 +313,7 @@ function notifyCredentialWasDeleted(self, credential)
     local observerEntry = self.observers[observerId]
     if observerEntry then
       local success, err =
-        oil.pcall(observerEntry.observer.credentialWasDeleted, 
+        oil.pcall(observerEntry.observer.credentialWasDeleted,
                   observerEntry.observer, credential)
       if not success then
         Log:warn("Erro ao notificar um observador.")
