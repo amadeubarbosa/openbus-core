@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
-#include <openbus.h>
+#include <oil/openbus.h>
 
 using namespace openbus ;
 

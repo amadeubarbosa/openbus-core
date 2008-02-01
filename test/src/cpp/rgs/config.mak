@@ -1,4 +1,4 @@
-EXTRA_CONFIG=../../../../src/cpp/config
+EXTRA_CONFIG=../../../../src/cpp/oil/config
 
 PROJNAME= openbus
 APPNAME= runner

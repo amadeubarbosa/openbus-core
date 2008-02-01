@@ -2,7 +2,7 @@
 # ses/makefile
 #
 
-include ../../../../src/cpp/config
+include ../../../../src/cpp/oil/config
 
 RM= rm -rf
 LIBS=-llua5.1 -ldl -ltolua
