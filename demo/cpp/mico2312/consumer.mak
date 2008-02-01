@@ -17,7 +17,7 @@ SRC=access_control_service.cc \
     ClientInterceptor.cpp \
     ORBInitializerImpl.cpp
 
-INCLUDES= . ${MICOINC}
+INCLUDES= ../../../include . ${MICOINC}
 
 LDIR= ${MICOLDIR}
 

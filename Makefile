@@ -35,7 +35,7 @@ clean-libs:
 
 libs:
 #	@ls lib/lua | xargs -I ksh -c "cd lib/lua/{}; echo 'Compilando {}...'; make" 
-	cd src/cpp ; tecmake
+	cd src/cpp/oil ; tecmake
 	@(for lib_dir in lib/lua/* ; do \
 		echo ; echo "Compilando $$lib_dir " ; \
 		( cd $$lib_dir ; make ); \
