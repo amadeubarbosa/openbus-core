@@ -1,9 +1,5 @@
------------------------------------------------------------------------------
--- Componente responsável pelo Serviço de Controle de Acesso
---
--- Última alteração:
---   $Id$
------------------------------------------------------------------------------
+-- $Id$
+
 local os = os
 
 local loadfile = loadfile
@@ -30,14 +26,24 @@ local Log = require "openbus.common.Log"
 local IComponent = require "scs.core.IComponent"
 
 local oop = require "loop.simple"
+
+---
+--Componente responsável pelo Serviço de Controle de Acesso
+---
 module("openbus.services.accesscontrol.AccessControlService")
+
 oop.class(_M, IComponent)
 
 invalidCredential = {identifier = "", entityName = ""}
 invalidLease = -1
 deltaT = 30 -- lease fixo (por enquanto) em segundos
 
--- Constrói a implementação do componente
+---
+--Constrói a implementação do componente.
+--
+--@param name
+--@param config
+---
 function __init(self, name, config)
   local component = IComponent:__init(name, 1)
   component.config = config
@@ -51,7 +57,9 @@ function __init(self, name, config)
   return oop.rawnew(self, component)
 end
 
--- Inicia o componente
+---
+--Inicia o componente.
+---
 function startup(self)
   -- instala o interceptador do serviço
   local CONF_DIR = os.getenv("CONF_DIR")
@@ -323,6 +331,8 @@ function notifyCredentialWasDeleted(self, credential)
   end
 end
 
--- Shutdown do componente: ainda a implementar!!!
+---
+--Shutdown do componente: ainda a implementar!!!
+---
 function shutdown(self)
 end

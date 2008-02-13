@@ -1,5 +1,4 @@
 -----------------------------------------------------------------------------
--- Componente (membro) responsável pelo Serviço de Registro
 --
 -- Última alteração:
 --   $Id$
@@ -28,21 +27,29 @@ local Log = require "openbus.common.Log"
 local IComponent = require "scs.core.IComponent"
 
 local oop = require "loop.simple"
+
+---
+--Componente (membro) responsável pelo Serviço de Registro.
+---
 module("openbus.services.registry.RegistryService")
+
 oop.class(_M, IComponent)
 
+---
+--Constrói a implementação do componente
 --
--- Constrói a implementação do componente
---
+--@param name
+--@param config
+---
 function __init(self, name, config)
   local component = IComponent:__init(name, 1)
   component.config = config
   return oop.rawnew(self, component)
 end
 
---
--- Inicia o componente
---
+---
+--Inicia o componente.
+---
 function startup(self)
   Log:service("Pedido de startup para serviço de registro")
 
@@ -128,15 +135,17 @@ function startup(self)
   Log:service("Serviço de registro iniciado")
 end
 
---
--- Registra uma nova oferta de serviço
--- A oferta de serviço é representada por uma tabela com os campos:
+---
+--Registra uma nova oferta de serviço. A oferta de serviço é representada por
+--uma tabela com os campos:
 --   type: tipo da oferta (string)
 --   description: descrição (textual) da oferta
 --   properties: lista de propriedades associadas à oferta (opcional)
 --               cada propriedade é um par nome/valor (lista de strings)
 --   member: referência para o membro que faz a oferta
 --
+--@param serviceOffer
+---
 function register(self, serviceOffer)
   local identifier = self:generateIdentifier()
   local credential = self.serverInterceptor:getCredential()
@@ -158,9 +167,11 @@ function register(self, serviceOffer)
   return true, identifier
 end
 
+---
+--Adiciona uma oferta ao repositório.
 --
--- Adiciona uma oferta ao repositório
---
+--@param offerEntry
+---
 function addOffer(self, offerEntry)
 
   -- Índice de ofertas por identificador
@@ -190,8 +201,13 @@ function addOffer(self, offerEntry)
   Log:service("Adicionada credencial no observador")
 end
 
--- Constrói um conjunto com os valores das propriedades, para acelerar a busca
--- procedimento válido enquanto propriedade for lista de strings !!!
+---
+--Constrói um conjunto com os valores das propriedades, para acelerar a busca.
+--OBS: procedimento válido enquanto propriedade for lista de strings !!!
+--
+--@param offerProperties
+--@param member
+---
 function createPropertyIndex(self, offerProperties, member)
   local properties = {}
   for _, property in ipairs(offerProperties) do
@@ -226,9 +242,11 @@ function createPropertyIndex(self, offerProperties, member)
   return properties
 end
 
+---
+--Remove uma oferta de serviço.
 --
--- Remove uma oferta de serviço
---
+--@param identifier
+---
 function unregister(self, identifier)
   Log:service("Removendo oferta "..identifier)
 
@@ -279,11 +297,13 @@ function unregister(self, identifier)
   return true
 end
 
+---
+--Atualiza a oferta de serviço associada ao identificador especificado. Apenas
+--as propriedades da oferta podem ser atualizadas (nessa versão, substituidas).
 --
--- Atualiza a oferta de serviço associada ao identificador especificado
--- Apenas as propriedades da oferta podem ser atualizadas
---   (nessa versão, substituidas)
---
+--@param identifier
+--@param properties
+---
 function update(self, identifier, properties)
   Log:service("Atualizando oferta "..identifier)
 
@@ -308,11 +328,14 @@ function update(self, identifier, properties)
   return true
 end
 
+---
+--Busca por ofertas de serviço de um determinado tipo, que atendam aos
+--critérios (propriedades) especificados. A especificação de critérios
+--é opcional.
 --
--- Busca por ofertas de serviço de um determinado tipo, que atendam aos
--- critérios (propriedades) especificados.
--- A especificação de critérios é opcional.
---
+--@param type
+--@param criteria
+---
 function find(self, type, criteria)
   Log:service("Procurando oferta com tipo "..type)
 
@@ -342,9 +365,12 @@ function find(self, type, criteria)
   return selectedOffers
 end
 
+---
+--Verifica se uma oferta atende aos critérios de busca
 --
--- Verifica se uma oferta atende aos critérios de busca
---
+--@param criteria
+--@param offerProperties
+---
 function meetsCriteria(self, criteria, offerProperties)
   for _, criterion in ipairs(criteria) do
     local offerProperty = offerProperties[criterion.name]
@@ -361,10 +387,12 @@ function meetsCriteria(self, criteria, offerProperties)
   return true
 end
 
+---
+--Notificação de deleção de credencial. As ofertas de serviço relacionadas
+--deverão ser removidas.
 --
--- Notificação de deleção de credencial
--- As ofertas de serviço relacionadas deverão ser removidas
---
+--@param credential
+---
 function credentialWasDeleted(self, credential)
   Log:service("Remover ofertas da credencial deletada "..credential.identifier)
   local credentialOffers = self.offersByCredential[credential.identifier]
@@ -392,16 +420,16 @@ function credentialWasDeleted(self, credential)
   end
 end
 
---
--- Gera uma identificação de oferta de serviço
---
+---
+--Gera uma identificação de oferta de serviço.
+---
 function generateIdentifier()
     return luuid.new("time")
 end
 
---
--- Procedimento após reconexão do serviço
---
+---
+--Procedimento após reconexão do serviço.
+---
 function wasReconnected(self)
  Log:service("Serviço de registro foi reconectado")
  -- atualiza a referência junto ao serviço de controle de acesso
@@ -433,9 +461,9 @@ function wasReconnected(self)
   end
 end
 
---
--- Finaliza o serviço
---
+---
+--Finaliza o serviço.
+---
 function shutdown(self)
   Log:service("Pedido de shutdown para serviço de registro")
   if not self.started then

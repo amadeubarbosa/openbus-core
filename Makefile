@@ -24,7 +24,7 @@ clean: clean-libs clean-bins
 
 doc:
 	@(cd docs/idl; doxygen openbus.dox)
-	@(mkdir -p docs/lua; luadoc -d docs/lua `find src/lua -name '*.lua'`)
+	@(mkdir -p docs/lua; luadoc --nofiles -d docs/lua `find src/lua -name '*.lua'`)
 
 idl:
 	@ln -fs src/corba_idl

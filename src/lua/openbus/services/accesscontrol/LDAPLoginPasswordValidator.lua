@@ -1,9 +1,14 @@
+-- $Id$
+
 local lualdap = require "lualdap"
+local oop = require "loop.simple"
 
 local LoginPasswordValidator =
     require "openbus.services.accesscontrol.LoginPasswordValidator"
 
-local oop = require "loop.simple"
+---
+--Representa um validador de usuário e senha através de LDAP.
+---
 module("openbus.services.accesscontrol.LDAPLoginPasswordValidator")
 oop.class(_M, LoginPasswordValidator)
 

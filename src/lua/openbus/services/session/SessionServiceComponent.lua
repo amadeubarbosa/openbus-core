@@ -1,9 +1,5 @@
------------------------------------------------------------------------------
--- Componente (membro) responsável pelo Serviço de Sessão
---
--- Última alteração:
---   $Id$
------------------------------------------------------------------------------
+-- $Id$
+
 local os = os
 
 local loadfile = loadfile
@@ -23,21 +19,29 @@ local Log = require "openbus.common.Log"
 local IComponent = require "scs.core.IComponent"
 
 local oop = require "loop.simple"
+
+---
+--Componente (membro) responsável pelo Serviço de Sessão.
+---
 module("openbus.services.session.SessionServiceComponent")
+
 oop.class(_M, IComponent)
 
+---
+--Constroi a implementação do componente.
 --
--- Constroi a implementação do componente
---
+--@param name
+--@param config
+---
 function __init(self, name, config)
   local component = IComponent:__init(name, 1)
   component.config = config
   return oop.rawnew(self, component)
 end
 
---
--- Inicia o componente
---
+---
+--Inicia o componente.
+---
 function startup(self)
   Log:service("Pedido de startup para o serviço de sessão")
 
@@ -112,9 +116,9 @@ function startup(self)
   Log:service("Serviço de sessão iniciado")
 end
 
---
--- Procedimento após a reconexão do serviço
---
+---
+--Procedimento após a reconexão do serviço.
+---
 function wasReconnected(self)
 Log:service("Serviço de sessão foi reconectado")
 
@@ -138,9 +142,9 @@ Log:service("Serviço de sessão foi reconectado")
   end
 end
 
---
--- Finaliza o serviço
---
+---
+--Finaliza o serviço.
+---
 function shutdown(self)
   Log:service("Pedido de shutdown para o serviço de sessão")
   if not self.started then

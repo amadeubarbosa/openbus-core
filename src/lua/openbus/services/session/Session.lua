@@ -1,9 +1,5 @@
------------------------------------------------------------------------------
--- Sessão compartilhada pelos membros associados a uma mesma credencial
---
--- Última alteração:
---   $Id$
------------------------------------------------------------------------------
+-- $Id$
+
 local tostring = tostring
 local ipairs = ipairs
 local pairs = pairs
@@ -14,21 +10,36 @@ local luuid = require "luuid"
 local Log = require "openbus.common.Log"
 
 local oop = require "loop.base"
+
+---
+--Sessão compartilhada pelos membros associados a uma mesma credencial.
+---
 module("openbus.services.session.Session", oop.class)
 
--- Constrói a sessão
+---
+--Constrói a sessão.
+--
+--@param identifier
+--@param credential
+---
 function __init(self, identifier, credential)
   Log:service("Construindo sessão com id "..tostring(identifier))
   return oop.rawnew(self, {identifier = identifier, credential = credential,
                            sessionMembers = {}, eventSinks = {}})
 end
 
--- Obtém o identificador da sessão
+---
+--Obtém o identificador da sessão.
+---
 function getIdentifier(self)
   return self.identifier
 end
 
--- Adiciona um membro à sessão
+---
+--Adiciona um membro à sessão.
+--
+--@param member
+---
 function addMember(self, member)
   local memberName = member:getClassId().name
   Log:service("Membro "..memberName.." adicionado à sessão")
@@ -48,7 +59,11 @@ function addMember(self, member)
   return memberIdentifier
 end
 
--- Remove um membro da sessão
+---
+--Remove um membro da sessão.
+--
+--@param memberIdentifier
+---
 function removeMember(self, memberIdentifier)
   member = self.sessionMembers[memberIdentifier]
   if not member then
@@ -60,7 +75,11 @@ function removeMember(self, memberIdentifier)
   return true
 end
 
--- Repassa evento para membros da sessão
+---
+--Repassa evento para membros da sessão.
+--
+--@param event
+---
 function push(self, event)
   Log:service("Repassando evento "..event.type.." para membros de sessão")
   for _, sink in pairs(self.eventSinks) do
@@ -75,7 +94,9 @@ function disconnect(self)
   end
 end
 
--- Obtém a lista de membros de uma sessão
+---
+--Obtém a lista de membros de uma sessão.
+---
 function getMembers(self)
   local members = {}
   for _, member in pairs(self.sessionMembers) do

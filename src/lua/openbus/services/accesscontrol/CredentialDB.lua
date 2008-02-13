@@ -1,9 +1,5 @@
------------------------------------------------------------------------------
--- Mecanismo de persistência de credenciais
---
--- Última alteração:
---   $Id$
------------------------------------------------------------------------------
+-- $Id$
+
 local io = io
 local string = string
 local os = os
@@ -21,6 +17,10 @@ local oil = require "oil"
 local Log = require "openbus.common.Log"
 
 local oop = require "loop.base"
+
+---
+--Mecanismo de persistência de credenciais
+---
 module("openbus.services.accesscontrol.CredentialDB", oop.class)
 
 FILE_SUFFIX = ".credential"

@@ -1,9 +1,5 @@
------------------------------------------------------------------------------
--- Faceta que disponibiliza a funcionalidade básica do serviço de sessão
---
--- Última alteração:
---   $Id$
------------------------------------------------------------------------------
+-- $Id$
+
 local oil = require "oil"
 local luuid = require "luuid"
 
@@ -12,6 +8,10 @@ local Session = require "openbus.services.session.Session"
 local Log = require "openbus.common.Log"
 
 local oop = require "loop.base"
+
+---
+--Faceta que disponibiliza a funcionalidade básica do serviço de sessão.
+---
 module("openbus.services.session.SessionService", oop.class)
 
 function __init(self, accessControlService, serverInterceptor)
@@ -22,9 +22,13 @@ function __init(self, accessControlService, serverInterceptor)
   })
 end
 
--- Cria uma sessão associada a uma credencial.
--- A credencial em questão é recuperada da requisição pelo interceptador
--- do serviço, e repassada através do objeto PICurrent
+---
+--Cria uma sessão associada a uma credencial. A credencial em questão é
+--recuperada da requisição pelo interceptador do serviço, e repassada através
+--do objeto PICurrent.
+--
+--@param member
+---
 function createSession(self, member)
   local credential = self.serverInterceptor:getCredential()
   if self.sessions[credential.identifier] then
@@ -62,7 +66,11 @@ function createSession(self, member)
   return true, session, memberID
 end
 
--- Notificação de deleção de credencial (logout)
+---
+--Notificação de deleção de credencial (logout).
+--
+--@param credential
+---
 function credentialWasDeleted(self, credential)
 
   -- Remove a sessão
@@ -79,9 +87,11 @@ function generateIdentifier()
   return luuid.new("time")
 end
 
--- Obtém a sessão associada a uma credencial.
--- A credencial em questão é recuperada da requisição pelo interceptador
--- do serviço, e repassada através do objeto PICurrent
+---
+--Obtém a sessão associada a uma credencial. A credencial em questão é
+--recuperada da requisição pelo interceptador do serviço, e repassada através
+--do objeto PICurrent.
+---
 function getSession(self)
   local credential = self.serverInterceptor:getCredential()
   local session = self.sessions[credential.identifier]
@@ -91,9 +101,9 @@ function getSession(self)
   return session
 end
 
---
--- Procedimento após a reconexão do serviço
---
+---
+--Procedimento após a reconexão do serviço.
+---
 function wasReconnected(self)
 
   -- registra novamente o observador de credenciais
@@ -116,9 +126,9 @@ function wasReconnected(self)
   end
 end
 
---
--- Finaliza o serviço
---
+---
+--Finaliza o serviço.
+---
 function shutdown(self)
   if self.observerId then
     self.accessControlService:removeObserver(self.observerId)

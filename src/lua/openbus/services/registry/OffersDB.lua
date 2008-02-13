@@ -1,9 +1,5 @@
------------------------------------------------------------------------------
--- Mecanismo de persistência de ofertas de serviço
---
--- Última alteração:
---   $Id$
------------------------------------------------------------------------------
+-- $Id$
+
 local io = io
 local string = string
 local os = os
@@ -21,6 +17,10 @@ local oil = require "oil"
 local Log = require "openbus.common.Log"
 
 local oop = require "loop.base"
+
+---
+--Mecanismo de persistência de ofertas de serviço.
+--
 module("openbus.services.registry.OffersDB", oop.class)
 
 FILE_SUFFIX = ".offer"
