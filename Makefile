@@ -13,7 +13,7 @@ SESSION_SERVICE_DIR=$(COMPONENTS_DIR)/session_service
 
 all: libs bins idl
 
-rebuild: clean libs bins idl
+rebuild: clean all
 
 clean: clean-libs clean-bins
 	@rm -rf ${OPENBUS_HOME}/libpath
@@ -23,7 +23,8 @@ clean: clean-libs clean-bins
 #reinstall:	clean	install
 
 doc:
-	cd docs/idl; doxygen openbus.dox
+	@(cd docs/idl; doxygen openbus.dox)
+	@(mkdir -p docs/lua; luadoc -d docs/lua `find src/lua -name '*.lua'`)
 
 idl:
 	@ln -fs src/corba_idl
