@@ -28,10 +28,12 @@ module("openbus.services.session.SessionServiceComponent")
 oop.class(_M, IComponent)
 
 ---
---Constroi a implementação do componente.
+--Cria um Serviço de Sessão.
 --
---@param name
---@param config
+--@param name O nome do componente.
+--@param config As configurações do componente.
+--
+--@return O Serviço de Sessão.
 ---
 function __init(self, name, config)
   local component = IComponent:__init(name, 1)
@@ -41,6 +43,8 @@ end
 
 ---
 --Inicia o componente.
+--
+--@see scs.core.IComponent#startup
 ---
 function startup(self)
   Log:service("Pedido de startup para o serviço de sessão")
@@ -144,6 +148,8 @@ end
 
 ---
 --Finaliza o serviço.
+--
+--@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
   Log:service("Pedido de shutdown para o serviço de sessão")

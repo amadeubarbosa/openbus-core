@@ -34,15 +34,24 @@ module("openbus.services.accesscontrol.AccessControlService")
 
 oop.class(_M, IComponent)
 
+---
+--Credencial inválida.
+--
+--@class table
+--@name invalidCredential
+--
+--@field identifier O identificador da credencial que, neste caso, é vazio.
+--@field entityName O nome da entidade dona da credencial que, neste caso, é vazio.
+---
 invalidCredential = {identifier = "", entityName = ""}
 invalidLease = -1
 deltaT = 30 -- lease fixo (por enquanto) em segundos
 
 ---
---Constrói a implementação do componente.
+--Cria um serviço de controle de acesso.
 --
---@param name
---@param config
+--@param name O nome do componente.
+--@param config As configurações do componentes.
 ---
 function __init(self, name, config)
   local component = IComponent:__init(name, 1)
@@ -59,6 +68,8 @@ end
 
 ---
 --Inicia o componente.
+--
+--@see scs.core.IComponent#startup
 ---
 function startup(self)
   -- instala o interceptador do serviço
@@ -102,6 +113,15 @@ function startup(self)
   return self
 end
 
+---
+--Realiza um login de uma entidade através de usuário e senha.
+--
+--@param name O nome da entidade.
+--@param password A senha da entidade.
+--
+--@return true, a credencial da entidade e o lease caso o login seja realizado
+--com sucesso, ou false e uma credencial e uma lease inválidos, caso contrário.
+---
 function loginByPassword(self, name, password)
   for _, validator in ipairs(self.loginPasswordValidators) do
     local result, err = validator:validate(name, password)
@@ -116,6 +136,17 @@ function loginByPassword(self, name, password)
   return false, self.invalidCredential, self.invalidLease
 end
 
+---
+--Realiza um login de um membro através de assinatura digital.
+--
+--@param name OI nome do membro.
+--@param answer A resposta para um desafio previamente obtido.
+--
+--@return true, a credencial do membro e o lease caso o login seja realizado
+--com sucesso, ou false e uma credencial e uma lease inválidos, caso contrário.
+--
+--@see getChallenge
+---
 function loginByCertificate(self, name, answer)
   local challenge = self.challenges[name]
   if not challenge then
@@ -133,6 +164,15 @@ function loginByCertificate(self, name, answer)
   return true, entry.credential, entry.lease.duration
 end
 
+---
+--Obtém o desafio para um membro.
+--
+--@param name O nome do membro.
+--
+--@return O desafio.
+--
+--@see loginByCertificate
+---
 function getChallenge(self, name)
   local certificate, errorMessage = self:getCertificate(name)
   if not certificate then
@@ -140,21 +180,38 @@ function getChallenge(self, name)
     Log:error(errorMessage)
     return ""
   end
-  local challenge = self:generateChallenge(name, certificate)
-  return challenge
+  return self:generateChallenge(name, certificate)
 end
 
+---
+--Obtém o certificado de um membro.
+--
+--@param name O nome do membro.
+--
+--@return O certificado do membro.
+---
 function getCertificate(self, name)
   local certificateFile = self.config.certificatesDirectory.."/"..name..".crt"
   return lce.x509.readfromderfile(certificateFile)
 end
 
+---
+--Gera um desafio para um membro.
+--
+--@param name O nome do membro.
+--@param certificate O certificado do membro.
+--
+--@return O desafio.
+---
 function generateChallenge(self, name, certificate)
   local currentTime = tostring(os.time())
   self.challenges[name] = currentTime
   return lce.cipher.encrypt(certificate:getpublickey(), currentTime)
 end
 
+---
+--@see openbus.common.LeaseProvider#renewLease
+---
 function renewLease(self, credential)
   Log:lease(credential.entityName .. " renovando lease.")
   if not self:isValid(credential) then
@@ -169,6 +226,13 @@ function renewLease(self, credential)
   return true, self.deltaT
 end
 
+---
+--Faz o logout de uma credencial.
+--
+--@param credential A credencial.
+--
+--@return true caso a credencial estivesse logada, ou false caso contrário.
+---
 function logout(self, credential)
   local entry = self.entries[credential.identifier]
   if not entry then
@@ -187,6 +251,13 @@ function logout(self, credential)
   return true
 end
 
+---
+--Verifica se uma credencial é válida.
+--
+--@param credential A credencial.
+--
+--@return true caso a credencial seja válida, ou false caso contrário.
+---
 function isValid(self, credential)
   local entry = self.entries[credential.identifier]
   if not entry then
@@ -198,6 +269,11 @@ function isValid(self, credential)
   return true
 end
 
+---
+--Obtém o Serviço de Registro.
+--
+--@return O Serviço de Registro, ou nil caso não tenha sido definido.
+---
 function getRegistryService(self)
   if self.registryService then
     return self.registryService.component
@@ -205,6 +281,14 @@ function getRegistryService(self)
   return nil
 end
 
+---
+--Define o componente responsável pelo Serviço de Registro.
+--
+--@param registryServiceComponent O componente responsável pelo Serviço de
+--Registro.
+--
+--@return true caso o componente seja definido, ou false caso contrário.
+---
 function setRegistryService(self, registryServiceComponent)
   local credential = self.serverInterceptor:getCredential()
   if credential.entityName == "RegistryService" then
@@ -222,6 +306,14 @@ function setRegistryService(self, registryServiceComponent)
   return false
 end
 
+---
+--Adiciona um observador de credenciais.
+--
+--@param observer O observador.
+--@param credentialIdentifiers As credenciais de interesse do observador.
+--
+--@return O identificador do observador.
+---
 function addObserver(self, observer, credentialIdentifiers)
   local observerId = self:generateObserverIdentifier()
   local observerEntry = {observer = observer, credentials = {}}
@@ -235,6 +327,14 @@ function addObserver(self, observer, credentialIdentifiers)
   return observerId
 end
 
+---
+--Adiciona uma credencial à lista de credenciais de um observador.
+--
+--@param observerIdentifier O identificador do observador.
+--@param credentialIdentifier O identificador da credencial.
+--
+--@return true caso a credencil tenha sido adicionada, ou false caso contrário.
+---
 function addCredentialToObserver(self, observerIdentifier, credentialIdentifier)
   if not self.entries[credentialIdentifier] then
     return false
@@ -249,6 +349,14 @@ function addCredentialToObserver(self, observerIdentifier, credentialIdentifier)
   return true
 end
 
+---
+--Remove um observador e retira sua credencial da lista de outros observadores.
+--
+--@param observerIdentifier O identificador do observador.
+--@param credential A credencial.
+--
+--@return true caso o observador tenha sido removido, ou false caso contrário.
+---
 function removeObserver(self, observerIdentifier, credential)
   local observerEntry = self.observers[observerIdentifier]
   if not observerEntry then
@@ -263,6 +371,14 @@ function removeObserver(self, observerIdentifier, credential)
   return true
 end
 
+---
+--Remove uma credencial da lista de credenciais de um observador.
+--
+--@param observerIdentifier O identificador do observador.
+--@param credentialIdentifier O identificador da credencial.
+--
+--@return true caso a credencial seja removida, ou false caso contrário.
+---
 function removeCredentialFromObserver(self, observerIdentifier,
     credentialIdentifier)
   local observerEntry = self.observers[observerIdentifier]
@@ -278,6 +394,13 @@ function removeCredentialFromObserver(self, observerIdentifier,
   return true
 end
 
+---
+--Adiciona uma credencial ao banco de dados.
+--
+--@param name O nome da entidade para a qual a credencial será gerada.
+--
+--@return A credencial.
+---
 function addEntry(self, name)
   local credential = {
     identifier = self:generateCredentialIdentifier(),
@@ -295,14 +418,30 @@ function addEntry(self, name)
   return entry
 end
 
+---
+--Gera um identificador de credenciais.
+--
+--@return O identificador de credenciais.
+---
 function generateCredentialIdentifier()
   return luuid.new("time")
 end
 
+---
+--Gera um identificador de observadores de credenciais.
+--
+--@return O identificador de observadores de credenciais.
+---
 function generateObserverIdentifier()
   return luuid.new("time")
 end
 
+---
+--Remove uma credencial da base de dados e notifica os observadores sobre tal
+--evento.
+--
+--@param entry A credencial.
+---
 function removeEntry(self, entry)
   local credential = entry.credential
   self:notifyCredentialWasDeleted(credential)
@@ -316,6 +455,11 @@ function removeEntry(self, entry)
   self.credentialDB:delete(entry)
 end
 
+---
+--Envia aos observadores a notificação de que um credencial não existe mais.
+--
+--@param credential A credencial.
+---
 function notifyCredentialWasDeleted(self, credential)
   for observerId in pairs(self.entries[credential.identifier].observedBy) do
     local observerEntry = self.observers[observerId]
@@ -329,10 +473,4 @@ function notifyCredentialWasDeleted(self, credential)
       end
     end
   end
-end
-
----
---Shutdown do componente: ainda a implementar!!!
----
-function shutdown(self)
 end

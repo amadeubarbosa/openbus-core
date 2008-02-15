@@ -14,6 +14,15 @@ local oop = require "loop.base"
 ---
 module("openbus.services.session.SessionService", oop.class)
 
+---
+--Cria a facete de um Serviço de Sessão.
+--
+--@param accessControlService O Serviço de Controle de Acesso.
+--@param serverInterceptor O interceptador de servidor que será instalado para
+--este serviço.
+--
+--@return A faceta do Serviço de Sessão.
+---
 function __init(self, accessControlService, serverInterceptor)
   return oop.rawnew(self, {
     sessions = {},
@@ -27,7 +36,11 @@ end
 --recuperada da requisição pelo interceptador do serviço, e repassada através
 --do objeto PICurrent.
 --
---@param member
+--@param member O membro que está solicitando a criação da sessão e que estará
+--inserido na sessão automaticamente.
+--
+--@return true, a sessão e o identificador de membro da sessão em caso de
+--sucesso, ou false, caso contrário.
 ---
 function createSession(self, member)
   local credential = self.serverInterceptor:getCredential()
@@ -69,7 +82,7 @@ end
 ---
 --Notificação de deleção de credencial (logout).
 --
---@param credential
+--@param credential A credencial removida.
 ---
 function credentialWasDeleted(self, credential)
 
@@ -83,6 +96,11 @@ function credentialWasDeleted(self, credential)
   end
 end
 
+---
+--Gera um identificador de sessão.
+--
+--@return Um identificador de sessão.
+---
 function generateIdentifier()
   return luuid.new("time")
 end
@@ -91,12 +109,15 @@ end
 --Obtém a sessão associada a uma credencial. A credencial em questão é
 --recuperada da requisição pelo interceptador do serviço, e repassada através
 --do objeto PICurrent.
+--
+--@return A sessão, ou nil, caso não exista sessão para a credencial do membro.
 ---
 function getSession(self)
   local credential = self.serverInterceptor:getCredential()
   local session = self.sessions[credential.identifier]
   if not session then
    Log:warn("Não há sessão para "..credential.identifier)
+    return nil
   end
   return session
 end

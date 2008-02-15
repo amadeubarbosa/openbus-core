@@ -1,8 +1,5 @@
------------------------------------------------------------------------------
---
--- Última alteração:
---   $Id$
------------------------------------------------------------------------------
+-- $Id$
+
 local os = os
 local table = table
 
@@ -11,6 +8,7 @@ local assert = assert
 local pairs = pairs
 local ipairs = ipairs
 local next = next
+local error = error
 
 local luuid = require "luuid"
 local oil = require "oil"
@@ -36,10 +34,12 @@ module("openbus.services.registry.RegistryService")
 oop.class(_M, IComponent)
 
 ---
---Constrói a implementação do componente
+--Cria um Serviço de Registro.
 --
---@param name
---@param config
+--@param name O nome do componente.
+--@param config As configurações do componente.
+--
+--@return O Serviço de Registro.
 ---
 function __init(self, name, config)
   local component = IComponent:__init(name, 1)
@@ -49,6 +49,8 @@ end
 
 ---
 --Inicia o componente.
+--
+--@see scs.core.IComponent#startup
 ---
 function startup(self)
   Log:service("Pedido de startup para serviço de registro")
@@ -144,7 +146,10 @@ end
 --               cada propriedade é um par nome/valor (lista de strings)
 --   member: referência para o membro que faz a oferta
 --
---@param serviceOffer
+--@param serviceOffer A oferta de serviço.
+--
+--@return true e o identificador do registro da oferta em caso de sucesso, ou
+--false caso contrário.
 ---
 function register(self, serviceOffer)
   local identifier = self:generateIdentifier()
@@ -170,7 +175,7 @@ end
 ---
 --Adiciona uma oferta ao repositório.
 --
---@param offerEntry
+--@param offerEntry A oferta.
 ---
 function addOffer(self, offerEntry)
 
@@ -205,8 +210,11 @@ end
 --Constrói um conjunto com os valores das propriedades, para acelerar a busca.
 --OBS: procedimento válido enquanto propriedade for lista de strings !!!
 --
---@param offerProperties
---@param member
+--@param offerProperties As propriedades da oferta de serviço.
+--@param member O membro dono das propriedades.
+--
+--@return As propriedades da oferta em uma tabela cuja chave é o nome da
+--propriedade.
 ---
 function createPropertyIndex(self, offerProperties, member)
   local properties = {}
@@ -245,7 +253,9 @@ end
 ---
 --Remove uma oferta de serviço.
 --
---@param identifier
+--@param identifier A identificação da oferta de serviço.
+--
+--@return true caso a oferta tenha sido removida, ou false caso contrário.
 ---
 function unregister(self, identifier)
   Log:service("Removendo oferta "..identifier)
@@ -301,8 +311,10 @@ end
 --Atualiza a oferta de serviço associada ao identificador especificado. Apenas
 --as propriedades da oferta podem ser atualizadas (nessa versão, substituidas).
 --
---@param identifier
---@param properties
+--@param identifier O identificador da oferta.
+--@param properties As novas propriedades da oferta.
+--
+--@return true caso a oferta seja atualizada, ou false caso contrário.
 ---
 function update(self, identifier, properties)
   Log:service("Atualizando oferta "..identifier)
@@ -333,8 +345,10 @@ end
 --critérios (propriedades) especificados. A especificação de critérios
 --é opcional.
 --
---@param type
---@param criteria
+--@param type O tipo da oferta.
+--@param criteria Os critérios da busca.
+--
+--@return As ofertas de serviço que correspondem aos critérios.
 ---
 function find(self, type, criteria)
   Log:service("Procurando oferta com tipo "..type)
@@ -368,8 +382,10 @@ end
 ---
 --Verifica se uma oferta atende aos critérios de busca
 --
---@param criteria
---@param offerProperties
+--@param criteria Os critérios da busca.
+--@param offerProperties As propriedades da oferta.
+--
+--@return true caso a oferta atenda aos critérios, ou false caso contrário.
 ---
 function meetsCriteria(self, criteria, offerProperties)
   for _, criterion in ipairs(criteria) do
@@ -391,7 +407,7 @@ end
 --Notificação de deleção de credencial. As ofertas de serviço relacionadas
 --deverão ser removidas.
 --
---@param credential
+--@param credential A credencial removida.
 ---
 function credentialWasDeleted(self, credential)
   Log:service("Remover ofertas da credencial deletada "..credential.identifier)
@@ -422,6 +438,8 @@ end
 
 ---
 --Gera uma identificação de oferta de serviço.
+--
+--@return O identificador de oferta de serviço.
 ---
 function generateIdentifier()
     return luuid.new("time")
@@ -463,6 +481,8 @@ end
 
 ---
 --Finaliza o serviço.
+--
+--@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
   Log:service("Pedido de shutdown para serviço de registro")

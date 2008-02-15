@@ -17,10 +17,12 @@ local oop = require "loop.base"
 module("openbus.services.session.Session", oop.class)
 
 ---
---Constrói a sessão.
+--Cria a sessão.
 --
---@param identifier
---@param credential
+--@param identifier O identificador da sessão.
+--@param credential A credencial relacionada à sessão.
+--
+--@return A sessão.
 ---
 function __init(self, identifier, credential)
   Log:service("Construindo sessão com id "..tostring(identifier))
@@ -30,6 +32,8 @@ end
 
 ---
 --Obtém o identificador da sessão.
+--
+--@return O identificador da sessão.
 ---
 function getIdentifier(self)
   return self.identifier
@@ -38,7 +42,9 @@ end
 ---
 --Adiciona um membro à sessão.
 --
---@param member
+--@param member O membro a ser adicionado.
+--
+--@return O identificador do membro na sessão.
 ---
 function addMember(self, member)
   local memberName = member:getClassId().name
@@ -62,7 +68,10 @@ end
 ---
 --Remove um membro da sessão.
 --
---@param memberIdentifier
+--@param memberIdentifier O identificador do membro na sessão.
+--
+--@return true caso o membro tenha sido removido da sessão, ou false caso
+--contrário.
 ---
 function removeMember(self, memberIdentifier)
   member = self.sessionMembers[memberIdentifier]
@@ -78,7 +87,7 @@ end
 ---
 --Repassa evento para membros da sessão.
 --
---@param event
+--@param event O evento.
 ---
 function push(self, event)
   Log:service("Repassando evento "..event.type.." para membros de sessão")
@@ -87,6 +96,9 @@ function push(self, event)
   end
 end
 
+---
+--Solicita a desconexão de todos os membros da sessão.
+---
 function disconnect(self)
   Log:service("Desconectando os membros da sessão")
   for _, sink in pairs(self.eventSinks) do
@@ -96,6 +108,8 @@ end
 
 ---
 --Obtém a lista de membros de uma sessão.
+--
+--@return Os membros da sessão.
 ---
 function getMembers(self)
   local members = {}
@@ -105,6 +119,11 @@ function getMembers(self)
   return members
 end
 
+---
+--Gera um identificador de membros de sessão.
+--
+--@return O identificador de membro de sessão.
+---
 function generateMemberIdentifier()
   return luuid.new("time")
 end

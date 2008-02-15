@@ -1,11 +1,13 @@
------------------------------------------------------------------------------
--- Inicialização do Serviço de Controle de Acesso
---
--- Última alteração:
---   $Id$
------------------------------------------------------------------------------
+-- $Id$
+
+---
+--Inicialização do Serviço de Controle de Acesso
+---
+
+-- Habilitando o suporte a interceptadores
 package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
+
 local oil = require "oil"
 
 local Log = require "openbus.common.Log"
@@ -42,6 +44,9 @@ oil.loadidlfile(CORBA_IDL_DIR.."/access_control_service.idl")
 oil.init{host = AccessControlServerConfiguration.hostName,
     port = AccessControlServerConfiguration.hostPort}
 
+---
+--Função que será executada pelo OiL em modo protegido.
+---
 function main()
   local success, res = oil.pcall(oil.newthread, oil.run)
   if not success then

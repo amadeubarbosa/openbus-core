@@ -12,6 +12,9 @@ module("openbus.services.accesscontrol.TestLoginPasswordValidator")
 
 oop.class(_M, LoginPasswordValidator)
 
+---
+--@see openbus.services.accesscontrol.LoginPasswordValidator#validate
+---
 function validate(self, name, password)
   if name == "tester" and password == "tester" then
     return true

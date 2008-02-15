@@ -26,6 +26,14 @@ module("openbus.services.registry.OffersDB", oop.class)
 FILE_SUFFIX = ".offer"
 FILE_SEPARATOR = "/"
 
+---
+--Cria um banco de dados de ofertas de serviço.
+--
+--@param databaseDirectory O diretório que sera utilizado para armazenas as
+--ofertas de serviço.
+--
+--@return O banco de dados de ofertas de serviço.
+---
 function __init(self, databaseDirectory)
   if not lposix.dir(databaseDirectory) then
     Log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. "..
@@ -42,6 +50,11 @@ function __init(self, databaseDirectory)
   })
 end
 
+---
+--Obtém todas as ofertas de serviço.
+--
+--@return As ofertas de serviço.
+---
 function retrieveAll(self)
   local offerFiles = lposix.dir(self.databaseDirectory)
   local offerEntries = {}
@@ -61,6 +74,14 @@ function retrieveAll(self)
   return offerEntries
 end
 
+---
+--Insere uma entrada no banco de dados.
+--
+--@param offerEntry A oferta de serviço.
+--
+--@return true caso a oferta tenha sido inserida, ou false e uma mensagem
+--de erro, caso contrário.
+---
 function insert(self, offerEntry)
   if self.dbOffers[offerEntry.identifier] then
     return false, "A oferta especificada ja existe."
@@ -73,6 +94,14 @@ function insert(self, offerEntry)
   return true
 end
 
+---
+--Atualiza uma oferta de serviço.
+--
+--@param offerEntry A oferta de serviço.
+--
+--@return true caso a oferta seja atualizada, ou false e uma mensagem de erro,
+--caso contrário.
+---
 function update(self, offerEntry)
   if not self.dbOffers[offerEntry.identifier] then
     return false, "A oferta especificada não existe."
@@ -80,6 +109,14 @@ function update(self, offerEntry)
   return self:writeOffer(offerEntry)
 end
 
+---
+--Remove uma oferta de serviço.
+--
+--@param offerEntry A oferta de serviço.
+--
+--@return true caso a oferta tenha sido removida, ou false e uma mensagem de
+--erro, caso contrário.
+---
 function delete(self, offerEntry)
   if not self.dbOffers[offerEntry.identifier] then
     return false, "A oferta especificada não existe."
@@ -92,6 +129,14 @@ function delete(self, offerEntry)
   return true
 end
 
+---
+--Função auxiliar que transforma um objeto em uma string.
+--
+--@param val O objeto.
+--
+--@return A string representando o objeto, ou nil caso seja um objeto de tipo
+--não suportado.
+---
 function serialize(self, val)
   local t = type(val)
   if t == "table" then
@@ -120,6 +165,14 @@ function serialize(self, val)
   end
 end
 
+---
+--Escreve a oferta de serviço em arquivo.
+--
+--@param offerEntry A oferta de serviço.
+--
+--@return true caso o arquivo seja gerado, ou false e uma mensagem de erro,
+--caso contrário.
+---
 function writeOffer(self, offerEntry)
   local offerFile, errorMessage =  io.open(self.databaseDirectory..
       self.FILE_SEPARATOR..offerEntry.identifier..self.FILE_SUFFIX, "w")
@@ -131,6 +184,13 @@ function writeOffer(self, offerEntry)
   return true
 end
 
+---
+--Remove o arquivo da oferta de serviço.
+--
+--@param offerEntry A oferta de serviço.
+--
+--@return Caso o arquivo não seja removido, retorna nil e uma mensagem de erro.
+---
 function removeOffer(self, offerEntry)
   return os.remove(self.databaseDirectory..self.FILE_SEPARATOR..
       offerEntry.identifier..self.FILE_SUFFIX)
