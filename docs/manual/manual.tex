@@ -1,0 +1,312 @@
+\documentclass[a4paper,11pt]{article}
+
+%% Estilos e Plug-Ins
+\usepackage{a4wide}
+\usepackage{times}
+\usepackage[latin1]{inputenc}
+\usepackage[brazil]{babel}
+
+% ===================
+% Início do documento
+% ===================
+\begin{document}
+
+\newcommand{\OPHOME}{{\tt OPENBUS\_HOME}}
+
+\title{OpenBus\\Manual do Usuário Desenvolvedor}
+\author{}
+\date{}
+\maketitle
+
+\begin{abstract}
+Este documento visa auxilar novos usuários na instalação do sistema.
+Assume-se que o usuário tenha lido o documento sobre a arquitetura do OpenBus.
+\end{abstract}
+
+\section{Checkout do Subversion}
+Os fontes do OpenBus são armazenados num sistema de controle 
+de versão -- o subversion (http://subversion.tigris.org/).
+A URL para o OpenBus é {\tt
+https://subversion.tecgraf.puc-rio.br/engsoftware/openbus/trunk/}
+Para obter os fontes é necessário que o usuário tenha uma conta no tecgraf.
+A senha Unix deve ser usada para autenticação.
+
+Para criar um diretório {\tt openbus}  com os fontes do Openbus, basta
+executar o comando:
+\begin{verbatim}
+svn co https://subversion.tecgraf.puc-rio.br/engsoftware/openbus/trunk openbus
+\end{verbatim}
+
+\section{Organização de diretórios}
+
+\begin{itemize}
+\item bin \\
+Contém os scripts de execução dos serviços básicos para ambos os modos
+de execução (binários estáticos ou através do interpretador Lua).
+
+\item conf \\
+Contém arquivos Lua, que configuram os serviços básicos, o script
+config, que configura as variáveis de ambiente e, no diretório advanced, os 
+arquivos Lua que configuram os interceptadores.
+
+\item demo \\
+Contém um exemplo em Lua de um serviço OpenBus (publisher.lua) e de um 
+cliente OpenBus (consumer.lua).
+
+\item docs \\
+Contém os documentos relacionados ao OpenBus (proposta, apresentações,
+manuais, etc).
+
+\item include \\
+Headers do OiL e do Mico. 
+?? Servem para compilar as bibliotecas C++ para acesso ao OpenBus e criação
+de serviços.
+
+\item lib \\
+Contém as bibliotecas utilizadas pelo OpenBus.
+== Falar de cada uma delas!
+
+\subitem Java (commons-codec, Jacorb e SCS), 
+\subitem Lua (lce, posix, ldap e uuid).
+
+\item src \\
+Contém a implementação dos serviços básicos e de bibliotecas auxiliares
+para implementação de clientes e servidores para o OpenBus.
+Implementações C++, Java e Lua.
+
+\subitem c \\
+Fontes e makefiles (formato tecmake) para os binários estáticos.
+
+\subitem idl \\
+Idls dos serviços básicos e de serviços de dados.
+?? A idl do serviço de projetos deveria estar aqui?!
+
+\subitem cpp \\ 
+Bibliotacas C++ para acesso ao OpenBus e criação de serviços.
+
+\subitem java \\
+Classes auxiliares para acesso ao OpenBus.
+
+\subitem lua \\
+Implementação dos serviços básicos e de classes auxiliares para acesso
+ao OpenBus.
+
+\item test \\
+Contém os testes dos serviços básicos e de clientes e servidores.
+
+\subitem bin \\
+Contém scripts para a execução dos testes.
+?? cpp
+
+
+
+\end{itemize}
+Makefile
+build.xml
+
+\section{Ambiente de Desenvolvimento}
+
+É necessário instalar as seguintes bibliotecas:
+
+\begin{tabular}{lcll}
+Biblioteca & Versão & tag     & Serviços \\ \hline
+doxygen    & x      & docs    &          \\ \hline
+lua        & 5.1    &         &          \\ \hline 
+luasocket  & x      &         &          \\ \hline 
+oil        & x      &         &          \\ \hline 
+openldap   & x      & libs    & acesso   \\ \hline
+openssl    & x      & libs    & acesso   \\ \hline
+posix      & x      & libs    & básicos  \\ \hline
+tolua      & x      & usrlibs &          \\ \hline
+uuid       & x      & libs    & básicos  \\ \hline
+\end{tabular}
+
+\section{Compilação}
+
+A variável de ambiente {\tt OPENBUS\_HOME} deve ser definida pelo
+usuário. Ela deve apontar para o diretório para o qual o usuário fez
+checkout do subversion.
+
+Configurar a localização da biblioteca OpenSSL em
+{\tt lib/lua/lce-1.0.0/src/config.mak}
+
+Configurar a localização da biblioteca toLua em
+{\tt src/cpp/oil/config}
+
+
+O Makefile do OpenBus possui as seguintes tags para compilação:
+{\tt doc}, {\tt idl}, {\tt libs}, {\tt bins} e {\tt usrlibs}.
+A tag {\tt doc} gera a documentação no format doxygen.
+{\tt idl}  cria um link no diretório {\tt OPENBUS\_HOME} para o diretório que
+contém as idls.
+{\tt libs} compila as bibliotecas Lua usadas pelos serviços
+básicos. Essas bibliotecas serão geradas no diretório {\tt
+OPENBUS\_HOME}/libpath.
+{\tt bins} gera os binários estáticos dos serviços básicos.
+{\tt usrlibs} gera as bibliotecas C++ para acesso ao OpenBus.
+
+\section{Execução dos Serviços Básicos}
+
+Deve ser possível executar os serviços básicos nas seguintes
+plataformas:
+Windows XP
+Linux26g4
+Solaris510
+
+ 
+===== Como fazemos para gerar as chaves dos serviços básicos?!?!?!
+
+A variável de ambiente {\tt OPENBUS\_HOME} deve ser definida pelo
+usuário. Ela deve apontar para o diretório para o qual o usuário fez
+checkout do subversion.
+
+Os serviços básicos devem ser configurados através de arquivos Lua.
+
+\begin{itemize}
+\item conf/AccessControlServerConfiguration.lua \\
+Máquina e porta do serviço de acesso.
+\begin{verbatim}
+  hostName = "localhost",
+  hostPort = 2089,
+\end{verbatim}
+Máquina e porta do serviço LDap.
+\begin{verbatim}
+  ldapHostName = "segall.tecgraf.puc-rio.br",
+  ldapHostPort = 389,
+\end{verbatim}
+Diretório onde ficam os certificados gerados por ???
+\begin{verbatim}
+  certificatesDirectory = "../certificates",
+\end{verbatim}
+Chave privada do serviço de acesso.
+\begin{verbatim}
+  privateKeyFile = "../certificates/AccessControlService.key",
+\end{verbatim}
+Diretório onde serão armazenadas as credenciais.
+\begin{verbatim}
+  databaseDirectory = "../credentials",
+\end{verbatim}
+Nível de log do serviço de acesso. Quanto maior o nível, maior o número
+de mensagens.
+\begin{verbatim}
+  logLevel = 3,
+\end{verbatim}
+Nível de log do OiL. Quanto maior o nível, maior o número de mensagens.
+\begin{verbatim}
+  oilVerboseLevel = 1,
+\end{verbatim}
+
+\item conf/RegistryServerConfiguration.lua \\
+Máquina e porta do serviço de acesso. 
+\begin{verbatim}
+  accessControlServerHostName = "localhost",
+  accessControlServerHostPort = 2089,
+\end{verbatim}
+Chave privada do serviço de registro.
+\begin{verbatim}
+  privateKeyFile = "../certificates/RegistryService.key",
+\end{verbatim}
+  Chave pública do controle de acesso.
+\begin{verbatim}
+  accessControlServiceCertificateFile = "../certificates/AccessControlService.crt",
+\end{verbatim}
+Diretório onde serão armazenadas as ofertas de serviço.
+\begin{verbatim}
+  databaseDirectory = "../offers",
+\end{verbatim}
+Nível de log do serviço de acesso. Quanto maior o nível, maior o número
+de mensagens.
+\begin{verbatim}
+  logLevel = 3,
+\end{verbatim}
+Nível de log do OiL. Quanto maior o nível, maior o número de mensagens.
+\begin{verbatim}
+  oilVerboseLevel = 1,
+\end{verbatim}
+
+\item conf/SessionServerConfiguration.lua \\
+
+Máquina e porta do serviço de acesso.
+\begin{verbatim}
+  accessControlServerHostName = "localhost",
+  accessControlServerHostPort = 2089,
+\end{verbatim}
+Chave privada do serviço de registro.
+\begin{verbatim}
+  privateKeyFile = "../certificates/SessionService.key",
+\end{verbatim}
+  Chave pública do controle de acesso.
+\begin{verbatim}
+  accessControlServiceCertificateFile = "../certificates/AccessControlService.cr
+\end{verbatim}
+Tipo do serviço oferecido pelo serviço de Sessão.
+\begin{verbatim}
+  sessionServiceOfferType = "SessionService",
+\end{verbatim}
+Nível de log do serviço de acesso. Quanto maior o nível, maior o número
+de mensagens.
+\begin{verbatim}
+  logLevel = 3,
+\end{verbatim}
+Nível de log do OiL. Quanto maior o nível, maior o número de mensagens.
+\begin{verbatim}
+  oilVerboseLevel = 1,
+\end{verbatim}
+
+\end{itemize}
+
+\subsection{Através do interpretador Lua}
+
+Usar os scripts {\tt bin/run\_access\_control\_server.sh} para o serviço
+de acesso, {\tt bin/run\_registry\_server.sh} para o serviço de registro e 
+{\tt bin/run\_session\_server.sh} para o serviço de sessão.
+ 
+\subsection{Através de binários}
+ 
+Colocar no {\tt LD\_LIBRARY\_PATH} {\tt \OPHOME/libpath/\$TEC\_UNAME}.
+
+Usar os scripts {\tt bin/accesscontrol\_service} para o serviço
+de acesso, {\tt bin/registry\_service} para o serviço de registro e 
+{\tt bin/session\_service} para o serviço de sessão.
+ 
+
+\section{Pacote de instalação}
+
+Pacote para usuários **não** desenvolvedores de serviços básicos.
+
+O que deve entrar no pacote de instalação?
+O que NÃO deve entrar?
+
+\section{Padrões}
+Abreviação
+- nomes de diretórios
+- nomes de arquivos
+
+\section{FAQ}
+
+\subsection{Configurar libreadline.so.5}
+
+\subsection{Permissões dos arquivos so}
+
+\subsection{Variável está setada e exportada?}
+
+\subsection{``:'' no path}
+
+\subsection{Localização de libs dinâmicas}
+
+\subsection{{\tt LUA\_PATH} e {\tt LUA\_CPATH}}
+
+\subsection{Can't contact LDAP server}
+
+\subsection{Usuário não existe no servidor LDAP}
+
+\subsection{unable to bind to port of host}
+
+\subsection{Como acessar o usuário que chamou o serviço para fazer a
+autorização?}
+
+
+
+\end{document}
+
+
