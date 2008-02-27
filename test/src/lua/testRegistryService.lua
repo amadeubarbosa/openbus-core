@@ -1,5 +1,5 @@
 --
--- Testes unitários do Serviço de Registro
+-- Testes unitï¿½rios do Serviï¿½o de Registro
 --
 -- $Id$
 --
@@ -44,13 +44,15 @@ Suite = {
       local success
       success, self.credential = self.accessControlService:loginByPassword(user, password)
       self.credentialHolder:setValue(self.credential)
-
+oil.verbose:debug()
       self.registryService = self.accessControlService:getRegistryService()
+local a = 1
     end,
 
     testRegister = function(self)
       local member = IComponent("Membro Mock", 1)
       member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
+oil.verbose:debug()
       local success, registryIdentifier = self.registryService:register({type = "type1", description = "bla bla bla", properties = {}, member = member, })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
@@ -84,8 +86,8 @@ Suite = {
       Check.assertTrue(self.registryService:update(registryIdentifier, newProps))
       offers = self.registryService:find("X", {{name = "p1", value = {"b"}}})
       Check.assertEquals(1, #offers)
-      Check.assertEquals(offers[1].member:getClassId().name,
-        member:getClassId().name)
+      Check.assertEquals(offers[1].member:getComponentId().name,
+        member:getComponentId().name)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 

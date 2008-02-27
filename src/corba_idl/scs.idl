@@ -50,7 +50,7 @@ module scs {
       Object getFacet (in string facet_interface);
       Object getFacetByName (in string facet);
 
-      ComponentId getClassId ();
+      ComponentId getComponentId ();
     };
     typedef sequence<IComponent> IComponentSeq;
 

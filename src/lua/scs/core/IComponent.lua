@@ -10,7 +10,7 @@ module("scs.core.IComponent", oop.class)
 
 function __init(self, name, version)
   local component = oop.rawnew(self, {
-    classId = {name = name, version = version},
+    componentId = {name = name, version = version},
     facetDescriptionsByName = {},
   })
   local metaInterface = IMetaInterface(component)
@@ -36,8 +36,8 @@ function getFacetByName(self, facet)
   return facetDescription.facet_ref
 end
 
-function getClassId(self)
-  return self.classId
+function getComponentId(self)
+  return self.componentId
 end
 
 function addFacet(self, name, interface_name, facet_servant)

@@ -59,7 +59,7 @@ int main( int argc, char* argv[] ) {
 /*test*/
 /*  printf( "%p", member->getFacetByName( "facet" ) ) ;
   printf( "%p", member->getFacetByName( "facet2" ) ) ;
-  ::scs::core::ComponentId* cId = member->getClassId() ;
+  ::scs::core::ComponentId* cId = member->getComponentId() ;
   printf( "%s %lu", cId->name.in(), cId->version ) ;*/
 /**/
   Hello_var hello = Hello::_narrow( obj ) ;

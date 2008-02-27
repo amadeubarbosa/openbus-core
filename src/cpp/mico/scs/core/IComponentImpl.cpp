@@ -61,7 +61,7 @@ namespace scs {
     #endif
     }
 
-  /* Também não está implementado em Lua */
+  /* Tambï¿½m nï¿½o estï¿½ implementado em Lua */
     void IComponentImpl::startup() {}
     void IComponentImpl::shutdown() {}
   /**/
@@ -102,27 +102,27 @@ namespace scs {
         return facets[ facet ].facet_ref ;
       }
       #ifdef VERBOSE
-        cout << "\t[Faceta de nome '" << facet << "' NÂO encontrada]" << endl ;
+        cout << "\t[Faceta de nome '" << facet << "' Nï¿½O encontrada]" << endl ;
         cout << "[IComponentImpl::getFacetByName() END]" << endl ;
       #endif
       return NULL ;
     }
 
   /*OK*/
-    ComponentId* IComponentImpl::getClassId() {
+    ComponentId* IComponentImpl::getComponentId() {
     #ifdef VERBOSE
-      cout << "\n\n[IComponentImpl::getClassId() BEGIN]" << endl ;
+      cout << "\n\n[IComponentImpl::getComponentId() BEGIN]" << endl ;
     #endif
       ComponentId_var cId = new ComponentId ;
       cId = componentId ;
     #ifdef VERBOSE
-      cout << "\t[classID.name: " << cId->name.in() << "]" << endl ;
-      cout << "\t[classID.version: " << cId->version << "]" << endl ;
-      cout << "[IComponentImpl::getClassId() END]" << endl ;
+      cout << "\t[componentID.name: " << cId->name.in() << "]" << endl ;
+      cout << "\t[componentID.version: " << cId->version << "]" << endl ;
+      cout << "[IComponentImpl::getComponentId() END]" << endl ;
     #endif
       return cId._retn() ;
     }
 
-  /* Falta o método removeFacets() */
+  /* Falta o mï¿½todo removeFacets() */
   }
 }

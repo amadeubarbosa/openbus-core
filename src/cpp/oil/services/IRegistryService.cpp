@@ -525,7 +525,7 @@ namespace openbus {
         #if VERBOSE
           const void* ptr = lua_topointer( Openbus::LuaVM, -1 ) ;
         #endif
-/*          lua_getfield( Openbus::LuaVM, -1, "getClassId" ) ;
+/*          lua_getfield( Openbus::LuaVM, -1, "getComponentId" ) ;
           lua_pushvalue( Openbus::LuaVM, -2 ) ;
           lua_pcall( Openbus::LuaVM, 1, 1, 0 ) ;
           lua_getfield( Openbus::LuaVM, -1, "name" ) ;*/

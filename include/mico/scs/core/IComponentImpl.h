@@ -27,7 +27,7 @@ namespace scs {
         void shutdown() ;
         CORBA::Object_ptr getFacet( const char* facet_interface ) ;
         CORBA::Object_ptr getFacetByName( const char* facet ) ;
-        ComponentId* getClassId() ;
+        ComponentId* getComponentId() ;
     } ;
 
   }
