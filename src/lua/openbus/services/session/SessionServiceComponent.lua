@@ -82,7 +82,7 @@ function startup(self)
   end
 
   -- autentica o serviço, conectando-o ao barramento
-  local success = self.connectionManager:connect(self.classId.name,
+  local success = self.connectionManager:connect(self.componentId.name,
       function() self.wasReconnected(self) end)
   if not success then
     error{"IDL:SCS/StartupFailed:1.0"}
