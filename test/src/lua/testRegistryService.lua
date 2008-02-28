@@ -44,7 +44,6 @@ Suite = {
       local success
       success, self.credential = self.accessControlService:loginByPassword(user, password)
       self.credentialHolder:setValue(self.credential)
-oil.verbose:debug()
       self.registryService = self.accessControlService:getRegistryService()
 local a = 1
     end,
@@ -52,7 +51,6 @@ local a = 1
     testRegister = function(self)
       local member = IComponent("Membro Mock", 1)
       member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
-oil.verbose:debug()
       local success, registryIdentifier = self.registryService:register({type = "type1", description = "bla bla bla", properties = {}, member = member, })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
