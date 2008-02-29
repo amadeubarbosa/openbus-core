@@ -1,12 +1,10 @@
-#file "config.mak"
+EXTRA_CONFIG= ${OPENBUS_HOME}/config
 
 PROJNAME = lualdap
 LIBNAME = ${PROJNAME}
 
 TARGETROOT= ${OPENBUS_HOME}/libpath
 
-# OpenLDAP includes directory
-OPENLDAP_INC= /usr/local/include
 # OpenLDAP library (an optional directory can be specified with -L<dir>)
 OPENLDAP_LIB= ldap
 

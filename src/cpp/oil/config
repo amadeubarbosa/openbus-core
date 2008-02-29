@@ -7,15 +7,14 @@
 # config.mak no caso para o tecmake.
 #
 
-LUA_INC=${LUA51INC}
-LUA_LIB=${LUA51LIB}
+include ${OPENBUS_HOME}/config
 
-TOLUA=${HOME}/tools/tolua-5.1b
+LUA51LIB=${LUA51}/lib
+
 TOLUA_INC=${TOLUA}/include
 TOLUA_LIB=${TOLUA}/lib
 
 # Somente necessário para a execução da base de testes
-CXXTEST=${HOME}/tools/cxxtest
 CXXTEST_INC=${CXXTEST}
 
 FLAGS=-Wall -ansi -O3

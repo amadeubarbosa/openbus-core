@@ -1,6 +1,6 @@
 #include <lua.h>
 #include <lauxlib.h>
-#include "oil/auxiliar.h"
+#include "auxiliar.h"
 
 static const unsigned char B0[]={
  27, 76,117, 97, 81,  0,  1,  4,  4,  4,  8,  0, 15,  0,  0,  0, 64, 46, 47,111,

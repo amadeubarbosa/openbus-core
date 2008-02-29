@@ -55,7 +55,6 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     void testGetRGS()
     {
-      bool returnValue ;
       try {
         acs = o->getACS( "corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;
         credential = new services::Credential ;

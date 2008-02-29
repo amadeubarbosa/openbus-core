@@ -1,4 +1,3 @@
-#file "config.mak"
 
 PROJNAME = lposix
 LIBNAME = ${PROJNAME}
