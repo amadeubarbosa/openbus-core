@@ -37,7 +37,7 @@ clean-libs:
 	done)
 
 usrlibs:
-	cd src/cpp/oil ; `which tecmake`
+	cd src/cpp/oil ; make
 
 libs:
 #	@ls lib/lua | xargs -I ksh -c "cd lib/lua/{}; echo 'Compilando {}...'; make" 

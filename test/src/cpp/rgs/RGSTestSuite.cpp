@@ -59,7 +59,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         acs = o->getACS( "corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;
         credential = new services::Credential ;
         lease = new services::Lease ;
-        acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
+        acs->loginByPassword( "tester", "tester", credential, lease ) ;
         credentialManager->setValue( credential ) ;
         rgs = acs->getRegistryService() ;
         scs::core::IComponent* member = new scs::core::IComponent( "scs::core::IComponent Mock" ) ;

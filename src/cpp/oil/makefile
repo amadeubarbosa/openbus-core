@@ -4,7 +4,7 @@
 
 include config
 
-all:
+all: precompile
 	tecmake
 
 precompile:

@@ -58,10 +58,10 @@ class ACSTestSuite: public CxxTest::TestSuite {
         services::Credential* credential2 = new services::Credential() ;
         lease = new services::Lease() ;
         services::Lease* lease2 = new services::Lease() ;
-        acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
-        acs->loginByPassword( "csbase", "csbLDAPtest", credential2, lease2 ) ;
-        TS_ASSERT_SAME_DATA( credential->entityName, "csbase", 6 ) ;
-        TS_ASSERT_SAME_DATA( credential2->entityName, "csbase", 6 ) ;
+        acs->loginByPassword( "tester", "tester", credential, lease ) ;
+        acs->loginByPassword( "tester", "tester", credential2, lease2 ) ;
+        TS_ASSERT_SAME_DATA( credential->entityName, "tester", 6 ) ;
+        TS_ASSERT_SAME_DATA( credential2->entityName, "tester", 6 ) ;
         TS_ASSERT( strcmp( credential2->identifier, credential->identifier ) ) ;
         credentialManager->setValue( credential ) ;
         acs->logout( credential ) ;
@@ -79,11 +79,11 @@ class ACSTestSuite: public CxxTest::TestSuite {
     {
       try {
         services::Credential* c = new services::Credential ;
-        acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
+        acs->loginByPassword( "tester", "tester", credential, lease ) ;
         credentialManager->setValue( credential ) ;
         TS_ASSERT( acs->isValid( credential ) ) ;
         c->identifier = "123" ;
-        c->entityName = "csbase" ;
+        c->entityName = "tester" ;
         TS_ASSERT( !acs->isValid( c ) ) ;
         acs->logout( credential ) ;
         TS_ASSERT_THROWS_ANYTHING( acs->isValid( credential ) ) ;
@@ -95,7 +95,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
     void testGetRegistry()
     {
       try {
-        acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
+        acs->loginByPassword( "tester", "tester", credential, lease ) ;
         credentialManager->setValue( credential ) ;
         acs->getRegistryService() ;
       } catch ( const char* errmsg ) {
@@ -107,7 +107,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
     {
       try {
         services::Lease* leaseout = new services::Lease() ;
-        acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
+        acs->loginByPassword( "tester", "tester", credential, lease ) ;
         credentialManager->setValue( credential ) ;
         TS_ASSERT( acs->renewLease( credential, leaseout ) ) ;
         TS_ASSERT_EQUALS( 30, (int) *leaseout ) ;
@@ -124,11 +124,11 @@ class ACSTestSuite: public CxxTest::TestSuite {
 
     void testLogout()
     {
-      acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
+      acs->loginByPassword( "tester", "tester", credential, lease ) ;
       credentialManager->setValue( credential ) ;
       TS_ASSERT( acs->logout( credential ) ) ;
       services::Credential* c = new services::Credential ;
-      c->entityName = "csbase" ;
+      c->entityName = "tester" ;
       c->identifier = "dadadsa" ;
       TS_ASSERT_THROWS_ANYTHING( acs->logout( c ) ) ;
     }
@@ -145,7 +145,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
           }
         } ;
         services::CredentialIdentifierList* list = new services::CredentialIdentifierList ;
-        acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
+        acs->loginByPassword( "tester", "tester", credential, lease ) ;
         credentialManager->setValue( credential ) ;
         credentialObserver* co = new credentialObserver;
         list->newmember( credential->identifier ) ;
@@ -164,7 +164,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
         } ;
         services::CredentialIdentifierList* list = new services::CredentialIdentifierList ;
         services::Credential* c = new services::Credential ;;
-        acs->loginByPassword( "csbase", "csbLDAPtest", c, lease ) ;
+        acs->loginByPassword( "tester", "tester", c, lease ) ;
         credentialManager->setValue( c ) ;
         credentialObserver* co = new credentialObserver ;
         list->newmember( c->identifier ) ;
