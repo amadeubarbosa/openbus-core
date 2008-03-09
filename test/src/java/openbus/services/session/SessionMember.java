@@ -70,7 +70,7 @@ public final class SessionMember extends IComponentServant {
    * {@inheritDoc}
    */
   @Override
-  protected ComponentId createClassId() {
+  protected ComponentId createComponentId() {
     return new ComponentId(this.getClass().getName(), 1);
   }
 }
