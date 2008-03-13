@@ -38,7 +38,8 @@ public final class SessionMember extends IComponentServant {
   @Override
   protected ArrayList<FacetDescription> createFacets() {
     try {
-      ArrayList<FacetDescription> descriptions = new ArrayList<FacetDescription>();
+      ArrayList<FacetDescription> descriptions =
+        new ArrayList<FacetDescription>();
       descriptions.add(new FacetDescription("EventSink",
         "IDL:openbusidl/ss/SessionEventSink:1.0", this.poa
           .servant_to_reference(new SessionEventSinkImpl())));

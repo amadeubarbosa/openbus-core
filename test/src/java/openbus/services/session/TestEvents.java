@@ -69,8 +69,9 @@ public class TestEvents {
     this.orb = ORB.init((String[]) null, props);
     this.rootPoa = Utils.getRootPoa(this.orb);
 
-    this.connection = new ClientConnectionManager(this.orb, "localhost", 2089,
-      "tester", "tester");
+    this.connection =
+      new ClientConnectionManager(this.orb, "localhost", 2089, "tester",
+        "tester");
     this.connection.connect();
   }
 
@@ -89,8 +90,8 @@ public class TestEvents {
     Assert.assertNull(sessionService.getSession());
     ISessionHolder sessionHolder = new ISessionHolder();
     SessionMember member1 = new SessionMember(this.rootPoa);
-    IComponent component1 = IComponentHelper.narrow(this.rootPoa
-      .servant_to_reference(member1));
+    IComponent component1 =
+      IComponentHelper.narrow(this.rootPoa.servant_to_reference(member1));
     component1.startup();
     sessionService.createSession(component1, sessionHolder, new StringHolder());
 
@@ -98,8 +99,8 @@ public class TestEvents {
     Assert.assertEquals(sessionHolder.value.getIdentifier(), session
       .getIdentifier());
     SessionMember member2 = new SessionMember(this.rootPoa);
-    IComponent component2 = IComponentHelper.narrow(this.rootPoa
-      .servant_to_reference(member2));
+    IComponent component2 =
+      IComponentHelper.narrow(this.rootPoa.servant_to_reference(member2));
     component2.startup();
     session.addMember(component2);
 
@@ -112,8 +113,8 @@ public class TestEvents {
      */
     dataChannelAny.insert_long(100);
 
-    SessionEvent ev = new SessionEvent("IDL:openbusidl/ps/DataChannel:1.0",
-      dataChannelAny);
+    SessionEvent ev =
+      new SessionEvent("IDL:openbusidl/ps/DataChannel:1.0", dataChannelAny);
     session.push(ev);
     session.disconnect();
   }
