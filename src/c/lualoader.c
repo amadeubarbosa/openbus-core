@@ -11,8 +11,8 @@
 #define lua_c
 
 #include "lua.h"
-#include "lualib.h"
 #include "lauxlib.h"
+#include "lualib.h"
 #include "luasocket.h"
 #include "oilall.h"
 #include "luuid.h"
@@ -113,7 +113,11 @@ static int pmain (lua_State *L) {
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   luaL_openlibs(L);  /* open libraries */
   /* Inicialização do OiL */
-  luaopen_socket_core(L);
+  // preload the LuaSocket library
+  luaL_findtable(L, LUA_GLOBALSINDEX, "package.preload", 1);
+  lua_pushcfunction(L, luaopen_socket_core);
+  lua_setfield(L, -2, "socket.core");
+  // preload all OiL libraries
   luapreload_oilall(L);
   luaopen_luuid(L);
 #ifdef ACCESS_CONTROL_SERVICE

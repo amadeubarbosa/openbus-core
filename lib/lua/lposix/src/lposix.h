@@ -10,4 +10,4 @@
 #include "lua.h"
 #include "lualib.h"
 
-LUALIB_API int luaopen_posix (lua_State *L);
+LUALIB_API int luaopen_lposix (lua_State *L);
