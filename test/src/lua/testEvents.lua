@@ -8,7 +8,7 @@ package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
+local CredentialManage = require "openbus.common.CredentialManager"
 local ClientConnectionManager = require "openbus.common.ClientConnectionManager"
 
 local IComponent = require "scs.core.IComponent"
@@ -46,9 +46,9 @@ function main()
   local password = "tester"
 
   -- Conecta o cliente ao barramento
-  local credentialHolder = CredentialHolder()
+  local credentialManager = CredentialManager()
   local connectionManager =
-    ClientConnectionManager("localhost:2089", credentialHolder, user, password)
+    ClientConnectionManager("localhost:2089", credentialManager, user, password)
 
   -- obtém a referência para o Serviço de Controle de Acesso
   local accessControlService = connectionManager:getAccessControlService()
@@ -63,7 +63,7 @@ function main()
   end
     local config =
       assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
-    oil.setclientinterceptor(ClientInterceptor(config, credentialHolder))
+    oil.setclientinterceptor(ClientInterceptor(config, credentialManager))
 
   -- autentica o cliente
   success = connectionManager:connect()

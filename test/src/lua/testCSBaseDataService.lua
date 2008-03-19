@@ -2,7 +2,7 @@ package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
 
-local CredentialHolder = require "openbus.common.CredentialHolder"
+local CredentialManager = require "openbus.common.CredentialManager"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 
 local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
@@ -70,12 +70,12 @@ function main()
   accessControlService = oil.narrow(accessControlService, accessControlServiceInterface)
 
   -- instala o interceptador de cliente
-  local credentialHolder = CredentialHolder()
-  oil.setclientinterceptor(ClientInterceptor(config, credentialHolder))
+  local credentialManager= CredentialManager()
+  oil.setclientinterceptor(ClientInterceptor(config, credentialManager))
 
   local credential
   _, credential = accessControlService:loginByPassword(user, password)
-  credentialHolder:setValue(credential)
+  credentialManager:setValue(credential)
 
   local registryService= accessControlService:getRegistryService()
 

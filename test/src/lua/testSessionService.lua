@@ -6,7 +6,7 @@
 local oil = require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
+local CredentialManager = require "openbus.common.CredentialManager"
 
 local IComponent = require "scs.core.IComponent"
 
@@ -38,11 +38,11 @@ Suite = {
       -- instala o interceptador de cliente
       local CONF_DIR = os.getenv("CONF_DIR")
       local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
-      self.credentialHolder = CredentialHolder()
-      oil.setclientinterceptor(ClientInterceptor(config, self.credentialHolder))
+      self.credentialManager = CredentialManager()
+      oil.setclientinterceptor(ClientInterceptor(config, self.credentialManager))
 
       _, self.credential = self.accessControlService:loginByPassword(user, password)
-      self.credentialHolder:setValue(self.credential)
+      self.credentialManager:setValue(self.credential)
 
       local registryService = self.accessControlService:getRegistryService()
 
@@ -73,7 +73,7 @@ print("FIM TESTE")
     afterTestCase = function(self)
 print("FIM TUDO")
       self.accessControlService:logout(self.credential)
-      self.credentialHolder:invalidate()
+      self.credentialManager:invalidate()
     end,
   }
 }

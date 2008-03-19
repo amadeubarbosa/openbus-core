@@ -10,7 +10,7 @@ local oil = require "oil"
 local SessionService = require "openbus.services.session.SessionService"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
+local CredentialManager = require "openbus.common.CredentialManager"
 local ServiceConnectionManager =
     require "openbus.common.ServiceConnectionManager"
 
@@ -53,10 +53,10 @@ function startup(self)
   -- instalar interceptadores
   if not self.initialized then
     Log:service("Serviço de sessão está inicializando")
-    local credentialHolder = CredentialHolder()
+    local credentialManager = CredentialManager()
     self.connectionManager =
       ServiceConnectionManager(self.config.accessControlServerHost,
-        credentialHolder, self.config.privateKeyFile,
+        credentialManager, self.config.privateKeyFile,
         self.config.accessControlServiceCertificateFile)
 
     -- obtém a referência para o Serviço de Controle de Acesso
@@ -70,7 +70,7 @@ function startup(self)
     local interceptorsConfig =
       assert(loadfile(CONF_DIR.."/advanced/SSInterceptorsConfiguration.lua"))()
     oil.setclientinterceptor(
-      ClientInterceptor(interceptorsConfig, credentialHolder))
+      ClientInterceptor(interceptorsConfig, credentialManager))
 
     -- instala o interceptador servidor
     self.serverInterceptor = ServerInterceptor(interceptorsConfig, self.accessControlService)

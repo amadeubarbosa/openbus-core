@@ -5,7 +5,7 @@
 require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
+local CredentialManager = require "openbus.common.CredentialManager"
 
 local Check = require "latt.Check"
 
@@ -33,8 +33,8 @@ Suite = {
       -- instala o interceptador de cliente
       local CONF_DIR = os.getenv("CONF_DIR")
       local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
-      self.credentialHolder = CredentialHolder()
-      oil.setclientinterceptor(ClientInterceptor(config, self.credentialHolder))
+      self.credentialManager = CredentialManager()
+      oil.setclientinterceptor(ClientInterceptor(config, self.credentialManager))
     end,
 
     testLoginByPassword = function(self)
@@ -45,11 +45,11 @@ Suite = {
       Check.assertTrue(success)
       Check.assertNotEquals(credential.identifier, credential2.identifier)
 
-      self.credentialHolder:setValue(credential) 
+      self.credentialManager:setValue(credential) 
       Check.assertTrue(self.accessControlService:logout(credential))
-      self.credentialHolder:setValue(credential2) 
+      self.credentialManager:setValue(credential2) 
       Check.assertTrue(self.accessControlService:logout(credential2))
-      self.credentialHolder:invalidate()
+      self.credentialManager:invalidate()
     end,
 
     testLoginByPassword2 = function(self)
@@ -60,10 +60,10 @@ Suite = {
 
     testLogout = function(self)
       local _, credential = self.accessControlService:loginByPassword(self.user, self.password)
-      self.credentialHolder:setValue(credential) 
+      self.credentialManager:setValue(credential) 
       Check.assertFalse(self.accessControlService:logout({identifier = "", entityName = "abcd", }))
       Check.assertTrue(self.accessControlService:logout(credential))
-      self.credentialHolder:invalidate(credential) 
+      self.credentialManager:invalidate(credential) 
       Check.assertError(self.accessControlService.logout,self.accessControlService,credential)
     end,
   },
@@ -88,19 +88,19 @@ Suite = {
       -- instala o interceptador de cliente
       local CONF_DIR = os.getenv("CONF_DIR")
       local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
-      self.credentialHolder = CredentialHolder()
-      oil.setclientinterceptor(ClientInterceptor(config, self.credentialHolder))
+      self.credentialManager = CredentialManager()
+      oil.setclientinterceptor(ClientInterceptor(config, self.credentialManager))
     end,
 
     beforeEachTest = function(self)
       _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
-      self.credentialHolder:setValue(self.credential)
+      self.credentialManager:setValue(self.credential)
     end,
 
     afterEachTest = function(self)
-      if (self.credentialHolder:hasValue()) then
+      if (self.credentialManager:hasValue()) then
         self.accessControlService:logout(self.credential)
-        self.credentialHolder:invalidate()
+        self.credentialManager:invalidate()
       end
     end,
 
@@ -119,7 +119,7 @@ Suite = {
 
       -- neste caso o proprio interceptador do serviço rejeita o request
       Check.assertError(self.accessControlService.isValid,self.accessControlService,self.credential)
-      self.credentialHolder:invalidate()
+      self.credentialManager:invalidate()
     end,
 
     testObservers = function(self)
@@ -146,9 +146,9 @@ Suite = {
       end
       local oldCredential = self.credential
       self.accessControlService:logout(self.credential)
-      self.credentialHolder:invalidate()
+      self.credentialManager:invalidate()
       _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
-      self.credentialHolder:setValue(self.credential)
+      self.credentialManager:setValue(self.credential)
       for i=1,3 do
         Check.assertFalse(self.accessControlService:removeCredentialFromObserver(observersId[i], oldCredential.identifier))
       end
@@ -162,9 +162,9 @@ Suite = {
       credentialObserver = oil.newobject(credentialObserver, "IDL:openbusidl/acs/ICredentialObserver:1.0")
       local observerId = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       self.accessControlService:logout(self.credential)
-      self.credentialHolder:invalidate()
+      self.credentialManager:invalidate()
       _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
-      self.credentialHolder:setValue(self.credential)
+      self.credentialManager:setValue(self.credential)
       Check.assertFalse(self.accessControlService:removeObserver(observerId))
     end,
   },

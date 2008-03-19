@@ -16,7 +16,7 @@ local oil = require "oil"
 local OffersDB = require "openbus.services.registry.OffersDB"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
+local CredentialManager = require "openbus.common.CredentialManager"
 local ServiceConnectionManager =
     require "openbus.common.ServiceConnectionManager"
 
@@ -59,9 +59,9 @@ function startup(self)
   -- instalar interceptadores
   if not self.initialized then
     Log:service("Servi�o de registro est� inicializando")
-    local credentialHolder = CredentialHolder()
+    local credentialManager = CredentialManager()
     self.connectionManager =  ServiceConnectionManager(
-        self.config.accessControlServerHost, credentialHolder,
+        self.config.accessControlServerHost, credentialManager,
         self.config.privateKeyFile,
         self.config.accessControlServiceCertificateFile)
 
@@ -76,7 +76,7 @@ function startup(self)
     local interceptorsConfig =
       assert(loadfile(CONF_DIR.."/advanced/RSInterceptorsConfiguration.lua"))()
     oil.setclientinterceptor(
-      ClientInterceptor(interceptorsConfig, credentialHolder))
+      ClientInterceptor(interceptorsConfig, credentialManager))
 
     -- instala o interceptador servidor
     self.serverInterceptor = ServerInterceptor(interceptorsConfig, self.accessControlService)
