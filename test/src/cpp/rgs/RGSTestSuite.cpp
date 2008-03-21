@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
-#include <oil/openbus.h>
+#include <openbus/oil/openbus.h>
 #include "hello.hpp"
 int  tolua_hello_open (lua_State*) ;
 

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
-#include <oil/openbus.h>
+#include <openbus/oil/openbus.h>
 
 using namespace openbus ;
 
