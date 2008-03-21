@@ -7,23 +7,23 @@
 #include <iostream>
 
 #include "hello.h"
-#include "scs.h"
-#include "access_control_service.h"
-#include "registry_service.h"
-#include "mico/common/ClientInterceptor.h"
-#include "mico/common/ORBInitializerImpl.h"
+#include <openbus/mico/services/access_control_service.h>
+#include <openbus/mico/common/CredentialManager.h>
+#include <openbus/mico/common/ORBInitializerImpl.h>
+#include <openbus/mico/common/ServerInterceptor.h>
+#include <openbus/mico/scs/core/IComponentImpl.h>
 
 using namespace std ;
 using namespace openbusidl::acs ;
 using namespace openbusidl::rs ;
-using namespace orbinitializerimpl ;
+using namespace openbus::common ;
 
 int main( int argc, char* argv[] ) {
   Lease lease = 0 ;
   Credential_var credential ;
-  CredentialHolder credentialHolder ;
+  CredentialManager credentialManager ;
 
-  ORBInitializerImpl* ini =  new ORBInitializerImpl( &credentialHolder ) ;
+  ORBInitializerImpl* ini = new ORBInitializerImpl( &credentialManager ) ;
   PortableInterceptor::register_orb_initializer( ini ) ;
 
   CORBA::ORB_var orb = CORBA::ORB_init( argc, argv ) ;
@@ -34,13 +34,13 @@ int main( int argc, char* argv[] ) {
   CORBA::Object_var obj = orb->string_to_object( "corbaloc::localhost:2089/ACS" ) ;
   IAccessControlService_var acs = IAccessControlService::_narrow( obj ) ;
 
-  bool status = acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
+  bool status = acs->loginByPassword( "tester", "tester", credential, lease ) ;
   if ( status ) {
-    credentialHolder.identifier = credential->identifier.in() ;
-    credentialHolder.entityName = credential->entityName.in() ;
-    cout << "\nLogin efetuado no Openbus.\nentityName=" << \
-    credentialHolder.entityName << "\nidentifier=" << \
-    credentialHolder.identifier << "\n\n" ;
+    credentialManager.setValue( credential ) ;
+    cout << endl << "CONSUMER" << endl ;
+    cout << "Login efetuado no Openbus." << endl ;
+    cout << "entityName = " << credential->entityName.in() << endl ;
+    cout << "identifier = " << credential->identifier.in() << endl ;
   } else {
     return -1 ;
   }
@@ -51,7 +51,6 @@ int main( int argc, char* argv[] ) {
   ServiceOfferList_var soList = new ServiceOfferList ;
   soList = rgs->find( "type1", p ) ;
   ServiceOffer so ;
-  cout << (soList[ idx ].type).in() ;
   so = soList[ idx ] ;
   ::scs::core::IComponent_var member;
   member = so.member ;

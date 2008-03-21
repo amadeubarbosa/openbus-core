@@ -7,24 +7,29 @@
 #include <iostream>
 #include <CORBA.h>
 
-#include "access_control_service.h"
-#include "registry_service.h"
 #include "hello.h"
-#include "mico/common/ORBInitializerImpl.h"
-#include "mico/scs/core/IComponentImpl.h"
+#include <openbus/mico/services/access_control_service.h>
+#include <openbus/mico/common/CredentialManager.h>
+#include <openbus/mico/common/ORBInitializerImpl.h>
+#include <openbus/mico/common/ServerInterceptor.h>
+#include <openbus/mico/scs/core/IComponentImpl.h>
 
 using namespace std ;
 using namespace openbusidl::acs ;
 using namespace openbusidl::rs ;
-using namespace orbinitializerimpl ;
+using namespace openbus::common ;
 
 char* id ;
 IRegistryService_var rgs ;
+ORBInitializerImpl* ini;
+openbus::common::ServerInterceptor* serverInterceptor ;
 
 class Hello_impl : virtual public POA_Hello {
   public:
     void sayHello() {
-      cout << "Servant says: \nHELLO!\n\n" ;
+      cout << endl<< "Servant diz: HELLO!" << endl ;
+      serverInterceptor = ini->getServerInterceptor() ;
+      cout << "Usuário OpenBus que fez a chamada: " << serverInterceptor->getCredential()->entityName.in() << endl;
     } ;
 } ;
 
@@ -45,9 +50,9 @@ class ORBThread : virtual public MICOMT::Thread {
 int main( int argc, char* argv[] ) {
   Lease lease = 0 ;
   Credential_var credential ;
-  CredentialHolder credentialHolder ;
+  openbus::common::CredentialManager credentialManager ;
 
-  ORBInitializerImpl* ini = new  ORBInitializerImpl( &credentialHolder ) ;
+  ini = new ORBInitializerImpl( &credentialManager ) ;
   PortableInterceptor::register_orb_initializer( ini ) ;
 
   orb = CORBA::ORB_init( argc, argv ) ;
@@ -58,13 +63,13 @@ int main( int argc, char* argv[] ) {
   CORBA::Object_var obj = orb->string_to_object( "corbaloc::localhost:2089/ACS" ) ;
   IAccessControlService_var acs = IAccessControlService::_narrow( obj ) ;
 
-  bool status = acs->loginByPassword( "csbase", "csbLDAPtest", credential, lease ) ;
+  bool status = acs->loginByPassword( "tester", "tester", credential, lease ) ;
   if ( status ) {
-    credentialHolder.identifier = credential->identifier.in() ;
-    credentialHolder.entityName = credential->entityName.in() ;
-    cout << "\nLogin efetuado no Openbus.\nentityName=" << \
-    credentialHolder.entityName << "\nidentifier=" << \
-    credentialHolder.identifier << "\n\n" ;
+    credentialManager.setValue( credential ) ;
+    cout << "PUBLISHER" << endl ;
+    cout << "Login efetuado no Openbus." << endl ;
+    cout << "entityName = " << credential->entityName.in() << endl ;
+    cout << "identifier = " << credential->identifier.in() << endl ;
   } else {
     return -1 ;
   }

@@ -1,8 +1,8 @@
 /*
-** IComponentImpl.cpp
+** mico/scs/core/IComponentImpl.cpp
 */
 
-#include "mico/scs/core/IComponentImpl.h"
+#include <openbus/mico/scs/core/IComponentImpl.h>
 
 #ifdef VERBOSE
 using namespace std ;
@@ -10,7 +10,6 @@ using namespace std ;
 
 namespace scs {
   namespace core {
-
     IComponentImpl::IComponentImpl( const char* name, unsigned long version, \
                                     CORBA::ORB_ptr orb, PortableServer::POA_ptr poa )
     {
@@ -61,7 +60,6 @@ namespace scs {
     #endif
     }
 
-  /* Tamb�m n�o est� implementado em Lua */
     void IComponentImpl::startup() {}
     void IComponentImpl::shutdown() {}
   /**/
@@ -122,7 +120,5 @@ namespace scs {
     #endif
       return cId._retn() ;
     }
-
-  /* Falta o m�todo removeFacets() */
   }
 }
