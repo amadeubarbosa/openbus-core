@@ -1,13 +1,12 @@
 /*
-* common/ClientInterceptor.cpp
+* oil/common/ClientInterceptor.cpp
 */
 
-#include <oil/common/ClientInterceptor.h>
+#include <openbus/oil/common/ClientInterceptor.h>
 #include <lua.hpp>
 
 namespace openbus {
   namespace common {
-
       int ClientInterceptor::sendrequest( lua_State* L )
       {
       #if VERBOSE2

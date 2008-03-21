@@ -1,8 +1,8 @@
 /*
-* scs/core/IComponent.cpp
+* oil/scs/core/IComponent.cpp
 */
 
-#include <oil/scs/core/IComponent.h>
+#include <openbus/oil/scs/core/IComponent.h>
 #include <lua.hpp>
 #include <tolua.h>
 

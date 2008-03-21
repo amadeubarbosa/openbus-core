@@ -1,13 +1,12 @@
 /*
-* common/CredentialManager.cpp
+* oil/common/CredentialManager.cpp
 */
 
-#include <oil/common/CredentialManager.h>
+#include <openbus/oil/common/CredentialManager.h>
 #include <lua.hpp>
 
 namespace openbus {
   namespace common {
-
     CredentialManager::CredentialManager() {
     #if VERBOSE
       printf( "\n\n[CredentialManager::CredentialManager() COMECO]\n" ) ;
@@ -36,6 +35,5 @@ namespace openbus {
     void CredentialManager::invalidate() {
       credentialValue = NULL ;
     }
-
   }
 }

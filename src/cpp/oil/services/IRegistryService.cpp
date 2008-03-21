@@ -1,8 +1,8 @@
 /*
-* services/IRegistryService.cpp
+* oil/services/IRegistryService.cpp
 */
 
-#include <oil/services/IRegistryService.h>
+#include <openbus/oil/services/IRegistryService.h>
 #include <lua.hpp>
 #include <string.h>
 
