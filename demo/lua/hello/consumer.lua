@@ -8,7 +8,7 @@ package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
+local CredentialManager = require "openbus.common.CredentialManager"
 
 local IComponent = require "scs.core.IComponent"
 
@@ -36,12 +36,12 @@ function main ()
 -- instala o interceptador de cliente
   local CONF_DIR = os.getenv("CONF_DIR")
   local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
-  credentialHolder = CredentialHolder()
-  oil.setclientinterceptor(ClientInterceptor(config, credentialHolder))
+  credentialManager = CredentialManager()
+  oil.setclientinterceptor(ClientInterceptor(config, credentialManager))
 
   local success
   success, credential = accessControlService:loginByPassword(user, password)
-  credentialHolder:setValue(credential)
+  credentialManager:setValue(credential)
 
   registryService = accessControlService:getRegistryService()
 

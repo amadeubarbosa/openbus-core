@@ -9,7 +9,7 @@ local oil = require "oil"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local CredentialHolder = require "openbus.common.CredentialHolder"
+local CredentialManager = require "openbus.common.CredentialManager"
 
 local IComponent = require "scs.core.IComponent"
 
@@ -30,22 +30,22 @@ function main ()
   idlfile = CORBA_IDL_DIR.."/access_control_service.idl"
   oil.loadidlfile(idlfile)
 
-  local user = "csbase"
-  local password = "csbLDAPtest"
+  local user = "tester"
+  local password = "tester"
 
   accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
   -- instala o interceptador de cliente
   local CONF_DIR = os.getenv("CONF_DIR")
   local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
-  credentialHolder = CredentialHolder()
-  oil.setclientinterceptor(ClientInterceptor(config, credentialHolder))
+  credentialManager = CredentialManager()
+  oil.setclientinterceptor(ClientInterceptor(config, credentialManager))
   serverInterceptor = ServerInterceptor(config, accessControlService)
   oil.setserverinterceptor(serverInterceptor)
 
   local success
   success, credential = accessControlService:loginByPassword(user, password)
-  credentialHolder:setValue(credential)
+  credentialManager:setValue(credential)
 
   registryService = accessControlService:getRegistryService()
 
