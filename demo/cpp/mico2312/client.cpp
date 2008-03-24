@@ -1,6 +1,6 @@
 /*
 ** OpenBus Demo - Mico 2.3.12
-** consumer.cpp
+** client.cpp
 */
 
 #include <fstream>
@@ -37,7 +37,7 @@ int main( int argc, char* argv[] ) {
   bool status = acs->loginByPassword( "tester", "tester", credential, lease ) ;
   if ( status ) {
     credentialManager.setValue( credential ) ;
-    cout << endl << "CONSUMER" << endl ;
+    cout << endl << "CLIENT" << endl ;
     cout << "Login efetuado no Openbus." << endl ;
     cout << "entityName = " << credential->entityName.in() << endl ;
     cout << "identifier = " << credential->identifier.in() << endl ;

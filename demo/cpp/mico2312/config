@@ -5,3 +5,6 @@ MICOLIB=mico2.3.12
 MICOBIN=${MICO_HOME}/bin
 MICOINC=${MICO_HOME}/include
 MICOLDIR=${MICO_HOME}/lib
+
+#Descomente a linha abaixo para ativar o verbose.
+#VERBOSE= VERBOSE
