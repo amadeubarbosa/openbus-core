@@ -25,6 +25,9 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+#if defined(__CYGWIN__) && !defined(_SC_STREAM_MAX)
+  #define _SC_STREAM_MAX                  100 /* CRIS E JULIA */
+#endif
 #include <utime.h>
 
 #define MYNAME		"posix"
