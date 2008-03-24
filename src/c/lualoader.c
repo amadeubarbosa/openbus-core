@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define lua_c
+#define lua_c 
 
 #include "lua.h"
 #include "lauxlib.h"
@@ -16,8 +16,9 @@
 #include "luasocket.h"
 #include "oilall.h"
 #include "luuid.h"
+#include "lposix.h"
+#include "lce.h"
 #ifdef ACCESS_CONTROL_SERVICE
-  #include "lposix.h"
   #include "lualdap.h"
 #endif
 
@@ -107,9 +108,7 @@ struct Smain {
 
 static int pmain (lua_State *L) {
   struct Smain *s = (struct Smain *)lua_touserdata(L, 1);
-  char **argv = s->argv;
   globalL = L;
-  if (argv[0] && argv[0][0]) progname = argv[0];
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   luaL_openlibs(L);  /* open libraries */
   /* Inicialização do OiL */
@@ -120,12 +119,13 @@ static int pmain (lua_State *L) {
   // preload all OiL libraries
   luapreload_oilall(L);
   luaopen_luuid(L);
-#ifdef ACCESS_CONTROL_SERVICE
   luaopen_lposix(L);
+#ifdef ACCESS_CONTROL_SERVICE
   luaopen_lualdap(L);
 #endif
+  luaopen_lce(L);
   lua_gc(L, LUA_GCRESTART, 0);
-  dofile(L, LUA_FILE);
+  dofile(L, progname);
   return 0;
 }
 
