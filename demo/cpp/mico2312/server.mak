@@ -3,6 +3,9 @@ APPNAME=server
 
 EXTRA_CONFIG=config
 
+CPPC=${MICOBIN}/mico-c++
+LINKER=${MICOBIN}/mico-ld
+
 DEFINES=${VERBOSE}
 
 TARGETROOT=bin
@@ -24,4 +27,4 @@ INCLUDES= . ${MICOINC} ${OPENBUS_HOME}/include
 
 LDIR= ${MICOLDIR}
 
-LIBS= dl pthread ${MICOLIB}
+LIBS= ${MICOLIB}
