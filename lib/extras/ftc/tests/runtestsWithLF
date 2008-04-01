@@ -1,0 +1,32 @@
+#!/bin/ksh
+
+if [[ $1 = "genfiles" ]] ; then
+  lua runtestsWithLF.lua
+else
+  if [[ $1 = "scp" ]] ; then
+    time scp d3:/tmp/10Mb /tmp/10MbRCVED
+    time scp d3:/tmp/50Mb /tmp/50MbRCVED
+    time scp d3:/tmp/100Mb /tmp/100MbRCVED
+    time scp d3:/tmp/200Mb /tmp/200MbRCVED
+    time scp d3:/tmp/300Mb /tmp/300MbRCVED
+    time scp d3:/tmp/500Mb /tmp/500MbRCVED
+    time scp d3:/tmp/700Mb /tmp/700MbRCVED
+    time scp d3:/tmp/1Gb /tmp/1GbRCVED
+    time scp d3:/tmp/1_5Gb /tmp/1_5GbRCVED
+    time scp d3:/tmp/2Gb /tmp/2GbRCVED
+    time scp d3:/tmp/2_5Gb /tmp/2_5GbRCVED
+    time scp d3:/tmp/3Gb /tmp/3GbRCVED
+    time scp d3:/tmp/3_5Gb /tmp/3_5GbRCVED
+    time scp d3:/tmp/4Gb /tmp/4GbRCVED
+    time scp d3:/tmp/4_5Gb /tmp/4_5GbRCVED
+    time scp d3:/tmp/5Gb /tmp/5GbRCVED
+  else
+    runnerWithLF
+  fi
+fi
+
+#if [[ $1 = "rmfiles" ]] ; then
+# rm -f /tmp/NO_PERMISSION /tmp/20b /tmp/100b /tmp/10b /tmp/10Mb /tmp/10MbRCVED /tmp/50Mb /tmp/100Mb
+#fi
+
+

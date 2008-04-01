@@ -1,0 +1,2 @@
+java -Xmx512m -cp javautils.jar tecgraf.javautils.remotefile.server.FileTransferServiceImpl 40120 10100
+

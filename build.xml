@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 
 <project name="openbus" default="jar">
-  <property name="java.source.dir" value="src/java"/>
+  <property name="java.source.dir" value="src/openbus/java"/>
   <property name="idl.source.dir" value="corba_idl"/>
   <property name="classes.dir" value="classes"/>
   <property name="lib.dir" value="lib/java"/>
 
-  <property name="test.java.source.dir" value="test/src/java"/>
+  <property name="test.java.source.dir" value="test/src/openbus/java"/>
   <property name="test.classes.dir" value="test/classes"/>
 
   <property name="jacorb.dir" value="${lib.dir}/jacorb2.2.4"/>

@@ -1,0 +1,32 @@
+FTC (File Transfer Channel)
+
+(1) CONFIGURAÇÕES
+
+    [+] Configurações no OiL
+      É necessário compilar o OiL com suporte a números grandes (>2^31). 
+      Para fazer isso precisamos adicionar uma flag ao processo de compilação da oilbit: -DLARGE_NUMBERS
+
+      O retorno da mensagem de erro "invalid format character, got 'g'" durante o processo de unmarshalling
+      do OiL, demonstra que o OiL utilizado não está apto para lidar com o 'long long'.
+
+    [+] Sistema de Arquivos
+      Para que esta lib possa operar com arquivos maiores do que 2Gb, é preciso que o Lua tenha sido
+      compilado com o suporte a arquivos grandes (LFS). Isso pode ser feito setando a flag:
+        -D_FILE_OFFSET_BITS=64
+
+      Mais informações podem ser obtidas em:
+        http://www.suse.de/~aj/linux_lfs.html
+
+
+(2) COMPILAÇÃO/INSTALAÇÃO
+
+  2.1. Edite o arquivo config.
+  2.2. make
+  2.3. make install
+
+
+Ricardo Cosme
+rcosme@tecgraf.puc-rio.br
+
+
+

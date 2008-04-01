@@ -1,0 +1,3 @@
+#!/bin/sh
+lua5.1 runTests.lua tests.lua
+rm -f /tmp/NO_PERMISSION /tmp/20b /tmp/100b

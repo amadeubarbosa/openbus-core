@@ -1,6 +1,8 @@
 
 # OpenSSL directory
 OPENSSL_HOME= ${HOME}/tecgraf/lib/openssl
+OPENSSL_INC= ${OPENSSL_HOME}/include
+OPENSSL_LIB= ${OPENSSL_HOME}
 
 # OpenLDAP includes directory
 OPENLDAP_INC= /usr/local/include

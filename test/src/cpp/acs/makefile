@@ -2,7 +2,7 @@
 # acs/makefile
 #
 
-include ${OPENBUS_HOME}/src/cpp/oil/config
+include ${OPENBUS_HOME}/src/openbus/cpp/oil/config
 
 RM= rm -rf
 

@@ -8,11 +8,11 @@ export CONF_DIR=${OPENBUS_HOME}/conf
 
 export CORBA_IDL_DIR=${OPENBUS_HOME}/corba_idl
 
-SERVICES_DIR=${OPENBUS_HOME}/src/lua/openbus/services
+SERVICES_DIR=${OPENBUS_HOME}/src/openbus/lua/openbus/services
 
 REGISTRY_SERVICE_DIR=${SERVICES_DIR}/registry
 ACCESS_CONTROL_SERVICE_DIR=${SERVICES_DIR}/accesscontrol
 SESSION_SERVICE_DIR=${SERVICES_DIR}/session
 
-export LUA_PATH="${OPENBUS_HOME}/src/lua/?.lua;${LUA_PATH}"
+export LUA_PATH="${OPENBUS_HOME}/src/openbus/lua/?.lua;${LUA_PATH}"
 

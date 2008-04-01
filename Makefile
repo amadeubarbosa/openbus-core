@@ -26,10 +26,10 @@ clean: clean-libs clean-bins
 
 doc:
 	@(cd docs/idl; doxygen openbus.dox)
-	@(mkdir -p docs/lua; luadoc --nofiles -d docs/lua `find src/lua -name '*.lua'`)
+	@(mkdir -p docs/lua; luadoc --nofiles -d docs/lua `find src/openbus/lua -name '*.lua'`)
 
 idl:
-	@ln -fs src/corba_idl
+	@ln -fs src/openbus/corba_idl
 
 clean-libs:
 	@(for lib_dir in lib/lua/* ; do \
@@ -37,7 +37,7 @@ clean-libs:
 	done)
 
 usrlibs:
-	cd src/cpp/oil ; make
+	cd src/openbus/cpp/oil ; make
 
 libs:
 #	@ls lib/lua | xargs -I ksh -c "cd lib/lua/{}; echo 'Compilando {}...'; make" 
@@ -63,10 +63,10 @@ libs:
 		echo ; echo "Compilando $$lib_dir " ; \
 		( cd $$lib_dir ; make ); \
 	done)
-	cp -rf src/lua/scs ${LUA51}/share/lua/5.1
+	cp -rf src/openbus/lua/scs ${LUA51}/share/lua/5.1
 
 clean-bins:
-	@cd src/c ; (for service in ../lua/openbus/services/* ; do \
+	@cd src/openbus/c ; (for service in ../lua/openbus/services/* ; do \
 	export mkfile=`echo $$service | cut -d/ -f5` ; \
 		if  test -e $$mkfile.mak ;  then \
 			echo ; echo "Limpando serviço $$service" ; \
@@ -75,7 +75,7 @@ clean-bins:
 	done)
 
 bins:
-	@cd src/c ; (for service in ../lua/openbus/services/* ; do \
+	@cd src/openbus/c ; (for service in ../lua/openbus/services/* ; do \
 	export mkfile=`echo $$service | cut -d/ -f5` ; \
 		if  test -e $$mkfile.mak ;  then \
 			echo ; echo "Compilando serviço $$service" ; \
