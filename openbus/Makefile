@@ -17,7 +17,6 @@ rebuild: clean all
 
 clean: clean-bins
 	@rm -rf ${OPENBUS_HOME}/libpath
-#	@rm -rf ${OPENBUS_HOME}/bin
 	@rm -rf $(CORBA_IDL_DIR)
 
 #reinstall:	clean	install
@@ -27,7 +26,7 @@ doc:
 	@(mkdir -p docs/lua; luadoc --nofiles -d docs/lua `find src/openbus/lua -name '*.lua'`)
 
 idl:
-	@ln -fs src/openbus/corba_idl
+	@ln -fs src/corba_idl
 
 usrlibs:
 	cd src/openbus/cpp/oil ; tecmake
@@ -42,7 +41,7 @@ clean-bins:
 	done)
 
 bins:
-	@cd src/openbus/c ; (for service in ../lua/openbus/services/* ; do \
+	@cd src/c ; (for service in ../lua/openbus/services/* ; do \
 	export mkfile=`echo $$service | cut -d/ -f5` ; \
 		if  test -e $$mkfile.mak ;  then \
 			echo ; echo "Compilando serviço $$service" ; \
