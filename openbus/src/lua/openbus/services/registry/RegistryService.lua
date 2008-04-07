@@ -10,7 +10,7 @@ local ipairs = ipairs
 local next = next
 local error = error
 
-local luuid = require "luuid"
+local luuid = require "uuid"
 local oil = require "oil"
 
 local OffersDB = require "openbus.services.registry.OffersDB"

@@ -11,7 +11,7 @@ local pairs = pairs
 local tostring = tostring
 local tonumber = tonumber
 
-local lposix = require "lposix"
+local lposix = require "posix"
 local oil = require "oil"
 
 local Log = require "openbus.common.Log"

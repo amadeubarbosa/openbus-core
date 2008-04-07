@@ -1,7 +1,7 @@
 -- $Id$
 
 local oil = require "oil"
-local luuid = require "luuid"
+local luuid = require "uuid"
 
 local Session = require "openbus.services.session.Session"
 

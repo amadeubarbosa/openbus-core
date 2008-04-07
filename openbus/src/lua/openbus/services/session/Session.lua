@@ -5,7 +5,7 @@ local ipairs = ipairs
 local pairs = pairs
 
 local oil = require "oil"
-local luuid = require "luuid"
+local luuid = require "uuid"
 
 local Log = require "openbus.common.Log"
 

@@ -8,7 +8,7 @@ local pairs = pairs
 local ipairs = ipairs
 local tostring = tostring
 
-local luuid = require "luuid"
+local luuid = require "uuid"
 local lce = require "lce"
 local oil = require "oil"
 
