@@ -46,6 +46,7 @@ function main ()
   registryService = accessControlService:getRegistryService()
 
   local offers = registryService:find("type", {})
+  -- Assume que o publisher é o único serviço cadastrado.
   SS = oil.narrow(offers[1].member, "IDL:scs/core/IComponent:1.0")
   local facet = SS:getFacet("IDL:Hello:1.0")
   hello = oil.narrow(facet, "IDL:Hello:1.0")
