@@ -9,7 +9,10 @@ LIBNAME= ${PROJNAME}
 OBJROOT= ${OPENBUS_HOME}/obj/cpp
 TARGETROOT= ${OPENBUS_HOME}/lib/cpp
 
-INCLUDES=${OPENBUS_HOME}/include ${TOLUA_INC}
+INCLUDES=${OPENBUS_HOME}/include ${TOLUA_INC} ${OIL04INC} {LUASOCKET2INC}
+
+SLIB= ${OIL04LIB}/liboilall.a \
+      ${LUASOCKET2LIB}/libluasocket.a
 
 SRC= common/ClientInterceptor.cpp common/CredentialManager.cpp auxiliar.c openbus.cpp scs/core/IComponent.cpp \
 services/IAccessControlService.cpp services/IRegistryService.cpp services/ISessionService.cpp

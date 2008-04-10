@@ -6,14 +6,16 @@ APPNAME= runner
 OBJROOT= ../../../bin/cpp/acs
 TARGETROOT= ../../../bin/cpp/acs
 
-LDIR= ${LUA51LIB} ${TOLUA_LIB}
-
 INCLUDES= ${OPENBUS_HOME}/include ${CXXTEST_INC} ${TOLUA_INC}
-LIBS= dl tolua oilbit luasocket
 
-SLIB= ${OPENBUS_HOME}/lib/cpp/${TEC_UNAME}/libopenbus.a
+LIBS= dl
 
-SRC= runner.cpp
+SLIB= ${OPENBUS_HOME}/lib/cpp/${TEC_UNAME}/libopenbus.a \
+      ${OIL04LIB}/liboilall.a \
+      ${LUASOCKET2LIB}/libluasocket.a \
+      ${TOLUA_LIB}/libtolua.a
+
+SRC= runner.cpp 
 
 USE_LUA51=YES
 USE_STATIC=YES

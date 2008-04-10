@@ -2,11 +2,13 @@
 * oil/openbus.cpp
 */
 
+#include <lua.hpp>
 extern "C" {
   #include "openbus/oil/auxiliar.h"
+  #include <oilall.h>
+  #include "luasocket.h"
 }
 #include <openbus/oil/openbus.h>
-#include <lua.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +29,10 @@ namespace openbus {
       printf( "\t[Carregando bibliotecas de Lua...]\n" ) ;
     #endif
       luaL_openlibs( LuaVM ) ;
+      luaL_findtable( LuaVM, LUA_GLOBALSINDEX, "package.preload", 1 ) ;
+      lua_pushcfunction( LuaVM, luaopen_socket_core ) ;
+      lua_setfield( LuaVM, -2, "socket.core" ) ;
+      luapreload_oilall( LuaVM ) ;
     #if VERBOSE
       printf( "\t[Tentando carregar arquivo openbus.lua...]\n" ) ;
     #endif
