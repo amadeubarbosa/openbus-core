@@ -1,6 +1,0 @@
-#!/bin/ksh
-
-source ../env
-
-${TEC_UNAME}/runner
-
