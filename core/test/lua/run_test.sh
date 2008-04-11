@@ -1,7 +1,5 @@
-#!/bin/sh
+#!/bin/ksh
 
 PARAMS=$*
 
-. ../../conf/config
-
-${LUA} ${PARAMS}
+${OPENBUS_HOME}/core/bin/servicelauncher ${PARAMS}
