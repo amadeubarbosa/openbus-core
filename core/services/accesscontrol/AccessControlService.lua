@@ -7,19 +7,20 @@ local assert = assert
 local pairs = pairs
 local ipairs = ipairs
 local tostring = tostring
+local print = print
 
 local luuid = require "uuid"
 local lce = require "lce"
 local oil = require "oil"
 
-local CredentialDB = require "openbus.services.accesscontrol.CredentialDB"
+local CredentialDB = require "core.services.accesscontrol.CredentialDB"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local LeaseProvider = require "openbus.common.LeaseProvider"
 
 local LDAPLoginPasswordValidator =
-    require "openbus.services.accesscontrol.LDAPLoginPasswordValidator"
+    require "core.services.accesscontrol.LDAPLoginPasswordValidator"
 local TestLoginPasswordValidator =
-    require "openbus.services.accesscontrol.TestLoginPasswordValidator"
+    require "core.services.accesscontrol.TestLoginPasswordValidator"
 
 local Log = require "openbus.common.Log"
 
@@ -30,7 +31,7 @@ local oop = require "loop.simple"
 ---
 --Componente responsável pelo Serviço de Controle de Acesso
 ---
-module("openbus.services.accesscontrol.AccessControlService")
+module("core.services.accesscontrol.AccessControlService")
 
 oop.class(_M, IComponent)
 

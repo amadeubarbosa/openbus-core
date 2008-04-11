@@ -4,12 +4,12 @@ local lualdap = require "lualdap"
 local oop = require "loop.simple"
 
 local LoginPasswordValidator =
-    require "openbus.services.accesscontrol.LoginPasswordValidator"
+    require "core.services.accesscontrol.LoginPasswordValidator"
 
 ---
 --Representa um validador de usuário e senha através de LDAP.
 ---
-module("openbus.services.accesscontrol.LDAPLoginPasswordValidator")
+module("core.services.accesscontrol.LDAPLoginPasswordValidator")
 oop.class(_M, LoginPasswordValidator)
 
 ---
@@ -26,7 +26,7 @@ function __init(self, ldapHost)
 end
 
 ---
---@see openbus.services.accesscontrol.LoginPasswordValidator#validate
+--@see core.services.accesscontrol.LoginPasswordValidator#validate
 ---
 function validate(self, name, password)
   local connection, err = lualdap.open_simple(self.ldapHost, name, password,

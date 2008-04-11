@@ -3,7 +3,7 @@
 local oil = require "oil"
 local luuid = require "uuid"
 
-local Session = require "openbus.services.session.Session"
+local Session = require "core.services.session.Session"
 
 local Log = require "openbus.common.Log"
 
@@ -12,7 +12,7 @@ local oop = require "loop.base"
 ---
 --Faceta que disponibiliza a funcionalidade básica do serviço de sessão.
 ---
-module("openbus.services.session.SessionService", oop.class)
+module("core.services.session.SessionService", oop.class)
 
 ---
 --Cria a facete de um Serviço de Sessão.

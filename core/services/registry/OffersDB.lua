@@ -21,7 +21,7 @@ local oop = require "loop.base"
 ---
 --Mecanismo de persistência de ofertas de serviço.
 --
-module("openbus.services.registry.OffersDB", oop.class)
+module("core.services.registry.OffersDB", oop.class)
 
 FILE_SUFFIX = ".offer"
 FILE_SEPARATOR = "/"

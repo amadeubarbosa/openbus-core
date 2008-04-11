@@ -13,11 +13,11 @@ local oil = require "oil"
 local Log = require "openbus.common.Log"
 
 local AccessControlService =
-    require "openbus.services.accesscontrol.AccessControlService"
+    require "core.services.accesscontrol.AccessControlService"
 
-local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
-if CORBA_IDL_DIR == nil then
-  Log:error("A variavel CORBA_IDL_DIR nao foi definida.\n")
+local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
+if CORE_IDL_DIR == nil then
+  Log:error("A variavel CORE_IDL_DIR nao foi definida.\n")
   os.exit(1)
 end
 
@@ -38,7 +38,7 @@ if AccessControlServerConfiguration.oilVerboseLevel then
   oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
 end
 
-oil.loadidlfile(CORBA_IDL_DIR.."/access_control_service.idl")
+oil.loadidlfile(CORE_IDL_DIR.."/access_control_service.idl")
 
 -- Inicializa o ORB, fixando a localização do serviço em uma porta específica
 oil.init{host = AccessControlServerConfiguration.hostName,

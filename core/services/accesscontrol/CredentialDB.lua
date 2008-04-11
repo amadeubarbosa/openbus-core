@@ -21,7 +21,7 @@ local oop = require "loop.base"
 ---
 --Mecanismo de persistência de credenciais
 ---
-module("openbus.services.accesscontrol.CredentialDB", oop.class)
+module("core.services.accesscontrol.CredentialDB", oop.class)
 
 FILE_SUFFIX = ".credential"
 FILE_SEPARATOR = "/"

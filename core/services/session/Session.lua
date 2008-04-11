@@ -14,7 +14,7 @@ local oop = require "loop.base"
 ---
 --Sess�o compartilhada pelos membros associados a uma mesma credencial.
 ---
-module("openbus.services.session.Session", oop.class)
+module("core.services.session.Session", oop.class)
 
 ---
 --Cria a sess�o.

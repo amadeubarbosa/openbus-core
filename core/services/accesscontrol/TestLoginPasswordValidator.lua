@@ -1,19 +1,19 @@
 -- $Id$
 
 local LoginPasswordValidator =
-    require "openbus.services.accesscontrol.LoginPasswordValidator"
+    require "core.services.accesscontrol.LoginPasswordValidator"
 
 local oop = require "loop.simple"
 
 ---
 --Representa um validador de usuário e senha para testes.
 ---
-module("openbus.services.accesscontrol.TestLoginPasswordValidator")
+module("core.services.accesscontrol.TestLoginPasswordValidator")
 
 oop.class(_M, LoginPasswordValidator)
 
 ---
---@see openbus.services.accesscontrol.LoginPasswordValidator#validate
+--@see core.services.accesscontrol.LoginPasswordValidator#validate
 ---
 function validate(self, name, password)
   if name == "tester" and password == "tester" then

@@ -13,7 +13,7 @@ local error = error
 local luuid = require "uuid"
 local oil = require "oil"
 
-local OffersDB = require "openbus.services.registry.OffersDB"
+local OffersDB = require "core.services.registry.OffersDB"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
@@ -29,7 +29,7 @@ local oop = require "loop.simple"
 ---
 --Componente (membro) respons�vel pelo Servi�o de Registro.
 ---
-module("openbus.services.registry.RegistryService")
+module("core.services.registry.RegistryService")
 
 oop.class(_M, IComponent)
 

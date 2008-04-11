@@ -7,7 +7,7 @@ local assert = assert
 
 local oil = require "oil"
 
-local SessionService = require "openbus.services.session.SessionService"
+local SessionService = require "core.services.session.SessionService"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
@@ -23,7 +23,7 @@ local oop = require "loop.simple"
 ---
 --Componente (membro) responsável pelo Serviço de Sessão.
 ---
-module("openbus.services.session.SessionServiceComponent")
+module("core.services.session.SessionServiceComponent")
 
 oop.class(_M, IComponent)
 
