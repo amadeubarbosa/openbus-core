@@ -2,8 +2,6 @@
 
 PARAMS=$*
 
-. ../../conf/config
+LATT_HOME=${OPENBUS_HOME}/libpath/lua/5.1/latt
 
-LATT_HOME=${LUA_HOME}/share/lua/5.1/latt
-
-${LUA} ${LATT_HOME}/extras/OiLTestRunner.lua ${PARAMS}
+${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua ${PARAMS}

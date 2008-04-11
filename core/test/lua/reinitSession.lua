@@ -13,14 +13,14 @@ local ClientConnectionManager = require "openbus.common.ClientConnectionManager"
 
 oil.verbose:level(3)
 
-local CORBA_IDL_DIR = os.getenv("CORBA_IDL_DIR")
-if CORBA_IDL_DIR == nil then
-  error("ERRO: A variavel CORBA_IDL_DIR nao foi definida.\n")
+local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
+if CORE_IDL_DIR == nil then
+  error("ERRO: A variavel CORE_IDL_DIR nao foi definida.\n")
 end
 
-oil.loadidlfile(CORBA_IDL_DIR.."/session_service.idl")
-oil.loadidlfile(CORBA_IDL_DIR.."/registry_service.idl")
-oil.loadidlfile(CORBA_IDL_DIR.."/access_control_service.idl")
+oil.loadidlfile(CORE_IDL_DIR.."/session_service.idl")
+oil.loadidlfile(CORE_IDL_DIR.."/registry_service.idl")
+oil.loadidlfile(CORE_IDL_DIR.."/access_control_service.idl")
 
 function main()
   -- Aloca uma thread para o oil

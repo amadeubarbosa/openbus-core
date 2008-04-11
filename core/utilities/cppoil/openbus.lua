@@ -9,9 +9,9 @@ require 'oil'
 
 oilcorbaidlstring = oil.corba.idl.string
 
-oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/access_control_service.idl" )
-oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/registry_service.idl" )
-oil.loadidlfile( os.getenv( "CORBA_IDL_DIR" ).."/session_service.idl" )
+oil.loadidlfile( os.getenv( "CORE_IDL_DIR" ).."/access_control_service.idl" )
+oil.loadidlfile( os.getenv( "CORE_IDL_DIR" ).."/registry_service.idl" )
+oil.loadidlfile( os.getenv( "CORE_IDL_DIR" ).."/session_service.idl" )
 
 local lir = oil.getLIR()
 
