@@ -1,5 +1,3 @@
-#!/bin/sh
+#!/bin/ksh
 
-. ../conf/config
-
-${LUA} ${SESSION_SERVICE_DIR}/SessionServer.lua
+./servicelauncher ${OPENBUS_HOME}/core/services/session/SessionServer.lua

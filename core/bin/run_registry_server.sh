@@ -1,5 +1,3 @@
-#!/bin/sh
+#!/bin/ksh
 
-. ../conf/config
-
-${LUA} ${REGISTRY_SERVICE_DIR}/RegistryServer.lua
+./servicelauncher ${OPENBUS_HOME}/core/services/registry/RegistryServer.lua

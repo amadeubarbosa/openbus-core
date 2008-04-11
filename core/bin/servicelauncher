@@ -1,0 +1,10 @@
+#!/bin/ksh
+
+OPENBUS_BIN=${OPENBUS_HOME}/core/bin
+OPENBUS_CONF=${OPENBUS_HOME}/core/conf
+
+if [ -r ${OPENBUS_CONF}/config ]; then
+  . ${OPENBUS_CONF}/config
+fi
+
+exec ${OPENBUS_BIN}/$TEC_UNAME/servicelauncher $*

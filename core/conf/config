@@ -1,19 +1,7 @@
-LUA=lua5.1
+export CONF_DIR=${OPENBUS_HOME}/core/conf
+export CORE_IDL_DIR=${OPENBUS_HOME}/core/idl
+export IDLPATH_DIR=${OPENBUS_HOME}/idlpath
 
-export LD_LIBRARY_PATH=${OPENBUS_HOME}/libpath/${TEC_UNAME}:${LD_LIBRARY_PATH}
-
-export LUA_PATH="${OPENBUS_HOME}/libpath/lua/?.lua;${OPENBUS_HOME}/libpath/lua/?/init.lua;${LUA_HOME}/share/lua/5.1/?.lua;${LUA_HOME}/share/lua/5.1/?/init.lua;${LUA_PATH}"
-export LUA_CPATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}/lib?.so;${LUA_HOME}/lib/lua/5.1/lib?.so;${LUA_HOME}/lib/lua/5.1/?.so;${LUA_CPATH}"
-
-export CONF_DIR=${OPENBUS_HOME}/conf
-
-export CORBA_IDL_DIR=${OPENBUS_HOME}/corba_idl
-
-SERVICES_DIR=${OPENBUS_HOME}/src/lua/openbus/services
-
-REGISTRY_SERVICE_DIR=${SERVICES_DIR}/registry
-ACCESS_CONTROL_SERVICE_DIR=${SERVICES_DIR}/accesscontrol
-SESSION_SERVICE_DIR=${SERVICES_DIR}/session
-
-export LUA_PATH="${OPENBUS_HOME}/src/lua/?.lua;${LUA_PATH}"
+export LUA_PATH="${OPENBUS_HOME}/?.lua;${OPENBUS_HOME}/core/utilities/lua/?.lua;${OPENBUS_HOME}/libpath/lua/5.1/?.lua"
+export LUA_CPATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}/lib?.so"
 
