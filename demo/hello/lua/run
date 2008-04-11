@@ -1,13 +1,12 @@
 #!/bin/sh
 
-. ../../../conf/config
+${OPENBUS_HOME}/core/bin/servicelauncher publisher.lua&
 
-${LUA} publisher.lua&
 pid=$!
 #echo "PID: $pid"
 trap "kill $pid > /dev/null 2> /dev/null" 0
 
 sleep 3
 
-${LUA} consumer.lua
+${OPENBUS_HOME}/core/bin/servicelauncher consumer.lua
 
