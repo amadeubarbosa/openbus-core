@@ -10,6 +10,12 @@ if CORE_IDL_DIR == nil then
   io.stderr:write("A variavel CORE_IDL_DIR nao foi definida.\n")
   os.exit(1)
 end
+local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+if IDLPATH_DIR == nil then
+  io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+  os.exit(1)
+end
+
 local CONF_DIR = os.getenv("CONF_DIR")
 local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
 
@@ -19,9 +25,9 @@ local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
 oil.loadidlfile(idlfile)
 idlfile = CORE_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile(idlfile)
-idlfile = CORE_IDL_DIR.."/data_service.idl"
+idlfile = IDLPATH_DIR.."/data_service.idl"
 oil.loadidlfile(idlfile)
-idlfile = CORE_IDL_DIR.."/project_service.idl"
+idlfile = IDLPATH_DIR.."/project_service.idl"
 oil.loadidlfile(idlfile)
 
 -- Serviço de Acesso
