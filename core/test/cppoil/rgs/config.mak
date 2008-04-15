@@ -1,21 +1,26 @@
-EXTRA_CONFIG=${OPENBUS_HOME}/src/openbus/cpp/oil/config
+PROJNAME= RGSTester
+APPNAME= ${PROJNAME}
 
-PROJNAME= openbus
-APPNAME= runner
+OPENBUSINC = ${OPENBUS_HOME}/incpath
+OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-OBJROOT= ../../../bin/cpp/rgs
-TARGETROOT= ../../../bin/cpp/rgs
+INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/cxxtest ${OPENBUSINC}/tolua-5.1b ${OPENBUSINC}/scs
+LDIR= ${OPENBUSLIB}
 
-INCLUDES= ${OPENBUS_HOME}/include ${CXXTEST_INC} ${TOLUA_INC}
+LIBS= dl scsoil
 
-LIBS= dl
+SLIB= ${OPENBUS_HOME}/core/lib/cpp/${TEC_UNAME}/libopenbus.a \
+      ${OPENBUSLIB}/liboilall.a \
+      ${OPENBUSLIB}/libluasocket.a \
+      ${OPENBUSLIB}/libtolua.a
 
-SLIB= ${OPENBUS_HOME}/lib/cpp/${TEC_UNAME}/libopenbus.a \
-     ${OIL04LIB}/liboilall.a \
-     ${LUASOCKET2LIB}/libluasocket.a \
-     ${TOLUA_LIB}/libtolua.a
-
-SRC= runner.cpp hellobind.cpp
+SRC= runner.cpp \
+     hellobind.cpp \
 
 USE_LUA51=YES
 USE_STATIC=YES
+NO_SCRIPTS=YES
+
+cxxtest:
+	cxxtestgen.pl --runner=StdioPrinter -o runner.cpp RGSTestSuite.cpp
+

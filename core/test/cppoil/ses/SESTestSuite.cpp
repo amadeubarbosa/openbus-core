@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
-#include <openbus/oil/openbus.h>
+#include <openbus.h>
 
 using namespace openbus ;
 
@@ -45,7 +45,7 @@ class SESTestSuite: public CxxTest::TestSuite {
         }
         strcpy( path, OPENBUS_HOME ) ;
         clientInterceptor = new common::ClientInterceptor( \
-          strcat( path, "/conf/advanced/InterceptorsConfiguration.lua" ), \
+          strcat( path, "/core/conf/advanced/InterceptorsConfiguration.lua" ), \
           credentialManager ) ;
         o->setclientinterceptor( clientInterceptor ) ;
         acs = o->getACS( "corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;

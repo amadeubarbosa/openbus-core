@@ -1,8 +1,8 @@
 /*
-* oil/services/IAccessControlService.cpp
+** stubs/IAccessControlService.cpp
 */
 
-#include <openbus/oil/services/IAccessControlService.h>
+#include "IAccessControlService.h"
 #include <string.h>
 #include <lua.hpp>
 

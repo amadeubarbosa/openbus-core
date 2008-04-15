@@ -1,8 +1,8 @@
 /*
-* oil/services/ISessionService.cpp
+* stubs/ISessionService.cpp
 */
 
-#include <openbus/oil/services/ISessionService.h>
+#include "ISessionService.h"
 #include <lua.hpp>
 #include <string.h>
 

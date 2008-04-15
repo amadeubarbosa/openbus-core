@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
-#include <openbus/oil/openbus.h>
+#include <openbus.h>
 
 using namespace openbus ;
 
@@ -34,7 +34,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
         char path[ 100 ] ;
         strcpy( path, OPENBUS_HOME ) ;
         clientInterceptor = new common::ClientInterceptor( \
-          strcat( path, "/conf/advanced/InterceptorsConfiguration.lua" ), \
+          strcat( path, "/core/conf/advanced/InterceptorsConfiguration.lua" ), \
           credentialManager ) ;
         o->setclientinterceptor( clientInterceptor ) ;
       } catch ( const char* errmsg ) {

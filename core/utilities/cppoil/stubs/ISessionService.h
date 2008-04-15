@@ -1,5 +1,5 @@
 /*
-* oil/services/ISessionService.h
+* stubs/ISessionService.h
 */
 
 #ifndef ISESSION_SERVICE_H_

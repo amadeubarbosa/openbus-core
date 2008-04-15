@@ -1,8 +1,8 @@
 /*
-* oil/common/CredentialManager.cpp
+** common/CredentialManager.cpp
 */
 
-#include <openbus/oil/common/CredentialManager.h>
+#include "CredentialManager.h"
 #include <lua.hpp>
 
 namespace openbus {

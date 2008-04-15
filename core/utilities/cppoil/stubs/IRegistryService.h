@@ -1,5 +1,5 @@
 /*
-* oil/services/IRegistryService.h
+** stubs/IRegistryService.h
 */
 
 #ifndef IREGISTRY_SERVICE_H_

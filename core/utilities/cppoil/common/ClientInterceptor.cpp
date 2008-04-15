@@ -1,8 +1,8 @@
 /*
-* oil/common/ClientInterceptor.cpp
+** common/ClientInterceptor.cpp
 */
 
-#include <openbus/oil/common/ClientInterceptor.h>
+#include "ClientInterceptor.h"
 #include <lua.hpp>
 
 namespace openbus {

@@ -1,14 +1,14 @@
 /*
-* oil/openbus.cpp
+** openbus.cpp
 */
 
 #include <lua.hpp>
 extern "C" {
-  #include "openbus/oil/auxiliar.h"
+  #include "auxiliar.h"
   #include <oilall.h>
   #include "luasocket.h"
 }
-#include <openbus/oil/openbus.h>
+#include "openbus.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +33,7 @@ namespace openbus {
       lua_pushcfunction( LuaVM, luaopen_socket_core ) ;
       lua_setfield( LuaVM, -2, "socket.core" ) ;
       luapreload_oilall( LuaVM ) ;
+      scs::core::IComponent::setLuaVM( LuaVM ) ;
     #if VERBOSE
       printf( "\t[Tentando carregar arquivo openbus.lua...]\n" ) ;
     #endif

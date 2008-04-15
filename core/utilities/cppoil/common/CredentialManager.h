@@ -1,5 +1,5 @@
 /*
-* oil/common/CredentialManager.h
+** common/CredentialManager.h
 */
 
 #ifndef CREDENTIAL_MANAGER_H_

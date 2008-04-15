@@ -1,21 +1,34 @@
-EXTRA_CONFIG=config
+PROJNAME= openbus
+LIBNAME= ${PROJNAME}
+
+OPENBUSINC = ${OPENBUS_HOME}/incpath
+OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
 DEFINES=VERBOSE
 
-PROJNAME= openbus
-LIBNAME= ${PROJNAME}
+OBJROOT= ${OPENBUS_HOME}/core/obj/cpp
+TARGETROOT= ${OPENBUS_HOME}/core/lib/cpp
 
-OBJROOT= ${OPENBUS_HOME}/obj/cpp
-TARGETROOT= ${OPENBUS_HOME}/lib/cpp
+INCLUDES= ${OPENBUSINC}/tolua-5.1b ${OPENBUSINC}/oil04 ${OPENBUSINC}/luasocket2 ${OPENBUSINC}/scs
+LDIR= ${OPENBUSLIB}
 
-INCLUDES=${OPENBUS_HOME}/include ${TOLUA_INC} ${OIL04INC} {LUASOCKET2INC}
+LIBS= scsoil
 
-SLIB= ${OIL04LIB}/liboilall.a \
-      ${LUASOCKET2LIB}/libluasocket.a
+SLIB= ${OPENBUSLIB}/liboilall.a \
+      ${OPENBUSLIB}/libluasocket.a \
+      ${OPENBUSLIB}/libtolua.a
 
-SRC= common/ClientInterceptor.cpp common/CredentialManager.cpp auxiliar.c openbus.cpp scs/core/IComponent.cpp \
-services/IAccessControlService.cpp services/IRegistryService.cpp services/ISessionService.cpp
+SRC= common/ClientInterceptor.cpp \
+     common/CredentialManager.cpp \
+     auxiliar.c \
+     openbus.cpp \
+     stubs/IAccessControlService.cpp \
+     stubs/IRegistryService.cpp \
+     stubs/ISessionService.cpp
 
 USE_LUA51=YES
 USE_STATIC=YES
+
+precompile:
+	lua5.1 precompiler.lua -f auxiliar -p auxiliar openbus.lua

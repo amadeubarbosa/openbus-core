@@ -1,0 +1,18 @@
+PROJNAME= scsoil
+LIBNAME= ${PROJNAME}
+
+# ??
+OPENBUSINC = ${OPENBUS_HOME}/incpath
+OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
+
+INCLUDES= ../include ${OPENBUSINC}/tolua-5.1b
+
+LIBS= dl
+
+SLIB= ${OPENBUSLIB}/libtolua.a
+
+SRC= IComponentOil.cpp
+
+USE_LUA51=YES
+USE_STATIC=YES
+

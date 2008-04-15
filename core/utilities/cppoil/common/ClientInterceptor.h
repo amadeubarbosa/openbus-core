@@ -1,5 +1,5 @@
 /*
-* oil/common/ClientInterceptor.h
+* common/ClientInterceptor.h
 */
 
 #ifndef CLIENT_INTERCEPTOR_H_

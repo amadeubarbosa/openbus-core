@@ -1,7 +1,7 @@
 #!/bin/ksh
 
-source ../env
+source ${OPENBUS_HOME}/core/conf/config
+echo ${CORE_IDL_DIR}
 
-${TEC_UNAME}/runner
-#runner
+bin/${TEC_UNAME}/$1
 

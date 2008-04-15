@@ -1,5 +1,5 @@
 /*
-* oil/services/IAccessControlService.h
+* stubs/IAccessControlService.h
 */
 
 #ifndef IACCESS_CONTROL_SERVICE_H_
