@@ -17,8 +17,8 @@ local OffersDB = require "core.services.registry.OffersDB"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
-local ServiceConnectionManager =
-    require "openbus.common.ServiceConnectionManager"
+local ServerConnectionManager =
+    require "openbus.common.ServerConnectionManager"
 
 local Log = require "openbus.common.Log"
 
@@ -60,7 +60,7 @@ function startup(self)
   if not self.initialized then
     Log:service("Servi�o de registro est� inicializando")
     local credentialManager = CredentialManager()
-    self.connectionManager =  ServiceConnectionManager(
+    self.connectionManager =  ServerConnectionManager(
         self.config.accessControlServerHost, credentialManager,
         self.config.privateKeyFile,
         self.config.accessControlServiceCertificateFile)

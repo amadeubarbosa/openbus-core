@@ -11,8 +11,7 @@ local SessionService = require "core.services.session.SessionService"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
-local ServiceConnectionManager =
-    require "openbus.common.ServiceConnectionManager"
+local ServerConnectionManager = require "openbus.common.ServerConnectionManager"
 
 local Log = require "openbus.common.Log"
 
@@ -55,7 +54,7 @@ function startup(self)
     Log:service("Serviço de sessão está inicializando")
     local credentialManager = CredentialManager()
     self.connectionManager =
-      ServiceConnectionManager(self.config.accessControlServerHost,
+      ServerConnectionManager(self.config.accessControlServerHost,
         credentialManager, self.config.privateKeyFile,
         self.config.accessControlServiceCertificateFile)
 
