@@ -7,8 +7,8 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
 DEFINES=VERBOSE
 
-OBJROOT= ${OPENBUS_HOME}/core/obj/cpp
-TARGETROOT= ${OPENBUS_HOME}/core/lib/cpp
+OBJROOT= obj
+TARGETROOT= lib
 
 INCLUDES= ${OPENBUSINC}/tolua-5.1b ${OPENBUSINC}/oil04 ${OPENBUSINC}/luasocket2 ${OPENBUSINC}/scs
 LDIR= ${OPENBUSLIB}
@@ -32,3 +32,4 @@ USE_STATIC=YES
 
 precompile:
 	lua5.1 precompiler.lua -f auxiliar -p auxiliar openbus.lua
+
