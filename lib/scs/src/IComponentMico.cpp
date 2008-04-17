@@ -1,8 +1,8 @@
 /*
-** mico/scs/core/IComponentImpl.cpp
+** IComponentMico.cpp
 */
 
-#include <openbus/mico/scs/core/IComponentImpl.h>
+#include <scs/core/IComponentMico.h>
 
 #ifdef VERBOSE
 using namespace std ;

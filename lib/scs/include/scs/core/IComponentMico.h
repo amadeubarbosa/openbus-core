@@ -1,11 +1,11 @@
 /*
-** mico/scs/core/IComponentImpl.h
+** scs/core/IComponentMico.h
 */
 
 #ifndef ICOMPONENTIMPL_H_
 #define ICOMPONENTIMPL_H_
 
-#include <openbus/mico/services/scs.h>
+#include <stubs/scs.h>
 
 namespace scs {
   namespace core {

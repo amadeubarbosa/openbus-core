@@ -1,7 +1,6 @@
 PROJNAME= scsoil
 LIBNAME= ${PROJNAME}
 
-# ??
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
