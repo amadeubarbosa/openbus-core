@@ -1,5 +1,5 @@
 PROJNAME= ACSTester
-APPNAME= ${PROJNAME}
+APPNAME= acs
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
@@ -7,9 +7,10 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/cxxtest ${OPENBUSINC}/tolua-5.1b ${OPENBUSINC}/scs
 LDIR= ${OPENBUSLIB}
 
-LIBS= dl scsoil
+LIBS= dl 
 
-SLIB= ${OPENBUS_HOME}/core/lib/cpp/${TEC_UNAME}/libopenbus.a \
+SLIB= ${OPENBUS_HOME}/core/utilities/cppoil/lib/${TEC_UNAME}/libopenbus.a \
+      ${OPENBUSLIB}/libscsoil.a \
       ${OPENBUSLIB}/liboilall.a \
       ${OPENBUSLIB}/libluasocket.a \
       ${OPENBUSLIB}/libtolua.a
