@@ -1,5 +1,8 @@
 PROJNAME=server
-APPNAME=server
+APPNAME=${PROJNAME}
+
+OPENBUSINC = ${OPENBUS_HOME}/incpath
+OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 EXTRA_CONFIG=config
 
@@ -11,20 +14,13 @@ DEFINES=${VERBOSE}
 TARGETROOT=bin
 OBJROOT=obj
 
-SRC=${OPENBUS_HOME}/src/openbus/cpp/mico/services/access_control_service.cc \
-    ${OPENBUS_HOME}/src/openbus/cpp/mico/services/scs.cc \
-    ${OPENBUS_HOME}/src/openbus/cpp/mico/services/core.cc \
-    ${OPENBUS_HOME}/src/openbus/cpp/mico/services/registry_service.cc \
-    ${OPENBUS_HOME}/src/openbus/cpp/mico/common/ClientInterceptor.cpp \
-    ${OPENBUS_HOME}/src/openbus/cpp/mico/common/ServerInterceptor.cpp \
-    ${OPENBUS_HOME}/src/openbus/cpp/mico/common/ORBInitializerImpl.cpp \
-    ${OPENBUS_HOME}/src/openbus/cpp/mico/common/CredentialManager.cpp \
-    ${OPENBUS_HOME}/src/openbus/cpp/mico/scs/core/IComponentImpl.cpp \
-    server.cpp \
-    hello.cc
+INCLUDES= . ${MICOINC} ${OPENBUS_HOME}/core/utilities/mico ${OPENBUSINC}/scs
+LDIR= ${MICOLDIR} 
 
-INCLUDES= . ${MICOINC} ${OPENBUS_HOME}/include
+LIBS= mico2.3.12
 
-LDIR= ${MICOLDIR}
+SLIB= ${OPENBUSLIB}/libscsmico.a \
+      ${OPENBUS_HOME}/core/utilities/mico/lib/${TEC_UNAME}/libopenbus.a
 
-LIBS= ${MICOLIB}
+SRC= server.cpp hello.cc
+

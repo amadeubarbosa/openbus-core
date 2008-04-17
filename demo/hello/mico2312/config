@@ -1,6 +1,5 @@
 
 MICO_HOME=/usr/local
-MICOLIB=mico2.3.12
 
 MICOBIN=${MICO_HOME}/bin
 MICOINC=${MICO_HOME}/include

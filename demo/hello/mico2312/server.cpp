@@ -7,12 +7,9 @@
 #include <iostream>
 #include <CORBA.h>
 
+#include <openbus.h>
+
 #include "hello.h"
-#include <openbus/mico/services/access_control_service.h>
-#include <openbus/mico/common/CredentialManager.h>
-#include <openbus/mico/common/ORBInitializerImpl.h>
-#include <openbus/mico/common/ServerInterceptor.h>
-#include <openbus/mico/scs/core/IComponentImpl.h>
 
 using namespace std ;
 using namespace openbusidl::acs ;
