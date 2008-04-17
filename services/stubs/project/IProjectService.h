@@ -6,7 +6,7 @@
 #define IPROJECTSERVICE_H_
 
 #include <lua.hpp>
-#include <openbus/oil/luaidl/cpp/types.h>
+#include <scs/core/luaidl/cpp/types.h>
 
 using namespace luaidl::cpp::types ;
 

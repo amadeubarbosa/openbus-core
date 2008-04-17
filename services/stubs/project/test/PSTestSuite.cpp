@@ -1,5 +1,5 @@
 /*
-* ProjectService/TestSuite.cpp
+** ProjectService/TestSuite.cpp
 */
 
 #ifndef PS_TESTSUITE_H
@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
-#include <openbus/oil/openbus.h>
+#include <openbus.h>
 // #include <ftc.h>
-#include <extras/services/ProjectService/IProjectService.h>
+#include "../IProjectService.h"
 
 using namespace openbus ;
 using namespace std ;
@@ -54,7 +54,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         }
         strcpy( path, OPENBUS_HOME ) ;
         clientInterceptor = new common::ClientInterceptor( \
-          strcat( path, "/conf/advanced/InterceptorsConfiguration.lua" ), \
+          strcat( path, "/core/conf/advanced/InterceptorsConfiguration.lua" ), \
           credentialManager ) ;
         o->setclientinterceptor( clientInterceptor ) ;
         acs = o->getACS( "corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;
@@ -67,7 +67,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         TS_ASSERT( serviceOfferList != NULL ) ;
         so = serviceOfferList->getmember(0) ;
         member = so->member ;
-        member->loadidlfile( "/home/rcosme/tecgraf/work/openbus/corba_idl/project_service.idl" ) ;
+        member->loadidlfile( "/home/rcosme/tecgraf/work/openbus/services/idl/project_service.idl" ) ;
         ps = member->getFacet <projectService::IProjectService> ( "IDL:openbusidl/ps/IProjectService:1.0" ) ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;

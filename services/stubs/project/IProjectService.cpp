@@ -3,8 +3,8 @@
 */
 
 #include <iostream>
-#include <extras/services/ProjectService/IProjectService.h>
-#include <openbus/oil/openbus.h>
+#include "IProjectService.h"
+#include <openbus.h>
 
 using namespace openbus ;
 using namespace std ;

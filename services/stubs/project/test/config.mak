@@ -1,22 +1,31 @@
-EXTRA_CONFIG=${OPENBUS_HOME}/src/openbus/cpp/oil/config
-
-PROJNAME= openbus
-APPNAME= runner
+PROJNAME= PSTester
+APPNAME= ps
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
 DEFINES=VERBOSE
 
-OBJROOT= ../../../bin/cpp/ProjectService
-TARGETROOT= ../../../bin/cpp/ProjectService
+OPENBUSINC = ${OPENBUS_HOME}/incpath
+OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-LDIR= ${LUA51LIB} ${TOLUA_LIB}
+OBJROOT= obj
+TARGETROOT= lib
 
-INCLUDES= ${OPENBUS_HOME}/include ${CXXTEST_INC} ${TOLUA_INC}
-LIBS= dl tolua oilbit luasocket
+INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/cxxtest ${OPENBUSINC}/tolua-5.1b ${OPENBUSINC}/scs
+LDIR= ${OPENBUSLIB}
 
-SLIB= ${OPENBUS_HOME}/lib/cpp/${TEC_UNAME}/libopenbus.a
+LIBS= dl
 
-SRC= runner.cpp ${OPENBUS_HOME}/src/extras/services/ProjectService/IProjectService.cpp
+SLIB= ${OPENBUS_HOME}/core/utilities/cppoil/lib/${TEC_UNAME}/libopenbus.a \
+      ${OPENBUSLIB}/libscsoil.a \
+      ${OPENBUSLIB}/liboilall.a \
+      ${OPENBUSLIB}/libluasocket.a \
+      ${OPENBUSLIB}/libtolua.a
+
+SRC= runner.cpp ../IProjectService.cpp
 
 USE_LUA51=YES
 USE_STATIC=YES
+
+cxxtest:
+	cxxtestgen.pl --runner=StdioPrinter -o runner.cpp PSTestSuite.cpp
+
