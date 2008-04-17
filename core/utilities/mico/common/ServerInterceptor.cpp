@@ -1,8 +1,8 @@
 /*
-** mico/common/ServerInterceptor.cpp
+** common/ServerInterceptor.cpp
 */
 
-#include <openbus/mico/common/ServerInterceptor.h>
+#include "ServerInterceptor.h"
 
 #ifdef VERBOSE
   #include <iostream>
@@ -10,7 +10,6 @@
 #endif
 
 #include <mico/pi_impl.h>
-#include <openbus/mico/services/access_control_service.h>
 
 #ifdef VERBOSE
   using namespace std ;

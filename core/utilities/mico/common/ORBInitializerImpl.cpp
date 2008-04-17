@@ -1,8 +1,8 @@
 /*
-** ORBInitializerImpl.cpp
+** common/ORBInitializerImpl.cpp
 */
 
-#include <openbus/mico/common/ORBInitializerImpl.h>
+#include "ORBInitializerImpl.h"
 
 #ifdef VERBOSE
   using namespace std ;

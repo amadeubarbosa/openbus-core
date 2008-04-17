@@ -1,8 +1,8 @@
 /*
-* mico/common/CredentialManager.cpp
+* common/CredentialManager.cpp
 */
 
-#include <openbus/mico/common/CredentialManager.h>
+#include "CredentialManager.h"
 
 namespace openbus {
   namespace common {

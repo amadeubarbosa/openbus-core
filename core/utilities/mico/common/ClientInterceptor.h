@@ -1,5 +1,5 @@
 /*
-** mico/common/ClientInterceptor.h
+** common/ClientInterceptor.h
 */
 
 #ifndef CLIENTINTERCEPTOR_H_
@@ -8,7 +8,7 @@
 #include <string.h>
 #include <CORBA.h>
 
-#include <openbus/mico/common/CredentialManager.h>
+#include "CredentialManager.h"
 
 using namespace PortableInterceptor ;
 

@@ -1,5 +1,5 @@
 /*
-** mico/common/ORBInitializerImpl.h
+** common/ORBInitializerImpl.h
 */
 
 #ifndef ORBINITIALIZERIMPL_H_

@@ -1,11 +1,11 @@
 /*
-* mico/common/CredentialManager.h
+* common/CredentialManager.h
 */
 
 #ifndef CREDENTIAL_MANAGER_H_
 #define CREDENTIAL_MANAGER_H_
 
-#include <openbus/mico/services/access_control_service.h>
+#include "../stubs/access_control_service.h"
 
 namespace openbus {
   namespace common {

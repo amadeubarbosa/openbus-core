@@ -1,5 +1,5 @@
 /*
-** mico/common/ServerInterceptor.h
+** common/ServerInterceptor.h
 */
 
 #ifndef SERVERINTERCEPTOR_H_
@@ -9,7 +9,7 @@
 #include <mico/pi.h>
 
 #include "CredentialManager.h"
-#include <openbus/mico/services/access_control_service.h>
+#include "../stubs/access_control_service.h"
 
 using namespace PortableInterceptor ;
 

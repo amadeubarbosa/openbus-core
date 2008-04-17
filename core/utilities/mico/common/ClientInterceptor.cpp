@@ -1,8 +1,8 @@
 /*
-** ClientInterceptor.cpp
+** common/ClientInterceptor.cpp
 */
 
-#include <openbus/mico/common/ClientInterceptor.h>
+#include "ClientInterceptor.h"
 
 #ifdef VERBOSE
   #include <iostream>
@@ -11,7 +11,7 @@
 #include <mico/pi_impl.h>
 #include <mico/codec_impl.h>
 
-#include <openbus/mico/services/access_control_service.h>
+#include "../stubs/access_control_service.h"
 
 using namespace openbusidl::acs;
 #ifdef VERBOSE
