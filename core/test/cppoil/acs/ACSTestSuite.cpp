@@ -6,7 +6,6 @@
 #define ACS_TESTSUITE_H
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
@@ -30,12 +29,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
       try {
         o = Openbus::getInstance() ;
         credentialManager = new common::CredentialManager ;
-        const char* OPENBUS_HOME = getenv( "OPENBUS_HOME" ) ;
-        char path[ 100 ] ;
-        strcpy( path, OPENBUS_HOME ) ;
-        clientInterceptor = new common::ClientInterceptor( \
-          strcat( path, "/core/conf/advanced/InterceptorsConfiguration.lua" ), \
-          credentialManager ) ;
+        clientInterceptor = new common::ClientInterceptor(credentialManager);
         o->setClientInterceptor( clientInterceptor ) ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;

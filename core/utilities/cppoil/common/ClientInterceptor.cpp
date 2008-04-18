@@ -4,6 +4,10 @@
 
 #include "ClientInterceptor.h"
 #include <lua.hpp>
+#include <stdlib.h>
+#include <string.h>
+
+#define BUFFER_SIZE 1024
 
 namespace openbus {
   namespace common {
@@ -51,17 +55,21 @@ namespace openbus {
         return 0 ;
       }
 
-      ClientInterceptor::ClientInterceptor ( String configPATH, CredentialManager* pcredentialManager )
+      ClientInterceptor::ClientInterceptor ( CredentialManager* pcredentialManager )
       {
       #if VERBOSE
         printf( "\n\n[ClientInterceptor::ClientInterceptor() COMECO]\n" ) ;
         printf( "\t[Criando instancia de ClientInterceptor]\n" ) ;
       #endif
+        const char* OPENBUS_HOME = getenv("OPENBUS_HOME");
+        char* configPath = new char[BUFFER_SIZE];
+        strcpy(configPath, OPENBUS_HOME);
+        strcat(configPath, "/core/conf/advanced/InterceptorsConfiguration.lua");
       #if VERBOSE
         printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( Openbus::LuaVM ) ) ;
-        printf( "\t[Carregando arquivo de cofiguracao: %s]\n" , configPATH ) ;
+        printf( "\t[Carregando arquivo de cofiguracao: %s]\n" , configPath ) ;
       #endif
-        if ( luaL_dofile( Openbus::LuaVM, configPATH ) != 0 ) {
+        if ( luaL_dofile( Openbus::LuaVM, configPath ) != 0 ) {
           const char * returnValue ;
           lua_getglobal( Openbus::LuaVM, "tostring" ) ;
           lua_insert( Openbus::LuaVM, -2 ) ;

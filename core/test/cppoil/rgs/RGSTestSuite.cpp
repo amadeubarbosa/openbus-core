@@ -5,7 +5,6 @@
 #ifndef RGS_TESTSUITE_H
 #define RGS_TESTSUITE_H
 
-#include <stdlib.h>
 #include <string.h>
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
@@ -37,16 +36,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
       try {
         o = Openbus::getInstance() ;
         credentialManager = new common::CredentialManager ;
-        const char* OPENBUS_HOME = getenv( "OPENBUS_HOME" ) ;
-        char path[ 100 ] ;
-        if ( OPENBUS_HOME == NULL )
-        {
-          throw "Error: OPENBUS_HOME environment variable is not defined." ;
-        }
-        strcpy( path, OPENBUS_HOME ) ;
-        clientInterceptor = new common::ClientInterceptor( \
-          strcat( path, "/core/conf/advanced/InterceptorsConfiguration.lua" ), \
-          credentialManager ) ;
+        clientInterceptor = new common::ClientInterceptor(credentialManager);
         o->setClientInterceptor( clientInterceptor ) ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;
@@ -154,7 +144,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     void testFacets()
     {
-      tolua_hello_open( Openbus::getLuaVM() ) ;
+      tolua_hello_open( o->getLuaVM() ) ;
       hello* obj = new hello ;
       scs::core::IComponent* member = new scs::core::IComponent( "scs::core::IComponent" ) ;
       member->loadidl( "interface hello { void say_hello() ; };" ) ;
