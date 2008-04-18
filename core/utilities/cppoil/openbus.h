@@ -7,14 +7,9 @@
 
 #include "luaidl/cpp/types.h"
 
-typedef struct lua_State Lua_State ;
+#include <scs/core/IComponentOil.h>
 
-namespace scs {
-  namespace core {
-    class IComponent ;
-    typedef luaidl::cpp::sequence<IComponent> IComponentSeq ;
-  }
-}
+typedef struct lua_State Lua_State ;
 
 namespace openbus {
   typedef luaidl::cpp::types::String String ;
@@ -43,7 +38,6 @@ namespace openbus {
   class Openbus;
 }
 
-#include <scs/core/IComponentOil.h>
 #include "stubs/IAccessControlService.h"
 #include "stubs/IRegistryService.h"
 #include "stubs/ISessionService.h"
@@ -55,15 +49,15 @@ namespace openbus {
 /* sigleton pattern */
   class Openbus {
     private:
-      static Openbus* pInstance ;
+      static Openbus* instance ;
       static Lua_State* LuaVM ;
       void initLuaVM() ;
       Openbus() ;
       Openbus( const Openbus& ) ;
     public:
       ~Openbus() ;
-      static Lua_State* getLuaVM() ;
       static Openbus* getInstance() ;
+      Lua_State* getLuaVM() ;
       void setclientinterceptor( common::ClientInterceptor* clientInterceptor ) ;
       services::IAccessControlService* getACS( String reference, String interface ) ;
       friend class scs::core::IComponent ;

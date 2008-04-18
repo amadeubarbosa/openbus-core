@@ -16,7 +16,7 @@ extern "C" {
 namespace openbus {
 
     lua_State* Openbus::LuaVM = 0 ;
-    Openbus* Openbus::pInstance = 0 ;
+    Openbus* Openbus::instance = 0 ;
 
     Lua_State* Openbus::getLuaVM( void )
     {
@@ -58,16 +58,16 @@ namespace openbus {
 
     Openbus::~Openbus()
     {
-      pInstance = 0 ;
+      instance = 0 ;
     }
 
     Openbus* Openbus::getInstance()
     {
-      if ( pInstance == 0 )
+      if ( instance == 0 )
       {
         new Openbus ;
       }
-      return pInstance ;
+      return instance ;
     }
 
     void Openbus::setclientinterceptor( common::ClientInterceptor* clientInterceptor )
