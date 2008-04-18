@@ -18,11 +18,6 @@ namespace openbus {
   typedef String UUID;
   typedef UUID Identifier;
 
-  namespace common {
-    class CredentialManager;
-    class ClientInterceptor;
-  }
-
   namespace services {
     struct Credential;
     struct ServiceOffer;
@@ -38,11 +33,11 @@ namespace openbus {
   class Openbus;
 }
 
+#include "common/CredentialManager.h"
+#include "common/ClientInterceptor.h"
 #include "stubs/IAccessControlService.h"
 #include "stubs/IRegistryService.h"
 #include "stubs/ISessionService.h"
-#include "common/ClientInterceptor.h"
-#include "common/CredentialManager.h"
 
 namespace openbus {
 
@@ -66,7 +61,6 @@ namespace openbus {
       friend class services::ISession;
       friend class services::ISessionService;
       friend class services::SessionEventSink;
-      friend class common::CredentialManager;
   };
 
 }

@@ -5,6 +5,12 @@
 #ifndef CLIENT_INTERCEPTOR_H_
 #define CLIENT_INTERCEPTOR_H_
 
+namespace openbus {
+  namespace common {
+    class ClientInterceptor;
+  }
+}
+
 #include "../openbus.h"
 
 namespace openbus {
