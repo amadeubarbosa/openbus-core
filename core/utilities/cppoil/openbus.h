@@ -67,7 +67,6 @@ namespace openbus {
       friend class services::ISessionService;
       friend class services::SessionEventSink;
       friend class common::CredentialManager;
-      friend class common::ClientInterceptor;
   };
 
 }

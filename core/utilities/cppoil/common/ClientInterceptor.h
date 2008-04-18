@@ -12,15 +12,16 @@ namespace openbus {
 
     class ClientInterceptor {
       private:
-        Long contextID ;
-        String credentialType ;
-        CredentialManager* credentialManager ;
+        Openbus* openbus;
+        static Lua_State* LuaVM;
+        Long contextID;
+        String credentialType;
+        CredentialManager* credentialManager;
       public:
-        static int sendrequest( lua_State* L ) ;
-        ClientInterceptor ( CredentialManager* pcredentialManager ) ;
-        ~ClientInterceptor() ;
-        friend class Openbus ;
-    } ;
+        static int sendrequest(lua_State* L);
+        ClientInterceptor (CredentialManager* pcredentialManager);
+        ~ClientInterceptor();
+    };
 
   }
 }
