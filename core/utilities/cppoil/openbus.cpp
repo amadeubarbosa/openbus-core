@@ -35,8 +35,6 @@ namespace openbus {
   #if VERBOSE
     printf("\t[Tentando carregar arquivo openbus.lua...]\n");
   #endif
-    lua_pushcfunction(LuaVM, common::ClientInterceptor::sendrequest);
-    lua_setglobal(LuaVM, "CPPsendrequest");
     luaopen_openbus(LuaVM);
     lua_pop(LuaVM, 1);
   }
@@ -81,7 +79,7 @@ namespace openbus {
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     lua_pushstring(LuaVM, "sendrequest");
-    lua_getglobal(LuaVM, "CPPsendrequest");
+    lua_pushcfunction(LuaVM, common::ClientInterceptor::sendrequest);
     lua_settable(LuaVM, -3);
   #if VERBOSE
     printf("\t[parametro {}.sendrequest (function) empilhado]\n");

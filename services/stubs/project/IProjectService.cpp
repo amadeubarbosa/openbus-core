@@ -14,7 +14,8 @@ namespace projectService {
   static lua_State* LuaVM ;
 
   IProjectService::IProjectService() {
-    LuaVM = Openbus::getLuaVM() ;
+    Openbus* openbus = Openbus::getInstance();
+    LuaVM = openbus->getLuaVM() ;
   #if VERBOSE
     printf( "[IProjectService::IProjectService () COMECO]\n" ) ;
     printf( "\t[This: %p]\n", this ) ;
