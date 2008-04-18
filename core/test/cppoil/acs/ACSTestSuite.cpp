@@ -36,7 +36,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
         clientInterceptor = new common::ClientInterceptor( \
           strcat( path, "/core/conf/advanced/InterceptorsConfiguration.lua" ), \
           credentialManager ) ;
-        o->setclientinterceptor( clientInterceptor ) ;
+        o->setClientInterceptor( clientInterceptor ) ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;
       } /* try */

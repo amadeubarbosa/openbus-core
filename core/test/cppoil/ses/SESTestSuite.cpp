@@ -47,7 +47,7 @@ class SESTestSuite: public CxxTest::TestSuite {
         clientInterceptor = new common::ClientInterceptor( \
           strcat( path, "/core/conf/advanced/InterceptorsConfiguration.lua" ), \
           credentialManager ) ;
-        o->setclientinterceptor( clientInterceptor ) ;
+        o->setClientInterceptor( clientInterceptor ) ;
         acs = o->getACS( "corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;
         credential = new services::Credential() ;
         lease = new services::Lease() ;

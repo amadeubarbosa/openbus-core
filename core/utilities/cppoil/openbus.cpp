@@ -70,12 +70,12 @@ namespace openbus {
       return instance ;
     }
 
-    void Openbus::setclientinterceptor( common::ClientInterceptor* clientInterceptor )
+    void Openbus::setClientInterceptor( common::ClientInterceptor* clientInterceptor )
     {
     #if VERBOSE
-      printf( "[Openbus::setclientinterceptor() COMECO]\n" ) ;
+      printf( "[Openbus::setClientInterceptor() COMECO]\n" ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-      printf( "\t[Chamando metodo %s( %p )]\n", "oil.setclientinterceptor", clientInterceptor ) ;
+      printf( "\t[Chamando metodo %s( %p )]\n", "oil.setClientInterceptor", clientInterceptor ) ;
     #endif
       lua_getglobal( LuaVM, "oil" ) ;
       lua_getfield( LuaVM, -1, "setclientinterceptor" ) ;
@@ -109,7 +109,7 @@ namespace openbus {
       #if VERBOSE
         printf( "\t[lancando excecao]\n" ) ;
         printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-        printf( "[Openbus::setclientinterceptor() FIM]\n\n" ) ;
+        printf( "[Openbus::setClientInterceptor() FIM]\n\n" ) ;
       #endif
         throw errmsg ;
       } /* if */
@@ -117,7 +117,7 @@ namespace openbus {
     /* retira a tabela oil */
       lua_pop( LuaVM, 1 ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-      printf( "[Openbus::setclientinterceptor() FIM]\n\n" ) ;
+      printf( "[Openbus::setClientInterceptor() FIM]\n\n" ) ;
     #endif
     }
 
