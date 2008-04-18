@@ -57,7 +57,7 @@ namespace openbus {
 
   Openbus* Openbus::getInstance() {
     if (instance == 0) {
-      new Openbus;
+      instance = new Openbus;
     }
     return instance;
   }
