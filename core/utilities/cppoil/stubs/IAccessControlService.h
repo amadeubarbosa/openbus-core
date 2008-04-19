@@ -29,17 +29,21 @@ namespace openbus {
     } ;
 
     class ICredentialObserver {
+      private:
+        Openbus* openbus;
+        static Lua_State* LuaVM;
         void* ptr_luaimpl ;
         static int _credentialWasDeleted_bind ( Lua_State* L ) ;
       public:
         ICredentialObserver () ;
         virtual ~ICredentialObserver () ;
         virtual void credentialWasDeleted ( Credential* aCredential ) {} ;
-        friend class openbus::Openbus ;
     } ;
 
     class IAccessControlService :public ILeaseProvider {
       private:
+        Openbus* openbus;
+        static Lua_State* LuaVM;
         IAccessControlService( String reference, String interface ) ;
         IRegistryService* registryService ;
       public:

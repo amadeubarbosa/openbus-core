@@ -55,12 +55,6 @@ namespace openbus {
       Lua_State* getLuaVM();
       void setClientInterceptor(common::ClientInterceptor* clientInterceptor);
       services::IAccessControlService* getACS(String reference, String interface);
-      friend class services::ICredentialObserver;
-      friend class services::IAccessControlService;
-      friend class services::IRegistryService;
-      friend class services::ISession;
-      friend class services::ISessionService;
-      friend class services::SessionEventSink;
   };
 
 }

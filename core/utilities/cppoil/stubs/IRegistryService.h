@@ -32,6 +32,8 @@ namespace openbus {
 
     class IRegistryService {
       private:
+        Openbus* openbus;
+        static Lua_State* LuaVM;
         IRegistryService( String reference, String interface ) ;
       public:
         ~IRegistryService( void ) ;
@@ -40,7 +42,6 @@ namespace openbus {
         bool unregister( RegistryIdentifier identifier ) ;
         bool update( RegistryIdentifier identifier, PropertyList* newProperties ) ;
         ServiceOfferList* find( String type, PropertyList* criteria ) ;
-        friend class openbus::Openbus ;
     } ;
   }
 }
