@@ -5,7 +5,7 @@
 #ifndef CREDENTIAL_MANAGER_H_
 #define CREDENTIAL_MANAGER_H_
 
-#include "../stubs/access_control_service.h"
+#include "../../stubs/access_control_service.h"
 
 namespace openbus {
   namespace common {

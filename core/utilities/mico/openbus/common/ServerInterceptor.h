@@ -9,7 +9,7 @@
 #include <mico/pi.h>
 
 #include "CredentialManager.h"
-#include "../stubs/access_control_service.h"
+#include "../../stubs/access_control_service.h"
 
 using namespace PortableInterceptor ;
 

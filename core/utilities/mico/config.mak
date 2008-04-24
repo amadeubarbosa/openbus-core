@@ -16,10 +16,10 @@ LIBS= mico2.3.12
 
 SLIB= ${OPENBUSLIB}/libscsmico.a
 
-SRC= common/ClientInterceptor.cpp \
-     common/ServerInterceptor.cpp \
-     common/CredentialManager.cpp \
-     common/ORBInitializerImpl.cpp \
+SRC= openbus/common/ClientInterceptor.cpp \
+     openbus/common/ServerInterceptor.cpp \
+     openbus/common/CredentialManager.cpp \
+     openbus/common/ORBInitializerImpl.cpp \
      stubs/access_control_service.cc \
      stubs/registry_service.cc \
      stubs/session_service.cc \

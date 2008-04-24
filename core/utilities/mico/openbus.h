@@ -6,9 +6,9 @@
 #define OPENBUS_H_
 
 #include "stubs/access_control_service.h"
-#include "common/CredentialManager.h"
-#include "common/ORBInitializerImpl.h"
-#include "common/ServerInterceptor.h"
+#include "openbus/common/CredentialManager.h"
+#include "openbus/common/ORBInitializerImpl.h"
+#include "openbus/common/ServerInterceptor.h"
 #include <scs/core/IComponentMico.h>
 
 #endif

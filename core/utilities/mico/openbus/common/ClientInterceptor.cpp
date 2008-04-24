@@ -11,7 +11,7 @@
 #include <mico/pi_impl.h>
 #include <mico/codec_impl.h>
 
-#include "../stubs/access_control_service.h"
+#include "../../stubs/access_control_service.h"
 
 using namespace openbusidl::acs;
 #ifdef VERBOSE
