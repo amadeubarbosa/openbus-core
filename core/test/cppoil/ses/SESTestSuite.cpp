@@ -6,8 +6,11 @@
 #define SES_TESTSUITE_H
 
 #include <string.h>
+#include <stdlib.h>
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
+
+#define BUFFER_SIZE 1024
 
 using namespace openbus ;
 
@@ -27,6 +30,11 @@ class SESTestSuite: public CxxTest::TestSuite {
     services::PropertyList* propertyList ;
     services::PropertyValue* propertyValue ;
     scs::core::IComponent* component ;
+    char BUFFER[BUFFER_SIZE];
+    char* OPENBUS_SERVER_HOST;
+    char* OPENBUS_SERVER_PORT;
+    char* OPENBUS_USERNAME;
+    char* OPENBUS_PASSWORD;
   public:
     void setUP() {
     }
@@ -35,13 +43,31 @@ class SESTestSuite: public CxxTest::TestSuite {
     {
       try {
         o = Openbus::getInstance() ;
+        Lua_State* LuaVM = o->getLuaVM();
+        const char* OPENBUS_HOME = getenv("OPENBUS_HOME");
+        strcpy(BUFFER, OPENBUS_HOME);
+        strcat(BUFFER, "/core/test/cppoil/config.lua");
+        if (luaL_dofile(LuaVM, BUFFER)) {
+          printf("Não foi possível carregar o arquivo %s.\n", BUFFER);
+          exit(-1);
+        }
+        lua_getglobal(LuaVM, "OPENBUS_SERVER_HOST");
+        OPENBUS_SERVER_HOST = (char*) lua_tostring(LuaVM, -1);
+        lua_getglobal(LuaVM, "OPENBUS_SERVER_PORT");
+        OPENBUS_SERVER_PORT = (char*) lua_tostring(LuaVM, -1);
+        lua_getglobal(LuaVM, "OPENBUS_USERNAME");
+        OPENBUS_USERNAME = (char*) lua_tostring(LuaVM, -1);
+        lua_getglobal(LuaVM, "OPENBUS_PASSWORD");
+        OPENBUS_PASSWORD = (char*) lua_tostring(LuaVM, -1);
+        lua_pop(LuaVM, 4);
         credentialManager = new common::CredentialManager ;
         clientInterceptor = new common::ClientInterceptor(credentialManager);
         o->setClientInterceptor( clientInterceptor ) ;
-        acs = o->getACS( "corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;
+        sprintf(BUFFER, "corbaloc::%s:%s/ACS", OPENBUS_SERVER_HOST, OPENBUS_SERVER_PORT);
+        acs = o->getACS( BUFFER, "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;
         credential = new services::Credential() ;
         lease = new services::Lease() ;
-        acs->loginByPassword( "tester", "tester", credential, lease ) ;
+        acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
         credentialManager->setValue( credential ) ;
         rgs = acs->getRegistryService() ;
         serviceOfferList = rgs->find( "SessionService", NULL ) ;

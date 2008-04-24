@@ -21,6 +21,6 @@ USE_LUA51=YES
 USE_STATIC=YES
 NO_SCRIPTS=YES
 
-cxxtext:
+cxxtest:
 	cxxtestgen.pl --runner=StdioPrinter -o runner.cpp ACSTestSuite.cpp
 
