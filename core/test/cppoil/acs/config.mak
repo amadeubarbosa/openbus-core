@@ -13,7 +13,7 @@ SLIB= ${OPENBUS_HOME}/core/utilities/cppoil/lib/${TEC_UNAME}/libopenbus.a \
       ${OPENBUSLIB}/libscsoil.a \
       ${OPENBUSLIB}/liboilall.a \
       ${OPENBUSLIB}/libluasocket.a \
-      ${OPENBUSLIB}/libtolua.a
+      ${OPENBUSLIB}/libtolua5.1.a
 
 SRC= runner.cpp 
 

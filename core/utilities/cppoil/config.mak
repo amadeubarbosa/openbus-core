@@ -17,7 +17,7 @@ LIBS= scsoil
 
 SLIB= ${OPENBUSLIB}/liboilall.a \
       ${OPENBUSLIB}/libluasocket.a \
-      ${OPENBUSLIB}/libtolua.a
+      ${OPENBUSLIB}/libtolua5.1.a
 
 SRC= common/ClientInterceptor.cpp \
      common/CredentialManager.cpp \

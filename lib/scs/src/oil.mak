@@ -4,11 +4,11 @@ LIBNAME= ${PROJNAME}
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-INCLUDES= ../include ${OPENBUSINC}/tolua-5.1b
+INCLUDES= ../include ${OPENBUSINC}/tolua5.1
 
 LIBS= dl
 
-SLIB= ${OPENBUSLIB}/libtolua.a
+SLIB= ${OPENBUSLIB}/libtolua5.1.a
 
 SRC= IComponentOil.cpp
 

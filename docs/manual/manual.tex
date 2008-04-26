@@ -244,7 +244,7 @@ instalação, então é conveniente adicionar ao final deste:
 \begin{verbatim}
 INSTALL_TOP=/usr/local
 install:
-	install -m 644 lib/libtolua.a $(INSTALL_TOP)/lib/
+	install -m 644 lib/libtolua5.1.a $(INSTALL_TOP)/lib/
 	mkdir -p $(INSTALL_TOP)/include/lua5.1
 	install -m 644 include/tolua.h $(INSTALL_TOP)/include/lua5.1/
 	install -m 755 bin/tolua $(INSTALL_TOP)/bin/
