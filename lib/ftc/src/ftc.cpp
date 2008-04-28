@@ -6,7 +6,6 @@
 
 #include <lua.hpp>
 extern "C" {
-#include "luasocketext/cbuffer.h"
 #include "auxiliar.h"
 }
 #include <string.h>
@@ -16,10 +15,6 @@ Lua_State* ftc::LuaVM = 0 ;
 void ftc::setEnv()
 {
   luaL_openlibs( LuaVM ) ;
-  lua_pushcfunction( LuaVM, cbuffer_receive ) ;
-  lua_setglobal( LuaVM, "receiveC" ) ;
-  lua_pushcfunction( LuaVM, cbuffer_send ) ;
-  lua_setglobal( LuaVM, "sendC" ) ;
   luaopen_auxiliar( LuaVM ) ;
   lua_pop( LuaVM, 1 ) ;
 }

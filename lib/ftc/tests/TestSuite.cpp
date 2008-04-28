@@ -10,7 +10,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "../src/ftc.h"
+#include <ftc.h>
 
 char buffer[256];
 
