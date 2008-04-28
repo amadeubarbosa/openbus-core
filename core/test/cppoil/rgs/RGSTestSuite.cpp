@@ -203,7 +203,6 @@ class RGSTestSuite: public CxxTest::TestSuite {
       TS_ASSERT( rgs->unregister( RegistryIdentifier ) ) ;
       delete member ;
       delete acs ;
-      delete rgs ;
     }
 } ;
 
