@@ -104,9 +104,9 @@ namespace openbus {
     #endif
       throw errmsg;
     } /* if */
+    lua_pop(LuaVM, 1);
   #if VERBOSE
   /* retira a tabela oil */
-    lua_pop(LuaVM, 1);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     printf("[Openbus::setClientInterceptor() FIM]\n\n");
   #endif

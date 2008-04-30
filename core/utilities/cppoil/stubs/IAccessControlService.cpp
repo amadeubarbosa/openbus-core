@@ -74,20 +74,22 @@ namespace openbus {
     {
     #if VERBOSE
       printf( "[Destruindo objeto ICredentialObserver (%p)...]\n", this ) ;
+    #endif
       lua_pushlightuserdata( LuaVM, this ) ;
       lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
+    #if VERBOSE
       printf( "[Liberando referencia Lua:%p]\n", lua_topointer( LuaVM, -1 ) ) ;
-      lua_pop( LuaVM, 1 ) ;
     #endif
-    lua_pushlightuserdata( LuaVM, this ) ;
-    lua_pushnil( LuaVM ) ;
-    lua_settable( LuaVM, LUA_REGISTRYINDEX ) ;
+      lua_pop( LuaVM, 1 ) ;
+      lua_pushlightuserdata( LuaVM, this ) ;
+      lua_pushnil( LuaVM ) ;
+      lua_settable( LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
       printf( "[Liberando referencia Lua da implementacao:%p]\n", ptr_luaimpl ) ;
     #endif
-    lua_pushlightuserdata( LuaVM, ptr_luaimpl ) ;
-    lua_pushnil( LuaVM ) ;
-    lua_settable( LuaVM, LUA_REGISTRYINDEX ) ;
+      lua_pushlightuserdata( LuaVM, ptr_luaimpl ) ;
+      lua_pushnil( LuaVM ) ;
+      lua_settable( LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
       printf( "[Objeto ICredentialObserver(%p) destruido!]\n\n", this ) ;
     #endif
@@ -198,12 +200,12 @@ namespace openbus {
       printf( "[Destruindo objeto IAccessControlService (%p)...]\n", this ) ;
     #endif
       delete registryService ;
-    #if VERBOSE
       lua_pushlightuserdata( LuaVM, this ) ;
       lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
+    #if VERBOSE
       printf( "[Liberando referencia Lua:%p]\n", lua_topointer( LuaVM, -1 ) ) ;
-      lua_pop( LuaVM, 1 ) ;
     #endif
+      lua_pop( LuaVM, 1 ) ;
     lua_pushlightuserdata( LuaVM, this ) ;
     lua_pushnil( LuaVM ) ;
     lua_settable( LuaVM, LUA_REGISTRYINDEX ) ;
@@ -243,8 +245,6 @@ namespace openbus {
     #if VERBOSE
       printf( "\t[parametro aCredential empilhado]\n" ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    #endif
-    #if VERBOSE
       printf( "\t[chamando metodo]\n" ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     #endif
@@ -279,10 +279,10 @@ namespace openbus {
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     #endif
       lua_pop( LuaVM, 2 ) ;
-  #if VERBOSE
-    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    printf( "[IAccessControlService::renewLease() FIM]\n\n" ) ;
-  #endif
+    #if VERBOSE
+      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+      printf( "[IAccessControlService::renewLease() FIM]\n\n" ) ;
+    #endif
       return returnValue ;
     }
 
@@ -705,8 +705,6 @@ namespace openbus {
     #if VERBOSE
       printf( "\t[IRegistryService Lua:%p C:%p]\n", ptr, registryService ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    #endif
-    #if VERBOSE
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
       printf( "[IAccessControlService::getRegistryService() FIM]\n\n" ) ;
     #endif

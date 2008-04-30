@@ -63,14 +63,16 @@ namespace openbus {
     {
     #if VERBOSE
       printf( "[Destruindo objeto IRegistryService (%p)...]\n", (void*) this ) ;
+    #endif
       lua_pushlightuserdata( LuaVM, (void *) this ) ;
       lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
+    #if VERBOSE
       printf( "[Liberando referencia Lua:%p]\n", lua_topointer( LuaVM, -1 ) ) ;
-      lua_pop( LuaVM, 1 ) ;
     #endif
-    lua_pushlightuserdata( LuaVM, (void *) this ) ;
-    lua_pushnil( LuaVM ) ;
-    lua_settable( LuaVM, LUA_REGISTRYINDEX ) ;
+      lua_pop( LuaVM, 1 ) ;
+      lua_pushlightuserdata( LuaVM, (void *) this ) ;
+      lua_pushnil( LuaVM ) ;
+      lua_settable( LuaVM, LUA_REGISTRYINDEX ) ;
     #if VERBOSE
       printf( "[Objeto IRegistryService(%p) destruido!]\n\n", (void*) this ) ;
     #endif
