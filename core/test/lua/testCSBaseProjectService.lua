@@ -1,6 +1,7 @@
 package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
+require "ftc"
 
 local CredentialManager = require "openbus.common.CredentialManager"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
@@ -21,8 +22,8 @@ local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lu
 
 oil.verbose:level(0)
 
-local key = arg[1]
-print("Chave", key)
+local projectPath = arg[1]
+print("Chave", projectPath)
 
 local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
 oil.loadidlfile(idlfile)
@@ -67,13 +68,37 @@ function main()
       print(project:getName())
       project:close()
     end
-    if key then
-      local file = projectService:getFile(key)
+    if projectPath then
+      local file = projectService:getFile(projectPath)
       if file then
         print(file:getName())
-        file:close()
+        if file:isDirectory() then
+          file:createFile("teste","")
+          file = projectService:getFile(projectPath)
+          local files = file:getFiles()
+          for k, v in pairs(files) do
+            if type(v) == "table" then
+              print(k, v:getName())
+            end
+          end
+        else
+          local dataChannel = file:getDataChannel()
+          if dataChannel then
+            print(dataChannel.host, dataChannel.port, dataChannel.fileIdentifier)
+            local ftc = ftc(dataChannel.fileIdentifier, dataChannel.writable, dataChannel.fileSize, dataChannel.host, dataChannel.port, dataChannel.accessKey)
+            print(ftc:open(false))
+            local _, size = ftc:getSize()
+            print("Tamanho do arquivo: "..size.." byte(s).")
+            print(ftc:read(size, 0))
+            print(ftc:truncate(0))
+            _, size = ftc:getSize()
+            print("Tamanho do arquivo: "..size.." byte(s).")
+            print(ftc:write(10, 0, "1234567890"))
+            ftc:close()
+          end
+        end
       else
-        print("Não foi encontrado arquivo com a chave "..key)
+        print("O arquivo "..projectPath.." não foi encontrado.")
       end
     end
   end
