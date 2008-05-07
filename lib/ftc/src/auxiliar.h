@@ -3,10 +3,10 @@
 
 #include <lua.h>
 
-#ifndef auxiliar 
-#define auxiliar 
+#ifndef LUAOPEN_API 
+#define LUAOPEN_API 
 #endif
 
-auxiliar int luaopen_auxiliar(lua_State *L);
+LUAOPEN_API int luaopen_auxiliar(lua_State *L);
 
 #endif /* __AUXILIAR__ */

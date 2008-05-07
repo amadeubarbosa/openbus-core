@@ -14,7 +14,7 @@ ${PRECMP_DIR}/auxiliar.c ${PRECMP_DIR}/auxiliar.h:
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
 DEFINES=VERBOSE
 
-SRC= auxiliar.c ftc.cpp ${PRECMP_DIR}/ftc_core.c
+SRC= ftc.cpp ${PRECMP_DIR}/ftc_core.c ${PRECMP_DIR}/auxiliar.c
 
 INCLUDES= ../include
 LDIR += ${OPENBUSLIB}
