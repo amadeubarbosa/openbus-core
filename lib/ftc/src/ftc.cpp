@@ -6,7 +6,10 @@
 
 #include <lua.hpp>
 extern "C" {
-#include "auxiliar.h"
+  #include "luasocket.h"
+  #include "oilall.h"
+  #include "auxiliar.h"
+  #include "ftc_core.h"
 }
 #include <string.h>
 
@@ -15,6 +18,15 @@ Lua_State* ftc::LuaVM = 0 ;
 void ftc::setEnv()
 {
   luaL_openlibs( LuaVM ) ;
+  /* Inicialização do OiL */
+  // preload the LuaSocket library
+  luaL_findtable(LuaVM, LUA_GLOBALSINDEX, "package.preload", 1);
+  lua_pushcfunction(LuaVM, luaopen_socket_core);
+  lua_setfield(LuaVM, -2, "socket.core");
+  // preload all OiL libraries
+  luapreload_oilall(LuaVM);
+  luaopen_ftc_verbose(LuaVM);
+  luaopen_ftc(LuaVM);
   luaopen_auxiliar( LuaVM ) ;
   lua_pop( LuaVM, 1 ) ;
 }

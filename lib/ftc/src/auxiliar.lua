@@ -21,3 +21,4 @@ function invoke( func, ... )
   end
   return select( 2, unpack( res ) )
 end
+
