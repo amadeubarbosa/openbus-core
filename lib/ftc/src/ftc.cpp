@@ -2,7 +2,7 @@
 ** ftc.cpp
 */
 
-#include "ftc.h"
+#include <ftc.h>
 
 #include <lua.hpp>
 extern "C" {
