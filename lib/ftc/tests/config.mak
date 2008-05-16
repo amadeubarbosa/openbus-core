@@ -1,10 +1,19 @@
 PROJNAME= ftctest
-APPNAME= test
+APPNAME= runner
 
-CXXTESTINC= ${HOME}/tools/cxxtest
+OPENBUSINC = ${OPENBUS_HOME}/incpath
+OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-INCLUDES= ../include ${CXXTESTINC}
-SRC= TestSuite.cpp
+INCLUDES= ../include ${OPENBUSINC}/cxxtest
+LDIR= ${OPENBUSLIB}
 
-SLIB= ../lib/${TEC_UNAME}/libftc.a
+SRC= runner.cpp
+
+LIBS= dl oilall luasocket ftc
+
+USE_LUA51=YES
+USE_STATIC=YES
+
+cxxtest:
+	cxxtestgen.pl --runner=StdioPrinter -o runner.cpp TestSuite.cpp
 

@@ -12,7 +12,8 @@ ${PRECMP_DIR}/auxiliar.c ${PRECMP_DIR}/auxiliar.h:
 	lua5.1 precompiler.lua -f auxiliar -d ../obj/${TEC_UNAME} -l ../lua auxiliar.lua
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
-DEFINES=VERBOSE
+#DEFINES=VERBOSE
+#DEFINES+=VERBOSE2
 
 SRC= ftc.cpp ${PRECMP_DIR}/ftc_core.c ${PRECMP_DIR}/auxiliar.c
 

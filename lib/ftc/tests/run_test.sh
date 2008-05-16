@@ -4,4 +4,4 @@ export LUA_PATH="?.lua;${OPENBUS_HOME}/?.lua;${OPENBUS_HOME}/core/utilities/lua/
 
 export LUA_CPATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}/lib?.so"
 
-exec ${OPENBUS_HOME}/core/bin/$TEC_UNAME/servicelauncher server.lua
+exec ${OPENBUS_HOME}/core/bin/$TEC_UNAME/servicelauncher runtests.lua $*

@@ -11,7 +11,7 @@ local tostring  = tostring
 
 local oo = require "loop.base"
 
-module("ftc.tests.FileGenerator", oo.class)
+module("FileGenerator", oo.class)
 
 local filePath
 local size

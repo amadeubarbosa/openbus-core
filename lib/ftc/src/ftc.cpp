@@ -577,7 +577,7 @@ void ftc::read( char* data, size_t nbytes, unsigned long long position )
     errmsg = lua_tostring( LuaVM, -1 ) ;
     lua_pop( LuaVM, 1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::read() FIM]\n\n" ) ;
   #endif
@@ -591,7 +591,7 @@ void ftc::read( char* data, size_t nbytes, unsigned long long position )
     const char* errmsg = lua_tostring( LuaVM, -1 ) ;
     lua_pop( LuaVM, 1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::read() FIM]\n\n" ) ;
   #endif

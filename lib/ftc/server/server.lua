@@ -82,11 +82,11 @@ while true do
       if (errcode == 2) then
     --[[VERBOSE]] LOG:log("Código de retorno FILE_NOT_FOUND enviado")
         assert(c:send(string.char(returnCode.FILE_NOT_FOUND)))
-    --[[VERBOSE]] LOG:log(false, "OPEN_READ_WRITE operation END")
+    --[[VERBOSE]] LOG:log(false, "OPEN_READ_ONLY operation END")
         break
       elseif (errcode == 13) then
         assert(c:send(string.char(returnCode.NO_PERMISSION)))
-    --[[VERBOSE]] LOG:log(false, "OPEN_READ_WRITE operation END")
+    --[[VERBOSE]] LOG:log(false, "OPEN_READ_ONLY operation END")
         break
       else
     --[[VERBOSE]] LOG:log("Código de retorno OK enviado")
@@ -119,13 +119,14 @@ while true do
     --[[VERBOSE]] LOG:log(false, "OPEN_READ_WRITE operation END")
     elseif (opcode == operation.CLOSE) then
     --[[VERBOSE]] LOG:log(true, "CLOSE operation BEGIN")
+      assert(ct.fp:close())
       assert(c:close())
     --[[VERBOSE]] LOG:log(false, "CLOSE operation END")
       break
     elseif (opcode == operation.TRUNCATE) then
     --[[VERBOSE]] LOG:log(true, "TRUNCATE operation BEGIN")
       local size = OctBytes2Long(assert(c:receive(8)))
-    --[[VERBOSE]] LOG:log(true, "New size: ", size)
+    --[[VERBOSE]] LOG:log("New size: ", size)
       local content = assert(ct.fp:read(size))
       assert(ct.fp:seek("set"))
       assert(ct.fp:write(content))
@@ -175,9 +176,10 @@ while true do
       local nbytes = OctBytes2Long(assert(c:receive(8)))
     --[[VERBOSE]] LOG:log("Bytes to write:", nbytes)
       local content = assert(c:receive(nbytes))
+    --[[VERBOSE]] LOG:log("Content:", content)
       assert(ct.fp:seek("set", position))
-      print(ct.fp:write(content))
-    --[[VERBOSE]] LOG:log(true, "WRITE operation END")
+      assert(ct.fp:write(content))
+    --[[VERBOSE]] LOG:log(false, "WRITE operation END")
     end
   end
 end
