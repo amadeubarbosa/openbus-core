@@ -1,7 +1,8 @@
 PROJNAME= ftc
 LIBNAME= ${PROJNAME}
 
-OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
+OPENBUSINC= ${OPENBUS_HOME}/incpath
+OPENBUSLIB= ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 PRECMP_DIR= ../obj/${TEC_UNAME}
 
@@ -17,7 +18,7 @@ ${PRECMP_DIR}/auxiliar.c ${PRECMP_DIR}/auxiliar.h:
 
 SRC= ftc.cpp ${PRECMP_DIR}/ftc_core.c ${PRECMP_DIR}/auxiliar.c
 
-INCLUDES= ../include
+INCLUDES= ../include ${OPENBUSINC}/luasocket2 ${OPENBUSINC}/oil04
 LDIR += ${OPENBUSLIB}
 
 LIBS= luasocket oilall
