@@ -49,18 +49,18 @@ class TestSuite: public CxxTest::TestSuite {
       }
     }
 
-//     void testOpenNO_PERMISSION()
-//     {
-//       const char* id = "/tmp/NO_PERMISSION" ;
-//       bool writable = true ;
-//       unsigned long size = 20 ;
-//       const char* ACCESS_KEY = "Key" ;
-//       ftc* ch = new ftc( id, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
-//       TS_ASSERT_THROWS( ch->open( true ), Error::NO_PERMISSION ) ;
-//       TS_ASSERT( !ch->isOpen() ) ;
-//       TS_ASSERT_THROWS( ch->close(), Error::FILE_NOT_OPENED ) ;
-//       delete ch ;
-//     }
+//   void testOpenNO_PERMISSION()
+//   {
+//     const char* id = "/tmp/NO_PERMISSION" ;
+//     bool writable = true ;
+//     unsigned long size = 20 ;
+//     const char* ACCESS_KEY = "Key" ;
+//     ftc* ch = new ftc( id, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
+//     TS_ASSERT_THROWS( ch->open( true ), Error::NO_PERMISSION ) ;
+//     TS_ASSERT( !ch->isOpen() ) ;
+//     TS_ASSERT_THROWS( ch->close(), Error::FILE_NOT_OPENED ) ;
+//     delete ch ;
+//   }
 
     void testOpen20b()
     {
@@ -74,7 +74,6 @@ class TestSuite: public CxxTest::TestSuite {
       delete ch ;
     }
 
-  /* especializar exceção...*/
     void testWritableANDReadOnlyFALSE()
     {
       sprintf(buffer, "%s/20b", SERVER_TMP_PATH) ;
@@ -133,21 +132,21 @@ class TestSuite: public CxxTest::TestSuite {
       delete ch ;
     }
 
-//     void testGETPOSITION()
-//     {
-//       const char* id = "/tmp/20b" ;
-//       bool writable = true ;
-//       unsigned long size = 20 ;
-//       const char* ACCESS_KEY = "Key" ;
-//       ftc* ch = new ftc( id, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
-//       TS_ASSERT_THROWS_NOTHING( ch->open( false ) ) ;
-//       size_t nbytes = 2 ;
-//       char* data = new char[ nbytes ] ;
-//       ch->read( data, nbytes, 0 );
-//       TS_ASSERT_EQUALS( ch->getPosition(), (unsigned long) 2 ) ;
-//       TS_ASSERT_THROWS_NOTHING( ch->close() ) ;
-//       delete ch ;
-//     }
+//   void testGETPOSITION()
+//   {
+//     const char* id = "/tmp/20b" ;
+//     bool writable = true ;
+//     unsigned long size = 20 ;
+//     const char* ACCESS_KEY = "Key" ;
+//     ftc* ch = new ftc( id, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
+//     TS_ASSERT_THROWS_NOTHING( ch->open( false ) ) ;
+//     size_t nbytes = 2 ;
+//     char* data = new char[ nbytes ] ;
+//     ch->read( data, nbytes, 0 );
+//     TS_ASSERT_EQUALS( ch->getPosition(), (unsigned long) 2 ) ;
+//     TS_ASSERT_THROWS_NOTHING( ch->close() ) ;
+//     delete ch ;
+//   }
 
     void testGETSIZE()
     {
@@ -161,19 +160,19 @@ class TestSuite: public CxxTest::TestSuite {
       delete ch ;
     }
 
-    void testREAD()
-    {
-      sprintf(buffer, "%s/10b", SERVER_TMP_PATH) ;
-      bool writable = true ;
-      unsigned long size = 10 ;
-      ftc* ch = new ftc( buffer, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
-      TS_ASSERT_THROWS_NOTHING( ch->open( false ) ) ;
-      size_t nbytes = 7 ;
-      char* data = new char[ nbytes ] ;
-      ch->read( data, nbytes, 0 ) ;
-      TS_ASSERT_THROWS_NOTHING( ch->close() ) ;
-      delete ch ;
-    }
+   void testREAD()
+   {
+     sprintf(buffer, "%s/10b", SERVER_TMP_PATH) ;
+     bool writable = true ;
+     unsigned long size = 10 ;
+     ftc* ch = new ftc( buffer, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
+     TS_ASSERT_THROWS_NOTHING( ch->open( false ) ) ;
+     size_t nbytes = 7 ;
+     char* data = new char[ nbytes ] ;
+     ch->read( data, nbytes, 0 ) ;
+     TS_ASSERT_THROWS_NOTHING( ch->close() ) ;
+     delete ch ;
+   }
 
     void testWRITE()
     {
@@ -189,23 +188,23 @@ class TestSuite: public CxxTest::TestSuite {
       delete ch ;
     }
 
-//     void testWRITE1Mb()
-//     {
-//       sprintf(buffer, "%s/1WMb", SERVER_TMP_PATH) ;
-//       bool writable = true ;
-//       unsigned long size = 1000000 ;
-//       ftc* ch = new ftc( buffer, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
-//       TS_ASSERT_THROWS_NOTHING( ch->open( false ) ) ;
-//       size_t nbytes = size ;
-//       char* data = new char[ size ] ;
-//       unsigned int x ;
-//       for( x = 0; x < size ; x++ ) {
-//         data[ x ] = '*' ;
-//       }
-//       try { ch->write( data, nbytes, 0 ) ; } catch (const char* m) { printf("%s",m); }
-//       TS_ASSERT_THROWS_NOTHING( ch->close() ) ;
-//       delete ch ;
-//     }
+    void testWRITE1Mb()
+    {
+      sprintf(buffer, "%s/1WMb", SERVER_TMP_PATH) ;
+      bool writable = true ;
+      unsigned long size = 1000000 ;
+      ftc* ch = new ftc( buffer, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
+      TS_ASSERT_THROWS_NOTHING( ch->open( false ) ) ;
+      size_t nbytes = size ;
+      char* data = new char[ size ] ;
+      unsigned int x ;
+      for( x = 0; x < size ; x++ ) {
+        data[ x ] = '*' ;
+      }
+      try { ch->write( data, nbytes, 0 ) ; } catch (const char* m) { printf("%s",m); }
+      TS_ASSERT_THROWS_NOTHING( ch->close() ) ;
+      delete ch ;
+    }
 
     void testREAD10Mb()
     {
@@ -355,10 +354,10 @@ class TestSuite: public CxxTest::TestSuite {
       struct timeval t_start, t_finish ;
       sprintf(buffer, "%s/3Gb", SERVER_TMP_PATH) ;
       bool writable = true ;
-      unsigned long size = 3000000000LL ;
+      unsigned long long size = 3000000000LL ;
       ftc* ch = new ftc( buffer, writable, size, SERVER_HOST, SERVER_PORT, ACCESS_KEY) ;
-      TS_ASSERT_THROWS_NOTHING( ch->open( false ) ) ;
-      size_t nbytes = 3000000000LL ;
+      TS_ASSERT_THROWS_NOTHING( ch->open( true ) ) ;
+      size_t nbytes = 500000000 ;
       char* data = new char[ nbytes ] ;
       gettimeofday( &t_start, NULL ) ;
       sprintf(buffer, "%s/3GbRCVED", LOCAL_TMP_PATH) ;
@@ -397,7 +396,7 @@ class TestSuite: public CxxTest::TestSuite {
         ch->read( data+300000000, nbytes/10, 1300000000 ) ;
         ch->read( data+350000000, nbytes/10, 1350000000 ) ;
         ch->read( data+400000000, nbytes/10, 1400000000 ) ;
-        ch>read( data+450000000, nbytes/10, 1450000000 ) ;
+        ch->read( data+450000000, nbytes/10, 1450000000 ) ;
         fwrite( data, sizeof(data[0]), 500000000, fp ) ;
         ch->read( data, nbytes/10, 1500000000 ) ;
         ch->read( data+50000000,  nbytes/10, 1550000000 ) ;

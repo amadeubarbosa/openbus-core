@@ -288,8 +288,8 @@ function read(self, nbytes, position, userdata)
   if (nbytes > available) then
     nbytes = available
   end
-  self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(nbytes)
 -- [[VERBOSE]] LOG:read("nbytes = ", nbytes," position = ", position)
+  self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(nbytes)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
   -- [[VERBOSE]] LOG:open("ERRO '", errmsg, "'")
@@ -321,8 +321,8 @@ function write(self, nbytes, position, data)
   if (nbytes > available) then
     nbytes = available
   end
-  self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(nbytes)
 -- [[VERBOSE]] LOG:write("nbytes = ", nbytes," position = ", position)
+  self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(nbytes)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
   -- [[VERBOSE]] LOG:open("ERRO '", errmsg, "'")
