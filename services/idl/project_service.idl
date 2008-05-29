@@ -2,6 +2,7 @@
 #define PS_IDL
 
 #include "core.idl"
+#include "data_service.idl"
 
 module openbusidl {
 
@@ -13,7 +14,7 @@ module ps {
 interface IFile;
 typedef sequence<IFile> FileList;
 
-interface IProject {
+interface IProject : openbusidl::ds::IDataEntry {
   string getId();
   string getName();
   string getOwner();
@@ -31,7 +32,7 @@ struct DataChannel {
   long long fileSize;
 };
 
-interface IFile {
+interface IFile : openbusidl::ds::IDataEntry {
   string getName();
   string getPath();
   long long getSize();
@@ -48,14 +49,6 @@ interface IFile {
   boolean copyFile(in IFile newParent);
   DataChannel getDataChannel();
   void close();
-};
-
-interface IProjectService {
-  ProjectList getProjects();
-  IProject getProject (in string name);
-  IFile getFile(in string path);
-  IProject createProject(in string name);
-  boolean deleteProject(in IProject aProject);
 };
 
 };

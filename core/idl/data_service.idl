@@ -1,0 +1,195 @@
+#ifndef DS_IDL
+#define DS_IDL
+
+#include "scs.idl"
+
+module openbusidl {
+
+/**
+ * \brief Módulo do Serviço de Dados
+ */
+module ds {
+/** \brief Representa que uma operação não suportada foi executada. */
+exception OperationNotSupported {};
+/** \brief Representa um tipo desconhecido. */
+exception UnknownType {};
+
+/** \brief Representa uma sequência de valores. */
+typedef sequence<any> ValueList;
+/** \brief Representa o nome de uma propriedade. */
+typedef string PropertyName;
+/** \brief Representa o valor de uma propriedade. */
+typedef string PropertyValue;
+
+/** \brief Representa uma propriedade. */
+struct Property {
+  PropertyName name; /**< \brief Nome. */
+  PropertyValue value; /**< \brief Valor. */
+};
+typedef sequence<Property> PropertyList;
+
+typedef string URI;
+/** \brief Representa o identificador unívoco de um dado. */
+struct DataKey {
+  scs::core::ComponentId service_id; /**< \brief O identificador do serviço responsável pelo dado. */
+  URI actual_data_id; /**< \brief O identificador do dado real. */
+};
+
+/** \brief Representa um dado. */
+struct Data {
+  DataKey key; /**< \brief O identificador unívoco. */
+  PropertyList properties /**< \brief As propriedades. */;
+};
+typedef sequence<Data> DataList;
+
+interface IDataService;
+/**
+ * \brief Representa um dado obtido através de um Serviço de Dados.
+ */
+interface IDataEntry {
+  /**
+   * \brief Obtém o identificador unívoco do objeto.
+   *
+   * Através do identificador unívoco é possível identificar, além do objeto
+   * em si, o serviço que o hospeda. Ou seja, dado o identificador de um
+   * objeto é possível achá-lo no barramento de forma unívoca.
+   * É importante não amarrar o identificador de um objeto a um servidor
+   * específico. No caso de um serviço mudar de servidor, devemos ainda ser
+   * capazes de achar um objeto seu através do identificador.
+   *
+   * \return O identificador unívoco do objeto.
+   */
+  DataKey getKey();
+
+  /**
+   * \brief Obtém o Serviço de Dados de onde o dado se originou.
+   *
+   * \return O Serviço de Dados de onde o dado se originou.
+   */
+  IDataService getDataService();
+
+  /**
+   * \brief Obtém a faceta atual do dado. Esta informação deve ser utilizada
+   * para se fazer um \c narrow para um tipo mais específico.
+   *
+   * \return A faceta atual do dado.
+   */
+  string getFacetInterface();
+
+  /**
+   * \brief Copia o conteúdo do objeto cujo identificador seja fornecido para este objeto.
+   *
+   * Todo o conteúdo deste objeto será sobre-escrito com o conteúdo
+   * do objeto indicado.
+   * Essa operação é de implementação opcional nas especializações do tipo.
+   * Caso uma especialização opte por implementar apenas uma entre esta e a
+   * copyTo, o ideal é que esta seja escolhida para ser implementada.
+   *
+   * \param [in] source_key A chave do objeto de origem.
+   *
+   * \exception OperationNotSupported Caso esta operação não seja suportada.
+   * \exception UnknownType Caso nenhum tipo oferecido pelo objeto de origem
+   * seja conhecido.
+   *
+   */
+  void copyFrom(in DataKey source_key) raises (OperationNotSupported,
+      UnknownType);
+
+  /**
+   * \brief Copia o conteúdo deste objeto para o objeto cujo identificador seja fornecido.
+   *
+   * Todo o conteúdo do objeto indicado será sobre-escrito com
+   * o conteúdo deste objeto.
+   * Essa operação é de implementação opcional nas especializações do tipo.
+   *
+   * \param [in] dest_key A chave do objeto de destino.
+   *
+   * \exception OperationNotSupported Caso esta operação não seja suportada.
+   * \exception UnknownType Caso nenhum tipo oferecido pelo objetoseja
+   * conhecido pelo objeto de destino.
+   */
+  void copyTo(in DataKey dest_key) raises (OperationNotSupported,
+      UnknownType);
+
+  any getAttr(in string attr_name);
+  any getAttrs(in scs::core::NameList attrs_name);
+  void setAttr(in string attr_name, in any attr_value);
+  void setAttrs(in scs::core::NameList attrs_name, in ValueList attrs_value);
+};
+
+/**
+ * \brief Representa um Serviço de Dados.
+ */
+interface IDataService {
+  /**
+   * \brief Obtém todos os dados que representam as raízes da hierarquia.
+   *
+   * \return Os dados que representam as raízes da hierarquia.
+   */
+  DataList getRoots();
+
+  /**
+   * \brief Obtém os filhos do objeto representado por uma chave.
+   *
+   * \param [in] key A chave do objeto pai.
+   *
+   * \return Os filhos.
+   */
+  DataList getChildren(in DataKey key);
+
+  /**
+   * \brief Cria um dado a partir de um dado de origem.
+   *
+   * \param [in] parent_key
+   * \param [in] source_key
+   *
+   * \return
+   *
+   * \exception OperationNotSupported
+   * \exception UnknownType
+   */
+  DataKey createDataFrom(in DataKey parent_key, in DataKey source_key) raises
+      (OperationNotSupported, UnknownType);
+
+  /**
+   * \brief Remove um dado.
+   *
+   * \param [in] key A chave do dado.
+   */
+  boolean deleteData(in DataKey key);
+
+  /**
+   * \brief Obtém um dado representado por uma chave.
+   *
+   * \param [in] key A chave.
+   *
+   * \return O dado, ou \c NULL, caso não exista dado com a chave indicada.
+   */
+  Data getData(in DataKey key);
+
+  /**
+   * \brief Obtém um dado representado por uma chave.
+   *
+   * \param [in] key A chave.
+   * \param [in] facet_interface O nome d
+   *
+   * \return A faceta para transferência do dado, ou \c NULL, caso não exista
+   * dado com a chave indicada.
+   */
+  IDataEntry getDataFacet(in DataKey key, in string facet_interface);
+
+  /**
+   * \brief Obtém os nomes das facetas disponibilizadas por um dado.
+   *
+   * \param [in] key A chave identificadora do dado.
+   *
+   * \return Os nomes das facetas.
+   */
+  scs::core::NameList getFacetInterfaces(in DataKey key);
+};
+
+};
+
+};
+
+#endif
