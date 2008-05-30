@@ -16,17 +16,17 @@ exception UnknownType {};
 
 /** \brief Representa uma sequência de valores. */
 typedef sequence<any> ValueList;
-/** \brief Representa o nome de uma propriedade. */
-typedef string PropertyName;
-/** \brief Representa o valor de uma propriedade. */
-typedef string PropertyValue;
+/** \brief Representa o nome de um metadado. */
+typedef string MetadataName;
+/** \brief Representa o valor de um metadado. */
+typedef string MetadataValue;
 
-/** \brief Representa uma propriedade. */
-struct Property {
-  PropertyName name; /**< \brief Nome. */
-  PropertyValue value; /**< \brief Valor. */
+/** \brief Representa um metadado. */
+struct Metadata {
+  MetadataName name; /**< \brief Nome do metadado. */
+  MetadataValue value; /**< \brief Valor do metadado. */
 };
-typedef sequence<Property> PropertyList;
+typedef sequence<Metadata> MetadataList;
 
 typedef string URI;
 /** \brief Representa o identificador unívoco de um dado. */
@@ -38,7 +38,7 @@ struct DataKey {
 /** \brief Representa um dado. */
 struct Data {
   DataKey key; /**< \brief O identificador unívoco. */
-  PropertyList properties /**< \brief As propriedades. */;
+  MetadataList metadata; /**< \brief Os metadados. */
 };
 typedef sequence<Data> DataList;
 
@@ -111,10 +111,44 @@ interface IDataEntry {
   void copyTo(in DataKey dest_key) raises (OperationNotSupported,
       UnknownType);
 
+  /**
+   * Obtém o valor de um atributo.
+   *
+   * \param [in] attr_name Nome do atributo.
+   *
+   * \return O atributo, ou \c NULL, caso não exista atributo com o nome
+   * indicado.
+   */
   any getAttr(in string attr_name);
-  any getAttrs(in scs::core::NameList attrs_name);
-  void setAttr(in string attr_name, in any attr_value);
-  void setAttrs(in scs::core::NameList attrs_name, in ValueList attrs_value);
+
+  /**
+   * Obtém os valores de um conjunto de atributos.
+   *
+   * \param [in] attrs_name Os nomes dos atributos.
+   *
+   * \return Os atributos, na ordem em que foram solicitados.
+   */
+  ValueList getAttrs(in scs::core::NameList attrs_name);
+
+  /**
+   * Define o valor de um atributo.
+   *
+   * \param [in] attr_name O nome do atributo.
+   * \param [in] attr_value O valor do atributo.
+   *
+   * \return \c true, caso o atributo seja definido, ou \c false, caso contrário.
+   */
+  boolean setAttr(in string attr_name, in any attr_value);
+
+  /**
+   * Define os valores de um conjunto de atributos.
+   *
+   * \param [in] attrs_name Os nomes dos atributos.
+   * \param [in] attrs_value Os valores dos atributos, na mesma ordem dos nomes.
+   *
+   * \return \c true, caso os atributos sejam definidos, ou \c false, caso contrário.
+   */
+  boolean setAttrs(in scs::core::NameList attrs_name, in ValueList attrs_value);
 };
 
 /**
@@ -140,13 +174,15 @@ interface IDataService {
   /**
    * \brief Cria um dado a partir de um dado de origem.
    *
-   * \param [in] parent_key
-   * \param [in] source_key
+   * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho)
+   * será criado.
+   * \param [in] source_key A chave do dado de origem.
    *
-   * \return
+   * \return A chave do dado criado.
    *
-   * \exception OperationNotSupported
-   * \exception UnknownType
+   * \exception OperationNotSupported A operação não está implementada para os
+   * tipos de dado deste Serviço.
+   * \exception UnknownType O dado não possui tipos suportados para o novo dado.
    */
   DataKey createDataFrom(in DataKey parent_key, in DataKey source_key) raises
       (OperationNotSupported, UnknownType);
@@ -171,7 +207,7 @@ interface IDataService {
    * \brief Obtém um dado representado por uma chave.
    *
    * \param [in] key A chave.
-   * \param [in] facet_interface O nome d
+   * \param [in] facet_interface O nome da interface que se deseja.
    *
    * \return A faceta para transferência do dado, ou \c NULL, caso não exista
    * dado com a chave indicada.
