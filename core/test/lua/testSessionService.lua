@@ -67,11 +67,9 @@ Suite = {
       Check.assertNotEquals(id1, id2)
       session:removeMember(id1)
       session:removeMember(id2)
-print("FIM TESTE")
     end,
 
     afterTestCase = function(self)
-print("FIM TUDO")
       self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()
     end,
