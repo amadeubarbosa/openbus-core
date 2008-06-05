@@ -1,3 +1,8 @@
+--
+-- Teste de integração do Serviço de Projetos do CSBase.
+--
+-- $Id$
+--
 package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
@@ -8,12 +13,12 @@ local ClientInterceptor = require "openbus.common.ClientInterceptor"
 
 local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
 if CORE_IDL_DIR == nil then
-  io.stderr:write("A variavel CORE_IDL_DIR nao foi definida.\n")
+  io.stderr:write("A variável CORE_IDL_DIR não foi definida.\n")
   os.exit(1)
 end
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
-  io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+  io.stderr:write("A variável IDLPATH_DIR não foi definida.\n")
   os.exit(1)
 end
 

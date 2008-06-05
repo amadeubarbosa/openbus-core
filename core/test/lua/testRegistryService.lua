@@ -1,5 +1,5 @@
 --
--- Testes unitï¿½rios do Serviï¿½o de Registro
+-- Testes unitários do Serviço de Registro
 --
 -- $Id$
 --

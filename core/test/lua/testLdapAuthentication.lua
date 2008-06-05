@@ -1,7 +1,12 @@
+--
+-- Testa o funcionamento do lualdap.
+-- 
+-- $Id$
+--
 require "lualdap"
 
 if #arg ~= 3 then
-    print("Parametros invalidos !!!")
+    print("Parâmetros inválidos !!!")
     print("Use testLdapAuthentication.lua <host>[:port] <user> <password>")
     os.exit(0)
 end
@@ -15,5 +20,5 @@ if connection == nil then
     print(errorMessage)
     os.exit(1)
 end
-print("Usuario "..user.." autenticado com sucesso.")
+print("Usuário "..user.." autenticado com sucesso.")
 connection:close()

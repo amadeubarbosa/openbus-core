@@ -1,3 +1,8 @@
+--
+-- Teste de integração do Serviço de Dados do CSBase.
+--
+-- $Id$
+--
 package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
@@ -12,7 +17,7 @@ if CORE_IDL_DIR == nil then
 end
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
-  io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+  io.stderr:write("A variável IDLPATH_DIR não foi definida.\n")
   os.exit(1)
 end
 
