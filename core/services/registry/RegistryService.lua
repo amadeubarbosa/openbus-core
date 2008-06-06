@@ -225,8 +225,10 @@ function createPropertyIndex(self, offerProperties, member)
     end
   end
 
-  local memberName = member:getComponentId().name
+  local componentId = member:getComponentId()
+  properties["component_id"] = componentId.name..":"..componentId.version
 
+  local memberName = componentId.name
   -- se não foi definida uma propriedade "facets", discriminando as facetas
   -- disponibilizadas, assume que todas as facetas do membro são oferecidas
   if not properties["facets"] then
