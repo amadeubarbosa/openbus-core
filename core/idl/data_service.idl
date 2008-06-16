@@ -156,6 +156,21 @@ interface IDataService {
   DataList getChildren(in DataKey key);
 
   /**
+   * \brief Cria um dado.
+   *
+   * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho)
+   * será criado.
+   * \param [in] metadata Dados sobre o dado (metadados) que será criado.
+   *
+   * \return A chave do dado criado.
+   *
+   * \exception OperationNotSupported A operação não está implementada para os
+   * tipos de dado deste Serviço.
+   */
+  DataKey createData(in DataKey parent_key, in MetadataList metadata) raises
+      (OperationNotSupported);
+
+  /**
    * \brief Cria um dado a partir de um dado de origem.
    *
    * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho)
