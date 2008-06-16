@@ -96,22 +96,6 @@ interface IDataEntry {
       UnknownType);
 
   /**
-   * \brief Copia o conteúdo deste objeto para o objeto cujo identificador seja fornecido.
-   *
-   * Todo o conteúdo do objeto indicado será sobre-escrito com
-   * o conteúdo deste objeto.
-   * Essa operação é de implementação opcional nas especializações do tipo.
-   *
-   * \param [in] dest_key A chave do objeto de destino.
-   *
-   * \exception OperationNotSupported Caso esta operação não seja suportada.
-   * \exception UnknownType Caso nenhum tipo oferecido pelo objetoseja
-   * conhecido pelo objeto de destino.
-   */
-  void copyTo(in DataKey dest_key) raises (OperationNotSupported,
-      UnknownType);
-
-  /**
    * Obtém o valor de um atributo.
    *
    * \param [in] attr_name Nome do atributo.
