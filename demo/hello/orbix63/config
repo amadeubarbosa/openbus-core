@@ -1,0 +1,9 @@
+
+ORBIX_HOME=/opt/iona34/asp/6.3
+
+ORBIXBIN=${ORBIX_HOME}/bin
+ORBIXINC=${ORBIX_HOME}/include
+ORBIXLDIR=${ORBIX_HOME}/lib
+
+#Descomente a linha abaixo para ativar o verbose.
+#VERBOSE= VERBOSE
