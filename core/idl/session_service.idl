@@ -61,11 +61,11 @@ interface ISession : SessionEventSink {
     /**
      * \brief Remove um membro da sessão.
      *
-     * \param memberIdentifier O identificador do membro.
+     * \param identifier O identificador do membro.
      *
      * \return \c true caso o membro tenha sido removido, ou \c false, caso contrário.
      */
-    boolean removeMember(in MemberIdentifier memberIdentifier);
+    boolean removeMember(in MemberIdentifier identifier);
     /**
      * \brief Obtém todos os membros da sessão.
      *
@@ -86,12 +86,12 @@ interface ISessionService {
      *
      * \param[in] member referência para o membro que está criando a sessão
      * \param[out] session A sessão criada.
-     * \param[out] memberIdentifier A identificação do membro para a sessão
+     * \param[out] identifier A identificação do membro para a sessão
      *
      * \return \c true, caso a sessão tenha sido criada, ou \c false, caso contrário.
      */
     boolean createSession(in scs::core::IComponent member,
-        out ISession session, out MemberIdentifier memberIdentifier);
+        out ISession session, out MemberIdentifier identifier);
     /**
      * \brief Obtém a sessão associada a uma credencial.
      *

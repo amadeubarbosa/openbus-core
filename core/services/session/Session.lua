@@ -12,104 +12,104 @@ local Log = require "openbus.common.Log"
 local oop = require "loop.base"
 
 ---
---Sessï¿½o compartilhada pelos membros associados a uma mesma credencial.
+--Sessão compartilhada pelos membros associados a uma mesma credencial.
 ---
 module("core.services.session.Session", oop.class)
 
 ---
---Cria a sessï¿½o.
+--Cria a sessão.
 --
---@param identifier O identificador da sessï¿½o.
---@param credential A credencial relacionada ï¿½ sessï¿½o.
+--@param identifier O identificador da sessão.
+--@param credential A credencial relacionada a sessão.
 --
---@return A sessï¿½o.
+--@return A sessão.
 ---
 function __init(self, identifier, credential)
-  Log:service("Construindo sessï¿½o com id "..tostring(identifier))
+  Log:service("Construindo sessão com id "..tostring(identifier))
   return oop.rawnew(self, {identifier = identifier, credential = credential,
                            sessionMembers = {}, eventSinks = {}})
 end
 
 ---
---Obtï¿½m o identificador da sessï¿½o.
+--Obtï¿½m o identificador da sessão.
 --
---@return O identificador da sessï¿½o.
+--@return O identificador da sessão.
 ---
 function getIdentifier(self)
   return self.identifier
 end
 
 ---
---Adiciona um membro ï¿½ sessï¿½o.
+--Adiciona um membro a sessão.
 --
 --@param member O membro a ser adicionado.
 --
---@return O identificador do membro na sessï¿½o.
+--@return O identificador do membro na sessão.
 ---
 function addMember(self, member)
   local memberName = member:getComponentId().name
-  Log:service("Membro "..memberName.." adicionado ï¿½ sessï¿½o")
-  local memberIdentifier = self:generateMemberIdentifier()
-  self.sessionMembers[memberIdentifier] = member
+  Log:service("Membro "..memberName.." adicionado a sessão")
+  local identifier = self:generateMemberIdentifier()
+  self.sessionMembers[identifier] = member
 
   -- verifica se o membro recebe eventos
   local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
   local eventSink = member:getFacet(eventSinkInterface)
   if eventSink then
-    Log:service("Membro "..memberName.." receberï¿½ eventos")
-    self.eventSinks[memberIdentifier] =  oil.narrow(eventSink,
+    Log:service("Membro "..memberName.." receberá eventos")
+    self.eventSinks[identifier] =  oil.narrow(eventSink,
         eventSinkInterface)
   else
-    Log:service("Membro "..memberName.." nï¿½o receberï¿½ eventos")
+    Log:service("Membro "..memberName.." não receberá eventos")
   end
-  return memberIdentifier
+  return identifier
 end
 
 ---
---Remove um membro da sessï¿½o.
+--Remove um membro da sessão.
 --
---@param memberIdentifier O identificador do membro na sessï¿½o.
+--@param identifier O identificador do membro na sessão.
 --
---@return true caso o membro tenha sido removido da sessï¿½o, ou false caso
---contrï¿½rio.
+--@return true caso o membro tenha sido removido da sessão, ou false caso
+--contrário.
 ---
-function removeMember(self, memberIdentifier)
-  member = self.sessionMembers[memberIdentifier]
+function removeMember(self, identifier)
+  member = self.sessionMembers[identifier]
   if not member then
     return false
   end
-  Log:service("Membro "..member:getComponentId().name.." removido da sessï¿½o")
-  self.sessionMembers[memberIdentifier] = nil
-  self.eventSinks[memberIdentifier] = nil
+  Log:service("Membro "..member:getComponentId().name.." removido da sessão")
+  self.sessionMembers[identifier] = nil
+  self.eventSinks[identifier] = nil
   return true
 end
 
 ---
---Repassa evento para membros da sessï¿½o.
+--Repassa evento para membros da sessão.
 --
 --@param event O evento.
 ---
 function push(self, event)
-  Log:service("Repassando evento "..event.type.." para membros de sessï¿½o")
+  Log:service("Repassando evento "..event.type.." para membros de sessão")
   for _, sink in pairs(self.eventSinks) do
     sink:push(event)
   end
 end
 
 ---
---Solicita a desconexï¿½o de todos os membros da sessï¿½o.
+--Solicita a desconexão de todos os membros da sessão.
 ---
 function disconnect(self)
-  Log:service("Desconectando os membros da sessï¿½o")
+  Log:service("Desconectando os membros da sessão")
   for _, sink in pairs(self.eventSinks) do
     sink:disconnect()
   end
 end
 
 ---
---Obtï¿½m a lista de membros de uma sessï¿½o.
+--Obtém a lista de membros de uma sessão.
 --
---@return Os membros da sessï¿½o.
+--@return Os membros da sessão.
 ---
 function getMembers(self)
   local members = {}
@@ -120,9 +120,9 @@ function getMembers(self)
 end
 
 ---
---Gera um identificador de membros de sessï¿½o.
+--Gera um identificador de membros de sessão.
 --
---@return O identificador de membro de sessï¿½o.
+--@return O identificador de membro de sessão.
 ---
 function generateMemberIdentifier()
   return luuid.new("time")
