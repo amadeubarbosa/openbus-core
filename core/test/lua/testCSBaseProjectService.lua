@@ -27,8 +27,8 @@ local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lu
 
 oil.verbose:level(0)
 
-local projectPath = arg[1]
-print("Chave", projectPath)
+local actualDataId = arg[1]
+print("ID: ", actualDataId)
 
 local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
 oil.loadidlfile(idlfile)
@@ -65,45 +65,62 @@ function main()
   else
     local serviceOffer = serviceOffers[1]
     print(serviceOffer.description)
-    local projectServiceInterface = "IDL:openbusidl/ps/IProjectService:1.0"
-    local projectService = serviceOffer.member:getFacet(projectServiceInterface)
-    projectService = oil.narrow(projectService, projectServiceInterface)
-    local projects = projectService:getProjects()
-    for _, project in ipairs(projects) do
-      print(project:getName())
-      project:close()
-    end
-    if projectPath then
-      local file = projectService:getFile(projectPath)
-      if file then
-        print(file:getName())
-        if file:isDirectory() then
-          file:createFile("teste","")
-          file = projectService:getFile(projectPath)
-          local files = file:getFiles()
-          for k, v in pairs(files) do
-            if type(v) == "table" then
-              print(k, v:getName())
-            end
+    local dataServiceInterface = "IDL:openbusidl/ds/IDataService:1.0"
+    local dataService = serviceOffer.member:getFacet(dataServiceInterface)
+    dataService = oil.narrow(dataService, dataServiceInterface)
+    if actualDataId then
+      local dataKey = {
+        service_id = serviceOffer.member:getComponentId(),
+        actual_data_id = actualDataId
+      }
+      local facetInterface = dataService:getFacetInterfaces(dataKey)
+      if #facetInterface > 0 then
+        local projectInterface = "IDL:openbusidl/ps/IProject:1.0"
+        if facetInterface[1] == projectInterface then
+          local project = dataService:getDataFacet(dataKey, projectInterface)
+          if project then
+            print(project:getFacetInterface())
+            print((project:getAttr("NAME"))._anyval)
           end
         else
-          local dataChannel = file:getDataChannel()
-          if dataChannel then
-            print(dataChannel.host, dataChannel.port, dataChannel.fileIdentifier)
-            local ftc = ftc(dataChannel.fileIdentifier, dataChannel.writable, dataChannel.fileSize, dataChannel.host, dataChannel.port, dataChannel.accessKey)
-            print(ftc:open(false))
-            local _, size = ftc:getSize()
-            print("Tamanho do arquivo: "..size.." byte(s).")
-            print(ftc:read(size, 0))
-            print(ftc:truncate(0))
-            _, size = ftc:getSize()
-            print("Tamanho do arquivo: "..size.." byte(s).")
-            print(ftc:write(10, 0, "1234567890"))
-            ftc:close()
+          local fileInterface = "IDL:openbusidl/ps/IFile:1.0"
+          local data = dataService:getDataFacet(dataKey, fileInterface)
+          if data then
+            print(data:getFacetInterface())
+            print((data:getAttr("NAME"))._anyval)
+            print((data:getAttr("ABSOLUTE_PATH"))._anyval)
+            print((data:getAttr("TYPE"))._anyval)
+            local file = oil.narrow(data, fileInterface)
+            if file:isDirectory() then
+              file:createFile("teste","")
+              file = projectService:getFile(projectPath)
+              local files = file:getFiles()
+              for k, v in pairs(files) do
+                if type(v) == "table" then
+                  print(k, v:getName())
+                end
+              end
+              print(data:deleteData(file:getKey()))
+            else
+              local dataChannel = file:getDataChannel()
+              if dataChannel then
+                print(dataChannel.host, dataChannel.port, dataChannel.fileIdentifier)
+                local ftc = ftc(dataChannel.fileIdentifier, dataChannel.writable, dataChannel.fileSize, dataChannel.host, dataChannel.port, dataChannel.accessKey)
+                print(ftc:open(false))
+                local _, size = ftc:getSize()
+                print("Tamanho do arquivo: "..size.." byte(s).")
+                print(ftc:read(size, 0))
+                print(ftc:truncate(0))
+                _, size = ftc:getSize()
+                print("Tamanho do arquivo: "..size.." byte(s).")
+                print(ftc:write(10, 0, "1234567890"))
+                ftc:close()
+              end
+            end
           end
         end
       else
-        print("O arquivo "..projectPath.." não foi encontrado.")
+        print("O "..actualDataId.." não foi encontrado.")
       end
     end
   end

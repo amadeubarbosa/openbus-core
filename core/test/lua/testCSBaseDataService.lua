@@ -30,7 +30,7 @@ local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
 oil.loadidlfile(idlfile)
 idlfile = CORE_IDL_DIR.."/registry_service.idl"
 oil.loadidlfile(idlfile)
-idlfile = IDLPATH_DIR.."/data_service.idl"
+idlfile = CORE_IDL_DIR.."/data_service.idl"
 oil.loadidlfile(idlfile)
 idlfile = IDLPATH_DIR.."/project_service.idl"
 oil.loadidlfile(idlfile)
@@ -51,27 +51,17 @@ function showNodes(nodes, depth, dataService)
   local projectKey
   for i=1, #nodes do
     local node = nodes[i]
-    io.stdout:write(prefix..node.key.." [")
-    local prefix = ""
-    for j=1, #node.properties do
-      if node.properties[j].name == "type" and
-          node.properties[j].value == "PROJECT" then
-        projectKey = node.key
-      end
-      io.stdout:write(prefix..node.properties[j].name.." = "..
-          node.properties[j].value)
-      prefix = ", "
+    io.stdout:write(prefix..node.key.actual_data_id.." [")
+    for j=1, #node.metadata do
+      io.stdout:write("\n"..node.metadata[j].name.." = "..
+          node.metadata[j].value)
     end
-    io.stdout:write("]\n")
+    local interfaces = dataService:getFacetInterfaces(node.key)
+    for j=1, #interfaces do
+      io.stdout:write("\nINTERFACE = "..interfaces[j])
+    end
+    io.stdout:write("\n]\n")
     showNodes(dataService:getChildren(node.key), depth + 1, dataService)
-  end
-  if projectKey then
-    local projectComponent = dataService:getComponent(projectKey)
-    projectComponent:startup()
-    local project = projectComponent:getFacetByName("Project")
-    project = oil.narrow(project, "IDL:openbusidl/ps/IProject:1.0")
-    print(project:getName())
-    projectComponent:shutdown()
   end
 end
 
