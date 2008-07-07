@@ -25,7 +25,8 @@ SRC= common/ClientInterceptor.cpp \
      openbus.cpp \
      stubs/IAccessControlService.cpp \
      stubs/IRegistryService.cpp \
-     stubs/ISessionService.cpp
+     stubs/ISessionService.cpp \
+     stubs/IDataService.cpp
 
 USE_LUA51=YES
 USE_STATIC=YES

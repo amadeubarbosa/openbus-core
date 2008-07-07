@@ -11,6 +11,12 @@
 
 namespace scs {
   namespace core {
+    struct ComponentId {
+      char* name;
+      unsigned long version;
+    };
+
+    typedef luaidl::cpp::sequence<char> NameList;
 
     class IComponent {
         void _getFacet (void* ptr, const char* facet_interface);
