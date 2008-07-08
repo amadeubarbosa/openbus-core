@@ -2,6 +2,8 @@
 ** IComponentOil.cpp
 */
 
+#include <iostream>
+
 #include <scs/core/IComponentOil.h>
 #include <lua.hpp>
 extern "C" {
@@ -507,6 +509,81 @@ namespace scs {
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
       printf("[IComponent::getFacet() FIM]\n\n");
     #endif
+    }
+
+    ComponentId* IComponent::getComponentId() {
+      ComponentId* returnValue;
+      size_t size;
+    #if VERBOSE
+      printf("[IComponent::getComponentId() COMECO]\n");
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+      printf("\t[Carregando proxy para IComponent]\n");
+    #endif
+      lua_getglobal(LuaVM, "invoke");
+      lua_pushlightuserdata(LuaVM, this);
+      lua_gettable(LuaVM, LUA_REGISTRYINDEX);
+    #if VERBOSE
+      printf("\t[IComponent Lua:%p C:%p]\n", \
+        lua_topointer(LuaVM, -1), this);
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    #endif
+      lua_getfield(LuaVM, -1, "getComponentId");
+    #if VERBOSE
+      printf("\t[metodo getComponentId empilhado]\n");
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+      printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+          lua_typename(LuaVM, lua_type(LuaVM, -1)));
+    #endif
+      lua_insert(LuaVM, -2);
+      if (lua_pcall(LuaVM, 2, 1, 0) != 0) {
+      #if VERBOSE
+        printf("\t[ERRO ao realizar pcall do metodo]\n");
+        printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+        printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+            lua_typename(LuaVM, lua_type(LuaVM, -1)));
+      #endif
+        const char * returnValue;
+        lua_getglobal(LuaVM, "tostring");
+        lua_insert(LuaVM, -2);
+        lua_pcall(LuaVM, 1, 1, 0);
+        returnValue = lua_tostring(LuaVM, -1);
+        lua_pop(LuaVM, 1);
+      #if VERBOSE
+        printf("\t[lancando excecao %s]\n", returnValue);
+        printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+        printf("[IComponent::getComponentId() FIM]\n\n");
+      #endif
+        throw returnValue;
+      } /* if */
+      returnValue = new ComponentId;
+    #if VERBOSE
+      printf("\t[gerando valor de retorno do tipo ComponentId*]\n");
+      printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+    #endif
+
+      lua_getfield(LuaVM, -1, "name");
+      const char * luastring = lua_tolstring(LuaVM, -1, &size);
+      returnValue->name = new char[ size + 1 ];
+      memcpy(returnValue->name, luastring, size);
+      returnValue->name[ size ] = '\0';
+    #if VERBOSE
+      printf("\t[componentId->name: %s]\n", returnValue->name);
+      printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+    #endif
+      lua_pop(LuaVM, 1);
+
+      lua_getfield(LuaVM, -1, "version");
+      returnValue->version = (unsigned long) lua_tonumber(LuaVM, -1);
+    #if VERBOSE
+      printf("\t[componentId->->version: %lu]\n", returnValue->version);
+      printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+    #endif
+      lua_pop(LuaVM, 2);
+    #if VERBOSE
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+      printf("[IComponent::getComponentId() FIM]\n\n");
+    #endif
+      return returnValue;
     }
 
     void IComponent::setLuaVM(lua_State* L) {

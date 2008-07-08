@@ -40,6 +40,7 @@ namespace scs {
           _getFacet(ptr, facet_interface);
           return (T*) ptr;
         }
+        ComponentId* getComponentId();
 
 //        friend class openbus::services::IRegistryService;
     };

@@ -4,6 +4,9 @@ LIBNAME= ${PROJNAME}
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
+#Descomente a linha abaixo caso deseje ativar o VERBOSE
+DEFINES=VERBOSE
+
 INCLUDES= ../include ${OPENBUSINC}/tolua5.1
 
 LIBS= dl
