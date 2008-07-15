@@ -93,14 +93,13 @@ function main()
             local file = oil.narrow(data, fileInterface)
             if file:isDirectory() then
               file:createFile("teste","")
-              file = projectService:getFile(projectPath)
               local files = file:getFiles()
               for k, v in pairs(files) do
                 if type(v) == "table" then
                   print(k, v:getName())
                 end
               end
-              print(data:deleteData(file:getKey()))
+              print(dataService:deleteData(file:getKey()))
             else
               local dataChannel = file:getDataChannel()
               if dataChannel then
