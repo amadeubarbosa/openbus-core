@@ -14,6 +14,8 @@ local oop = require "loop.base"
 ---
 module("core.services.session.SessionService", oop.class)
 
+invalidMemberIdentifier = ""
+
 ---
 --Cria a facete de um Serviço de Sessão.
 --
@@ -46,7 +48,7 @@ function createSession(self, member)
   local credential = self.serverInterceptor:getCredential()
   if self.sessions[credential.identifier] then
     Log:err("Tentativa de criar sessão já existente")
-    return false
+    return false, nil, self.invalidMemberIdentifier
   end
   Log:service("Vou criar sessão")
   local session = Session(self:generateIdentifier(), credential)
