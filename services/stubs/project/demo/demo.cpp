@@ -13,13 +13,12 @@ using namespace openbus;
 int main(int argc, char** argv) {
   char PSIDL[256];
 
-  if (argc != 3) {
-    std::cout << "Uso: demo <projeto>/<arquivo> <tamanho_do_arquivo>" << std::endl;
+  if (argc != 2) {
+    std::cout << "Uso: demo <projeto>/<arquivo>" << std::endl;
     return 0;
   }
 
   char* fileName = argv[1];
-  size_t fileSize = atoi(argv[2]);
 
   Openbus* openbus = Openbus::getInstance();
 
@@ -52,10 +51,10 @@ int main(int argc, char** argv) {
   dataKey->service_id = member->getComponentId();
   dataKey->actual_data_id = fileName;
   projectService::IFile* file = ds->getDataFacet <projectService::IFile> (dataKey, (char*) "IDL:openbusidl/ps/IFile:1.0");
-  std::cout << file->getName();
 
 /* Canal de acesso ao arquivo. */
   projectService::DataChannel* dataChannel = file->getDataChannel();
+  size_t fileSize = dataChannel->fileSize;
 
 /* Leitura do arquivo */
   ftc* ch = new ftc(dataChannel->fileIdentifier->getmember(0), true, fileSize, dataChannel->host,
