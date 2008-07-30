@@ -1132,7 +1132,7 @@ namespace dataService {
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     lua_newtable(LuaVM);
-    for (int x = 1; ; x++) {
+    for (int x = 1; x <= metadata->length(); x++) {
       lua_pushnumber(LuaVM, x);
       lua_newtable(LuaVM);
       Metadata* md = metadata->getmember(x-1);
@@ -1355,7 +1355,7 @@ namespace dataService {
     return returnValue;
   }
 
-  IDataEntry* IDataService::getDataFacet(DataKey* key, char* facet_interface) {
+  void IDataService::_getDataFacet(void* ptr, DataKey* key, char* facet_interface) {
     IDataEntry* returnValue = NULL;
   #if VERBOSE
     printf("[(%p)IDataService::getDataFacet() COMECO]\n", this);
@@ -1377,12 +1377,21 @@ namespace dataService {
         lua_typename(LuaVM, lua_type(LuaVM, -1)));
   #endif
     lua_insert(LuaVM, -2);
-    lua_pushlightuserdata(LuaVM, key);
-    lua_gettable(LuaVM, LUA_REGISTRYINDEX);
+
+    lua_newtable(LuaVM);
+    lua_pushstring(LuaVM, key->actual_data_id);
+    lua_setfield(LuaVM, -2, "actual_data_id");
+    lua_newtable(LuaVM);
+    lua_pushstring(LuaVM, key->service_id->name);
+    lua_setfield(LuaVM, -2, "name");
+    lua_pushnumber(LuaVM, key->service_id->version);
+    lua_setfield(LuaVM, -2, "version");
+    lua_setfield(LuaVM, -2, "service_id");
   #if VERBOSE
-    printf("\t[parâmetro key=%p empilhado]\n", key);
-    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[parâmetro dataKey:]\n\t[dataKey->actual_data_id: %s]\n\t[dataKey->service_id->name: %s]\n\t" \
+        "[dataKey->service_id->version: %lu]\n", key->actual_data_id, key->service_id->name, key->service_id->version);
   #endif
+
     lua_pushstring(LuaVM, facet_interface);
   #if VERBOSE
     printf("\t[parâmetro facet_interface=%s empilhado]\n", facet_interface);
@@ -1408,15 +1417,28 @@ namespace dataService {
     #endif
       throw returnValue;
     } /* if */
-    returnValue = new IDataEntry;
-    lua_pushlightuserdata(LuaVM, returnValue);
-    lua_insert(LuaVM, -2);
-    lua_settable(LuaVM, LUA_REGISTRYINDEX);
+      lua_getglobal(LuaVM, "oil");
+      lua_getfield(LuaVM, -1, "narrow");
+      lua_pushvalue(LuaVM, -3);
+      lua_pushstring(LuaVM, facet_interface);
+      lua_pcall(LuaVM, 2, 1, 0);
+    #if VERBOSE
+      const void* luaRef = lua_topointer(LuaVM, -1);
+    #endif
+      lua_pushlightuserdata(LuaVM, ptr);
+      lua_insert(LuaVM, -2);
+      lua_settable(LuaVM, LUA_REGISTRYINDEX);
+    #if VERBOSE
+      printf("\t[OBJ Lua:%p C:%p]\n", luaRef, ptr);
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+      printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+          lua_typename(LuaVM, lua_type(LuaVM, -1)));
+    #endif
+      lua_pop(LuaVM, 2);
   #if VERBOSE
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     printf("[IDataService::getDataFacet() FIM]\n\n");
   #endif
-    return returnValue;
   }
 
   scs::core::NameList* IDataService::getFacetInterfaces(DataKey* key) {
@@ -1442,12 +1464,21 @@ namespace dataService {
         lua_typename(LuaVM, lua_type(LuaVM, -1)));
   #endif
     lua_insert(LuaVM, -2);
-    lua_pushlightuserdata(LuaVM, key);
-    lua_gettable(LuaVM, LUA_REGISTRYINDEX);
+
+    lua_newtable(LuaVM);
+    lua_pushstring(LuaVM, key->actual_data_id);
+    lua_setfield(LuaVM, -2, "actual_data_id");
+    lua_newtable(LuaVM);
+    lua_pushstring(LuaVM, key->service_id->name);
+    lua_setfield(LuaVM, -2, "name");
+    lua_pushnumber(LuaVM, key->service_id->version);
+    lua_setfield(LuaVM, -2, "version");
+    lua_setfield(LuaVM, -2, "service_id");
   #if VERBOSE
-    printf("\t[parâmetro key=%p empilhado]\n", key);
-    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[parâmetro dataKey:]\n\t[dataKey->actual_data_id: %s]\n\t[dataKey->service_id->name: %s]\n\t" \
+        "[dataKey->service_id->version: %lu]\n", key->actual_data_id, key->service_id->name, key->service_id->version);
   #endif
+
     if (lua_pcall(LuaVM, 3, 1, 0) != 0) {
     #if VERBOSE
       printf("\t[ERRO ao realizar pcall do metodo]\n");

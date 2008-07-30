@@ -5,7 +5,7 @@ OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
-#DEFINES=VERBOSE
+DEFINES=VERBOSE
 
 OBJROOT= obj
 TARGETROOT= lib
