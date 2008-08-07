@@ -7,7 +7,6 @@ local loadfile = loadfile
 local assert = assert
 local pairs = pairs
 local ipairs = ipairs
-local next = next
 local error = error
 
 local luuid = require "uuid"
@@ -91,7 +90,6 @@ function startup(self)
 
   -- Inicializa o repositório de ofertas
   self.offersByIdentifier = {}   -- id -> oferta
-  self.offersByType = {}         -- tipo -> id -> oferta
   self.offersByCredential = {}  -- credencial -> id -> oferta
 
   -- autentica o serviço, conectando-o ao barramento
@@ -163,8 +161,7 @@ function register(self, serviceOffer)
     identifier = identifier
   }
 
-  Log:service("Registrando oferta com tipo "..serviceOffer.type..
-              " id "..identifier)
+  Log:service("Registrando oferta com id "..identifier)
 
   self:addOffer(offerEntry)
   self.offersDB:insert(offerEntry)
@@ -181,14 +178,6 @@ function addOffer(self, offerEntry)
 
   -- Índice de ofertas por identificador
   self.offersByIdentifier[offerEntry.identifier] = offerEntry
-
-  -- Índice de ofertas por tipo
-  local type = offerEntry.offer.type
-  if not self.offersByType[type] then
-    Log:service("Primeira oferta do tipo "..type)
-    self.offersByType[type] = {}
-  end
-  self.offersByType[type][offerEntry.identifier] = offerEntry
 
   -- Índice de ofertas por credencial
   local credential = offerEntry.credential
@@ -278,17 +267,6 @@ function unregister(self, identifier)
   -- Remove oferta do índice por identificador
   self.offersByIdentifier[identifier] = nil
 
-  -- Remove oferta do índice por tipo
-  local type = offerEntry.offer.type
-  if self.offersByType[type] then
-    self.offersByType[type][identifier] = nil
-    if not next(self.offersByType[type]) then
-      -- Não há mais ofertas desse tipo
-      Log:service("Última oferta do tipo "..type.." removida")
-      self.offersByType[type] = nil
-    end
-  end
-
   -- Remove oferta do índice por credencial
   local credentialOffers = self.offersByCredential[credential.identifier]
   if credentialOffers then
@@ -298,7 +276,7 @@ function unregister(self, identifier)
                 credential.identifier)
     return true
   end
-  if not next(credentialOffers) then
+  if #credentialOffers == 0 then
     -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
     Log:service("Última oferta da credencial: remove credencial do observador")
@@ -347,37 +325,24 @@ end
 --critérios (propriedades) especificados. A especificação de critrios
 --é opcional.
 --
---@param type O tipo da oferta.
 --@param criteria Os critérios da busca.
 --
 --@return As ofertas de serviço que correspondem aos critérios.
 ---
-function find(self, type, criteria)
-  Log:service("Procurando oferta com tipo "..type)
-
+function find(self, criteria)
   local selectedOffers = {}
-  local candidateOfferEntries = self.offersByType[type]
-  if candidateOfferEntries and next(candidateOfferEntries) then
-    Log:service("Há ofertas para o tipo")
-    -- Se não há critérios, retorna todas as ofertas
-    if #criteria == 0 then
-      for id, offerEntry in pairs(candidateOfferEntries) do
-        table.insert(selectedOffers, offerEntry.offer)
-        Log:service("Sem critério, encontrei "..#selectedOffers.." ofertas")
-      end
-    else
-      -- Há critérios a verificar
-      for id, offerEntry in pairs(candidateOfferEntries) do
-        if self:meetsCriteria(criteria, offerEntry.properties) then
-          table.insert(selectedOffers, offerEntry.offer)
-        end
-      end
-     Log:service("Com critério, encontrei "..#selectedOffers.." ofertas")
+  if #criteria == 0 then
+    for _, offerEntry in pairs(self.offersByIdentifier) do
+      table.insert(selectedOffers, offerEntry.offer)
     end
   else
-    Log:service("Não há ofertas para o tipo "..type)
+    for _, offerEntry in pairs(self.offersByIdentifier) do
+      if self:meetsCriteria(criteria, offerEntry.properties) then
+        table.insert(selectedOffers, offerEntry.offer)
+      end
+    end
+     Log:service("Com critério, encontrei "..#selectedOffers.." ofertas")
   end
-
   return selectedOffers
 end
 
@@ -420,17 +385,6 @@ function credentialWasDeleted(self, credential)
     for identifier, offerEntry in pairs(credentialOffers) do
       self.offersByIdentifier[identifier] = nil
       Log:service("Removida oferta "..identifier.." do índice por id")
-
-      local type = offerEntry.offer.type
-      if self.offersByType[type] then
-        self.offersByType[type][identifier] = nil
-        Log:service("Removida oferta "..identifier..
-                     " do índice por tipo "..type)
-        if not next(self.offersByType[type]) then -- fim das ofertas desse tipo
-          Log:service("Última oferta do tipo "..type.." removida")
-          self.offersByType[type] = nil
-        end
-      end
       self.offersDB:delete(offerEntry)
     end
   else

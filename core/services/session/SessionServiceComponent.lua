@@ -94,12 +94,9 @@ function startup(self)
   self:addFacet("sessionService", sessionServiceInterface, self.sessionService)
 
   -- registra sua oferta de serviço junto ao Serviço de Registro
-  self.offerType = self.config.sessionServiceOfferType
   self.serviceOffer = {
-    type = self.offerType,
-    description = "Servico de Sessoes",
-    properties = {},
     member = self,
+    properties = {},
   }
   local registryService = self.accessControlService:getRegistryService()
   if not registryService then

@@ -26,8 +26,6 @@ typedef sequence<Property> PropertyList;
  * \brief Representa uma oferta de serviço.
  */
 struct ServiceOffer {
-    string type; /**< \brief O tipo do serviço. */
-    string description; /**< \brief A descrição do serviço. */
     PropertyList properties; /**< \brief Propriedades. */
     scs::core::IComponent member; /**< \brief O membro que está ofertando o serviço. */
 };
@@ -75,12 +73,11 @@ interface IRegistryService : scs::core::IComponent {
     /**
      * \brief Realiza uma busca por ofertas que satisfaçam a determinados critérios.
      *
-     * \param type O tipo de serviço
      * \param criteria Os critérios da busca.
      *
      * \return Os membros encontrados.
      */
-    ServiceOfferList find (in string type, in PropertyList criteria);
+    ServiceOfferList find (in PropertyList criteria);
 };
 
 };
