@@ -70,7 +70,16 @@ class SESTestSuite: public CxxTest::TestSuite {
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
         credentialManager->setValue( credential ) ;
         rgs = acs->getRegistryService() ;
-        serviceOfferList = rgs->find( "SessionService", NULL ) ;
+        services::PropertyList* propertyList = new services::PropertyList;
+        services::ServiceOffer* serviceOffer = new services::ServiceOffer;
+        serviceOffer->properties = propertyList;
+        property = new services::Property;
+        property->name = "type";
+        propertyValue = new services::PropertyValue;
+        propertyValue->newmember("SessionService");
+        property->value = propertyValue;
+        propertyList->newmember(property);
+        serviceOfferList = rgs->find( propertyList ) ;
         if ( serviceOfferList != NULL )
         {
           serviceOffer = serviceOfferList->getmember( 0 ) ;

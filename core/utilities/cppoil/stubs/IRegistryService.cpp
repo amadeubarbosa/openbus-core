@@ -109,20 +109,6 @@ namespace openbus {
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     #endif
       lua_newtable( LuaVM ) ;
-      lua_pushstring( LuaVM, "type" ) ;
-      lua_pushstring( LuaVM, aServiceOffer->type ) ;
-      lua_settable( LuaVM, -3 ) ;
-    #if VERBOSE
-      printf( "\t[ServiceOffer.type empilhado]\n" ) ;
-      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    #endif
-      lua_pushstring( LuaVM, "description" ) ;
-      lua_pushstring( LuaVM, aServiceOffer->description ) ;
-      lua_settable( LuaVM, -3 ) ;
-    #if VERBOSE
-      printf( "\t[ServiceOffer.description empilhado]\n" ) ;
-      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    #endif
       lua_pushstring( LuaVM, "properties" ) ;
       lua_newtable( LuaVM ) ;
     #if VERBOSE
@@ -395,13 +381,13 @@ namespace openbus {
       return returnValue ;
     }
 
-    ServiceOfferList* IRegistryService::find( String type, PropertyList* criteria )
+    ServiceOfferList* IRegistryService::find( PropertyList* criteria )
     {
       ServiceOfferList* returnValue = NULL ;
       Property* property ;
       int len ;
     #if VERBOSE
-      printf( "[IRegistryService::find( String type, PropertyList criteria ) COMECO]\n" ) ;
+      printf( "[IRegistryService::find( PropertyList criteria ) COMECO]\n" ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
       printf( "\t[Criando proxy para IRegistryService]\n" ) ;
     #endif
@@ -419,11 +405,6 @@ namespace openbus {
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     #endif
       lua_insert( LuaVM, -2 ) ;
-      lua_pushstring( LuaVM, type ) ;
-    #if VERBOSE
-      printf( "\t[type=%s empilhado]\n", type ) ;
-      printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    #endif
       lua_newtable( LuaVM ) ;
       if ( criteria != NULL )
       {
@@ -471,7 +452,7 @@ namespace openbus {
           lua_settable( LuaVM, -3 ) ;
         } /* for */
       } /* if */
-      if ( lua_pcall( LuaVM, 4, 1, 0 ) != 0 ) {
+      if ( lua_pcall( LuaVM, 3, 1, 0 ) != 0 ) {
       #if VERBOSE
         printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
         printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -487,7 +468,7 @@ namespace openbus {
       #if VERBOSE
         printf( "\t[lancando excecao %s]\n", returnValue ) ;
         printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-        printf( "[IRegistryService::find( String type, PropertyList criteria ) FIM]\n\n" ) ;
+        printf( "[IRegistryService::find( PropertyList criteria ) FIM]\n\n" ) ;
       #endif
         throw returnValue ;
       } /* if */
@@ -513,22 +494,6 @@ namespace openbus {
           printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
         #endif
           ServiceOffer* serviceOffer = new ServiceOffer ;
-          lua_pushstring( LuaVM, "type" ) ;
-          lua_gettable( LuaVM, -2 ) ;
-          serviceOffer->type = lua_tostring( LuaVM, -1 ) ;
-          lua_pop( LuaVM, 1 ) ;
-        #if VERBOSE
-          printf( "\t[serviceOfferList[%d]->type=%s]\n", x, serviceOffer->type ) ;
-          printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-        #endif
-          lua_pushstring( LuaVM, "description" ) ;
-          lua_gettable( LuaVM, -2 ) ;
-          serviceOffer->description = lua_tostring( LuaVM, -1 ) ;
-          lua_pop( LuaVM, 1 ) ;
-        #if VERBOSE
-          printf( "\t[serviceOfferList[%d]->description=%s]\n", x, serviceOffer->description ) ;
-          printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-        #endif
           lua_pushstring( LuaVM, "member" ) ;
           lua_gettable( LuaVM, -2 ) ;
         #if VERBOSE
@@ -564,7 +529,7 @@ namespace openbus {
       lua_pop( LuaVM, 2 ) ;
     #if VERBOSE
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-      printf( "[IRegistryService::find( String type, PropertyList criteria ) FIM]\n\n" ) ;
+      printf( "[IRegistryService::find( PropertyList criteria ) FIM]\n\n" ) ;
     #endif
       return returnValue ;
     }

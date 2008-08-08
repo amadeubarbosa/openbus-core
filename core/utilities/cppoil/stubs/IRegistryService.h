@@ -20,8 +20,6 @@ namespace openbus {
     typedef luaidl::cpp::sequence<Property> PropertyList ;
 
     struct ServiceOffer {
-        String type ;
-        String description ;
         PropertyList* properties ;
         scs::core::IComponent* member ;
     } ;
@@ -41,7 +39,7 @@ namespace openbus {
         bool Register( ServiceOffer* aServiceOffer, char*& outIdentifier ) ;
         bool unregister( RegistryIdentifier identifier ) ;
         bool update( RegistryIdentifier identifier, PropertyList* newProperties ) ;
-        ServiceOfferList* find( String type, PropertyList* criteria ) ;
+        ServiceOfferList* find( PropertyList* criteria ) ;
     } ;
   }
 }
