@@ -80,13 +80,14 @@ function main()
 
   local registryService= accessControlService:getRegistryService()
 
-  local serviceOffers = registryService:find("ProjectService", {})
+  local serviceOffers = registryService:find({
+    {name = "facets", value = {"projectDataService"}}
+  })
 
   if #serviceOffers == 0 then
     print("Serviço de projetos não registrado!!!")
   else
     local serviceOffer = serviceOffers[1]
-    print(serviceOffer.description)
     local dataServiceInterface = "IDL:openbusidl/ds/IDataService:1.0"
     local dataService = serviceOffer.member:getFacet(dataServiceInterface)
     dataService = oil.narrow(dataService, dataServiceInterface)
