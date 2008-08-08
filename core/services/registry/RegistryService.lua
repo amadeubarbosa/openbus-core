@@ -215,7 +215,8 @@ function createPropertyIndex(self, offerProperties, member)
   end
 
   local componentId = member:getComponentId()
-  properties["component_id"] = componentId.name..":"..componentId.version
+  properties["component_id"] = {}
+  properties["component_id"][componentId.name..":"..componentId.version] = true
 
   local memberName = componentId.name
   -- se não foi definida uma propriedade "facets", discriminando as facetas
@@ -236,6 +237,9 @@ function createPropertyIndex(self, offerProperties, member)
           properties["facets"][facet.name] = true
         end
       end
+    else
+      Log:service("Membro "..memberName.." não disponibiliza a interface"..
+          " IMetaInterface.")
     end
   end
   return properties
