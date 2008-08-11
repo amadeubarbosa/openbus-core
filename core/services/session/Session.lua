@@ -92,7 +92,10 @@ end
 function push(self, event)
   Log:service("Repassando evento "..event.type.." para membros de sessão")
   for _, sink in pairs(self.eventSinks) do
-    sink:push(event)
+    local result, errorMsg = oil.pcall(sink.push, sink, event)
+    if not result then
+      Log:service("Erro ao enviar evento para membro de sessão: "..errorMsg)
+    end
   end
 end
 
