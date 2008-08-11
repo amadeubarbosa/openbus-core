@@ -43,9 +43,18 @@ int main(int argc, char* argv[]) {
 
   CORBA::ULong idx = 0;
   IRegistryService_var rgs = acs->getRegistryService();
-  PropertyList p;
-  ServiceOfferList_var soList = new ServiceOfferList;
-  soList = rgs->find("type1", p);
+  PropertyList_var p = new PropertyList(5);
+  p->length(1);
+  ServiceOfferList_var soList = new ServiceOfferList(5);
+  soList->length(5);
+  Property_var property = new Property;
+  property->name = "type";
+  PropertyValue_var propertyValue = new PropertyValue(5);
+  propertyValue->length(1);
+  propertyValue[0] = "type1";
+  property->value = propertyValue;
+  p[0] = property;
+  soList = rgs->find(p);
   ServiceOffer so;
   so = soList[ idx ];
   ::scs::core::IComponent_var member;

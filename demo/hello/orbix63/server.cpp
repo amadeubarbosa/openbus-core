@@ -71,10 +71,16 @@ int main(int argc, char* argv[]) {
 
   c->addFacet("facet", "IDL:Hello:1.0", hello);
   poa_manager->activate();
-  PropertyList p;
+  PropertyList_var p = new PropertyList(5);
+  p->length(1);
+  Property_var property = new Property;
+  property->name = "type";
+  PropertyValue_var propertyValue = new PropertyValue(5);
+  propertyValue->length(1);
+  propertyValue[0] = "type1";
+  property->value = propertyValue;
+  p[0] = property;
   ServiceOffer so;
-  so.type = "type1";
-  so.description = "none";
   so.properties = p;
   so.member = c->_this();
   rgs->_cxx_register(so, id);
