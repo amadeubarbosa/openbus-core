@@ -33,9 +33,9 @@ SRC= openbus/common/ClientInterceptor.cpp \
 
 genstubs:
 	mkdir -p stubs
-	cd stubs ; idl -base -poa ${OPENBUS_HOME}/core/idl/access_control_service.idl 
-	cd stubs ; idl -base -poa ${OPENBUS_HOME}/core/idl/registry_service.idl
-	cd stubs ; idl -base -poa ${OPENBUS_HOME}/core/idl/session_service.idl
-	cd stubs ; idl -base -poa ${OPENBUS_HOME}/core/idl/core.idl
-	cd stubs ; idl -base -poa ${OPENBUS_HOME}/core/idl/scs.idl
+	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/core/idl/access_control_service.idl 
+	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/core/idl/registry_service.idl
+	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/core/idl/session_service.idl
+	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/core/idl/core.idl
+	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/core/idl/scs.idl
 	

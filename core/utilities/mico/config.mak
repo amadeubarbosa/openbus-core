@@ -1,6 +1,8 @@
 PROJNAME= openbus
 LIBNAME= ${PROJNAME}
 
+MICOBIN=/usr/local/bin
+
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
@@ -28,9 +30,9 @@ SRC= openbus/common/ClientInterceptor.cpp \
 
 genstubs:
 	mkdir -p stubs
-	cd stubs ; idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/access_control_service.idl 
-	cd stubs ; idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/registry_service.idl
-	cd stubs ; idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/session_service.idl
-	cd stubs ; idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/core.idl
-	cd stubs ; idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/scs.idl
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/access_control_service.idl 
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/registry_service.idl
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/session_service.idl
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/core.idl
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/scs.idl
 	
