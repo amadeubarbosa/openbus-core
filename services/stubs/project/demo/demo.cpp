@@ -34,13 +34,19 @@ int main(int argc, char** argv) {
   credentialManager->setValue(credential);
 
   services::IRegistryService* rgs = acs->getRegistryService();
-  services::ServiceOfferList* serviceOfferList = rgs->find("ProjectService", NULL);
+  services::PropertyList* propertyList = new services::PropertyList;
+  services::Property* property = new services::Property;
+  property->name = "facets";
+  property->value = new services::PropertyValue;
+  property->value->newmember("projectDataService");
+  propertyList->newmember(property);
+  services::ServiceOfferList* serviceOfferList = rgs->find(propertyList);
   services::ServiceOffer* serviceOffer = serviceOfferList->getmember(0);
 
   scs::core::IComponent* member = serviceOffer->member;
   const char* OPENBUS_HOME = getenv("OPENBUS_HOME");
   strcpy(PSIDL, OPENBUS_HOME);
-  strcat(PSIDL, "/services/idl/project_service.idl");
+  strcat(PSIDL, "/idlpath/project_service.idl");
   member->loadidlfile(PSIDL);
 
 /* Obtendo o serviço de dados. */
