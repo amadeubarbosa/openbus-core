@@ -22,8 +22,9 @@ namespace openbus {
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
       printf( "\t[Criando objeto ICredentialObserver]\n" ) ;
     #endif
-      lua_getglobal( LuaVM, "oil" ) ;
+      lua_getglobal( LuaVM, "orb" ) ;
       lua_getfield( LuaVM, -1, "newservant" ) ;
+      lua_getglobal( LuaVM, "orb" ) ;
       lua_newtable( LuaVM ) ;
       ptr_luaimpl = (void*) lua_topointer( LuaVM, -1 ) ;
       lua_pushvalue( LuaVM, -1 ) ;
@@ -40,8 +41,9 @@ namespace openbus {
       lua_pushstring( LuaVM, "credentialWasDeleted" ) ;
       lua_pushcfunction( LuaVM, ICredentialObserver::_credentialWasDeleted_bind ) ;
       lua_settable( LuaVM, -3 ) ;
+      lua_pushnil(LuaVM);
       lua_pushstring( LuaVM, "IDL:openbusidl/acs/ICredentialObserver:1.0" ) ;
-      if ( lua_pcall( LuaVM, 2, 1, 0 ) != 0 ) {
+      if ( lua_pcall( LuaVM, 4, 1, 0 ) != 0 ) {
         const char * returnValue ;
         lua_getglobal( LuaVM, "tostring" ) ;
         lua_insert( LuaVM, -2 ) ;
@@ -153,8 +155,9 @@ namespace openbus {
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
       printf( "\t[Criando proxy para IAccessControlService]\n" ) ;
     #endif
-      lua_getglobal( LuaVM, "oil" ) ;
+      lua_getglobal( LuaVM, "orb" ) ;
       lua_getfield( LuaVM, -1, "newproxy" ) ;
+      lua_getglobal( LuaVM, "orb" ) ;
       lua_pushstring( LuaVM, reference ) ;
     #if VERBOSE
       printf( "\t[parametro reference=%s empilhado]\n", reference ) ;
@@ -165,7 +168,7 @@ namespace openbus {
       printf( "\t[parametro interface=%s empilhado]\n", interface ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     #endif
-      if ( lua_pcall( LuaVM, 2, 1, 0 ) != 0 ) {
+      if ( lua_pcall( LuaVM, 3, 1, 0 ) != 0 ) {
         const char * returnValue ;
         lua_getglobal( LuaVM, "tostring" ) ;
         lua_insert( LuaVM, -2 ) ;

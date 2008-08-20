@@ -68,8 +68,9 @@ namespace openbus {
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     printf("\t[Chamando metodo %s( %p )]\n", "oil.setClientInterceptor", clientInterceptor);
   #endif
-    lua_getglobal(LuaVM, "oil");
+    lua_getglobal(LuaVM, "orb");
     lua_getfield(LuaVM, -1, "setclientinterceptor");
+    lua_getglobal(LuaVM, "orb");
     lua_newtable(LuaVM);
     lua_pushstring(LuaVM, "clientInterceptor");
     lua_pushlightuserdata(LuaVM, clientInterceptor);
@@ -85,7 +86,7 @@ namespace openbus {
     printf("\t[parametro {}.sendrequest (function) empilhado]\n");
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
-    if (lua_pcall(LuaVM, 1, 0, 0) != 0) {
+    if (lua_pcall(LuaVM, 2, 0, 0) != 0) {
     #if VERBOSE
       printf("\t[ERRO ao realizar pcall do metodo]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));

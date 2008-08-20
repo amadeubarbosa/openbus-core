@@ -2,19 +2,19 @@
 -- openbus.lua
 --
 
-package.loaded["oil.component"] = require "loop.component.wrapped"
-package.loaded["oil.port"]      = require "loop.component.intercepted"
-
 require 'oil'
+
+orb = oil.init {flavor = "intercepted;corba;typed;cooperative;base"}
+oil.orb = orb
 
 oilcorbaidlstring = oil.corba.idl.string
 
 
-oil.loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/access_control_service.idl" )
-oil.loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/registry_service.idl" )
-oil.loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/session_service.idl" )
+orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/access_control_service.idl" )
+orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/registry_service.idl" )
+orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/session_service.idl" )
 
-local lir = oil.getLIR()
+local lir = orb:getLIR()
 
 IComponent = require 'scs.core.IComponent'
 
@@ -24,7 +24,7 @@ oil.tasks.verbose:level(0)
 
 -- Metodo utilizado pelo interceptador do OiL
 function sendrequest(credential, credentialType, contextID, request)
-  local encoder = oil.newencoder()
+  local encoder = orb:newencoder()
   encoder:put(credential, lir:lookup_id(credentialType).type)
   request.service_context =  {
      { context_id = contextID, context_data = encoder:getdata() }
@@ -33,7 +33,7 @@ end
 
 if not oil.isrunning then
   oil.isrunning = true
-  oil.tasks:register(coroutine.create(oil.run))
+  oil.tasks:register(coroutine.create(function() return orb:run() end))
 end
 
 -- Invoke with concurrency

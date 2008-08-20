@@ -20,11 +20,12 @@ namespace openbus {
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
       printf( "\t[Criando proxy para IRegistryService]\n" ) ;
     #endif
-      lua_getglobal( LuaVM, "oil" ) ;
+      lua_getglobal( LuaVM, "orb" ) ;
       lua_getfield( LuaVM, -1, "newproxy" ) ;
+      lua_getglobal( LuaVM, "orb" ) ;
       lua_pushstring( LuaVM, reference ) ;
       lua_pushstring( LuaVM, interface ) ;
-      if ( lua_pcall( LuaVM, 2, 1, 0 ) != 0 ) {
+      if ( lua_pcall( LuaVM, 3, 1, 0 ) != 0 ) {
         const char * returnValue ;
         lua_getglobal( LuaVM, "tostring" ) ;
         lua_insert( LuaVM, -2 ) ;

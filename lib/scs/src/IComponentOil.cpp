@@ -58,24 +58,24 @@ namespace scs {
         throw returnValue;
       } /* if */
     #if VERBOSE
-      printf("\t[Chamando oil.newobject]\n");
+      printf("\t[Chamando orb:newservant]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      lua_getglobal(LuaVM, "oil");
-      lua_pushstring(LuaVM, "newobject");
-      lua_gettable(LuaVM, -2);
-      lua_remove(LuaVM, -2);
+      lua_getglobal(LuaVM, "orb");
+      lua_getfield( LuaVM, -1, "newservant" ) ;
+      lua_insert(LuaVM, -3);
       lua_insert(LuaVM, -2);
     #if VERBOSE
       printf("\t[parametro IComponent empilhado]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
+      lua_pushnil(LuaVM);
       lua_pushstring(LuaVM, "IDL:scs/core/IComponent:1.0");
     #if VERBOSE
       printf("\t[parametro IDL:scs/core/IComponent:1.0 empilhado]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      if (lua_pcall(LuaVM, 2, 1, 0) != 0) {
+      if (lua_pcall(LuaVM, 4, 1, 0) != 0) {
       #if VERBOSE
         printf("\t[ERRO ao realizar pcall do metodo]\n");
         printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -153,24 +153,24 @@ namespace scs {
         throw returnValue;
       } /* if */
     #if VERBOSE
-      printf("\t[Chamando oil.newobject]\n");
+      printf("\t[Chamando orb:newservant]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      lua_getglobal(LuaVM, "oil");
-      lua_pushstring(LuaVM, "newobject");
-      lua_gettable(LuaVM, -2);
-      lua_remove(LuaVM, -2);
+      lua_getglobal(LuaVM, "orb");
+      lua_getfield( LuaVM, -1, "newservant" ) ;
+      lua_insert(LuaVM, -3);
       lua_insert(LuaVM, -2);
     #if VERBOSE
       printf("\t[parametro IComponent empilhado]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
+      lua_pushnil(LuaVM);
       lua_pushstring(LuaVM, "IDL:scs/core/IComponent:1.0");
     #if VERBOSE
       printf("\t[parametro IDL:scs/core/IComponent:1.0 empilhado]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      if (lua_pcall(LuaVM, 2, 1, 0) != 0) {
+      if (lua_pcall(LuaVM, 4, 1, 0) != 0) {
       #if VERBOSE
         printf("\t[ERRO ao realizar pcall do metodo]\n");
         printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -354,19 +354,20 @@ namespace scs {
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
       printf("\t[Carregando proxy para IComponent]\n");
     #endif
-      lua_getglobal(LuaVM, "oil");
+      lua_getglobal(LuaVM, "orb");
       lua_getfield(LuaVM, -1, "loadidl");
       lua_remove(LuaVM, 1);
     #if VERBOSE
       printf("\t[metodo loadidl empilhado]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
+      lua_getglobal(LuaVM, "orb");
       lua_pushstring(LuaVM, idl);
     #if VERBOSE
       printf("\t[idl=%s empilhado]\n", idl);
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      if (lua_pcall(LuaVM, 1, 0, 0) != 0) {
+      if (lua_pcall(LuaVM, 2, 0, 0) != 0) {
       #if VERBOSE
         printf("\t[ERRO ao realizar pcall do metodo]\n");
         printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -399,9 +400,10 @@ namespace scs {
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
       printf("\t[Carregando proxy para IComponent]\n");
     #endif
-      lua_getglobal(LuaVM, "oil");
+      lua_getglobal(LuaVM, "orb");
       lua_getfield(LuaVM, -1, "loadidlfile");
       lua_remove(LuaVM, 1);
+      lua_getglobal(LuaVM, "orb");
     #if VERBOSE
       printf("\t[metodo loadidlfile empilhado]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -411,7 +413,7 @@ namespace scs {
       printf("\t[idlfilename=%s empilhado]\n", idlfilename);
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      if (lua_pcall(LuaVM, 1, 0, 0) != 0) {
+      if (lua_pcall(LuaVM, 2, 0, 0) != 0) {
       #if VERBOSE
         printf("\t[ERRO ao realizar pcall do metodo]\n");
         printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -487,11 +489,12 @@ namespace scs {
       #endif
         throw returnValue;
       } /* if */
-      lua_getglobal(LuaVM, "oil");
+      lua_getglobal(LuaVM, "orb");
       lua_getfield(LuaVM, -1, "narrow");
       lua_pushvalue(LuaVM, -3);
+      lua_getglobal(LuaVM, "orb");
       lua_pushstring(LuaVM, facet_interface);
-      lua_pcall(LuaVM, 2, 1, 0);
+      lua_pcall(LuaVM, 3, 1, 0);
     #if VERBOSE
       const void* luaRef = lua_topointer(LuaVM, -1);
     #endif
