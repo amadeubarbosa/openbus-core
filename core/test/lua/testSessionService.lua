@@ -4,6 +4,7 @@
 -- $Id$
 --
 local oil = require "oil"
+local orb = oil.orb
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
@@ -20,26 +21,26 @@ Suite = {
         io.stderr:write("A variavel CORE_IDL_DIR nao foi definida.\n")
         os.exit(1)
       end
-      
+
       oil.verbose:level(0)
 
       local idlfile = CORE_IDL_DIR.."/session_service.idl"
-      oil.loadidlfile(idlfile)
+      orb:loadidlfile(idlfile)
       idlfile = CORE_IDL_DIR.."/registry_service.idl"
-      oil.loadidlfile(idlfile)
+      orb:loadidlfile(idlfile)
       idlfile = CORE_IDL_DIR.."/access_control_service.idl"
-      oil.loadidlfile(idlfile)
+      orb:loadidlfile(idlfile)
 
       local user = "tester"
       local password = "tester"
 
-      self.accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local CONF_DIR = os.getenv("CONF_DIR")
       local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
       self.credentialManager = CredentialManager()
-      oil.setclientinterceptor(ClientInterceptor(config, self.credentialManager))
+      orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
 
       _, self.credential = self.accessControlService:loginByPassword(user, password)
       self.credentialManager:setValue(self.credential)
@@ -50,19 +51,19 @@ Suite = {
         {name = "facets", value = {"sessionService"}},
       })
       Check.assertNotEquals(#serviceOffers, 0)
-      local sessionServiceComponent = oil.narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
+      local sessionServiceComponent = orb:narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
       local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
       self.sessionService = sessionServiceComponent:getFacet(sessionServiceInterface)
-      self.sessionService = oil.narrow(self.sessionService, sessionServiceInterface)
+      self.sessionService = orb:narrow(self.sessionService, sessionServiceInterface)
     end,
 
     testCreateSession = function(self)
       local member1 = IComponent("membro1", 1)
-      member1 = oil.newservant(member1, "IDL:scs/core/IComponent:1.0")
+      member1 = orb:newservant(member1, nil, "IDL:scs/core/IComponent:1.0")
       local success, session, id1 = self.sessionService:createSession(member1)
       Check.assertTrue(success)
       local member2 = IComponent("membro2", 1)
-      member2 = oil.newservant(member2, "IDL:scs/core/IComponent:1.0")
+      member2 = orb:newservant(member2, nil, "IDL:scs/core/IComponent:1.0")
       local session2 = self.sessionService:getSession()
       Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
       local id2 = session:addMember(member2)

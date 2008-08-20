@@ -4,9 +4,11 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-package.loaded["oil.component"] = require "loop.component.wrapped"
-package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
+
+-- Inicializa o ORB
+local orb = oil.init { flavor = "intercepted;corba;typed;cooperative;base", }
+oil.orb = orb
 
 local Log = require "openbus.common.Log"
 
@@ -41,21 +43,21 @@ end
 
 -- Carrega a interface do serviço
 local idlfile = CORE_IDL_DIR.."/registry_service.idl"
-oil.loadidlfile (idlfile)
+orb:loadidlfile(idlfile)
 idlfile = CORE_IDL_DIR.."/access_control_service.idl"
-oil.loadidlfile (idlfile)
+orb:loadidlfile(idlfile)
 
 function main()
   -- Aloca uma thread para o orb
-  local success, res = oil.pcall(oil.newthread,oil.run)
+  local success, res = oil.pcall(oil.newthread, orb.run, orb)
   if not success then
     Log:error("Falha na execução do ORB: "..tostring(res).."\n")
     os.exit(1)
   end
 
   -- Cria o componente responsável pelo Serviço de Registro
-  success, res = oil.pcall(oil.newservant, RegistryService("RegistryService",
-      RegistryServerConfiguration), "IDL:openbusidl/rs/IRegistryService:1.0")
+  success, res = oil.pcall(orb.newservant, orb, RegistryService("RegistryService",
+      RegistryServerConfiguration), nil, "IDL:openbusidl/rs/IRegistryService:1.0")
   if not success then
     Log:error("Falha criando RegistryService: "..tostring(res).."\n")
     os.exit(1)

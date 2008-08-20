@@ -4,14 +4,9 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-package.loaded["oil.component"] = require "loop.component.wrapped"
-package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
 
 local Log = require "openbus.common.Log"
-
-local SessionServiceComponent =
-    require "core.services.session.SessionServiceComponent"
 
 local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
 if CORE_IDL_DIR == nil then
@@ -24,6 +19,16 @@ if CONF_DIR == nil then
   Log:error("A variavel CONF_DIR nao foi definida.\n")
   os.exit(1)
 end
+
+-- Inicializa o ORB, fixando a localização do serviço em uma porta específica
+local orb = oil.init { flavor = "intercepted;corba;typed;cooperative;base",
+                       tcpoptions = {reuseaddr = true}
+                     }
+
+oil.orb = orb
+
+local SessionServiceComponent =
+    require "core.services.session.SessionServiceComponent"
 
 -- Obtém a configuração do serviço
 assert(loadfile(CONF_DIR.."/SessionServerConfiguration.lua"))()
@@ -42,15 +47,15 @@ end
 
 -- Carrega a interface do serviço
 local idlfile = CORE_IDL_DIR.."/session_service.idl"
-oil.loadidlfile (idlfile)
+orb:loadidlfile (idlfile)
 idlfile = CORE_IDL_DIR.."/access_control_service.idl"
-oil.loadidlfile (idlfile)
+orb:loadidlfile (idlfile)
 idlfile = CORE_IDL_DIR.."/registry_service.idl"
-oil.loadidlfile (idlfile)
+orb:loadidlfile (idlfile)
 
 function main()
   -- Aloca uma thread para o orb
-  local success, res = oil.pcall(oil.newthread, oil.run)
+  local success, res = oil.pcall(oil.newthread, orb.run, orb)
   if not success then
     Log:error("Falha na execução do ORB: "..tostring(res).."\n")
     os.exit(1)
@@ -58,8 +63,9 @@ function main()
 
   print("ABCD")
   -- Cria o componente responsável pelo Serviço de Sessão
-  success, res = oil.pcall(oil.newservant,
+  success, res = oil.pcall(orb.newservant, orb,
       SessionServiceComponent("SessionService", SessionServerConfiguration),
+      nil,
       "IDL:scs/core/IComponent:1.0")
   print("EFGH")
   if not success then

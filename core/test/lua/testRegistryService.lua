@@ -3,9 +3,8 @@
 --
 -- $Id$
 --
-package.loaded["oil.component"] = require "loop.component.wrapped"
-package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
+local orb = oil.orb
 
 oil.verbose:level(5)
 
@@ -28,20 +27,20 @@ Suite = {
       oil.verbose:level(0)
 
       local idlfile = CORE_IDL_DIR.."/registry_service.idl"
-      oil.loadidlfile(idlfile)
+      orb:loadidlfile(idlfile)
       idlfile = CORE_IDL_DIR.."/access_control_service.idl"
-      oil.loadidlfile(idlfile)
+      orb:loadidlfile(idlfile)
 
       local user = "tester"
       local password = "tester"
 
-      self.accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local CONF_DIR = os.getenv("CONF_DIR")
       local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
       self.credentialManager = CredentialManager()
-      oil.setclientinterceptor(ClientInterceptor(config, self.credentialManager))
+      orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
 
       local success
       success, self.credential = self.accessControlService:loginByPassword(user, password)
@@ -52,7 +51,7 @@ local a = 1
 
     testRegister = function(self)
       local member = IComponent("Membro Mock", 1)
-      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
+      member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
       local success, registryIdentifier = self.registryService:register({
         properties = {
           {name = "type", value = {"type1"}},
@@ -67,7 +66,7 @@ local a = 1
 
     testFind = function(self)
       local member = IComponent("Membro Mock", 1)
-      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
+      member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
       local success, registryIdentifier = self.registryService:register({
         properties = {
           {name = "type", value = {"X"}},
@@ -95,7 +94,7 @@ local a = 1
 
     testUpdate = function(self)
       local member = IComponent("Membro Mock", 1)
-      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
+      member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
       local serviceOffer = {
         properties = {
           {name = "type", value = {"X"}},
@@ -127,7 +126,7 @@ local a = 1
 
     testFacets = function(self)
       local member = IComponent("Membro Mock", 1)
-      member = oil.newobject(member, "IDL:scs/core/IComponent:1.0")
+      member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
       local dummyObserver = {
         credentialWasDeleted = function(self, credential) end
       }
@@ -140,7 +139,7 @@ local a = 1
           {name = "type", value = {"WithFacets"}},
           {name = "description", value = {"bla"}},
           {name = "p1", value = {"b"}}
-        }, 
+        },
         member = member
       }
       local success, registryIdentifier = self.registryService:register(serviceOffer)

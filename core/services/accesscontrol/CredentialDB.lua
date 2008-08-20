@@ -13,6 +13,7 @@ local tonumber = tonumber
 
 local lposix = require "posix"
 local oil = require "oil"
+local orb = oil.orb
 
 local Log = require "openbus.common.Log"
 
@@ -144,7 +145,7 @@ function toString(self, val)
     for f, s in pairs(val) do
       -- caso especial para referencia a componente
       if type(f) == "string" and f == "component" then
-        str = str .. f .. "=[[" .. oil.tostring(s) .. "]],"
+        str = str .. f .. "=[[" .. orb:tostring(s) .. "]],"
       else
         if not tonumber(f) then
           str = str .. f .. "="
@@ -212,9 +213,10 @@ function retrieveRegistryService(self)
   f:close()
   local registryEntry = dofile(self.databaseDirectory..self.FILE_SEPARATOR..
       "registryservice")
+
   -- recupera referência ao componente
   local regIOR = registryEntry.component
-  registryEntry.component = oil.newproxy(regIOR)
+  registryEntry.component = orb:newproxy(regIOR)
   Log:service("Referencia ao RegistryService recuperada")
   return registryEntry
 end

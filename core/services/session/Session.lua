@@ -5,6 +5,8 @@ local ipairs = ipairs
 local pairs = pairs
 
 local oil = require "oil"
+local orb = oil.orb
+
 local luuid = require "uuid"
 
 local Log = require "openbus.common.Log"
@@ -57,7 +59,7 @@ function addMember(self, member)
   local eventSink = member:getFacet(eventSinkInterface)
   if eventSink then
     Log:service("Membro "..memberName.." receberá eventos")
-    self.eventSinks[identifier] =  oil.narrow(eventSink,
+    self.eventSinks[identifier] =  orb:narrow(eventSink,
         eventSinkInterface)
   else
     Log:service("Membro "..memberName.." não receberá eventos")

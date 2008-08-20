@@ -12,6 +12,7 @@ local print = print
 local luuid = require "uuid"
 local lce = require "lce"
 local oil = require "oil"
+local orb = oil.orb
 
 local CredentialDB = require "core.services.accesscontrol.CredentialDB"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
@@ -78,7 +79,7 @@ function startup(self)
   local iconfig =
     assert(loadfile(CONF_DIR.."/advanced/ACSInterceptorsConfiguration.lua"))()
   self.serverInterceptor = ServerInterceptor(iconfig, self)
-  oil.setserverinterceptor(self.serverInterceptor)
+  orb:setserverinterceptor(self.serverInterceptor)
 
   -- inicializa repositorio de credenciais
   self.privateKey = lce.key.readprivatefrompemfile(self.config.privateKeyFile)

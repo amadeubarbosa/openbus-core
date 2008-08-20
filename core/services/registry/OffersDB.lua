@@ -13,6 +13,7 @@ local tonumber = tonumber
 
 local lposix = require "posix"
 local oil = require "oil"
+local orb = oil.orb
 
 local Log = require "openbus.common.Log"
 
@@ -66,7 +67,7 @@ function retrieveAll(self)
 
       -- caso especial para referencias a membros
       local memberIOR = offerEntry.offer.member
-      offerEntry.offer.member = oil.newproxy(memberIOR)
+      offerEntry.offer.member = orb:newproxy(memberIOR)
 
       offerEntries[offerEntry.identifier] = offerEntry
     end
@@ -145,7 +146,7 @@ function serialize(self, val)
 
       -- caso especial para referencias a membros (persiste o IOR)
       if type(f) == "string"  and f == "member" then
-        str = str .. f .. "=[[" .. oil.tostring(s) .. "]],"
+        str = str .. f .. "=[[" .. orb:tostring(s) .. "]],"
       else
         if not tonumber(f) then
           str = str .. f .. "="

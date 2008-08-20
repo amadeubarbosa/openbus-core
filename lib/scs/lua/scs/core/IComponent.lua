@@ -7,6 +7,7 @@ local IMetaInterface = require "scs.core.IMetaInterface"
 local oop = require "loop.base"
 
 module("scs.core.IComponent", oop.class)
+local orb = oil.orb or oil.init()
 
 function __init(self, name, version)
   local component = oop.rawnew(self, {
@@ -41,7 +42,7 @@ function getComponentId(self)
 end
 
 function addFacet(self, name, interface_name, facet_servant)
-  local facet_ref = oil.newservant(facet_servant, interface_name)
+  local facet_ref = orb:newservant(facet_servant, nil, interface_name)
   local facetDescription = {
     name = name,
     interface_name = interface_name,

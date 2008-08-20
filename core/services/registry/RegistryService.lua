@@ -11,13 +11,13 @@ local error = error
 
 local luuid = require "uuid"
 local oil = require "oil"
+local orb = oil.orb
 
 local OffersDB = require "core.services.registry.OffersDB"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
-local ServerConnectionManager =
-    require "openbus.common.ServerConnectionManager"
+local ServerConnectionManager = require "openbus.common.ServerConnectionManager"
 
 local Log = require "openbus.common.Log"
 
@@ -74,12 +74,12 @@ function startup(self)
     local CONF_DIR = os.getenv("CONF_DIR")
     local interceptorsConfig =
       assert(loadfile(CONF_DIR.."/advanced/RSInterceptorsConfiguration.lua"))()
-    oil.setclientinterceptor(
+    orb:setclientinterceptor(
       ClientInterceptor(interceptorsConfig, credentialManager))
 
     -- instala o interceptador servidor
     self.serverInterceptor = ServerInterceptor(interceptorsConfig, self.accessControlService)
-    oil.setserverinterceptor(self.serverInterceptor)
+    orb:setserverinterceptor(self.serverInterceptor)
 
     -- instancia mecanismo de persistencia
     self.offersDB = OffersDB(self.config.databaseDirectory)
@@ -111,9 +111,10 @@ function startup(self)
       self.registryService:credentialWasDeleted(credential)
     end
   }
-  self.observer = oil.newservant(observer,
-                                "IDL:openbusidl/acs/ICredentialObserver:1.0",
-                                "RegistryServiceCredentialObserver")
+  self.observer = orb:newservant(observer,
+                                "RegistryServiceCredentialObserver",
+                                "IDL:openbusidl/acs/ICredentialObserver:1.0"
+                                )
   self.observerId =
     self.accessControlService:addObserver(self.observer, {})
   Log:service("Cadastrado observador para a credencial")
@@ -225,7 +226,7 @@ function createPropertyIndex(self, offerProperties, member)
     Log:service("Oferta de serviço sem facetas para o membro "..memberName)
     local metaInterface = member:getFacetByName("IMetaInterface")
     if metaInterface then
-      metaInterface = oil.narrow(metaInterface,
+      metaInterface = orb:narrow(metaInterface,
           "IDL:scs/core/IMetaInterface:1.0")
       local facet_descriptions = metaInterface:getFacets()
       if #facet_descriptions == 0 then

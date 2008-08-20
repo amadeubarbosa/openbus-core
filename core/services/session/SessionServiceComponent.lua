@@ -6,6 +6,7 @@ local loadfile = loadfile
 local assert = assert
 
 local oil = require "oil"
+local orb = oil.orb
 
 local SessionService = require "core.services.session.SessionService"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
@@ -68,12 +69,12 @@ function startup(self)
     local CONF_DIR = os.getenv("CONF_DIR")
     local interceptorsConfig =
       assert(loadfile(CONF_DIR.."/advanced/SSInterceptorsConfiguration.lua"))()
-    oil.setclientinterceptor(
+    orb:setclientinterceptor(
       ClientInterceptor(interceptorsConfig, credentialManager))
 
     -- instala o interceptador servidor
     self.serverInterceptor = ServerInterceptor(interceptorsConfig, self.accessControlService)
-    oil.setserverinterceptor(self.serverInterceptor)
+    orb:setserverinterceptor(self.serverInterceptor)
 
     self.initialized = true
   else

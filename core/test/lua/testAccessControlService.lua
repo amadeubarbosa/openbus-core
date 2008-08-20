@@ -3,6 +3,7 @@
 -- $Id$
 --
 require "oil"
+local orb = oil.orb
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
@@ -23,18 +24,18 @@ Suite = {
       local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
 
       oil.verbose:level(0)
-      oil.loadidlfile(idlfile)
+      orb:loadidlfile(idlfile)
 
       self.user = "tester"
       self.password = "tester"
 
-      self.accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local CONF_DIR = os.getenv("CONF_DIR")
       local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
       self.credentialManager = CredentialManager()
-      oil.setclientinterceptor(ClientInterceptor(config, self.credentialManager))
+      orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
     end,
 
     testLoginByPassword = function(self)
@@ -45,9 +46,9 @@ Suite = {
       Check.assertTrue(success)
       Check.assertNotEquals(credential.identifier, credential2.identifier)
 
-      self.credentialManager:setValue(credential) 
+      self.credentialManager:setValue(credential)
       Check.assertTrue(self.accessControlService:logout(credential))
-      self.credentialManager:setValue(credential2) 
+      self.credentialManager:setValue(credential2)
       Check.assertTrue(self.accessControlService:logout(credential2))
       self.credentialManager:invalidate()
     end,
@@ -60,10 +61,10 @@ Suite = {
 
     testLogout = function(self)
       local _, credential = self.accessControlService:loginByPassword(self.user, self.password)
-      self.credentialManager:setValue(credential) 
+      self.credentialManager:setValue(credential)
       Check.assertFalse(self.accessControlService:logout({identifier = "", entityName = "abcd", }))
       Check.assertTrue(self.accessControlService:logout(credential))
-      self.credentialManager:invalidate(credential) 
+      self.credentialManager:invalidate(credential)
       Check.assertError(self.accessControlService.logout,self.accessControlService,credential)
     end,
   },
@@ -78,18 +79,18 @@ Suite = {
       local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
 
       oil.verbose:level(0)
-      oil.loadidlfile(idlfile)
+      orb:loadidlfile(idlfile)
 
       self.user = "tester"
       self.password = "tester"
 
-      self.accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local CONF_DIR = os.getenv("CONF_DIR")
       local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
       self.credentialManager = CredentialManager()
-      oil.setclientinterceptor(ClientInterceptor(config, self.credentialManager))
+      orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
     end,
 
     beforeEachTest = function(self)
@@ -127,7 +128,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential, credential)
       end
-      credentialObserver = oil.newobject(credentialObserver, "IDL:openbusidl/acs/ICredentialObserver:1.0")
+      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:openbusidl/acs/ICredentialObserver:1.0")
       local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       Check.assertNotEquals("", observerIdentifier)
       Check.assertTrue(self.accessControlService:removeObserver(observerIdentifier))
@@ -139,7 +140,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential.identifier, credential.identifier)
       end
-      credentialObserver = oil.newobject(credentialObserver, "IDL:openbusidl/acs/ICredentialObserver:1.0")
+      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:openbusidl/acs/ICredentialObserver:1.0")
       local observersId = {}
       for i=1,3 do
         observersId[i] = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
@@ -159,7 +160,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential.identifier, credential.identifier)
       end
-      credentialObserver = oil.newobject(credentialObserver, "IDL:openbusidl/acs/ICredentialObserver:1.0")
+      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:openbusidl/acs/ICredentialObserver:1.0")
       local observerId = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()

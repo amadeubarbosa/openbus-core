@@ -1,6 +1,8 @@
 -- $Id$
 
 local oil = require "oil"
+local orb = oil.orb
+
 local luuid = require "uuid"
 
 local Session = require "core.services.session.Session"
@@ -52,7 +54,7 @@ function createSession(self, member)
   end
   Log:service("Vou criar sessão")
   local session = Session(self:generateIdentifier(), credential)
-  session = oil.newservant(session, "IDL:openbusidl/ss/ISession:1.0")
+  session = orb:newservant(session, nil, "IDL:openbusidl/ss/ISession:1.0")
   self.sessions[credential.identifier] = session
   Log:service("Sessão criada!")
 
@@ -65,9 +67,9 @@ function createSession(self, member)
           self.sessionService:credentialWasDeleted(credential)
         end
     }
-    self.observer = oil.newservant(observer,
-                                  "IDL:openbusidl/acs/ICredentialObserver:1.0",
-                                  "SessionServiceCredentialObserver")
+    self.observer = orb:newservant(observer,
+                                  "SessionServiceCredentialObserver",
+                                  "IDL:openbusidl/acs/ICredentialObserver:1.0")
     self.observerId =
       self.accessControlService:addObserver(self.observer,
                                             {credential.identifier})
