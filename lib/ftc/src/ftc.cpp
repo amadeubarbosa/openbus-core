@@ -25,9 +25,9 @@ void ftc::setEnv()
   lua_setfield(LuaVM, -2, "socket.core");
   // preload all OiL libraries
   luapreload_oilall(LuaVM);
+  luaopen_auxiliar( LuaVM ) ;
   luaopen_ftc_verbose(LuaVM);
   luaopen_ftc(LuaVM);
-  luaopen_auxiliar( LuaVM ) ;
   lua_pop( LuaVM, 1 ) ;
 }
 

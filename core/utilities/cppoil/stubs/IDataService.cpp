@@ -1417,11 +1417,12 @@ namespace dataService {
     #endif
       throw returnValue;
     } /* if */
-      lua_getglobal(LuaVM, "oil");
+      lua_getglobal(LuaVM, "orb");
       lua_getfield(LuaVM, -1, "narrow");
-      lua_pushvalue(LuaVM, -3);
+      lua_getglobal(LuaVM, "orb");
+      lua_pushvalue(LuaVM, -4);
       lua_pushstring(LuaVM, facet_interface);
-      lua_pcall(LuaVM, 2, 1, 0);
+      lua_pcall(LuaVM, 3, 1, 0);
     #if VERBOSE
       const void* luaRef = lua_topointer(LuaVM, -1);
     #endif

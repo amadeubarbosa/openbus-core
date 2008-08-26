@@ -3,9 +3,9 @@
 --
 -- $Id$
 --
-package.loaded["oil.component"] = require "loop.component.wrapped"
-package.loaded["oil.port"]      = require "loop.component.intercepted"
 require "oil"
+oil.orb = oil.init {flavor = "intercepted;corba;typed;cooperative;base"}
+local orb = oil.orb
 
 local CredentialManager = require "openbus.common.CredentialManager"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
@@ -27,13 +27,13 @@ local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lu
 oil.verbose:level(0)
 
 local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
-oil.loadidlfile(idlfile)
+orb:loadidlfile(idlfile)
 idlfile = CORE_IDL_DIR.."/registry_service.idl"
-oil.loadidlfile(idlfile)
+orb:loadidlfile(idlfile)
 idlfile = CORE_IDL_DIR.."/data_service.idl"
-oil.loadidlfile(idlfile)
+orb:loadidlfile(idlfile)
 idlfile = IDLPATH_DIR.."/project_service.idl"
-oil.loadidlfile(idlfile)
+orb:loadidlfile(idlfile)
 
 -- Serviço de Acesso
 local host = "localhost"
@@ -67,12 +67,12 @@ end
 
 function main()
   local accessControlServiceInterface = "IDL:openbusidl/acs/IAccessControlService:1.0"
-  local accessControlService = oil.newproxy("corbaloc::"..host..":"..port.."/ACS", accessControlServiceInterface)
-  accessControlService = oil.narrow(accessControlService, accessControlServiceInterface)
+  local accessControlService = orb:newproxy("corbaloc::"..host..":"..port.."/ACS", accessControlServiceInterface)
+  accessControlService = orb:narrow(accessControlService, accessControlServiceInterface)
 
   -- instala o interceptador de cliente
   local credentialManager= CredentialManager()
-  oil.setclientinterceptor(ClientInterceptor(config, credentialManager))
+  orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
 
   local credential
   _, credential = accessControlService:loginByPassword(user, password)
@@ -90,7 +90,7 @@ function main()
     local serviceOffer = serviceOffers[1]
     local dataServiceInterface = "IDL:openbusidl/ds/IDataService:1.0"
     local dataService = serviceOffer.member:getFacet(dataServiceInterface)
-    dataService = oil.narrow(dataService, dataServiceInterface)
+    dataService = orb:narrow(dataService, dataServiceInterface)
     showNodes(dataService:getRoots(), 1, dataService)
   end
   accessControlService:logout(credential)

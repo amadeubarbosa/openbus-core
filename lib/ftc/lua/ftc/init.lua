@@ -15,16 +15,15 @@ local pairs     = pairs
 local string    = string
 local tonumber  = tonumber
 
-OIL_FLAVOR = "corba;csockets;cooperative;typed;base"
-
 local oil = require 'oil'
+local orb = oil.orb
 
 local pack = oil.bit.pack
 
 local oo = require "loop.base"
 module("ftc", oo.class)
 
-local sockets = oil.TaskManager.sockets
+local sockets = oil.kernel.base.Sockets
 
 local operation = {
   OPEN_READ_ONLY  = 0,

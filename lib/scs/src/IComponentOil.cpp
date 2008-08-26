@@ -356,12 +356,11 @@ namespace scs {
     #endif
       lua_getglobal(LuaVM, "orb");
       lua_getfield(LuaVM, -1, "loadidl");
-      lua_remove(LuaVM, 1);
+      lua_insert(LuaVM, -2);
     #if VERBOSE
       printf("\t[metodo loadidl empilhado]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      lua_getglobal(LuaVM, "orb");
       lua_pushstring(LuaVM, idl);
     #if VERBOSE
       printf("\t[idl=%s empilhado]\n", idl);
@@ -402,8 +401,7 @@ namespace scs {
     #endif
       lua_getglobal(LuaVM, "orb");
       lua_getfield(LuaVM, -1, "loadidlfile");
-      lua_remove(LuaVM, 1);
-      lua_getglobal(LuaVM, "orb");
+      lua_insert(LuaVM, -2);
     #if VERBOSE
       printf("\t[metodo loadidlfile empilhado]\n");
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -491,8 +489,8 @@ namespace scs {
       } /* if */
       lua_getglobal(LuaVM, "orb");
       lua_getfield(LuaVM, -1, "narrow");
-      lua_pushvalue(LuaVM, -3);
       lua_getglobal(LuaVM, "orb");
+      lua_pushvalue(LuaVM, -4);
       lua_pushstring(LuaVM, facet_interface);
       lua_pcall(LuaVM, 3, 1, 0);
     #if VERBOSE
