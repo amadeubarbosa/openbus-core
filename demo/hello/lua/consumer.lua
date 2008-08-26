@@ -3,9 +3,14 @@
 -- consumer.lua
 --
 
-package.loaded["oil.component"] = require "loop.component.wrapped"
-package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
+
+local orb = oil.init {
+                       flavor = "intercepted;corba;typed;cooperative;base",
+                       tcpoptions = {reuseaddr = true}
+                     }
+
+oil.orb = orb
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
@@ -13,7 +18,7 @@ local CredentialManager = require "openbus.common.CredentialManager"
 local IComponent = require "scs.core.IComponent"
 
 --  oil.verbose:level(0)
-oil.loadidlfile "hello.idl"
+orb:loadidlfile "hello.idl"
 
 function main ()
   local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
@@ -23,21 +28,20 @@ function main ()
   end
 
   local idlfile = CORE_IDL_DIR.."/registry_service.idl"
-  oil.loadidlfile(idlfile)
+  orb:loadidlfile(idlfile)
   idlfile = CORE_IDL_DIR.."/access_control_service.idl"
-  oil.loadidlfile(idlfile)
+  orb:loadidlfile(idlfile)
 
   local user = "tester"
   local password = "tester"
 
-  accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS",
-"IDL:openbusidl/acs/IAccessControlService:1.0")
+  accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
 -- instala o interceptador de cliente
   local CONF_DIR = os.getenv("CONF_DIR")
   local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
   credentialManager = CredentialManager()
-  oil.setclientinterceptor(ClientInterceptor(config, credentialManager))
+  orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
 
   local success
   success, credential = accessControlService:loginByPassword(user, password)
@@ -47,9 +51,9 @@ function main ()
 
   local offers = registryService:find({name = "type", value = "type"})
   -- Assume que o publisher é o único serviço cadastrado.
-  SS = oil.narrow(offers[1].member, "IDL:scs/core/IComponent:1.0")
+  SS = orb:narrow(offers[1].member, "IDL:scs/core/IComponent:1.0")
   local facet = SS:getFacet("IDL:Hello:1.0")
-  hello = oil.narrow(facet, "IDL:Hello:1.0")
+  hello = orb:narrow(facet, "IDL:Hello:1.0")
   hello:sayHello()
 
 end

@@ -3,9 +3,14 @@
 -- publisher.lua
 --
 
-package.loaded["oil.component"] = require "loop.component.wrapped"
-package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
+
+local orb = oil.init {
+                       flavor = "intercepted;corba;typed;cooperative;base",
+                       tcpoptions = {reuseaddr = true}
+                     }
+
+oil.orb = orb
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
@@ -14,9 +19,9 @@ local CredentialManager = require "openbus.common.CredentialManager"
 local IComponent = require "scs.core.IComponent"
 
 --  oil.verbose:level(0)
-oil.loadidlfile "hello.idl"
+orb:loadidlfile "hello.idl"
 
-oil.tasks:register(coroutine.create(oil.run))
+oil.tasks:register(coroutine.create(function() return orb:run() end))
 
 function main ()
   local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
@@ -26,22 +31,22 @@ function main ()
   end
 
   local idlfile = CORE_IDL_DIR.."/registry_service.idl"
-  oil.loadidlfile(idlfile)
+  orb:loadidlfile(idlfile)
   idlfile = CORE_IDL_DIR.."/access_control_service.idl"
-  oil.loadidlfile(idlfile)
+  orb:loadidlfile(idlfile)
 
   local user = "tester"
   local password = "tester"
 
-  accessControlService = oil.newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+  accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
   -- instala o interceptador de cliente
   local CONF_DIR = os.getenv("CONF_DIR")
   local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
   credentialManager = CredentialManager()
-  oil.setclientinterceptor(ClientInterceptor(config, credentialManager))
+  orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
   serverInterceptor = ServerInterceptor(config, accessControlService)
-  oil.setserverinterceptor(serverInterceptor)
+  orb:setserverinterceptor(serverInterceptor)
 
   local success
   success, credential = accessControlService:loginByPassword(user, password)
@@ -59,7 +64,7 @@ function main ()
       registryService:unregister(registryIdentifier)
     end
     local M = IComponent("Membro", 1)
-    M = oil.newobject(M, "IDL:scs/core/IComponent:1.0")
+    M = orb:newservant(M, nil, "IDL:scs/core/IComponent:1.0")
     M:addFacet("faceta", "IDL:Hello:1.0", Hello)
     success, registryIdentifier = registryService:register({ properties = {{name = "type", value = {"type"}}}, member = M, })
     print("*********************************************\n")
