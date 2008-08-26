@@ -54,7 +54,13 @@ class RGSTestSuite: public CxxTest::TestSuite {
         acs->loginByPassword("tester", "tester", credential, lease);
         credentialManager->setValue(credential);
         rgs = acs->getRegistryService();
-        serviceOfferList = rgs->find("ProjectService", NULL);
+        propertyList = new services::PropertyList;
+        property = new services::Property;
+        property->name = "facets";
+        property->value = new services::PropertyValue;
+        property->value->newmember("projectDataService");
+        propertyList->newmember(property);
+        serviceOfferList = rgs->find(propertyList);
         TS_ASSERT(serviceOfferList != NULL);
         so = serviceOfferList->getmember(0);
         member = so->member;
