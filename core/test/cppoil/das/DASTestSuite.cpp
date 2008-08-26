@@ -24,6 +24,9 @@ class DASTestSuite: public CxxTest::TestSuite {
     services::IRegistryService* rgs;
     services::ServiceOfferList* serviceOfferList;
     services::ServiceOffer* so;
+    services::Property* property;
+    services::PropertyList* propertyList;
+    services::PropertyValue* propertyValue;
     scs::core::IComponent* member;
     common::CredentialManager* credentialManager;
     common::ClientInterceptor* clientInterceptor;
@@ -52,7 +55,13 @@ class DASTestSuite: public CxxTest::TestSuite {
         acs->loginByPassword("tester", "tester", credential, lease);
         credentialManager->setValue(credential);
         rgs = acs->getRegistryService();
-        serviceOfferList = rgs->find("ProjectService", NULL);
+        propertyList = new services::PropertyList;
+        property = new services::Property;
+        property->name = "facets";
+        property->value = new services::PropertyValue;
+        property->value->newmember("projectDataService");
+        propertyList->newmember(property);
+        serviceOfferList = rgs->find(propertyList);
         TS_ASSERT(serviceOfferList != NULL);
         so = serviceOfferList->getmember(0);
         member = so->member;
