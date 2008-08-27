@@ -4,16 +4,12 @@ No tecgraf:
 2) Criar, em ${OPENBUS_HOME}, os links
 incpath->/home/t/tecgraf/prod/app/openbus/incpath
 libpath->/home/t/tecgraf/prod/app/openbus/libpath
+idlpath->/home/t/tecgraf/prod/app/openbus/idlpath
 
 Fora do tecgraf:
 2) Expandir o pacote das libs externas em OPENBUS_HOME.
-
-3) **TEMPORÁRIO**
-   Copiar scs.idl de /home/t/tecgraf/prod/app/openbus/lib/scs/idl para 
-   ${OPENBUS_HOME}/core/idl
-
+3) Expandir o pacote de IDL's em OPENBUS_HOME.
 4) Em ${OPENBUS_HOME}/core/services, fazer tecmake.
-
 5) Executar os serviços básicos a partir de ${OPENBUS_HOME}/core/bin.
 
 Para mais informações, consultar o manual do usuário em
