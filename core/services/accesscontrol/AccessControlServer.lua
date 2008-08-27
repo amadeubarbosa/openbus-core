@@ -8,9 +8,9 @@ local Log = require "openbus.common.Log"
 
 local oil = require "oil"
 
-local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
-if CORE_IDL_DIR == nil then
-  Log:error("A variavel CORE_IDL_DIR nao foi definida.\n")
+local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+if IDLPATH_DIR == nil then
+  Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
   os.exit(1)
 end
 
@@ -42,7 +42,7 @@ oil.orb = orb
 
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
 
-orb:loadidlfile(CORE_IDL_DIR.."/access_control_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
 
 ---
 --Função que será executada pelo OiL em modo protegido.

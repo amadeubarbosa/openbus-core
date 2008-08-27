@@ -12,9 +12,9 @@ require "ftc"
 local CredentialManager = require "openbus.common.CredentialManager"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 
-local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
-if CORE_IDL_DIR == nil then
-  io.stderr:write("A variável CORE_IDL_DIR não foi definida.\n")
+local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+if IDLPATH_DIR == nil then
+  io.stderr:write("A variável IDLPATH_DIR não foi definida.\n")
   os.exit(1)
 end
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
@@ -31,9 +31,9 @@ oil.verbose:level(0)
 local actualDataId = arg[1]
 print("ID: ", actualDataId)
 
-local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
+local idlfile = IDLPATH_DIR.."/access_control_service.idl"
 orb:loadidlfile(idlfile)
-idlfile = CORE_IDL_DIR.."/registry_service.idl"
+idlfile = IDLPATH_DIR.."/registry_service.idl"
 orb:loadidlfile(idlfile)
 idlfile = IDLPATH_DIR.."/project_service.idl"
 orb:loadidlfile(idlfile)

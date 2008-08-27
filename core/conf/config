@@ -1,5 +1,4 @@
 export CONF_DIR=${OPENBUS_HOME}/core/conf
-export CORE_IDL_DIR=${OPENBUS_HOME}/core/idl
 export IDLPATH_DIR=${OPENBUS_HOME}/idlpath
 
 export LUA_PATH="${OPENBUS_HOME}/?.lua;${OPENBUS_HOME}/core/utilities/lua/?.lua;${OPENBUS_HOME}/libpath/lua/5.1/?.lua;${OPENBUS_HOME}/libpath/lua/5.1/?/init.lua"

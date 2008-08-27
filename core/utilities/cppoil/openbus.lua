@@ -10,9 +10,9 @@ oil.orb = orb
 oilcorbaidlstring = oil.corba.idl.string
 
 
-orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/access_control_service.idl" )
-orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/registry_service.idl" )
-orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/core/idl/session_service.idl" )
+orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/idlpath/access_control_service.idl" )
+orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/idlpath/registry_service.idl" )
+orb:loadidlfile( os.getenv( "OPENBUS_HOME" ).."/idlpath/session_service.idl" )
 
 local lir = orb:getLIR()
 

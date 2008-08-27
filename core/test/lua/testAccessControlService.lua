@@ -16,12 +16,12 @@ Suite = {
   -- 
   Test1 = {
     beforeTestCase = function(self)
-      local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
-      if CORE_IDL_DIR == nil then
-        io.stderr:write("A variavel CORE_IDL_DIR nao foi definida.\n")
+      local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+      if IDLPATH_DIR == nil then
+        io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
         os.exit(1)
       end
-      local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
+      local idlfile = IDLPATH_DIR.."/access_control_service.idl"
 
       oil.verbose:level(0)
       orb:loadidlfile(idlfile)
@@ -71,12 +71,12 @@ Suite = {
 
   Test2 = {
     beforeTestCase = function(self)
-      local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
-      if CORE_IDL_DIR == nil then
-        io.stderr:write("A variavel CORE_IDL_DIR nao foi definida.\n")
+      local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+      if IDLPATH_DIR == nil then
+        io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
         os.exit(1)
       end
-      local idlfile = CORE_IDL_DIR.."/access_control_service.idl"
+      local idlfile = IDLPATH_DIR.."/access_control_service.idl"
 
       oil.verbose:level(0)
       orb:loadidlfile(idlfile)

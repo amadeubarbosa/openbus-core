@@ -64,7 +64,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         TS_ASSERT(serviceOfferList != NULL);
         so = serviceOfferList->getmember(0);
         member = so->member;
-        member->loadidlfile("/home/rcosme/tecgraf/work/openbus/services/idl/project_service.idl");
+        member->loadidlfile("/home/rcosme/tecgraf/work/openbus/idlpath/project_service.idl");
         ds = member->getFacet <dataService::IDataService> ("IDL:openbusidl/ds/IDataService:1.0");
         dataService::DataKey* dataKey = new dataService::DataKey;
         dataKey->service_id = member->getComponentId();

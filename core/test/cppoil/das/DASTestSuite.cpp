@@ -65,7 +65,7 @@ class DASTestSuite: public CxxTest::TestSuite {
         TS_ASSERT(serviceOfferList != NULL);
         so = serviceOfferList->getmember(0);
         member = so->member;
-        member->loadidlfile("/home/rcosme/tecgraf/work/openbus/core/idl/data_service.idl");
+        member->loadidlfile("/home/rcosme/tecgraf/work/openbus/idlpath/data_service.idl");
         ds = member->getFacet <dataService::IDataService> ("IDL:openbusidl/ds/IDataService:1.0");
       } catch (const char* errmsg) {
         TS_FAIL(errmsg);

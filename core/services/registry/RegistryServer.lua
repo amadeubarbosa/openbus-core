@@ -14,9 +14,9 @@ local Log = require "openbus.common.Log"
 
 local RegistryService = require "core.services.registry.RegistryService"
 
-local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
-if CORE_IDL_DIR == nil then
-  Log:error("A variavel CORE_IDL_DIR nao foi definida.\n")
+local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+if IDLPATH_DIR == nil then
+  Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
   os.exit(1)
 end
 
@@ -42,9 +42,9 @@ if RegistryServerConfiguration.oilVerboseLevel then
 end
 
 -- Carrega a interface do serviço
-local idlfile = CORE_IDL_DIR.."/registry_service.idl"
+local idlfile = IDLPATH_DIR.."/registry_service.idl"
 orb:loadidlfile(idlfile)
-idlfile = CORE_IDL_DIR.."/access_control_service.idl"
+idlfile = IDLPATH_DIR.."/access_control_service.idl"
 orb:loadidlfile(idlfile)
 
 function main()

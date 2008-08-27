@@ -21,15 +21,15 @@ local IComponent = require "scs.core.IComponent"
 orb:loadidlfile "hello.idl"
 
 function main ()
-  local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
-  if CORE_IDL_DIR == nil then
-    io.stderr:write("A variavel CORE_IDL_DIR nao foi definida.\n")
+  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+  if IDLPATH_DIR == nil then
+    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
     os.exit(1)
   end
 
-  local idlfile = CORE_IDL_DIR.."/registry_service.idl"
+  local idlfile = IDLPATH_DIR.."/registry_service.idl"
   orb:loadidlfile(idlfile)
-  idlfile = CORE_IDL_DIR.."/access_control_service.idl"
+  idlfile = IDLPATH_DIR.."/access_control_service.idl"
   orb:loadidlfile(idlfile)
 
   local user = "tester"
