@@ -25,7 +25,7 @@ typedef sequence<IProject> ProjectList;
 
 struct DataChannel {
   string host;
-  unsigned short port;
+  unsigned long port;
   OctetSeq accessKey;
   OctetSeq fileIdentifier;
   boolean writable;
