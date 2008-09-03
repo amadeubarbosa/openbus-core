@@ -17,5 +17,5 @@ SRC= IComponentOrbix.cpp \
 
 genstubs:
 	mkdir -p stubs
-	cd stubs ; idl --poa --use-quotes --no-paths ../../idl/scs.idl
+	cd stubs ; idl -base -poa ../../idl/scs.idl
 
