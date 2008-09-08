@@ -97,7 +97,9 @@ function startup(self)
   -- registra sua oferta de serviço junto ao Serviço de Registro
   self.serviceOffer = {
     member = self,
-    properties = {},
+    properties = {
+      {name = "facets", value = {"sessionService"}},
+    },
   }
   local registryService = self.accessControlService:getRegistryService()
   if not registryService then
