@@ -1,5 +1,4 @@
 -- $Id$
-
 local io = io
 local string = string
 local os = os
@@ -14,6 +13,8 @@ local tonumber = tonumber
 local lposix = require "posix"
 local oil = require "oil"
 local orb = oil.orb
+
+local FileStream = require "loop.serial.FileStream"
 
 local Log = require "openbus.common.Log"
 
@@ -61,8 +62,13 @@ function retrieveAll(self)
   local offerEntries = {}
   for _, fileName in ipairs(offerFiles) do
     if string.sub(fileName, -(#self.FILE_SUFFIX)) == self.FILE_SUFFIX then
-      local offerEntry = dofile(self.databaseDirectory..self.FILE_SEPARATOR..
-          fileName)
+      local offerFile = io.open(self.databaseDirectory..self.FILE_SEPARATOR..fileName)
+      local stream = FileStream{
+        file = offerFile
+      }
+      local offerEntry = stream:get()
+      offerFile:close()
+
       self.dbOffers[offerEntry.identifier] = true
 
       -- caso especial para referencias a membros
@@ -131,42 +137,6 @@ function delete(self, offerEntry)
 end
 
 ---
---Função auxiliar que transforma um objeto em uma string.
---
---@param val O objeto.
---
---@return A string representando o objeto, ou nil caso seja um objeto de tipo
---não suportado.
----
-function serialize(self, val)
-  local t = type(val)
-  if t == "table" then
-    local str = '{'
-    for f, s in pairs(val) do
-
-      -- caso especial para referencias a membros (persiste o IOR)
-      if type(f) == "string"  and f == "member" then
-        str = str .. f .. "=[[" .. orb:tostring(s) .. "]],"
-      else
-        if not tonumber(f) then
-          str = str .. f .. "="
-        end
-        str = str .. self:serialize(s) .. ","
-      end
-    end
-    return str .. '}'
-  elseif t == "string" then
-    return "[[" .. val .. "]]"
-  elseif t == "number" then
-    return val
-  elseif t == "boolean" then
-    return tostring(val)
-  else -- if not tab then
-    return "nil"
-  end
-end
-
----
 --Escreve a oferta de serviço em arquivo.
 --
 --@param offerEntry A oferta de serviço.
@@ -180,8 +150,16 @@ function writeOffer(self, offerEntry)
   if not offerFile then
     return false, errorMessage
   end
-  offerFile:write("return ".. self:serialize(offerEntry))
+  local stream = FileStream{
+    file = offerFile,
+    getmetatable = false,
+  }
+
+  local member =  offerEntry.offer.member
+  stream[member] = "'"..orb:tostring(member).."'"
+  stream:put(offerEntry)
   offerFile:close()
+
   return true
 end
 
