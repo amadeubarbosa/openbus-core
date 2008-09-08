@@ -6,8 +6,6 @@
 local oil = require "oil"
 local orb = oil.orb
 
-oil.verbose:level(5)
-
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
 
