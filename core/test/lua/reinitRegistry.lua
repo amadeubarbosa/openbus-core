@@ -3,9 +3,10 @@
 --
 -- $Id$
 --
-package.loaded["oil.component"] = require "loop.component.wrapped"
-package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
+
+local orb = oil.init {flavor = "intercepted;corba;typed;cooperative;base",}
+oil.orb = orb
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
@@ -13,17 +14,18 @@ local ClientConnectionManager = require "openbus.common.ClientConnectionManager"
 
 oil.verbose:level(3)
 
-local CORE_IDL_DIR = os.getenv("CORE_IDL_DIR")
-if CORE_IDL_DIR == nil then
-  error("ERRO: A variavel CORE_IDL_DIR nao foi definida.\n")
+local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+if IDLPATH_DIR == nil then
+  Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
+  os.exit(1)
 end
-
-oil.loadidlfile(CORE_IDL_DIR.."/registry_service.idl")
-oil.loadidlfile(CORE_IDL_DIR.."/access_control_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/session_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
 
 function main()
   -- Aloca uma thread para o oil
-  local success, res = oil.pcall(oil.newthread, oil.run)
+  local success, res = oil.pcall(oil.newthread, orb.run, orb)
   if not success then
     error("ERRO: Falha na execução da thread do oil")
   end
@@ -49,7 +51,7 @@ function main()
   end
     local config = 
       assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
-    oil.setclientinterceptor(ClientInterceptor(config, credentialManager))
+    orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
   
   -- autentica o cliente
   success = connectionManager:connect()
