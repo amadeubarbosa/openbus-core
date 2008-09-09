@@ -10,7 +10,7 @@ require "oil"
 
 local socket = require "socket"
 
-local host = "localhost"
+local host = "gnaisse"
 local port = 40120
 
 local operation = {

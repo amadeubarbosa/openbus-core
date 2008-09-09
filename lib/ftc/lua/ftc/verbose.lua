@@ -20,6 +20,7 @@ LOG = verbose {
     {"getSize"},
     {"read"},
     {"write"},
+    {"LuaNumber2Long"},
     {"OctBytes2Long"},
     all = {
       "log",
@@ -31,6 +32,7 @@ LOG = verbose {
       "getSize",
       "read",
       "write",
+      "LuaNumber2Long",
       "OctBytes2Long"
     },
   },

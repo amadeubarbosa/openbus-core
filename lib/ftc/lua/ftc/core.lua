@@ -1,29 +1,29 @@
 --
--- init.lua
+-- core.lua
 --
 
-local receiveUserData = receiveUserData
-
 -- Verbose
-local print = print
+-- [[VERBOSE]] local print = print
 -- [[VERBOSE]] local verbose = require "ftc.verbose"
 -- [[VERBOSE]] local LOG = verbose.LOG
 
-local error     = error
 local math      = math
 local pairs     = pairs
 local string    = string
-local tonumber  = tonumber
-
-local oil = require 'oil'
-local orb = oil.orb
-
-local pack = oil.bit.pack
 
 local oo = require "loop.base"
-module("ftc", oo.class)
+module("ftc.core", oo.class)
 
-local sockets = oil.kernel.base.Sockets
+function showAccessKey(key)
+  local len = string.len(key)
+  local dump = ''
+  for i=1, len do
+    dump = dump..'['..string.byte(key, i, i)..'] '
+  end
+  return dump
+end
+
+local sockets
 
 local operation = {
   OPEN_READ_ONLY  = 0,
@@ -70,7 +70,8 @@ local timeout
 -- @param host The host of server
 -- @param port The port of server
 -- @param accessKey This is an access key for the file
-function __init(self, identifier, writable, size, host, port, accessKey)
+function __init(self, psockets, identifier, writable, size, host, port, accessKey)
+  sockets = psockets
   return oo.rawnew(self, {
     identifier = identifier,
     writable = writable,
@@ -84,6 +85,7 @@ end
 -- Base converter
 -- Decimal to base 256
 local function LuaNumber2Long(x)
+-- [[VERBOSE]] LOG:LuaNumber2Long("["..x.."]")
   local v = ""
   x = math.floor(x)
   for i = 1, 8 do
@@ -134,7 +136,7 @@ function open(self, readonly)
 -- [[VERBOSE]] LOG:open("Conexão estabelecida.")
   self.buffer = string.char(string.len(self.accessKey))
   self.buffer = self.buffer..self.accessKey
--- [[VERBOSE]] LOG:open("accessKey = ", self.accessKey)
+-- [[VERBOSE]] LOG:open("accessKey[", string.len(self.accessKey), "] = ", showAccessKey(self.accessKey))
   if (readonly) then
   -- [[VERBOSE]] LOG:open("Operação OPEN_READ_ONLY")
     self.buffer = self.buffer..operation.OPEN_READ_ONLY
@@ -334,4 +336,4 @@ function write(self, nbytes, position, data)
     return nil, errmsg
   end
   return true
-  end
+end

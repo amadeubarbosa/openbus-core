@@ -7,9 +7,12 @@
 #include <lua.hpp>
 extern "C" {
   #include "luasocket.h"
+#ifndef WITHOUT_OIL
   #include "oilall.h"
-  #include "auxiliar.h"
   #include "ftc_core.h"
+#else
+  #include "ftcwooil_core.h"
+#endif
 }
 #include <string.h>
 
@@ -23,11 +26,14 @@ void ftc::setEnv()
   luaL_findtable(LuaVM, LUA_GLOBALSINDEX, "package.preload", 1);
   lua_pushcfunction(LuaVM, luaopen_socket_core);
   lua_setfield(LuaVM, -2, "socket.core");
+#ifndef WITHOUT_OIL
   // preload all OiL libraries
   luapreload_oilall(LuaVM);
-  luaopen_auxiliar( LuaVM ) ;
   luaopen_ftc_verbose(LuaVM);
   luaopen_ftc(LuaVM);
+#else
+  luaopen_ftcwooil(LuaVM);
+#endif
   lua_pop( LuaVM, 1 ) ;
 }
 
@@ -91,7 +97,7 @@ ftc::ftc( const char* id, bool writable, unsigned long long size, const char* ho
   #endif
   lua_pushstring( LuaVM, accessKey ) ;
   #if VERBOSE
-    printf( "\t[parâmetro accessKey = %s empilhado]\n", accessKey ) ;
+    printf( "\t[parâmetro accessKey(%d) = %s empilhado]\n", strlen(accessKey), accessKey ) ;
   #endif
   lua_pcall( LuaVM, 6, 1, 0 ) ;
   #if VERBOSE
@@ -129,7 +135,11 @@ void ftc::open( bool readonly )
 #if VERBOSE
   printf( "[ftc::open() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -141,7 +151,11 @@ void ftc::open( bool readonly )
 #if VERBOSE
   printf( "\t[parâmetro readonly = %d empilhado]\n", readonly ) ;
 #endif
-  if ( lua_pcall( LuaVM, 3, 3, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 4, 3, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 2, 3, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -155,7 +169,7 @@ void ftc::open( bool readonly )
     errmsg = lua_tostring( LuaVM, -1 ) ;
     lua_pop( LuaVM, 1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::open() FIM]\n\n" ) ;
   #endif
@@ -171,7 +185,7 @@ void ftc::open( bool readonly )
     lua_pop( LuaVM, 3 ) ;
   #if VERBOSE
     printf( "\t[errorCode = %d]\n", errorCode ) ;
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::open() FIM]\n\n" ) ;
   #endif
@@ -195,7 +209,11 @@ bool ftc::isOpen()
 #if VERBOSE
   printf( "[ftc::isOpen() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -203,7 +221,11 @@ bool ftc::isOpen()
 #endif
   lua_getfield( LuaVM, -1, "isOpen" ) ;
   lua_insert( LuaVM, -2 ) ;
-  if ( lua_pcall( LuaVM, 2, 1, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 3, 1, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 1, 1, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -217,7 +239,7 @@ bool ftc::isOpen()
     errmsg = lua_tostring( LuaVM, -1 ) ;
     lua_pop( LuaVM, 1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::isOpen() FIM]\n\n" ) ;
   #endif
@@ -240,7 +262,11 @@ void ftc::close()
 #if VERBOSE
   printf( "[ftc::close() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -248,7 +274,11 @@ void ftc::close()
 #endif
   lua_getfield( LuaVM, -1, "close" ) ;
   lua_insert( LuaVM, -2 ) ;
-  if ( lua_pcall( LuaVM, 2, 3, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 3, 3, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 1, 3, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -299,7 +329,11 @@ void ftc::truncate( unsigned long long size )
 #if VERBOSE
   printf( "[ftc::truncate() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -311,7 +345,11 @@ void ftc::truncate( unsigned long long size )
 #if VERBOSE
   printf( "\t[parâmetro size = %Ld empilhado]\n", size ) ;
 #endif
-  if ( lua_pcall( LuaVM, 3, 3, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 4, 3, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 2, 3, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -325,7 +363,7 @@ void ftc::truncate( unsigned long long size )
     errmsg = lua_tostring( LuaVM, -1 ) ;
     lua_pop( LuaVM, 1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::truncate() FIM]\n\n" ) ;
   #endif
@@ -363,7 +401,11 @@ void ftc::setPosition( unsigned long long position )
 #if VERBOSE
   printf( "[ftc::setPosition() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -375,7 +417,11 @@ void ftc::setPosition( unsigned long long position )
 #if VERBOSE
   printf( "\t[parâmetro position = %Ld empilhado]\n", position ) ;
 #endif
-  if ( lua_pcall( LuaVM, 3, 2, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 4, 2, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 2, 2, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -402,7 +448,7 @@ void ftc::setPosition( unsigned long long position )
   if ( !returnValue ) {
     const char* errmsg = lua_tostring( LuaVM, -1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::setPosition() FIM]\n\n" ) ;
   #endif
@@ -422,7 +468,11 @@ unsigned long long ftc::getPosition()
 #if VERBOSE
   printf( "[ftc::getPosition() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -430,7 +480,11 @@ unsigned long long ftc::getPosition()
 #endif
   lua_getfield( LuaVM, -1, "getPosition" ) ;
   lua_insert( LuaVM, -2 ) ;
-  if ( lua_pcall( LuaVM, 2, 2, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 3, 2, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 1, 2, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -457,7 +511,7 @@ unsigned long long ftc::getPosition()
   if ( !returnValue ) {
     const char* errmsg = lua_tostring( LuaVM, -1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::getPosition() FIM]\n\n" ) ;
   #endif
@@ -483,7 +537,11 @@ unsigned long long ftc::getSize()
 #if VERBOSE
   printf( "[ftc::getSize() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -491,7 +549,11 @@ unsigned long long ftc::getSize()
 #endif
   lua_getfield( LuaVM, -1, "getSize" ) ;
   lua_insert( LuaVM, -2 ) ;
-  if ( lua_pcall( LuaVM, 2, 2, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 3, 2, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 1, 2, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -518,7 +580,7 @@ unsigned long long ftc::getSize()
   if ( !returnValue ) {
     const char* errmsg = lua_tostring( LuaVM, -1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::getSize() FIM]\n\n" ) ;
   #endif
@@ -543,7 +605,11 @@ void ftc::read( char* data, size_t nbytes, unsigned long long position )
 #if VERBOSE
   printf( "[ftc::read() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -551,11 +617,11 @@ void ftc::read( char* data, size_t nbytes, unsigned long long position )
 #endif
   lua_getfield( LuaVM, -1, "read" ) ;
   lua_insert( LuaVM, -2 ) ;
-  lua_pushinteger( LuaVM, nbytes ) ;
+  lua_pushinteger( LuaVM, (int) nbytes ) ;
 #if VERBOSE
   printf( "\t[parâmetro nbytes = %d empilhado]\n", (int) nbytes ) ;
 #endif
-  lua_pushinteger( LuaVM, position ) ;
+  lua_pushinteger( LuaVM, (int) position ) ;
 #if VERBOSE
   printf( "\t[parâmetro position = %Ld empilhado]\n", position ) ;
 #endif
@@ -563,7 +629,11 @@ void ftc::read( char* data, size_t nbytes, unsigned long long position )
 #if VERBOSE
   printf( "\t[data = %p empilhado]\n", data ) ;
 #endif
-  if ( lua_pcall( LuaVM, 5, 2, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 6, 2, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 4, 2, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -623,7 +693,11 @@ void ftc::write( char* data, size_t nbytes, unsigned long long position )
 #if VERBOSE
   printf( "[ftc::write() COMECO]\n" ) ;
 #endif
-  lua_getglobal( LuaVM, "invoke" ) ;
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
   lua_pushlightuserdata( LuaVM, this ) ;
   lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
 #if VERBOSE
@@ -643,7 +717,11 @@ void ftc::write( char* data, size_t nbytes, unsigned long long position )
 #if VERBOSE
   printf( "\t[data = %p empilhado]\n", data ) ;
 #endif
-  if ( lua_pcall( LuaVM, 5, 2, 0 ) != 0 ) {
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 6, 2, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 4, 2, 0 ) != 0 ) {
+#endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -657,7 +735,7 @@ void ftc::write( char* data, size_t nbytes, unsigned long long position )
     errmsg = lua_tostring( LuaVM, -1 ) ;
     lua_pop( LuaVM, 1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::write() FIM]\n\n" ) ;
   #endif
