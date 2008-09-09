@@ -43,6 +43,7 @@ namespace openbus {
     {
     #ifdef VERBOSE
       cout << "\n\n[ClientInterceptor::send_request() BEGIN]" << endl ;
+      cout << "Method: " << ri->operation() << endl;
     #endif
       Credential* c = credentialManager->getValue() ;
       if ( c != NULL ) {
