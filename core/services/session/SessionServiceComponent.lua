@@ -4,6 +4,7 @@ local os = os
 
 local loadfile = loadfile
 local assert = assert
+local error = error
 
 local oil = require "oil"
 local orb = oil.orb
