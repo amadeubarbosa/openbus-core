@@ -95,9 +95,9 @@ ftc::ftc( const char* id, bool writable, unsigned long long size, const char* ho
   #if VERBOSE
     printf( "\t[parâmetro port = %d empilhado]\n", (int) port ) ;
   #endif
-  lua_pushstring( LuaVM, accessKey ) ;
+  lua_pushlstring( LuaVM, accessKey, 16 ) ;
   #if VERBOSE
-    printf( "\t[parâmetro accessKey(%d) = %s empilhado]\n", strlen(accessKey), accessKey ) ;
+    printf( "\t[parâmetro accessKey = %s empilhado]\n", accessKey ) ;
   #endif
   lua_pcall( LuaVM, 6, 1, 0 ) ;
   #if VERBOSE
