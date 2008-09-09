@@ -7,7 +7,6 @@ local assert = assert
 local pairs = pairs
 local ipairs = ipairs
 local tostring = tostring
-local print = print
 
 local luuid = require "uuid"
 local lce = require "lce"
@@ -84,11 +83,16 @@ function startup(self)
   -- inicializa repositorio de credenciais
   self.privateKey = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
   self.credentialDB = CredentialDB(self.config.databaseDirectory)
-  self.registryService = self.credentialDB:retrieveRegistryService()
   local entriesDB = self.credentialDB:retrieveAll()
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
     self.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
+    if entry.component and entry.credential.entityName == "RegistryService" then
+      self.registryService = {
+        credential = entry.credential,
+        component = entry.component,
+      }
+    end
   end
   self.checkExpiredLeases = function()
     -- Uma corotina só percorre a tabela de tempos em tempos
@@ -247,7 +251,6 @@ function logout(self, credential)
     if credential.entityName == "RegistryService" and
         credential.identifier == self.registryService.credential.identifier then
       self.registryService = nil
-      self.credentialDB:deleteRegistryService()
     end
   end
   return true
@@ -296,10 +299,12 @@ function setRegistryService(self, registryServiceComponent)
   if credential.entityName == "RegistryService" then
     self.registryService = {
       credential = credential,
-      component = registryServiceComponent
+      component = registryServiceComponent,
     }
-    local suc, err =
-      self.credentialDB:writeRegistryService(self.registryService)
+
+    local entry = self.entries[credential.identifier]
+    entry.component = registryServiceComponent
+    local suc, err = self.credentialDB:update(entry)
     if not suc then
       Log:error("Erro persistindo referencia registry service: "..err)
     end
@@ -410,10 +415,11 @@ function addEntry(self, name)
   }
   local duration = self.deltaT
   local lease = { lastUpdate = os.time(), duration = duration }
-  entry = { credential = credential,
-            lease = lease,
-            observers = {},
-            observedBy = {}
+  local entry = {
+    credential = credential,
+    lease = lease,
+    observers = {},
+    observedBy = {}
   }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry

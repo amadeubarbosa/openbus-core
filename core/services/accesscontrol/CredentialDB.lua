@@ -15,6 +15,8 @@ local lposix = require "posix"
 local oil = require "oil"
 local orb = oil.orb
 
+local FileStream = require "loop.serial.FileStream"
+
 local Log = require "openbus.common.Log"
 
 local oop = require "loop.base"
@@ -61,10 +63,21 @@ function retrieveAll(self)
   local entries = {}
   for _, fileName in ipairs(credentialFiles) do
     if string.sub(fileName, -(#self.FILE_SUFFIX)) == self.FILE_SUFFIX then
-      local entry = dofile(self.databaseDirectory..self.FILE_SEPARATOR..
-          fileName)
+      local credentialFile = io.open(self.databaseDirectory..self.FILE_SEPARATOR..fileName)
+      local stream = FileStream{
+        file = credentialFile,
+      }
+      local entry = stream:get()
+      credentialFile:close()
+
       local credential = entry.credential
       self.credentials[credential.identifier] = true
+
+      -- caso especial para referencias a membros
+      if entry.component then
+        entry.component = orb:newproxy(entry.component) 
+      end
+
       entries[credential.identifier] = entry
     end
   end
@@ -130,42 +143,6 @@ function delete(self, entry)
 end
 
 ---
---Função auxiliar que transforma um objeto em uma string.
---OBS: Não tem nada pronto pra usar?!
---
---@param val O objeto.
---
---@return A string representando o objeto, ou nil caso seja um objeto de tipo
---não suportado.
----
-function toString(self, val)
-  local t = type(val)
-  if t == "table" then
-    local str = '{'
-    for f, s in pairs(val) do
-      -- caso especial para referencia a componente
-      if type(f) == "string" and f == "component" then
-        str = str .. f .. "=[[" .. orb:tostring(s) .. "]],"
-      else
-        if not tonumber(f) then
-          str = str .. f .. "="
-        end
-        str = str .. self:toString(s) .. ","
-      end
-    end
-    return str .. '}'
-  elseif t == "string" then
-    return "[[" .. val .. "]]"
-  elseif t == "number" then
-    return val
-  elseif t == "boolean" then
-    return tostring(val)
-  else -- if not tab then
-    return "nil"
-  end
-end
-
----
 --Escreve a credencial em arquivo.
 --
 --@param registryEntry A credencial.
@@ -179,8 +156,19 @@ function writeCredential(self, entry)
   if not credentialFile then
     return false, errorMessage
   end
-  credentialFile:write("return "..self:toString(entry))
+
+  local stream = FileStream{
+    file = credentialFile,
+    getmetatable = false,
+  }
+  local component = entry.component
+  if component then
+    stream[component] = "'"..orb:tostring(component).."'"
+  end
+  stream:put(entry)
+  
   credentialFile:close()
+
   return true
 end
 
@@ -197,55 +185,3 @@ function removeCredential(self, entry)
       credential.identifier..self.FILE_SUFFIX)
 end
 
----
---Carrega a credencial do Serviço de Registro a partir do seu arquivo.
---
---@return A credencial do Serviço de Registro.
----
-function retrieveRegistryService(self)
-  local regFileName = self.databaseDirectory..self.FILE_SEPARATOR..
-      "registryservice"
-  local f = io.open(regFileName)
-  if not f then
-    Log:service("Referencia ao RegistryService não persistida")
-    return nil
-  end
-  f:close()
-  local registryEntry = dofile(self.databaseDirectory..self.FILE_SEPARATOR..
-      "registryservice")
-
-  -- recupera referência ao componente
-  local regIOR = registryEntry.component
-  registryEntry.component = orb:newproxy(regIOR)
-  Log:service("Referencia ao RegistryService recuperada")
-  return registryEntry
-end
-
----
---Escreve a credencial do Serviço de Registro em arquivo.
---
---@param registryEntry A credencial do Serviço de Registro.
---
---@return true caso o arquivo seja gerado, ou false e uma mensagem de erro,
---caso contrário.
----
-function writeRegistryService(self, registryEntry)
-  local regFile, errorMessage = io.open(self.databaseDirectory..
-      self.FILE_SEPARATOR.."registryservice","w")
-  if not regFile then
-    return false, errorMessage
-  end
-  regFile:write("return ".. self:toString(registryEntry))
-  regFile:close()
-  return true
-end
-
----
---Remove o arquivo da credencial do Serviço de Registro.
---
---@return Caso o arquivo não seja removido, retorna nil e uma mensagem de erro.
----
-function deleteRegistryService(self)
-  return os.remove(self.databaseDirectory..self.FILE_SEPARATOR..
-      "registryservice")
-end
