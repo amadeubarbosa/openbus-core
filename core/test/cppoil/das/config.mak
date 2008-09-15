@@ -8,6 +8,9 @@ INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/cxxtest ${OPENBUSI
 LDIR= ${OPENBUSLIB}
 
 LIBS= dl 
+ifeq "${TEC_SYSNAME}" "SunOS"
+LIBS+= socket nsl
+endif
 
 SLIB= ${OPENBUS_HOME}/core/utilities/cppoil/lib/${TEC_UNAME}/libopenbus.a \
       ${OPENBUSLIB}/libscsoil.a \
