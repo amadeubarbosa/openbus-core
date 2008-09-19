@@ -15,11 +15,9 @@ OBJROOT= obj
 TARGETROOT= lib
 
 INCLUDES= . ${ORBIXINC}
-LDIR= ${ORBIXLDIR}
+LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
 
-LIBS= it_poa it_art it_ifc it_portable_interceptor
-
-SLIB= ${OPENBUSLIB}/libscsorbix.a
+LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix
 
 SRC= openbus/common/ClientInterceptor.cpp \
      openbus/common/ServerInterceptor.cpp \

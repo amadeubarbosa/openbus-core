@@ -1,6 +1,8 @@
 PROJNAME= scsoil
 LIBNAME= ${PROJNAME}
 
+OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
+
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
@@ -8,10 +10,9 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 DEFINES=VERBOSE
 
 INCLUDES= ../include ${OPENBUSINC}/tolua5.1
+LDIR= ${OPENBUSLIB}
 
-LIBS= dl
-
-SLIB= ${OPENBUSLIB}/libtolua5.1.a
+LIBS= dl tolua5.1
 
 SRC= IComponentOil.cpp
 

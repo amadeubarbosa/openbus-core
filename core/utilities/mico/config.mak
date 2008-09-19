@@ -13,10 +13,9 @@ OBJROOT= obj
 TARGETROOT= lib
 
 INCLUDES= ${OPENBUSINC}/scs
+LDIR= ${OPENBUSLIB}
 
-LIBS= mico2.3.12
-
-SLIB= ${OPENBUSLIB}/libscsmico.a
+LIBS= mico2.3.12 scsmico
 
 SRC= openbus/common/ClientInterceptor.cpp \
      openbus/common/ServerInterceptor.cpp \
