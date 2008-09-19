@@ -15,7 +15,7 @@ DEFINES= WITHOUT_OIL
 #DEFINES+=VERBOSE
 #DEFINES+=VERBOSE2
 
-SRC= ftc.cpp ${PRECMP_DIR}/ftcwooil_core.c
+SRC= ${PRECMP_DIR}/ftcwooil_core.c ftc.cpp
 
 INCLUDES= ../include ${OPENBUSINC}/luasocket2 ${PRECMP_DIR}
 LDIR= ${OPENBUSLIB}
