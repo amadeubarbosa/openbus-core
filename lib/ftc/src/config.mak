@@ -13,7 +13,7 @@ ${PRECMP_DIR}/ftc_core.c ${PRECMP_DIR}/ftc_core.h:
 #DEFINES=VERBOSE
 #DEFINES+=VERBOSE2
 
-SRC= ftc.cpp ${PRECMP_DIR}/ftc_core.c
+SRC= ${PRECMP_DIR}/ftc_core.c ftc.cpp
 
 INCLUDES= ../include ${OPENBUSINC}/luasocket2 ${OPENBUSINC}/oil04 ${PRECMP_DIR}
 LDIR += ${OPENBUSLIB}
