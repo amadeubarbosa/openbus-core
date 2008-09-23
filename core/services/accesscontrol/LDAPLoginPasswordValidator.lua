@@ -1,5 +1,7 @@
 -- $Id$
 
+local ipairs = ipairs
+
 local lualdap = require "lualdap"
 local oop = require "loop.simple"
 
@@ -19,9 +21,10 @@ oop.class(_M, LoginPasswordValidator)
 --
 --@return O validador.
 ---
-function __init(self, ldapHost)
+function __init(self, ldapHosts, ldapSuffixes)
   return oop.rawnew(self, {
-    ldapHost = ldapHost,
+    ldapHosts = ldapHosts,
+    ldapSuffixes = ldapSuffixes,
   })
 end
 
@@ -29,11 +32,15 @@ end
 --@see core.services.accesscontrol.LoginPasswordValidator#validate
 ---
 function validate(self, name, password)
-  local connection, err = lualdap.open_simple(self.ldapHost, name, password,
-      false)
-  if not connection then
-    return false, err
+  for _, ldapHost in ipairs(self.ldapHosts) do
+    for _, ldapSuffix in ipairs(self.ldapSuffixes) do
+      local connection, err = lualdap.open_simple(
+          ldapHost.name..":"..ldapHost.port, name..ldapSuffix, password, false)
+      if connection then
+        connection:close()
+        return true
+      end
+    end
   end
-  connection:close()
-  return true
+  return false, "O usuário "..name.." não foi validado."
 end

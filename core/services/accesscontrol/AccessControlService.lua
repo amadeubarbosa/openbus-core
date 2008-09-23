@@ -61,7 +61,7 @@ function __init(self, name, config)
   component.observers = {}
   component.challenges = {}
   component.loginPasswordValidators = {
-    LDAPLoginPasswordValidator(config.ldapHostName..":"..config.ldapHostPort),
+    LDAPLoginPasswordValidator(config.ldapHosts, config.ldapSuffixes),
     TestLoginPasswordValidator(),
   }
   return oop.rawnew(self, component)
