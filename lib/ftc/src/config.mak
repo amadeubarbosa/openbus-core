@@ -7,7 +7,7 @@ OPENBUSLIB= ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 PRECMP_DIR= ../obj/${TEC_UNAME}
 
 ${PRECMP_DIR}/ftc_core.c ${PRECMP_DIR}/ftc_core.h:
-	lua5.1 precompiler.lua -f ftc_core -d ../obj/${TEC_UNAME} -l ../lua ftc.lua ftc/verbose.lua ftc/core.lua
+	lua5.1 precompiler.lua -f ftc_core -d ${PRECMP_DIR} -l ../lua ftc.lua ftc/verbose.lua ftc/core.lua
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
 #DEFINES=VERBOSE

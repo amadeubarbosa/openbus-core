@@ -7,7 +7,7 @@ OPENBUSLIB= ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 PRECMP_DIR= ../obj/${TEC_UNAME}
 
 ${PRECMP_DIR}/ftcwooil_core.c ${PRECMP_DIR}/ftcwooil_core.h:
-	lua5.1 precompiler.lua -f ftcwooil_core -d ../obj/${TEC_UNAME} -l ../lua ftcwooil.lua ftc/verbose.lua ftc/core.lua
+	lua5.1 precompiler.lua -f ftcwooil_core -d ${PRECMP_DIR} -l ../lua ftcwooil.lua ftc/verbose.lua ftc/core.lua
 
 DEFINES= WITHOUT_OIL
 
