@@ -19,6 +19,7 @@
 
 #include "luasocket.h"
 #include "oilall.h"
+#include "scsall.h"
 #include "luuid.h"
 #include "lposix.h"
 #include "lce.h"
@@ -359,6 +360,7 @@ static int pmain (lua_State *L) {
   lua_setfield(L, -2, "socket.core");
   // preload all OiL libraries
   luapreload_oilall(L);
+  luapreload_scsall(L);
   luaopen_uuid(L);
   luaopen_posix(L);
   luaopen_lualdap(L);
