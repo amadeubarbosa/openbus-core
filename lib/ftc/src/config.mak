@@ -18,6 +18,6 @@ SRC= ${PRECMP_DIR}/ftc_core.c ftc.cpp
 INCLUDES= ../include ${OPENBUSINC}/luasocket2 ${OPENBUSINC}/oil04 ${PRECMP_DIR}
 LDIR += ${OPENBUSLIB}
 
-LIBS= luasocket oilall
+LIBS= luasocket oilall stdc++
 
 USE_LUA51=YES

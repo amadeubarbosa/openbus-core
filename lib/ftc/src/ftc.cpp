@@ -30,8 +30,10 @@ void ftc::setEnv()
   // preload all OiL libraries
   luapreload_oilall(LuaVM);
   luaopen_ftc_verbose(LuaVM);
+  luaopen_ftc_core(LuaVM);
   luaopen_ftc(LuaVM);
 #else
+  luaopen_ftc_core(LuaVM);
   luaopen_ftcwooil(LuaVM);
 #endif
   lua_pop( LuaVM, 1 ) ;
