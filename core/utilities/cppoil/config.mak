@@ -20,9 +20,9 @@ LDIR= ${OPENBUSLIB}
 
 LIBS= scsoil oilall scsall luasocket tolua5.1
 
-SRC= common/ClientInterceptor.cpp \
+SRC= ${PRECMP_DIR}/auxiliar.c \
+     common/ClientInterceptor.cpp \
      common/CredentialManager.cpp \
-     auxiliar.c \
      openbus.cpp \
      stubs/IAccessControlService.cpp \
      stubs/IRegistryService.cpp \
@@ -30,5 +30,4 @@ SRC= common/ClientInterceptor.cpp \
      stubs/IDataService.cpp
 
 USE_LUA51=YES
-USE_STATIC=YES
 
