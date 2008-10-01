@@ -18,7 +18,7 @@ TARGETROOT= lib
 INCLUDES= ${OPENBUSINC}/tolua-5.1b ${OPENBUSINC}/oil04 ${OPENBUSINC}/luasocket2 ${OPENBUSINC}/scs ${PRECMP_DIR}
 LDIR= ${OPENBUSLIB}
 
-LIBS= scsoil oilall luasocket tolua5.1
+LIBS= scsoil oilall scsall luasocket tolua5.1
 
 SRC= common/ClientInterceptor.cpp \
      common/CredentialManager.cpp \

@@ -6,6 +6,7 @@
 extern "C" {
   #include "auxiliar.h"
   #include <oilall.h>
+  #include <scsall.h>
   #include "luasocket.h"
 }
 #include "openbus.h"
@@ -31,6 +32,7 @@ namespace openbus {
     lua_pushcfunction(LuaVM, luaopen_socket_core);
     lua_setfield(LuaVM, -2, "socket.core");
     luapreload_oilall(LuaVM);
+    luapreload_scsall(LuaVM);
     scs::core::IComponent::setLuaVM(LuaVM);
   #if VERBOSE
     printf("\t[Tentando carregar arquivo openbus.lua...]\n");
