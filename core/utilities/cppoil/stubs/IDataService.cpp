@@ -6,6 +6,7 @@
 #include "../openbus.h"
 
 #include <iostream>
+#include <string.h>
 
 namespace dataService {
 

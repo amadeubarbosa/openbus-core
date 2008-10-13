@@ -3,6 +3,7 @@
 */
 
 #include <iostream>
+#include <string.h>
 
 #include <scs/core/IComponentOil.h>
 #include <lua.hpp>
