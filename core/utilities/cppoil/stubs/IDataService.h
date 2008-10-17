@@ -71,12 +71,15 @@ namespace dataService {
       DataKey* createDataFrom(DataKey* parent_key, DataKey* source_key);
       bool deleteData(DataKey* key);
       Data* getData(DataKey* key);
-      void _getDataFacet(void* ptr, DataKey* key, char* facet_interface);
+      bool _getDataFacet(void* ptr, DataKey* key, char* facet_interface);
       template <class T>
       T* getDataFacet(DataKey* key, char* facet_interface) {
         T* ptr = new T;
-        _getDataFacet(ptr, key, facet_interface);
-        return ptr;
+        if (!_getDataFacet(ptr, key, facet_interface)) {
+          return 0;
+        } else {
+          return ptr;
+        }
       }
       scs::core::NameList* getFacetInterfaces(DataKey* key);
   };

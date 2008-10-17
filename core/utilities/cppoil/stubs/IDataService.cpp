@@ -1356,8 +1356,7 @@ namespace dataService {
     return returnValue;
   }
 
-  void IDataService::_getDataFacet(void* ptr, DataKey* key, char* facet_interface) {
-    IDataEntry* returnValue = NULL;
+  bool IDataService::_getDataFacet(void* ptr, DataKey* key, char* facet_interface) {
   #if VERBOSE
     printf("[(%p)IDataService::getDataFacet() COMECO]\n", this);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -1418,6 +1417,14 @@ namespace dataService {
     #endif
       throw returnValue;
     } /* if */
+      if (lua_type(LuaVM, -1) == LUA_TNIL) {
+      #if VERBOSE
+        printf("\t[Dado nao encontrado]\n");
+        printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+        printf("[IDataService::getDataFacet() FIM]\n\n");
+      #endif
+        return false;
+      }
       lua_getglobal(LuaVM, "orb");
       lua_getfield(LuaVM, -1, "narrow");
       lua_getglobal(LuaVM, "orb");
@@ -1441,6 +1448,7 @@ namespace dataService {
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     printf("[IDataService::getDataFacet() FIM]\n\n");
   #endif
+    return true;
   }
 
   scs::core::NameList* IDataService::getFacetInterfaces(DataKey* key) {
