@@ -2,19 +2,33 @@
 ** demo.cpp
 */
 
+/*
+** Configuracoes
+*/
+/**************************************************************************************************/
+#define USER "tester"     /* Usuario OpenBus. */
+#define PASSWORD "tester" /* Senha do usuario OpenBus. */
+#define HOST "localhost"  /* Host onde esta o servico de controle de acesso. */
+#define PORT "2089"       /* Porta do servico de controle de acesso. */
+/**************************************************************************************************/
+
+
+
 #include <openbus.h>
 #include <ftc.h>
 #include "../IProjectService.h"
 
 #include <iostream>
+#include <sstream>
 
+using namespace std;
 using namespace openbus;
 
 int main(int argc, char** argv) {
   char PSIDL[256];
 
   if (argc != 2) {
-    std::cout << "Uso: demo <projeto>/<arquivo>" << std::endl;
+    cout << "Uso: demo <projeto>/<arquivo>" << endl;
     return 0;
   }
 
@@ -25,12 +39,22 @@ int main(int argc, char** argv) {
   common::CredentialManager* credentialManager = new common::CredentialManager();
   common::ClientInterceptor* clientInterceptor = new common::ClientInterceptor(credentialManager);
   openbus->setClientInterceptor(clientInterceptor);
+  stringstream corbaloc;
+  corbaloc << "corbaloc::" << HOST << ":" << PORT << "/ACS";
+  services::IAccessControlService* acs = openbus->getACS(corbaloc.str().c_str(), "IDL:openbusidl/acs/IAccessControlService:1.0");
 
-  services::IAccessControlService* acs = openbus->getACS("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0");
+/* Autenticacao no barramento. */
   services::Credential* credential = new services::Credential();
   services::Lease* lease = new services::Lease();
+  try {
+    if (!acs->loginByPassword(USER, PASSWORD, credential, lease)) {
+      throw "Servico de controle de acesso localizado, porem o par usuario/senha nao foi validado.";
+    }
+  } catch (const char* errmsg) { 
+    cout << "** Nao foi possivel se conectar ao barramento." << endl << errmsg << endl; 
+    exit(-1);
+  }
 
-  acs->loginByPassword("tester", "tester", credential, lease);
   credentialManager->setValue(credential);
 
   services::IRegistryService* rgs = acs->getRegistryService();
@@ -41,6 +65,10 @@ int main(int argc, char** argv) {
   property->value->newmember("projectDataService");
   propertyList->newmember(property);
   services::ServiceOfferList* serviceOfferList = rgs->find(propertyList);
+  if (!serviceOfferList) {
+    cout << "** Nenhum servico de projetos foi encontrado no barramento." << endl;
+    exit(-1);
+  }
   services::ServiceOffer* serviceOffer = serviceOfferList->getmember(0);
 
   scs::core::IComponent* member = serviceOffer->member;
@@ -56,24 +84,35 @@ int main(int argc, char** argv) {
   dataService::DataKey* dataKey = new dataService::DataKey;
   dataKey->service_id = member->getComponentId();
   dataKey->actual_data_id = fileName;
-  projectService::IFile* file = ds->getDataFacet <projectService::IFile> (dataKey, (char*) "IDL:openbusidl/ps/IFile:1.0");
-
+  projectService::IFile* file;
+  projectService::DataChannel* dataChannel;
+  file = ds->getDataFacet <projectService::IFile> (dataKey, (char*) "IDL:openbusidl/ps/IFile:1.0");
+  if (!file) {
+    cout << "** Arquivo nao encontrado." << endl;
+    exit(-1);
+  }
 /* Canal de acesso ao arquivo. */
-  projectService::DataChannel* dataChannel = file->getDataChannel();
+  dataChannel = file->getDataChannel();
   size_t fileSize = dataChannel->fileSize;
 
 /* Leitura do arquivo */
   ftc* ch = new ftc(dataChannel->fileIdentifier->getmember(0), true, fileSize, dataChannel->host,
       dataChannel->port, dataChannel->accessKey->getmember(0));
-  ch->open(true);
+  try {
+    ch->open(true);
+  } catch (const char* errmsg) { 
+    cout << "** Erro ao abrir arquivo: " << errmsg << endl; 
+    exit(-1);
+  }
   char* content = new char[fileSize];
   ch->read(content, fileSize, 0);
-  std::cout << "Eu li:";
+  cout << "Eu li:";
   for (size_t i = 0; i < fileSize; i++) {
-    std::cout << content[i];
+    cout << content[i];
   }
-  std::cout << std::endl;
+  cout << endl;
   ch->close();
 
   return 0;
 }
+
