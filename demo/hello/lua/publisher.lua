@@ -19,7 +19,7 @@ local CredentialManager = require "openbus.common.CredentialManager"
 local IComponent = require "scs.core.IComponent"
 
 --  oil.verbose:level(0)
-orb:loadidlfile "hello.idl"
+orb:loadidlfile "../idl/hello.idl"
 
 oil.tasks:register(coroutine.create(function() return orb:run() end))
 
@@ -65,7 +65,7 @@ function main ()
     end
     local M = IComponent("Membro", 1)
     M = orb:newservant(M, nil, "IDL:scs/core/IComponent:1.0")
-    M:addFacet("faceta", "IDL:Hello:1.0", Hello)
+    M:addFacet("faceta", "IDL:demoidl/hello/IHello:1.0", Hello)
     success, registryIdentifier = registryService:register({ properties = {{name = "type", value = {"type"}}}, member = M, })
     print("*********************************************\n")
     print("PUBLISHER\nServiço Hello registrado no barramento do OpenBus.\n")

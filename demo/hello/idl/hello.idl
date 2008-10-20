@@ -2,15 +2,11 @@
 #define HELLO_IDL
 
 module demoidl {
-
-module hello {
-
-interface IHello {
-  void sayHello();
-};
-
-};
-
+  module hello {
+    interface IHello {
+      void sayHello();
+    };
+  };
 };
 
 #endif

@@ -1,8 +1,0 @@
-/*
-** hello.idl
-*/
-
-interface Hello {
-	void sayHello() ;
-} ;
-

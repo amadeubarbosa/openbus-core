@@ -18,7 +18,7 @@ local CredentialManager = require "openbus.common.CredentialManager"
 local IComponent = require "scs.core.IComponent"
 
 --  oil.verbose:level(0)
-orb:loadidlfile "hello.idl"
+orb:loadidlfile "../idl/hello.idl"
 
 function main ()
   local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
@@ -52,8 +52,8 @@ function main ()
   local offers = registryService:find({name = "type", value = "type"})
   -- Assume que o publisher é o único serviço cadastrado.
   SS = orb:narrow(offers[1].member, "IDL:scs/core/IComponent:1.0")
-  local facet = SS:getFacet("IDL:Hello:1.0")
-  hello = orb:narrow(facet, "IDL:Hello:1.0")
+  local facet = SS:getFacet("IDL:demoidl/hello/IHello:1.0")
+  hello = orb:narrow(facet, "IDL:demoidl/hello/IHello:1.0")
   hello:sayHello()
 
 end
