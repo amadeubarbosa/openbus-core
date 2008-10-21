@@ -13,11 +13,16 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sstream>
+
+using namespace std;
 
 namespace openbus {
 
   lua_State* Openbus::LuaVM = 0;
   Openbus* Openbus::instance = 0;
+  common::CredentialManager* Openbus::credentialManager = 0;
+  common::ClientInterceptor* Openbus::clientInterceptor = 0;
 
   Lua_State* Openbus::getLuaVM(void) {
     return LuaVM;
@@ -55,11 +60,16 @@ namespace openbus {
 
   Openbus::~Openbus() {
     instance = 0;
+    delete clientInterceptor;
+    delete credentialManager;
   }
 
   Openbus* Openbus::getInstance() {
     if (instance == 0) {
       instance = new Openbus;
+      credentialManager = new common::CredentialManager();
+      clientInterceptor = new common::ClientInterceptor(credentialManager);
+      instance->setClientInterceptor(clientInterceptor);
     }
     return instance;
   }
@@ -115,8 +125,21 @@ namespace openbus {
   #endif
   }
 
-  services::IAccessControlService* Openbus::getACS(String reference, String interface) {
-    return new services::IAccessControlService(reference, interface);
+  services::IAccessControlService* Openbus::getACS(String host, unsigned short port) {
+    stringstream corbaloc;
+    corbaloc << "corbaloc::" << host << ":" << port << "/ACS";
+    return new services::IAccessControlService(corbaloc.str().c_str(), "IDL:openbusidl/acs/IAccessControlService:1.0");
+  }
+
+  services::IAccessControlService* Openbus::connect(String host, unsigned short port, String user, String password, \
+        services::Credential* aCredential, services::Lease* aLease) {
+    services::IAccessControlService* acs = getACS(host, port);
+    if (!acs->loginByPassword(user, password, aCredential, aLease)) {
+      return 0;
+    } else {
+      credentialManager->setValue(aCredential);
+      return acs;
+    }
   }
 
 }

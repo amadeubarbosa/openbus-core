@@ -22,6 +22,7 @@ namespace openbus {
     struct Credential;
     struct ServiceOffer;
     typedef Identifier RegistryIdentifier;
+    typedef Long Lease;
     class ICredentialObserver;
     class IAccessControlService;
     class IRegistryService;
@@ -46,6 +47,8 @@ namespace openbus {
     private:
       static Openbus* instance;
       static Lua_State* LuaVM;
+      static common::CredentialManager* credentialManager;
+      static common::ClientInterceptor* clientInterceptor;
       void initLuaVM();
       Openbus();
       Openbus(const Openbus&);
@@ -54,7 +57,9 @@ namespace openbus {
       static Openbus* getInstance();
       Lua_State* getLuaVM();
       void setClientInterceptor(common::ClientInterceptor* clientInterceptor);
-      services::IAccessControlService* getACS(String reference, String interface);
+      services::IAccessControlService* getACS(String host, unsigned short port);
+      services::IAccessControlService* connect(String host, unsigned short port, String user, String password, \
+            services::Credential* aCredential, services::Lease* aLease);
   };
 
 }

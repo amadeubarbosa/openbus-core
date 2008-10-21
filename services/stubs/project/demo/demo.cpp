@@ -9,7 +9,7 @@
 #define USER "tester"     /* Usuario OpenBus. */
 #define PASSWORD "tester" /* Senha do usuario OpenBus. */
 #define HOST "localhost"  /* Host onde esta o servico de controle de acesso. */
-#define PORT "2089"       /* Porta do servico de controle de acesso. */
+#define PORT 2089       /* Porta do servico de controle de acesso. */
 /**************************************************************************************************/
 
 
@@ -36,26 +36,19 @@ int main(int argc, char** argv) {
 
   Openbus* openbus = Openbus::getInstance();
 
-  common::CredentialManager* credentialManager = new common::CredentialManager();
-  common::ClientInterceptor* clientInterceptor = new common::ClientInterceptor(credentialManager);
-  openbus->setClientInterceptor(clientInterceptor);
-  stringstream corbaloc;
-  corbaloc << "corbaloc::" << HOST << ":" << PORT << "/ACS";
-  services::IAccessControlService* acs = openbus->getACS(corbaloc.str().c_str(), "IDL:openbusidl/acs/IAccessControlService:1.0");
-
-/* Autenticacao no barramento. */
+/* Conexao com o barramento. */
   services::Credential* credential = new services::Credential();
   services::Lease* lease = new services::Lease();
+  services::IAccessControlService* acs;
   try {
-    if (!acs->loginByPassword(USER, PASSWORD, credential, lease)) {
+    acs = openbus->connect(HOST, (unsigned short) PORT, USER, PASSWORD, credential, lease);
+    if (!acs) {
       throw "Servico de controle de acesso localizado, porem o par usuario/senha nao foi validado.";
     }
   } catch (const char* errmsg) { 
     cout << "** Nao foi possivel se conectar ao barramento." << endl << errmsg << endl; 
     exit(-1);
   }
-
-  credentialManager->setValue(credential);
 
   services::IRegistryService* rgs = acs->getRegistryService();
   services::PropertyList* propertyList = new services::PropertyList;
