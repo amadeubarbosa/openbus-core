@@ -45,7 +45,10 @@ int main(int argc, char** argv) {
     exit(-1);
   }
 
+/* Adquirindo o servico de registro. */
   services::IRegistryService* rgs = acs->getRegistryService();
+
+/* Procurando o servico de dados do CSBase no barramento. */
   services::PropertyList* propertyList = new services::PropertyList;
   services::Property* property = new services::Property;
   property->name = "facets";
