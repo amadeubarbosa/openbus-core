@@ -10,9 +10,9 @@ extern "C" {
   #include "luasocket.h"
 }
 #include "openbus.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 #include <sstream>
 
 using namespace std;
@@ -30,7 +30,7 @@ namespace openbus {
 
   void Openbus::initLuaVM(void) {
   #if VERBOSE
-    printf("\t[Carregando bibliotecas de Lua...]\n");
+    cout << "\t[Carregando bibliotecas Lua.]" << endl;
   #endif
     luaL_openlibs(LuaVM);
     luaL_findtable(LuaVM, LUA_GLOBALSINDEX, "package.preload", 1);
@@ -40,7 +40,7 @@ namespace openbus {
     luapreload_scsall(LuaVM);
     scs::core::IComponent::setLuaVM(LuaVM);
   #if VERBOSE
-    printf("\t[Tentando carregar arquivo openbus.lua...]\n");
+    cout << "\t[Tentando carregar arquivo openbus.lua...]" << endl;
   #endif
     luaopen_openbus(LuaVM);
     lua_pop(LuaVM, 1);
@@ -48,13 +48,13 @@ namespace openbus {
 
   Openbus::Openbus() {
   #if VERBOSE
-    printf("\n\n[Openbus::Openbus() COMECO]\n");
-    printf("\t[Criando instancia de Openbus]\n");
+    cout << endl << endl << "[Openbus::Openbus() COMECO]" << endl;
+    cout << "\t[Criando instancia de Openbus]" << endl;
   #endif
     LuaVM = lua_open();
     initLuaVM();
   #if VERBOSE
-    printf("[Openbus::Openbus() FIM]\n\n");
+    cout << "[Openbus::Openbus() FIM]" << endl;
   #endif
   }
 
@@ -76,9 +76,9 @@ namespace openbus {
 
   void Openbus::setClientInterceptor(common::ClientInterceptor* clientInterceptor) {
   #if VERBOSE
-    printf("[Openbus::setClientInterceptor() COMECO]\n");
-    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    printf("\t[Chamando metodo %s( %p )]\n", "oil.setClientInterceptor", clientInterceptor);
+    cout << "[Openbus::setClientInterceptor() COMECO]" << endl;
+    cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
+    cout << "\t[Chamando metodo orb:setClientInterceptor(" << clientInterceptor << ")]" << endl;
   #endif
     lua_getglobal(LuaVM, "orb");
     lua_getfield(LuaVM, -1, "setclientinterceptor");
@@ -88,21 +88,21 @@ namespace openbus {
     lua_pushlightuserdata(LuaVM, clientInterceptor);
     lua_settable(LuaVM, -3);
   #if VERBOSE
-    printf("\t[parametro {}.clientInterceptor (pointer) empilhado]\n");
-    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    cout << "\t[parametro {}.clientInterceptor (pointer) empilhado]" << endl;
+    cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
   #endif
     lua_pushstring(LuaVM, "sendrequest");
     lua_pushcfunction(LuaVM, common::ClientInterceptor::sendrequest);
     lua_settable(LuaVM, -3);
   #if VERBOSE
-    printf("\t[parametro {}.sendrequest (function) empilhado]\n");
-    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    cout << "\t[parametro {}.sendrequest (function) empilhado]" << endl;
+    cout << "\t[Tamanho da pilha de Lua: " <<  lua_gettop(LuaVM) << "]" << endl;
   #endif
     if (lua_pcall(LuaVM, 2, 0, 0) != 0) {
     #if VERBOSE
-      printf("\t[ERRO ao realizar pcall do metodo]\n");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-      printf("\t[Tipo do elemento do TOPO: %s]\n" , lua_typename(LuaVM, lua_type(LuaVM, -1)));
+      cout << "\t[ERRO ao realizar pcall do metodo]" << endl;
+      cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << endl;
+      cout << "\t[Tipo do elemento do TOPO: " << lua_typename(LuaVM, lua_type(LuaVM, -1)) << "]" << endl;
     #endif
       const char * errmsg ;
       lua_getglobal(LuaVM, "tostring");
@@ -111,17 +111,16 @@ namespace openbus {
       errmsg = lua_tostring(LuaVM, -1);
       lua_pop(LuaVM, 1);
     #if VERBOSE
-      printf("\t[lancando excecao]\n");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-      printf("[Openbus::setClientInterceptor() FIM]\n\n");
+      cout << "\t[lancando excecao]" << endl;
+      cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
+      cout << "[Openbus::setClientInterceptor() FIM]" << endl << endl;
     #endif
       throw errmsg;
     } /* if */
     lua_pop(LuaVM, 1);
   #if VERBOSE
-  /* retira a tabela oil */
-    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    printf("[Openbus::setClientInterceptor() FIM]\n\n");
+    cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
+    cout << "[Openbus::setClientInterceptor() FIM]" << endl << endl;
   #endif
   }
 

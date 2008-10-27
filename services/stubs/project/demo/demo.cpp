@@ -9,7 +9,7 @@
 #define USER "tester"     /* Usuario OpenBus. */
 #define PASSWORD "tester" /* Senha do usuario OpenBus. */
 #define HOST "localhost"  /* Host onde esta o servico de controle de acesso. */
-#define PORT 2089       /* Porta do servico de controle de acesso. */
+#define PORT 2089         /* Porta do servico de controle de acesso. */
 /**************************************************************************************************/
 
 
@@ -19,14 +19,12 @@
 #include "../IProjectService.h"
 
 #include <iostream>
-#include <sstream>
+#include <string>
 
 using namespace std;
 using namespace openbus;
 
 int main(int argc, char** argv) {
-  char PSIDL[256];
-
   if (argc != 2) {
     cout << "Uso: demo <projeto>/<arquivo>" << endl;
     return 0;
@@ -65,10 +63,9 @@ int main(int argc, char** argv) {
   services::ServiceOffer* serviceOffer = serviceOfferList->getmember(0);
 
   scs::core::IComponent* member = serviceOffer->member;
-  const char* OPENBUS_HOME = getenv("OPENBUS_HOME");
-  strcpy(PSIDL, OPENBUS_HOME);
-  strcat(PSIDL, "/idlpath/project_service.idl");
-  member->loadidlfile(PSIDL);
+  string PSIDLPath(getenv("OPENBUS_HOME"));
+  PSIDLPath += "/idlpath/project_service.idl";
+  member->loadidlfile(PSIDLPath.c_str());
 
 /* Obtendo o serviço de dados. */
   dataService::IDataService* ds = member->getFacet <dataService::IDataService> ("IDL:openbusidl/ds/IDataService:1.0");

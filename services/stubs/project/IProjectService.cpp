@@ -499,7 +499,7 @@ namespace projectService {
     #if VERBOSE
       printf("\t[lancando excecao %s]\n", returnValue);
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-      printf("[IFile::getDataChannel() FIM]\n\n");
+      printf("[IFile::getProject() FIM]\n\n");
     #endif
       throw returnValue;
     } /* if */
@@ -511,7 +511,7 @@ namespace projectService {
     lua_settable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    printf("[IFile::getDataChannel() FIM]\n\n");
+    printf("[IFile::getProject() FIM]\n\n");
   #endif
     return returnValue;
   }
@@ -915,7 +915,6 @@ namespace projectService {
   /* DataChannel->host */
   #if VERBOSE
     printf("\t[Gerando valor de retorno do tipo DataChannel]\n");
-    printf("\t[DataChannel->host]\n");
   #endif
     lua_getfield(LuaVM, -1, "host");
   #if VERBOSE
@@ -928,18 +927,21 @@ namespace projectService {
     memcpy((void*) returnValue->host, luastring, size);
     returnValue->host[size] = '\0';
     lua_pop(LuaVM, 1);
-  /* DataChannel->port */
   #if VERBOSE
-    printf("\t[DataChannel->port]\n");
+    printf("\t[DataChannel->host: %s]\n", returnValue->host);
   #endif
-    lua_getfield(LuaVM, -1, "port");
+  /* DataChannel->port */
   #if VERBOSE
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     printf("\t[Tipo do elemento do TOPO: %s]\n" , \
         lua_typename(LuaVM, lua_type(LuaVM, -1)));
   #endif
+    lua_getfield(LuaVM, -1, "port");
     returnValue->port = lua_tointeger(LuaVM, -1);
     lua_pop(LuaVM, 1);
+  #if VERBOSE
+    printf("\t[DataChannel->port: %u]\n", returnValue->port);
+  #endif
   /* DataChannel->accessKey */
   #if VERBOSE
     printf("\t[DataChannel->accessKey]\n");
@@ -958,9 +960,6 @@ namespace projectService {
     returnValue->accessKey = accessKey;
     lua_pop(LuaVM, 1);
   /* DataChannel->fileIdentifier */
-  #if VERBOSE
-    printf("\t[DataChannel->fileIdentifier]\n");
-  #endif
     lua_getfield(LuaVM, -1, "fileIdentifier");
   #if VERBOSE
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -974,10 +973,10 @@ namespace projectService {
     }
     returnValue->fileIdentifier = fileIdentifier;
     lua_pop(LuaVM, 1);
-  /* DataChannel->writable */
   #if VERBOSE
-    printf("\t[DataChannel->writable]\n");
+    printf("\t[DataChannel->fileIdentifier: %s]\n", fileIdentifierStr);
   #endif
+  /* DataChannel->writable */
     lua_getfield(LuaVM, -1, "writable");
   #if VERBOSE
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -985,11 +984,11 @@ namespace projectService {
         lua_typename(LuaVM, lua_type(LuaVM, -1)));
   #endif
     returnValue->writable = lua_toboolean(LuaVM, -1);
+  #if VERBOSE
+    printf("\t[DataChannel->writable: %d]\n", returnValue->writable);
+  #endif
     lua_pop(LuaVM, 1);
   /* DataChannel->fileSize */
-  #if VERBOSE
-    printf("\t[DataChannel->fileSize]\n");
-  #endif
     lua_getfield(LuaVM, -1, "fileSize");
   #if VERBOSE
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -997,6 +996,9 @@ namespace projectService {
         lua_typename(LuaVM, lua_type(LuaVM, -1)));
   #endif
     returnValue->fileSize = lua_tointeger(LuaVM, -1);
+  #if VERBOSE
+    printf("\t[DataChannel->fileSize: %lld]\n", returnValue->fileSize);
+  #endif
     lua_pop(LuaVM, 1);
 
     lua_pushlightuserdata(LuaVM, returnValue);
