@@ -40,10 +40,7 @@ int main(int argc, char** argv) {
   services::IAccessControlService* acs;
   try {
     acs = openbus->connect(HOST, (unsigned short) PORT, USER, PASSWORD, credential, lease);
-    if (!acs) {
-      throw "Servico de controle de acesso localizado, porem o par usuario/senha nao foi validado.";
-    }
-  } catch (const char* errmsg) { 
+  } catch (const char* errmsg) {
     cout << "** Nao foi possivel se conectar ao barramento." << endl << errmsg << endl; 
     exit(-1);
   }

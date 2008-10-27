@@ -132,12 +132,16 @@ namespace openbus {
 
   services::IAccessControlService* Openbus::connect(String host, unsigned short port, String user, String password, \
         services::Credential* aCredential, services::Lease* aLease) {
-    services::IAccessControlService* acs = getACS(host, port);
-    if (!acs->loginByPassword(user, password, aCredential, aLease)) {
-      return 0;
-    } else {
-      credentialManager->setValue(aCredential);
-      return acs;
+    try {
+      services::IAccessControlService* acs = getACS(host, port);
+      if (!acs->loginByPassword(user, password, aCredential, aLease)) {
+        throw "Par usuario/senha nao validado.";
+      } else {
+        credentialManager->setValue(aCredential);
+        return acs;
+      }
+    } catch (const char* errmsg) {
+      throw errmsg;
     }
   }
 
