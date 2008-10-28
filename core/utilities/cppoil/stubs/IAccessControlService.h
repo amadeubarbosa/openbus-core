@@ -17,7 +17,8 @@ namespace openbus {
 
     struct Credential {
       String identifier ;
-      String entityName ;
+      String owner ;
+      String delegate ;
     } ;
 
     typedef Long Lease ;

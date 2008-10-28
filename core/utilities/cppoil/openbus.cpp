@@ -124,6 +124,10 @@ namespace openbus {
   #endif
   }
 
+  common::CredentialManager* Openbus::getCredentialManager() {
+    return credentialManager;
+  }
+
   services::IAccessControlService* Openbus::getACS(String host, unsigned short port) {
     stringstream corbaloc;
     corbaloc << "corbaloc::" << host << ":" << port << "/ACS";

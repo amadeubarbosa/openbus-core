@@ -19,8 +19,6 @@ class SESTestSuite: public CxxTest::TestSuite {
     Openbus* o ;
     services::IAccessControlService* acs ;
     services::IRegistryService* rgs ;
-    common::CredentialManager* credentialManager ;
-    common::ClientInterceptor* clientInterceptor ;
     services::Credential* credential ;
     services::Lease* lease ;
     char* RegistryIdentifier;
@@ -32,7 +30,7 @@ class SESTestSuite: public CxxTest::TestSuite {
     scs::core::IComponent* component ;
     char BUFFER[BUFFER_SIZE];
     char* OPENBUS_SERVER_HOST;
-    char* OPENBUS_SERVER_PORT;
+    unsigned short OPENBUS_SERVER_PORT;
     char* OPENBUS_USERNAME;
     char* OPENBUS_PASSWORD;
   public:
@@ -54,21 +52,17 @@ class SESTestSuite: public CxxTest::TestSuite {
         lua_getglobal(LuaVM, "OPENBUS_SERVER_HOST");
         OPENBUS_SERVER_HOST = (char*) lua_tostring(LuaVM, -1);
         lua_getglobal(LuaVM, "OPENBUS_SERVER_PORT");
-        OPENBUS_SERVER_PORT = (char*) lua_tostring(LuaVM, -1);
+        OPENBUS_SERVER_PORT = lua_tonumber(LuaVM, -1);
         lua_getglobal(LuaVM, "OPENBUS_USERNAME");
         OPENBUS_USERNAME = (char*) lua_tostring(LuaVM, -1);
         lua_getglobal(LuaVM, "OPENBUS_PASSWORD");
         OPENBUS_PASSWORD = (char*) lua_tostring(LuaVM, -1);
         lua_pop(LuaVM, 4);
-        credentialManager = new common::CredentialManager ;
-        clientInterceptor = new common::ClientInterceptor(credentialManager);
-        o->setClientInterceptor( clientInterceptor ) ;
-        sprintf(BUFFER, "corbaloc::%s:%s/ACS", OPENBUS_SERVER_HOST, OPENBUS_SERVER_PORT);
-        acs = o->getACS( BUFFER, "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;
+        acs = o->getACS(OPENBUS_SERVER_HOST, OPENBUS_SERVER_PORT) ;
         credential = new services::Credential() ;
         lease = new services::Lease() ;
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
-        credentialManager->setValue( credential ) ;
+        o->getCredentialManager()->setValue( credential ) ;
         rgs = acs->getRegistryService() ;
         services::PropertyList* propertyList = new services::PropertyList;
         services::ServiceOffer* serviceOffer = new services::ServiceOffer;

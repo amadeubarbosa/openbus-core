@@ -117,14 +117,14 @@ namespace openbus {
     #endif
     /* quem faz delete desse cara?? */
       Credential* c = new Credential ;
-      lua_getfield( L, -1, "entityName" ) ;
+      lua_getfield( L, -1, "owner" ) ;
       const char * luastring = lua_tolstring( L, -1, &size ) ;
       str = new char[ size + 1 ] ;
       memcpy( str, luastring, size ) ;
       str[ size ] = '\0' ;
-      c->entityName = str ;
+      c->owner = str ;
     #if VERBOSE
-      printf( "\t\t[credential->entityName=%s]\n", c->entityName ) ;
+      printf( "\t\t[credential->owner=%s]\n", c->owner ) ;
     #endif
       lua_pop( L, 1 ) ;
       lua_getfield( L, -1, "identifier" ) ;
@@ -135,6 +135,16 @@ namespace openbus {
       c->identifier = str ;
     #if VERBOSE
       printf( "\t\t[credential->identifier=%s]\n",  c->identifier ) ;
+    #endif
+      lua_pop( L, 1 ) ;
+      lua_getfield( L, -1, "delegate" ) ;
+      luastring = lua_tolstring( L, -1, &size ) ;
+      str = new char[ size + 1 ] ;
+      memcpy( str, luastring, size ) ;
+      str[ size ] = '\0' ;
+      c->delegate = str ;
+    #if VERBOSE
+      printf( "\t\t[credential->delegate=%s]\n",  c->delegate ) ;
     #endif
       lua_pop( L, 2 ) ;
       co->credentialWasDeleted( c ) ;
@@ -242,8 +252,11 @@ namespace openbus {
       lua_pushstring( LuaVM, "identifier" ) ;
       lua_pushstring( LuaVM, aCredential->identifier ) ;
       lua_settable( LuaVM, -3 ) ;
-      lua_pushstring( LuaVM, "entityName" ) ;
-      lua_pushstring( LuaVM, aCredential->entityName ) ;
+      lua_pushstring( LuaVM, "owner" ) ;
+      lua_pushstring( LuaVM, aCredential->owner ) ;
+      lua_settable( LuaVM, -3 ) ;
+      lua_pushstring( LuaVM, "delegate" ) ;
+      lua_pushstring( LuaVM, aCredential->delegate ) ;
       lua_settable( LuaVM, -3 ) ;
     #if VERBOSE
       printf( "\t[parametro aCredential empilhado]\n" ) ;
@@ -354,8 +367,11 @@ namespace openbus {
       lua_getfield( LuaVM, -1, "identifier" ) ;
       aCredential->identifier = lua_tostring( LuaVM, -1 ) ;
       lua_pop( LuaVM, 1 ) ;
-      lua_getfield( LuaVM, -1, "entityName" ) ;
-      aCredential->entityName = lua_tostring( LuaVM, -1 ) ;
+      lua_getfield( LuaVM, -1, "owner" ) ;
+      aCredential->owner = lua_tostring( LuaVM, -1 ) ;
+      lua_pop( LuaVM, 1 ) ;
+      lua_getfield( LuaVM, -1, "delegate" ) ;
+      aCredential->delegate = lua_tostring( LuaVM, -1 ) ;
     #if VERBOSE
       printf( "\t[resultado aCredential retirado]\n" ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -440,8 +456,11 @@ namespace openbus {
       lua_getfield( LuaVM, -1, "identifier" ) ;
       aCredential->identifier = lua_tostring( LuaVM, -1 ) ;
       lua_pop( LuaVM, 1 ) ;
-      lua_getfield( LuaVM, -1, "entityName" ) ;
-      aCredential->entityName = lua_tostring( LuaVM, -1 ) ;
+      lua_getfield( LuaVM, -1, "owner" ) ;
+      aCredential->owner = lua_tostring( LuaVM, -1 ) ;
+      lua_pop( LuaVM, 1 ) ;
+      lua_getfield( LuaVM, -1, "delegate" ) ;
+      aCredential->delegate = lua_tostring( LuaVM, -1 ) ;
     #if VERBOSE
       printf( "\t[resultado aCredential retirado]\n" ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
@@ -542,12 +561,15 @@ namespace openbus {
       lua_pushstring( LuaVM, "identifier" ) ;
       lua_pushstring( LuaVM, aCredential->identifier ) ;
       lua_settable( LuaVM, -3 ) ;
-      lua_pushstring( LuaVM, "entityName" ) ;
-      lua_pushstring( LuaVM, aCredential->entityName ) ;
+      lua_pushstring( LuaVM, "owner" ) ;
+      lua_pushstring( LuaVM, aCredential->owner ) ;
+      lua_settable( LuaVM, -3 ) ;
+      lua_pushstring( LuaVM, "delegate" ) ;
+      lua_pushstring( LuaVM, aCredential->delegate ) ;
       lua_settable( LuaVM, -3 ) ;
     #if VERBOSE
-      printf( "\t[parametro aCredential empilhado\n\t\tidentifier:%s\n\t\tentityName:%s]\n",
-          aCredential->identifier, aCredential->entityName ) ;
+      printf( "\t[parametro aCredential empilhado\n\t\tidentifier:%s\n\t\towner:%s\n\t\tdelegate:%s]\n",
+          aCredential->identifier, aCredential->owner, aCredential->delegate ) ;
       printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     #endif
     #if VERBOSE
@@ -613,8 +635,11 @@ namespace openbus {
       lua_pushstring( LuaVM, "identifier" ) ;
       lua_pushstring( LuaVM, aCredential->identifier ) ;
       lua_settable( LuaVM, -3 ) ;
-      lua_pushstring( LuaVM, "entityName" ) ;
-      lua_pushstring( LuaVM, aCredential->entityName ) ;
+      lua_pushstring( LuaVM, "owner" ) ;
+      lua_pushstring( LuaVM, aCredential->owner ) ;
+      lua_settable( LuaVM, -3 ) ;
+      lua_pushstring( LuaVM, "delegate" ) ;
+      lua_pushstring( LuaVM, aCredential->delegate ) ;
       lua_settable( LuaVM, -3 ) ;
       lua_setglobal( LuaVM , "aCredential" ) ;
       lua_getglobal( LuaVM, "aCredential" ) ;

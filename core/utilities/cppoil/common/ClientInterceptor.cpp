@@ -37,8 +37,11 @@ namespace openbus {
       lua_pushstring(LuaVM, "identifier");
       lua_pushstring(LuaVM, credential->identifier);
       lua_settable(LuaVM, -3);
-      lua_pushstring(LuaVM, "entityName");
-      lua_pushstring(LuaVM, credential->entityName);
+      lua_pushstring(LuaVM, "owner");
+      lua_pushstring(LuaVM, credential->owner);
+      lua_settable(LuaVM, -3);
+      lua_pushstring(LuaVM, "delegate");
+      lua_pushstring(LuaVM, credential->delegate);
       lua_settable(LuaVM, -3);
     /* CredentialType */
       lua_pushstring(LuaVM, clientInterceptor->credentialType);

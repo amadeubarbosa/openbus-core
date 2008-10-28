@@ -57,6 +57,7 @@ namespace openbus {
       static Openbus* getInstance();
       Lua_State* getLuaVM();
       void setClientInterceptor(common::ClientInterceptor* clientInterceptor);
+      common::CredentialManager* getCredentialManager();
       services::IAccessControlService* getACS(String host, unsigned short port);
       services::IAccessControlService* connect(String host, unsigned short port, String user, String password, \
             services::Credential* aCredential, services::Lease* aLease);

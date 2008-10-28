@@ -19,13 +19,11 @@ class ACSTestSuite: public CxxTest::TestSuite {
   private:
     Openbus* o ;
     services::IAccessControlService* acs ;
-    common::CredentialManager* credentialManager ;
-    common::ClientInterceptor* clientInterceptor ;
     services::Credential* credential ;
     services::Lease* lease ;
     char BUFFER[BUFFER_SIZE];
     char* OPENBUS_SERVER_HOST;
-    char* OPENBUS_SERVER_PORT;
+    unsigned short OPENBUS_SERVER_PORT;
     char* OPENBUS_USERNAME;
     char* OPENBUS_PASSWORD;
   public:
@@ -47,15 +45,12 @@ class ACSTestSuite: public CxxTest::TestSuite {
         lua_getglobal(LuaVM, "OPENBUS_SERVER_HOST");
         OPENBUS_SERVER_HOST = (char*) lua_tostring(LuaVM, -1);
         lua_getglobal(LuaVM, "OPENBUS_SERVER_PORT");
-        OPENBUS_SERVER_PORT = (char*) lua_tostring(LuaVM, -1);
+        OPENBUS_SERVER_PORT = lua_tonumber(LuaVM, -1);
         lua_getglobal(LuaVM, "OPENBUS_USERNAME");
         OPENBUS_USERNAME = (char*) lua_tostring(LuaVM, -1);
         lua_getglobal(LuaVM, "OPENBUS_PASSWORD");
         OPENBUS_PASSWORD = (char*) lua_tostring(LuaVM, -1);
         lua_pop(LuaVM, 4);
-        credentialManager = new common::CredentialManager ;
-        clientInterceptor = new common::ClientInterceptor(credentialManager);
-        o->setClientInterceptor( clientInterceptor ) ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;
       } /* try */
@@ -64,8 +59,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
     void testGetACS()
     {
       try {
-        sprintf(BUFFER, "corbaloc::%s:%s/ACS", OPENBUS_SERVER_HOST, OPENBUS_SERVER_PORT);
-        acs = o->getACS( BUFFER, "IDL:openbusidl/acs/IAccessControlService:1.0" ) ;
+        acs = o->getACS( OPENBUS_SERVER_HOST, OPENBUS_SERVER_PORT ) ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;
       } /* try */
@@ -80,14 +74,14 @@ class ACSTestSuite: public CxxTest::TestSuite {
         services::Lease* lease2 = new services::Lease() ;
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential2, lease2 ) ;
-        TS_ASSERT_SAME_DATA( credential->entityName, OPENBUS_USERNAME, 6 ) ;
-        TS_ASSERT_SAME_DATA( credential2->entityName, OPENBUS_USERNAME, 6 ) ;
+        TS_ASSERT_SAME_DATA( credential->owner, OPENBUS_USERNAME, 6 ) ;
+        TS_ASSERT_SAME_DATA( credential2->owner, OPENBUS_USERNAME, 6 ) ;
         TS_ASSERT( strcmp( credential2->identifier, credential->identifier ) ) ;
-        credentialManager->setValue( credential ) ;
+        o->getCredentialManager()->setValue( credential ) ;
         acs->logout( credential ) ;
-        credentialManager->setValue( credential2 ) ;
+        o->getCredentialManager()->setValue( credential2 ) ;
         acs->logout( credential2 ) ;
-        credentialManager->invalidate() ;
+        o->getCredentialManager()->invalidate() ;
         TS_ASSERT(!acs->loginByPassword( "INVALID", "INVALID", credential, lease )) ;
         TS_ASSERT_SAME_DATA( credential->identifier, "", 0 ) ;
       } catch ( const char* errmsg ) {
@@ -100,10 +94,11 @@ class ACSTestSuite: public CxxTest::TestSuite {
       try {
         services::Credential* c = new services::Credential ;
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
-        credentialManager->setValue( credential ) ;
+        o->getCredentialManager()->setValue( credential ) ;
         TS_ASSERT( acs->isValid( credential ) ) ;
         c->identifier = "123" ;
-        c->entityName = OPENBUS_USERNAME ;
+        c->owner = OPENBUS_USERNAME ;
+        c->delegate = "";
         TS_ASSERT( !acs->isValid( c ) ) ;
         acs->logout( credential ) ;
         TS_ASSERT_THROWS_ANYTHING( acs->isValid( credential ) ) ;
@@ -116,7 +111,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
     {
       try {
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
-        credentialManager->setValue( credential ) ;
+        o->getCredentialManager()->setValue( credential ) ;
         acs->getRegistryService() ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;
@@ -128,15 +123,16 @@ class ACSTestSuite: public CxxTest::TestSuite {
       try {
         services::Lease* leaseout = new services::Lease() ;
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
-        credentialManager->setValue( credential ) ;
+        o->getCredentialManager()->setValue( credential ) ;
         TS_ASSERT( acs->renewLease( credential, leaseout ) ) ;
         TS_ASSERT_EQUALS( 30, (int) *leaseout ) ;
         services::Credential* s = new services::Credential ;
         s->identifier = "" ;
-        s->entityName = "" ;
+        s->owner = "" ;
+        s->delegate = "";
         TS_ASSERT( !acs->renewLease( s, leaseout ) ) ;
         acs->logout( credential ) ;
-        credentialManager->invalidate() ;
+        o->getCredentialManager()->invalidate() ;
       } catch ( const char* errmsg ) {
         TS_FAIL( errmsg ) ;
       } /* try */
@@ -145,11 +141,12 @@ class ACSTestSuite: public CxxTest::TestSuite {
     void testLogout()
     {
       acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
-      credentialManager->setValue( credential ) ;
+      o->getCredentialManager()->setValue( credential ) ;
       TS_ASSERT( acs->logout( credential ) ) ;
       services::Credential* c = new services::Credential ;
-      c->entityName = OPENBUS_USERNAME ;
+      c->owner = OPENBUS_USERNAME ;
       c->identifier = "dadadsa" ;
+      c->delegate = "";
       TS_ASSERT_THROWS_ANYTHING( acs->logout( c ) ) ;
     }
 
@@ -160,13 +157,14 @@ class ACSTestSuite: public CxxTest::TestSuite {
           void credentialWasDeleted ( services::Credential* aCredential )
           {
             printf("\nChamando metodo de callback 'credentialWasDeleted'\n");
-            printf( "  credential->entityName=%s\n", aCredential->entityName ) ;
+            printf( "  credential->owner=%s\n", aCredential->owner ) ;
             printf( "  credential->identifier=%s\n\n", aCredential->identifier ) ;
+            printf( "  credential->delegate=%s\n\n", aCredential->delegate ) ;
           }
         } ;
         services::CredentialIdentifierList* list = new services::CredentialIdentifierList ;
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease ) ;
-        credentialManager->setValue( credential ) ;
+        o->getCredentialManager()->setValue( credential ) ;
         credentialObserver* co = new credentialObserver;
         list->newmember( credential->identifier ) ;
         acs->addObserver( co, list ) ;
@@ -185,7 +183,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
         services::CredentialIdentifierList* list = new services::CredentialIdentifierList ;
         services::Credential* c = new services::Credential ;;
         acs->loginByPassword( OPENBUS_USERNAME, OPENBUS_PASSWORD, c, lease ) ;
-        credentialManager->setValue( c ) ;
+        o->getCredentialManager()->setValue( c ) ;
         credentialObserver* co = new credentialObserver ;
         list->newmember( c->identifier ) ;
         const char* id = acs->addObserver( co, list ) ;
