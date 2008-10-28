@@ -23,7 +23,7 @@ Suite = {
       end
       local idlfile = IDLPATH_DIR.."/access_control_service.idl"
 
-      oil.verbose:level(0)
+      oil.verbose:level(5)
       orb:loadidlfile(idlfile)
 
       self.user = "tester"
@@ -62,7 +62,7 @@ Suite = {
     testLogout = function(self)
       local _, credential = self.accessControlService:loginByPassword(self.user, self.password)
       self.credentialManager:setValue(credential)
-      Check.assertFalse(self.accessControlService:logout({identifier = "", entityName = "abcd", }))
+      Check.assertFalse(self.accessControlService:logout({identifier = "", owner = "abcd", delegate = "", }))
       Check.assertTrue(self.accessControlService:logout(credential))
       self.credentialManager:invalidate(credential)
       Check.assertError(self.accessControlService.logout,self.accessControlService,credential)
@@ -115,7 +115,7 @@ Suite = {
 
     testIsValid = function(self)
       Check.assertTrue(self.accessControlService:isValid(self.credential))
-      Check.assertFalse(self.accessControlService:isValid({entityName=self.user, identifier = "123"}))
+      Check.assertFalse(self.accessControlService:isValid({identifier = "123", owner = self.user, delegate = "",}))
       self.accessControlService:logout(self.credential)
 
       -- neste caso o proprio interceptador do serviço rejeita o request

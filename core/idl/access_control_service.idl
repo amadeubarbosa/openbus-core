@@ -26,7 +26,8 @@ typedef Identifier CredentialObserverIdentifier;
  */
 struct Credential {
   CredentialIdentifier identifier; /**< \brief Identificador único. */
-  string entityName; /**< \brief Nome da entidade. */
+  string owner; /**< \brief Nome da entidade dona. */
+  string delegate; /**< \brief Nome da entidade delegada (opcional). */
 };
 
 /**

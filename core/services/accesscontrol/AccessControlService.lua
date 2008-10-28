@@ -42,9 +42,10 @@ oop.class(_M, IComponent)
 --@name invalidCredential
 --
 --@field identifier O identificador da credencial que, neste caso, é vazio.
---@field entityName O nome da entidade dona da credencial que, neste caso, é vazio.
+--@field owner O nome da entidade dona da credencial que, neste caso, é vazio.
+--@field delegate O nome da entidade delegada que, neste caso, é vazio.
 ---
-invalidCredential = {identifier = "", entityName = ""}
+invalidCredential = {identifier = "", owner = "", delegate = ""}
 invalidLease = -1
 deltaT = 30 -- lease fixo (por enquanto) em segundos
 
@@ -87,7 +88,7 @@ function startup(self)
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
     self.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
-    if entry.component and entry.credential.entityName == "RegistryService" then
+    if entry.component and entry.credential.owner == "RegistryService" then
       self.registryService = {
         credential = entry.credential,
         component = entry.component,
@@ -107,7 +108,7 @@ function startup(self)
       local now = os.time()
       if (os.difftime (now, lastUpdate) > duration ) then
         if secondChance then
-          Log:warn(credential.entityName .. " lease expirado: LOGOUT.")
+          Log:warn(credential.owner.. " lease expirado: LOGOUT.")
           self:logout(credential) -- you may clear existing fields.
         else
           entry.lease.secondChance = true
@@ -166,7 +167,7 @@ function loginByCertificate(self, name, answer)
     Log:error(errorMessage)
     return false, self.invalidCredential, self.invalidLease
   end
-  local entry = self:addEntry(name)
+  local entry = self:addEntry(name, true)
   return true, entry.credential, entry.lease.duration
 end
 
@@ -219,9 +220,9 @@ end
 --@see openbus.common.LeaseProvider#renewLease
 ---
 function renewLease(self, credential)
-  Log:lease(credential.entityName .. " renovando lease.")
+  Log:lease(credential.owner.. " renovando lease.")
   if not self:isValid(credential) then
-    Log:warn(credential.entityName .. " credencial inválida.")
+    Log:warn(credential.owner.. " credencial inválida.")
     return false, self.invalidLease
   end
   local now = os.time()
@@ -248,7 +249,7 @@ function logout(self, credential)
   end
   self:removeEntry(entry)
   if self.registryService then
-    if credential.entityName == "RegistryService" and
+    if credential.owner == "RegistryService" and
         credential.identifier == self.registryService.credential.identifier then
       self.registryService = nil
     end
@@ -269,6 +270,9 @@ function isValid(self, credential)
     return false
   end
   if entry.credential.identifier ~= credential.identifier then
+    return false
+  end
+  if entry.credential.delegate ~= "" and not entry.certified then
     return false
   end
   return true
@@ -296,7 +300,7 @@ end
 ---
 function setRegistryService(self, registryServiceComponent)
   local credential = self.serverInterceptor:getCredential()
-  if credential.entityName == "RegistryService" then
+  if credential.owner == "RegistryService" then
     self.registryService = {
       credential = credential,
       component = registryServiceComponent,
@@ -408,15 +412,17 @@ end
 --
 --@return A credencial.
 ---
-function addEntry(self, name)
+function addEntry(self, name, certified)
   local credential = {
     identifier = self:generateCredentialIdentifier(),
-    entityName = name
+    owner = name,
+    delegate = "",
   }
   local duration = self.deltaT
   local lease = { lastUpdate = os.time(), duration = duration }
   local entry = {
     credential = credential,
+    certified = certified,
     lease = lease,
     observers = {},
     observedBy = {}
