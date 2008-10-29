@@ -14,6 +14,8 @@
 using namespace luaidl::cpp::types;
 
 namespace dataService {
+  typedef luaidl::cpp::sequence<char> OctetSeq;
+
   typedef luaidl::cpp::sequence<luaidl::cpp::types::Any> ValueList;
 
   typedef char* MetadataName;
@@ -41,6 +43,15 @@ namespace dataService {
 
   typedef luaidl::cpp::sequence<Data> DataList;
 
+  struct DataChannel {
+    char* host;
+    unsigned short port;
+    OctetSeq* accessKey;
+    OctetSeq* dataIdentifier;
+    bool writable;
+    long long dataSize;
+  };
+
   class IDataService;
 
   class OperationNotSupported : public std::exception {};
@@ -59,6 +70,7 @@ namespace dataService {
       ValueList* getAttrs(scs::core::NameList* attrs_name);
       bool setAttr(char* attr_name, luaidl::cpp::types::Any* attr_value);
       bool setAttrs(scs::core::NameList* attrs_name, ValueList* attrs_value);
+      DataChannel* getDataChannel();
   };
 
   class IDataService {

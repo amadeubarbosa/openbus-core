@@ -636,6 +636,151 @@ namespace dataService {
     return returnValue;
   }
 
+  DataChannel* IDataEntry::getDataChannel() {
+    DataChannel* returnValue = NULL;
+    size_t size;
+  #if VERBOSE
+    printf("[(%p)IDataEntry::getDataChannel() COMECO]\n", this);
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+  #endif
+    lua_getglobal(LuaVM, "invoke");
+    lua_pushlightuserdata(LuaVM, this);
+    lua_gettable(LuaVM, LUA_REGISTRYINDEX);
+  #if VERBOSE
+    printf("\t[IDataEntry Lua:%p C++:%p]\n", \
+      lua_topointer(LuaVM, -1), this);
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+  #endif
+    lua_getfield(LuaVM, -1, "getDataChannel");
+  #if VERBOSE
+    printf("\t[metodo getDataChannel empilhado]\n");
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename(LuaVM, lua_type(LuaVM, -1)));
+  #endif
+    lua_insert(LuaVM, -2);
+    if (lua_pcall(LuaVM, 2, 1, 0) != 0) {
+    #if VERBOSE
+      printf("\t[ERRO ao realizar pcall do metodo]\n");
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+      printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+          lua_typename(LuaVM, lua_type(LuaVM, -1)));
+    #endif
+      const char * returnValue;
+      lua_getglobal(LuaVM, "tostring");
+      lua_insert(LuaVM, -2);
+      lua_pcall(LuaVM, 1, 1, 0);
+      returnValue = lua_tostring(LuaVM, -1);
+      lua_pop(LuaVM, 1);
+    #if VERBOSE
+      printf("\t[lancando excecao %s]\n", returnValue);
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+      printf("[IDataEntry::getDataChannel() FIM]\n\n");
+    #endif
+      throw returnValue;
+    } /* if */
+    printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename(LuaVM, lua_type(LuaVM, -1)));
+    returnValue = new DataChannel;
+  /* DataChannel->host */
+  #if VERBOSE
+    printf("\t[Gerando valor de retorno do tipo DataChannel]\n");
+  #endif
+    lua_getfield(LuaVM, -1, "host");
+  #if VERBOSE
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename(LuaVM, lua_type(LuaVM, -1)));
+  #endif
+    const char * luastring = lua_tolstring(LuaVM, -1, &size);
+    returnValue->host = new char[size + 1];
+    memcpy((void*) returnValue->host, luastring, size);
+    returnValue->host[size] = '\0';
+    lua_pop(LuaVM, 1);
+  #if VERBOSE
+    printf("\t[DataChannel->host: %s]\n", returnValue->host);
+  #endif
+  /* DataChannel->port */
+  #if VERBOSE
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename(LuaVM, lua_type(LuaVM, -1)));
+  #endif
+    lua_getfield(LuaVM, -1, "port");
+    returnValue->port = lua_tointeger(LuaVM, -1);
+    lua_pop(LuaVM, 1);
+  #if VERBOSE
+    printf("\t[DataChannel->port: %u]\n", returnValue->port);
+  #endif
+  /* DataChannel->accessKey */
+  #if VERBOSE
+    printf("\t[DataChannel->accessKey]\n");
+  #endif
+    lua_getfield(LuaVM, -1, "accessKey");
+  #if VERBOSE
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename(LuaVM, lua_type(LuaVM, -1)));
+  #endif
+    const char* accessKeyStr = lua_tostring(LuaVM, -1);
+    OctetSeq* accessKey  = new OctetSeq;
+    for (size = 0; size < strlen(accessKeyStr); size++) {
+      accessKey->newmember((char*) (accessKeyStr + size));
+    }
+    returnValue->accessKey = accessKey;
+    lua_pop(LuaVM, 1);
+  /* DataChannel->dataIdentifier */
+    lua_getfield(LuaVM, -1, "dataIdentifier");
+  #if VERBOSE
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename(LuaVM, lua_type(LuaVM, -1)));
+  #endif
+    const char* dataIdentifierStr = lua_tostring(LuaVM, -1);
+    OctetSeq* dataIdentifier = new OctetSeq;
+    for (size = 0; size < strlen(dataIdentifierStr); size++) {
+      dataIdentifier->newmember((char*) (dataIdentifierStr + size));
+    }
+    returnValue->dataIdentifier = dataIdentifier;
+    lua_pop(LuaVM, 1);
+  #if VERBOSE
+    printf("\t[DataChannel->dataIdentifier: %s]\n", dataIdentifierStr);
+  #endif
+  /* DataChannel->writable */
+    lua_getfield(LuaVM, -1, "writable");
+  #if VERBOSE
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename(LuaVM, lua_type(LuaVM, -1)));
+  #endif
+    returnValue->writable = lua_toboolean(LuaVM, -1);
+  #if VERBOSE
+    printf("\t[DataChannel->writable: %d]\n", returnValue->writable);
+  #endif
+    lua_pop(LuaVM, 1);
+  /* DataChannel->dataSize */
+    lua_getfield(LuaVM, -1, "dataSize");
+  #if VERBOSE
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename(LuaVM, lua_type(LuaVM, -1)));
+  #endif
+    returnValue->dataSize = lua_tointeger(LuaVM, -1);
+  #if VERBOSE
+    printf("\t[DataChannel->dataSize: %lld]\n", returnValue->dataSize);
+  #endif
+    lua_pop(LuaVM, 1);
+
+    lua_pushlightuserdata(LuaVM, returnValue);
+    lua_insert(LuaVM, -2);
+    lua_settable(LuaVM, LUA_REGISTRYINDEX);
+  #if VERBOSE
+    printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    printf("[IDataEntry::getDataChannel() FIM]\n\n");
+  #endif
+    return returnValue;
+  }
+
   IDataService::IDataService() {
     openbus::Openbus* openbus = openbus::Openbus::getInstance();
     LuaVM = openbus->getLuaVM();

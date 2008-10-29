@@ -13,8 +13,6 @@ using namespace luaidl::cpp::types;
 
 namespace projectService {
 
-  typedef luaidl::cpp::sequence<char> OctetSeq;
-
   class IFile;
 
   class IProject : public dataService::IDataEntry {
@@ -30,15 +28,6 @@ namespace projectService {
 
   typedef luaidl::cpp::sequence<IProject> ProjectList;
   typedef luaidl::cpp::sequence<IFile> FileList;
-
-  struct DataChannel {
-    char* host;
-    unsigned short port;
-    OctetSeq* accessKey;
-    OctetSeq* fileIdentifier;
-    bool writable;
-    long long fileSize;
-  };
 
   class IFile : public dataService::IDataEntry {
     public:
@@ -58,7 +47,6 @@ namespace projectService {
       bool rename (char* newName);
       bool moveFile(IFile* newParent);
       bool copyFile(IFile* newParent);
-      DataChannel* getDataChannel();
       void close();
   };
 

@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 /* Adquirindo o servico de registro. */
   services::IRegistryService* rgs = acs->getRegistryService();
 
-/* Procurando o servico de dados do CSBase no barramento. */
+/* Procurando o servico de projetos do CSBase no barramento. */
   services::PropertyList* propertyList = new services::PropertyList;
   services::Property* property = new services::Property;
   property->name = "facets";
@@ -75,18 +75,17 @@ int main(int argc, char** argv) {
   dataKey->service_id = member->getComponentId();
   dataKey->actual_data_id = fileName;
   projectService::IFile* file;
-  projectService::DataChannel* dataChannel;
   file = ds->getDataFacet <projectService::IFile> (dataKey, (char*) "IDL:openbusidl/ps/IFile:1.0");
   if (!file) {
     cout << "** Arquivo nao encontrado." << endl;
     exit(-1);
   }
 /* Canal de acesso ao arquivo. */
-  dataChannel = file->getDataChannel();
-  size_t fileSize = dataChannel->fileSize;
+  dataService::DataChannel* dataChannel = file->getDataChannel();
+  size_t dataSize = dataChannel->dataSize;
 
 /* Leitura do arquivo */
-  ftc* ch = new ftc(dataChannel->fileIdentifier->getmember(0), true, fileSize, dataChannel->host,
+  ftc* ch = new ftc(dataChannel->dataIdentifier->getmember(0), true, dataSize, dataChannel->host,
       dataChannel->port, dataChannel->accessKey->getmember(0));
   try {
     ch->open(true);
@@ -94,10 +93,10 @@ int main(int argc, char** argv) {
     cout << "** Erro ao abrir arquivo: " << errmsg << endl; 
     exit(-1);
   }
-  char* content = new char[fileSize];
-  ch->read(content, fileSize, 0);
+  char* content = new char[dataSize];
+  ch->read(content, dataSize, 0);
   cout << "Eu li:";
-  for (size_t i = 0; i < fileSize; i++) {
+  for (size_t i = 0; i < dataSize; i++) {
     cout << content[i];
   }
   cout << endl;
