@@ -1,7 +1,6 @@
 #ifndef PS_IDL
 #define PS_IDL
 
-#include "core.idl"
 #include "data_service.idl"
 
 module openbusidl {
@@ -23,15 +22,6 @@ interface IProject : openbusidl::ds::IDataEntry {
 };
 typedef sequence<IProject> ProjectList;
 
-struct DataChannel {
-  string host;
-  unsigned long port;
-  OctetSeq accessKey;
-  OctetSeq fileIdentifier;
-  boolean writable;
-  long long fileSize;
-};
-
 interface IFile : openbusidl::ds::IDataEntry {
   string getName();
   string getPath();
@@ -47,7 +37,6 @@ interface IFile : openbusidl::ds::IDataEntry {
   boolean rename (in string newName);
   boolean moveFile(in IFile newParent);
   boolean copyFile(in IFile newParent);
-  DataChannel getDataChannel();
   void close();
 };
 

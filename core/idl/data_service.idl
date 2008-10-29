@@ -2,6 +2,7 @@
 #define DS_IDL
 
 #include "scs.idl"
+#include "core.idl"
 
 module openbusidl {
 
@@ -41,6 +42,16 @@ struct Data {
   MetadataList metadata; /**< \brief Os metadados. */
 };
 typedef sequence<Data> DataList;
+
+/** \brief Representa um canal de acesso a dados. */
+struct DataChannel {
+  string host; /**< \brief Nome da máquina onde o canal de dados está disponível. */
+  unsigned long port; /**< \brief Porta da máquina onde o canal de dados está disponível. */
+  OctetSeq accessKey; /**< \brief Chave de acesso ao dado. */
+  OctetSeq dataIdentifier; /**< \brief O identificador do dado. */
+  boolean writable; /**< \brief Indica se é possível escrever no dado. */
+  long long dataSize; /**< \brief O tamanho do dado em bytes. */
+};
 
 interface IDataService;
 /**
@@ -133,6 +144,13 @@ interface IDataEntry {
    * \return \c true, caso os atributos sejam definidos, ou \c false, caso contrário.
    */
   boolean setAttrs(in scs::core::NameList attrs_name, in ValueList attrs_value);
+
+  /**
+   * Obtém um canal para acesso ao dado.
+   *
+   * \return Um canal para acesso ao dado.
+   */
+  DataChannel getDataChannel();
 };
 
 /**
