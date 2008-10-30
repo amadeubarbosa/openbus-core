@@ -87,7 +87,7 @@ ftc::ftc( const char* id, bool writable, unsigned long long size, const char* ho
   #endif
   lua_pushinteger( LuaVM, size ) ;
   #if VERBOSE
-    printf( "\t[parâmetro size = %Ld empilhado]\n", size ) ;
+    printf( "\t[parâmetro size = %lld empilhado]\n", size ) ;
   #endif
   lua_pushstring( LuaVM, host ) ;
   #if VERBOSE
@@ -345,7 +345,7 @@ void ftc::truncate( unsigned long long size )
   lua_insert( LuaVM, -2 ) ;
   lua_pushinteger( LuaVM, size ) ;
 #if VERBOSE
-  printf( "\t[parâmetro size = %Ld empilhado]\n", size ) ;
+  printf( "\t[parâmetro size = %lld empilhado]\n", size ) ;
 #endif
 #ifndef WITHOUT_OIL
   if ( lua_pcall( LuaVM, 4, 3, 0 ) != 0 ) {
@@ -417,7 +417,7 @@ void ftc::setPosition( unsigned long long position )
   lua_insert( LuaVM, -2 ) ;
   lua_pushinteger( LuaVM, position ) ;
 #if VERBOSE
-  printf( "\t[parâmetro position = %Ld empilhado]\n", position ) ;
+  printf( "\t[parâmetro position = %lld empilhado]\n", position ) ;
 #endif
 #ifndef WITHOUT_OIL
   if ( lua_pcall( LuaVM, 4, 2, 0 ) != 0 ) {
@@ -522,7 +522,7 @@ unsigned long long ftc::getPosition()
   } else {
     position = lua_tointeger( LuaVM, -1 ) ;
   #if VERBOSE
-    printf( "\t[position = %Ld empilhado]\n", position ) ;
+    printf( "\t[position = %lld empilhado]\n", position ) ;
   #endif
     lua_pop( LuaVM, 2 ) ;
     return position ;
@@ -591,7 +591,7 @@ unsigned long long ftc::getSize()
   } else {
     size = lua_tointeger( LuaVM, -1 ) ;
   #if VERBOSE
-    printf( "\t[size = %Ld empilhado]\n", size ) ;
+    printf( "\t[size = %lld empilhado]\n", size ) ;
   #endif
     lua_pop( LuaVM, 2 ) ;
     return size ;
@@ -602,7 +602,7 @@ unsigned long long ftc::getSize()
 #endif
 }
 
-void ftc::read( char* data, size_t nbytes, unsigned long long position )
+void ftc::read( char* data, unsigned long long nbytes, unsigned long long position )
 {
 #if VERBOSE
   printf( "[ftc::read() COMECO]\n" ) ;
@@ -619,13 +619,13 @@ void ftc::read( char* data, size_t nbytes, unsigned long long position )
 #endif
   lua_getfield( LuaVM, -1, "read" ) ;
   lua_insert( LuaVM, -2 ) ;
-  lua_pushinteger( LuaVM, (int) nbytes ) ;
+  lua_pushinteger( LuaVM, nbytes ) ;
 #if VERBOSE
-  printf( "\t[parâmetro nbytes = %d empilhado]\n", (int) nbytes ) ;
+  printf( "\t[parâmetro nbytes = %lld empilhado]\n", nbytes ) ;
 #endif
-  lua_pushinteger( LuaVM, (int) position ) ;
+  lua_pushinteger( LuaVM, position ) ;
 #if VERBOSE
-  printf( "\t[parâmetro position = %Ld empilhado]\n", position ) ;
+  printf( "\t[parâmetro position = %lld empilhado]\n", position ) ;
 #endif
   lua_pushlightuserdata( LuaVM, data ) ;
 #if VERBOSE
@@ -676,7 +676,7 @@ void ftc::read( char* data, size_t nbytes, unsigned long long position )
     printf( "\t[Byte Sequence:" ) ;
   #if VERBOSE2
     int x ;
-    for ( x = 0; x < (int) nbytes; x++ ) {
+    for ( x = 0; x < nbytes; x++ ) {
       printf( "%c", ptr_data[ x ] ) ;
     }
   #endif
@@ -690,7 +690,7 @@ void ftc::read( char* data, size_t nbytes, unsigned long long position )
 #endif
 }
 
-void ftc::write( char* data, size_t nbytes, unsigned long long position )
+void ftc::write( char* data, unsigned long long nbytes, unsigned long long position )
 {
 #if VERBOSE
   printf( "[ftc::write() COMECO]\n" ) ;
@@ -709,11 +709,11 @@ void ftc::write( char* data, size_t nbytes, unsigned long long position )
   lua_insert( LuaVM, -2 ) ;
   lua_pushinteger( LuaVM, nbytes ) ;
 #if VERBOSE
-  printf( "\t[parâmetro nbytes = %d empilhado]\n", (int) nbytes ) ;
+  printf( "\t[parâmetro nbytes = %lldd empilhado]\n", nbytes ) ;
 #endif
   lua_pushinteger( LuaVM, position ) ;
 #if VERBOSE
-  printf( "\t[parâmetro position = %Ld empilhado]\n", position ) ;
+  printf( "\t[parâmetro position = %lld empilhado]\n", position ) ;
 #endif
   lua_pushlstring( LuaVM, data, nbytes ) ;
 #if VERBOSE

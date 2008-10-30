@@ -32,8 +32,8 @@ class ftc {
     void setPosition( unsigned long long position ) ;
     unsigned long long getPosition() ;
     unsigned long long getSize() ;
-    void read( char* data, size_t nbytes, unsigned long long position ) ;
-    void write( char* data, size_t nbytes, unsigned long long position ) ;
+    void read( char* data, unsigned long long nbytes, unsigned long long position ) ;
+    void write( char* data, unsigned long long nbytes, unsigned long long position ) ;
 } ;
 
 #endif
