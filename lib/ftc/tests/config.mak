@@ -14,7 +14,6 @@ SRC= runner.cpp
 LIBS= dl oilall luasocket ftc
 
 USE_LUA51=YES
-USE_STATIC=YES
 
 cxxtest:
 	cxxtestgen.pl --runner=StdioPrinter -o runner.cpp TestSuite.cpp
