@@ -5,7 +5,10 @@
 local core = require "ftc.core"
 
 local oil = require 'oil'
-oil.orb = oil.init {flavor = "intercepted;corba;csockets;typed;cooperative;base"}
+oil.BasicSystem = require("oil.builder.csockets").BasicSystem()
+oil.tasks = oil.BasicSystem.tasks
+
+oil.orb = oil.init{flavor="intercepted;corba;typed;cooperative;base"}
 local orb = oil.orb
 
 local coroutine = require "coroutine"
@@ -20,7 +23,7 @@ if not oil.isrunning then
   oil.tasks:register(coroutine.create(function() return orb:run() end))
 end
 
-local sockets = oil.kernel.base.Sockets
+local sockets = orb.BasicSystem.sockets
 
 function __init(self, identifier, writable, size, host, port, accessKey)
   return core(sockets, identifier, writable, size, host, port, accessKey)
