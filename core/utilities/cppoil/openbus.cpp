@@ -74,6 +74,32 @@ namespace openbus {
     return instance;
   }
 
+  void Openbus::run() {
+  #if VERBOSE
+    cout << "[Openbus::run()]" << endl;
+  #endif
+    lua_getglobal(LuaVM, "run");
+    if (lua_pcall(LuaVM, 0, 0, 0) != 0) {
+    #if VERBOSE
+      cout << "\t[ERRO ao realizar pcall do metodo]" << endl;
+      cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << endl;
+      cout << "\t[Tipo do elemento do TOPO: " << lua_typename(LuaVM, lua_type(LuaVM, -1)) << "]" << endl;
+    #endif
+      const char * errmsg ;
+      lua_getglobal(LuaVM, "tostring");
+      lua_insert(LuaVM, -2);
+      lua_pcall(LuaVM, 1, 1, 0);
+      errmsg = lua_tostring(LuaVM, -1);
+      lua_pop(LuaVM, 1);
+    #if VERBOSE
+      cout << "\t[lancando excecao: " << errmsg << "]" << endl;
+      cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
+      cout << "[Openbus::run() FIM]" << endl << endl;
+    #endif
+      throw errmsg;
+    }
+  }
+
   void Openbus::setClientInterceptor(common::ClientInterceptor* clientInterceptor) {
   #if VERBOSE
     cout << "[Openbus::setClientInterceptor() COMECO]" << endl;

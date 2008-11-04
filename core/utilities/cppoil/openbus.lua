@@ -48,3 +48,8 @@ function invoke(func, ...)
   end --if
   return select(2, unpack(res))
 end
+
+function run()
+  oil.main( function ()
+  end)
+end

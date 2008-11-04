@@ -55,6 +55,7 @@ namespace openbus {
     public:
       ~Openbus();
       static Openbus* getInstance();
+      void run();
       Lua_State* getLuaVM();
       void setClientInterceptor(common::ClientInterceptor* clientInterceptor);
       common::CredentialManager* getCredentialManager();
