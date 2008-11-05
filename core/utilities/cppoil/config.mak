@@ -22,6 +22,7 @@ LIBS= scsoil oilall scsall luasocket tolua5.1
 
 SRC= ${PRECMP_DIR}/auxiliar.c \
      common/ClientInterceptor.cpp \
+     common/ServerInterceptor.cpp \
      common/CredentialManager.cpp \
      openbus.cpp \
      stubs/IAccessControlService.cpp \

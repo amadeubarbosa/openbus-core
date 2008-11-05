@@ -194,7 +194,7 @@ namespace openbus {
         returnValue = lua_tostring( LuaVM, -1 ) ;
         lua_pop( LuaVM, 1 ) ;
       #if VERBOSE
-        printf( "\t[lancando excecao]\n" ) ;
+        printf( "\t[lancando excecao: %s]\n", returnValue ) ;
         printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
         printf( "[IRegistryService::Register(ServiceOffer,RegistryIdentifier) FIM]\n\n" ) ;
       #endif

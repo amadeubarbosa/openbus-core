@@ -36,6 +36,7 @@ namespace openbus {
 
 #include "common/CredentialManager.h"
 #include "common/ClientInterceptor.h"
+#include "common/ServerInterceptor.h"
 #include "stubs/IAccessControlService.h"
 #include "stubs/IRegistryService.h"
 #include "stubs/ISessionService.h"
@@ -49,6 +50,7 @@ namespace openbus {
       static Lua_State* LuaVM;
       static common::CredentialManager* credentialManager;
       static common::ClientInterceptor* clientInterceptor;
+      static common::ServerInterceptor* serverInterceptor;
       void initLuaVM();
       Openbus();
       Openbus(const Openbus&);
@@ -57,7 +59,9 @@ namespace openbus {
       static Openbus* getInstance();
       void run();
       Lua_State* getLuaVM();
+      common::ServerInterceptor* getServerInterceptor();
       void setClientInterceptor(common::ClientInterceptor* clientInterceptor);
+      void setServerInterceptor(common::ServerInterceptor* serverInterceptor);
       common::CredentialManager* getCredentialManager();
       services::IAccessControlService* getACS(String host, unsigned short port);
       services::IAccessControlService* connect(String host, unsigned short port, String user, String password, \

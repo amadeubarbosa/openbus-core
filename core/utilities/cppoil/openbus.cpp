@@ -23,9 +23,14 @@ namespace openbus {
   Openbus* Openbus::instance = 0;
   common::CredentialManager* Openbus::credentialManager = 0;
   common::ClientInterceptor* Openbus::clientInterceptor = 0;
+  common::ServerInterceptor* Openbus::serverInterceptor = 0;
 
   Lua_State* Openbus::getLuaVM(void) {
     return LuaVM;
+  }
+
+  common::ServerInterceptor* Openbus::getServerInterceptor() {
+    return serverInterceptor;
   }
 
   void Openbus::initLuaVM(void) {
@@ -150,6 +155,56 @@ namespace openbus {
   #endif
   }
 
+  void Openbus::setServerInterceptor(common::ServerInterceptor* serverInterceptor) {
+  #if VERBOSE
+    cout << "[Openbus::setServerInterceptor() COMECO]" << endl;
+    cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
+    cout << "\t[Chamando metodo orb:setServerInterceptor(" << serverInterceptor << ")]" << endl;
+  #endif
+    lua_getglobal(LuaVM, "orb");
+    lua_getfield(LuaVM, -1, "setserverinterceptor");
+    lua_getglobal(LuaVM, "orb");
+    lua_newtable(LuaVM);
+    lua_pushstring(LuaVM, "serverInterceptor");
+    lua_pushlightuserdata(LuaVM, serverInterceptor);
+    lua_settable(LuaVM, -3);
+  #if VERBOSE
+    cout << "\t[parametro {}.clientInterceptor (pointer) empilhado]" << endl;
+    cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
+  #endif
+    lua_pushstring(LuaVM, "receiverequest");
+    lua_getglobal(LuaVM, "receiverequest");
+    lua_settable(LuaVM, -3);
+  #if VERBOSE
+    cout << "\t[parametro {}.receiverequest (function) empilhado]" << endl;
+    cout << "\t[Tamanho da pilha de Lua: " <<  lua_gettop(LuaVM) << "]" << endl;
+  #endif
+    if (lua_pcall(LuaVM, 2, 0, 0) != 0) {
+    #if VERBOSE
+      cout << "\t[ERRO ao realizar pcall do metodo]" << endl;
+      cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << endl;
+      cout << "\t[Tipo do elemento do TOPO: " << lua_typename(LuaVM, lua_type(LuaVM, -1)) << "]" << endl;
+    #endif
+      const char * errmsg ;
+      lua_getglobal(LuaVM, "tostring");
+      lua_insert(LuaVM, -2);
+      lua_pcall(LuaVM, 1, 1, 0);
+      errmsg = lua_tostring(LuaVM, -1);
+      lua_pop(LuaVM, 1);
+    #if VERBOSE
+      cout << "\t[lancando excecao]" << endl;
+      cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
+      cout << "[Openbus::setServerInterceptor() FIM]" << endl << endl;
+    #endif
+      throw errmsg;
+    } /* if */
+    lua_pop(LuaVM, 1);
+  #if VERBOSE
+    cout << "\t[Tamanho da pilha de Lua: " << lua_gettop(LuaVM) << "]" << endl;
+    cout << "[Openbus::setServerInterceptor() FIM]" << endl << endl;
+  #endif
+  }
+
   common::CredentialManager* Openbus::getCredentialManager() {
     return credentialManager;
   }
@@ -164,6 +219,8 @@ namespace openbus {
         services::Credential* aCredential, services::Lease* aLease) {
     try {
       services::IAccessControlService* acs = getACS(host, port);
+      serverInterceptor = new common::ServerInterceptor();
+      this->setServerInterceptor(serverInterceptor);
       if (!acs->loginByPassword(user, password, aCredential, aLease)) {
         throw "Par usuario/senha nao validado.";
       } else {

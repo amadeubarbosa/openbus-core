@@ -16,11 +16,13 @@ orb:loadidlfile(os.getenv("OPENBUS_HOME" ).."/idlpath/session_service.idl")
 
 local lir = orb:getLIR()
 
-IComponent = require 'scs.core.IComponent'
+IComponent = require "scs.core.IComponent"
 
 oil.verbose:level(0)
 oil.tasks.verbose:level(0)
 oil.tasks.verbose:flag("threads", false)
+
+picurrentTable = {}
 
 -- Metodo utilizado pelo interceptador do OiL
 function sendrequest(credential, credentialType, contextID, request)
@@ -29,6 +31,22 @@ function sendrequest(credential, credentialType, contextID, request)
   request.service_context =  {
      {context_id = contextID, context_data = encoder:getdata()}
    }
+end
+
+function receiverequest(self, request)
+  local credential
+  for _, context in ipairs(request.service_context) do
+    if context.context_id == 1234 then
+      local decoder = orb:newdecoder(context.context_data)
+      credential = decoder:get(lir:lookup_id("IDL:openbusidl/acs/Credential:1.0").type)
+      break
+    end
+  end
+  picurrentTable[oil.tasks.current] = credential
+end
+
+function getCredential()
+  return picurrentTable[oil.tasks.current]
 end
 
 if not oil.isrunning then
