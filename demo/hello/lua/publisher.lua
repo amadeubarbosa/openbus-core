@@ -58,7 +58,7 @@ function main ()
 
   local Hello = {}
     function Hello:sayHello()
-      local user = serverInterceptor:getCredential().entityName
+      local user = serverInterceptor:getCredential().owner
       print "HELLO!\n\n"
       print(string.format("O usuário OpenBus %s requisitou a operação sayHello.", user))
       registryService:unregister(registryIdentifier)
