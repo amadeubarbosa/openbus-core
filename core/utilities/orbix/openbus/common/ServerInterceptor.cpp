@@ -56,8 +56,9 @@ namespace openbus {
     #ifdef VERBOSE
       openbusidl::acs::Credential* c = new openbusidl::acs::Credential;
       any >>= c;
-      cout << "[credential->entityName: " << c->entityName << "]" << endl;
+      cout << "[credential->owner: " << c->owner << "]" << endl;
       cout << "[credential->identifier: " << c->identifier << "]" << endl;
+      cout << "[credential->delegate: " << c->delegate << "]" << endl;
     #endif
     }
     void ServerInterceptor::receive_request_service_contexts(ServerRequestInfo*) {}
@@ -79,13 +80,15 @@ namespace openbus {
       openbusidl::acs::Credential* c = new openbusidl::acs::Credential;
       any >>= c;
     #ifdef VERBOSE
-      cout << "\t[credential->entityName: " << c->entityName << "]" << endl;
+      cout << "\t[credential->owner: " << c->owner << "]" << endl;
       cout << "\t[credential->identifier: " << c->identifier << "]" << endl;
+      cout << "\t[credential->delegate: " << c->delegate << "]" << endl;
       cout << "[ServerInterceptor::getCredential() END]" << endl;
     #endif
       openbusidl::acs::Credential_var ret = new openbusidl::acs::Credential;
-      ret->entityName = c->entityName;
+      ret->owner = c->owner;
       ret->identifier = c->identifier;
+      ret->delegate = c->delegate;
       return ret._retn();
     }
   }

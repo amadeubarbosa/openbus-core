@@ -29,7 +29,7 @@ class Hello_impl : virtual public POA_Hello {
       cout << endl << "Servant diz: HELLO!" << endl;
       serverInterceptor = ini->getServerInterceptor();
       openbusidl::acs::Credential_var c = serverInterceptor->getCredential();
-      cout << "Usuário OpenBus que fez a chamada: " << c->entityName.in() << endl;
+      cout << "Usuário OpenBus que fez a chamada: " << c->owner.in() << endl;
     };
 };
 
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
     credentialManager.setValue(credential);
     cout << "SERVER" << endl;
     cout << "Login efetuado no Openbus." << endl;
-    cout << "entityName = " << credential->entityName.in() << endl;
+    cout << "owner = " << credential->owner.in() << endl;
     cout << "identifier = " << credential->identifier.in() << endl;
   } else {
     return -1;
