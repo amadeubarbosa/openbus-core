@@ -7,7 +7,7 @@
 
 #include "luaidl/cpp/types.h"
 
-#include <scs/core/IComponentOil.h>
+#include <scs/core/ComponentBuilderOil.h>
 
 typedef struct lua_State Lua_State;
 
@@ -51,6 +51,7 @@ namespace openbus {
       static common::CredentialManager* credentialManager;
       static common::ClientInterceptor* clientInterceptor;
       static common::ServerInterceptor* serverInterceptor;
+      static scs::core::ComponentBuilder* componentBuilder;
       void initLuaVM();
       Openbus();
       Openbus(const Openbus&);
@@ -58,6 +59,8 @@ namespace openbus {
       ~Openbus();
       static Openbus* getInstance();
       void run();
+      void init(int argc, char** argv);
+      scs::core::ComponentBuilder* getComponentBuilder();
       Lua_State* getLuaVM();
       common::ServerInterceptor* getServerInterceptor();
       void setClientInterceptor(common::ClientInterceptor* clientInterceptor);

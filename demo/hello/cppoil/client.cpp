@@ -1,5 +1,5 @@
 /*
-** Demo Hello
+** Demo Hello - OiL
 ** client.cpp
 */
 
@@ -12,21 +12,24 @@ using namespace openbus;
 using namespace std;
 
 int main(int argc, char** argv) {
-  Openbus* openbus = Openbus::getInstance();
+  services::IAccessControlService* accessControlService;
+  services::IRegistryService* registryService;
+
+  Openbus* bus = Openbus::getInstance();
+  bus->init(argc, argv);
 
 /* Conexao com o barramento. */
   services::Credential* credential = new services::Credential();
   services::Lease* lease = new services::Lease();
-  services::IAccessControlService* acs;
   try {
-    acs = openbus->connect("localhost", 2089, "tester", "tester", credential, lease);
+    accessControlService = bus->connect("localhost", 2089, "tester", "tester", credential, lease);
   } catch (const char* errmsg) {
     cout << "** Nao foi possivel se conectar ao barramento." << endl << errmsg << endl;
     exit(-1);
   }
 
 /* Adquirindo o servico de registro. */
-  services::IRegistryService* rgs = acs->getRegistryService();
+  registryService = accessControlService->getRegistryService();
 
 /* Procurando o servico hello. */
   services::PropertyList* propertyList = new services::PropertyList;
@@ -35,7 +38,7 @@ int main(int argc, char** argv) {
   property->value = new services::PropertyValue;
   property->value->newmember("IHello");
   propertyList->newmember(property);
-  services::ServiceOfferList* serviceOfferList = rgs->find(propertyList);
+  services::ServiceOfferList* serviceOfferList = registryService->find(propertyList);
   if (!serviceOfferList) {
     cout << "** Nenhum servico hello foi encontrado no barramento." << endl;
     exit(-1);

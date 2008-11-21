@@ -14,7 +14,7 @@ LDIR= ${OPENBUSLIB}
 
 LIBS= dl tolua5.1
 
-SRC= IComponentOil.cpp
+SRC= IComponentOil.cpp ComponentBuilderOil.cpp
 
 USE_LUA51=YES
 USE_STATIC=YES

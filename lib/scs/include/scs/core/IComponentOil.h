@@ -27,10 +27,10 @@ namespace scs {
         ~IComponent();
 
         static void setLuaVM(lua_State* L);
-        void  addFacet (const char* name, const char* interface_name, void * facet_servant);
+        void  addFacet (const char* name, const char* interface_name, void* facet_servant);
       /* ToLua Support */
         void  addFacet (const char* name, const char* interface_name, \
-                char* constructor_name, void * facet_servant);
+                char* constructor_name, void* facet_servant);
         void loadidl(const char* idl);
         void loadidlfile(const char* idlfilename);
         template <class T>
@@ -41,8 +41,6 @@ namespace scs {
           return (T*) ptr;
         }
         ComponentId* getComponentId();
-
-//        friend class openbus::services::IRegistryService;
     };
 
     typedef luaidl::cpp::sequence<IComponent> IComponentSeq;

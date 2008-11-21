@@ -24,6 +24,7 @@ namespace openbus {
   common::CredentialManager* Openbus::credentialManager = 0;
   common::ClientInterceptor* Openbus::clientInterceptor = 0;
   common::ServerInterceptor* Openbus::serverInterceptor = 0;
+  scs::core::ComponentBuilder* Openbus::componentBuilder = 0;
 
   Lua_State* Openbus::getLuaVM(void) {
     return LuaVM;
@@ -103,6 +104,15 @@ namespace openbus {
     #endif
       throw errmsg;
     }
+  }
+
+  void Openbus::init(int argc, char** argv) {
+    componentBuilder = new scs::core::ComponentBuilder();
+    componentBuilder->setLuaVM(LuaVM);
+  }
+
+  scs::core::ComponentBuilder* Openbus::getComponentBuilder() {
+    return componentBuilder;
   }
 
   void Openbus::setClientInterceptor(common::ClientInterceptor* clientInterceptor) {
