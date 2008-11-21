@@ -13,6 +13,7 @@ LDIR= ${ORBIXLDIR}
 LIBS= it_poa it_art it_ifc it_portable_interceptor
 
 SRC= IComponentOrbix.cpp \
+     ComponentBuilder.cpp \
      stubs/scsS.cxx
 
 genstubs:

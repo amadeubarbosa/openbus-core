@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <omg/orb.hh>
+#include <it_ts/thread.h>
 
 #include <openbus.h>
 
@@ -14,78 +15,68 @@
 using namespace std;
 using namespace openbusidl::acs;
 using namespace openbusidl::rs;
+using namespace openbus;
 using namespace openbus::common;
 
 IT_USING_NAMESPACE_STD
 
-char* id;
-IRegistryService_var rgs;
-ORBInitializerImpl* ini;
-openbus::common::ServerInterceptor* serverInterceptor;
+Openbus* bus;
 
 class Hello_impl : virtual public POA_Hello {
   public:
     void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
       cout << endl << "Servant diz: HELLO!" << endl;
-      serverInterceptor = ini->getServerInterceptor();
-      openbusidl::acs::Credential_var c = serverInterceptor->getCredential();
-      cout << "Usuário OpenBus que fez a chamada: " << c->owner.in() << endl;
+      openbus::common::ServerInterceptor* serverInterceptor = bus->getServerInterceptor();
+      openbusidl::acs::Credential_var credential = serverInterceptor->getCredential();
+      cout << "Usuário OpenBus que fez a chamada: " << credential->owner.in() << endl;
     };
 };
 
-CORBA::ORB_ptr orb = CORBA::ORB::_nil();
 Hello_impl* hello;
-PortableServer::POA_var root_poa;
 
 int main(int argc, char* argv[]) {
-  Lease lease = 0;
-  Credential_var credential;
-  openbus::common::CredentialManager credentialManager;
+  char* registryId;
+  openbus::services::RegistryService* registryService;
 
-  ini = new ORBInitializerImpl(&credentialManager);
-  PortableInterceptor::register_orb_initializer(ini);
+  bus = Openbus::getInstance();
 
-  orb = CORBA::ORB_init(argc, argv);
-  CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
-  root_poa = PortableServer::POA::_narrow(poa_obj);
-  PortableServer::POAManager_var poa_manager = root_poa->the_POAManager();
+/* Se o usuario desejar criar o seu proprio ORB/POA.
+  bus->init(argc, argv, orb, root_poa);
+*/
 
-  CORBA::Object_var obj = orb->string_to_object("corbaloc::localhost:2089/ACS");
-  IAccessControlService_var acs = IAccessControlService::_narrow(obj);
+/* Criacao implicita do ORB. */
+  bus->init(argc, argv);
 
-  bool status = acs->loginByPassword("tester", "tester", credential, lease);
-  if (status) {
-    credentialManager.setValue(credential);
-    cout << "SERVER" << endl;
-    cout << "Login efetuado no Openbus." << endl;
-    cout << "owner = " << credential->owner.in() << endl;
-    cout << "identifier = " << credential->identifier.in() << endl;
-  } else {
-    return -1;
+/* Conexao com o barramento. */
+  try {
+    registryService = bus->connect("localhost", 2089, "tester", "tester");
+  } catch (const char* errmsg) {
+    cout << "** Nao foi possivel se conectar ao barramento." << endl << errmsg << endl;
+    exit(-1);
   }
 
-  rgs = acs->getRegistryService();
   hello = new Hello_impl;
 
-  scs::core::IComponentImpl* c = new scs::core::IComponentImpl("component", 1, orb, root_poa);
+  scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
+  scs::core::IComponentImpl* IComponent = componentBuilder->createComponent("component", 1, "facet", "IDL:Hello:1.0", hello);
 
-  c->addFacet("facet", "IDL:Hello:1.0", hello);
-  poa_manager->activate();
   PropertyList_var p = new PropertyList(5);
   p->length(1);
   Property_var property = new Property;
-  property->name = "type";
+  property->name = "facet";
   PropertyValue_var propertyValue = new PropertyValue(5);
   propertyValue->length(1);
-  propertyValue[0] = "type1";
+  propertyValue[0] = "IHello";
   property->value = propertyValue;
   p[0] = property;
   ServiceOffer so;
   so.properties = p;
-  so.member = c->_this();
-  rgs->_cxx_register(so, id);
+  so.member = IComponent->_this();
+
+  registryService->Register(so, registryId);
   cout << "Serviço HELLO registrado no OpenBus..." << endl;
-  orb->run();
+
+  bus->run();
 
   return 0;
 }

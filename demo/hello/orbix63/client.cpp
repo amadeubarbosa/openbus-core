@@ -12,62 +12,48 @@
 using namespace std;
 using namespace openbusidl::acs;
 using namespace openbusidl::rs;
+using namespace openbus;
 using namespace openbus::common;
 
 int main(int argc, char* argv[]) {
-  Lease lease = 0;
-  Credential_var credential;
-  CredentialManager credentialManager;
+  Openbus* bus;
+  openbus::services::RegistryService* registryService;
 
-  ORBInitializerImpl* ini = new ORBInitializerImpl(&credentialManager);
-  PortableInterceptor::register_orb_initializer(ini);
+  bus = Openbus::getInstance();
 
-  CORBA::ORB_var orb = CORBA::ORB_init(argc, argv);
-  CORBA::Object_var poaobj = orb->resolve_initial_references ("RootPOA");
-  PortableServer::POA_var poa = PortableServer::POA::_narrow (poaobj);
-  PortableServer::POAManager_var mgr = poa->the_POAManager();
+/* Criacao implicita do ORB. */
+  bus->init(argc, argv);
 
-  CORBA::Object_var obj = orb->string_to_object("corbaloc::localhost:2089/ACS");
-  IAccessControlService_var acs = IAccessControlService::_narrow(obj);
-
-  bool status = acs->loginByPassword("tester", "tester", credential, lease);
-  if (status) {
-    credentialManager.setValue(credential);
-    cout << endl << "CLIENT" << endl;
-    cout << "Login efetuado no Openbus." << endl;
-    cout << "owner = " << credential->owner.in() << endl;
-    cout << "identifier = " << credential->identifier.in() << endl;
-  } else {
-    return -1;
+/* Conexao com o barramento. */
+  try {
+    registryService = bus->connect("localhost", 2089, "tester", "tester");
+  } catch (const char* errmsg) {
+    cout << "** Nao foi possivel se conectar ao barramento." << endl << errmsg << endl;
+    exit(-1);
   }
 
   CORBA::ULong idx = 0;
-  IRegistryService_var rgs = acs->getRegistryService();
   PropertyList_var p = new PropertyList(5);
   p->length(1);
   ServiceOfferList_var soList = new ServiceOfferList(5);
   soList->length(5);
   Property_var property = new Property;
-  property->name = "type";
+  property->name = "facet";
   PropertyValue_var propertyValue = new PropertyValue(5);
   propertyValue->length(1);
-  propertyValue[0] = "type1";
+  propertyValue[0] = "IHello";
   property->value = propertyValue;
   p[0] = property;
-  soList = rgs->find(p);
+  soList = registryService->find(p);
   ServiceOffer so;
-  so = soList[ idx ];
-  ::scs::core::IComponent_var member;
-  member = so.member;
-  obj = member->getFacet("IDL:Hello:1.0");
-/*test*/
-/*  printf("%p", member->getFacetByName("facet"));
-  printf("%p", member->getFacetByName("facet2"));
-  ::scs::core::ComponentId* cId = member->getComponentId();
-  printf("%s %lu", cId->name.in(), cId->version);*/
-/**/
-  Hello_var hello = Hello::_narrow(obj);
+  so = soList[idx];
+
+  scs::core::IComponent* component = so.member;
+  CORBA::Object* obj = component->getFacet("IDL:Hello:1.0");
+  Hello* hello = Hello::_narrow(obj);
   hello->sayHello();
-  CORBA::release(orb);
+
+  bus->logout();
+
   return 0;
 }

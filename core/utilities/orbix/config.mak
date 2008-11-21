@@ -14,7 +14,7 @@ DEFINES=VERBOSE
 OBJROOT= obj
 TARGETROOT= lib
 
-INCLUDES= . ${ORBIXINC}
+INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs
 LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix
@@ -27,7 +27,10 @@ SRC= openbus/common/ClientInterceptor.cpp \
      stubs/registry_serviceC.cxx \
      stubs/session_serviceC.cxx \
      stubs/coreC.cxx \
-     stubs/scsC.cxx
+     stubs/scsC.cxx \
+     services/AccessControlService.cpp \
+     services/RegistryService.cpp \
+     openbus.cpp
 
 genstubs:
 	mkdir -p stubs
