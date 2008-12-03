@@ -1,0 +1,5 @@
+#Localizacao do barramento.
+
+HOSTBUS='localhost'
+PORTBUS='2089'
+

@@ -5,5 +5,3 @@ ORBIXBIN=${ORBIX_HOME}/bin
 ORBIXINC=${ORBIX_HOME}/include
 ORBIXLDIR=${ORBIX_HOME}/lib
 
-#Descomente a linha abaixo para ativar o verbose.
-#VERBOSE= VERBOSE

@@ -7,6 +7,8 @@
 #include <omg/orb.hh>
 #include <it_ts/thread.h>
 #include <sstream>
+#include <stdio.h>
+#include <string.h>
 
 namespace openbus {
   Openbus::RenewLeaseThread::RenewLeaseThread(Openbus* _bus) {
@@ -35,6 +37,8 @@ namespace openbus {
     credentialManager = new common::CredentialManager;
     ini = new common::ORBInitializerImpl(credentialManager);
     PortableInterceptor::register_orb_initializer(ini);
+    hostBus = (char*) "";
+    portBus = 2089;
   }
 
   Openbus::~Openbus() {
@@ -61,6 +65,15 @@ namespace openbus {
     poa_manager = poa->the_POAManager();
     poa_manager->activate();
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
+    for (short idx = 1; idx < argc; idx++) {
+      if (!strcmp(argv[idx], "-OpenbusHost")) {
+        idx++;
+        hostBus = argv[idx];
+      } else if (!strcmp(argv[idx], "-OpenbusPort")) {
+        idx++;
+        portBus = atoi(argv[idx]);
+      }
+    }
   }
 
   void Openbus::init(int argc, char** argv, CORBA::ORB* _orb, PortableServer::POA* _poa) {
@@ -94,14 +107,29 @@ namespace openbus {
   }
 
   openbus::services::RegistryService* Openbus::connect(const char* host, unsigned short port, const char* user, \
-        const char* password)
+        const char* password) throw (COMMUNICATION_FAILURE, LOGIN_FAILURE)
   {
+  #ifdef VERBOSE
+    cout << "[Openbus::connect() BEGIN]" << endl;
+  #endif
     try {
+    #ifdef VERBOSE
+      cout << "\thost = "<<  host << endl;
+      cout << "\tport = "<<  port << endl;
+      cout << "\tuser = "<<  user << endl;
+      cout << "\tpassword = "<<  password << endl;
+      cout << "\torb = "<<  orb << endl;
+    #endif
       accessControlService = new openbus::services::AccessControlService(host, port, orb);
       IAccessControlService* iAccessControlService = accessControlService->getStub();
+    #ifdef VERBOSE
+      cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
+    #endif
       if (!iAccessControlService->loginByPassword(user, password, credential, lease)) {
-        throw "Par usuario/senha nao validado.";
+        throw LOGIN_FAILURE();
       } else {
+        hostBus = (char*) host;
+        portBus = port;
         credentialManager->setValue(credential);
         timeRenewing = lease;
         RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
@@ -109,9 +137,18 @@ namespace openbus {
         registryService = accessControlService->getRegistryService();
         return registryService;
       }
-    } catch (const char* errmsg) {
-      throw errmsg;
+    } catch (const CORBA::SystemException& systemException) {
+      throw COMMUNICATION_FAILURE();
     }
+  #ifdef VERBOSE
+    cout << "[Openbus::connect() END]" << endl << endl;
+  #endif
+  }
+
+  openbus::services::RegistryService* Openbus::connect(const char* user, const char* password) \
+        throw (COMMUNICATION_FAILURE, LOGIN_FAILURE)
+  {
+    return connect(hostBus, portBus, user, password);
   }
 
   bool Openbus::logout() {

@@ -10,42 +10,43 @@
 #include <openbus.h>
 
 using namespace std;
-using namespace openbusidl::acs;
-using namespace openbusidl::rs;
-using namespace openbus;
-using namespace openbus::common;
 
 int main(int argc, char* argv[]) {
-  Openbus* bus;
+  openbus::Openbus* bus;
   openbus::services::RegistryService* registryService;
 
-  bus = Openbus::getInstance();
+  bus = openbus::Openbus::getInstance();
 
 /* Criacao implicita do ORB. */
   bus->init(argc, argv);
 
 /* Conexao com o barramento. */
   try {
-    registryService = bus->connect("localhost", 2089, "tester", "tester");
-  } catch (const char* errmsg) {
-    cout << "** Nao foi possivel se conectar ao barramento." << endl << errmsg << endl;
+    registryService = bus->connect("tester", "tester");
+  } catch (openbus::COMMUNICATION_FAILURE& e) {
+    cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
+         << "* Falha na comunicacao. *" << endl;
+    exit(-1);
+  } catch (openbus::LOGIN_FAILURE& e) {
+    cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
+         << "* Par usuario/senha inválido. *" << endl;
     exit(-1);
   }
 
   CORBA::ULong idx = 0;
-  PropertyList_var p = new PropertyList(5);
+  openbusidl::rs::PropertyList_var p = new openbusidl::rs::PropertyList(5);
   p->length(1);
-  ServiceOfferList_var soList = new ServiceOfferList(5);
+  openbusidl::rs::ServiceOfferList_var soList = new openbusidl::rs::ServiceOfferList(5);
   soList->length(5);
-  Property_var property = new Property;
+  openbusidl::rs::Property_var property = new openbusidl::rs::Property;
   property->name = "facet";
-  PropertyValue_var propertyValue = new PropertyValue(5);
+  openbusidl::rs::PropertyValue_var propertyValue = new openbusidl::rs::PropertyValue(5);
   propertyValue->length(1);
   propertyValue[0] = "IHello";
   property->value = propertyValue;
   p[0] = property;
   soList = registryService->find(p);
-  ServiceOffer so;
+  openbusidl::rs::ServiceOffer so;
   so = soList[idx];
 
   scs::core::IComponent* component = so.member;

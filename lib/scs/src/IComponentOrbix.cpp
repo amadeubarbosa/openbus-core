@@ -100,7 +100,7 @@ namespace scs {
         return facets[facet].facet_ref;
       }
       #ifdef VERBOSE
-        cout << "\t[Faceta de nome '" << facet << "' Nï¿½O encontrada]" << endl;
+        cout << "\t[Faceta de nome '" << facet << "' não encontrada]" << endl;
         cout << "[IComponentImpl::getFacetByName() END]" << endl;
       #endif
       return NULL;

@@ -9,7 +9,7 @@ EXTRA_CONFIG=config
 CPPFLAGS= -g3 -mtune=pentium3 -march=i586 -pipe -D_REENTRANT -Wno-sign-compare
 LFLAGS= $(CPPFLAGS) -rdynamic -L/usr/local/lib -Wl,-t -lpthread -lrt
 
-CPPC=g++-3.4
+CPPC=g++
 
 DEFINES=${VERBOSE}
 

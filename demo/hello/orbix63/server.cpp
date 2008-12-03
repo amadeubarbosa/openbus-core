@@ -13,14 +13,10 @@
 #include "helloS.hh"
 
 using namespace std;
-using namespace openbusidl::acs;
-using namespace openbusidl::rs;
-using namespace openbus;
-using namespace openbus::common;
 
 IT_USING_NAMESPACE_STD
 
-Openbus* bus;
+openbus::Openbus* bus;
 
 class Hello_impl : virtual public POA_Hello {
   public:
@@ -38,7 +34,7 @@ int main(int argc, char* argv[]) {
   char* registryId;
   openbus::services::RegistryService* registryService;
 
-  bus = Openbus::getInstance();
+  bus = openbus::Openbus::getInstance();
 
 /* Se o usuario desejar criar o seu proprio ORB/POA.
   bus->init(argc, argv, orb, root_poa);
@@ -49,9 +45,14 @@ int main(int argc, char* argv[]) {
 
 /* Conexao com o barramento. */
   try {
-    registryService = bus->connect("localhost", 2089, "tester", "tester");
-  } catch (const char* errmsg) {
-    cout << "** Nao foi possivel se conectar ao barramento." << endl << errmsg << endl;
+    registryService = bus->connect("tester", "tester");
+  } catch (openbus::COMMUNICATION_FAILURE& e) {
+    cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
+         << "* Falha na comunicacao. *" << endl;
+    exit(-1);
+  } catch (openbus::LOGIN_FAILURE& e) {
+    cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
+         << "* Par usuario/senha inválido. *" << endl;
     exit(-1);
   }
 
@@ -60,16 +61,16 @@ int main(int argc, char* argv[]) {
   scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
   scs::core::IComponentImpl* IComponent = componentBuilder->createComponent("component", 1, "facet", "IDL:Hello:1.0", hello);
 
-  PropertyList_var p = new PropertyList(5);
+  openbusidl::rs::PropertyList_var p = new openbusidl::rs::PropertyList(5);
   p->length(1);
-  Property_var property = new Property;
+  openbusidl::rs::Property_var property = new openbusidl::rs::Property;
   property->name = "facet";
-  PropertyValue_var propertyValue = new PropertyValue(5);
+  openbusidl::rs::PropertyValue_var propertyValue = new openbusidl::rs::PropertyValue(5);
   propertyValue->length(1);
   propertyValue[0] = "IHello";
   property->value = propertyValue;
   p[0] = property;
-  ServiceOffer so;
+  openbusidl::rs::ServiceOffer so;
   so.properties = p;
   so.member = IComponent->_this();
 

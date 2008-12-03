@@ -20,6 +20,9 @@ using namespace openbusidl::acs;
 IT_USING_NAMESPACE_STD
 
 namespace openbus {
+  class COMMUNICATION_FAILURE {};
+  class LOGIN_FAILURE {};
+
   class Openbus {
     private:
       static Openbus* instance;
@@ -33,6 +36,8 @@ namespace openbus {
       openbus::services::RegistryService* registryService;
       Lease lease;
       Credential* credential;
+      char* hostBus;
+      unsigned short portBus;
       unsigned long timeRenewing;
       IT_Thread renewLeaseIT_Thread;
       Openbus();
@@ -56,7 +61,9 @@ namespace openbus {
       Credential* getCredential();
       Lease getLease();
       openbus::services::RegistryService* connect(const char* host, unsigned short port, const char* user, \
-            const char* password);
+            const char* password) throw (COMMUNICATION_FAILURE, LOGIN_FAILURE);
+      openbus::services::RegistryService* connect(const char* user, const char* password) \
+            throw (COMMUNICATION_FAILURE, LOGIN_FAILURE);
       bool logout();
   };
 }

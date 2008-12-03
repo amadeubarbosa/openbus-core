@@ -48,7 +48,7 @@ namespace scs {
       facet->name = name;
       facet->interface_name = interface_name;
       facet->facet_ref = ref;
-      facets[ name ] = *facet;
+      facets[name] = *facet;
     #ifdef VERBOSE
       CORBA::String_var str = _orb->object_to_string(ref.in());
       cout << "\t[IOR:]" << str.in() << endl;
@@ -71,9 +71,9 @@ namespace scs {
     #endif
       CORBA::Object_var o = new CORBA::Object();
       FacetDescription* f = NULL;
-      for(it = facets.begin(); it != facets.end(); it++) {
+      for (it = facets.begin(); it != facets.end(); it++) {
         f = &(*it).second;
-        if(strcmp(f->interface_name, facet_interface) == 0) {
+        if (strcmp(f->interface_name, facet_interface) == 0) {
         #ifdef VERBOSE
           cout << "\t[Faceta de interface '" << facet_interface << "' encontrada]" << endl;
         #endif
@@ -92,15 +92,15 @@ namespace scs {
       cout << "\n\n[IComponentImpl::getFacetByName() BEGIN]" << endl;
     #endif
       FacetDescription f;
-      if(facets.find(facet) == facets.end()) {
+      if (facets.find(facet) == facets.end()) {
       #ifdef VERBOSE
         cout << "\t[Faceta de nome '" << facet << "' encontrada]" << endl;
         cout << "[IComponentImpl::getFacetByName() END]" << endl;
       #endif
-        return facets[ facet ].facet_ref;
+        return facets[facet].facet_ref;
       }
       #ifdef VERBOSE
-        cout << "\t[Faceta de nome '" << facet << "' Não encontrada]" << endl;
+        cout << "\t[Faceta de nome '" << facet << "' não encontrada]" << endl;
         cout << "[IComponentImpl::getFacetByName() END]" << endl;
       #endif
       return NULL;

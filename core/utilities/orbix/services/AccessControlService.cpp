@@ -4,12 +4,13 @@
 
 #include "AccessControlService.h"
 
-#include <omg/orb.hh>
 #include <sstream>
 
 namespace openbus {
   namespace services {
-    AccessControlService::AccessControlService(const char* host, short unsigned int port, CORBA::ORB* _orb) {
+    AccessControlService::AccessControlService(const char* host, short unsigned int port, CORBA::ORB* _orb) \
+        throw (CORBA::SystemException)
+    {
       std::stringstream corbaloc;
       orb = _orb;
       corbaloc << "corbaloc::" << host << ":" << port << "/ACS";
