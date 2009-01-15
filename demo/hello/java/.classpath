@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding=".classpath|.project|HelloWorld_Leandro/|HelloWorld_NovoSCS/|lib/" kind="src" path=""/>
+	<classpathentry excluding=".classpath|.project|lib/" kind="src" path=""/>
+	<classpathentry kind="lib" path="lib/jacorb.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/scs.jar"/>
 	<classpathentry kind="lib" path="lib/openbus.jar"/>
 	<classpathentry kind="lib" path="lib/openbusidl.jar"/>
+	<classpathentry kind="lib" path="lib/scs.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

@@ -37,15 +37,14 @@ public class HelloClient {
     RegistryServiceWrapper registryService = acs.getRegistryService();
     assert (registryService != null);
 
-    Property property =
-      new Property("component_id", new String[] { "HelloComponent:1" });
+    Property property = new Property("facets", new String[] { "Hello" });
     ServiceOffer[] servicesOffers =
       registryService.find(new Property[] { property });
     assert (servicesOffers.length == 1);
     ServiceOffer serviceOffer = servicesOffers[0];
     IComponent component = serviceOffer.member;
 
-    Object helloObject = component.getFacetByName("hello");
+    Object helloObject = component.getFacetByName("Hello");
     IHello hello = IHelloHelper.narrow(helloObject);
     hello.sayHello();
 
