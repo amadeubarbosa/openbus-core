@@ -8,7 +8,6 @@
 #include <orbix/corba.hh>
 #include <omg/PortableInterceptor.hh>
 
-#include "CredentialManager.h"
 #include "../../stubs/access_control_service.hh"
 
 using namespace PortableInterceptor;

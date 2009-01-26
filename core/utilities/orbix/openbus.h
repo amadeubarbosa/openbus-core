@@ -8,7 +8,6 @@
 #include "services/AccessControlService.h"
 
 #include "stubs/access_control_service.hh"
-#include "openbus/common/CredentialManager.h"
 #include "openbus/common/ORBInitializerImpl.h"
 #include "openbus/common/ServerInterceptor.h"
 #include <scs/core/ComponentBuilder.h>
@@ -26,7 +25,6 @@ namespace openbus {
   class Openbus {
     private:
       static Openbus* instance;
-      static common::CredentialManager* credentialManager;
       static common::ORBInitializerImpl* ini;
       static CORBA::ORB* orb;
       static PortableServer::POA* poa;
@@ -56,7 +54,6 @@ namespace openbus {
       void init(int argc, char** argv, CORBA::ORB_ptr _orb, PortableServer::POA* _poa);
       scs::core::ComponentBuilder* getComponentBuilder();
       common::ServerInterceptor* getServerInterceptor();
-      common::CredentialManager* getCredentialManager();
       openbus::services::AccessControlService* getAccessControlService();
       Credential* getCredential();
       Lease getLease();

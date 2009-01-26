@@ -17,11 +17,11 @@ using namespace openbusidl::acs;
 
 namespace openbus {
   namespace common {
-    ClientInterceptor::ClientInterceptor(CredentialManager* pcredentialManager, IOP::Codec_ptr pcdr_codec) IT_THROW_DECL(()) {
+    ClientInterceptor::ClientInterceptor(openbusidl::acs::Credential** pcredential, IOP::Codec_ptr pcdr_codec) IT_THROW_DECL(()) {
     #ifdef VERBOSE
       cout << "\n\n[ClientInterceptor::ClientInterceptor() BEGIN]" << endl;
     #endif
-      credentialManager = pcredentialManager;
+      credential = pcredential;
       cdr_codec = pcdr_codec;
     #ifdef VERBOSE
       cout << "\n\n[ClientInterceptor::ClientInterceptor() END]" << endl;
@@ -46,18 +46,17 @@ namespace openbus {
       cout << "\n\n[ClientInterceptor::send_request() BEGIN]" << endl;
       cout << "Method: " << ri->operation() << endl;
     #endif
-      Credential* c = credentialManager->getValue();
-      if (c != NULL) {
+      if (*credential != NULL) {
         IOP::ServiceContext sc;
         sc.context_id = 1234;
 
         CORBA::Any_var any;
-        any <<= *c;
+        any <<= **credential;
         CORBA::OctetSeq_var octets;
 //        PICodec::Codec_impl* codec = new PICodec::Codec_impl;
 //        en = codec->encode_value(any);
         octets = cdr_codec->encode_value(any);
-IOP::ServiceContext::_context_data_seq seq( 
+IOP::ServiceContext::_context_data_seq seq(
                            octets->length(),
                            octets->length(),
                            octets->get_buffer(),

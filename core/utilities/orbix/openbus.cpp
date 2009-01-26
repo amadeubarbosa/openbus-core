@@ -26,7 +26,6 @@ namespace openbus {
   }
 
   Openbus* Openbus::instance = 0;
-  common::CredentialManager* Openbus::credentialManager = 0;
   common::ORBInitializerImpl* Openbus::ini = 0;
   CORBA::ORB* Openbus::orb = CORBA::ORB::_nil();
   PortableServer::POA* Openbus::poa = 0;
@@ -34,15 +33,13 @@ namespace openbus {
   PortableServer::POAManager_var Openbus::poa_manager = 0;
 
   Openbus::Openbus() {
-    credentialManager = new common::CredentialManager;
-    ini = new common::ORBInitializerImpl(credentialManager);
+    ini = new common::ORBInitializerImpl(&credential);
     PortableInterceptor::register_orb_initializer(ini);
     hostBus = (char*) "";
     portBus = 2089;
   }
 
   Openbus::~Openbus() {
-    delete credentialManager;
     delete ini;
     delete componentBuilder;
   }
@@ -90,10 +87,6 @@ namespace openbus {
     return ini->getServerInterceptor();
   }
 
-  common::CredentialManager* Openbus::getCredentialManager() {
-    return credentialManager;
-  }
-
   openbus::services::AccessControlService* Openbus::getAccessControlService() {
     return accessControlService;
   }
@@ -130,7 +123,6 @@ namespace openbus {
       } else {
         hostBus = (char*) host;
         portBus = port;
-        credentialManager->setValue(credential);
         timeRenewing = lease;
         RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
         renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, IT_ThreadFactory::attached, 0);

@@ -16,10 +16,10 @@ namespace openbus {
   namespace common {
     class ORBInitializerImpl : public ORBInitializer, public IT_CORBA::RefCountedLocalObject {
         ServerInterceptor* serverInterceptor;
-        CredentialManager* credentialManager;
+        openbusidl::acs::Credential** credential;
         SlotId slotid;
       public:
-        ORBInitializerImpl(CredentialManager* pcredentialManager);
+        ORBInitializerImpl(openbusidl::acs::Credential** pcredential);
         ~ORBInitializerImpl();
 
         void pre_init(ORBInitInfo_ptr info);
