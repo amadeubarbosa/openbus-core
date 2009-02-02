@@ -15,10 +15,18 @@ int main(int argc, char* argv[]) {
   openbus::Openbus* bus;
   openbus::services::RegistryService* registryService;
 
-  bus = openbus::Openbus::getInstance();
+  bus = new openbus::Openbus(argc, argv);
 
-/* Criacao implicita do ORB. */
-  bus->init(argc, argv);
+/* Se o usuario desejar criar o seu proprio ORB/POA.
+  CORBA::ORB* orb = CORBA::ORB_init(argc, argv);
+  CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
+  PortableServer::POA* poa = PortableServer::POA::_narrow(poa_obj);
+  PortableServer::POAManager_var poa_manager = poa->the_POAManager();
+  poa_manager->activate();
+
+  bus->init(orb, poa);
+*/
+  bus->init();
 
 /* Conexao com o barramento. */
   try {

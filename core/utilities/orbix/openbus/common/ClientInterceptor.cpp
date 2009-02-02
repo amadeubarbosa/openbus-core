@@ -17,11 +17,14 @@ using namespace openbusidl::acs;
 
 namespace openbus {
   namespace common {
-    ClientInterceptor::ClientInterceptor(openbusidl::acs::Credential** pcredential, IOP::Codec_ptr pcdr_codec) IT_THROW_DECL(()) {
+
+    std::map<CORBA::ORB*, openbusidl::acs::Credential**> ClientInterceptor::credentials;
+    openbusidl::acs::Credential** ClientInterceptor::credential = 0;
+
+    ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec) IT_THROW_DECL(()) {
     #ifdef VERBOSE
       cout << "\n\n[ClientInterceptor::ClientInterceptor() BEGIN]" << endl;
     #endif
-      credential = pcredential;
       cdr_codec = pcdr_codec;
     #ifdef VERBOSE
       cout << "\n\n[ClientInterceptor::ClientInterceptor() END]" << endl;
@@ -42,11 +45,19 @@ namespace openbus {
       PortableInterceptor::ForwardRequest
     ))
     {
+      CORBA::ORB_ptr orb;
+      orb = ri->target()->_it_get_orb();
     #ifdef VERBOSE
       cout << "\n\n[ClientInterceptor::send_request() BEGIN]" << endl;
       cout << "Method: " << ri->operation() << endl;
+      cout << "ORB: " << orb << endl;
     #endif
-      if (*credential != NULL) {
+      credential = credentials[orb];
+      if (credential != NULL) {
+      #ifdef VERBOSE
+        cout << "credencial referente ao ORB " << orb << ": "<< *credential << endl;
+        cout << "credential->identifier: " << (*credential)->identifier << endl;
+      #endif
         IOP::ServiceContext sc;
         sc.context_id = 1234;
 

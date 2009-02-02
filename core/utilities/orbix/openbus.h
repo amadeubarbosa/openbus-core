@@ -6,10 +6,9 @@
 #define OPENBUS_H_
 
 #include "services/AccessControlService.h"
+#include "services/RegistryService.h"
 
-#include "stubs/access_control_service.hh"
 #include "openbus/common/ORBInitializerImpl.h"
-#include "openbus/common/ServerInterceptor.h"
 #include <scs/core/ComponentBuilder.h>
 
 #include <omg/orb.hh>
@@ -24,21 +23,62 @@ namespace openbus {
 
   class Openbus {
     private:
-      static Openbus* instance;
+
+    /* Parâmetro argc da linha de comando. */
+      int _argc;
+
+    /* Parâmetro argv da linha de comando. */
+      char** _argv;
+
+    /* Inicializador do ORB. */
       static common::ORBInitializerImpl* ini;
-      static CORBA::ORB* orb;
-      static PortableServer::POA* poa;
-      static scs::core::ComponentBuilder* componentBuilder;
-      static PortableServer::POAManager_var poa_manager;
-      openbus::services::AccessControlService* accessControlService;
-      openbus::services::RegistryService* registryService;
+
+    /* ORB */
+      CORBA::ORB* orb;
+
+    /* POA */
+      PortableServer::POA* poa;
+
+    /* Fábrica de componentes SCS. */
+      scs::core::ComponentBuilder* componentBuilder;
+
+    /* Gerenciador do POA. */
+      PortableServer::POAManager_var poa_manager;
+
+    /* Serviço de acesso. */
+      services::AccessControlService* accessControlService;
+
+    /* Serviço de registro. */
+      services::RegistryService* registryService;
+
+    /* Intervalo de tempo que determina quando a credencial expira. */
       Lease lease;
+
+    /* Credencial de identificação do usuário frente ao barramento. */
       Credential* credential;
+
+    /* Host de localização do barramento. */
       char* hostBus;
+
+    /* Porta de localização do barramento. */
       unsigned short portBus;
+
       unsigned long timeRenewing;
+
+      void commandLineParse(
+        int argc,
+        char** argv);
+
+    /* Inicializa um valor default para o host e porta do barramento. */
+      void initializeHostPort();
+
+    /* Cria implicitamente um ORB e um POA. */
+      void createOrbPoa();
+
+    /* Registra os interceptadores cliente e servidor. */
+      void registerInterceptors();
+
       IT_Thread renewLeaseIT_Thread;
-      Openbus();
       class RenewLeaseThread : public IT_ThreadBody {
         private:
           Openbus* bus;
@@ -47,21 +87,79 @@ namespace openbus {
           void* run();
       };
     public:
+
+    /* Construtor
+    *  Cria uma referência para um determinado barramento.
+    *  A localização do barramento pode ser fornecida através dos parâmetros de linha comando
+    *  -OpenbusHost e -OpenbusPort.
+    */
+      Openbus(
+        int argc,
+        char** argv);
+
+    /* Construtor
+    *  Cria uma referência para um determinado barramento.
+    *  A localização do barramento é fornecida através dos parâmetros host e port.
+    */
+      Openbus(
+        int argc,
+        char** argv,
+        char* host,
+        unsigned short port);
+
       ~Openbus();
-      static Openbus* getInstance();
-      void run();
-      void init(int argc, char** argv);
-      void init(int argc, char** argv, CORBA::ORB_ptr _orb, PortableServer::POA* _poa);
+
+    /* Inicializa uma referência a um barramento.
+    *  Um ORB e POA são criado implicitamente.
+    *  Os parâmetros argc e argv são repassados para a função CORBA::ORB_init().
+    *  A fábrica de componentes SCS é criada.
+    *  Os argumentos Openbus de linha de comando (argc e aegv) são tratados.
+    */
+      void init();
+
+    /* Inicializa uma referência a um barramento.
+    *  Um ORB e POA são passados explicitamente pelo usuário.
+    *  A fábrica de componentes SCS é criada.
+    *  Os argumentos Openbus de linha de comando (argc e aegv) são tratados.
+    */
+      void init(
+        CORBA::ORB_ptr _orb,
+        PortableServer::POA* _poa);
+
+    /* Retorna a fábrica de componentes. */
       scs::core::ComponentBuilder* getComponentBuilder();
-      common::ServerInterceptor* getServerInterceptor();
-      openbus::services::AccessControlService* getAccessControlService();
+
+    /* Retorna a credencial interceptada pelo interceptador servidor. */
+      Credential_var getCredentialIntercepted();
+
+    /* Retorna o serviço de acesso. */
+      services::AccessControlService* getAccessControlService();
+
+    /* Retorna a credencial de identificação do usuário frente ao barramento. */
       Credential* getCredential();
+
+    /* Retorna o intervalo de tempo que determina quando a credencial expira. */
       Lease getLease();
-      openbus::services::RegistryService* connect(const char* host, unsigned short port, const char* user, \
-            const char* password) throw (COMMUNICATION_FAILURE, LOGIN_FAILURE);
-      openbus::services::RegistryService* connect(const char* user, const char* password) \
-            throw (COMMUNICATION_FAILURE, LOGIN_FAILURE);
+
+    /* Realiza uma tentativa de conexão com o barramento.
+    *  Parâmetros de entrada:
+    *    user: Nome do usuário.
+    *    password: Senha do usuário.
+    *  Se a tentativa for bem sucedida, uma instância que representa o serviço de registro é retornada,
+    *  caso contrário duas exceções podem ser lançadas:
+    *    LOGIN_FAILURE: O par nome de usuário e senha não foram validados.
+    *    COMMUNICATION_FAILURE: Alguma falha de comunicação com o barramento ocorreu.
+    */
+      services::RegistryService* connect(
+        const char* user,
+        const char* password)
+        throw (COMMUNICATION_FAILURE, LOGIN_FAILURE);
+
+    /* Efetua logout do barramento. */
       bool logout();
+
+    /* Loop que processa requisições CORBA. [execução do orb->run()]. */
+      void run();
   };
 }
 

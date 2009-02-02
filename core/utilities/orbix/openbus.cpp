@@ -11,6 +11,8 @@
 #include <string.h>
 
 namespace openbus {
+  common::ORBInitializerImpl* Openbus::ini = 0;
+
   Openbus::RenewLeaseThread::RenewLeaseThread(Openbus* _bus) {
     bus = _bus;
   }
@@ -25,43 +27,7 @@ namespace openbus {
     return 0;
   }
 
-  Openbus* Openbus::instance = 0;
-  common::ORBInitializerImpl* Openbus::ini = 0;
-  CORBA::ORB* Openbus::orb = CORBA::ORB::_nil();
-  PortableServer::POA* Openbus::poa = 0;
-  scs::core::ComponentBuilder* Openbus::componentBuilder = 0;
-  PortableServer::POAManager_var Openbus::poa_manager = 0;
-
-  Openbus::Openbus() {
-    ini = new common::ORBInitializerImpl(&credential);
-    PortableInterceptor::register_orb_initializer(ini);
-    hostBus = (char*) "";
-    portBus = 2089;
-  }
-
-  Openbus::~Openbus() {
-    delete ini;
-    delete componentBuilder;
-  }
-
-  Openbus* Openbus::getInstance() {
-    if (instance == 0) {
-      instance = new Openbus;
-    }
-    return instance;
-  }
-
-  void Openbus::run() {
-    orb->run();
-  }
-
-  void Openbus::init(int argc, char** argv) {
-    orb = CORBA::ORB_init(argc, argv);
-    CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
-    poa = PortableServer::POA::_narrow(poa_obj);
-    poa_manager = poa->the_POAManager();
-    poa_manager->activate();
-    componentBuilder = new scs::core::ComponentBuilder(orb, poa);
+  void Openbus::commandLineParse(int argc, char** argv) {
     for (short idx = 1; idx < argc; idx++) {
       if (!strcmp(argv[idx], "-OpenbusHost")) {
         idx++;
@@ -73,18 +39,83 @@ namespace openbus {
     }
   }
 
-  void Openbus::init(int argc, char** argv, CORBA::ORB* _orb, PortableServer::POA* _poa) {
+  void Openbus::initializeHostPort() {
+    hostBus = (char*) "";
+    portBus = 2089;
+  }
+
+  void Openbus::createOrbPoa() {
+    orb = CORBA::ORB_init(_argc, _argv);
+    CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
+    poa = PortableServer::POA::_narrow(poa_obj);
+    poa_manager = poa->the_POAManager();
+    poa_manager->activate();
+  }
+
+  void Openbus::registerInterceptors() {
+    ini = new common::ORBInitializerImpl();
+    PortableInterceptor::register_orb_initializer(ini);
+  }
+
+  Openbus::Openbus(
+    int argc,
+    char** argv)
+  {
+    _argc = argc;
+    _argv = argv;
+    if (ini == 0) {
+      cout << "Registrando interceptadores ..." << endl;
+      registerInterceptors();
+    }
+    initializeHostPort();
+  }
+
+  Openbus::Openbus(
+    int argc,
+    char** argv,
+    char* host,
+    unsigned short port)
+  {
+    _argc = argc;
+    _argv = argv;
+    if (ini == 0) {
+      cout << "Registrando interceptadores ..." << endl;
+      registerInterceptors();
+    }
+    initializeHostPort();
+    hostBus = host;
+    portBus = port;
+  }
+
+  Openbus::~Openbus() {
+    delete ini;
+    delete componentBuilder;
+  }
+
+  void Openbus::init() {
+    initializeHostPort();
+    createOrbPoa();
+    componentBuilder = new scs::core::ComponentBuilder(orb, poa);
+    commandLineParse(_argc, _argv);
+  }
+
+  void Openbus::init(
+    CORBA::ORB_ptr _orb,
+    PortableServer::POA* _poa)
+  {
+    initializeHostPort();
     orb = _orb;
     poa = _poa;
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
+    commandLineParse(_argc, _argv);
   }
 
   scs::core::ComponentBuilder* Openbus::getComponentBuilder() {
     return componentBuilder;
   }
 
-  common::ServerInterceptor* Openbus::getServerInterceptor() {
-    return ini->getServerInterceptor();
+  Credential_var Openbus::getCredentialIntercepted() {
+    return ini->getServerInterceptor()->getCredential();
   }
 
   openbus::services::AccessControlService* Openbus::getAccessControlService() {
@@ -99,21 +130,23 @@ namespace openbus {
     return lease;
   }
 
-  openbus::services::RegistryService* Openbus::connect(const char* host, unsigned short port, const char* user, \
-        const char* password) throw (COMMUNICATION_FAILURE, LOGIN_FAILURE)
+  openbus::services::RegistryService* Openbus::connect(
+    const char* user,
+    const char* password)
+    throw (COMMUNICATION_FAILURE, LOGIN_FAILURE)
   {
   #ifdef VERBOSE
     cout << "[Openbus::connect() BEGIN]" << endl;
   #endif
     try {
     #ifdef VERBOSE
-      cout << "\thost = "<<  host << endl;
-      cout << "\tport = "<<  port << endl;
+      cout << "\thost = "<<  hostBus << endl;
+      cout << "\tport = "<<  portBus << endl;
       cout << "\tuser = "<<  user << endl;
       cout << "\tpassword = "<<  password << endl;
       cout << "\torb = "<<  orb << endl;
     #endif
-      accessControlService = new openbus::services::AccessControlService(host, port, orb);
+      accessControlService = new openbus::services::AccessControlService(hostBus, portBus, orb);
       IAccessControlService* iAccessControlService = accessControlService->getStub();
     #ifdef VERBOSE
       cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
@@ -121,8 +154,11 @@ namespace openbus {
       if (!iAccessControlService->loginByPassword(user, password, credential, lease)) {
         throw LOGIN_FAILURE();
       } else {
-        hostBus = (char*) host;
-        portBus = port;
+            #ifdef VERBOSE
+        cout << "\tCrendencial recebida: " << credential->identifier << endl;
+        cout << "\tAssociando credencial " << credential << " ao ORB " << orb << endl;
+      #endif
+        openbus::common::ClientInterceptor::credentials[orb] = &credential;
         timeRenewing = lease;
         RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
         renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, IT_ThreadFactory::attached, 0);
@@ -137,13 +173,11 @@ namespace openbus {
   #endif
   }
 
-  openbus::services::RegistryService* Openbus::connect(const char* user, const char* password) \
-        throw (COMMUNICATION_FAILURE, LOGIN_FAILURE)
-  {
-    return connect(hostBus, portBus, user, password);
-  }
-
   bool Openbus::logout() {
     return accessControlService->logout(*credential);
+  }
+
+  void Openbus::run() {
+    orb->run();
   }
 }

@@ -14,12 +14,11 @@ IT_USING_NAMESPACE_STD
 
 namespace openbus {
   namespace common {
-    ORBInitializerImpl::ORBInitializerImpl(openbusidl::acs::Credential** pcredential)
+    ORBInitializerImpl::ORBInitializerImpl()
     {
     #ifdef VERBOSE
       cout << "[ORBInitializerImpl::ORBInitializerImpl() BEGIN]" << endl;
     #endif
-      credential = pcredential;
     #ifdef VERBOSE
       cout << "[ORBInitializerImpl::ORBInitializerImpl() END]" << endl;
     #endif
@@ -37,7 +36,7 @@ namespace openbus {
       IOP::CodecFactory_var codec_factory = info->codec_factory();
       IOP::Encoding cdr_encoding = {IOP::ENCODING_CDR_ENCAPS, 1, 2};
       PortableInterceptor::ClientRequestInterceptor_var clientInterceptor = \
-          new ClientInterceptor(credential, codec_factory->create_codec(cdr_encoding));
+          new ClientInterceptor(codec_factory->create_codec(cdr_encoding));
       info->add_client_request_interceptor(clientInterceptor);
 
       slotid = info->allocate_slot_id();

@@ -22,8 +22,7 @@ class Hello_impl : virtual public POA_Hello {
   public:
     void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
       cout << endl << "Servant diz: HELLO!" << endl;
-      openbus::common::ServerInterceptor* serverInterceptor = bus->getServerInterceptor();
-      openbusidl::acs::Credential_var credential = serverInterceptor->getCredential();
+      openbusidl::acs::Credential_var credential = bus->getCredentialIntercepted();
       cout << "Usuário OpenBus que fez a chamada: " << credential->owner.in() << endl;
     };
 };
@@ -34,14 +33,18 @@ int main(int argc, char* argv[]) {
   char* registryId;
   openbus::services::RegistryService* registryService;
 
-  bus = openbus::Openbus::getInstance();
+  bus = new openbus::Openbus(argc, argv);
 
 /* Se o usuario desejar criar o seu proprio ORB/POA.
-  bus->init(argc, argv, orb, root_poa);
-*/
+  CORBA::ORB* orb = CORBA::ORB_init(argc, argv);
+  CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
+  PortableServer::POA* poa = PortableServer::POA::_narrow(poa_obj);
+  PortableServer::POAManager_var poa_manager = poa->the_POAManager();
+  poa_manager->activate();
 
-/* Criacao implicita do ORB. */
-  bus->init(argc, argv);
+  bus->init(orb, poa);
+*/
+  bus->init();
 
 /* Conexao com o barramento. */
   try {

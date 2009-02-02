@@ -5,6 +5,7 @@
 #ifndef CLIENTINTERCEPTOR_H_
 #define CLIENTINTERCEPTOR_H_
 
+#include <map>
 #include <string.h>
 #include <orbix/corba.hh>
 #include <omg/PortableInterceptor.hh>
@@ -17,10 +18,12 @@ namespace openbus {
   namespace common {
     class ClientInterceptor : public ClientRequestInterceptor, public IT_CORBA::RefCountedLocalObject {
       private:
-        openbusidl::acs::Credential** credential;
         IOP::Codec_ptr cdr_codec;
       public:
-        ClientInterceptor(openbusidl::acs::Credential** pcredential, IOP::Codec_ptr pcdr_codec) IT_THROW_DECL(());
+        static std::map<CORBA::ORB*, openbusidl::acs::Credential**> credentials;
+        static openbusidl::acs::Credential** credential;
+
+        ClientInterceptor(IOP::Codec_ptr pcdr_codec) IT_THROW_DECL(());
         ~ClientInterceptor();
         void send_request(ClientRequestInfo_ptr ri) IT_THROW_DECL((
           CORBA::SystemException,
