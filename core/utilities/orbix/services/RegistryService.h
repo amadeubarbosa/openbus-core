@@ -13,7 +13,10 @@
 
 namespace openbus {
   namespace services {
-    typedef char** PropertyList;
+//     typedef char** PropertyList;
+    typedef openbusidl::rs::PropertyList PropertyList;
+    typedef openbusidl::rs::ServiceOffer ServiceOffer;
+    typedef openbusidl::rs::ServiceOfferList ServiceOfferList;
 
     class RegistryService {
       private:
@@ -27,7 +30,7 @@ namespace openbus {
       * criteria: Lista de propriedades que descrevem o serviço desejado.
       * Retorna uma lista de ofertas de serviço.
       */
-        openbusidl::rs::ServiceOfferList* find(openbusidl::rs::PropertyList criteria);
+        ServiceOfferList* find(PropertyList criteria);
 
       /*
       * Registra um serviço
@@ -36,9 +39,9 @@ namespace openbus {
       * Parâmetros de saída:
       *   registryId: Identificação do serviço registrado.
       */
-        void Register(openbusidl::rs::ServiceOffer serviceOffer, char* registryId);
+        void Register(ServiceOffer serviceOffer, char* registryId);
 
-        void Register(PropertyList propertyList, scs::core::IComponent* iComponent, char* registryId);
+         void Register(PropertyList propertyList, scs::core::IComponent* iComponent, char* registryId);
     };
   }
 }

@@ -63,6 +63,16 @@ namespace openbus {
     /* Porta de localização do barramento. */
       unsigned short portBus;
 
+    /* Possíveis estados para a conexão. */
+      enum ConnectionStates {
+        CONNECTED,
+        DISCONNECTED,
+        DISCONNECTING
+      };
+
+    /* Indica o estado da conexão. */
+      ConnectionStates connectionState;
+
       unsigned long timeRenewing;
 
       void commandLineParse(
@@ -79,6 +89,7 @@ namespace openbus {
       void registerInterceptors();
 
       IT_Thread renewLeaseIT_Thread;
+
       class RenewLeaseThread : public IT_ThreadBody {
         private:
           Openbus* bus;
@@ -86,6 +97,7 @@ namespace openbus {
           RenewLeaseThread(Openbus* _bus);
           void* run();
       };
+
     public:
 
     /* Construtor
@@ -113,14 +125,14 @@ namespace openbus {
     *  Um ORB e POA são criado implicitamente.
     *  Os parâmetros argc e argv são repassados para a função CORBA::ORB_init().
     *  A fábrica de componentes SCS é criada.
-    *  Os argumentos Openbus de linha de comando (argc e aegv) são tratados.
+    *  Os argumentos Openbus de linha de comando (argc e argv) são tratados.
     */
       void init();
 
     /* Inicializa uma referência a um barramento.
     *  Um ORB e POA são passados explicitamente pelo usuário.
     *  A fábrica de componentes SCS é criada.
-    *  Os argumentos Openbus de linha de comando (argc e aegv) são tratados.
+    *  Os argumentos Openbus de linha de comando (argc e argv) são tratados.
     */
       void init(
         CORBA::ORB_ptr _orb,
@@ -155,8 +167,16 @@ namespace openbus {
         const char* password)
         throw (COMMUNICATION_FAILURE, LOGIN_FAILURE);
 
-    /* Efetua logout do barramento. */
-      bool logout();
+    /* Desfaz a conexão atual.
+    *  Uma requisição remota logout() é realizada.
+    *  Antes da chamada logout() um estado de *desconectando* é assumido,
+    *  impedindo assim que a renovação de credencial seja realizada durante
+    *  o processo.
+    *  Se nenhuma conexão estiver ativa, o valor de retorno é false.
+    *  Retorno: Caso a conexão seja desfeita, true é retornado, caso contrário,
+    *  o valor de retorno é false.
+    */
+      bool disconnect();
 
     /* Loop que processa requisições CORBA. [execução do orb->run()]. */
       void run();

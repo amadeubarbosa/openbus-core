@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
   Hello* hello = Hello::_narrow(obj);
   hello->sayHello();
 
-  bus->logout();
+  bus->disconnect();
 
   return 0;
 }

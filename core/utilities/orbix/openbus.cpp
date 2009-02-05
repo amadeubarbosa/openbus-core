@@ -17,13 +17,27 @@ namespace openbus {
     bus = _bus;
   }
 
-  void* Openbus::RenewLeaseThread::run() {
+  void* Openbus:: RenewLeaseThread::run() {
     unsigned long time;
+  #ifdef VERBOSE
+    cout << "[Openbus::RenewLeaseThread::run() BEGIN]" << endl;
+  #endif
     while (true) {
-      time = ((bus->timeRenewing)/2)*1000;
+    #ifdef VERBOSE
+      cout << "\t[Renovando credencial...]" << endl;
+    #endif
+      time = ((bus->timeRenewing)/2)*300;
       IT_CurrentThread::sleep(time);
-      bus->accessControlService->renewLease(*bus->credential, bus->lease);
+      if (bus->connectionState == CONNECTED) {
+        bus->accessControlService->renewLease(*bus->credential, bus->lease);
+      } else {
+        break;
+      }
     }
+  #ifdef VERBOSE
+    cout << "[Mecanismo de renovação de credencial *desativado*...]" << endl;
+    cout << "[Openbus::RenewLeaseThread::run() END]" << endl;
+  #endif
     return 0;
   }
 
@@ -63,6 +77,10 @@ namespace openbus {
   {
     _argc = argc;
     _argv = argv;
+    connectionState = DISCONNECTED;
+    credential = 0;
+    lease = 0;
+    registryService = 0;
     if (ini == 0) {
       cout << "Registrando interceptadores ..." << endl;
       registerInterceptors();
@@ -78,6 +96,10 @@ namespace openbus {
   {
     _argc = argc;
     _argv = argv;
+    connectionState = DISCONNECTED;
+    credential = 0;
+    lease = 0;
+    registryService = 0;
     if (ini == 0) {
       cout << "Registrando interceptadores ..." << endl;
       registerInterceptors();
@@ -154,10 +176,11 @@ namespace openbus {
       if (!iAccessControlService->loginByPassword(user, password, credential, lease)) {
         throw LOGIN_FAILURE();
       } else {
-            #ifdef VERBOSE
+      #ifdef VERBOSE
         cout << "\tCrendencial recebida: " << credential->identifier << endl;
         cout << "\tAssociando credencial " << credential << " ao ORB " << orb << endl;
       #endif
+        connectionState = CONNECTED;
         openbus::common::ClientInterceptor::credentials[orb] = &credential;
         timeRenewing = lease;
         RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
@@ -173,8 +196,33 @@ namespace openbus {
   #endif
   }
 
-  bool Openbus::logout() {
-    return accessControlService->logout(*credential);
+  bool Openbus::disconnect() {
+  #ifdef VERBOSE
+    cout << "[Openbus::disconnect() BEGIN]" << endl;
+  #endif
+    if (connectionState == CONNECTED) {
+      connectionState = DISCONNECTING;
+      bool status = accessControlService->logout(*credential);
+      if (status) {
+        openbus::common::ClientInterceptor::credentials[orb] = 0;
+        credential = 0;
+        lease = 0;
+        registryService = 0;
+        connectionState = DISCONNECTED;
+      } else {
+        connectionState = CONNECTED;
+      }
+    #ifdef VERBOSE
+      cout << "[Openbus::disconnect() END]" << endl;
+    #endif
+      return status;
+    } else {
+    #ifdef VERBOSE
+      cout << "[Não há conexão a ser desfeita.]" << endl;
+      cout << "[Openbus::disconnect() END]" << endl;
+    #endif
+      return false;
+    }
   }
 
   void Openbus::run() {
