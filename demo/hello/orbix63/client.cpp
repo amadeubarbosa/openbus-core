@@ -17,18 +17,18 @@ int main(int argc, char* argv[]) {
 
   bus = new openbus::Openbus(argc, argv);
 
-/* Se o usuario desejar criar o seu proprio ORB/POA.
-  CORBA::ORB* orb = CORBA::ORB_init(argc, argv);
-  CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
-  PortableServer::POA* poa = PortableServer::POA::_narrow(poa_obj);
-  PortableServer::POAManager_var poa_manager = poa->the_POAManager();
-  poa_manager->activate();
-
-  bus->init(orb, poa);
+/* Se o usuário desejar criar o seu próprio ORB/POA:
+*  CORBA::ORB* orb = CORBA::ORB_init(argc, argv);
+*  CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
+*  PortableServer::POA* poa = PortableServer::POA::_narrow(poa_obj);
+*  PortableServer::POAManager_var poa_manager = poa->the_POAManager();
+*  poa_manager->activate();
+*
+*  bus->init(orb, poa);
 */
   bus->init();
 
-/* Conexao com o barramento. */
+/* Conexão com o barramento. */
   try {
     registryService = bus->connect("tester", "tester");
   } catch (openbus::COMMUNICATION_FAILURE& e) {
@@ -41,21 +41,20 @@ int main(int argc, char* argv[]) {
     exit(-1);
   }
 
+/* Define uma lista de propriedades que caracteriza o serviço de interesse.
+*  O trabalho de criação da lista é facilitado pelo uso da classe PropertyListHelper.
+*/
+  openbus::services::PropertyListHelper* propertiesHelper = new openbus::services::PropertyListHelper();
+  propertiesHelper->add("facet", "IHello");
+
+/* Busca no barramento o serviço desejado.
+*  Uma lista de *ofertas de serviço* é retornada para o usuário.
+*  OBS.: Neste demo somente há uma oferta de serviço.
+*/
+  openbus::services::ServiceOfferList_var soList = registryService->find(propertiesHelper->getPropertyList());
+
   CORBA::ULong idx = 0;
-  openbusidl::rs::PropertyList_var p = new openbusidl::rs::PropertyList(5);
-  p->length(1);
-  openbusidl::rs::ServiceOfferList_var soList = new openbusidl::rs::ServiceOfferList(5);
-  soList->length(5);
-  openbusidl::rs::Property_var property = new openbusidl::rs::Property;
-  property->name = "facet";
-  openbusidl::rs::PropertyValue_var propertyValue = new openbusidl::rs::PropertyValue(5);
-  propertyValue->length(1);
-  propertyValue[0] = "IHello";
-  property->value = propertyValue;
-  p[0] = property;
-  soList = registryService->find(p);
-  openbusidl::rs::ServiceOffer so;
-  so = soList[idx];
+  openbus::services::ServiceOffer so = soList[idx];
 
   scs::core::IComponent* component = so.member;
   CORBA::Object* obj = component->getFacet("IDL:Hello:1.0");

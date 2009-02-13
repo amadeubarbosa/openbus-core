@@ -77,19 +77,24 @@ namespace openbus {
       cout << "\n\n[ServerInterceptor::getCredential() BEGIN]" << endl;
     #endif
       CORBA::Any_var any = picurrent->get_slot(slotid);
+
       openbusidl::acs::Credential* c = new openbusidl::acs::Credential;
       any >>= c;
-    #ifdef VERBOSE
-      cout << "\t[credential->owner: " << c->owner << "]" << endl;
-      cout << "\t[credential->identifier: " << c->identifier << "]" << endl;
-      cout << "\t[credential->delegate: " << c->delegate << "]" << endl;
-      cout << "[ServerInterceptor::getCredential() END]" << endl;
-    #endif
-      openbusidl::acs::Credential_var ret = new openbusidl::acs::Credential;
-      ret->owner = c->owner;
-      ret->identifier = c->identifier;
-      ret->delegate = c->delegate;
-      return ret._retn();
+      if (c) {
+      #ifdef VERBOSE
+        cout << "\t[credential->owner: " << c->owner << "]" << endl;
+        cout << "\t[credential->identifier: " << c->identifier << "]" << endl;
+        cout << "\t[credential->delegate: " << c->delegate << "]" << endl;
+        cout << "[ServerInterceptor::getCredential() END]" << endl;
+      #endif
+        openbusidl::acs::Credential_var ret = new openbusidl::acs::Credential;
+        ret->owner = c->owner;
+        ret->identifier = c->identifier;
+        ret->delegate = c->delegate;
+        return ret._retn();
+      } else {
+        return 0;
+      }
     }
   }
 }

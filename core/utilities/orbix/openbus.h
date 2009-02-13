@@ -21,6 +21,8 @@ namespace openbus {
   class COMMUNICATION_FAILURE {};
   class LOGIN_FAILURE {};
 
+  typedef openbusidl::acs::Credential_var Credential_var;
+
   class Openbus {
     private:
 
