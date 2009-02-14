@@ -21,7 +21,6 @@ LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix
 
 SRC= openbus/common/ClientInterceptor.cpp \
      openbus/common/ServerInterceptor.cpp \
-     openbus/common/CredentialManager.cpp \
      openbus/common/ORBInitializerImpl.cpp \
      stubs/access_control_serviceC.cxx \
      stubs/registry_serviceC.cxx \
