@@ -217,7 +217,8 @@ function createPropertyIndex(self, offerProperties, member)
 
   local componentId = member:getComponentId()
   properties["component_id"] = {}
-  properties["component_id"][componentId.name..":"..componentId.version] = true
+  properties["component_id"][componentId.name..":"..componentId.major_version..componentId.minor_version..
+    componentId.patch_version] = true
 
   local memberName = componentId.name
   -- se não foi definida uma propriedade "facets", discriminando as facetas

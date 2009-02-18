@@ -37,7 +37,7 @@ oop.class(_M, IComponent)
 --@return O Serviço de Sessão.
 ---
 function __init(self, name, config)
-  local component = IComponent:__init(name, 1)
+  local component = IComponent:__init(name, 1, 0, 0, "")
   component.config = config
   return oop.rawnew(self, component)
 end
