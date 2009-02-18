@@ -44,7 +44,7 @@ namespace openbus {
     #ifdef VERBOSE
       openbusidl::acs::Credential_var c = new openbusidl::acs::Credential ;
       any >>= c ;
-      cout << "[credential->entityName: " << c->entityName.in() << "]" << endl ;
+      cout << "[credential->owner: " << c->owner.in() << "]" << endl ;
       cout << "[credential->identifier: " << c->identifier.in() << "]" << endl ;
     #endif
     }
