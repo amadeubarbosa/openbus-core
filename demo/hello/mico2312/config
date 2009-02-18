@@ -1,9 +1,9 @@
 
 MICO_HOME=/usr/local
 
-MICOBIN=${MICO_HOME}/bin
+MICOBIN=${MICO_HOME}/admin
 MICOINC=${MICO_HOME}/include
-MICOLDIR=${MICO_HOME}/lib
+MICOLDIR=${MICO_HOME}/libs
 
 #Descomente a linha abaixo para ativar o verbose.
-#VERBOSE= VERBOSE
+VERBOSE= VERBOSE

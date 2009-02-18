@@ -17,7 +17,7 @@ OBJROOT=obj
 INCLUDES= . ${MICOINC} ${OPENBUS_HOME}/core/utilities/mico ${OPENBUSINC}/scs
 LDIR= ${MICOLDIR} 
 
-LIBS= mico2.3.12
+LIBS= mico2.3.13
 
 SLIB= ${OPENBUSLIB}/libscsmico.a \
       ${OPENBUS_HOME}/core/utilities/mico/lib/${TEC_UNAME}/libopenbus.a
