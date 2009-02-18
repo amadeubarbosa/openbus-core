@@ -18,7 +18,8 @@ namespace scs {
         std::map<const char*, FacetDescription> facets;
         std::map<const char*, FacetDescription>::iterator it;
       public:
-        IComponentImpl(const char* name, unsigned long version, \
+        IComponentImpl(const char* name, CORBA::Octet major_version, CORBA::Octet minor_version, \
+                        CORBA::Octet patch_version, const char* platform_spec, \
                         CORBA::ORB_ptr orb, PortableServer::POA_ptr poa);
         ~IComponentImpl();
 

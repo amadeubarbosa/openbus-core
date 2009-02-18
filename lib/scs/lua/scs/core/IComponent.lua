@@ -9,9 +9,10 @@ local oop = require "loop.base"
 module("scs.core.IComponent", oop.class)
 local orb = oil.orb or oil.init()
 
-function __init(self, name, version)
+function __init(self, name, major_version, minor_version, patch_version, platform_spec)
   local component = oop.rawnew(self, {
-    componentId = {name = name, version = version},
+    componentId = {name = name, major_version = major_version, minor_version = minor_version, 
+      patch_version = patch_version, platform_spec = platform_spec},
     facetDescriptionsByName = {},
   })
   local metaInterface = IMetaInterface(component)

@@ -13,7 +13,10 @@ namespace scs {
   namespace core {
     struct ComponentId {
       char* name;
-      unsigned long version;
+      char major_version;
+      char minor_version;
+      char patch_version;
+      char* platform_spec;
     };
 
     typedef luaidl::cpp::sequence<char> NameList;
@@ -22,8 +25,8 @@ namespace scs {
         void _getFacet (void* ptr, const char* facet_interface);
         static lua_State* LuaVM;
       public:
-        IComponent();
-        IComponent(const char* name);
+        IComponent(const char* name, char major_version, char minor_version, char patch_version, \
+            const char* platform_spec);
         ~IComponent();
 
         static void setLuaVM(lua_State* L);

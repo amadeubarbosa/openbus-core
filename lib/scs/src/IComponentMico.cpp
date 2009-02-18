@@ -10,7 +10,8 @@ using namespace std;
 
 namespace scs {
   namespace core {
-    IComponentImpl::IComponentImpl(const char* name, unsigned long version, \
+    IComponentImpl::IComponentImpl(const char* name, CORBA::Octet major_version, CORBA::Octet minor_version, \
+                                    CORBA::Octet patch_version, const char* platform_spec, \
                                     CORBA::ORB_ptr orb, PortableServer::POA_ptr poa)
     {
     #ifdef VERBOSE
@@ -20,7 +21,10 @@ namespace scs {
       _poa = poa;
       componentId = new ComponentId;
       componentId->name = name;
-      componentId->version = version;
+      componentId->major_version = major_version;
+      componentId->minor_version = minor_version;
+      componentId->patch_version = patch_version;
+      componentId->platform_spec = platform_spec;
     /* Falta adicionar faceta do IMetaInterface ... */
     #ifdef VERBOSE
       cout << "[IComponentImpl::IComponentImpl() BEGIN]" << endl;
@@ -115,7 +119,10 @@ namespace scs {
       cId = componentId;
     #ifdef VERBOSE
       cout << "\t[componentID.name: " << cId->name.in() << "]" << endl;
-      cout << "\t[componentID.version: " << cId->version << "]" << endl;
+      cout << "\t[componentID.major_version: " << cId->major_version << "]" << endl;
+      cout << "\t[componentID.minor_version: " << cId->minor_version << "]" << endl;
+      cout << "\t[componentID.patch_version: " << cId->patch_version << "]" << endl;
+      cout << "\t[componentID.platform_spec: " << cId->platform_spec.in() << "]" << endl;
       cout << "[IComponentImpl::getComponentId() END]" << endl;
     #endif
       return cId._retn();

@@ -16,103 +16,8 @@ namespace scs {
 
     lua_State* IComponent::LuaVM = 0;
 
-  /* ??? */
-    IComponent::IComponent ()
-    {
-    #if VERBOSE
-      printf("[IComponent::IComponent() COMECO]\n");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    #endif
-    #if VERBOSE
-      printf("\t[Construindo objeto IComponent]\n");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    #endif
-      lua_getglobal(LuaVM, "IComponent");
-      lua_pushstring(LuaVM, "IDL:scs/core/IComponent:1.0");
-    #if VERBOSE
-      printf("\t[parametro name=%s empilhado]\n", "IDL:scs/core/IComponent:1.0");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    #endif
-      lua_pushnumber(LuaVM, 1);
-    #if VERBOSE
-      printf("\t[parametro 1 empilhado]\n");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    #endif
-      if (lua_pcall(LuaVM, 2, 1, 0) != 0) {
-      #if VERBOSE
-        printf("\t[ERRO ao realizar pcall do metodo]\n");
-        printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-        printf("\t[Tipo do elemento do TOPO: %s]\n" , \
-              lua_typename(LuaVM, lua_type(LuaVM, -1)));
-      #endif
-        const char * returnValue;
-        lua_getglobal(LuaVM, "tostring");
-        lua_insert(LuaVM, -2);
-        lua_pcall(LuaVM, 1, 1, 0);
-        returnValue = lua_tostring(LuaVM, -1);
-        lua_pop(LuaVM, 1);
-      #if VERBOSE
-        printf("\t[lancando excecao]\n");
-        printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-        printf("[IComponent::IComponent() FIM]\n\n");
-      #endif
-        throw returnValue;
-      } /* if */
-    #if VERBOSE
-      printf("\t[Chamando orb:newservant]\n");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    #endif
-      lua_getglobal(LuaVM, "orb");
-      lua_getfield( LuaVM, -1, "newservant" ) ;
-      lua_insert(LuaVM, -3);
-      lua_insert(LuaVM, -2);
-    #if VERBOSE
-      printf("\t[parametro IComponent empilhado]\n");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    #endif
-      lua_pushnil(LuaVM);
-      lua_pushstring(LuaVM, "IDL:scs/core/IComponent:1.0");
-    #if VERBOSE
-      printf("\t[parametro IDL:scs/core/IComponent:1.0 empilhado]\n");
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    #endif
-      if (lua_pcall(LuaVM, 4, 1, 0) != 0) {
-      #if VERBOSE
-        printf("\t[ERRO ao realizar pcall do metodo]\n");
-        printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-        printf("\t[Tipo do elemento do TOPO: %s]\n" , \
-            lua_typename(LuaVM, lua_type(LuaVM, -1)));
-      #endif
-        const char * returnValue;
-        lua_getglobal(LuaVM, "tostring");
-        lua_insert(LuaVM, -2);
-        lua_pcall(LuaVM, 1, 1, 0);
-        returnValue = lua_tostring(LuaVM, -1);
-        lua_pop(LuaVM, 1);
-      #if VERBOSE
-        printf("\t[lancando excecao]\n");
-        printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-        printf("[IComponent::IComponent() FIM]\n\n");
-      #endif
-        throw returnValue;
-      } /* if */
-    #if VERBOSE
-      const void* ptr = lua_topointer(LuaVM, -1);
-    #endif
-      lua_pushlightuserdata(LuaVM, this);
-      lua_insert(LuaVM, -2);
-      lua_settable(LuaVM, LUA_REGISTRYINDEX);
-    #if VERBOSE
-      printf("\t[IComponent Lua:%p C:%p]\n", ptr, this);
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-    #endif
-    #if VERBOSE
-      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
-      printf("[IComponent::IComponent() FIM]\n\n");
-    #endif
-    }
-
-    IComponent::IComponent (const char* name)
+    IComponent::IComponent (const char* name, char major_version, char minor_version, char patch_version, \
+        const char* platform_spec)
     {
     #if VERBOSE
       printf("[IComponent::IComponent() COMECO]\n");
@@ -128,12 +33,27 @@ namespace scs {
       printf("\t[parametro name=%s empilhado]\n", name);
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      lua_pushnumber(LuaVM, 1);
+      lua_pushnumber(LuaVM, (int)major_version);
     #if VERBOSE
-      printf("\t[parametro 1 empilhado]\n");
+      printf("\t[parametro major_version=%c empilhado]\n", major_version);
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
-      if (lua_pcall(LuaVM, 2, 1, 0) != 0) {
+      lua_pushnumber(LuaVM, (int)minor_version);
+    #if VERBOSE
+      printf("\t[parametro minor_version=%c empilhado]\n", minor_version);
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    #endif
+      lua_pushnumber(LuaVM, (int)patch_version);
+    #if VERBOSE
+      printf("\t[parametro patch_version=%c empilhado]\n", patch_version);
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    #endif
+      lua_pushstring(LuaVM, platform_spec);
+    #if VERBOSE
+      printf("\t[parametro platform_spec=%s empilhado]\n", platform_spec);
+      printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
+    #endif
+      if (lua_pcall(LuaVM, 5, 1, 0) != 0) {
       #if VERBOSE
         printf("\t[ERRO ao realizar pcall do metodo]\n");
         printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
@@ -574,13 +494,41 @@ namespace scs {
     #endif
       lua_pop(LuaVM, 1);
 
-      lua_getfield(LuaVM, -1, "version");
-      returnValue->version = (unsigned long) lua_tonumber(LuaVM, -1);
+      lua_getfield(LuaVM, -1, "major_version");
+      returnValue->major_version = ((char *) lua_tostring(LuaVM, -1))[0];
     #if VERBOSE
-      printf("\t[componentId->->version: %lu]\n", returnValue->version);
+      printf("\t[componentId->major_version: %c]\n", returnValue->major_version);
+      printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+    #endif
+      lua_pop(LuaVM, 1);
+
+      lua_getfield(LuaVM, -1, "minor_version");
+      returnValue->minor_version = ((char *) lua_tostring(LuaVM, -1))[0];
+    #if VERBOSE
+      printf("\t[componentId->minor_version: %c]\n", returnValue->minor_version);
+      printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+    #endif
+      lua_pop(LuaVM, 1);
+
+      lua_getfield(LuaVM, -1, "patch_version");
+      returnValue->patch_version = ((char *) lua_tostring(LuaVM, -1))[0];
+    #if VERBOSE
+      printf("\t[componentId->patch_version: %c]\n", returnValue->patch_version);
+      printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+    #endif
+      lua_pop(LuaVM, 1);
+
+      lua_getfield(LuaVM, -1, "platform_spec");
+      luastring = lua_tolstring(LuaVM, -1, &size);
+      returnValue->platform_spec = new char[ size + 1 ];
+      memcpy(returnValue->platform_spec, luastring, size);
+      returnValue->platform_spec[ size ] = '\0';
+    #if VERBOSE
+      printf("\t[componentId->platform_spec: %s]\n", returnValue->platform_spec);
       printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
     #endif
       lua_pop(LuaVM, 2);
+
     #if VERBOSE
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
       printf("[IComponent::getComponentId() FIM]\n\n");

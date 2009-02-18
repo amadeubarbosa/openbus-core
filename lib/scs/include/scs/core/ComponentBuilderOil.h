@@ -16,8 +16,9 @@ namespace scs {
         ComponentBuilder();
         ~ComponentBuilder();
         void setLuaVM(lua_State* L);
-        IComponent* createComponent(const char* name, unsigned long version, const char* facet_name, \
-          const char* interface_name, char* constructor_name, void* obj);
+        IComponent* createComponent(const char* name, char major_version, \
+            char minor_version, char patch_version, const char* platform_spec, \
+            const char* facet_name, const char* interface_name, char* constructor_name, void* obj);
         void loadIDLFile(const char* idlfilename);
     };
   }

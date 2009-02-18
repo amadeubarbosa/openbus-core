@@ -22,10 +22,11 @@ namespace scs {
       LuaVM = L;
     }
 
-    IComponent* ComponentBuilder::createComponent(const char* name, unsigned long version, const char* facet_name, \
-          const char* interface_name, char* constructor_name, void* obj)
+    IComponent* ComponentBuilder::createComponent(const char* name, char major_version, \
+        char minor_version, char patch_version, const char* platform_spec, \
+        const char* facet_name, const char* interface_name, char* constructor_name, void* obj)
     {
-      IComponent* iComponent = new IComponent(name);
+      IComponent* iComponent = new IComponent(name, major_version, minor_version, patch_version, platform_spec);
       iComponent->addFacet(facet_name, interface_name, constructor_name, obj);
       return iComponent;
     }
