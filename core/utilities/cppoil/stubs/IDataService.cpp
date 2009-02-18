@@ -87,8 +87,21 @@ namespace dataService {
     returnValue->service_id->name[ size ] = '\0';
     lua_pop(LuaVM, 1);
 
-    lua_getfield(LuaVM, -1, "version");
-    returnValue->service_id->version = (unsigned long) lua_tonumber(LuaVM, -1);
+    lua_getfield(LuaVM, -1, "major_version");
+    returnValue->service_id->major_version = *((const char*) lua_tostring(LuaVM, -1));
+    lua_pop(LuaVM, 1);
+    lua_getfield(LuaVM, -1, "minor_version");
+    returnValue->service_id->minor_version = *((const char*) lua_tostring(LuaVM, -1));
+    lua_pop(LuaVM, 1);
+    lua_getfield(LuaVM, -1, "patch_version");
+    returnValue->service_id->patch_version = *((const char*) lua_tostring(LuaVM, -1));
+    lua_pop(LuaVM, 1);
+
+    lua_getfield(LuaVM, -1, "platform_spec");
+    luastring = lua_tolstring(LuaVM, -1, &size);
+    returnValue->service_id->platform_spec = new char[ size + 1 ];
+    memcpy(returnValue->service_id->platform_spec, luastring, size);
+    returnValue->service_id->platform_spec[ size ] = '\0';
     lua_pop(LuaVM, 1);
   // link de C++ com Lua para o component_id ??
     lua_pop(LuaVM, 1);
@@ -220,8 +233,8 @@ namespace dataService {
   }
 
 //
-// Preciso mapear as exceções OperationNotSupported e UnknownType que são representadas
-// através de tabelas Lua, para exceções C++.
+// Preciso mapear as excecoes OperationNotSupported e UnknownType que sao representadas
+// atraves de tabelas Lua, para excecoes C++.
 //
   void IDataEntry::copyFrom(DataKey* source_key) {
   #if VERBOSE
@@ -247,7 +260,7 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, source_key);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro source_key=%p empilhado]\n", source_key);
+    printf("\t[parametro source_key=%p empilhado]\n", source_key);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (lua_pcall(LuaVM, 3, 0, 0) != 0) {
@@ -325,7 +338,7 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, attr_name);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro key=%p empilhado]\n", attr_name);
+    printf("\t[parametro key=%p empilhado]\n", attr_name);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (lua_pcall(LuaVM, 3, 1, 0) != 0) {
@@ -407,7 +420,7 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, attrs_name);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro key=%p empilhado]\n", attrs_name);
+    printf("\t[parametro key=%p empilhado]\n", attrs_name);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (lua_pcall(LuaVM, 3, 1, 0) != 0) {
@@ -502,7 +515,7 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, attr_name);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro attr_name=%p empilhado]\n", attr_name);
+    printf("\t[parametro attr_name=%p empilhado]\n", attr_name);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (attr_value->getTypeCode() == luaidl::cpp::types::tk_string) {
@@ -510,7 +523,7 @@ namespace dataService {
       *attr_value >>= str;
       lua_pushstring(LuaVM, str);
     #if VERBOSE
-      printf("\t[parâmetro attr_value=%s empilhado]\n", str);
+      printf("\t[parametro attr_value=%s empilhado]\n", str);
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
     #endif
     }
@@ -570,7 +583,7 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, attrs_name);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro attrs_name]\n");
+    printf("\t[parametro attrs_name]\n");
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     lua_newtable(LuaVM);
@@ -585,7 +598,7 @@ namespace dataService {
     #endif
     }
   #if VERBOSE
-    printf("\t[parâmetro attrs_value]\n");
+    printf("\t[parametro attrs_value]\n");
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     lua_newtable(LuaVM);
@@ -597,7 +610,7 @@ namespace dataService {
         *any >>= str;
         lua_pushstring(LuaVM, str);
       #if VERBOSE
-        printf("\t[parâmetro attr_value=%s empilhado]\n", str);
+        printf("\t[parametro attr_value=%s empilhado]\n", str);
         printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
       #endif
       }
@@ -885,10 +898,36 @@ namespace dataService {
         printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
       #endif
         lua_pop(LuaVM, 1);
-        lua_getfield(LuaVM, -1, "version");
-        data->key->service_id->version = (unsigned long) lua_tonumber(LuaVM, -1);
+
+        lua_getfield(LuaVM, -1, "major_version");
+        data->key->service_id->major_version = *((const char*) lua_tostring(LuaVM, -1));
       #if VERBOSE
-        printf("\t[data->key->service_id->version: %lu]\n", data->key->service_id->version);
+        printf("\t[data->key->service_id->major_version: %c]\n", data->key->service_id->major_version);
+        printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+      #endif
+        lua_pop(LuaVM, 1);
+        lua_getfield(LuaVM, -1, "minor_version");
+        data->key->service_id->minor_version = *((const char*) lua_tostring(LuaVM, -1));
+      #if VERBOSE
+        printf("\t[data->key->service_id->minor_version: %c]\n", data->key->service_id->minor_version);
+        printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+      #endif
+        lua_pop(LuaVM, 1);
+        lua_getfield(LuaVM, -1, "patch_version");
+        data->key->service_id->patch_version = *((const char*) lua_tostring(LuaVM, -1));
+      #if VERBOSE
+        printf("\t[data->key->service_id->patch_version: %c]\n", data->key->service_id->patch_version);
+        printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+      #endif
+        lua_pop(LuaVM, 1);
+
+        lua_getfield(LuaVM, -1, "platform_spec");
+        luastring = lua_tolstring(LuaVM, -1, &size);
+        data->key->service_id->platform_spec = new char[ size + 1 ];
+        memcpy(data->key->service_id->platform_spec, luastring, size);
+        data->key->service_id->platform_spec[ size ] = '\0';
+      #if VERBOSE
+        printf("\t[data->key->service_id->platform_spec: %s]\n", data->key->service_id->platform_spec);
         printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
       #endif
         lua_pop(LuaVM, 1);
@@ -996,7 +1035,7 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, key);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro key=%p empilhado]\n", key);
+    printf("\t[parametro key=%p empilhado]\n", key);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (lua_pcall(LuaVM, 3, 1, 0) != 0) {
@@ -1055,10 +1094,36 @@ namespace dataService {
         printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
       #endif
         lua_pop(LuaVM, 1);
-        lua_getfield(LuaVM, -1, "version");
-        data->key->service_id->version = (unsigned long) lua_tonumber(LuaVM, -1);
+
+        lua_getfield(LuaVM, -1, "major_version");
+        data->key->service_id->major_version = *((const char*) lua_tostring(LuaVM, -1));
       #if VERBOSE
-        printf("\t[data->key->service_id->version: %lu]\n", data->key->service_id->version);
+        printf("\t[data->key->service_id->major_version: %c]\n", data->key->service_id->major_version);
+        printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+      #endif
+        lua_pop(LuaVM, 1);
+        lua_getfield(LuaVM, -1, "minor_version");
+        data->key->service_id->minor_version = *((const char*) lua_tostring(LuaVM, -1));
+      #if VERBOSE
+        printf("\t[data->key->service_id->minor_version: %c]\n", data->key->service_id->minor_version);
+        printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+      #endif
+        lua_pop(LuaVM, 1);
+        lua_getfield(LuaVM, -1, "patch_version");
+        data->key->service_id->patch_version = *((const char*) lua_tostring(LuaVM, -1));
+      #if VERBOSE
+        printf("\t[data->key->service_id->patch_version: %c]\n", data->key->service_id->patch_version);
+        printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+      #endif
+        lua_pop(LuaVM, 1);
+
+        lua_getfield(LuaVM, -1, "platform_spec");
+        luastring = lua_tolstring(LuaVM, -1, &size);
+        data->key->service_id->platform_spec = new char[ size + 1 ];
+        memcpy(data->key->service_id->platform_spec, luastring, size);
+        data->key->service_id->platform_spec[ size ] = '\0';
+      #if VERBOSE
+        printf("\t[data->key->service_id->platform_spec: %s]\n", data->key->service_id->platform_spec);
         printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
       #endif
         lua_pop(LuaVM, 1);
@@ -1166,13 +1231,13 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, parent_key);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro parent_key=%p empilhado]\n", parent_key);
+    printf("\t[parametro parent_key=%p empilhado]\n", parent_key);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     lua_pushlightuserdata(LuaVM, source_key);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro source_key=%p empilhado]\n", source_key);
+    printf("\t[parametro source_key=%p empilhado]\n", source_key);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (lua_pcall(LuaVM, 4, 1, 0) != 0) {
@@ -1228,13 +1293,40 @@ namespace dataService {
     printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
   #endif
     lua_pop(LuaVM, 1);
-    lua_getfield(LuaVM, -1, "version");
-    returnValue->service_id->version = (unsigned long) lua_tonumber(LuaVM, -1);
+
+    lua_getfield(LuaVM, -1, "major_version");
+    returnValue->service_id->major_version = *((const char*) lua_tostring(LuaVM, -1));
   #if VERBOSE
-    printf("\t[key->service_id->version: %lu]\n", returnValue->service_id->version);
+    printf("\t[key->service_id->major_version: %c]\n", returnValue->service_id->major_version);
     printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
   #endif
     lua_pop(LuaVM, 1);
+    lua_getfield(LuaVM, -1, "minor_version");
+    returnValue->service_id->minor_version = *((const char*) lua_tostring(LuaVM, -1));
+  #if VERBOSE
+    printf("\t[key->service_id->minor_version: %c]\n", returnValue->service_id->minor_version);
+    printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+  #endif
+    lua_pop(LuaVM, 1);
+    lua_getfield(LuaVM, -1, "patch_version");
+    returnValue->service_id->patch_version = *((const char*) lua_tostring(LuaVM, -1));
+  #if VERBOSE
+    printf("\t[key->service_id->patch_version: %c]\n", returnValue->service_id->patch_version);
+    printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+  #endif
+    lua_pop(LuaVM, 1);
+
+    lua_getfield(LuaVM, -1, "platform_spec");
+    luastring = lua_tolstring(LuaVM, -1, &size);
+    returnValue->service_id->platform_spec = new char[ size + 1 ];
+    memcpy(returnValue->service_id->platform_spec, luastring, size);
+    returnValue->service_id->platform_spec[ size ] = '\0';
+  #if VERBOSE
+    printf("\t[key->service_id->platform_spec: %s]\n", returnValue->service_id->platform_spec);
+    printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+  #endif
+    lua_pop(LuaVM, 1);
+
     lua_pushlightuserdata(LuaVM, returnValue);
     lua_insert(LuaVM, -2);
     lua_settable(LuaVM, LUA_REGISTRYINDEX);
@@ -1270,11 +1362,11 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, parent_key);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro parent_key=%p empilhado]\n", parent_key);
+    printf("\t[parametro parent_key=%p empilhado]\n", parent_key);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
   #if VERBOSE
-    printf("\t[parâmetro metadataList]\n");
+    printf("\t[parametro metadataList]\n");
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     lua_newtable(LuaVM);
@@ -1371,7 +1463,7 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, key);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro key=%p empilhado]\n", key);
+    printf("\t[parametro key=%p empilhado]\n", key);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (lua_pcall(LuaVM, 3, 1, 0) != 0) {
@@ -1429,7 +1521,7 @@ namespace dataService {
     lua_pushlightuserdata(LuaVM, key);
     lua_gettable(LuaVM, LUA_REGISTRYINDEX);
   #if VERBOSE
-    printf("\t[parâmetro key=%p empilhado]\n", key);
+    printf("\t[parametro key=%p empilhado]\n", key);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (lua_pcall(LuaVM, 3, 1, 0) != 0) {
@@ -1468,10 +1560,36 @@ namespace dataService {
     printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
   #endif
     lua_pop(LuaVM, 1);
-    lua_getfield(LuaVM, -1, "version");
-    returnValue->key->service_id->version = (unsigned long) lua_tonumber(LuaVM, -1);
+
+    lua_getfield(LuaVM, -1, "major_version");
+    returnValue->key->service_id->major_version = *((const char*) lua_tostring(LuaVM, -1));
   #if VERBOSE
-    printf("\t[data->key->service_id->version: %lu]\n", returnValue->key->service_id->version);
+    printf("\t[data->key->service_id->major_version: %c]\n", returnValue->key->service_id->major_version);
+    printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+  #endif
+    lua_pop(LuaVM, 1);
+    lua_getfield(LuaVM, -1, "minor_version");
+    returnValue->key->service_id->minor_version = *((const char*) lua_tostring(LuaVM, -1));
+  #if VERBOSE
+    printf("\t[data->key->service_id->minor_version: %c]\n", returnValue->key->service_id->minor_version);
+    printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+  #endif
+    lua_pop(LuaVM, 1);
+    lua_getfield(LuaVM, -1, "patch_version");
+    returnValue->key->service_id->patch_version = *((const char*) lua_tostring(LuaVM, -1));
+  #if VERBOSE
+    printf("\t[data->key->service_id->patch_version: %c]\n", returnValue->key->service_id->patch_version);
+    printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
+  #endif
+    lua_pop(LuaVM, 1);
+
+    lua_getfield(LuaVM, -1, "platform_spec");
+    luastring = lua_tolstring(LuaVM, -1, &size);
+    returnValue->key->service_id->platform_spec = new char[ size + 1 ];
+    memcpy(returnValue->key->service_id->platform_spec, luastring, size);
+    returnValue->key->service_id->platform_spec[ size ] = '\0';
+  #if VERBOSE
+    printf("\t[data->key->service_id->platform_spec: %s]\n", returnValue->key->service_id->platform_spec);
     printf("\t[Tamanho da pilha de Lua: %d]\n",lua_gettop(LuaVM));
   #endif
     lua_pop(LuaVM, 1);
@@ -1529,17 +1647,26 @@ namespace dataService {
     lua_newtable(LuaVM);
     lua_pushstring(LuaVM, key->service_id->name);
     lua_setfield(LuaVM, -2, "name");
-    lua_pushnumber(LuaVM, key->service_id->version);
-    lua_setfield(LuaVM, -2, "version");
+    lua_pushnumber(LuaVM, key->service_id->major_version);
+    lua_setfield(LuaVM, -2, "major_version");
+    lua_pushnumber(LuaVM, key->service_id->minor_version);
+    lua_setfield(LuaVM, -2, "minor_version");
+    lua_pushnumber(LuaVM, key->service_id->patch_version);
+    lua_setfield(LuaVM, -2, "patch_version");
+    lua_pushstring(LuaVM, key->service_id->platform_spec);
+    lua_setfield(LuaVM, -2, "platform_spec");
     lua_setfield(LuaVM, -2, "service_id");
   #if VERBOSE
-    printf("\t[parâmetro dataKey:]\n\t[dataKey->actual_data_id: %s]\n\t[dataKey->service_id->name: %s]\n\t" \
-        "[dataKey->service_id->version: %lu]\n", key->actual_data_id, key->service_id->name, key->service_id->version);
+    printf("\t[parametro dataKey:]\n\t[dataKey->actual_data_id: %s]\n\t[dataKey->service_id->name: %s]\n\t" \
+        "[dataKey->service_id->major_version: %c]\n\t[dataKey->service_id->minor_version: %c]\n\t" \
+        "[dataKey->service_id->patch_version: %c]\n\t[dataKey->service_id->platform_spec: %s]\n", \
+        key->actual_data_id, key->service_id->name, key->service_id->major_version, key->service_id->minor_version, \
+        key->service_id->patch_version, key->service_id->platform_spec);
   #endif
 
     lua_pushstring(LuaVM, facet_interface);
   #if VERBOSE
-    printf("\t[parâmetro facet_interface=%s empilhado]\n", facet_interface);
+    printf("\t[parametro facet_interface=%s empilhado]\n", facet_interface);
     printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
   #endif
     if (lua_pcall(LuaVM, 4, 1, 0) != 0) {
@@ -1626,12 +1753,21 @@ namespace dataService {
     lua_newtable(LuaVM);
     lua_pushstring(LuaVM, key->service_id->name);
     lua_setfield(LuaVM, -2, "name");
-    lua_pushnumber(LuaVM, key->service_id->version);
-    lua_setfield(LuaVM, -2, "version");
+    lua_pushnumber(LuaVM, key->service_id->major_version);
+    lua_setfield(LuaVM, -2, "major_version");
+    lua_pushnumber(LuaVM, key->service_id->minor_version);
+    lua_setfield(LuaVM, -2, "minor_version");
+    lua_pushnumber(LuaVM, key->service_id->patch_version);
+    lua_setfield(LuaVM, -2, "patch_version");
+    lua_pushstring(LuaVM, key->service_id->platform_spec);
+    lua_setfield(LuaVM, -2, "platform_spec");
     lua_setfield(LuaVM, -2, "service_id");
   #if VERBOSE
-    printf("\t[parâmetro dataKey:]\n\t[dataKey->actual_data_id: %s]\n\t[dataKey->service_id->name: %s]\n\t" \
-        "[dataKey->service_id->version: %lu]\n", key->actual_data_id, key->service_id->name, key->service_id->version);
+    printf("\t[parametro dataKey:]\n\t[dataKey->actual_data_id: %s]\n\t[dataKey->service_id->name: %s]\n\t" \
+        "[dataKey->service_id->major_version: %c]\n\t[dataKey->service_id->minor_version: %c]\n\t" \
+        "[dataKey->service_id->patch_version: %c]\n\t[dataKey->service_id->platform_spec: %s]\n", \
+        key->actual_data_id, key->service_id->name, key->service_id->major_version, key->service_id->minor_version, \
+        key->service_id->patch_version, key->service_id->platform_spec);
   #endif
 
     if (lua_pcall(LuaVM, 3, 1, 0) != 0) {

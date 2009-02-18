@@ -504,7 +504,7 @@ namespace openbus {
           lua_pushvalue( LuaVM, -2 ) ;
           lua_pcall( LuaVM, 1, 1, 0 ) ;
           lua_getfield( LuaVM, -1, "name" ) ;*/
-          serviceOffer->member = new scs::core::IComponent( "substituir depois..." ) ;
+          serviceOffer->member = new scs::core::IComponent( "substituir depois...", '1', '0', '0', "nada" ) ;
 /*          lua_pop( LuaVM, 2 ) ;*/
           lua_pushlightuserdata( LuaVM, (void *) serviceOffer->member ) ;
           lua_insert( LuaVM, -2 ) ;
