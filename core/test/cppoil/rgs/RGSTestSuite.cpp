@@ -46,7 +46,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         strcpy(BUFFER, OPENBUS_HOME);
         strcat(BUFFER, "/core/test/cppoil/config.lua");
         if (luaL_dofile(LuaVM, BUFFER)) {
-          printf("Não foi possível carregar o arquivo %s.\n", BUFFER);
+          printf("Nao foi possivel carregar o arquivo %s.\n", BUFFER);
           exit(-1);
         }
         lua_getglobal(LuaVM, "OPENBUS_SERVER_HOST");
@@ -72,11 +72,10 @@ class RGSTestSuite: public CxxTest::TestSuite {
         acs->loginByPassword(OPENBUS_USERNAME, OPENBUS_PASSWORD, credential, lease);
         o->getCredentialManager()->setValue(credential);
         rgs = acs->getRegistryService();
-        scs::core::IComponent* member = new scs::core::IComponent("scs::core::IComponent Mock");
+        scs::core::IComponent* member = new scs::core::IComponent("scs::core::IComponent Mock", '1', '0', '0', "none");
         propertyList = new services::PropertyList;
         property = new services::Property;
         property->name = "type";
-        services::PropertyValue p;
         propertyValue = new services::PropertyValue;
         propertyValue->newmember("type1");
         propertyValue->newmember("b");
@@ -106,7 +105,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     void testFind()
     {
-      scs::core::IComponent* member = new scs::core::IComponent("scs::core::IComponent Mock");
+      scs::core::IComponent* member = new scs::core::IComponent("scs::core::IComponent Mock", '1', '0', '0', "none");
       services::PropertyList* propertyList = new services::PropertyList;
       services::ServiceOffer* serviceOffer = new services::ServiceOffer;
       serviceOffer->properties = propertyList;
@@ -133,7 +132,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     void testUpdate()
     {
-      scs::core::IComponent* member = new scs::core::IComponent("scs::core::IComponent Mock");
+      scs::core::IComponent* member = new scs::core::IComponent("scs::core::IComponent Mock", '1', '0', '0', "none");
       services::PropertyList* propertyList = new services::PropertyList;
       services::ServiceOffer* serviceOffer = new services::ServiceOffer;
       serviceOffer->properties = propertyList;
@@ -171,7 +170,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
     {
       tolua_hello_open(o->getLuaVM());
       hello* obj = new hello;
-      scs::core::IComponent* member = new scs::core::IComponent("scs::core::IComponent");
+      scs::core::IComponent* member = new scs::core::IComponent("scs::core::IComponent", '1', '0', '0', "none");
       member->loadidl("interface hello { void say_hello(); };");
       member->addFacet("Faceta01", "IDL:hello:1.0", "hello", obj);
       member->addFacet("Faceta02", "IDL:hello:1.0", "hello", obj);

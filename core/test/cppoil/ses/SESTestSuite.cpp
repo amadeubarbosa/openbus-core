@@ -46,7 +46,7 @@ class SESTestSuite: public CxxTest::TestSuite {
         strcpy(BUFFER, OPENBUS_HOME);
         strcat(BUFFER, "/core/test/cppoil/config.lua");
         if (luaL_dofile(LuaVM, BUFFER)) {
-          printf("Não foi possível carregar o arquivo %s.\n", BUFFER);
+          printf("Nao foi possivel carregar o arquivo %s.\n", BUFFER);
           exit(-1);
         }
         lua_getglobal(LuaVM, "OPENBUS_SERVER_HOST");
@@ -80,8 +80,8 @@ class SESTestSuite: public CxxTest::TestSuite {
           component = serviceOffer->member ;
           services::ISessionService* ses = component->getFacet <services::ISessionService> \
               ( "IDL:openbusidl/ss/ISessionService:1.0" ) ;
-          scs::core::IComponent* c1 = new scs::core::IComponent( "membro1" ) ;
-          scs::core::IComponent* c2 = new scs::core::IComponent( "membro2" ) ;
+          scs::core::IComponent* c1 = new scs::core::IComponent( "membro1", '1', '0', '0', "nenhuma" ) ;
+          scs::core::IComponent* c2 = new scs::core::IComponent( "membro2", '1', '0', '0', "nenhuma" ) ;
           class MySessionEventSink: public services::SessionEventSink {
             void push( services::SessionEvent* ev )
             {
@@ -89,7 +89,7 @@ class SESTestSuite: public CxxTest::TestSuite {
             }
             void disconnect()
             {
-              printf( "\nAviso de desconexão para %s\n\n", "IMPLEMENTAR" ) ;
+              printf( "\nAviso de desconexao para %s\n\n", "IMPLEMENTAR" ) ;
             }
           } ;
           MySessionEventSink* ev = new MySessionEventSink() ;
