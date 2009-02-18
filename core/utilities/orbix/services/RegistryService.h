@@ -1,7 +1,7 @@
 /*
 ** RegistryService.h
 **
-** Header do módulo wrapper do serviço de registro.
+** Header do mï¿½dulo wrapper do serviï¿½o de registro.
 **
 */
 
@@ -18,7 +18,7 @@ namespace openbus {
     typedef openbusidl::rs::ServiceOfferList ServiceOfferList;
     typedef openbusidl::rs::ServiceOfferList_var ServiceOfferList_var;
 
-  /* Auxilia na construção de uma lista de propriedades. */
+  /* Auxilia na construï¿½ï¿½o de uma lista de propriedades. */
     class PropertyListHelper {
       private:
         openbusidl::rs::PropertyList_var propertyList;
@@ -32,29 +32,30 @@ namespace openbus {
         openbusidl::rs::PropertyList_var getPropertyList();
     };
 
-  /* Representa o serviço de registro. */
+  /* Representa o serviï¿½o de registro. */
     class RegistryService {
       private:
-      /* Ponteiro para o serviço de registro. */
+      /* Ponteiro para o serviï¿½o de registro. */
         openbusidl::rs::IRegistryService* rgs;
       public:
         RegistryService(openbusidl::rs::IRegistryService* _rgs);
 
       /*
-      * Busca serviços.
-      * criteria: Lista de propriedades que descrevem o serviço desejado.
-      * Retorna uma lista de ofertas de serviço.
+      * Busca serviï¿½os.
+      * criteria: Lista de propriedades que descrevem o serviï¿½o desejado.
+      * Retorna uma lista de ofertas de serviï¿½o.
       */
         ServiceOfferList* find(PropertyList criteria);
 
       /*
-      * Registra um serviço
-      * Parâmetros de entrada:
-      *   serviceOffer: Oferta do serviço a ser registrado no barramento.
-      * Parâmetros de saída:
-      *   registryId: Identificação do serviço registrado.
+      * Registra um serviï¿½o
+      * Parï¿½metros de entrada:
+      *   serviceOffer: Oferta do serviï¿½o a ser registrado no barramento.
+      * Parï¿½metros de saï¿½da:
+      *   retorno: Bool indicando se a chamada executou corretamente.
+      *   registryId: Identificaï¿½ï¿½o do serviï¿½o registrado.
       */
-        void Register(
+        bool Register(
           ServiceOffer serviceOffer,
           char* registryId);
     };

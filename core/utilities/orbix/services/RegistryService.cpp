@@ -44,11 +44,11 @@ namespace openbus {
       return rgs->find(criteria);
     }
 
-    void RegistryService::Register(
+    bool RegistryService::Register(
       ServiceOffer serviceOffer,
       char* registryId)
     {
-      rgs->_cxx_register(serviceOffer, registryId);
+      return rgs->_cxx_register(serviceOffer, registryId);
     }
   }
 }
