@@ -89,18 +89,18 @@ function main()
 
   -- cria sessão com membros receptores de eventos
   local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
-  local member1 = IComponent("membro1", 1)
+  local member1 = IComponent("membro1", 1, 0, 0, "")
   member1 = oil.newservant(member1, "IDL:scs/core/IComponent:1.0")
   member1:addFacet("sink1", eventSinkInterface, createSink("sink1"))
   local success, session, id1 = sessionService:createSession(member1)
 
-  local member2 = IComponent("membro2", 1)
+  local member2 = IComponent("membro2", 1, 0, 0, "")
   member2 = oil.newservant(member2, "IDL:scs/core/IComponent:1.0")
   member2:addFacet("sink2", eventSinkInterface, createSink("sink2"))
   local id2 = session:addMember(member2)
 
   -- adiciona membro não receptor
-  local member3 = IComponent("membro3", 1)
+  local member3 = IComponent("membro3", 1, 0, 0, "")
   member3 = oil.newservant(member3, "IDL:scs/core/IComponent:1.0")
   local id3 = session:addMember(member3)
 

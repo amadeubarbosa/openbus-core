@@ -48,7 +48,7 @@ local a = 1
     end,
 
     testRegister = function(self)
-      local member = IComponent("Membro Mock", 1)
+      local member = IComponent("Membro Mock", 1, 0, 0, "")
       member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
       local success, registryIdentifier = self.registryService:register({
         properties = {
@@ -63,7 +63,7 @@ local a = 1
     end,
 
     testFind = function(self)
-      local member = IComponent("Membro Mock", 1)
+      local member = IComponent("Membro Mock", 1, 0, 0, "")
       member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
       local success, registryIdentifier = self.registryService:register({
         properties = {
@@ -91,7 +91,7 @@ local a = 1
     end,
 
     testUpdate = function(self)
-      local member = IComponent("Membro Mock", 1)
+      local member = IComponent("Membro Mock", 1, 0, 0, "")
       member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
       local serviceOffer = {
         properties = {
@@ -123,7 +123,7 @@ local a = 1
     end,
 
     testFacets = function(self)
-      local member = IComponent("Membro Mock", 1)
+      local member = IComponent("Membro Mock", 1, 0, 0, "")
       member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
       local dummyObserver = {
         credentialWasDeleted = function(self, credential) end

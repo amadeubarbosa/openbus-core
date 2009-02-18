@@ -58,11 +58,11 @@ Suite = {
     end,
 
     testCreateSession = function(self)
-      local member1 = IComponent("membro1", 1)
+      local member1 = IComponent("membro1", 1, 0, 0, "")
       member1 = orb:newservant(member1, nil, "IDL:scs/core/IComponent:1.0")
       local success, session, id1 = self.sessionService:createSession(member1)
       Check.assertTrue(success)
-      local member2 = IComponent("membro2", 1)
+      local member2 = IComponent("membro2", 1, 0, 0, "")
       member2 = orb:newservant(member2, nil, "IDL:scs/core/IComponent:1.0")
       local session2 = self.sessionService:getSession()
       Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
