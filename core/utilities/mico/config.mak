@@ -1,7 +1,11 @@
 PROJNAME= openbus
 LIBNAME= ${PROJNAME}
 
-MICOBIN=/usr/local/bin
+MICOHOME=${HOME}/tools/mico
+#MICOBIN=/usr/local/bin
+MICOBIN=${MICOHOME}/idl
+MICOINC=${MICOHOME}/include
+MICOLDIR=${MICOHOME}/libs
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
@@ -12,10 +16,10 @@ DEFINES=VERBOSE
 OBJROOT= obj
 TARGETROOT= lib
 
-INCLUDES= ${OPENBUSINC}/scs
-LDIR= ${OPENBUSLIB}
+INCLUDES= ${OPENBUSINC}/scs ${MICOINC}
+LDIR= ${OPENBUSLIB} ${MICOLDIR}
 
-LIBS= mico2.3.12 scsmico
+LIBS= mico2.3.13 scsmico
 
 SRC= openbus/common/ClientInterceptor.cpp \
      openbus/common/ServerInterceptor.cpp \
@@ -29,9 +33,9 @@ SRC= openbus/common/ClientInterceptor.cpp \
 
 genstubs:
 	mkdir -p stubs
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/access_control_service.idl 
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/registry_service.idl
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/session_service.idl
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/core.idl
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/core/idl/scs.idl
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/access_control_service.idl 
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/registry_service.idl
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/session_service.idl
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/core.idl
+	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/scs.idl
 	
