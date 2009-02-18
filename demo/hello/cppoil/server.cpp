@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
   IHello* hello = new IHello;
   scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
   componentBuilder->loadIDLFile("../idl/hello.idl");
-  scs::core::IComponent* iComponent = componentBuilder->createComponent("component", 1, "facet", "IDL:demoidl/hello/IHello:1.0", "IHello", hello);
+  scs::core::IComponent* iComponent = componentBuilder->createComponent("component", '1', '0', '0', "none", "facet", "IDL:demoidl/hello/IHello:1.0", "IHello", hello);
 
 /* Registrando no barramento o servico hello. */
   services::PropertyList* propertyList = new services::PropertyList;
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   char* RegistryIdentifier;
   registryService->Register(serviceOffer, RegistryIdentifier);
 
-/* O processo fica no aguardo de requisições CORBA referentes ao servico hello. */
+/* O processo fica no aguardo de requisicoes CORBA referentes ao servico hello. */
   bus->run();
 
   return 0;

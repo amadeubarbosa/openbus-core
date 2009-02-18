@@ -26,7 +26,7 @@ class Hello_impl : virtual public POA_Hello {
     void sayHello() {
       cout << endl<< "Servant diz: HELLO!" << endl;
       serverInterceptor = ini->getServerInterceptor();
-      cout << "Usuário OpenBus que fez a chamada: " << serverInterceptor->getCredential()->entityName.in() << endl;
+      cout << "Usuario OpenBus que fez a chamada: " << serverInterceptor->getCredential()->owner.in() << endl;
     };
 };
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     credentialManager.setValue(credential);
     cout << "SERVER" << endl;
     cout << "Login efetuado no Openbus." << endl;
-    cout << "entityName = " << credential->entityName.in() << endl;
+    cout << "owner = " << credential->owner.in() << endl;
     cout << "identifier = " << credential->identifier.in() << endl;
   } else {
     return -1;
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
 
   ORBThread* main = new ORBThread;
   main->start();
-  scs::core::IComponentImpl* c = new scs::core::IComponentImpl("component", 1, orb, poa);
+  scs::core::IComponentImpl* c = new scs::core::IComponentImpl("component", '1', '0', '0', "", orb, poa);
   c->addFacet("facet", "IDL:Hello:1.0", hello);
   mgr->activate ();
   PropertyList_var p = new PropertyList(5);
