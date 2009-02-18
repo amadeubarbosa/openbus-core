@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     credentialManager.setValue(credential);
     cout << endl << "CLIENT" << endl;
     cout << "Login efetuado no Openbus." << endl;
-    cout << "entityName = " << credential->entityName.in() << endl;
+    cout << "owner = " << credential->owner.in() << endl;
     cout << "identifier = " << credential->identifier.in() << endl;
   } else {
     return -1;
