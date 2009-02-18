@@ -35,7 +35,7 @@ namespace openbus {
       }
     }
   #ifdef VERBOSE
-    cout << "[Mecanismo de renovação de credencial *desativado*...]" << endl;
+    cout << "[Mecanismo de renovaï¿½ï¿½o de credencial *desativado*...]" << endl;
     cout << "[Openbus::RenewLeaseThread::run() END]" << endl;
   #endif
     return 0;
@@ -115,7 +115,6 @@ namespace openbus {
   }
 
   void Openbus::init() {
-    initializeHostPort();
     createOrbPoa();
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
     commandLineParse(_argc, _argv);
@@ -125,7 +124,6 @@ namespace openbus {
     CORBA::ORB_ptr _orb,
     PortableServer::POA* _poa)
   {
-    initializeHostPort();
     orb = _orb;
     poa = _poa;
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
@@ -218,7 +216,7 @@ namespace openbus {
       return status;
     } else {
     #ifdef VERBOSE
-      cout << "[Não há conexão a ser desfeita.]" << endl;
+      cout << "[Nï¿½o hï¿½ conexï¿½o a ser desfeita.]" << endl;
       cout << "[Openbus::disconnect() END]" << endl;
     #endif
       return false;
