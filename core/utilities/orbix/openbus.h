@@ -13,6 +13,7 @@
 
 #include <omg/orb.hh>
 #include <it_ts/thread.h>
+#include <it_ts/mutex.h>
 
 using namespace openbusidl::acs;
 IT_USING_NAMESPACE_STD
@@ -65,11 +66,13 @@ namespace openbus {
     /* Porta de localização do barramento. */
       unsigned short portBus;
 
+    /* Mutex */
+      IT_Mutex* mutex;
+
     /* Possíveis estados para a conexão. */
       enum ConnectionStates {
         CONNECTED,
-        DISCONNECTED,
-        DISCONNECTING
+        DISCONNECTED
       };
 
     /* Indica o estado da conexão. */

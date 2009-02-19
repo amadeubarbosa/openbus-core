@@ -17,7 +17,7 @@ namespace openbus {
     bus = _bus;
   }
 
-  void* Openbus:: RenewLeaseThread::run() {
+  void* Openbus::RenewLeaseThread::run() {
     unsigned long time;
   #ifdef VERBOSE
     cout << "[Openbus::RenewLeaseThread::run() BEGIN]" << endl;
@@ -28,14 +28,14 @@ namespace openbus {
     #endif
       time = ((bus->timeRenewing)/2)*300;
       IT_CurrentThread::sleep(time);
+      bus->mutex->lock();
       if (bus->connectionState == CONNECTED) {
         bus->accessControlService->renewLease(*bus->credential, bus->lease);
-      } else {
-        break;
       }
+      bus->mutex->unlock();
     }
   #ifdef VERBOSE
-    cout << "[Mecanismo de renovaï¿½ï¿½o de credencial *desativado*...]" << endl;
+    cout << "[Mecanismo de renovação de credencial *desativado*...]" << endl;
     cout << "[Openbus::RenewLeaseThread::run() END]" << endl;
   #endif
     return 0;
@@ -56,6 +56,7 @@ namespace openbus {
   void Openbus::initializeHostPort() {
     hostBus = (char*) "";
     portBus = 2089;
+    mutex = new IT_Mutex();
   }
 
   void Openbus::createOrbPoa() {
@@ -112,6 +113,7 @@ namespace openbus {
   Openbus::~Openbus() {
     delete ini;
     delete componentBuilder;
+    delete mutex;
   }
 
   void Openbus::init() {
@@ -198,8 +200,8 @@ namespace openbus {
   #ifdef VERBOSE
     cout << "[Openbus::disconnect() BEGIN]" << endl;
   #endif
+    mutex->lock();
     if (connectionState == CONNECTED) {
-      connectionState = DISCONNECTING;
       bool status = accessControlService->logout(*credential);
       if (status) {
         openbus::common::ClientInterceptor::credentials[orb] = 0;
@@ -213,12 +215,14 @@ namespace openbus {
     #ifdef VERBOSE
       cout << "[Openbus::disconnect() END]" << endl;
     #endif
+      mutex->unlock();
       return status;
     } else {
     #ifdef VERBOSE
-      cout << "[Nï¿½o hï¿½ conexï¿½o a ser desfeita.]" << endl;
+      cout << "[Não há conexão a ser desfeita.]" << endl;
       cout << "[Openbus::disconnect() END]" << endl;
     #endif
+      mutex->unlock();
       return false;
     }
   }
