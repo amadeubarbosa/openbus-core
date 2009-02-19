@@ -73,13 +73,12 @@ class ACSTestSuite: public CxxTest::TestSuite {
     ~ACSTestSuite() {
       try {
         if ( NULL != bus ) {
-          bus->disconnect();
-          bus = NULL;
+          if (bus->disconnect())
+            delete bus;
         }
         delete credential2;
         delete rgs;
         delete acs;
-        delete bus;
       }
       catch ( const char* errmsg ) {
         TS_FAIL( errmsg );
