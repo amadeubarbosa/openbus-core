@@ -23,13 +23,13 @@ namespace openbus {
     cout << "[Openbus::RenewLeaseThread::run() BEGIN]" << endl;
   #endif
     while (true) {
-    #ifdef VERBOSE
-      cout << "\t[Renovando credencial...]" << endl;
-    #endif
       time = ((bus->timeRenewing)/2)*300;
       IT_CurrentThread::sleep(time);
       bus->mutex->lock();
       if (bus->connectionState == CONNECTED) {
+  #ifdef VERBOSE
+    cout << "\t[Renovando credencial...]" << endl;
+  #endif
         bus->accessControlService->renewLease(*bus->credential, bus->lease);
       }
       bus->mutex->unlock();
@@ -160,37 +160,45 @@ namespace openbus {
   #ifdef VERBOSE
     cout << "[Openbus::connect() BEGIN]" << endl;
   #endif
-    try {
-    #ifdef VERBOSE
-      cout << "\thost = "<<  hostBus << endl;
-      cout << "\tport = "<<  portBus << endl;
-      cout << "\tuser = "<<  user << endl;
-      cout << "\tpassword = "<<  password << endl;
-      cout << "\torb = "<<  orb << endl;
-    #endif
-      accessControlService = new openbus::services::AccessControlService(hostBus, portBus, orb);
-      IAccessControlService* iAccessControlService = accessControlService->getStub();
-    #ifdef VERBOSE
-      cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
-    #endif
-      if (!iAccessControlService->loginByPassword(user, password, credential, lease)) {
-        throw LOGIN_FAILURE();
-      } else {
+    if (connectionState == DISCONNECTED) {
+      try {
       #ifdef VERBOSE
-        cout << "\tCrendencial recebida: " << credential->identifier << endl;
-        cout << "\tAssociando credencial " << credential << " ao ORB " << orb << endl;
+        cout << "\thost = "<<  hostBus << endl;
+        cout << "\tport = "<<  portBus << endl;
+        cout << "\tuser = "<<  user << endl;
+        cout << "\tpassword = "<<  password << endl;
+        cout << "\torb = "<<  orb << endl;
       #endif
-        connectionState = CONNECTED;
-        openbus::common::ClientInterceptor::credentials[orb] = &credential;
-        timeRenewing = lease;
-        RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
-        renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, IT_ThreadFactory::attached, 0);
-        registryService = accessControlService->getRegistryService();
-        return registryService;
+        if (NULL == accessControlService)
+          accessControlService = new openbus::services::AccessControlService(hostBus, portBus, orb);
+        IAccessControlService* iAccessControlService = accessControlService->getStub();
+      #ifdef VERBOSE
+        cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
+      #endif
+        mutex->lock();
+        if (!iAccessControlService->loginByPassword(user, password, credential, lease)) {
+          mutex->unlock();
+          throw LOGIN_FAILURE();
+        } else {
+        #ifdef VERBOSE
+          cout << "\tCrendencial recebida: " << credential->identifier << endl;
+          cout << "\tAssociando credencial " << credential << " ao ORB " << orb << endl;
+        #endif
+          connectionState = CONNECTED;
+          openbus::common::ClientInterceptor::credentials[orb] = &credential;
+          timeRenewing = lease;
+          mutex->unlock();
+          RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
+          renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, IT_ThreadFactory::attached, 0);
+          registryService = accessControlService->getRegistryService();
+          return registryService;
+        }
+      } catch (const CORBA::SystemException& systemException) {
+        mutex->unlock();
+        throw COMMUNICATION_FAILURE();
       }
-    } catch (const CORBA::SystemException& systemException) {
-      throw COMMUNICATION_FAILURE();
     }
+    else return registryService;
   #ifdef VERBOSE
     cout << "[Openbus::connect() END]" << endl << endl;
   #endif
@@ -209,6 +217,8 @@ namespace openbus {
         lease = 0;
         registryService = 0;
         connectionState = DISCONNECTED;
+        delete accessControlService;
+        accessControlService = NULL;
       } else {
         connectionState = CONNECTED;
       }
