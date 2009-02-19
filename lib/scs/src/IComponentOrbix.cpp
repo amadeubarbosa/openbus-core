@@ -27,7 +27,7 @@ namespace scs {
       componentId->platform_spec = platform_spec;
     /* Falta adicionar faceta do IMetaInterface ... */
     #ifdef VERBOSE
-      cout << "[IComponentImpl::IComponentImpl() BEGIN]" << endl;
+      cout << "[IComponentImpl::IComponentImpl() END]" << endl;
     #endif
     }
 
@@ -60,7 +60,7 @@ namespace scs {
       cout << "\t[facet.interface_name] = " << interface_name << endl;
     #endif
     #ifdef VERBOSE
-      cout << "[IComponentImpl::addFacet() BEGIN]" << endl;
+      cout << "[IComponentImpl::addFacet() END]" << endl;
     #endif
     }
 

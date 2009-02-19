@@ -17,6 +17,8 @@ namespace scs {
         ComponentBuilder(CORBA::ORB* _orb, PortableServer::POA* _poa);
         ~ComponentBuilder();
         IComponentImpl* createComponent(const char* name, CORBA::Octet major_version, \
+            CORBA::Octet minor_version, CORBA::Octet patch_version, const char* platform_spec);
+        IComponentImpl* createComponent(const char* name, CORBA::Octet major_version, \
             CORBA::Octet minor_version, CORBA::Octet patch_version, const char* platform_spec, \
             const char* facet_name, const char* interface_name, PortableServer::ServantBase* obj);
     };
