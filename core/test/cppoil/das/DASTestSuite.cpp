@@ -49,7 +49,7 @@ class DASTestSuite: public CxxTest::TestSuite {
         credentialManager = new common::CredentialManager;
         clientInterceptor = new common::ClientInterceptor(credentialManager);
         o->setClientInterceptor(clientInterceptor);
-        acs = o->getACS("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0");
+        acs = o->getACS("localhost", 2089);
         credential = new services::Credential;
         lease = new services::Lease;
         acs->loginByPassword("tester", "tester", credential, lease);
