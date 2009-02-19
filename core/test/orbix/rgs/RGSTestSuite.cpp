@@ -18,16 +18,15 @@ using namespace openbus;
 
 class RGSTestSuite: public CxxTest::TestSuite {
   private:
-    Openbus* o;
+    Openbus* bus;
     services::AccessControlService* acs;
     services::RegistryService* rgs;
     Credential* credential;
     Lease lease;
-    char* RegistryIdentifier;
-    openbusidl::rs::ServiceOfferList serviceOfferList;
-    openbusidl::rs::Property* property;
-    openbusidl::rs::PropertyList_var propertyList;
-    openbusidl::rs::PropertyValue_var propertyValue;
+    char* registryIdentifier;
+    char* registryIdentifier2;
+    openbus::services::PropertyListHelper* propertyListHelper;
+    openbus::services::PropertyListHelper* propertyListHelper2;
     scs::core::IComponentImpl* member;
     std::string OPENBUS_SERVER_HOST;
     unsigned short OPENBUS_SERVER_PORT;
@@ -36,8 +35,6 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
   public:
     RGSTestSuite() {
-      o = Openbus::getInstance();
-      o->init(0, NULL);
       try {
         std::string OPENBUS_HOME = getenv("OPENBUS_HOME");
         OPENBUS_HOME += "/core/test/orbix/config.txt";
@@ -67,9 +64,11 @@ class RGSTestSuite: public CxxTest::TestSuite {
           }
         }
         inFile.close();
+        bus = new Openbus(0, NULL, const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), OPENBUS_SERVER_PORT);
+        bus->init();
         credential = new Credential;
-        rgs = o->connect( OPENBUS_SERVER_HOST.c_str(), OPENBUS_SERVER_PORT, OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str() );
-        acs = o->getAccessControlService();
+        rgs = bus->connect( OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str() );
+        acs = bus->getAccessControlService();
       }
       catch ( const char* errmsg ) {
         TS_FAIL( errmsg );
@@ -78,11 +77,12 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     ~RGSTestSuite() {
       try {
-        if ( NULL != o ) {
-          o->disconnect();
-          o = NULL;
+        if ( NULL != bus ) {
+          if (bus->disconnect())
+            delete bus;
         }
-        delete property;
+        delete propertyListHelper;
+        delete propertyListHelper2;
         delete credential;
         delete rgs;
         delete acs;
@@ -110,55 +110,31 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     void testRegister() {
       try {
-        scs::core::ComponentBuilder* componentBuilder = o->getComponentBuilder();
-        member = componentBuilder->createComponent("component", '1', '0', '0', "none", "facet", "", NULL);
-        propertyList = new openbusidl::rs::PropertyList(1);
-        propertyList->length(1);
-        property = new openbusidl::rs::Property;
-        property->name = "type";
-        propertyValue = new openbusidl::rs::PropertyValue(3);
-        propertyValue->length(3);
-        propertyValue[0] = "type1";
-        propertyValue[1] = "a";
-        propertyValue[2] = "b";
-        property->value = propertyValue;
-        propertyList[0] = property;
-        openbusidl::rs::ServiceOffer *serviceOffer = new openbusidl::rs::ServiceOffer;
-        serviceOffer->properties = propertyList;
-        serviceOffer->member = member;
-        TS_ASSERT( rgs->Register(*serviceOffer, RegistryIdentifier) );
-        delete serviceOffer;
-      } catch (const char* errmsg) {
-        TS_FAIL(errmsg);
-      }
-    }
-
-    void testRegister2() {
-      try {
-        propertyValue = new openbusidl::rs::PropertyValue(3);
-        propertyValue->length(3);
-        propertyValue[0] = "type2";
-        propertyValue[1] = "c";
-        propertyValue[2] = "d";
-        property->value = propertyValue;
-        TS_ASSERT( rgs->Register(propertyList, member, RegistryIdentifier) );
+        scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
+        member = componentBuilder->createComponent("component", '1', '0', '0', "none");
+        propertyListHelper = new openbus::services::PropertyListHelper();
+        propertyListHelper->add("type", "type1");
+        openbusidl::rs::ServiceOffer serviceOffer;
+        serviceOffer.properties = propertyListHelper->getPropertyList();
+        serviceOffer.member = member->_this();
+        TS_ASSERT( rgs->Register(serviceOffer, registryIdentifier) );
+        propertyListHelper2 = new openbus::services::PropertyListHelper();
+        propertyListHelper2->add("type", "type2");
+        serviceOffer.properties = propertyListHelper2->getPropertyList();
+        serviceOffer.member = member->_this();
+        TS_ASSERT( rgs->Register(serviceOffer, registryIdentifier2) );
       } catch (const char* errmsg) {
         TS_FAIL(errmsg);
       }
     }
 
     void testFind() {
-      serviceOfferList = rgs->find(propertyList);
-      TS_ASSERT(serviceOfferList->length() == 2);
+      openbusidl::rs::ServiceOfferList* serviceOfferList = rgs->find(propertyListHelper->getPropertyList());
+      TS_ASSERT(serviceOfferList->length() == 1);
       delete serviceOfferList;
-      propertyValue = new openbusidl::rs::PropertyValue(3);
-      propertyValue->length(3);
-      propertyValue[0] = "type1";
-      propertyValue[1] = "a";
-      propertyValue[2] = "b";
-      property->value = propertyValue;
-      serviceOfferList = rgs->find(propertyList);
-      TS_ASSERT(serviceOfferList->length == 1);
+      serviceOfferList = rgs->find(propertyListHelper2->getPropertyList());
+      TS_ASSERT(serviceOfferList->length() == 1);
+      delete serviceOfferList;
     }
 };
 
