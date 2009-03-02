@@ -27,9 +27,9 @@ namespace openbus {
       IT_CurrentThread::sleep(time);
       bus->mutex->lock();
       if (bus->connectionState == CONNECTED) {
-  #ifdef VERBOSE
-    cout << "\t[Renovando credencial...]" << endl;
-  #endif
+      #ifdef VERBOSE
+        cout << "\t[Renovando credencial...]" << endl;
+      #endif
         bus->accessControlService->renewLease(*bus->credential, bus->lease);
       }
       bus->mutex->unlock();
@@ -72,21 +72,27 @@ namespace openbus {
     PortableInterceptor::register_orb_initializer(ini);
   }
 
+  void Openbus::newState() {
+    connectionState = DISCONNECTED;
+    credential = 0;
+    lease = 0;
+    registryService = 0;
+    accessControlService = 0;
+  }
+
   Openbus::Openbus(
     int argc,
     char** argv)
   {
     _argc = argc;
     _argv = argv;
-    connectionState = DISCONNECTED;
-    credential = 0;
-    lease = 0;
-    registryService = 0;
+    newState();
     if (ini == 0) {
       cout << "Registrando interceptadores ..." << endl;
       registerInterceptors();
     }
     initializeHostPort();
+    commandLineParse(_argc, _argv);
   }
 
   Openbus::Openbus(
@@ -97,21 +103,18 @@ namespace openbus {
   {
     _argc = argc;
     _argv = argv;
-    connectionState = DISCONNECTED;
-    credential = 0;
-    lease = 0;
-    registryService = 0;
+    newState();
     if (ini == 0) {
       cout << "Registrando interceptadores ..." << endl;
       registerInterceptors();
     }
     initializeHostPort();
+    commandLineParse(_argc, _argv);
     hostBus = host;
     portBus = port;
   }
 
   Openbus::~Openbus() {
-    delete ini;
     delete componentBuilder;
     delete mutex;
   }
@@ -119,7 +122,6 @@ namespace openbus {
   void Openbus::init() {
     createOrbPoa();
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
-    commandLineParse(_argc, _argv);
   }
 
   void Openbus::init(
@@ -129,7 +131,6 @@ namespace openbus {
     orb = _orb;
     poa = _poa;
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
-    commandLineParse(_argc, _argv);
   }
 
   scs::core::ComponentBuilder* Openbus::getComponentBuilder() {
@@ -169,8 +170,9 @@ namespace openbus {
         cout << "\tpassword = "<<  password << endl;
         cout << "\torb = "<<  orb << endl;
       #endif
-        if (NULL == accessControlService)
+        if (accessControlService == 0) {
           accessControlService = new openbus::services::AccessControlService(hostBus, portBus, orb);
+        }
         IAccessControlService* iAccessControlService = accessControlService->getStub();
       #ifdef VERBOSE
         cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
@@ -197,8 +199,9 @@ namespace openbus {
         mutex->unlock();
         throw COMMUNICATION_FAILURE();
       }
+    } else {
+      return registryService;
     }
-    else return registryService;
   #ifdef VERBOSE
     cout << "[Openbus::connect() END]" << endl << endl;
   #endif
@@ -213,12 +216,8 @@ namespace openbus {
       bool status = accessControlService->logout(*credential);
       if (status) {
         openbus::common::ClientInterceptor::credentials[orb] = 0;
-        credential = 0;
-        lease = 0;
-        registryService = 0;
-        connectionState = DISCONNECTED;
         delete accessControlService;
-        accessControlService = NULL;
+        newState();
       } else {
         connectionState = CONNECTED;
       }

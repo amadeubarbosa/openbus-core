@@ -93,6 +93,9 @@ namespace openbus {
     /* Registra os interceptadores cliente e servidor. */
       void registerInterceptors();
 
+    /* Cria um estado novo. */
+      void newState();
+
       IT_Thread renewLeaseIT_Thread;
 
       class RenewLeaseThread : public IT_ThreadBody {
