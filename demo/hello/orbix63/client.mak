@@ -6,9 +6,6 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 EXTRA_CONFIG=config
 
-CPPFLAGS= -g3 -mtune=pentium3 -march=i586 -pipe -D_REENTRANT -Wno-sign-compare
-LFLAGS= $(CPPFLAGS) -rdynamic -L/usr/local/lib -Wl,-t -lpthread -lrt
-
 CPPC=g++
 
 DEFINES=${VERBOSE}
@@ -24,5 +21,6 @@ LIBS= it_poa it_art it_ifc it_portable_interceptor
 SLIB= ${OPENBUS_HOME}/core/utilities/orbix/lib/${TEC_UNAME}/libopenbus.a \
       ${OPENBUSLIB}/libscsorbix.a
 
-SRC= client.cpp helloC.cxx
+SRC= client.cpp \
+     stubs/helloC.cxx
 

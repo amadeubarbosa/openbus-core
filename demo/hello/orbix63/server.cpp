@@ -10,7 +10,7 @@
 
 #include <openbus.h>
 
-#include "helloS.hh"
+#include "stubs/helloS.hh"
 
 using namespace std;
 

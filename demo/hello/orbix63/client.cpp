@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "hello.hh"
+#include "stubs/hello.hh"
 #include <openbus.h>
 
 using namespace std;

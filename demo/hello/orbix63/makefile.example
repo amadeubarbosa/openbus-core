@@ -1,0 +1,42 @@
+# Exemplo de arquivo do tipo *makefile*
+# 
+# Como usar:
+#
+# 1- make genstubs
+# 2- make server
+# 3- make client
+#
+# OBS.: O propósito deste arquivo é somente servir como exemplo 
+#       de *makefile* para um projeto C++ Openbus/Orbix.
+#
+
+include config
+
+OPENBUSINC = ${OPENBUS_HOME}/incpath
+OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
+
+SERVERSRC= server.cpp stubs/helloC.cxx stubs/helloS.cxx
+CLIENTSRC= client.cpp stubs/helloC.cxx
+
+server:
+	g++ -o server \
+        ${SERVERSRC} \
+        ${OPENBUSLIB}/libscsorbix.a \
+        ${OPENBUS_HOME}/core/utilities/orbix/lib/${TEC_UNAME}/libopenbus.a \
+        -L${ORBIXLDIR} \
+        -I. -I${ORBIXINC} -I${OPENBUS_HOME}/core/utilities/orbix -I${OPENBUSINC}/scs \
+        -lit_poa -lit_art -lit_ifc -lit_portable_interceptor 
+
+client:
+	g++ -o client \
+        ${CLIENTSRC} \
+        ${OPENBUS_HOME}/core/utilities/orbix/lib/${TEC_UNAME}/libopenbus.a \
+        ${OPENBUSLIB}/libscsorbix.a \
+        -L${ORBIXLDIR} \
+        -I. -I${ORBIXINC} -I${OPENBUS_HOME}/core/utilities/orbix -I${OPENBUSINC}/scs \
+        -lit_poa -lit_art -lit_ifc -lit_portable_interceptor
+
+genstubs:
+	mkdir -p stubs
+	cd stubs ; ${ORBIXBIN}/idl -base -poa ../hello.idl
+
