@@ -6,15 +6,15 @@ require "config"
 
 -- Define os arquivos de teste.
 local files = {
---   { "10b", 10, "TECGRAFCOS" },
---   { "20b", 20 },
---   { "100b", 100 },
---   { "10Mb", 10000000 },
+   { "10b", 10, "TECGRAFCOS" },
+   { "20b", 20 },
+   { "100b", 100 },
+   { "10Mb", 10000000 },
 --   { "50Mb", 50000000 },
 --   { "100Mb", 100000000 },
 --   { "200Mb", 200000000 },
 --   { "300Mb", 300000000 },
-  { "3Gb", 3000000000 },
+--  { "3Gb", 3000000000 },
 }
 
 -- Gera arquivos para testes da lib.

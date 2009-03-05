@@ -7,7 +7,7 @@
 
 #define ACCESS_KEY       "tester"
 #define SERVER_TMP_PATH  "/home/rcosme/tmp"
-#define SERVER_HOST      "localhost"
+#define SERVER_HOST      "gnaisse"
 #define SERVER_PORT      40120
 
 /* 

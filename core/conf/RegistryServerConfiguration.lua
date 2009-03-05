@@ -10,5 +10,5 @@ RegistryServerConfiguration = {
   accessControlServiceCertificateFile = "../certificates/AccessControlService.crt",
   databaseDirectory = "../offers",
   logLevel = 3,
-  oilVerboseLevel = 1,
+  oilVerboseLevel = 5,
 }

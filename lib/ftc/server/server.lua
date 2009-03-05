@@ -65,6 +65,7 @@ while true do
 --[[VERBOSE]] LOG:log("Pronto para receber chave de acesso de tamanho:", ct.accessKeyLength)
   ct.accessKey = assert(c:receive(ct.accessKeyLength))
 --[[VERBOSE]] LOG:log("Chave de acesso:", ct.accessKey)
+  assert(c:send(string.char(returnCode.OK)))
   while true do
     local opcode = string.byte(assert(c:receive(1)))
     if (opcode == operation.OPEN_READ_ONLY) then
@@ -76,7 +77,7 @@ while true do
       local errmsg, errcode
       ct.fp, errmsg, errcode = io.open(ct.filePath)
       errcode = tonumber(errcode)
-      assert(c:send(string.char(returnCode.OK)))
+      --assert(c:send(string.char(returnCode.OK)))
     --[[VERBOSE]] LOG:log("Código de retorno OK enviado")
     --"...The interpretation of the error numbers is system dependent..." PIL
       if (errcode == 2) then
@@ -120,6 +121,8 @@ while true do
     elseif (opcode == operation.CLOSE) then
     --[[VERBOSE]] LOG:log(true, "CLOSE operation BEGIN")
       assert(ct.fp:close())
+    --[[VERBOSE]] LOG:log("Código de retorno OK enviado")
+      assert(c:send(string.char(returnCode.OK)))
       assert(c:close())
     --[[VERBOSE]] LOG:log(false, "CLOSE operation END")
       break
