@@ -3,9 +3,9 @@
 --
 
 -- Verbose
---[[VERBOSE]] local print = print
---[[VERBOSE]] local verbose = require "ftc.verbose"
---[[VERBOSE]] local LOG = verbose.LOG
+-- [[VERBOSE]] local print = print
+-- [[VERBOSE]] local verbose = require "ftc.verbose"
+-- [[VERBOSE]] local LOG = verbose.LOG
 
 local math      = math
 local pairs     = pairs
@@ -85,7 +85,7 @@ end
 -- Base converter
 -- Decimal to base 256
 local function LuaNumber2Long(x)
---[[VERBOSE]] LOG:LuaNumber2Long("["..x.."]")
+-- [[VERBOSE]] LOG:LuaNumber2Long("["..x.."]")
   local v = ""
   x = math.floor(x)
   for i = 1, 8 do
@@ -99,11 +99,11 @@ end
 -- This function returns a representation of a number
 -- in a decimal base.
 local function OctBytes2Long(str)
---[[VERBOSE]] LOG:OctBytes2Long("OctBytes = ", verbose.bytes(str))
+-- [[VERBOSE]] LOG:OctBytes2Long("OctBytes = ", verbose.bytes(str))
   local v = 0
   for i = 1, 8 do
     v = v + string.byte(string.sub(str,i,i)) * math.pow(256, (8-i))
---[[VERBOCE]] LOG:OctBytes2Long("str[", i, "] = ", string.byte(string.sub(str,i,i)), "\tv = ", v)
+-- [[VERBOCE]] LOG:OctBytes2Long("str[", i, "] = ", string.byte(string.sub(str,i,i)), "\tv = ", v)
   end
   return v
 end
@@ -117,9 +117,9 @@ end
 -- @return Returns true in case of success, or, in case of errors,
 -- nil plus an error message.
 function open(self, readonly)
---[[VERBOSE]] LOG:open("OPEN")
+-- [[VERBOSE]] LOG:open("OPEN")
   if (readonly == false and self.writable == false) then
-  --[[VERBOSE]] LOG:open("O arquivo não pode ser aberto para escrita.")
+  -- [[VERBOSE]] LOG:open("O arquivo não pode ser aberto para escrita.")
     return nil, "O arquivo não pode ser aberto para escrita."
   end
   local errmsg
@@ -127,26 +127,26 @@ function open(self, readonly)
   if not self.channel then
     return nil, errmsg
   end
---[[VERBOSE]] LOG:open("Tentando se conectar em ", self.host, ":", self.port, " ...")
+-- [[VERBOSE]] LOG:open("Tentando se conectar em ", self.host, ":", self.port, " ...")
   local status, errmsg = self.channel:connect(self.host, self.port)
   if not status then
-  --[[VERBOSE]] LOG:open("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:open("ERRO '", errmsg, "'")
     return nil, errmsg
   end
---[[VERBOSE]] LOG:open("Conexão estabelecida.")
+-- [[VERBOSE]] LOG:open("Conexão estabelecida.")
   self.buffer = string.char(string.len(self.accessKey))
   self.buffer = self.buffer..self.accessKey
---[[VERBOSE]] LOG:open("accessKey[", string.len(self.accessKey), "] = ", showAccessKey(self.accessKey))
+-- [[VERBOSE]] LOG:open("accessKey[", string.len(self.accessKey), "] = ", showAccessKey(self.accessKey))
   if (readonly) then
-  --[[VERBOSE]] LOG:open("Operação OPEN_READ_ONLY")
+  -- [[VERBOSE]] LOG:open("Operação OPEN_READ_ONLY")
     self.buffer = self.buffer..operation.OPEN_READ_ONLY
   else
-  --[[VERBOSE]] LOG:open("Operação OPEN_READ_WRITE")
+  -- [[VERBOSE]] LOG:open("Operação OPEN_READ_WRITE")
     self.buffer = self.buffer..operation.OPEN_READ_WRITE
   end
   self.buffer = self.buffer..string.char(string.len(self.identifier))
   self.buffer = self.buffer..self.identifier
---[[VERBOSE]] LOG:open("identifier = ", self.identifier)
+-- [[VERBOSE]] LOG:open("identifier = ", self.identifier)
   status, errmsg = self.channel:send(self.buffer)
   if not status then
     return nil, errmsg
@@ -154,15 +154,15 @@ function open(self, readonly)
   --status = string.byte(self.channel:receive(1))
 --falta testar INVALID_KEY
   local code = string.byte(self.channel:receive(1))
---[[VERBOSE]] LOG:open("AccessKeyCode = ", code)
+-- [[VERBOSE]] LOG:open("AccessKeyCode = ", code)
   if errorCode[code] then
-  --[[VERBOSE]] LOG:open("ERROR Code=", code, " Msg=", errorCode[code])
+  -- [[VERBOSE]] LOG:open("ERROR Code=", code, " Msg=", errorCode[code])
     return nil, errorCode[code], code
   end
   code = string.byte(self.channel:receive(1))
---[[VERBOSE]] LOG:open("Return code = ", code)
+-- [[VERBOSE]] LOG:open("Return code = ", code)
   if errorCode[code] then
-  --[[VERBOSE]] LOG:open("ERROR Code=", code, " Msg=", errorCode[code])
+  -- [[VERBOSE]] LOG:open("ERROR Code=", code, " Msg=", errorCode[code])
     return nil, errorCode[code], code
   end
   self.opened = true
@@ -181,19 +181,19 @@ end
 -- @return Returns true in case of success, or, in case of errors,
 -- nil plus error message.
 function close(self)
---[[VERBOSE]] LOG:close("CLOSE")
+-- [[VERBOSE]] LOG:close("CLOSE")
   if (not self.opened) then
-  --[[VERBOSE]] LOG:close("ERRO '", errorCode[250], "'")
+  -- [[VERBOSE]] LOG:close("ERRO '", errorCode[250], "'")
     return nil, errorCode[250], 250
   end
   self.buffer = operation.CLOSE
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
-  --[[VERBOSE]] LOG:close("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:close("ERRO '", errmsg, "'")
     return nil, errmsg
   end
   local code = string.byte(self.channel:receive(1))
---[[VERBOSE]] LOG:close("Return code = ", code)
+-- [[VERBOSE]] LOG:close("Return code = ", code)
   if errorCode[code] then
     return nil, errorCode[code]
   end
@@ -208,22 +208,22 @@ end
 -- @return Returns true in case of success, or, in case of errors,
 -- nil plus error message.
 function truncate(self, size)
---[[VERBOSE]] LOG:truncate("TRUNCATE")
+-- [[VERBOSE]] LOG:truncate("TRUNCATE")
   if (self.readOnly) then
-  --[[VERBOSE]] LOG:truncate("ERRO '", errorCode[249], "'")
+  -- [[VERBOSE]] LOG:truncate("ERRO '", errorCode[249], "'")
     return nil, errorCode[249], 249
   end
   self.buffer = operation.TRUNCATE
   self.buffer = self.buffer..LuaNumber2Long(size)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
-  --[[VERBOSE]] LOG:truncate("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:truncate("ERRO '", errmsg, "'")
     return nil, errmsg
   end
 -- o q se pode retornar como erro??
   local code = string.byte(self.channel:receive(1))
   if errorCode[code] then
-  --[[VERBOSE]] LOG:truncate("ERRO '", errorCode[code], "'")
+  -- [[VERBOSE]] LOG:truncate("ERRO '", errorCode[code], "'")
     return nil, errorCode[code]
   end
   return true
@@ -233,32 +233,32 @@ end
 -- @return Returns true in case of success plus the current position of the file
 -- , or, in case of errors, nil plus error message.
 function getPosition(self)
---[[VERBOSE]] LOG:getposition("GETPOSITION")
+-- [[VERBOSE]] LOG:getposition("GETPOSITION")
   self.buffer = operation.GET_POSITION
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
-  --[[VERBOSE]] LOG:getposition("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:getposition("ERRO '", errmsg, "'")
     return nil, errmsg
   end
   local bytes = self.channel:receive(8)
---[[VERBOSE]] LOG:getPosition("position = ", verbose.bytes(self.buffer))
+-- [[VERBOSE]] LOG:getPosition("position = ", verbose.bytes(self.buffer))
   return true, OctBytes2Long(bytes)
 end
 
 function setPosition(self, position)
---[[VERBOSE]] LOG:setPosition("SETPOSITION")
+-- [[VERBOSE]] LOG:setPosition("SETPOSITION")
   self.buffer = operation.SET_POSITION
   self.buffer = self.buffer..LuaNumber2Long(position)
---[[VERBOSE]] LOG:setPosition("position = ", position)
+-- [[VERBOSE]] LOG:setPosition("position = ", position)
   local status , errmsg = self.channel:send(self.buffer)
   if not status then
-  --[[VERBOSE]] LOG:setPosition("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:setPosition("ERRO '", errmsg, "'")
     return nil, errmsg
   end
 -- o q se pode retornar como erro??
   local code = string.byte(self.channel:receive(1))
   if errorCode[code] then
-  --[[VERBOSE]] LOG:setPosition("ERRO '", errorCode[code], "'")
+  -- [[VERBOSE]] LOG:setPosition("ERRO '", errorCode[code], "'")
     return nil, errorCode[code]
   end
   return true, size
@@ -268,20 +268,20 @@ end
 -- @return Returns true in case of success plus the size of the file
 -- , or, in case of errors, nil plus error message.
 function getSize(self)
---[[VERBOSE]] LOG:getSize("GETSIZE")
+-- [[VERBOSE]] LOG:getSize("GETSIZE")
   self.buffer = operation.GET_SIZE
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
-  --[[VERBOSE]] LOG:getSize("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:getSize("ERRO '", errmsg, "'")
     return nil, errmsg
   end
   local bytes = self.channel:receive(8)
---[[VERBOSE]] LOG:getSize("size = = ", verbose.bytes(self.buffer))
+-- [[VERBOSE]] LOG:getSize("size = = ", verbose.bytes(self.buffer))
   return true, OctBytes2Long(bytes)
 end
 
 function read(self, nbytes, position, userdata)
---[[VERBOSE]] LOG:read("READ")
+-- [[VERBOSE]] LOG:read("READ")
   self.buffer = operation.READ
   if (position > self.size) then
     position = self.size
@@ -290,11 +290,11 @@ function read(self, nbytes, position, userdata)
   if (nbytes > available) then
     nbytes = available
   end
---[[VERBOSE]] LOG:read("nbytes = ", nbytes," position = ", position, " userdata = ", userdata)
+-- [[VERBOSE]] LOG:read("nbytes = ", nbytes," position = ", position)
   self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(nbytes)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
-  --[[VERBOSE]] LOG:read("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:read("ERRO '", errmsg, "'")
     return nil, errmsg
   end
   local data
@@ -304,14 +304,14 @@ function read(self, nbytes, position, userdata)
     data, errmsg = self.channel:receive(nbytes)
   end
   if not data then
-  --[[VERBOSE]] LOG:read("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:read("ERRO '", errmsg, "'")
     return nil, errmsg
   end
   return true, data
 end
 
 function write(self, nbytes, position, data)
---[[VERBOSE]] LOG:write("WRITE")
+-- [[VERBOSE]] LOG:write("WRITE")
   if (self.readOnly) then
     return nil, "This a read-only file."
   end
@@ -323,16 +323,16 @@ function write(self, nbytes, position, data)
   if (nbytes > available) then
     nbytes = available
   end
---[[VERBOSE]] LOG:write("nbytes = ", nbytes," position = ", position)
+-- [[VERBOSE]] LOG:write("nbytes = ", nbytes," position = ", position)
   self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(nbytes)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
-  --[[VERBOSE]] LOG:write("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:write("ERRO '", errmsg, "'")
     return nil, errmsg
   end
   status, errmsg = self.channel:send(data)
   if not status then
-  --[[VERBOSE]] LOG:write("ERRO '", errmsg, "'")
+  -- [[VERBOSE]] LOG:write("ERRO '", errmsg, "'")
     return nil, errmsg
   end
   return true

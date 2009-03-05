@@ -10,7 +10,7 @@ ${PRECMP_DIR}/ftc_core.c ${PRECMP_DIR}/ftc_core.h:
 	lua5.1 precompiler.lua -f ftc_core -d ${PRECMP_DIR} -l ../lua ftc.lua ftc/verbose.lua ftc/core.lua
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
-DEFINES=VERBOSE
+#DEFINES=VERBOSE
 #DEFINES+=VERBOSE2
 
 SRC= ${PRECMP_DIR}/ftc_core.c ftc.cpp

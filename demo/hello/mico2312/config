@@ -1,5 +1,5 @@
 
-MICO_HOME=/opt/mico-2.3.12
+MICO_HOME=/usr/local
 
 MICOBIN=${MICO_HOME}/admin
 MICOINC=${MICO_HOME}/include
