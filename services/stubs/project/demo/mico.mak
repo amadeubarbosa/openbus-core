@@ -20,6 +20,9 @@ INCLUDES= ${MICOINC} ${OPENBUS_HOME}/core/utilities/mico ${OPENBUSINC}/scs ${OPE
 LDIR= ${OPENBUSLIB} ${MICOLDIR}
 
 LIBS= dl mico2.3.12 pthread
+ifeq "${TEC_SYSNAME}" "SunOS"
+LIBS+= socket nsl
+endif
 
 SLIB= ${OPENBUS_HOME}/core/utilities/mico/lib/${TEC_UNAME}/libopenbus.a \
       ${OPENBUSLIB}/libscsmico.a \

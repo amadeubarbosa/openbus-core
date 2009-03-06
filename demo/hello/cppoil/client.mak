@@ -11,6 +11,9 @@ INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/tolua5.1 ${OPENBUS
 LDIR= ${OPENBUSLIB} ${OPENBUS_HOME}/core/utilities/cppoil/lib/${TEC_UNAME}
 
 LIBS= dl
+ifeq "${TEC_SYSNAME}" "SunOS"
+LIBS+= socket nsl
+endif
 
 SLIB= ${OPENBUS_HOME}/core/utilities/cppoil/lib/${TEC_UNAME}/libopenbus.a \
       ${OPENBUSLIB}/libftc.a \
