@@ -63,7 +63,7 @@ function main ()
       print(string.format("O usuário OpenBus %s requisitou a operação sayHello.", user))
       registryService:unregister(registryIdentifier)
     end
-    local M = IComponent("Membro", 1)
+    local M = IComponent("Membro", 1, 0, 0, "")
     M = orb:newservant(M, nil, "IDL:scs/core/IComponent:1.0")
     M:addFacet("faceta", "IDL:demoidl/hello/IHello:1.0", Hello)
     success, registryIdentifier = registryService:register({ properties = {{name = "type", value = {"type"}}}, member = M, })
