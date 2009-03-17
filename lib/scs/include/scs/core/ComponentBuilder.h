@@ -4,11 +4,25 @@
 
 #ifndef COMPONENTBUILDER_H_
 #define COMPONENTBUILDER_H_
+#define ICOMPONENT_NAME "IComponent"
+#define IRECEPTACLES_NAME "IReceptacles"
+#define IMETAINTERFACE_NAME "IMetaInterface"
 
-#include "IComponentOrbix.h"
+#include <string>
+#include <vector>
+#include <omg/orb.hh>
+#include <omg/PortableServer.hh>
+#include <scs/core/ComponentContextOrbix.h>
+#include <scs/core/ExtendedFacetDescription.h>
+#include <scs/core/IComponentOrbix.h>
+//#include <scs/core/IReceptacleOrbix.h>
+#include <scs/core/IMetaInterfaceOrbix.h>
 
 namespace scs {
   namespace core {
+    class ComponentContext;
+    class IComponentImpl;
+
     class ComponentBuilder {
       private:
         CORBA::ORB* orb;
@@ -16,11 +30,9 @@ namespace scs {
       public:
         ComponentBuilder(CORBA::ORB* _orb, PortableServer::POA* _poa);
         ~ComponentBuilder();
-        IComponentImpl* createComponent(const char* name, CORBA::Octet major_version, \
-            CORBA::Octet minor_version, CORBA::Octet patch_version, const char* platform_spec);
-        IComponentImpl* createComponent(const char* name, CORBA::Octet major_version, \
-            CORBA::Octet minor_version, CORBA::Octet patch_version, const char* platform_spec, \
-            const char* facet_name, const char* interface_name, PortableServer::ServantBase* obj);
+        ComponentContext* newComponent(std::vector<ExtendedFacetDescription>& facetExtDescs, ComponentId& id);
+        ComponentContext* newFullComponent(std::vector<ExtendedFacetDescription>& facetExtDescs, ComponentId& id);
+        void addFacet(ComponentContext& context, ExtendedFacetDescription extDesc);
     };
   }
 }

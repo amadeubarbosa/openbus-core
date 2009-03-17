@@ -10,22 +10,12 @@ using namespace std;
 
 namespace scs {
   namespace core {
-    IComponentImpl::IComponentImpl(const char* name, CORBA::Octet major_version, CORBA::Octet minor_version, \
-                                    CORBA::Octet patch_version, const char* platform_spec, \
-                                    CORBA::ORB_ptr orb, PortableServer::POA_ptr poa)
-    {
+    IComponentImpl::IComponentImpl(ComponentContext* context) {
     #ifdef VERBOSE
-      cout << "\n\n[IComponentImpl::IComponentImpl() BEGIN]" << endl;
+      cout << "[IComponentImpl::IComponentImpl() BEGIN]" << endl;
     #endif
-      _orb = orb;
-      _poa = poa;
-      componentId = new ComponentId;
-      componentId->name = name;
-      componentId->major_version = major_version;
-      componentId->minor_version = minor_version;
-      componentId->patch_version = patch_version;
-      componentId->platform_spec = platform_spec;
-    /* Falta adicionar faceta do IMetaInterface ... */
+      this->context = context;
+      this->facets = &(context->getFacetDescs());
     #ifdef VERBOSE
       cout << "[IComponentImpl::IComponentImpl() END]" << endl;
     #endif
@@ -40,83 +30,61 @@ namespace scs {
     #endif
     }
 
-    void IComponentImpl::addFacet(const char* name, const char* interface_name, \
-         PortableServer::ServantBase* obj)
-    {
-    #ifdef VERBOSE
-      cout << "\n\n[IComponentImpl::addFacet() BEGIN]" << endl;
-    #endif
-      PortableServer::ObjectId_var oid = _poa->activate_object(obj);
-      CORBA::Object_var ref = _poa->id_to_reference(oid.in());
-      FacetDescription_var facet = new FacetDescription;
-      facet->name = name;
-      facet->interface_name = interface_name;
-      facet->facet_ref = ref;
-      facets[name] = *facet;
-    #ifdef VERBOSE
-      CORBA::String_var str = _orb->object_to_string(ref.in());
-      cout << "\t[IOR:]" << str.in() << endl;
-      cout << "\t[facet.name] = " << name << endl;
-      cout << "\t[facet.interface_name] = " << interface_name << endl;
-    #endif
-    #ifdef VERBOSE
-      cout << "[IComponentImpl::addFacet() END]" << endl;
-    #endif
+    void* IComponentImpl::instantiate(ComponentContext* context) {
+      return (void*) new IComponentImpl(context);
     }
 
     void IComponentImpl::startup() IT_THROW_DECL((CORBA::SystemException, scs::core::StartupFailed)) {}
     void IComponentImpl::shutdown() IT_THROW_DECL((CORBA::SystemException, scs::core::ShutdownFailed)) {}
-  /**/
 
-  /*OK*/
     CORBA::Object_ptr IComponentImpl::getFacet(const char* facet_interface) IT_THROW_DECL((CORBA::SystemException)) {
     #ifdef VERBOSE
       cout << "\n\n[IComponentImpl::getFacet() BEGIN]" << endl;
+      cout << "\t[Interface da faceta sendo procurada: '" << facet_interface << "']" << endl;
     #endif
       CORBA::Object_var o;
+      std::string temp(" NÃO");
       FacetDescription* f = NULL;
-      for (it = facets.begin(); it != facets.end(); it++) {
+      std::map<std::string, FacetDescription>::iterator it;
+      for (it = facets->begin(); it != facets->end(); it++) {
         f = &(*it).second;
         if (strcmp(f->interface_name, facet_interface) == 0) {
-        #ifdef VERBOSE
-          cout << "\t[Faceta de interface '" << facet_interface << "' encontrada]" << endl;
-        #endif
           o = f->facet_ref;
+          temp = "";
+          break;
         }
       }
     #ifdef VERBOSE
+      cout << "\t[Faceta de interface '" << facet_interface << "'" << temp << " encontrada]" << endl;
       cout << "[IComponentImpl::getFacet() END]" << endl;
     #endif
       return o._retn();
     }
 
-  /*OK*/
     CORBA::Object_ptr IComponentImpl::getFacetByName(const char* facet) IT_THROW_DECL((CORBA::SystemException)) {
     #ifdef VERBOSE
       cout << "\n\n[IComponentImpl::getFacetByName() BEGIN]" << endl;
+      cout << "\t[Nome da faceta sendo procurada: '" << facet << "']" << endl;
     #endif
-      FacetDescription f;
-      if (facets.find(facet) == facets.end()) {
-      #ifdef VERBOSE
-        cout << "\t[Faceta de nome '" << facet << "' encontrada]" << endl;
-        cout << "[IComponentImpl::getFacetByName() END]" << endl;
-      #endif
-        return facets[facet].facet_ref;
-      }
-      #ifdef VERBOSE
-        cout << "\t[Faceta de nome '" << facet << "' nï¿½o encontrada]" << endl;
-        cout << "[IComponentImpl::getFacetByName() END]" << endl;
-      #endif
-      return NULL;
+      CORBA::Object_var o;
+      std::string temp("");
+      std::map<std::string, FacetDescription>::const_iterator it = facets->find(facet);
+      if (it != facets->end())
+        o = ((FacetDescription) it->second).facet_ref;
+      else
+        temp = " NÃO";
+    #ifdef VERBOSE
+      cout << "\t[Faceta de nome '" << facet << "'" << temp << " encontrada]" << endl;
+      cout << "[IComponentImpl::getFacetByName() END]" << endl;
+    #endif
+      return o._retn();
     }
 
-  /*OK*/
     ComponentId* IComponentImpl::getComponentId() IT_THROW_DECL((CORBA::SystemException)) {
     #ifdef VERBOSE
       cout << "\n\n[IComponentImpl::getComponentId() BEGIN]" << endl;
     #endif
-      ComponentId_var cId = new ComponentId;
-      cId = componentId;
+      ComponentId_var cId = new ComponentId(this->context->getComponentId());
     #ifdef VERBOSE
       cout << "\t[componentID.name: " << cId->name.in() << "]" << endl;
       cout << "\t[componentID.major_version: " << cId->major_version << "]" << endl;

@@ -12,7 +12,7 @@
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
 #include <services/AccessControlService.h>
-#include <scs/core/IComponentOrbix.h>
+#include <scs/core/ComponentBuilder.h>
 
 using namespace openbus;
 
@@ -27,11 +27,19 @@ class RGSTestSuite: public CxxTest::TestSuite {
     char* registryIdentifier2;
     openbus::services::PropertyListHelper* propertyListHelper;
     openbus::services::PropertyListHelper* propertyListHelper2;
-    scs::core::IComponentImpl* member;
+    scs::core::IComponent_var component;
     std::string OPENBUS_SERVER_HOST;
     unsigned short OPENBUS_SERVER_PORT;
     std::string OPENBUS_USERNAME;
     std::string OPENBUS_PASSWORD;
+
+    void fillComponentId(scs::core::ComponentId& id) {
+      id.name = "RGSTestSuiteComponent";
+      id.major_version = '1';
+      id.minor_version = '0';
+      id.patch_version = '0';
+      id.platform_spec = "none";
+    }
 
   public:
     RGSTestSuite() {
@@ -111,17 +119,21 @@ class RGSTestSuite: public CxxTest::TestSuite {
     void testRegister() {
       try {
         scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
-        member = componentBuilder->createComponent("component", '1', '0', '0', "none");
+        scs::core::ComponentId id;
+        fillComponentId(id);
+        std::vector<scs::core::ExtendedFacetDescription> extFacets;
+        scs::core::ComponentContext* context = componentBuilder->newFullComponent(extFacets, id);
+        component = context->getIComponent();
         propertyListHelper = new openbus::services::PropertyListHelper();
         propertyListHelper->add("type", "type1");
         openbusidl::rs::ServiceOffer serviceOffer;
         serviceOffer.properties = propertyListHelper->getPropertyList();
-        serviceOffer.member = member->_this();
+        serviceOffer.member = component;
         TS_ASSERT( rgs->Register(serviceOffer, registryIdentifier) );
         propertyListHelper2 = new openbus::services::PropertyListHelper();
         propertyListHelper2->add("type", "type2");
         serviceOffer.properties = propertyListHelper2->getPropertyList();
-        serviceOffer.member = member->_this();
+        serviceOffer.member = component;
         TS_ASSERT( rgs->Register(serviceOffer, registryIdentifier2) );
       } catch (const char* errmsg) {
         TS_FAIL(errmsg);

@@ -9,6 +9,8 @@
 #include <it_ts/thread.h>
 
 #include <openbus.h>
+#include <scs/core/ComponentBuilder.h>
+//#include <scs/core/IMetaInterfaceOrbix.h>
 
 #include "stubs/helloS.hh"
 
@@ -18,16 +20,28 @@ IT_USING_NAMESPACE_STD
 
 openbus::Openbus* bus;
 
-class Hello_impl : virtual public POA_Hello {
+class HelloImpl : virtual public POA_Hello {
+  private:
+    scs::core::ComponentContext* componentContext;
+    HelloImpl(scs::core::ComponentContext* componentContext) {
+    #ifdef VERBOSE
+      cout << "[HelloImpl::HelloImpl() BEGIN]" << endl;
+    #endif
+      this->componentContext = componentContext;
+    #ifdef VERBOSE
+      cout << "[HelloImpl::HelloImpl() END]" << endl;
+    #endif
+    }
   public:
+    static void* instantiate(scs::core::ComponentContext* componentContext) {
+      return (void*) new HelloImpl(componentContext);
+    }
     void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
       cout << endl << "Servant diz: HELLO!" << endl;
       openbus::Credential_var credential = bus->getCredentialIntercepted();
       cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in() << endl;
     };
 };
-
-Hello_impl* hello;
 
 int main(int argc, char* argv[]) {
   char* registryId;
@@ -46,39 +60,48 @@ int main(int argc, char* argv[]) {
 */
   bus->init();
 
-/* Conexao com o barramento. */
+/* Conexão com o barramento. */
   try {
     registryService = bus->connect("tester", "tester");
   } catch (openbus::COMMUNICATION_FAILURE& e) {
-    cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
-         << "* Falha na comunicacao. *" << endl;
+    cout << "** Não foi possível se conectar ao barramento. **" << endl \
+         << "* Falha na comunicação. *" << endl;
     exit(-1);
   } catch (openbus::LOGIN_FAILURE& e) {
-    cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
-         << "* Par usuario/senha invalido. *" << endl;
+    cout << "** Não foi possível se conectar ao barramento. **" << endl \
+         << "* Par usuário/senha inválido. *" << endl;
     exit(-1);
   }
 
-  hello = new Hello_impl;
-
+/* Criação do componente */
   scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
-  scs::core::IComponentImpl* IComponent = componentBuilder->createComponent("component", '1', '0', '0', "none", "facet", "IDL:Hello:1.0", hello);
+  scs::core::ComponentId componentId;
+  componentId.name = "HelloComponent";
+  componentId.major_version = '1';
+  componentId.minor_version = '0';
+  componentId.patch_version = '0';
+  componentId.platform_spec = "none";
+  std::vector<scs::core::ExtendedFacetDescription> extFacets;
+  scs::core::ExtendedFacetDescription helloDesc;
+  helloDesc.name = "IHello";
+  helloDesc.interface_name = "IDL:Hello:1.0";
+  helloDesc.instantiator = HelloImpl::instantiate;
+  extFacets.push_back(helloDesc);
+  scs::core::ComponentContext* componentContext = componentBuilder->newFullComponent(extFacets, componentId);
 
-/* Definicao de uma lista de propriedades que caracteriza o servico de interesse.
-*  O trabalho de criacao da lista e facilitado pelo uso da classe PropertyListHelper.
+/* Definição de uma lista de propriedades que caracteriza o serviço de interesse.
+*  O trabalho de criação da lista e facilitado pelo uso da classe PropertyListHelper.
 */
-  openbus::services::PropertyListHelper* PropertyListHelper = new openbus::services::PropertyListHelper();
-  PropertyListHelper->add("facet", "IHello");
+  openbus::services::PropertyListHelper* propertyListHelper = new openbus::services::PropertyListHelper();
+  propertyListHelper->add("facet", "IHello");
 
-/* Criacao de uma *oferta de servico*. */
+/* Criação de uma *oferta de serviço*. */
   openbus::services::ServiceOffer so;
-  so.properties = PropertyListHelper->getPropertyList();
-  so.member = IComponent->_this();
-
-/* Registro do servico no barramento. */
+  so.properties = propertyListHelper->getPropertyList();
+  so.member = componentContext->getIComponent();
+  /* Registro do serviço no barramento. */
   registryService->Register(so, registryId);
-  cout << "Servico HELLO registrado no OpenBus..." << endl;
-
+  cout << "\n\nServiço HELLO registrado no OpenBus..." << endl;
   bus->run();
 
   return 0;
