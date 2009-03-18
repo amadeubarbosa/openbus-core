@@ -9,7 +9,7 @@
 #define IMETAINTERFACE_NAME "IMetaInterface"
 
 #include <string>
-#include <vector>
+#include <list>
 #include <omg/orb.hh>
 #include <omg/PortableServer.hh>
 #include <scs/core/ComponentContextOrbix.h>
@@ -30,9 +30,10 @@ namespace scs {
       public:
         ComponentBuilder(CORBA::ORB* _orb, PortableServer::POA* _poa);
         ~ComponentBuilder();
-        ComponentContext* newComponent(std::vector<ExtendedFacetDescription>& facetExtDescs, ComponentId& id);
-        ComponentContext* newFullComponent(std::vector<ExtendedFacetDescription>& facetExtDescs, ComponentId& id);
-        void addFacet(ComponentContext& context, ExtendedFacetDescription extDesc);
+        ComponentContext* newComponent(std::list<ExtendedFacetDescription>& facetExtDescs, ComponentId& id);
+        ComponentContext* newFullComponent(std::list<ExtendedFacetDescription>& facetExtDescs, ComponentId& id);
+        void addFacet(ComponentContext& context, ExtendedFacetDescription& extDesc);
+        void addFacets(ComponentContext& context, std::list<ExtendedFacetDescription>& facetExtDescs);
     };
   }
 }

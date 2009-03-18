@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
   componentId.minor_version = '0';
   componentId.patch_version = '0';
   componentId.platform_spec = "none";
-  std::vector<scs::core::ExtendedFacetDescription> extFacets;
+  std::list<scs::core::ExtendedFacetDescription> extFacets;
   scs::core::ExtendedFacetDescription helloDesc;
   helloDesc.name = "IHello";
   helloDesc.interface_name = "IDL:Hello:1.0";

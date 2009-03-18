@@ -13,7 +13,7 @@ namespace scs {
     ComponentBuilder::~ComponentBuilder() {
     }
 
-    void ComponentBuilder::addFacet(ComponentContext& context, ExtendedFacetDescription extDesc)
+    void ComponentBuilder::addFacet(ComponentContext& context, ExtendedFacetDescription& extDesc)
     {
     #ifdef VERBOSE
       std::cout << "\n\n[ComponentBuilder::addFacet() BEGIN]" << std::endl;
@@ -43,54 +43,62 @@ namespace scs {
     #endif
     }
 
-    ComponentContext* ComponentBuilder::newComponent(std::vector<ExtendedFacetDescription>& facetExtDescs,
-        ComponentId& id) {
+    void ComponentBuilder::addFacets(ComponentContext& context, std::list<ExtendedFacetDescription>& facetExtDescs) {
+      // cria facetas na ordem especificada pela lista
+      std::list<ExtendedFacetDescription>::iterator it;
+      for (it = facetExtDescs.begin(); it != facetExtDescs.end(); it++) {
+        addFacet(context, *it);
+      }
+    }
+
+    ComponentContext* ComponentBuilder::newComponent(std::list<ExtendedFacetDescription>& facetExtDescs, ComponentId& id) {
     #ifdef VERBOSE
       std::cout << "\n\n[ComponentBuilder::newComponent() BEGIN]" << std::endl;
     #endif
       ComponentContext* context = new ComponentContext(this, &id);
-      // cria receptaculos (atualmente nao ha suporte a receptaculos)
+      // cria receptáculos (atualmente não há suporte a receptáculos)
       // cria facetas
-      std::vector<ExtendedFacetDescription>::iterator it;
-      for (it = facetExtDescs.begin(); it != facetExtDescs.end(); ++it) {
-        addFacet(*context, *it);
-      }
+      addFacets(*context, facetExtDescs);
     #ifdef VERBOSE
       std::cout << "\n\n[ComponentBuilder::newComponent() END]" << std::endl;
     #endif
       return context;
     }
 
-    ComponentContext* ComponentBuilder::newFullComponent(std::vector<ExtendedFacetDescription>& facetExtDescs, ComponentId& id) {
+    ComponentContext* ComponentBuilder::newFullComponent(std::list<ExtendedFacetDescription>& facetExtDescs, ComponentId& id) {
       bool foundIComponent = false, foundIReceptacles = false, foundIMetaInterface = false;
-      for (unsigned int i = 0; i < facetExtDescs.size(); i++) {
-          if (facetExtDescs[i].name.compare(ICOMPONENT_NAME) == 0)
+      // O usuário pode ter especificado outras classes para alguma das facetas principais.
+      // Dessa forma, devemos criar apenas as que não foram especificadas.
+      std::list<ExtendedFacetDescription>::iterator it;
+      for (it = facetExtDescs.begin(); it != facetExtDescs.end(); it++) {
+          if ((*it).name.compare(ICOMPONENT_NAME) == 0)
             foundIComponent = true;
-//          if (facetExtDescs[i].name.compare(IRECEPTACLES_NAME) == 0)
+//          if ((*it).name.compare(IRECEPTACLES_NAME) == 0)
 //            foundIReceptacles = true;
-          if (facetExtDescs[i].name.compare(IMETAINTERFACE_NAME) == 0)
+          if ((*it).name.compare(IMETAINTERFACE_NAME) == 0)
             foundIMetaInterface = true;
       }
-      if (!foundIComponent) {
-        scs::core::ExtendedFacetDescription iComponentDesc;
-        iComponentDesc.name = "IComponent";
-        iComponentDesc.interface_name = "IDL:scs/core/IComponent:1.0";
-        iComponentDesc.instantiator = scs::core::IComponentImpl::instantiate;
-        facetExtDescs.push_back(iComponentDesc);
+      // Adicionalmente, as facetas principais devem ser criadas antes das definidas pelo usuário.
+      if (!foundIMetaInterface) {
+        scs::core::ExtendedFacetDescription iMetaDesc;
+        iMetaDesc.name = "IMetaInterface";
+        iMetaDesc.interface_name = "IDL:scs/core/IMetaInterface:1.0";
+        iMetaDesc.instantiator = scs::core::IMetaInterfaceImpl::instantiate;
+        facetExtDescs.push_front(iMetaDesc);
       }
 //      if (!foundIReceptacles) {
 //        scs::core::ExtendedFacetDescription iReceptaclesDesc;
 //        iReceptaclesDesc.name = "IReceptacles";
 //        iReceptaclesDesc.interface_name = "IDL:scs/core/IReceptacles:1.0";
 //        iReceptaclesDesc.instantiator = scs::core::IReceptaclesImpl::instantiate;
-//        facetExtDescs.push_back(iReceptaclesDesc);
+//        facetExtDescs.push_front(iReceptacleDesc);
 //      }
-      if (!foundIMetaInterface) {
-        scs::core::ExtendedFacetDescription iMetaDesc;
-        iMetaDesc.name = "IMetaInterface";
-        iMetaDesc.interface_name = "IDL:scs/core/IMetaInterface:1.0";
-        iMetaDesc.instantiator = scs::core::IMetaInterfaceImpl::instantiate;
-        facetExtDescs.push_back(iMetaDesc);
+      if (!foundIComponent) {
+        scs::core::ExtendedFacetDescription iComponentDesc;
+        iComponentDesc.name = "IComponent";
+        iComponentDesc.interface_name = "IDL:scs/core/IComponent:1.0";
+        iComponentDesc.instantiator = scs::core::IComponentImpl::instantiate;
+        facetExtDescs.push_front(iComponentDesc);
       }
       return newComponent(facetExtDescs, id);
     }

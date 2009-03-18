@@ -120,7 +120,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
         scs::core::ComponentId id;
         fillComponentId(id);
-        std::vector<scs::core::ExtendedFacetDescription> extFacets;
+        std::list<scs::core::ExtendedFacetDescription> extFacets;
         scs::core::ComponentContext* context = componentBuilder->newFullComponent(extFacets, id);
         component = context->getIComponent();
         propertyListHelper = new openbus::services::PropertyListHelper();
