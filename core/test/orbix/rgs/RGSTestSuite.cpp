@@ -12,7 +12,6 @@
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
 #include <services/AccessControlService.h>
-#include <scs/core/ComponentBuilder.h>
 
 using namespace openbus;
 

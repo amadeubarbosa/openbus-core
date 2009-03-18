@@ -9,7 +9,7 @@
 #include "services/RegistryService.h"
 
 #include "openbus/common/ORBInitializerImpl.h"
-#include <scs/core/ComponentBuilder.h>
+#include <scs/core/ComponentBuilderOrbix.h>
 
 #include <omg/orb.hh>
 #include <it_ts/thread.h>

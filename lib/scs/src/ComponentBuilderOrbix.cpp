@@ -1,7 +1,7 @@
 /*
-** ComponentBuilder.cpp
+** ComponentBuilderOrbix.cpp
 */
-#include <scs/core/ComponentBuilder.h>
+#include <scs/core/ComponentBuilderOrbix.h>
 
 namespace scs {
   namespace core {

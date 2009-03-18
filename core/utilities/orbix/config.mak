@@ -28,8 +28,8 @@ SRC= openbus/common/ClientInterceptor.cpp \
      stubs/coreC.cxx \
      stubs/scsC.cxx \
      services/AccessControlService.cpp \
-     services/RegistryService.cpp \
-     openbus.cpp
+     openbus.cpp \
+     services/RegistryService.cpp
 
 genstubs:
 	mkdir -p stubs

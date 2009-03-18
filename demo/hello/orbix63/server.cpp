@@ -9,8 +9,7 @@
 #include <it_ts/thread.h>
 
 #include <openbus.h>
-#include <scs/core/ComponentBuilder.h>
-//#include <scs/core/IMetaInterfaceOrbix.h>
+#include <scs/core/ComponentBuilderOrbix.h>
 
 #include "stubs/helloS.hh"
 

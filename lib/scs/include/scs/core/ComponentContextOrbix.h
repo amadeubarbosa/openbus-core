@@ -8,7 +8,7 @@
 #include <string>
 #include <map>
 #include <stubs/scsS.hh>
-#include <scs/core/ComponentBuilder.h>
+#include <scs/core/ComponentBuilderOrbix.h>
 #include <scs/core/IComponentOrbix.h>
 #include <scs/core/ExtendedFacetDescription.h>
 

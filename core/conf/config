@@ -1,7 +1,7 @@
 export CONF_DIR=${OPENBUS_HOME}/core/conf
 export IDLPATH_DIR=${OPENBUS_HOME}/idlpath
 
-export LUA_PATH="${OPENBUS_HOME}/?.lua;${OPENBUS_HOME}/core/utilities/lua/?.lua;${OPENBUS_HOME}/libpath/lua/5.1/?.lua;${OPENBUS_HOME}/libpath/lua/5.1/?/init.lua"
+export LUA_PATH="/home/msv/augusto/svn/SCS/branches/SCS-Openbus/src/lua/scs/container/?.lua;${OPENBUS_HOME}/?.lua;${OPENBUS_HOME}/core/utilities/lua/?.lua;${OPENBUS_HOME}/libpath/lua/5.1/?.lua;${OPENBUS_HOME}/libpath/lua/5.1/?/init.lua"
 export LUA_CPATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}/lib?.so"
 
 export LD_LIBRARY_PATH="${OPENBUS_HOME}/libpath/${TEC_UNAME}:${LD_LIBRARY_PATH}"

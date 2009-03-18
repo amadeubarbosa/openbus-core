@@ -1,5 +1,5 @@
 /*
-** ComponentBuilder.h
+** ComponentBuilderOrbix.h
 */
 
 #ifndef COMPONENTBUILDER_H_
