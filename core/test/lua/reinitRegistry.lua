@@ -45,12 +45,12 @@ function main()
   end
 
   -- instala o interceptador de cliente
-  local CONF_DIR = os.getenv("CONF_DIR")
-  if CONF_DIR == nil then
-    error("ERRO: A variavel CONF_DIR nao foi definida.\n")
+  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+  if DATA_DIR == nil then
+    error("ERRO: A variavel OPENBUS_DATADIR nao foi definida.\n")
   end
     local config = 
-      assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+      assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
     orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
   
   -- autentica o cliente

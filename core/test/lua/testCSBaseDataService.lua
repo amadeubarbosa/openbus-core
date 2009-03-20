@@ -21,8 +21,8 @@ if IDLPATH_DIR == nil then
   os.exit(1)
 end
 
-local CONF_DIR = os.getenv("CONF_DIR")
-local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+local config = assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
 
 oil.verbose:level(0)
 

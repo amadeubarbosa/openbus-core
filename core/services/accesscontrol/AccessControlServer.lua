@@ -8,20 +8,23 @@ local Log = require "openbus.common.Log"
 
 local oil = require "oil"
 
+-- Inicialização do nível de verbose do openbus.
+Log:level(1)
+
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
   Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
   os.exit(1)
 end
 
-local CONF_DIR = os.getenv("CONF_DIR")
-if CONF_DIR == nil then
-  Log:error("A variavel CONF_DIR nao foi definida.\n")
+local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+if DATA_DIR == nil then
+  Log:error("A variavel OPENBUS_DATADIR nao foi definida.\n")
   os.exit(1)
 end
 
 -- Obtém a configuração do serviço
-assert(loadfile(CONF_DIR.."/AccessControlServerConfiguration.lua"))()
+assert(loadfile(DATA_DIR.."/conf/AccessControlServerConfiguration.lua"))()
 
 -- Define os níveis de verbose para o OpenBus e para o OiL.
 if AccessControlServerConfiguration.logLevel then

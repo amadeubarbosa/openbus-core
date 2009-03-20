@@ -6,6 +6,7 @@ local loadfile = loadfile
 local assert = assert
 local pairs = pairs
 local ipairs = ipairs
+local string = string
 local tostring = tostring
 
 local luuid = require "uuid"
@@ -34,6 +35,8 @@ local oop = require "loop.simple"
 module("core.services.accesscontrol.AccessControlService")
 
 oop.class(_M, IComponent)
+
+local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 
 ---
 --Credencial inválida.
@@ -75,15 +78,26 @@ end
 ---
 function startup(self)
   -- instala o interceptador do serviço
-  local CONF_DIR = os.getenv("CONF_DIR")
   local iconfig =
-    assert(loadfile(CONF_DIR.."/advanced/ACSInterceptorsConfiguration.lua"))()
+    assert(loadfile(DATA_DIR.."/conf/advanced/ACSInterceptorsConfiguration.lua"))()
   self.serverInterceptor = ServerInterceptor(iconfig, self)
   orb:setserverinterceptor(self.serverInterceptor)
 
   -- inicializa repositorio de credenciais
-  self.privateKey = lce.key.readprivatefrompemfile(self.config.privateKeyFile)
-  self.credentialDB = CredentialDB(self.config.databaseDirectory)
+  local privateKeyFile
+  if (string.sub(self.config.privateKeyFile,1 , 1) == "/") then
+    privateKeyFile = self.config.privateKeyFile
+  else
+    privateKeyFile = DATA_DIR.."/"..self.config.privateKeyFile
+  end
+  self.privateKey = lce.key.readprivatefrompemfile(privateKeyFile)
+  local databaseDirectory
+  if (string.sub(self.config.databaseDirectory,1 , 1) == "/") then
+    databaseDirectory = self.config.databaseDirectory
+  else
+    databaseDirectory = DATA_DIR.."/"..self.config.databaseDirectory
+  end
+  self.credentialDB = CredentialDB(databaseDirectory)
   local entriesDB = self.credentialDB:retrieveAll()
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
@@ -198,7 +212,13 @@ end
 --@return O certificado do membro.
 ---
 function getCertificate(self, name)
-  local certificateFile = self.config.certificatesDirectory.."/"..name..".crt"
+  local certificatesDirectory
+  if (string.sub(self.config.certificatesDirectory,1 , 1) == "/") then
+    certificatesDirectory = self.config.certificatesDirectory
+  else
+    certificatesDirectory = DATA_DIR.."/"..self.config.certificatesDirectory
+  end
+  local certificateFile = certificatesDirectory.."/"..name..".crt"
   return lce.x509.readfromderfile(certificateFile)
 end
 

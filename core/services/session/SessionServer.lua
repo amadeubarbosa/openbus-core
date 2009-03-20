@@ -8,15 +8,18 @@ local oil = require "oil"
 
 local Log = require "openbus.common.Log"
 
+-- Inicialização do nível de verbose do openbus.
+Log:level(1)
+
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
   Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
   os.exit(1)
 end
 
-local CONF_DIR = os.getenv("CONF_DIR")
-if CONF_DIR == nil then
-  Log:error("A variavel CONF_DIR nao foi definida.\n")
+local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+if DATA_DIR == nil then
+  Log:error("A variavel OPENBUS_DATADIR nao foi definida.\n")
   os.exit(1)
 end
 
@@ -31,7 +34,7 @@ local SessionServiceComponent =
     require "core.services.session.SessionServiceComponent"
 
 -- Obtém a configuração do serviço
-assert(loadfile(CONF_DIR.."/SessionServerConfiguration.lua"))()
+assert(loadfile(DATA_DIR.."/conf/SessionServerConfiguration.lua"))()
 
 SessionServerConfiguration.accessControlServerHost =
     SessionServerConfiguration.accessControlServerHostName..":"..
@@ -61,13 +64,11 @@ function main()
     os.exit(1)
   end
 
-  print("ABCD")
   -- Cria o componente responsável pelo Serviço de Sessão
   success, res = oil.pcall(orb.newservant, orb,
       SessionServiceComponent("SessionService", SessionServerConfiguration),
       nil,
       "IDL:scs/core/IComponent:1.0")
-  print("EFGH")
   if not success then
     Log:error("Falha criando SessionServiceComponent: "..tostring(res).."\n")
     os.exit(1)

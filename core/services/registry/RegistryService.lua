@@ -8,6 +8,7 @@ local assert = assert
 local pairs = pairs
 local ipairs = ipairs
 local error = error
+local string = string
 
 local luuid = require "uuid"
 local oil = require "oil"
@@ -53,16 +54,29 @@ end
 ---
 function startup(self)
   Log:service("Pedido de startup para serviço de registro")
+  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 
   -- Se é o primeiro startup, deve instanciar ConnectionManager e
   -- instalar interceptadores
   if not self.initialized then
     Log:service("Serviço de registro está inicializando")
     local credentialManager = CredentialManager()
+    local privateKeyFile
+    if (string.sub(self.config.privateKeyFile,1 , 1) == "/") then
+      privateKeyFile = self.config.privateKeyFile
+    else
+      privateKeyFile = DATA_DIR.."/"..self.config.privateKeyFile
+    end
+    local accessControlServiceCertificateFile
+    if (string.sub(self.config.accessControlServiceCertificateFile,1 , 1) == "/") then
+      accessControlServiceCertificateFile = self.config.accessControlServiceCertificateFile
+    else
+      accessControlServiceCertificateFile = DATA_DIR.."/"..self.config.accessControlServiceCertificateFile
+    end
     self.connectionManager =  ServerConnectionManager(
         self.config.accessControlServerHost, credentialManager,
-        self.config.privateKeyFile,
-        self.config.accessControlServiceCertificateFile)
+        privateKeyFile,
+        accessControlServiceCertificateFile)
 
     -- obtém a referência para o Serviço de Controle de Acesso
     self.accessControlService = self.connectionManager:getAccessControlService()
@@ -71,9 +85,8 @@ function startup(self)
     end
 
     -- instala o interceptador cliente
-    local CONF_DIR = os.getenv("CONF_DIR")
     local interceptorsConfig =
-      assert(loadfile(CONF_DIR.."/advanced/RSInterceptorsConfiguration.lua"))()
+      assert(loadfile(DATA_DIR.."/conf/advanced/RSInterceptorsConfiguration.lua"))()
     orb:setclientinterceptor(
       ClientInterceptor(interceptorsConfig, credentialManager))
 
@@ -82,7 +95,13 @@ function startup(self)
     orb:setserverinterceptor(self.serverInterceptor)
 
     -- instancia mecanismo de persistencia
-    self.offersDB = OffersDB(self.config.databaseDirectory)
+    local databaseDirectory
+    if (string.sub(self.config.databaseDirectory,1 , 1) == "/") then
+      databaseDirectory = self.config.databaseDirectory
+    else
+      databaseDirectory = DATA_DIR.."/"..self.config.databaseDirectory
+    end
+    self.offersDB = OffersDB(databaseDirectory)
     self.initialized = true
   else
     Log:service("Serviço de registro já foi inicializado")

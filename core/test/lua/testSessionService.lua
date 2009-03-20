@@ -37,8 +37,8 @@ Suite = {
       self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
-      local CONF_DIR = os.getenv("CONF_DIR")
-      local config = assert(loadfile(CONF_DIR.."/advanced/InterceptorsConfiguration.lua"))()
+      local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+      local config = assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
       self.credentialManager = CredentialManager()
       orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
 

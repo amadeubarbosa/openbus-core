@@ -5,6 +5,7 @@ local os = os
 local loadfile = loadfile
 local assert = assert
 local error = error
+local string = string
 
 local oil = require "oil"
 local orb = oil.orb
@@ -50,15 +51,29 @@ end
 function startup(self)
   Log:service("Pedido de startup para o serviço de sessão")
 
+  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+
   -- Se é o primeiro startup, deve instanciar ConnectionManager e
   -- instalar interceptadores
   if not self.initialized then
     Log:service("Serviço de sessão está inicializando")
     local credentialManager = CredentialManager()
+    local privateKeyFile
+    if (string.sub(self.config.privateKeyFile,1 , 1) == "/") then
+      privateKeyFile = self.config.privateKeyFile
+    else
+      privateKeyFile = DATA_DIR.."/"..self.config.privateKeyFile
+    end
+    local accessControlServiceCertificateFile
+    if (string.sub(self.config.accessControlServiceCertificateFile,1 , 1) == "/") then
+      accessControlServiceCertificateFile = self.config.accessControlServiceCertificateFile
+    else
+      accessControlServiceCertificateFile = DATA_DIR.."/"..self.config.accessControlServiceCertificateFile
+    end
     self.connectionManager =
       ServerConnectionManager(self.config.accessControlServerHost,
-        credentialManager, self.config.privateKeyFile,
-        self.config.accessControlServiceCertificateFile)
+        credentialManager, privateKeyFile,
+        accessControlServiceCertificateFile)
 
     -- obtém a referência para o Serviço de Controle de Acesso
     self.accessControlService = self.connectionManager:getAccessControlService()
@@ -67,9 +82,8 @@ function startup(self)
     end
 
     -- instala o interceptador cliente
-    local CONF_DIR = os.getenv("CONF_DIR")
     local interceptorsConfig =
-      assert(loadfile(CONF_DIR.."/advanced/SSInterceptorsConfiguration.lua"))()
+      assert(loadfile(DATA_DIR.."/conf/advanced/SSInterceptorsConfiguration.lua"))()
     orb:setclientinterceptor(
       ClientInterceptor(interceptorsConfig, credentialManager))
 
