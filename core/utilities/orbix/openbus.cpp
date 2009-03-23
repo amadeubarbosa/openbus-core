@@ -45,7 +45,8 @@ namespace openbus {
     for (short idx = 1; idx < argc; idx++) {
       if (!strcmp(argv[idx], "-OpenbusHost")) {
         idx++;
-        hostBus = argv[idx];
+        hostBus = (char*) malloc(sizeof(char) * strlen(argv[idx]) + 1);
+        hostBus = (char*) memcpy(hostBus, argv[idx], strlen(argv[idx]) + 1);
       } else if (!strcmp(argv[idx], "-OpenbusPort")) {
         idx++;
         portBus = atoi(argv[idx]);
@@ -110,13 +111,15 @@ namespace openbus {
     }
     initializeHostPort();
     commandLineParse(_argc, _argv);
-    hostBus = host;
+    hostBus = (char*) malloc(sizeof(char) * strlen(host) + 1);
+    hostBus = (char*) memcpy(hostBus, host, strlen(host) + 1);
     portBus = port;
   }
 
   Openbus::~Openbus() {
     delete componentBuilder;
     delete mutex;
+    delete hostBus;
   }
 
   void Openbus::init() {
