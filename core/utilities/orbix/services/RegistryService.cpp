@@ -50,5 +50,9 @@ namespace openbus {
     {
       return rgs->_cxx_register(serviceOffer, registryId);
     }
+
+    bool RegistryService::unregister(char* registryId) {
+      return rgs->unregister(registryId);
+    }
   }
 }

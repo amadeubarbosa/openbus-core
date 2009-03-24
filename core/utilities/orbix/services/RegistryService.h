@@ -58,6 +58,15 @@ namespace openbus {
         bool Register(
           ServiceOffer serviceOffer,
           char* registryId);
+
+      /*
+      * Remove uma oferta de serviço.
+      * Parâmetros de entrada:
+      *   identifier: Identificador do registro da oferta de serviço.
+      * Parâmetros de saída:
+      *   retorno: Bool indicando se a chamada executou corretamente.
+      */
+        bool unregister(char* registryId);
     };
   }
 }
