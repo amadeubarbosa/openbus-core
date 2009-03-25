@@ -25,8 +25,8 @@ end
 
 local sockets = orb.BasicSystem.sockets
 
-function __init(self, identifier, writable, size, host, port, accessKey)
-  return core(sockets, identifier, writable, size, host, port, accessKey)
+function __init(self, identifier, writable, host, port, accessKey)
+  return core(sockets, identifier, writable, host, port, accessKey)
 end
 
 -- Invoke with concurrency

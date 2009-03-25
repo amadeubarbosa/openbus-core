@@ -1,6 +1,6 @@
 PROJNAME= ftctest
 APPNAME= runner
-
+CXXTESTGEN = ../../cxxtest/cxxtestgen.pl
 DEFINES= _FILE_OFFSET_BITS=64
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
@@ -11,10 +11,12 @@ LDIR= ${OPENBUSLIB}
 
 SRC= runner.cpp
 
-LIBS= dl oilall luasocket ftc
+CPPFLAGS= -g
+
+LIBS= dl oilall luasocket ftc ssl crypto
 
 USE_LUA51=YES
 
 cxxtest:
-	cxxtestgen.pl --runner=StdioPrinter -o runner.cpp TestSuite.cpp
+	${CXXTESTGEN} --runner=StdioPrinter -o runner.cpp TestSuite.cpp
 

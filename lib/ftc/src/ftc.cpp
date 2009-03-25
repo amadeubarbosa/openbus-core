@@ -1,6 +1,6 @@
-/*
-** ftc.cpp
-*/
+/**
+ * ftc.cpp
+ */
 
 #include <ftc.h>
 
@@ -14,7 +14,8 @@ extern "C" {
   #include "ftcwooil_core.h"
 #endif
 }
-#include <string.h>
+
+using namespace std;
 
 Lua_State* ftc::LuaVM = 0 ;
 
@@ -50,7 +51,7 @@ Lua_State* ftc::getLuaVM()
   return LuaVM ;
 }
 
-ftc::ftc( const char* id, bool writable, unsigned long long size, const char* host, \
+ftc::ftc( const char* id, bool writable, const char* host, \
                                       unsigned long port, const char* accessKey )
 {
 #if VERBOSE
@@ -85,10 +86,6 @@ ftc::ftc( const char* id, bool writable, unsigned long long size, const char* ho
   #if VERBOSE
     printf( "\t[parâmetro writable = %d empilhado]\n", writable ) ;
   #endif
-  lua_pushinteger( LuaVM, size ) ;
-  #if VERBOSE
-    printf( "\t[parâmetro size = %lld empilhado]\n", size ) ;
-  #endif
   lua_pushstring( LuaVM, host ) ;
   #if VERBOSE
     printf( "\t[parâmetro host = %s empilhado]\n", host ) ;
@@ -101,7 +98,7 @@ ftc::ftc( const char* id, bool writable, unsigned long long size, const char* ho
   #if VERBOSE
     printf( "\t[parâmetro accessKey = %s empilhado]\n", accessKey ) ;
   #endif
-  lua_pcall( LuaVM, 6, 1, 0 ) ;
+  lua_pcall( LuaVM, 5, 1, 0 ) ;
   #if VERBOSE
     printf( "\t[Instância Lua de ftc(%p) criada]\n", \
             lua_topointer( LuaVM, -1 ) ) ;
@@ -164,18 +161,18 @@ void ftc::open( bool readonly )
     printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
         lua_typename( LuaVM, lua_type( LuaVM, -1 ) ) ) ;
   #endif
-    const char * errmsg ;
+    string errmsg ;
     lua_getglobal( LuaVM, "tostring" ) ;
     lua_insert( LuaVM, -2 ) ;
     lua_pcall( LuaVM, 1, 1, 0 ) ;
-    errmsg = lua_tostring( LuaVM, -1 ) ;
+    errmsg += lua_tostring( LuaVM, -1 ) ;
     lua_pop( LuaVM, 1 ) ;
   #if VERBOSE
-    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
+    printf( "\t[lancando excecao: %s]\n", errmsg.c_str() ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::open() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg);
   } /* if */
   bool returnValue = lua_toboolean( LuaVM, -3 ) ;
 #if VERBOSE
@@ -191,12 +188,15 @@ void ftc::open( bool readonly )
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::open() FIM]\n\n" ) ;
   #endif
-    if ( errorCode == 253 ) {
-      throw Error::FILE_NOT_FOUND() ;
-    } else if ( errorCode == 252 ) {
-      throw Error::NO_PERMISSION() ;
-    } else {
-      throw errmsg ;
+    switch(errorCode){
+        case FILE_NOT_FOUND:
+          throw FileNotFoundException(errmsg);
+        case NO_PERMISSION:
+          throw NoPermissionException(errmsg);
+        case INVALID_KEY:
+          throw InvalidKeyException(errmsg);
+        default:
+          throw FailureException(errmsg);
     }
   }
   lua_pop( LuaVM, 3 ) ;
@@ -245,7 +245,7 @@ bool ftc::isOpen()
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::isOpen() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } /* if */
   bool returnValue = lua_toboolean( LuaVM, -1 ) ;
 #if VERBOSE
@@ -298,7 +298,7 @@ void ftc::close()
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::close() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } /* if */
   bool returnValue = lua_toboolean( LuaVM, -3 ) ;
 #if VERBOSE
@@ -313,11 +313,10 @@ void ftc::close()
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::close() FIM]\n\n" ) ;
   #endif
-    if ( errorCode == 250 ) {
-      throw Error::FILE_NOT_OPENED() ;
-    } else {
-      throw errmsg ;
-    }
+    if(errorCode == FILE_NOT_OPEN ) 
+        throw FileNotOpenException(errmsg);
+    
+    throw FailureException(errmsg);
   }
   lua_pop( LuaVM, 3 ) ;
 #if VERBOSE
@@ -326,10 +325,10 @@ void ftc::close()
 #endif
 }
 
-void ftc::truncate( unsigned long long size )
+void ftc::setSize( unsigned long long size )
 {
 #if VERBOSE
-  printf( "[ftc::truncate() COMECO]\n" ) ;
+  printf( "[ftc::setSize() COMECO]\n" ) ;
 #endif
 #ifndef WITHOUT_OIL
   lua_getglobal(LuaVM, "ftc");
@@ -341,7 +340,7 @@ void ftc::truncate( unsigned long long size )
 #if VERBOSE
   printf( "\t[Objeto C++(%p) Objeto Lua(%p)]\n", this, lua_topointer( LuaVM, -1 ) ) ;
 #endif
-  lua_getfield( LuaVM, -1, "truncate" ) ;
+  lua_getfield( LuaVM, -1, "setSize" ) ;
   lua_insert( LuaVM, -2 ) ;
   lua_pushinteger( LuaVM, size ) ;
 #if VERBOSE
@@ -367,9 +366,9 @@ void ftc::truncate( unsigned long long size )
   #if VERBOSE
     printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    printf( "[ftc::truncate() FIM]\n\n" ) ;
+    printf( "[ftc::setSize() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg);
   } /* if */
   bool returnValue = lua_toboolean( LuaVM, -3 ) ;
 #if VERBOSE
@@ -383,18 +382,21 @@ void ftc::truncate( unsigned long long size )
     printf( "\t[errorCode = %d]\n", errorCode ) ;
     printf( "\t[lancando excecao]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    printf( "[ftc::truncate() FIM]\n\n" ) ;
+    printf( "[ftc::setSize() FIM]\n\n" ) ;
   #endif
-    if ( errorCode == 249 ) {
-      throw Error::IS_READ_ONLY_FILE() ;
-    } else {
-      throw errmsg ;
+    switch(errorCode){
+        case FILE_NOT_OPEN:
+          throw FileNotOpenException(errmsg);
+        case NO_PERMISSION:
+          throw NoPermissionException(errmsg);
+        default:
+          throw FailureException(errmsg);
     }
   }
   lua_pop( LuaVM, 3 ) ;
 #if VERBOSE
   printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-  printf( "[ftc::truncate() FIM]\n\n" ) ;
+  printf( "[ftc::setSize() FIM]\n\n" ) ;
 #endif
 }
 
@@ -420,9 +422,9 @@ void ftc::setPosition( unsigned long long position )
   printf( "\t[parâmetro position = %lld empilhado]\n", position ) ;
 #endif
 #ifndef WITHOUT_OIL
-  if ( lua_pcall( LuaVM, 4, 2, 0 ) != 0 ) {
+  if ( lua_pcall( LuaVM, 4, 3, 0 ) != 0 ) {
 #else
-  if ( lua_pcall( LuaVM, 2, 2, 0 ) != 0 ) {
+  if ( lua_pcall( LuaVM, 2, 3, 0 ) != 0 ) {
 #endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
@@ -441,23 +443,31 @@ void ftc::setPosition( unsigned long long position )
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::setPosition() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } /* if */
-  bool returnValue = lua_toboolean( LuaVM, -2 ) ;
+  bool returnValue = lua_toboolean( LuaVM, -3 ) ;
 #if VERBOSE
   printf( "\t[return = %d empilhado]\n", returnValue ) ;
 #endif
   if ( !returnValue ) {
-    const char* errmsg = lua_tostring( LuaVM, -1 ) ;
+    const char* errmsg = lua_tostring( LuaVM, -2 ) ;
+    int errorCode = (int) lua_tointeger( LuaVM, -1 ) ;
+    lua_pop( LuaVM, 3 ) ;
   #if VERBOSE
     printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::setPosition() FIM]\n\n" ) ;
   #endif
-    lua_pop( LuaVM, 2 ) ;
-    throw errmsg ;
+    switch(errorCode){
+        case FILE_NOT_OPEN:
+          throw FileNotOpenException(errmsg);
+        case NO_PERMISSION:
+          throw NoPermissionException(errmsg);
+        default:
+          throw FailureException(errmsg);
+    }
   }
-  lua_pop( LuaVM, 2 ) ;
+  lua_pop( LuaVM, 3 ) ;
 #if VERBOSE
   printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
   printf( "[ftc::setPosition() FIM]\n\n" ) ;
@@ -483,9 +493,9 @@ unsigned long long ftc::getPosition()
   lua_getfield( LuaVM, -1, "getPosition" ) ;
   lua_insert( LuaVM, -2 ) ;
 #ifndef WITHOUT_OIL
-  if ( lua_pcall( LuaVM, 3, 2, 0 ) != 0 ) {
+  if ( lua_pcall( LuaVM, 3, 3, 0 ) != 0 ) {
 #else
-  if ( lua_pcall( LuaVM, 1, 2, 0 ) != 0 ) {
+  if ( lua_pcall( LuaVM, 1, 3, 0 ) != 0 ) {
 #endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
@@ -504,27 +514,27 @@ unsigned long long ftc::getPosition()
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::getPosition() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } /* if */
-  bool returnValue = lua_toboolean( LuaVM, -2 ) ;
+  bool returnValue = lua_toboolean( LuaVM, -3 ) ;
 #if VERBOSE
   printf( "\t[return = %d empilhado]\n", returnValue ) ;
 #endif
   if ( !returnValue ) {
-    const char* errmsg = lua_tostring( LuaVM, -1 ) ;
+    const char* errmsg = lua_tostring( LuaVM, -2 ) ;
   #if VERBOSE
     printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::getPosition() FIM]\n\n" ) ;
   #endif
-    lua_pop( LuaVM, 2 ) ;
-    throw errmsg ;
+    lua_pop( LuaVM, 3 ) ;
+    throw FailureException(errmsg) ;
   } else {
-    position = lua_tointeger( LuaVM, -1 ) ;
+    position = lua_tointeger( LuaVM, -2 ) ;
   #if VERBOSE
     printf( "\t[position = %lld empilhado]\n", position ) ;
   #endif
-    lua_pop( LuaVM, 2 ) ;
+    lua_pop( LuaVM, 3 ) ;
     return position ;
   }
 #if VERBOSE
@@ -552,6 +562,75 @@ unsigned long long ftc::getSize()
   lua_getfield( LuaVM, -1, "getSize" ) ;
   lua_insert( LuaVM, -2 ) ;
 #ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 3, 3, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 1, 3, 0 ) != 0 ) {
+#endif
+  #if VERBOSE
+    printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename( LuaVM, lua_type( LuaVM, -1 ) ) ) ;
+  #endif
+    const char * errmsg ;
+    lua_getglobal( LuaVM, "tostring" ) ;
+    lua_insert( LuaVM, -2 ) ;
+    lua_pcall( LuaVM, 1, 1, 0 ) ;
+    errmsg = lua_tostring( LuaVM, -1 ) ;
+    lua_pop( LuaVM, 1 ) ;
+  #if VERBOSE
+    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "[ftc::getSize() FIM]\n\n" ) ;
+  #endif
+    throw FailureException(errmsg) ;
+  } /* if */
+  bool returnValue = lua_toboolean( LuaVM, -3 ) ;
+#if VERBOSE
+  printf( "\t[return = %d empilhado]\n", returnValue ) ;
+#endif
+  if ( !returnValue ) {
+    const char* errmsg = lua_tostring( LuaVM, -2 ) ;
+  #if VERBOSE
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "[ftc::getSize() FIM]\n\n" ) ;
+  #endif
+    lua_pop( LuaVM, 3 ) ;
+    throw FailureException(errmsg) ;
+  } else {
+    size = lua_tointeger( LuaVM, -2 ) ;
+  #if VERBOSE
+    printf( "\t[size = %lld empilhado]\n", size ) ;
+  #endif
+    lua_pop( LuaVM, 3 ) ;
+    return size ;
+  }
+#if VERBOSE
+  printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+  printf( "[ftc::getSize() FIM]\n\n" ) ;
+#endif
+}
+
+unsigned long long ftc::getReadBufferSize()
+{
+  unsigned long long size ;
+#if VERBOSE
+  printf( "[ftc::getReadBufferSize() COMECO]\n" ) ;
+#endif
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
+  lua_pushlightuserdata( LuaVM, this ) ;
+  lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
+#if VERBOSE
+  printf( "\t[Objeto C++(%p) Objeto Lua(%p)]\n", this, lua_topointer( LuaVM, -1 ) ) ;
+#endif
+  lua_getfield( LuaVM, -1, "getReadBufferSize" ) ;
+  lua_insert( LuaVM, -2 ) ;
+#ifndef WITHOUT_OIL
   if ( lua_pcall( LuaVM, 3, 2, 0 ) != 0 ) {
 #else
   if ( lua_pcall( LuaVM, 1, 2, 0 ) != 0 ) {
@@ -571,9 +650,9 @@ unsigned long long ftc::getSize()
   #if VERBOSE
     printf( "\t[lancando excecao]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    printf( "[ftc::getSize() FIM]\n\n" ) ;
+    printf( "[ftc::getReadBufferSize() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } /* if */
   bool returnValue = lua_toboolean( LuaVM, -2 ) ;
 #if VERBOSE
@@ -584,10 +663,10 @@ unsigned long long ftc::getSize()
   #if VERBOSE
     printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-    printf( "[ftc::getSize() FIM]\n\n" ) ;
+    printf( "[ftc::getReadBufferSize() FIM]\n\n" ) ;
   #endif
     lua_pop( LuaVM, 2 ) ;
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } else {
     size = lua_tointeger( LuaVM, -1 ) ;
   #if VERBOSE
@@ -596,13 +675,160 @@ unsigned long long ftc::getSize()
     lua_pop( LuaVM, 2 ) ;
     return size ;
   }
+}
+
+void ftc::setReadBufferSize( unsigned long long size )
+{
+#if VERBOSE
+  printf( "[ftc::setReadBufferSize() COMECO]\n" ) ;
+#endif
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
+  lua_pushlightuserdata( LuaVM, this ) ;
+  lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
+#if VERBOSE
+  printf( "\t[Objeto C++(%p) Objeto Lua(%p)]\n", this, lua_topointer( LuaVM, -1 ) ) ;
+#endif
+  lua_getfield( LuaVM, -1, "setReadBufferSize" ) ;
+  lua_insert( LuaVM, -2 ) ;
+  lua_pushinteger( LuaVM, size ) ;
+#if VERBOSE
+  printf( "\t[parâmetro size = %Ld empilhado]\n", size ) ;
+#endif
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 4, 2, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 2, 2, 0 ) != 0 ) {
+#endif
+  #if VERBOSE
+    printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename( LuaVM, lua_type( LuaVM, -1 ) ) ) ;
+  #endif
+    const char * errmsg ;
+    lua_getglobal( LuaVM, "tostring" ) ;
+    lua_insert( LuaVM, -2 ) ;
+    lua_pcall( LuaVM, 1, 1, 0 ) ;
+    errmsg = lua_tostring( LuaVM, -1 ) ;
+    lua_pop( LuaVM, 1 ) ;
+  #if VERBOSE
+    printf( "\t[lancando excecao]\n" ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "[ftc::setReadBufferSize() FIM]\n\n" ) ;
+  #endif
+    throw FailureException(errmsg) ;
+  } /* if */
+  bool returnValue = lua_toboolean( LuaVM, -2 ) ;
+#if VERBOSE
+  printf( "\t[return = %d empilhado]\n", returnValue ) ;
+#endif
+  if ( !returnValue ) {
+    const char* errmsg = lua_tostring( LuaVM, -1 ) ;
+  #if VERBOSE
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "[ftc::setReadBufferSize() FIM]\n\n" ) ;
+  #endif
+    lua_pop( LuaVM, 2 ) ;
+    throw FailureException(errmsg) ;
+  }
+  lua_pop( LuaVM, 2 ) ;
 #if VERBOSE
   printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
-  printf( "[ftc::getSize() FIM]\n\n" ) ;
+  printf( "[ftc::setSize() FIM]\n\n" ) ;
 #endif
 }
 
-void ftc::read( char* data, unsigned long long nbytes, unsigned long long position )
+unsigned long long ftc::transferTo( unsigned long long position, unsigned long long nbytes, FILE* fd, char * data  )
+{
+#if VERBOSE
+  printf( "[ftc::transferTo() COMECO]\n" ) ;
+#endif
+#ifndef WITHOUT_OIL
+  lua_getglobal(LuaVM, "ftc");
+  lua_getfield(LuaVM, -1, "invoke" );
+  lua_insert( LuaVM, -2 ) ;
+#endif
+  lua_pushlightuserdata( LuaVM, this ) ;
+  lua_gettable( LuaVM, LUA_REGISTRYINDEX ) ;
+#if VERBOSE
+  printf( "\t[Objeto C++(%p) Objeto Lua(%p)]\n", this, lua_topointer( LuaVM, -1 ) ) ;
+#endif
+  lua_getfield( LuaVM, -1, "transferTo" ) ;
+  lua_insert( LuaVM, -2 ) ;
+  lua_pushinteger( LuaVM, position ) ;
+#if VERBOSE
+  printf( "\t[parâmetro position = %lld empilhado]\n", position ) ;
+#endif
+  lua_pushinteger( LuaVM, nbytes ) ;
+#if VERBOSE
+  printf( "\t[parâmetro nbytes = %lld empilhado]\n", nbytes ) ;
+#endif
+  lua_pushlightuserdata( LuaVM, (void*)fd ) ;
+#if VERBOSE
+  printf( "\t[fd = %p empilhado]\n", fd ) ;
+#endif
+  lua_pushlightuserdata( LuaVM, data ) ;
+#if VERBOSE
+  printf( "\t[data = %p empilhado]\n", data ) ;
+#endif
+#ifndef WITHOUT_OIL
+  if ( lua_pcall( LuaVM, 7, 3, 0 ) != 0 ) {
+#else
+  if ( lua_pcall( LuaVM, 5, 3, 0 ) != 0 ) {
+#endif
+  #if VERBOSE
+    printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "\t[Tipo do elemento do TOPO: %s]\n" , \
+        lua_typename( LuaVM, lua_type( LuaVM, -1 ) ) ) ;
+  #endif
+    const char * errmsg ;
+    lua_getglobal( LuaVM, "tostring" ) ;
+    lua_insert( LuaVM, -2 ) ;
+    lua_pcall( LuaVM, 1, 1, 0 ) ;
+    errmsg = lua_tostring( LuaVM, -1 ) ;
+    lua_pop( LuaVM, 1 ) ;
+  #if VERBOSE
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "[ftc::read() FIM]\n\n" ) ;
+  #endif
+    throw FailureException(errmsg) ;
+  } /* if */
+  bool returnValue = lua_toboolean( LuaVM, -3 ) ;
+#if VERBOSE
+  printf( "\t[return = %d empilhado]\n", returnValue ) ;
+#endif
+  unsigned long long readBytes = 0;
+  if ( !returnValue ) {
+    const char* errmsg = lua_tostring( LuaVM, -2 ) ;
+  #if VERBOSE
+    printf( "\t[lancando excecao: %s]\n", errmsg ) ;
+    printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+    printf( "[ftc::read() FIM]\n\n" ) ;
+  #endif
+    lua_pop( LuaVM, 3 ) ;
+    throw FailureException(errmsg) ;
+  } else {
+    readBytes = lua_tointeger( LuaVM, -2 ) ;
+  #if VERBOSE
+    printf( "\t[Bytes lidos: %lld]\n" , readBytes ) ;
+  #endif
+    lua_pop( LuaVM, 3 ) ;
+  }
+#if VERBOSE
+  printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
+  printf( "[ftc::read() FIM]\n\n" ) ;
+#endif
+  return readBytes;
+}
+
+unsigned long long ftc::read( char* data, unsigned long long nbytes, unsigned long long position )
 {
 #if VERBOSE
   printf( "[ftc::read() COMECO]\n" ) ;
@@ -632,9 +858,9 @@ void ftc::read( char* data, unsigned long long nbytes, unsigned long long positi
   printf( "\t[data = %p empilhado]\n", data ) ;
 #endif
 #ifndef WITHOUT_OIL
-  if ( lua_pcall( LuaVM, 6, 2, 0 ) != 0 ) {
+  if ( lua_pcall( LuaVM, 6, 3, 0 ) != 0 ) {
 #else
-  if ( lua_pcall( LuaVM, 4, 2, 0 ) != 0 ) {
+  if ( lua_pcall( LuaVM, 4, 3, 0 ) != 0 ) {
 #endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
@@ -653,44 +879,48 @@ void ftc::read( char* data, unsigned long long nbytes, unsigned long long positi
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::read() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } /* if */
-  bool returnValue = lua_toboolean( LuaVM, -2 ) ;
+  bool returnValue = lua_toboolean( LuaVM, -3 ) ;
 #if VERBOSE
+  printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
   printf( "\t[return = %d empilhado]\n", returnValue ) ;
 #endif
-  if ( !returnValue ) {
-    const char* errmsg = lua_tostring( LuaVM, -1 ) ;
-    lua_pop( LuaVM, 1 ) ;
+  unsigned long long readBytes = 0;
+  if ( false ) {
+    const char* errmsg = lua_tostring( LuaVM, -2 ) ;
+    lua_pop( LuaVM, 3 ) ;
   #if VERBOSE
     printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::read() FIM]\n\n" ) ;
   #endif
-    lua_pop( LuaVM, 2 ) ;
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } else {
+    readBytes = lua_tointeger( LuaVM, -1 ) ;
   #if VERBOSE
-    char* ptr_data = (char*) lua_topointer( LuaVM, -1 ) ;
+    printf( "\t[Bytes lidos: %lli]\n" , readBytes ) ;
+    char* ptr_data = (char*) lua_topointer( LuaVM, -2 ) ;
     printf( "\t[Data buffer recovered: %p]\n", ptr_data ) ;
-    printf( "\t[Byte Sequence:" ) ;
   #if VERBOSE2
+    printf( "\t[Byte Sequence:" ) ;
     int x ;
     for ( x = 0; x < nbytes; x++ ) {
       printf( "%c", ptr_data[ x ] ) ;
     }
-  #endif
     printf( "]\n" ) ;
   #endif
-    lua_pop( LuaVM, 2 ) ;
+  #endif
+    lua_pop( LuaVM, 3 ) ;
   }
 #if VERBOSE
   printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
   printf( "[ftc::read() FIM]\n\n" ) ;
 #endif
+  return readBytes;
 }
 
-void ftc::write( char* data, unsigned long long nbytes, unsigned long long position )
+unsigned long long ftc::write( const char* data, unsigned long long nbytes, unsigned long long position )
 {
 #if VERBOSE
   printf( "[ftc::write() COMECO]\n" ) ;
@@ -720,9 +950,9 @@ void ftc::write( char* data, unsigned long long nbytes, unsigned long long posit
   printf( "\t[data = %p empilhado]\n", data ) ;
 #endif
 #ifndef WITHOUT_OIL
-  if ( lua_pcall( LuaVM, 6, 2, 0 ) != 0 ) {
+  if ( lua_pcall( LuaVM, 6, 3, 0 ) != 0 ) {
 #else
-  if ( lua_pcall( LuaVM, 4, 2, 0 ) != 0 ) {
+  if ( lua_pcall( LuaVM, 4, 3, 0 ) != 0 ) {
 #endif
   #if VERBOSE
     printf( "\t[ERRO ao realizar pcall do metodo]\n" ) ;
@@ -735,36 +965,39 @@ void ftc::write( char* data, unsigned long long nbytes, unsigned long long posit
     lua_insert( LuaVM, -2 ) ;
     lua_pcall( LuaVM, 1, 1, 0 ) ;
     errmsg = lua_tostring( LuaVM, -1 ) ;
-    lua_pop( LuaVM, 1 ) ;
+    lua_pop( LuaVM, 1) ;
   #if VERBOSE
     printf( "\t[lancando excecao: %s]\n", errmsg ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::write() FIM]\n\n" ) ;
   #endif
-    throw errmsg ;
+    throw FailureException(errmsg) ;
   } /* if */
-  bool returnValue = lua_toboolean( LuaVM, -2 ) ;
+  bool returnValue = lua_toboolean( LuaVM, -3 ) ;
 #if VERBOSE
   printf( "\t[return = %d empilhado]\n", returnValue ) ;
 #endif
+  unsigned long long readBytes = 0;
   if ( !returnValue ) {
-    const char* errmsg = lua_tostring( LuaVM, -1 ) ;
-    lua_pop( LuaVM, 1 ) ;
+    const char* errmsg = lua_tostring( LuaVM, -2 ) ;
   #if VERBOSE
     printf( "\t[lancando excecao]\n" ) ;
     printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
     printf( "[ftc::write() FIM]\n\n" ) ;
   #endif
-    lua_pop( LuaVM, 2 ) ;
-    throw errmsg ;
+    lua_pop( LuaVM, 3 ) ;
+    throw FailureException(errmsg) ;
   } else {
+    readBytes = lua_tointeger( LuaVM, -2 ) ;
   #if VERBOSE
+    printf( "\t[Bytes lidos: %lld]\n" , readBytes ) ;
   #endif
-    lua_pop( LuaVM, 2 ) ;
+    lua_pop( LuaVM, 3 ) ;
   }
 #if VERBOSE
   printf( "\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop( LuaVM ) ) ;
   printf( "[ftc::write() FIM]\n\n" ) ;
 #endif
+  return readBytes;
 }
 

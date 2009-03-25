@@ -13,6 +13,7 @@ ${PRECMP_DIR}/ftc_core.c ${PRECMP_DIR}/ftc_core.h:
 #DEFINES=VERBOSE
 #DEFINES+=VERBOSE2
 
+DEFINES+=_FILE_OFFSET_BITS=64 LUA_USELONGLONG
 SRC= ${PRECMP_DIR}/ftc_core.c ftc.cpp
 
 INCLUDES= ../include ${OPENBUSINC}/luasocket2 ${OPENBUSINC}/oil04 ${PRECMP_DIR}
@@ -21,3 +22,6 @@ LDIR += ${OPENBUSLIB}
 LIBS= luasocket oilall stdc++
 
 USE_LUA51=YES
+
+distclean:
+	rm -rf ${PRECMP_DIR}/ftc_core.*

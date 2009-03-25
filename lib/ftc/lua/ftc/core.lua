@@ -3,9 +3,9 @@
 --
 
 -- Verbose
--- [[VERBOSE]] local print = print
--- [[VERBOSE]] local verbose = require "ftc.verbose"
--- [[VERBOSE]] local LOG = verbose.LOG
+--local print = print
+--local verbose = require "ftc.verbose"
+--local LOG = verbose.LOG
 
 local math      = math
 local pairs     = pairs
@@ -29,7 +29,7 @@ local operation = {
   OPEN_READ_ONLY  = 0,
   OPEN_READ_WRITE = 1,
   CLOSE           = 2,
-  TRUNCATE        = 3,
+  SET_SIZE        = 3,
   GET_POSITION    = 4,
   SET_POSITION    = 5,
   GET_SIZE        = 6,
@@ -37,14 +37,22 @@ local operation = {
   WRITE           = 8,
 }
 
+local FAILURE             = 255
+local INVALID_KEY         = 254
+local FILE_NOT_FOUND      = 253
+local NO_PERMISSION       = 252
+local FILE_LOCKED         = 251
+local MAX_CLIENTS_REACHED = 250
+local FILE_NOT_OPEN       = 249
+
 local errorCode = {
-  FAILURE         = -1,                                         -- FAILURE
-  INVALID_KEY     = -2,                                         -- INVALID_KEY
-  [253]           = "File not found.",                          -- FILE_NOT_FOUND
-  [252]           = "There is no permission to open the file.", -- NO_PERMISSION
-  FILE_LOCKED     = -5,                                         -- FILE_LOCKED
-  [250]           = "This file wasn't open.",                   -- FILE_NOT_OPENED
-  [249]           = "This a read-only file.",                   -- IS_READ_ONLY_FILE
+  [FAILURE            ] = "Failure",
+  [INVALID_KEY        ] = "Invalid Key",
+  [FILE_NOT_FOUND     ] = "File not found.",
+  [NO_PERMISSION      ] = "No permission.",
+  [FILE_LOCKED        ] = "File locked",
+  [MAX_CLIENTS_REACHED] = "Server max clients limit reached.",
+  [FILE_NOT_OPEN      ] = "The file is not open",
 }
 
 for k,v in pairs(operation) do
@@ -59,37 +67,38 @@ local identifier
 local writable
 local opened
 local readOnly
-local size
 local channel
 local timeout
+local readBufferSize
 
 --- Create a remote file
 -- @param identifier The file path
 -- @param writable The writable flag
--- @param size The file size
 -- @param host The host of server
 -- @param port The port of server
 -- @param accessKey This is an access key for the file
-function __init(self, psockets, identifier, writable, size, host, port, accessKey)
+function __init(self, psockets, identifier, writable, host, port, accessKey)
   sockets = psockets
   return oo.rawnew(self, {
     identifier = identifier,
     writable = writable,
-    size = size,
     host = host,
     port = port,
     accessKey = accessKey,
+	readBufferSize = 1024*1024
   } )
 end
 
 -- Base converter
 -- Decimal to base 256
 local function LuaNumber2Long(x)
--- [[VERBOSE]] LOG:LuaNumber2Long("["..x.."]")
+-- [[Verbose]] LOG:LuaNumber2Long("x ["..x.."]")
   local v = ""
   x = math.floor(x)
+  local m = 0
   for i = 1, 8 do
-    v = string.char(math.mod(x, 256))..v
+	m = math.mod(x, 256)  
+    v = string.char(m)..v
     x = math.floor(x / 256)
   end
   return v
@@ -120,18 +129,18 @@ function open(self, readonly)
 -- [[VERBOSE]] LOG:open("OPEN")
   if (readonly == false and self.writable == false) then
   -- [[VERBOSE]] LOG:open("O arquivo não pode ser aberto para escrita.")
-    return nil, "O arquivo não pode ser aberto para escrita."
+    return nil, errorCode[NO_PERMISSION], NO_PERMISSION
   end
   local errmsg
   self.channel, errmsg = sockets:tcp()
   if not self.channel then
-    return nil, errmsg
+    return nil, errmsg , FAILURE
   end
 -- [[VERBOSE]] LOG:open("Tentando se conectar em ", self.host, ":", self.port, " ...")
   local status, errmsg = self.channel:connect(self.host, self.port)
   if not status then
-  -- [[VERBOSE]] LOG:open("ERRO '", errmsg, "'")
-    return nil, errmsg
+ -- [[VERBOSE]] LOG:open("ERRO '", errmsg, "'")
+    return nil, errmsg, FAILURE
   end
 -- [[VERBOSE]] LOG:open("Conexão estabelecida.")
   self.buffer = string.char(string.len(self.accessKey))
@@ -149,18 +158,23 @@ function open(self, readonly)
 -- [[VERBOSE]] LOG:open("identifier = ", self.identifier)
   status, errmsg = self.channel:send(self.buffer)
   if not status then
-    return nil, errmsg
+    return nil, errmsg, FAILURE
   end
   --status = string.byte(self.channel:receive(1))
 --falta testar INVALID_KEY
   local code = string.byte(self.channel:receive(1))
 -- [[VERBOSE]] LOG:open("AccessKeyCode = ", code)
   if errorCode[code] then
-  -- [[VERBOSE]] LOG:open("ERROR Code=", code, " Msg=", errorCode[code])
+-- [[VERBOSE]]   LOG:open("ERROR Code=", code, " Msg=", errorCode[code])
     return nil, errorCode[code], code
   end
-  code = string.byte(self.channel:receive(1))
--- [[VERBOSE]] LOG:open("Return code = ", code)
+  byte,err =self.channel:receive(1) 
+  if not byte then
+-- [[VERBOSE]]	  print("channel:receive error: " .. err)
+	  return nil,err, FAILURE
+  end
+  code = string.byte(byte)
+ -- [[VERBOSE]] LOG:open("Return code = ", code)
   if errorCode[code] then
   -- [[VERBOSE]] LOG:open("ERROR Code=", code, " Msg=", errorCode[code])
     return nil, errorCode[code], code
@@ -184,18 +198,18 @@ function close(self)
 -- [[VERBOSE]] LOG:close("CLOSE")
   if (not self.opened) then
   -- [[VERBOSE]] LOG:close("ERRO '", errorCode[250], "'")
-    return nil, errorCode[250], 250
+    return nil, errorCode[FILE_NOT_OPEN], FILE_NOT_OPEN
   end
   self.buffer = operation.CLOSE
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
   -- [[VERBOSE]] LOG:close("ERRO '", errmsg, "'")
-    return nil, errmsg
+    return nil, errmsg , FAILURE
   end
   local code = string.byte(self.channel:receive(1))
 -- [[VERBOSE]] LOG:close("Return code = ", code)
   if errorCode[code] then
-    return nil, errorCode[code]
+    return nil, errorCode[code],code
   end
   self.channel:close()
   self.channel = nil
@@ -203,28 +217,28 @@ function close(self)
   return true
 end
 
---- Truncate the file for a specified length
+--- Resize the file for a specified length
 -- @param size The new size of the file
 -- @return Returns true in case of success, or, in case of errors,
 -- nil plus error message.
-function truncate(self, size)
--- [[VERBOSE]] LOG:truncate("TRUNCATE")
+function setSize(self, size)
+-- [[VERBOSE]] LOG:setSize("SET_SIZE")
   if (self.readOnly) then
-  -- [[VERBOSE]] LOG:truncate("ERRO '", errorCode[249], "'")
-    return nil, errorCode[249], 249
+  -- [[VERBOSE]] LOG:setSize("ERRO '", errorCode[249], "'")
+    return nil, errorCode[NO_PERMISSION], NO_PERMISSION
   end
-  self.buffer = operation.TRUNCATE
+  self.buffer = operation.SET_SIZE
   self.buffer = self.buffer..LuaNumber2Long(size)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
-  -- [[VERBOSE]] LOG:truncate("ERRO '", errmsg, "'")
-    return nil, errmsg
+  -- [[VERBOSE]] LOG:setSize("ERRO '", errmsg, "'")
+    return nil, errmsg, FAILURE
   end
 -- o q se pode retornar como erro??
   local code = string.byte(self.channel:receive(1))
   if errorCode[code] then
-  -- [[VERBOSE]] LOG:truncate("ERRO '", errorCode[code], "'")
-    return nil, errorCode[code]
+  -- [[VERBOSE]] LOG:setSize("ERRO '", errorCode[code], "'")
+    return nil, errorCode[code], code
   end
   return true
 end
@@ -238,7 +252,7 @@ function getPosition(self)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
   -- [[VERBOSE]] LOG:getposition("ERRO '", errmsg, "'")
-    return nil, errmsg
+    return nil, errmsg, FAILURE
   end
   local bytes = self.channel:receive(8)
 -- [[VERBOSE]] LOG:getPosition("position = ", verbose.bytes(self.buffer))
@@ -253,15 +267,15 @@ function setPosition(self, position)
   local status , errmsg = self.channel:send(self.buffer)
   if not status then
   -- [[VERBOSE]] LOG:setPosition("ERRO '", errmsg, "'")
-    return nil, errmsg
+    return nil, errmsg, FAILURE
   end
 -- o q se pode retornar como erro??
   local code = string.byte(self.channel:receive(1))
   if errorCode[code] then
   -- [[VERBOSE]] LOG:setPosition("ERRO '", errorCode[code], "'")
-    return nil, errorCode[code]
+    return nil, errorCode[code], code
   end
-  return true, size
+  return true, position
 end
 
 --- Get the file size
@@ -273,67 +287,125 @@ function getSize(self)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
   -- [[VERBOSE]] LOG:getSize("ERRO '", errmsg, "'")
-    return nil, errmsg
+    return nil, errmsg, FAILURE
   end
   local bytes = self.channel:receive(8)
--- [[VERBOSE]] LOG:getSize("size = = ", verbose.bytes(self.buffer))
+ -- [[VERBOSE]] LOG:getSize("size = = ", verbose.bytes(self.buffer))
+--  print(OctBytes2Long(bytes))
   return true, OctBytes2Long(bytes)
 end
 
 function read(self, nbytes, position, userdata)
 -- [[VERBOSE]] LOG:read("READ")
   self.buffer = operation.READ
-  if (position > self.size) then
-    position = self.size
-  end
-  local available = self.size - position
-  if (nbytes > available) then
-    nbytes = available
-  end
 -- [[VERBOSE]] LOG:read("nbytes = ", nbytes," position = ", position)
   self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(nbytes)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
   -- [[VERBOSE]] LOG:read("ERRO '", errmsg, "'")
-    return nil, errmsg
+    return nil, errmsg, FAILURE
   end
-  local data
+  local data, readBytes
   if userdata then
-    data, errmsg = self.channel:receiveC(nbytes, userdata)
+    data, errmsg , readBytes = self.channel:receiveC(nbytes, userdata)
   else
     data, errmsg = self.channel:receive(nbytes)
+    if data then readBytes = #data end
   end
   if not data then
   -- [[VERBOSE]] LOG:read("ERRO '", errmsg, "'")
-    return nil, errmsg
+    return nil, errmsg, FAILURE 
   end
-  return true, data
+  return true, data , readBytes
+end
+
+function transferTo(self, position, count , outfile , userdata )
+ -- [[VERBOSE]]  LOG:transferTo("")
+  self.buffer = operation.READ
+ -- [[VERBOSE]] LOG:transferTo("Position=", position, " Count=", count  , " outfile=", outfile) 
+  self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(count)
+  local status, errmsg = self.channel:send(self.buffer)
+  if not status then
+ -- [[VERBOSE]]  LOG:transferTo("SEND ERROR '", errmsg, "'")
+    return false, errmsg, FAILURE
+  end
+
+  local readBlockSize    = 0            
+  local bytesAlreadyRead = 0            
+  local missingBytes     = 0           
+  local data,errmsg
+
+  while( bytesAlreadyRead < count ) do    
+    missingBytes = count - bytesAlreadyRead   
+
+    if(missingBytes > self.readBufferSize) then 
+        readBlockSize = self.readBufferSize 
+    else
+        readBlockSize = missingBytes 
+    end
+
+    -- Lendo os dados          
+    if userdata then
+      data, errmsg = self.channel:receiveC(readBlockSize, userdata)
+    else
+      data, errmsg = self.channel:receive(readBlockSize)
+    end
+
+    -- Se tudo ok escrevendo em um arquivo
+    if not data then 
+ -- [[VERBOSE]]      LOG:transferTo("DATA ERRO '", errmsg, "'")
+		return nil, errmsg,FAILURE
+    else
+	  local ret
+      if userdata then
+        ret, errmsg = self.channel:writeToFile(outfile,readBlockSize, data)
+      else
+        ret, errmsg = outfile:write(data)
+	  end
+
+	  if ret == nil then
+ -- [[VERBOSE]]  	  LOG:transferTo("WRITE ERRO '", errmsg, "'")
+		  return nil, errmsg, FAILURE
+	  end
+    end
+
+    bytesAlreadyRead = bytesAlreadyRead + readBlockSize
+  end
+  
+  return true , bytesAlreadyRead 
 end
 
 function write(self, nbytes, position, data)
 -- [[VERBOSE]] LOG:write("WRITE")
   if (self.readOnly) then
-    return nil, "This a read-only file."
+    return nil, errorCode[NO_PERMISSION], NO_PERMISSION
   end
   self.buffer = operation.WRITE
-  if (position > self.size) then
-    position = self.size
-  end
-  local available = self.size - position
-  if (nbytes > available) then
-    nbytes = available
-  end
 -- [[VERBOSE]] LOG:write("nbytes = ", nbytes," position = ", position)
   self.buffer = self.buffer..LuaNumber2Long(position)..LuaNumber2Long(nbytes)
   local status, errmsg = self.channel:send(self.buffer)
   if not status then
   -- [[VERBOSE]] LOG:write("ERRO '", errmsg, "'")
-    return nil, errmsg
+    return nil, errmsg, FAILURE
   end
   status, errmsg = self.channel:send(data)
   if not status then
   -- [[VERBOSE]] LOG:write("ERRO '", errmsg, "'")
-    return nil, errmsg
+    return nil, errmsg,FAILURE
   end
-  return true
+  local code = string.byte(self.channel:receive(1))
+  if errorCode[code] then
+  -- [[VERBOSE]] LOG:setPosition("ERRO '", errorCode[code], "'")
+    return nil, errorCode[code], code
+  end
+  return true , nbytes
+end
+
+function setReadBufferSize(self, size)
+	self.readBufferSize = size
+	return self.readBufferSize
+end
+
+function getReadBufferSize(self)
+	return self.readBufferSize
 end
