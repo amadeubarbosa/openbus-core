@@ -4,7 +4,15 @@
 
 #include "RegistryService.h"
 
+#ifdef VERBOSE
+  #include <iostream>
+#endif
+
 #define VECTORSIZE 256
+
+#ifdef VERBOSE
+  using namespace std;
+#endif
 
 namespace openbus {
   namespace services {
@@ -41,18 +49,44 @@ namespace openbus {
     }
 
     ServiceOfferList* RegistryService::find(PropertyList criteria) {
-      return rgs->find(criteria);
+    #ifdef VERBOSE
+      cout << "[RegistryService::find() BEGIN]" << endl;
+    #endif
+      ServiceOfferList* serviceOfferList = rgs->find(criteria);
+    #ifdef VERBOSE
+      cout << "[RegistryService::find() END]" << endl;
+    #endif
+      return serviceOfferList;
     }
 
     bool RegistryService::Register(
       ServiceOffer serviceOffer,
-      char* registryId)
+      char*& registryId)
     {
-      return rgs->_cxx_register(serviceOffer, registryId);
+    #ifdef VERBOSE
+      cout << "[RegistryService::Register() BEGIN]" << endl;
+    #endif
+      openbusidl::rs::RegistryIdentifier_var _registryId;
+      bool returnValue = rgs->_cxx_register(serviceOffer, _registryId);
+      registryId = _registryId._retn();
+    #ifdef VERBOSE
+      cout << "\treturnValue = " << returnValue << endl;
+      cout << "\tregistryId = (" << registryId << ")" << endl;
+      cout << "[RegistryService::Register() END]" << endl;
+    #endif
+      return returnValue;
     }
 
     bool RegistryService::unregister(char* registryId) {
-      return rgs->unregister(registryId);
+    #ifdef VERBOSE
+      cout << "[RegistryService::unregister() BEGIN]" << endl;
+      cout << "\tregistryId = (" << registryId << ")" << endl;
+    #endif
+      bool returnValue = rgs->unregister(registryId);
+    #ifdef VERBOSE
+      cout << "[RegistryService::unregister() END]" << endl;
+    #endif
+      return returnValue;
     }
   }
 }

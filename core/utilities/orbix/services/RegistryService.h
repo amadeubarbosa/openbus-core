@@ -57,7 +57,7 @@ namespace openbus {
       */
         bool Register(
           ServiceOffer serviceOffer,
-          char* registryId);
+          char*& registryId);
 
       /*
       * Remove uma oferta de serviço.
