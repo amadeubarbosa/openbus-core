@@ -15,6 +15,8 @@
 #include <it_ts/thread.h>
 #include <it_ts/mutex.h>
 
+#include <set>
+
 using namespace openbusidl::acs;
 IT_USING_NAMESPACE_STD
 
@@ -26,6 +28,9 @@ namespace openbus {
 
   class Openbus {
     private:
+
+    /* Conjunto dos barramentos instanciados. */
+      static std::set<Openbus*> busSet;
 
     /* Parâmetro argc da linha de comando. */
       int _argc;
@@ -85,7 +90,7 @@ namespace openbus {
         char** argv);
 
     /* Inicializa um valor default para o host e porta do barramento. */
-      void initializeHostPort();
+      void initialize();
 
     /* Cria implicitamente um ORB e um POA. */
       void createOrbPoa();
@@ -107,6 +112,11 @@ namespace openbus {
       };
 
     public:
+
+    /* Termination Handler disponível para a classe IT_TerminationHandler()
+    *  Este método desfaz a conexão para cada instância de barramento.
+    */
+      static void terminationHandlerCallback(long signalType);
 
     /* Construtor
     *  Cria uma referência para um determinado barramento.
@@ -145,6 +155,9 @@ namespace openbus {
       void init(
         CORBA::ORB_ptr _orb,
         PortableServer::POA* _poa);
+
+    /* Retorna o ORB utilizado. */
+      CORBA::ORB* getORB();
 
     /* Retorna a fábrica de componentes. */
       scs::core::ComponentBuilder* getComponentBuilder();

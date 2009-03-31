@@ -54,9 +54,9 @@ int main(int argc, char* argv[]) {
   openbus::services::ServiceOfferList_var soList = registryService->find(propertiesHelper->getPropertyList());
 
   CORBA::ULong idx = 0;
-  openbus::services::ServiceOffer so = soList[idx];
+  openbus::services::ServiceOffer serviceOffer = soList[idx];
 
-  scs::core::IComponent* component = so.member;
+  scs::core::IComponent* component = serviceOffer.member;
   CORBA::Object* obj = component->getFacet("IDL:Hello:1.0");
   Hello* hello = Hello::_narrow(obj);
   hello->sayHello();

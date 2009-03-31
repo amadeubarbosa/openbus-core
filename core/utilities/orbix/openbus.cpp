@@ -12,6 +12,24 @@
 
 namespace openbus {
   common::ORBInitializerImpl* Openbus::ini = 0;
+  std::set<Openbus*> Openbus::busSet;
+
+  void Openbus::terminationHandlerCallback(long signalType) {
+  #ifdef VERBOSE
+    cout << "[Openbus::terminationHandlerCallback() BEGIN]" << endl;
+  #endif
+    std::set<Openbus*>::iterator it;
+    for (it = busSet.begin(); it != busSet.end(); it++) {
+      Openbus* bus = *it;
+      bus->disconnect();
+      if (!CORBA::is_nil(bus->orb)) {
+        bus->orb->shutdown(0);
+      }
+    }
+  #ifdef VERBOSE
+    cout << "[Openbus::terminationHandlerCallback() END]" << endl;
+  #endif
+  }
 
   Openbus::RenewLeaseThread::RenewLeaseThread(Openbus* _bus) {
     bus = _bus;
@@ -54,9 +72,12 @@ namespace openbus {
     }
   }
 
-  void Openbus::initializeHostPort() {
+  void Openbus::initialize() {
     hostBus = (char*) "";
     portBus = 2089;
+    orb = 0;
+    poa = 0;
+    componentBuilder = 0;
     mutex = new IT_Mutex();
   }
 
@@ -88,12 +109,13 @@ namespace openbus {
     _argc = argc;
     _argv = argv;
     newState();
-    if (ini == 0) {
+    if (!ini) {
       cout << "Registrando interceptadores ..." << endl;
       registerInterceptors();
     }
-    initializeHostPort();
+    initialize();
     commandLineParse(_argc, _argv);
+    busSet.insert(this);
   }
 
   Openbus::Openbus(
@@ -109,14 +131,16 @@ namespace openbus {
       cout << "Registrando interceptadores ..." << endl;
       registerInterceptors();
     }
-    initializeHostPort();
+    initialize();
     commandLineParse(_argc, _argv);
     hostBus = (char*) malloc(sizeof(char) * strlen(host) + 1);
     hostBus = (char*) memcpy(hostBus, host, strlen(host) + 1);
     portBus = port;
+    busSet.insert(this);
   }
 
   Openbus::~Openbus() {
+    busSet.erase(this);
     delete componentBuilder;
     delete mutex;
     delete hostBus;
@@ -134,6 +158,10 @@ namespace openbus {
     orb = _orb;
     poa = _poa;
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
+  }
+
+  CORBA::ORB* Openbus::getORB() {
+    return orb;
   }
 
   scs::core::ComponentBuilder* Openbus::getComponentBuilder() {
