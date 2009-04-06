@@ -1,0 +1,18 @@
+#ifndef OPEN_EXCEPTIONS_IDL
+#define OPEN_EXCEPTIONS_IDL
+
+
+/* Exceptions */
+module openbusidl{
+module exceptions{
+
+	/* --- Exceptions --- */
+	/** \brief Representa que uma operacao nao suportada foi executada. */
+	exception OperationNotSupported {};
+
+	/** \brief Representa que nao foi permitido o acesso para um dado usuario. */
+	exception AccessDenied {};
+
+};
+};
+#endif
