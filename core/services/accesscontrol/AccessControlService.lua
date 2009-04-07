@@ -8,6 +8,7 @@ local pairs = pairs
 local ipairs = ipairs
 local string = string
 local tostring = tostring
+local math = math
 
 local luuid = require "uuid"
 local lce = require "lce"
@@ -231,9 +232,10 @@ end
 --@return O desafio.
 ---
 function generateChallenge(self, name, certificate)
-  local currentTime = tostring(os.time())
-  self.challenges[name] = currentTime
-  return lce.cipher.encrypt(certificate:getpublickey(), currentTime)
+  math.randomseed(os.time())
+  local randomSequence = tostring(math.random(2e9))
+  self.challenges[name] = randomSequence
+  return lce.cipher.encrypt(certificate:getpublickey(), randomSequence)
 end
 
 ---
