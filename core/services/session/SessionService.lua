@@ -138,7 +138,7 @@ function wasReconnected(self)
   -- Mantém apenas as sessões com credenciais válidas
   local invalidCredentials = {}
   for credentialId, session in pairs(self.sessions) do
-    if not self.accessService.addCredentialToObserver(self.observerId,
+    if not self.accessService:addCredentialToObserver(self.observerId,
                                                       credentialId) then
       Log:service("Sessão para "..credentialId.." será removida")
       table.insert(invalidCredentials, credentialId)
