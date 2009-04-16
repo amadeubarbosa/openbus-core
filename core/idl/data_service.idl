@@ -1,264 +1,261 @@
-#ifndef OPEN_DATASERVICE_IDL
-#define OPEN_DATASERVICE_IDL
+#ifndef __DATA_SERVICE_IDL__
+#define __DATA_SERVICE_IDL__
 
-
-#include "exceptions.idl"
-#include "basic_types.idl"
-
-/* DataService */
 module openbusidl{
+
 module data_service{
 
-	/* --- Definitions --- */
-	/** \brief Representa uma sequência de octetos. */
-	typedef sequence<octet> OctetSeq;
+/** \brief Representa uma sequência de octetos. */
+typedef sequence<octet> OctetSeq;
 
-	/** \brief Representa o identificador unívoco de um dado. */
-	typedef sequence<octet> DataKey;
-	/** \brief Representa uma sequência de DataKeys. */
-	typedef	sequence<DataKey> DataKeyList;
-	typedef openbusidl::basic_types::TimeStamp TimeStamp;
-	typedef openbusidl::basic_types::MetadataList MetadataList;
+/** \brief Representa o nome de um metadado. */
+typedef string MetadataName;
 
-	/* --- Exceptions --- */
-	/** \brief Representa um tipo desconhecido. */
-	exception UnknownType {};
-	/** \brief Representa um protótipo invalido. */
-	exception InvalidPrototype {};	
-	/** \brief Representa que o DataKey passado não está válido. */
-	exception InvalidDataKey{ DataKey key; };
+/** \brief Representa o valor de um metadado. */
+typedef any MetadataValue;
 
-
-	/* --- Structs --- */
-	/** \brief Representa um canal de acesso a dados. */
-	struct DataChannel {
-		 string host;
-		 unsigned long port;
-		 OctetSeq accessKey;
-		 OctetSeq dataIdentifier;
-		 boolean writable;
-		 long long dataSize;
-	};
-
-
-	/* --- Core --- */
-	/** \brief Representa a visão de um dado. */
-	valuetype DataView {
-		public DataKey key;
-		public string description;
-		public TimeStamp creationDate;
-
-		public boolean isContainer;
-		public string name;
-		public string owner;
-		public sequence<string> interfaces;
-
-		private MetadataList mdata;
-		/** \brief Retorna uma lista de Metadados.
-		 * Esta lista contém os metadados representados pelo mdata e todos 
-		 * os outros atributos de DataView. 
-		 *
-		 * \return Lista de Metadados que contém os metadados representados 
-                 * pelo mdata e todos os outros atributos do valuetype.
-		 */
-		MetadataList getMetadata();
-	};
-	typedef sequence<DataView> DataViewList;
-
-	interface IHDataService {
-		/**
-		 * \brief Obtém todos os dados que representam as raízes da hierarquia.
-		 *
-		 * \return Os dados que representam as raízes da hierarquia.
-		 */
-		DataViewList getRoots();
-
-		/**
-   	  	 * \brief Obtém os filhos do dado.
-   	  	 *
-		 * \param [in] key A chave do dado pai.
-		 *
-		 * \return Os dados filhos.
-		 *
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para asse usuário.
-		 */
-		DataViewList getChildren(in DataKey key)
-			raises (InvalidDataKey,openbusidl::exceptions::AccessDenied);
-
-		/**
-		 * \brief Obtém o pai do dado.
-		 *
-		 * \param [in] key A chave do dado.
-		 *
-		 * \return O dado pai.
-		 *
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para esse usuário.
-		 */
-		DataView getParent(in DataKey key)
-			raises (InvalidDataKey,openbusidl::exceptions::AccessDenied);
-
-		/**
-		 * \brief Obtém o DataView do dado representado por uma chave.
-		 *
-		 * \param [in] key A chave do dado.
-		 *
-		 * \return O dado.
-		 *
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 */
-		DataView getData(in DataKey key)
-			raises (InvalidDataKey);
-
-		/**
-		 * \brief Obtém a visão do dado representado por uma chave.
-		 *
-		 * \param [in] key A chave do dado.
-		 * \param [in] view_interface A visão desejada do dado.
-		 *
-		 * \return A visão do dado.
-		 *
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 */
-		DataView getDataView(in DataKey key, in string view_interface)
-			raises (InvalidDataKey);
-
-		/**
-		 * \brief Obtém a visão dos dado representados por uma lista de chaves.
-		 *
-		 * \param [in] keys As chaves dos dados.
-		 * \param [in] view_interface A visão desejada dos dados.
-		 *
-		 * \return Uma lista contendo a visão dos dados.
-		 *
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 */
-		DataViewList getDataViewList(in DataKeyList keys, in string view_interface)
-			raises (InvalidDataKey);
-
-		/**
-		 * \brief Cria um dado.
-		 *
-		 * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho)
-		 * será criado.
-		 * \param [in] prototype Um protótipo do DataView que será criado.
-		 *
-		 * \return O dado criado.
-		 *
-		 * \exception OperationNotSupported A operação não está implementada 
-		 * para os tipos de dado deste Serviço.
-		 * \exception InvalidPrototype O protótipo não foi aceito pelo serviço.
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para asse usuário.
-		 */
-		DataView createData(in DataKey parent_key, in DataView prototype)
-			raises (openbusidl::exceptions::OperationNotSupported, InvalidPrototype, InvalidDataKey, openbusidl::exceptions::AccessDenied);
-
-		/**
-		 * \brief Cria um dado a partir de um dado de origem.
-		 *
-		 * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho)
-		 * será criado.
-		 * \param [in] source_key A chave do dado de origem.
-		 *
-		 * \return O dado criado.
-		 *
-		 * \exception OperationNotSupported A operação não está implementada 
-                 * para os tipos de dado deste Serviço.		 
-		 * \exception UnknownType O dado não possui tipos suportados para o novo dado.
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para asse usuário.
-		 */
-		DataView createDataFrom(in DataKey parent_key, in DataKey source_key)
-			raises (openbusidl::exceptions::OperationNotSupported, UnknownType, InvalidDataKey,openbusidl::exceptions::AccessDenied);
-
-		/**
-		 * \brief Move o dado.
-		 *
-		 * \param [in] source_key A chave do dado de origem.
-		 * \param [in] parent_destination_key A chave do dado de destino.
-		 *
-		 * \return O dado criado.
-		 *
-		 * \exception OperationNotSupported A operação não está implementada 
-                 * para os tipos de dado deste Serviço.		 
-		 * \exception UnknownType O dado não possui tipos suportados para o novo dado.
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para asse usuário.
-		 */
-		DataView moveData(in DataKey source_key, in DataKey parent_destination_key)
-			raises (openbusidl::exceptions::OperationNotSupported, UnknownType, InvalidDataKey,openbusidl::exceptions::AccessDenied);
-
-		/**
-		 * \brief Copia o dado.
-		 *
-		 * \param [in] source_key A chave do dado de origem.
-		 * \param [in] parent_destination_key A chave do dado de destino.
-		 *
-		 * \return O dado criado.
-		 *
-		 * \exception OperationNotSupported A operação não está implementada 
-                 * para os tipos de dado deste Serviço.		 
-		 * \exception UnknownType O dado não possui tipos suportados para o novo dado.
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para asse usuário.
-		 */
-		DataView copyData(in DataKey source_key, in DataKey target_key)
-			raises (openbusidl::exceptions::OperationNotSupported, UnknownType, InvalidDataKey, openbusidl::exceptions::AccessDenied);
-
-		/**
-		 * \brief Remove um dado .
-		 *
-		 * \param [in] keys A chave do dado.
-		 *
-		 * \return \c true, caso o atributo seja removido, ou \c false, caso contrário.
-		 *
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para asse usuário.
-		 */
-		boolean deleteData(in DataKey key)
-			raises (InvalidDataKey,openbusidl::exceptions::AccessDenied);
-
-		/**
-		 * \brief Obtém um canal para acesso ao dado.
-		 *
-		 * \param [in] keys A chave do dado.
-		 *
-		 * \return Um canal para acesso ao dado.
-		 */
-		DataChannel getDataChannel(in DataKey key);
-
-		/**
-		 * \brief Define o valor de uma description.
-		 *
-		 * \param [in] keys A chave do dado.
-		 * \param [in] description O valor da description.
-		 *
-		 * \return O dado alterado.
-		 *
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para asse usuário.
-		 */
-		DataView setDescription (in DataKey key, in string description)
-			raises (InvalidDataKey,openbusidl::exceptions::AccessDenied);
-
-		/**
-		 * \brief Define o valor de um nome.
-		 *
-		 * \param [in] keys A chave do dado.
-		 * \param [in] description O valor do nome.
-		 *
-		 * \return O dado alterado.
-		 *
-		 * \exception InvalidDataKey O DataKey não é válido ou não existe.
-		 * \exception AccessDenied O acesso foi negado para asse usuário.
-		 */
-		DataView setName (in DataKey key, in string name)
-			raises (InvalidDataKey,openbusidl::exceptions::AccessDenied);
-
-	};
+/** \brief Representa um metadado. */
+struct Metadata {
+  MetadataName name;
+  MetadataValue value;
 };
+typedef sequence<Metadata> MetadataList;
+
+/** \brief Representa o tempo em millisegundos desde de 1 de janeiro de 1970. */
+typedef long long TimeStamp;
+
+/** \brief Representa o identificador unívoco de um dado. */
+typedef sequence<octet> DataKey;
+/** \brief Representa uma sequência de DataKeys. */
+typedef  sequence<DataKey> DataKeyList;
+
+/** \brief Representa um tipo desconhecido. */
+exception UnknownType {};
+/** \brief Representa um protótipo invalido. */
+exception InvalidPrototype {};  
+/** \brief Representa que o DataKey passado não está válido. */
+exception InvalidDataKey{ DataKey key; };
+/** \brief Representa que uma operacao nao suportada foi executada. */
+exception OperationNotSupported {};
+
+/** \brief Representa um canal de acesso a dados. */
+struct DataChannel {
+  string host;
+  unsigned long port;
+  OctetSeq accessKey;
+  OctetSeq dataIdentifier;
+  boolean writable;
+  long long dataSize;
+};
+
+/** \brief Representa a visão de um dado. */
+valuetype DataView {
+  public DataKey key;
+  public string description;
+  public TimeStamp creationDate;
+
+  public boolean isContainer;
+  public string name;
+  public string owner;
+  public sequence<string> interfaces;
+
+  private MetadataList mdata;
+
+ /**
+  * \brief Retorna uma lista de Metadados.
+  *
+  * Esta lista contém os metadados representados pelo mdata e todos 
+  * os outros atributos de DataView. 
+  *
+  * \return Lista de Metadados que contém os metadados representados 
+  * pelo mdata e todos os outros atributos do valuetype.
+  */
+  MetadataList getMetadata();
+};
+typedef sequence<DataView> DataViewList;
+
+interface IHDataService {
+ /**
+  * \brief Obtém todos os dados que representam as raízes da hierarquia.
+  *
+  * \return Os dados que representam as raízes da hierarquia.
+  */
+  DataViewList getRoots();
+
+ /**
+  * \brief Obtém os filhos do dado.
+  *
+  * \param [in] key A chave do dado pai.
+  *
+  * \return Os dados filhos.
+  *
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataViewList getChildren(in DataKey key) raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém o pai do dado.
+  *
+  * \param [in] key A chave do dado.
+  *
+  * \return O dado pai.
+  *
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView getParent(in DataKey key) raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém o DataView do dado representado por uma chave.
+  *
+  * \param [in] key A chave do dado.
+  *
+  * \return O dado.
+  *
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView getData(in DataKey key) raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém a visão do dado representado por uma chave.
+  *
+  * \param [in] key A chave do dado.
+  * \param [in] view_interface A visão desejada do dado.
+  *
+  * \return A visão do dado.
+  *
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView getDataView(in DataKey key, in string view_interface)
+      raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém a visão dos dado representados por uma lista de chaves.
+  *
+  * \param [in] keys As chaves dos dados.
+  * \param [in] view_interface A visão desejada dos dados.
+  *
+  * \return Uma lista contendo a visão dos dados.
+  *
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataViewList getDataViewList(in DataKeyList keys, in string view_interface)
+      raises (InvalidDataKey);
+
+ /**
+  * \brief Cria um dado.
+  *
+  * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho)
+  * será criado.
+  * \param [in] prototype Um protótipo do DataView que será criado.
+  *
+  * \return O dado criado.
+  *
+  * \exception OperationNotSupported A operação não está implementada 
+  * para os tipos de dado deste Serviço.
+  *
+  * \exception InvalidPrototype O protótipo não foi aceito pelo serviço.
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView createData(in DataKey parent_key, in DataView prototype)
+      raises (OperationNotSupported, InvalidPrototype, InvalidDataKey);
+
+ /**
+  * \brief Cria um dado a partir de um dado de origem.
+  *
+  * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho) será
+  * criado.
+  * \param [in] source_key A chave do dado de origem.
+  *
+  * \return O dado criado.
+  *
+  * \exception OperationNotSupported A operação não está implementada para os
+  * tipos de dado deste Serviço.     
+  * \exception UnknownType O dado não possui tipos suportados para o novo dado.
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView createDataFrom(in DataKey parent_key, in DataKey source_key)
+      raises (OperationNotSupported, UnknownType, InvalidDataKey);
+
+ /**
+  * \brief Move o dado.
+  *
+  * \param [in] source_key A chave do dado de origem.
+  * \param [in] parent_destination_key A chave do dado de destino.
+  *
+  * \return O dado criado.
+  *
+  * \exception OperationNotSupported A operação não está implementada
+  * para os tipos de dado deste Serviço.     
+  * \exception UnknownType O dado não possui tipos suportados para o novo dado.
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView moveData(in DataKey source_key, in DataKey parent_destination_key)
+      raises (OperationNotSupported, UnknownType, InvalidDataKey);
+
+ /**
+  * \brief Copia o dado.
+  *
+  * \param [in] source_key A chave do dado de origem.
+  * \param [in] parent_destination_key A chave do dado de destino.
+  *
+  * \return O dado criado.
+  *
+  * \exception OperationNotSupported A operação não está implementada para os
+  * tipos de dado deste Serviço.     
+  * \exception UnknownType O dado não possui tipos suportados para o novo dado.
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView copyData(in DataKey source_key, in DataKey target_key)
+      raises (OperationNotSupported, UnknownType, InvalidDataKey);
+
+ /**
+  * \brief Remove um dado .
+  *
+  * \param [in] keys A chave do dado.
+  *
+  * \return \c true, caso o atributo seja removido, ou \c false, caso contrário.
+  *
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  boolean deleteData(in DataKey key) raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém um canal para acesso ao dado.
+  *
+  * \param [in] keys A chave do dado.
+  *
+  * \return Um canal para acesso ao dado.
+  */
+  DataChannel getDataChannel(in DataKey key);
+
+ /**
+  * \brief Define o valor de uma description.
+  *
+  * \param [in] keys A chave do dado.
+  * \param [in] description O valor da description.
+  *
+  * \return O dado alterado.
+  *
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView setDescription (in DataKey key, in string description)
+      raises (InvalidDataKey);
+
+ /**
+  * \brief Define o valor de um nome.
+  *
+  * \param [in] keys A chave do dado.
+  * \param [in] description O valor do nome.
+  *
+  * \return O dado alterado.
+  *
+  * \exception InvalidDataKey O DataKey não é válido ou não existe.
+  */
+  DataView setName (in DataKey key, in string name) raises (InvalidDataKey);
+};
+
+};
+
 };
 
 #endif
