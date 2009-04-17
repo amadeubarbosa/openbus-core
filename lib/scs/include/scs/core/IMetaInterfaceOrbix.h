@@ -19,6 +19,7 @@ namespace scs {
       IMetaInterfaceImpl(ComponentContext* context);
     public:
       static void* instantiate(ComponentContext* context);
+      static void destruct(void* obj);
       ~IMetaInterfaceImpl();
 
       FacetDescriptions* getFacets() IT_THROW_DECL((CORBA::SystemException));

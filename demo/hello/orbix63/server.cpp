@@ -32,6 +32,9 @@ class HelloImpl : virtual public POA_Hello {
     static void* instantiate(scs::core::ComponentContext* componentContext) {
       return (void*) new HelloImpl(componentContext);
     }
+    static void destruct(void* obj) {
+      delete (HelloImpl*) obj;
+    }
     void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
       cout << endl << "Servant diz: HELLO!" << endl;
       openbus::Credential_var credential = bus->getCredentialIntercepted();
@@ -80,12 +83,13 @@ int main(int argc, char* argv[]) {
   componentId.major_version = '1';
   componentId.minor_version = '0';
   componentId.patch_version = '0';
-  componentId.platform_spec = "none";
+  componentId.platform_spec = "nenhuma";
   std::list<scs::core::ExtendedFacetDescription> extFacets;
   scs::core::ExtendedFacetDescription helloDesc;
   helloDesc.name = "IHello";
-  helloDesc.interface_name = "IDL:Hello:1.0";
+  helloDesc.interface_name = "IDL:demoidl/hello/IHello:1.0";
   helloDesc.instantiator = HelloImpl::instantiate;
+  helloDesc.destructor = HelloImpl::destruct;
   extFacets.push_back(helloDesc);
   scs::core::ComponentContext* componentContext = componentBuilder->newFullComponent(extFacets, componentId);
 

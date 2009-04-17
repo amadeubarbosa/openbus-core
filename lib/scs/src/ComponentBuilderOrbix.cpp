@@ -23,8 +23,8 @@ namespace scs {
       FacetDescription desc;
       desc.name = extDesc.name.c_str();
       desc.interface_name = extDesc.interface_name.c_str();
-      PortableServer::ObjectId_var oid = poa->activate_object(facet);
-      CORBA::Object_var ref = poa->id_to_reference(oid.in());
+      extDesc.oid = poa->activate_object(facet);
+      CORBA::Object_var ref = poa->id_to_reference(extDesc.oid.in());
       desc.facet_ref = ref;
       // insere nos mapas do contexto
       std::string tempName(desc.name);
@@ -47,7 +47,7 @@ namespace scs {
       // cria facetas na ordem especificada pela lista
       std::list<ExtendedFacetDescription>::iterator it;
       for (it = facetExtDescs.begin(); it != facetExtDescs.end(); it++) {
-        addFacet(context, *it);
+        this->addFacet(context, *it);
       }
     }
 
@@ -69,7 +69,7 @@ namespace scs {
       bool foundIComponent = false, foundIReceptacles = false, foundIMetaInterface = false;
       // O usuário pode ter especificado outras classes para alguma das facetas principais.
       // Dessa forma, devemos criar apenas as que não foram especificadas.
-      std::list<ExtendedFacetDescription>::iterator it;
+      std::list<ExtendedFacetDescription>::const_iterator it;
       for (it = facetExtDescs.begin(); it != facetExtDescs.end(); it++) {
           if ((*it).name.compare(ICOMPONENT_NAME) == 0)
             foundIComponent = true;
@@ -84,6 +84,7 @@ namespace scs {
         iMetaDesc.name = "IMetaInterface";
         iMetaDesc.interface_name = "IDL:scs/core/IMetaInterface:1.0";
         iMetaDesc.instantiator = scs::core::IMetaInterfaceImpl::instantiate;
+        iMetaDesc.destructor = scs::core::IMetaInterfaceImpl::destruct;
         facetExtDescs.push_front(iMetaDesc);
       }
 //      if (!foundIReceptacles) {
@@ -91,6 +92,7 @@ namespace scs {
 //        iReceptaclesDesc.name = "IReceptacles";
 //        iReceptaclesDesc.interface_name = "IDL:scs/core/IReceptacles:1.0";
 //        iReceptaclesDesc.instantiator = scs::core::IReceptaclesImpl::instantiate;
+//        iReceptaclesDesc.desctructor = scs::core::IReceptaclesImpl::destruct;
 //        facetExtDescs.push_front(iReceptacleDesc);
 //      }
       if (!foundIComponent) {
@@ -98,9 +100,18 @@ namespace scs {
         iComponentDesc.name = "IComponent";
         iComponentDesc.interface_name = "IDL:scs/core/IComponent:1.0";
         iComponentDesc.instantiator = scs::core::IComponentImpl::instantiate;
+        iComponentDesc.destructor = scs::core::IComponentImpl::destruct;
         facetExtDescs.push_front(iComponentDesc);
       }
       return newComponent(facetExtDescs, id);
+    }
+
+    CORBA::ORB* ComponentBuilder::getORB() {
+      return this->orb;
+    }
+
+    PortableServer::POA* ComponentBuilder::getPOA() {
+      return this->poa;
     }
   }
 }

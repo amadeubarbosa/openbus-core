@@ -34,6 +34,10 @@ namespace scs {
       return (void*) new IComponentImpl(context);
     }
 
+    void IComponentImpl::destruct(void* obj) {
+      delete (IComponentImpl*) obj;
+    }
+
     void IComponentImpl::startup() IT_THROW_DECL((CORBA::SystemException, scs::core::StartupFailed)) {}
     void IComponentImpl::shutdown() IT_THROW_DECL((CORBA::SystemException, scs::core::ShutdownFailed)) {}
 

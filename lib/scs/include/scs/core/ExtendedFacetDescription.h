@@ -14,7 +14,9 @@ namespace scs {
     typedef struct ExtFacetDescription {
       std::string name;
       std::string interface_name;
+      PortableServer::ObjectId_var oid;
       void* (*instantiator)(ComponentContext* context);
+      void (*destructor)(void* obj);
     } ExtendedFacetDescription;
   }
 }

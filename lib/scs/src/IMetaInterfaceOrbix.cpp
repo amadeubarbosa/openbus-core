@@ -35,6 +35,10 @@ namespace scs {
       return (void*) new IMetaInterfaceImpl(context);
     }
 
+    void IMetaInterfaceImpl::destruct(void* obj) {
+      delete (IMetaInterfaceImpl*) obj;
+    }
+
     FacetDescriptions* IMetaInterfaceImpl::getFacets() IT_THROW_DECL((CORBA::SystemException)) {
     #ifdef VERBOSE
       cout << "\n\n[IMetaInterfaceImpl::getFacets() BEGIN]" << endl;

@@ -26,6 +26,7 @@ namespace scs {
 
       public:
         static void* instantiate(ComponentContext* context);
+        static void destruct(void* obj);
         ~IComponentImpl();
 
         void startup() IT_THROW_DECL((CORBA::SystemException, scs::core::StartupFailed));

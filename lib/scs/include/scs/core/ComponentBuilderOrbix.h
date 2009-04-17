@@ -34,6 +34,8 @@ namespace scs {
         ComponentContext* newFullComponent(std::list<ExtendedFacetDescription>& facetExtDescs, ComponentId& id);
         void addFacet(ComponentContext& context, ExtendedFacetDescription& extDesc);
         void addFacets(ComponentContext& context, std::list<ExtendedFacetDescription>& facetExtDescs);
+        CORBA::ORB* getORB();
+        PortableServer::POA* getPOA();
     };
   }
 }

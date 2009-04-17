@@ -17,44 +17,26 @@ namespace scs {
     }
 
     ComponentContext::~ComponentContext() {
-      extFacetDescs->clear();
-      delete extFacetDescs;
-      facetDescs->clear();
-      delete facetDescs;
+      std::map<std::string, void*>::iterator it;
+      for (it = facets->begin(); it != facets->end(); it++) {
+        ExtendedFacetDescription desc = this->getExtendedFacetDescs()[it->first];
+        // desativa objeto CORBA
+        this->builder->getPOA()->deactivate_object(desc.oid);
+        // destroi objeto
+        desc.destructor(it->second);
+        it->second = NULL;
+      }
       facets->clear();
       delete facets;
+      facetDescs->clear();
+      delete facetDescs;
+      extFacetDescs->clear();
+      delete extFacetDescs;
 //      receptacleDescs.clear();
 //      delete receptacleDescs;
 //      receptacles.clear();
 //      delete receptacles;
     }
-
-/*
-    ComponentContext& ComponentContext::operator=(const ComponentContext& ct) {
-      if (this != &ct) {
-        if (NULL == this.extFacetDescs)
-          this.extFacetDescs = new std::map<std::string, ExtendedFacetDescription>();
-        else
-          this.extFacetDescs.clear();
-        if (NULL == this.facetDescs)
-          this.facetDescs = new std::map<std::string, FacetDescription>();
-        else
-          this.facetDescs.clear();
-        if (NULL == this.facets)
-          this.facets = new std::map<std::string, void*>();
-        else
-          this.facets.clear();
-        //      this.receptacleDescs = new std::map<std::string, ReceptacleDescription>();
-        //      this.receptacles = new std::map<std::string, Receptacle&>();
-        // copia dados
-        this.builder = ct.builder;
-        this.id = ct.id;
-        ...
-      }
-
-      return *this;
-    }
-*/
 
     ComponentBuilder* ComponentContext::getBuilder() {
       return this->builder;
