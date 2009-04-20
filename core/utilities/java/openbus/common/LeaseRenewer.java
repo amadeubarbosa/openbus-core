@@ -5,7 +5,7 @@ package openbus.common;
 
 import java.util.Date;
 
-import openbusidl.acs.Credential;
+import openbusidl.Credential;
 import openbusidl.acs.ILeaseProvider;
 
 import org.omg.CORBA.IntHolder;

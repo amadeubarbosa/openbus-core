@@ -35,7 +35,7 @@ function main ()
   local user = "tester"
   local password = "tester"
 
-  accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+  accessControlService = orb:newproxy("corbaloc::localhost:2020/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
 -- instala o interceptador de cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")

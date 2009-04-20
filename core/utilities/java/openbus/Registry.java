@@ -4,8 +4,8 @@
 package openbus;
 
 import openbus.common.Log;
-import openbusidl.acs.Credential;
-import openbusidl.acs.CredentialHelper;
+import openbusidl.Credential;
+import openbusidl.CredentialHelper;
 import openbusidl.ss.ISession;
 
 import org.omg.CORBA.Any;

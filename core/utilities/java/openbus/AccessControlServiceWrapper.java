@@ -16,8 +16,8 @@ import openbus.common.exception.ACSUnavailableException;
 import openbus.exception.CORBAException;
 import openbus.exception.InvalidCredentialException;
 import openbus.exception.PKIException;
-import openbusidl.acs.Credential;
-import openbusidl.acs.CredentialHolder;
+import openbusidl.Credential;
+import openbusidl.CredentialHolder;
 import openbusidl.acs.IAccessControlService;
 import openbusidl.rs.IRegistryService;
 
@@ -30,15 +30,17 @@ import org.omg.CORBA.SystemException;
  * 
  * @author Tecgraf/PUC-Rio
  */
-public final class AccessControlServiceWrapper {
+public class AccessControlServiceWrapper {
   /**
    * O Serviço de Controle de Acesso real, encapsulado por este objeto.
    */
-  private IAccessControlService acs;
-  /**
+  protected IAccessControlService acs;
+
+
+/**
    * O Serviço de Registro.
    */
-  private RegistryServiceWrapper rs;
+  protected RegistryServiceWrapper rs;
   /**
    * O renovador do <i>lease</i>.
    */
@@ -65,6 +67,16 @@ public final class AccessControlServiceWrapper {
 
     this.leaseExpiredCallback = new LeaseExpiredCallbackImpl();
   }
+ 
+  /**
+   * Cria um objeto vazio que encapsula o Serviço de Controle de Acesso a ser configurado.
+   * 
+   * @param acs O Serviço de Controle de Acesso a ser encapsulado.
+   * 
+   */
+  public AccessControlServiceWrapper(){
+	  this.leaseExpiredCallback = new LeaseExpiredCallbackImpl();
+  }
 
   /**
    * Autentica uma entidade a partir de um nome de usuário e senha.
@@ -76,9 +88,10 @@ public final class AccessControlServiceWrapper {
    *         caso contrário.
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
+   * @throws ACSUnavailableException
    */
   public boolean loginByPassword(String name, String password)
-    throws CORBAException {
+  throws CORBAException, ACSUnavailableException {
     CredentialHolder aCredential = new CredentialHolder();
     boolean result;
     try {
@@ -112,9 +125,10 @@ public final class AccessControlServiceWrapper {
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
    * @throws PKIException
+   * @throws ACSUnavailableException
    */
   public boolean loginByCertificate(String name, RSAPrivateKey privateKey,
-    X509Certificate acsCertificate) throws CORBAException, PKIException {
+    X509Certificate acsCertificate) throws CORBAException, PKIException, ACSUnavailableException {
     byte[] challenge;
     try {
       challenge = this.acs.getChallenge(name);
@@ -162,8 +176,9 @@ public final class AccessControlServiceWrapper {
    *         caso contrário.
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
+   * @throws ACSUnavailableException
    */
-  public boolean loginByCredential(Credential credential) throws CORBAException {
+  public boolean loginByCredential(Credential credential) throws CORBAException, ACSUnavailableException {
     Registry registry = Registry.getInstance();
     registry.setCredential(credential);
     return this.isValid(credential);
@@ -176,8 +191,9 @@ public final class AccessControlServiceWrapper {
    *         caso contrário.
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
+   * @throws ACSUnavailableException
    */
-  public boolean logout() throws CORBAException {
+  public boolean logout() throws CORBAException, ACSUnavailableException {
     Registry registry = Registry.getInstance();
     Credential credential = registry.getCredential();
     this.leaseRenewer.finish();
@@ -201,9 +217,11 @@ public final class AccessControlServiceWrapper {
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
    * @throws InvalidCredentialException Indica que a credencial da entidade não
    *         é mais válida.
+   *         
+   * @throws ACSUnavailableException
    */
   public RegistryServiceWrapper getRegistryService() throws CORBAException,
-    InvalidCredentialException {
+    InvalidCredentialException, ACSUnavailableException {
     try {
       IRegistryService registryService = this.acs.getRegistryService();
       if (registryService == null) {
@@ -238,8 +256,9 @@ public final class AccessControlServiceWrapper {
    *         contrário.
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
+   * @throws ACSUnavailableException 
    */
-  public boolean isValid(Credential credential) throws CORBAException {
+  public boolean isValid(Credential credential) throws CORBAException, ACSUnavailableException {
     try {
       return this.acs.isValid(credential);
     }
@@ -324,5 +343,7 @@ public final class AccessControlServiceWrapper {
     boolean removeLeaseExpiredCallback(LeaseExpiredCallback lec) {
       return this.callbacks.remove(lec);
     }
+    
+    
   }
 }

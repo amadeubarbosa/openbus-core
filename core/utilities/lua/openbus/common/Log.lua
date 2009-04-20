@@ -21,7 +21,7 @@ viewer = Viewer{
 -- Definição dos tags que compõem cada grupo
 groups.basic = {"init", "warn", "error"}
 groups.mechanism = {"interceptor", "lease", "conn"}
-groups.core = {"scs", "member"}
+groups.core = {"scs", "member", "faulttolerance"}
 groups.all = {"basic", "service", "mechanism", "core"}
 
 -- Definição dos níveis de debug (em ordem crescente)

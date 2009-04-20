@@ -10,7 +10,11 @@ config.interfaces = {
   { interface = "IDL:openbusidl/acs/IAccessControlService:1.0",
     excluded_ops = { loginByPassword = true, 
                      loginByCertificate = true,
-                     getChallenge = true
+                     getChallenge = true,
+	 	     getEntryCredential = true,
+                     isValid = true,
+		     isAlive = true,
+		     setStatus = true
                     }
   }
 }

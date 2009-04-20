@@ -1,24 +1,37 @@
 -- $Id$
 
 local os = os
-local table = table
 
 local loadfile = loadfile
 local assert = assert
 local pairs = pairs
 local ipairs = ipairs
 local error = error
+
+local print = print
+local table = table
+local tostring = tostring
+local insert = insert
 local string = string
 
 local luuid = require "uuid"
 local oil = require "oil"
 local orb = oil.orb
 
+
 local OffersDB = require "core.services.registry.OffersDB"
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
+
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
+
 local CredentialManager = require "openbus.common.CredentialManager"
+
 local ServerConnectionManager = require "openbus.common.ServerConnectionManager"
+
+local AccessControlServiceWrapper = require "core.services.accesscontrol.AccessControlServiceWrapper"
+
+local RegistryServiceWrapper = require "core.services.registry.RegistryServiceWrapper"
+
 
 local Log = require "openbus.common.Log"
 
@@ -26,12 +39,17 @@ local IComponent = require "scs.core.IComponent"
 
 local oop = require "loop.simple"
 
+Log:level(4)
+oil.verbose:level(2)
+
 ---
 --Componente (membro) responsável pelo Serviço de Registro.
 ---
 module("core.services.registry.RegistryService")
 
 oop.class(_M, IComponent)
+
+faultDescription = {_isAlive = false, _errorMsg = "" }
 
 ---
 --Cria um Serviço de Registro.
@@ -47,6 +65,7 @@ function __init(self, name, config)
   return oop.rawnew(self, component)
 end
 
+
 ---
 --Inicia o componente.
 --
@@ -54,6 +73,7 @@ end
 ---
 function startup(self)
   Log:service("Pedido de startup para serviço de registro")
+
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 
   -- Se é o primeiro startup, deve instanciar ConnectionManager e
@@ -74,13 +94,13 @@ function startup(self)
       accessControlServiceCertificateFile = DATA_DIR.."/"..self.config.accessControlServiceCertificateFile
     end
     self.connectionManager =  ServerConnectionManager(
-        self.config.accessControlServerHost, credentialManager,
+        self.config.registryServerHost, credentialManager,
         privateKeyFile,
         accessControlServiceCertificateFile)
 
-    -- obtém a referência para o Serviço de Controle de Acesso
-    self.accessControlService = self.connectionManager:getAccessControlService()
-    if self.accessControlService == nil then
+    -- obtém a referência para o Wrapper do Serviço de Controle de Acesso
+    self.accessControlServiceWrapper = self.connectionManager:getAccessControlServiceWrapper()
+    if self.accessControlServiceWrapper == nil then
       error{"IDL:SCS/StartupFailed:1.0"}
     end
 
@@ -90,8 +110,10 @@ function startup(self)
     orb:setclientinterceptor(
       ClientInterceptor(interceptorsConfig, credentialManager))
 
+
     -- instala o interceptador servidor
-    self.serverInterceptor = ServerInterceptor(interceptorsConfig, self.accessControlService)
+    self.serverInterceptor = ServerInterceptor(interceptorsConfig,self.accessControlServiceWrapper)
+
     orb:setserverinterceptor(self.serverInterceptor)
 
     -- instancia mecanismo de persistencia
@@ -119,7 +141,7 @@ function startup(self)
   end
 
   -- atualiza a referência junto ao serviço de controle de acesso
-  self.accessControlService:setRegistryService(self)
+  self.accessControlServiceWrapper:setRegistryService( self )
 
   -- registra um observador de credenciais
   local observer = {
@@ -130,12 +152,12 @@ function startup(self)
       self.registryService:credentialWasDeleted(credential)
     end
   }
+
   self.observer = orb:newservant(observer,
                                 "RegistryServiceCredentialObserver",
                                 "IDL:openbusidl/acs/ICredentialObserver:1.0"
                                 )
-  self.observerId =
-    self.accessControlService:addObserver(self.observer, {})
+  self.observerId = self.accessControlServiceWrapper:addObserver(self.observer, {})
   Log:service("Cadastrado observador para a credencial")
 
   -- recupera ofertas persistidas
@@ -143,7 +165,7 @@ function startup(self)
   local offerEntriesDB = self.offersDB:retrieveAll()
   for _, offerEntry in pairs(offerEntriesDB) do
     -- somente recupera ofertas de credenciais válidas
-    if self.accessControlService:isValid(offerEntry.credential) then
+    if self.accessControlServiceWrapper:isValid(offerEntry.credential) then
       self:addOffer(offerEntry)
     else
       Log:service("Oferta de "..offerEntry.credential.identifier.." descartada")
@@ -151,6 +173,7 @@ function startup(self)
     end
   end
 
+  faultDescription._isAlive = true
   self.started = true
   Log:service("Serviço de registro iniciado")
 end
@@ -210,7 +233,7 @@ function addOffer(self, offerEntry)
 
   -- A credencial deve ser observada, porque se for deletada as
   -- ofertas a ela relacionadas devem ser removidas
-  self.accessControlService:addCredentialToObserver(self.observerId,
+  self.accessControlServiceWrapper:addCredentialToObserver(self.observerId,
                                                     credential.identifier)
   Log:service("Adicionada credencial no observador")
 end
@@ -234,10 +257,11 @@ function createPropertyIndex(self, offerProperties, member)
     end
   end
 
-  local componentId = member:getComponentId()
+  local componentId = {name = "", major_version = 1, minor_version = 0, patch_version = 0, platform_spec = ""}
+--  TODO: VER COM O CADU - local componentId = member:getComponentId()
   properties["component_id"] = {}
-  properties["component_id"][componentId.name..":"..componentId.major_version..componentId.minor_version..
-    componentId.patch_version] = true
+  properties["component_id"][componentId.name..":"..tostring(componentId.major_version)..tostring(componentId.minor_version)..
+    tostring(componentId.patch_version)] = true
 
   local memberName = componentId.name
   -- se não foi definida uma propriedade "facets", discriminando as facetas
@@ -305,7 +329,7 @@ function unregister(self, identifier)
     -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
     Log:service("Última oferta da credencial: remove credencial do observador")
-    self.accessControlService:removeCredentialFromObserver(self.observerId,
+    self.accessControlServiceWrapper:removeCredentialFromObserver(self.observerId,
                                                          credential.identifier)
   end
   self.offersDB:delete(offerEntry)
@@ -346,7 +370,7 @@ function update(self, identifier, properties)
 end
 
 ---
---Busca por ofertas de serviço de um determinado tipo, que atendam aos
+--Busca por ofertas de serviço de um determinado tipo em todas as replicas, que atendam aos
 --critérios (propriedades) especificados. A especificação de critrios
 --é opcional.
 --
@@ -354,21 +378,109 @@ end
 --
 --@return As ofertas de serviço que correspondem aos critérios.
 ---
+
 function find(self, criteria)
-  local selectedOffers = {}
+  --carrega as ofertas da réplica que está sendo solicitada
+  local selectedLocalOffersEntries = self:localFind(criteria)
+
+print("[find] selectedLocalOffersEntries")
+table.foreach(selectedLocalOffersEntries, print)
+
+  --Buscar em todas as replicas, exceto a que está solicitando
+  local rsWrapper = RegistryServiceWrapper
+  local selectedOffersEntries = rsWrapper:offersLookupInReplicas(criteria, self.config.registryServerHost)
+
+  if #selectedOffersEntries > 0 then
+	  --para todas as ofertas encontradas nas replicas
+	  for i, offerEntryFound in pairs(selectedOffersEntries) do
+		offerEntryFound.properties = self:createPropertyIndex(offerEntryFound.offer.properties,
+                                          			      offerEntryFound.offer.member)
+
+		-- verifica se ja existem localmente
+		for j, offerEntry in pairs(self.offersByIdentifier) do
+		    local insert = true
+		    if offerEntryFound == offerEntry then
+			--se ja existir, nao insere
+			insert = false
+	 		break
+		    end
+	 	    
+		end
+		if insert then  
+		  -- se nao existir,
+		  --insere no banco local
+		  self.offersDB:insert(offerEntryFound) 
+		  --insere na lista local
+	 	  self.offersByIdentifier.insert(offerEntryFound)
+		end
+	  end
+
+	  -- Tudo ja está atualizado de acordo com a busca solicitada, entao retorna os resultados encontrados
+	  local selectedOffers = {}
+	  for _, offerEntry in pairs(selectedOffersEntries) do
+	      table.insert(selectedOffers, offerEntry.offer)
+	  end
+	  for _, offerEntry in pairs(selectedLocalOffersEntries) do
+	      table.insert(selectedOffers, offerEntry.offer)
+	  end
+	  if #criteria ~= 0 then
+	     Log:service("Com critério, encontrei "..#selectedOffers.." ofertas")
+	  end
+	  Log:service("Ofertas encontradas local e remotamente: ")
+	  for _, offerEntry in pairs(selectedOffersEntries) do
+	   table.foreach(offerEntry, print)
+	  end
+          return selectedOffers
+  else
+
+	local selectedOffers = {}
+	for _, offerEntry in pairs(selectedLocalOffersEntries) do
+		table.insert(selectedOffers, offerEntry.offer)
+	end
+
+        Log:service("Foram encontradas ofertas "..#selectedOffers.." ofertas")
+	return selectedOffers
+
+  end
+
+end
+
+
+---
+--Busca por ofertas de serviço de um determinado tipo na base local, que atendam aos
+--critérios (propriedades) especificados. A especificação de critrios
+--é opcional.
+--
+--@param criteria Os critérios da busca.
+--
+--@return As entradas das ofertas de serviço que correspondem aos critérios.
+---
+function localFind(self, criteria)
+  local selectedOffersEntries = {}
+
   if #criteria == 0 then
-    for _, offerEntry in pairs(self.offersByIdentifier) do
-      table.insert(selectedOffers, offerEntry.offer)
+    for i, offerEntry in pairs(self.offersByIdentifier) do
+	selectedOffersEntries[i] = {}
+	selectedOffersEntries[i].identifier = offerEntry.identifier
+	selectedOffersEntries[i].offer = offerEntry.offer
+	selectedOffersEntries[i].credential = offerEntry.credential
+--        table.insert(selectedOffersEntries, offerEntry)
     end
   else
-    for _, offerEntry in pairs(self.offersByIdentifier) do
+    for k, offerEntry in pairs(self.offersByIdentifier) do
       if self:meetsCriteria(criteria, offerEntry.properties) then
-        table.insert(selectedOffers, offerEntry.offer)
+	selectedOffersEntries[k] = {}
+	selectedOffersEntries[k].identifier = offerEntry.identifier
+	selectedOffersEntries[k].offer = offerEntry.offer
+	selectedOffersEntries[k].credential = offerEntry.credential
+--        table.insert(selectedOffersEntries, offerEntry)
       end
     end
-     Log:service("Com critério, encontrei "..#selectedOffers.." ofertas")
   end
-  return selectedOffers
+print("[localFind] selectedOffersEntries")
+table.foreach(selectedOffersEntries, print)
+  return selectedOffersEntries
+
 end
 
 ---
@@ -432,11 +544,11 @@ end
 function wasReconnected(self)
  Log:service("Serviço de registro foi reconectado")
  -- atualiza a referência junto ao serviço de controle de acesso
-  self.accessControlService:setRegistryService(self)
+  self.accessControlServiceWrapper:setRegistryService( self )
 
   -- registra novamente o observador de credenciais
   self.observerId =
-    self.accessControlService:addObserver(self.observer, {})
+    self.accessControlServiceWrapper:addObserver(self.observer, {})
  Log:service("Observador recadastrado")
 
   -- Mantém no repositório apenas ofertas com credenciais válidas
@@ -447,7 +559,7 @@ function wasReconnected(self)
   end
   local invalidCredentials = {}
   for credentialId, credential in pairs(credentials) do
-    if not self.accessControlService:addCredentialToObserver(self.observerId,
+    if not self.accessControlServiceWrapper:addCredentialToObserver(self.observerId,
                                                             credentialId) then
       Log:service("Ofertas de "..credentialId.." serão removidas")
       table.insert(invalidCredentials, credential)
@@ -475,11 +587,38 @@ function shutdown(self)
 
   -- Remove o observador
   if self.observerId then
-    self.accessControlService:removeObserver(self.observerId)
+    self.accessControlServiceWrapper:removeObserver(self.observerId)
     self.observer:_deactivate()
   end
 
   self.connectionManager:disconnect()
 
   Log:service("Serviço de registro finalizado")
+end
+
+
+---
+--Retorna se o serviço de controle de acesso está em estado de falha ou não.
+---
+function isAlive()
+
+  if not faultDescription._isAlive then
+       msg = "Servico de Registro nao esta disponivel.\n"
+       faultDescription._errorMsg = msg
+       Log:error(msg)
+       return false
+   end
+   return true
+end
+
+function setStatus(self, isAlive)
+   faultDescription._isAlive = isAlive
+end
+
+function kill(self)
+   --TODO: Verificar se precisa fazer algo mais antes do serviço remover seu processo
+   self:shutdown()
+   orb:deactivate(self)
+   orb:shutdown()
+   Log:faulttolerance("Servico de Registro matou seu processo.")
 end

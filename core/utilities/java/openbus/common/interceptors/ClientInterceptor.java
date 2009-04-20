@@ -5,8 +5,8 @@ package openbus.common.interceptors;
 
 import openbus.Registry;
 import openbus.common.Log;
-import openbusidl.acs.Credential;
-import openbusidl.acs.CredentialHelper;
+import openbusidl.Credential;
+import openbusidl.CredentialHelper;
 
 import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;

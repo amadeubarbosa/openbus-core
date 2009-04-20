@@ -1,11 +1,14 @@
 -- $Id$
+local print = print
 
 local oil = require "oil"
 local orb = oil.orb
 
 local oop = require "loop.base"
 local log = require "openbus.common.Log"
-local LeaseRenewer = require "openbus.common.LeaseRenewer"
+local FTLeaseRenewer = require "openbus.common.FTLeaseRenewer"
+
+local AccessControlServiceWrapper = require "core.services.accesscontrol.AccessControlServiceWrapper"
 
 ---
 --Gerenciador de conexões de membros ao barramento.
@@ -30,21 +33,28 @@ end
 
 ---
 --Obtém referência para o serviço de controle de acesso.
+--TODO: Foi mantido para evitar propagação de erros no Openbus, porém deve existir
+--	somente o getAccessControlServiceWrapper
 --
 --@return O Serviço de Controle de Acesso, ou nil, caso não esteja definido.
 --=
 function getAccessControlService(self)
-  if self.accessControlService == nil then
-    local acs = orb:newproxy("corbaloc::"..self.accessControlServerHost.."/ACS",
-                             "IDL:openbusidl/acs/IAccessControlService:1.0")
-    if acs:_non_existent() then
-      log:error("ConnectionManager: Servico de controle de acesso nao encontrado.")
-      return nil
-    end
-    self.accessControlService = acs
-  end
-  return self.accessControlService
+  return self:getAccessControlServiceWrapper():getAccessControlService()
 end
+
+
+---
+--Obtém o Wrapper para o serviço de controle de acesso.
+--
+--@return O Wrapper do Serviço de Controle de Acesso, ou nil, caso não esteja definido.
+--=
+function getAccessControlServiceWrapper(self)
+  if self.accessControlServiceWrapper == nil then
+	self.accessControlServiceWrapper = AccessControlServiceWrapper
+  end
+  return self.accessControlServiceWrapper
+end
+
 
 ---
 --Finaliza o procedimento de conexão, após um login bem sucedido salva a
@@ -55,9 +65,9 @@ end
 --@param leaseExpiredCallback Função que será executada quando o lease expirar.
 ---
 function completeConnection(self, credential, lease, leaseExpiredCallback)
+
   self.credentialManager:setValue(credential)
-  self.leaseRenewer = LeaseRenewer(
-    lease, credential, self.accessControlService, leaseExpiredCallback)
+  self.leaseRenewer = FTLeaseRenewer(lease, credential, self:getAccessControlServiceWrapper(), leaseExpiredCallback)
   self.leaseRenewer:startRenew()
 end
 

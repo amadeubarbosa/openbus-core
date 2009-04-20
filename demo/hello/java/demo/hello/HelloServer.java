@@ -26,8 +26,9 @@ import scs.core.servant.IMetaInterfaceServant;
 public class HelloServer {
   public static void main(String[] args) throws Exception {
     // Obtencão da chave privada deste servidor.
+	  /*
     RSAPrivateKey privateKey = CryptoUtils.readPrivateKey("HelloService.key");
-
+    */
     // Obtencão do certificado do Servico de Controle de Acesso.
     X509Certificate acsCertificate =
       CryptoUtils.readCertificate("AccessControlService.crt");
@@ -65,7 +66,8 @@ public class HelloServer {
       new AccessControlServiceWrapper(orb, "localhost", 2089);
     Registry.getInstance().setACS(acs);
 
-    assert (acs.loginByCertificate("HelloService", privateKey, acsCertificate));
+    //assert (acs.loginByCertificate("HelloService", privateKey, acsCertificate));
+    assert (acs.loginByPassword("tester", "tester"));
 
     RegistryServiceWrapper registryService = acs.getRegistryService();
     assert (registryService != null);

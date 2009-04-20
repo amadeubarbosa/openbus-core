@@ -38,7 +38,7 @@ function main ()
   local user = "tester"
   local password = "tester"
 
-  accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+  accessControlService = orb:newproxy("corbaloc::localhost:2020/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
 
   -- instala o interceptador de cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -52,9 +52,15 @@ function main ()
   success, credential = accessControlService:loginByPassword(user, password)
   credentialManager:setValue(credential)
 
-  registryService = accessControlService:getRegistryService()
+--oil.verbose:flag("marshal", true)
+--oil.verbose:flag("unmarshal", true)
+
+  ok, registryService = oil.pcall(accessControlService.getRegistryService, accessControlService)
 
   local registryIdentifier
+
+--oil.verbose:flag("marshal", false)
+--oil.verbose:flag("unmarshal", false)
 
   local Hello = {}
     function Hello:sayHello()

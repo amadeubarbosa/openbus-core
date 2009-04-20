@@ -3,6 +3,7 @@
  */
 package openbus;
 
+import openbus.common.exception.RegistryUnavailableException;
 import openbus.exception.CORBAException;
 import openbusidl.rs.IRegistryService;
 import openbusidl.rs.Property;
@@ -16,11 +17,11 @@ import org.omg.CORBA.SystemException;
  * 
  * @author Tecgraf/PUC-Rio
  */
-public final class RegistryServiceWrapper {
+public class RegistryServiceWrapper {
   /**
    * O Serviço de Registro real, encapsulado por este objeto.
    */
-  private IRegistryService rs;
+  protected IRegistryService rs;
 
   /**
    * Cria um objeto que encapsula o Serviço de Registro.
@@ -46,8 +47,9 @@ public final class RegistryServiceWrapper {
    * @return O identificador do registro da oferta.
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
+ * @throws RegistryUnavailableException 
    */
-  public String register(ServiceOffer offer) throws CORBAException {
+  public String register(ServiceOffer offer) throws CORBAException, RegistryUnavailableException {
     try {
       StringHolder offerIdentifier = new StringHolder();
       if (this.rs.register(offer, offerIdentifier)) {
@@ -69,8 +71,9 @@ public final class RegistryServiceWrapper {
    *         contrário.
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
+ * @throws RegistryUnavailableException 
    */
-  public boolean unregister(String offerIdentifier) throws CORBAException {
+  public boolean unregister(String offerIdentifier) throws CORBAException, RegistryUnavailableException {
     try {
       return this.rs.unregister(offerIdentifier);
     }
@@ -89,9 +92,10 @@ public final class RegistryServiceWrapper {
    *         caso contrário.
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
+ * @throws RegistryUnavailableException 
    */
   public boolean update(String offerIdentifier, Property[] newProperties)
-    throws CORBAException {
+    throws CORBAException, RegistryUnavailableException {
     try {
       return this.rs.update(offerIdentifier, newProperties);
     }
@@ -108,8 +112,9 @@ public final class RegistryServiceWrapper {
    * @return As ofertas de serviço encontradas.
    * 
    * @throws CORBAException Caso ocorra alguma exceção na infra-estrutura CORBA.
+ * @throws RegistryUnavailableException 
    */
-  public ServiceOffer[] find(Property[] criteria) throws CORBAException {
+  public ServiceOffer[] find(Property[] criteria) throws CORBAException, RegistryUnavailableException {
     try {
       return this.rs.find(criteria);
     }

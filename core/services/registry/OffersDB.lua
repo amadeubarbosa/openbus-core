@@ -9,6 +9,7 @@ local dofile = dofile
 local type = type
 local tostring = tostring
 local tonumber = tonumber
+local print = print
 
 local lposix = require "posix"
 local oil = require "oil"
@@ -74,7 +75,8 @@ function retrieveAll(self)
       -- caso especial para referencias a membros
       local memberIOR = offerEntry.offer.member
       offerEntry.offer.member = orb:newproxy(memberIOR)
-
+print("OPA")
+print(offerEntry.offer.member.__reference.type_id)
       offerEntries[offerEntry.identifier] = offerEntry
     end
   end

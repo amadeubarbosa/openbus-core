@@ -10,6 +10,7 @@ import java.security.cert.Certificate;
 import openbus.ORBWrapper;
 import openbus.RegistryServiceWrapper;
 import openbus.common.exception.ACSUnavailableException;
+import openbus.common.exception.RegistryUnavailableException;
 import openbus.exception.CORBAException;
 import openbusidl.acs.IAccessControlService;
 import openbusidl.acs.IAccessControlServiceHelper;
@@ -123,17 +124,24 @@ public final class Utils {
       new Property(FACETS_PROPERTY_NAME,
         new String[] { SESSION_SERVICE_FACET_NAME });
     try {
-      ServiceOffer[] offers = registryService.find(properties);
-      if (offers.length == 1) {
-        IComponent component = offers[0].member;
-        Object facet = component.getFacet(SESSION_SERVICE_INTERFACE);
-        if (facet == null) {
-          return null;
-        }
-        return ISessionServiceHelper.narrow(facet);
-      }
-      return null;
-    }
+    	ServiceOffer[] offers;
+		offers = registryService.find(properties);
+		if (offers.length == 1) {
+	        IComponent component = offers[0].member;
+	        Object facet = component.getFacet(SESSION_SERVICE_INTERFACE);
+	        if (facet == null) {
+	          return null;
+	        }
+	        return ISessionServiceHelper.narrow(facet);
+	      }
+	      return null;
+		
+      
+    } catch (RegistryUnavailableException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		return null;
+	}
     catch (SystemException e) {
       throw new CORBAException(e);
     }
@@ -169,7 +177,11 @@ public final class Utils {
         return IDataServiceHelper.narrow(dataServiceFacet);
       }
       return null;
-    }
+    } catch (RegistryUnavailableException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		return null;
+	}
     catch (SystemException e) {
       throw new CORBAException(e);
     }

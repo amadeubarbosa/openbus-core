@@ -1,7 +1,12 @@
 -- $Id$
 
+
+local print = print
+
 local log = require "openbus.common.Log"
+
 local oop = require "loop.simple"
+
 local lce = require "lce"
 
 local ConnectionManager = require "openbus.common.ConnectionManager"
@@ -43,7 +48,7 @@ end
 function connect(self, name, leaseExpiredCallback)
   self.name = name
   self.leaseExpiredCallback = leaseExpiredCallback
-  local accessControlService = self:getAccessControlService()
+  local accessControlService = self:getAccessControlServiceWrapper()
   if accessControlService == nil then
     return false
   end
@@ -71,6 +76,7 @@ function connect(self, name, leaseExpiredCallback)
     log:error("ServerConnectionManager: insucesso no login de "..name)
     return false
   end
+
   self:completeConnection(credential, lease,
     function() self.reconnect(self) end)
   return true

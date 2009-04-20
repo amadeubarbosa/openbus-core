@@ -26,6 +26,7 @@ end
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/AccessControlServerConfiguration.lua"))()
 
+
 -- Define os níveis de verbose para o OpenBus e para o OiL.
 if AccessControlServerConfiguration.logLevel then
   Log:level(AccessControlServerConfiguration.logLevel)

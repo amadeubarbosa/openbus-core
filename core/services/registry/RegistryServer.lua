@@ -32,9 +32,9 @@ end
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 
-RegistryServerConfiguration.accessControlServerHost = 
-    RegistryServerConfiguration.accessControlServerHostName..":"..
-    RegistryServerConfiguration.accessControlServerHostPort
+RegistryServerConfiguration.registryServerHost = 
+    RegistryServerConfiguration.registryServerHostName..":"..
+    RegistryServerConfiguration.registryServerHostPort
 
 -- Seta os níveis de verbose para o openbus e para o oil
 if RegistryServerConfiguration.logLevel then

@@ -3,6 +3,7 @@
 local print = print
 local pairs = pairs
 local ipairs = ipairs
+local table = table
 
 local oil = require "oil"
 local orb = oil.orb
@@ -11,6 +12,8 @@ local Log = require "openbus.common.Log"
 local PICurrent = require "openbus.common.PICurrent"
 
 local oop = require "loop.base"
+
+local ACSWrapper = require "core.services.accesscontrol.AccessControlServiceWrapper"
 
 ---
 --Interceptador de requisições de serviço, responsável por verificar se o
@@ -22,14 +25,13 @@ module("openbus.common.ServerInterceptor", oop.class)
 --Constrói o interceptador.
 --
 --@param config As configurações do interceptador.
---@param accessControlService O serviço de controle de acesso.
 --
 --@return O interceptador.
 ---
-function __init(self, config, accessControlService)
+function __init(self, config, acs)
   Log:interceptor("Construindo interceptador para serviço")
   local lir = orb:getLIR()
-
+  self.accessControlService = acs
   -- Obtém as operações das interfaces que devem ser verificadas
   local checkedOperations = {}
   if config.interfaces then
@@ -56,8 +58,7 @@ function __init(self, config, accessControlService)
                     { checkedOperations = checkedOperations,
                       credentialType = lir:lookup_id(config.credential_type).type,
                       contextID = config.contextID,
-                      picurrent = PICurrent(),
-                      accessControlService = accessControlService })
+                      picurrent = PICurrent() })
 end
 
 ---
@@ -90,11 +91,13 @@ function receiverequest(self, request)
       break
     end
   end
-
+--FAZER O SEGUINTE TESTE: SE O REQUISITOR FOR O SERVERINTERCEPTOR E A OPERACAO ISVALID - NAO PRECISA DE CREDENCIAL
   if credential then
-    local success, res = oil.pcall(self.accessControlService.isValid,
-                                   self.accessControlService, credential)
-    if success and res then
+    local res = accessControlService:isValid(credential)
+
+--    local success, res = oil.pcall(self.accessControlService.isValid,
+--                                   self.accessControlService, credential)
+    if res then
       Log:interceptor("CREDENCIAL VALIDADA PARA "..request.operation)
       self.picurrent:setValue(credential)
       return
@@ -103,7 +106,7 @@ function receiverequest(self, request)
 
   -- Credencial inválida ou sem credencial
   if credential then
-    Log:interceptor("\n ***CREDENCIAL INVALIDA ***\n")
+    Log:interceptor("\n ***CREDENCIAL ["..credential.identifier.."] INVALIDA PARA "..request.operation.." ***\n")
   else
     Log:interceptor("\n***NÂO TEM CREDENCIAL ***\n")
   end

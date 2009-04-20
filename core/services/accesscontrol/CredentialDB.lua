@@ -3,6 +3,8 @@
 local io = io
 local string = string
 local os = os
+local print = print
+local error = error
 
 local ipairs = ipairs
 local type = type
@@ -61,7 +63,11 @@ end
 function retrieveAll(self)
   local credentialFiles = lposix.dir(self.databaseDirectory)
   local entries = {}
+  local remove_entries = {}
+  
+
   for _, fileName in ipairs(credentialFiles) do
+    local addEntry = true
     if string.sub(fileName, -(#self.FILE_SUFFIX)) == self.FILE_SUFFIX then
       local credentialFile = io.open(self.databaseDirectory..self.FILE_SEPARATOR..fileName)
       local stream = FileStream{
@@ -75,12 +81,36 @@ function retrieveAll(self)
 
       -- caso especial para referencias a membros
       if entry.component then
-        entry.component = orb:newproxy(entry.component) 
+
+	local success, result = oil.pcall(orb.newproxy, orb, entry.component)
+
+         if success then 
+		 --TODO: Quando o bug do oil for consertado, mudar para: if not result:_non_existent() then
+		 local succ, non_existent = result.__try:_non_existent()
+		 if succ and not non_existent then
+		     entry.component = result
+		 else
+		    --CREDENCIAL INVALIDA - REMOVER CREDENCIAL
+		    addEntry = false
+		    remove_entries[credential.identifier] = entry
+		 end
+         else
+	    --CREDENCIAL INVALIDA - REMOVER CREDENCIAL
+	    addEntry = false
+	    remove_entries[credential.identifier] = entry
+         end
       end
 
-      entries[credential.identifier] = entry
+      if addEntry then
+         entries[credential.identifier] = entry
+      end
     end
   end
+
+  for _, entry in pairs(remove_entries) do
+    self:delete(entry)
+  end
+
   return entries
 end
 
@@ -163,7 +193,7 @@ function writeCredential(self, entry)
   }
   local component = entry.component
   if component then
-    stream[component] = "'"..orb:tostring(component).."'"
+    stream[component] = "'"..tostring(component).."'"
   end
   stream:put(entry)
   

@@ -15,6 +15,7 @@ local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
 local ServerConnectionManager = require "openbus.common.ServerConnectionManager"
+local ACSWrapper = require "core.services.accesscontrol.AccessControlServiceWrapper"
 
 local Log = require "openbus.common.Log"
 
@@ -76,7 +77,8 @@ function startup(self)
         accessControlServiceCertificateFile)
 
     -- obtém a referência para o Serviço de Controle de Acesso
-    self.accessControlService = self.connectionManager:getAccessControlService()
+--    self.accessControlService = self.connectionManager:getAccessControlService()
+    self.accessControlService = ACSWrapper
     if self.accessControlService == nil then
       error{"IDL:SCS/StartupFailed:1.0"}
     end
@@ -88,7 +90,7 @@ function startup(self)
       ClientInterceptor(interceptorsConfig, credentialManager))
 
     -- instala o interceptador servidor
-    self.serverInterceptor = ServerInterceptor(interceptorsConfig, self.accessControlService)
+    self.serverInterceptor = ServerInterceptor(interceptorsConfig,self.accessControlService)
     orb:setserverinterceptor(self.serverInterceptor)
 
     self.initialized = true
@@ -174,7 +176,7 @@ function shutdown(self)
   self.started = false
 
   if self.registryIdentifier then
-    local accessControlService = self.connectionManager:getAccessControlService()
+    local accessControlService = ACSWrapper
     local registryService = accessControlService:getRegistryService()
     if not registryService then
       Log:error("Serviço de registro não encontrado")

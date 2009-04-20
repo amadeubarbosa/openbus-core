@@ -8,6 +8,8 @@ local pairs = pairs
 local ipairs = ipairs
 local string = string
 local tostring = tostring
+local print = print
+local table = table
 
 local luuid = require "uuid"
 local lce = require "lce"
@@ -15,7 +17,9 @@ local oil = require "oil"
 local orb = oil.orb
 
 local CredentialDB = require "core.services.accesscontrol.CredentialDB"
+
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
+
 local LeaseProvider = require "openbus.common.LeaseProvider"
 
 local LDAPLoginPasswordValidator =
@@ -29,10 +33,17 @@ local IComponent = require "scs.core.IComponent"
 
 local oop = require "loop.simple"
 
+local AccessControlServiceWrapper = require "core.services.accesscontrol.AccessControlServiceWrapper"
+
+local RegistryServiceWrapper = require "core.services.registry.RegistryServiceWrapper"
+
+local RegistryService = require "core.services.registry.RegistryService"
+
 ---
 --Componente responsável pelo Serviço de Controle de Acesso
 ---
 module("core.services.accesscontrol.AccessControlService")
+
 
 oop.class(_M, IComponent)
 
@@ -51,6 +62,8 @@ local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 invalidCredential = {identifier = "", owner = "", delegate = ""}
 invalidLease = -1
 deltaT = 30 -- lease fixo (por enquanto) em segundos
+
+faultDescription = {_isAlive = false, _errorMsg = "" }
 
 ---
 --Cria um serviço de controle de acesso.
@@ -77,10 +90,11 @@ end
 --@see scs.core.IComponent#startup
 ---
 function startup(self)
+
   -- instala o interceptador do serviço
   local iconfig =
     assert(loadfile(DATA_DIR.."/conf/advanced/ACSInterceptorsConfiguration.lua"))()
-  self.serverInterceptor = ServerInterceptor(iconfig, self)
+  self.serverInterceptor = ServerInterceptor(iconfig,self)
   orb:setserverinterceptor(self.serverInterceptor)
 
   -- inicializa repositorio de credenciais
@@ -98,7 +112,10 @@ function startup(self)
     databaseDirectory = DATA_DIR.."/"..self.config.databaseDirectory
   end
   self.credentialDB = CredentialDB(databaseDirectory)
+
+
   local entriesDB = self.credentialDB:retrieveAll()
+
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
     self.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
@@ -131,6 +148,9 @@ function startup(self)
     end
   end
   self.leaseProvider = LeaseProvider(self.checkExpiredLeases, self.deltaT)
+
+
+ faultDescription._isAlive = true
   return self
 end
 
@@ -236,9 +256,7 @@ function generateChallenge(self, name, certificate)
   return lce.cipher.encrypt(certificate:getpublickey(), randomSequence)
 end
 
----
---@see openbus.common.LeaseProvider#renewLease
----
+
 function renewLease(self, credential)
   Log:lease(credential.owner.. " renovando lease.")
   if not self:isValid(credential) then
@@ -261,6 +279,7 @@ end
 --@return true caso a credencial estivesse logada, ou false caso contrário.
 ---
 function logout(self, credential)
+  Log:warn("-------------------["..credential.owner.."]-["..credential.identifier.."]--------------------")
   local entry = self.entries[credential.identifier]
   if not entry then
     Log:warn("Tentativa de logout com credencial inexistente: "..
@@ -269,8 +288,8 @@ function logout(self, credential)
   end
   self:removeEntry(entry)
   if self.registryService then
-    if credential.owner == "RegistryService" and
-        credential.identifier == self.registryService.credential.identifier then
+    local registry = self.registryService
+    if credential.owner == "RegistryService" and credential.identifier == registry.credential.identifier then
       self.registryService = nil
     end
   end
@@ -286,9 +305,21 @@ end
 ---
 function isValid(self, credential)
   local entry = self.entries[credential.identifier]
+
   if not entry then
-    return false
+	--VAI BUSCAR NAS REPLICAS
+
+	local acsWrapper = AccessControlServiceWrapper
+	entry = acsWrapper:credentialLookupInReplicas(credential)
+
+	if not entry.certified then
+		return false
+	else
+	--ADICIONA LOCALMENTE
+		entry = self:addEntryCredential(entry)
+	end
   end
+
   if entry.credential.identifier ~= credential.identifier then
     return false
   end
@@ -298,29 +329,64 @@ function isValid(self, credential)
   return true
 end
 
+
+---
+--Verifica se uma credencial é válida e retorna sua entrada completa.
+--
+--@param credential A credencial.
+--
+--@return a credencial caso exista, ou nil caso contrário.
+---
+function getEntryCredential(self, credential)
+
+
+  local emptyEntry = {     credential = {  identifier = "",  owner = "",  delegate = "" },
+			    certified = false,
+			    lease = 0,
+			    observers = {},
+			    observedBy = ""
+			}
+  local entry = self.entries[credential.identifier]
+
+  if not entry or entry == nil then
+    return emptyEntry
+  end
+  if entry.credential.identifier ~= credential.identifier then
+    return emptyEntry
+  end
+  if entry.credential.delegate ~= "" and not entry.certified then
+    return emptyEntry
+  end
+  return entry
+end
+
+local registryServiceWrapper = RegistryServiceWrapper
+
 ---
 --Obtém o Serviço de Registro.
 --
 --@return O Serviço de Registro, ou nil caso não tenha sido definido.
 ---
 function getRegistryService(self)
-  if self.registryService then
-    return self.registryService.component
-  end
-  return nil
+  return registryServiceWrapper:getRegistryService()
 end
 
 ---
 --Define o componente responsável pelo Serviço de Registro.
 --
---@param registryServiceComponent O componente responsável pelo Serviço de
+--@param registryServiceComponent O componente responsável pelo Wrapper do Serviço de
 --Registro.
 --
 --@return true caso o componente seja definido, ou false caso contrário.
 ---
 function setRegistryService(self, registryServiceComponent)
+  
   local credential = self.serverInterceptor:getCredential()
+
   if credential.owner == "RegistryService" then
+
+    registryServiceComponent = registryServiceWrapper:getRegistryService()
+
     self.registryService = {
       credential = credential,
       component = registryServiceComponent,
@@ -452,6 +518,22 @@ function addEntry(self, name, certified)
   return entry
 end
 
+
+---
+--Adiciona uma credencial ao banco de dados.
+--
+--@param name O nome da entidade para a qual a credencial será gerada.
+--
+--@return A credencial.
+---
+function addEntryCredential(self, entry)
+  local duration = self.deltaT
+  entry.lease = { lastUpdate = os.time(), duration = duration }
+  self.credentialDB:insert(entry)
+  self.entries[entry.credential.identifier] = entry
+  return entry
+end
+
 ---
 --Gera um identificador de credenciais.
 --
@@ -507,4 +589,30 @@ function notifyCredentialWasDeleted(self, credential)
       end
     end
   end
+end
+
+---
+--Retorna se o serviço de controle de acesso está em estado de falha ou não.
+---
+function isAlive()
+
+  if not faultDescription._isAlive then
+       msg = "Servico de Controle de Acesso nao esta disponivel.\n"
+       faultDescription._errorMsg = msg
+       Log:error(msg)
+       return false
+   end
+   return true
+end
+
+function setStatus(self, isAlive)
+   faultDescription._isAlive = isAlive
+end
+
+function kill(self)
+   --TODO: Verificar se precisa fazer algo mais antes do serviço remover seu processo
+   self.leaseProvider:stopCheck()
+   orb:deactivate(self)
+   orb:shutdown()
+   Log:faulttolerance("Servico de Controle de Acesso matou seu processo.")
 end
