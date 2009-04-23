@@ -5,13 +5,31 @@
 --
 local oil = require "oil"
 local orb = oil.orb
+local oop = require "loop.base"
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
 
-local IComponent = require "scs.core.IComponent"
+local scs = require "scs.core.base"
 
 local Check = require "latt.Check"
+
+---- Facet Descriptions
+local facetDescriptions = {}
+facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0", class = scs.Component}
+facetDescriptions.IMetaInterface = {name = "IMetaInterface", interface_name = "IDL:scs/core/IMetaInterface:1.0", class = scs.MetaInterface}
+
+-- Receptacle Descriptions
+local receptacleDescriptions = {}
+
+-- component id
+local componentId = {}
+componentId.name = "Membro Mock"
+componentId.major_version = 1
+componentId.minor_version = 0
+componentId.patch_version = 0
+componentId.platform_spec = ""
+
 
 Suite = {
   Test1 = {
@@ -44,18 +62,16 @@ Suite = {
       success, self.credential = self.accessControlService:loginByPassword(user, password)
       self.credentialManager:setValue(self.credential)
       self.registryService = self.accessControlService:getRegistryService()
-local a = 1
     end,
 
     testRegister = function(self)
-      local member = IComponent("Membro Mock", 1, 0, 0, "")
-      member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
+      local member = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
       local success, registryIdentifier = self.registryService:register({
         properties = {
           {name = "type", value = {"type1"}},
           {name = "description", value = {"bla bla bla"}}, 
         },
-        member = member,
+        member = member.IComponent,
       })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
@@ -63,14 +79,13 @@ local a = 1
     end,
 
     testFind = function(self)
-      local member = IComponent("Membro Mock", 1, 0, 0, "")
-      member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
+      local member = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
       local success, registryIdentifier = self.registryService:register({
         properties = {
           {name = "type", value = {"X"}},
           {name = "description", value = {"bla"}},
         },
-        member = member,
+        member = member.IComponent,
       })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
@@ -91,13 +106,12 @@ local a = 1
     end,
 
     testUpdate = function(self)
-      local member = IComponent("Membro Mock", 1, 0, 0, "")
-      member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
+      local member = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
       local serviceOffer = {
         properties = {
           {name = "type", value = {"X"}},
           {name = "description", value = {"bla"}},
-        }, member = member, }
+        }, member = member.IComponent, }
       Check.assertFalse(self.registryService:update("", {}))
       local success, registryIdentifier = self.registryService:register(serviceOffer)
       Check.assertTrue(success)
@@ -118,27 +132,26 @@ local a = 1
       })
       Check.assertEquals(1, #offers)
       Check.assertEquals(offers[1].member:getComponentId().name,
-        member:getComponentId().name)
+        member._componentId.name)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 
     testFacets = function(self)
-      local member = IComponent("Membro Mock", 1, 0, 0, "")
-      member = orb:newservant(member, nil, "IDL:scs/core/IComponent:1.0")
-      local dummyObserver = {
+      local dummyObserver = oop.class{
         credentialWasDeleted = function(self, credential) end
       }
-      member:addFacet("facet1", "IDL:openbusidl/acs/ICredentialObserver:1.0",
-                      dummyObserver)
-      member:addFacet("facet2", "IDL:openbusidl/acs/ICredentialObserver:1.0",
-                      dummyObserver)
+      facetDescriptions.ICredentialObserver = {name = "facet1", interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0",
+                                                class = dummyObserver}
+      facetDescriptions.ICredentialObserver2 = {name = "facet2", interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0",
+                                                class = dummyObserver}
+      local member = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
       local serviceOffer = {
         properties = {
           {name = "type", value = {"WithFacets"}},
           {name = "description", value = {"bla"}},
           {name = "p1", value = {"b"}}
         },
-        member = member
+        member = member.IComponent
       }
       local success, registryIdentifier = self.registryService:register(serviceOffer)
       Check.assertTrue(success)

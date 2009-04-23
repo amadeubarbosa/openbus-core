@@ -5,6 +5,10 @@
 ---
 
 local Log = require "openbus.common.Log"
+local LDAPLoginPasswordValidator =
+    require "core.services.accesscontrol.LDAPLoginPasswordValidator"
+local TestLoginPasswordValidator =
+    require "core.services.accesscontrol.TestLoginPasswordValidator"
 
 local oil = require "oil"
 
@@ -43,9 +47,51 @@ local orb = oil.init { host = AccessControlServerConfiguration.hostName,
 
 oil.orb = orb
 
+local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
 
 orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
+
+-----------------------------------------------------------------------------
+-- AccessControlService Descriptions
+-----------------------------------------------------------------------------
+
+-- Facet Descriptions
+local facetDescriptions = {}
+facetDescriptions.IComponent          	= {}
+facetDescriptions.IMetaInterface      	= {}
+facetDescriptions.IAccessControlService = {}
+facetDescriptions.ILeaseProvider       	= {}
+
+facetDescriptions.IComponent.name                     = "IComponent"
+facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
+facetDescriptions.IComponent.class                    = scs.Component
+facetDescriptions.IComponent.key                      = "IC"
+
+facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
+facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
+facetDescriptions.IMetaInterface.class                = scs.MetaInterface
+
+facetDescriptions.IAccessControlService.name            = "IAccessControlService"
+facetDescriptions.IAccessControlService.interface_name  = "IDL:openbusidl/acs/IAccessControlService:1.0"
+facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
+facetDescriptions.IAccessControlService.key             = "ACS"
+
+facetDescriptions.ILeaseProvider.name                  = "ILeaseProvider"
+facetDescriptions.ILeaseProvider.interface_name        = "IDL:openbusidl/acs/ILeaseProvider:1.0"
+facetDescriptions.ILeaseProvider.class                 = AccessControlService.LeaseProviderFacet
+facetDescriptions.ILeaseProvider.key                   = "LP"
+
+-- Receptacle Descriptions
+local receptacleDescriptions = {}
+
+-- component id
+local componentId = {}
+componentId.name = "AccessControlService"
+componentId.major_version = 1
+componentId.minor_version = 0
+componentId.patch_version = 0
+componentId.platform_spec = ""
 
 ---
 --Função que será executada pelo OiL em modo protegido.
@@ -58,18 +104,22 @@ function main()
   end
 
   -- Cria o componente responsável pelo Serviço de Controle de Acesso
-  success, res  = oil.pcall(orb.newservant, orb,
-      AccessControlService("AccessControlService",
-      AccessControlServerConfiguration),
-      "ACS",
-      "IDL:openbusidl/acs/IAccessControlService:1.0")
-  if not success then
-    Log:error("Falha criando o AcessControlService: "..tostring(res).."\n")
-    os.exit(1)
-  end
+  acsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
 
-  local accessControlService = res
-  success, res = oil.pcall(accessControlService.startup, accessControlService)
+  -- Configurações
+  acsInst.IComponent.startup = AccessControlService.startup
+  
+  local acs = acsInst.IAccessControlService
+  acs.config = AccessControlServerConfiguration
+  acs.entries = {}
+  acs.observers = {}
+  acs.challenges = {}
+  acs.loginPasswordValidators = {LDAPLoginPasswordValidator(acs.config.ldapHosts, acs.config.ldapSuffixes),
+    TestLoginPasswordValidator(),
+  }
+
+  -- Inicialização
+  success, res = oil.pcall(acsInst.IComponent.startup, acsInst.IComponent)
   if not success then
     Log:error("Falha ao iniciar o serviço de controle de acesso: "..
         tostring(res).."\n")

@@ -16,7 +16,8 @@ local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local ServerInterceptor = require "openbus.common.ServerInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
 
-local IComponent = require "scs.core.IComponent"
+local oop = require "loop.base"
+local scs = require "scs.core.base"
 
 --  oil.verbose:level(0)
 orb:loadidlfile "../idl/hello.idl"
@@ -56,17 +57,21 @@ function main ()
 
   local registryIdentifier
 
-  local Hello = {}
+  local Hello = oop.class{}
     function Hello:sayHello()
       local user = serverInterceptor:getCredential().owner
       print "HELLO!\n\n"
       print(string.format("O usuário OpenBus %s requisitou a operação sayHello.", user))
       registryService:unregister(registryIdentifier)
     end
-    local M = IComponent("Membro", 1, 0, 0, "")
-    M = orb:newservant(M, nil, "IDL:scs/core/IComponent:1.0")
-    M:addFacet("faceta", "IDL:demoidl/hello/IHello:1.0", Hello)
-    success, registryIdentifier = registryService:register({ properties = {{name = "type", value = {"type"}}}, member = M, })
+    local facetDescriptions = {}
+    facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0",
+                                     class = scs.Component}
+    facetDescriptions.IHello = {name = "IHello", interface_name = "IDL:demoidl/hello/IHello:1.0", class = Hello}
+    local componentId = {name = "Membro", major_version = 1, minor_version = 0, patch_version = 0, platform_spec = ""}
+    local component = scs.newComponent(facetDescriptions, {}, componentId)
+    success, registryIdentifier = registryService:register({ properties = {{name = "type", value = {"type"}}}, 
+      member = component.IComponent})
     print("*********************************************\n")
     print("PUBLISHER\nServiço Hello registrado no barramento do OpenBus.\n")
     print("*********************************************")

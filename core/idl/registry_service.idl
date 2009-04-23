@@ -37,7 +37,7 @@ typedef Identifier RegistryIdentifier;
 /**
  * \brief Representa o serviço de registro.
  */
-interface IRegistryService : scs::core::IComponent {
+interface IRegistryService {
     /**
      * \brief Registra uma oferta de serviço.
      *

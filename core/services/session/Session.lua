@@ -16,28 +16,20 @@ local oop = require "loop.base"
 ---
 --Sessão compartilhada pelos membros associados a uma mesma credencial.
 ---
-module("core.services.session.Session", oop.class)
+module "core.services.session.Session"
 
----
---Cria a sessão.
---
---@param identifier O identificador da sessão.
---@param credential A credencial relacionada a sessão.
---
---@return A sessão.
----
-function __init(self, identifier, credential)
-  Log:service("Construindo sessão com id "..tostring(identifier))
-  return oop.rawnew(self, {identifier = identifier, credential = credential,
-                           sessionMembers = {}, eventSinks = {}})
-end
+--------------------------------------------------------------------------------
+-- Faceta ISession
+--------------------------------------------------------------------------------
+
+Session = oop.class{sessionMembers = {}}
 
 ---
 --Obtï¿½m o identificador da sessão.
 --
 --@return O identificador da sessão.
 ---
-function getIdentifier(self)
+function Session:getIdentifier()
   return self.identifier
 end
 
@@ -48,7 +40,7 @@ end
 --
 --@return O identificador do membro na sessão.
 ---
-function addMember(self, member)
+function Session:addMember(member)
   local memberName = member:getComponentId().name
   Log:service("Membro "..memberName.." adicionado a sessão")
   local identifier = self:generateMemberIdentifier()
@@ -59,7 +51,8 @@ function addMember(self, member)
   local eventSink = member:getFacet(eventSinkInterface)
   if eventSink then
     Log:service("Membro "..memberName.." receberá eventos")
-    self.eventSinks[identifier] =  orb:narrow(eventSink,
+    local eventSinks = self.context.SessionEventSink.eventSinks
+    eventSinks[identifier] =  orb:narrow(eventSink,
         eventSinkInterface)
   else
     Log:service("Membro "..memberName.." não receberá eventos")
@@ -75,40 +68,15 @@ end
 --@return true caso o membro tenha sido removido da sessão, ou false caso
 --contrário.
 ---
-function removeMember(self, identifier)
+function Session:removeMember(identifier)
   member = self.sessionMembers[identifier]
   if not member then
     return false
   end
   Log:service("Membro "..member:getComponentId().name.." removido da sessão")
   self.sessionMembers[identifier] = nil
-  self.eventSinks[identifier] = nil
+  self.context.SessionEventSink.eventSinks[identifier] = nil
   return true
-end
-
----
---Repassa evento para membros da sessão.
---
---@param event O evento.
----
-function push(self, event)
-  Log:service("Repassando evento "..event.type.." para membros de sessão")
-  for _, sink in pairs(self.eventSinks) do
-    local result, errorMsg = oil.pcall(sink.push, sink, event)
-    if not result then
-      Log:service("Erro ao enviar evento para membro de sessão: "..errorMsg)
-    end
-  end
-end
-
----
---Solicita a desconexão de todos os membros da sessão.
----
-function disconnect(self)
-  Log:service("Desconectando os membros da sessão")
-  for _, sink in pairs(self.eventSinks) do
-    sink:disconnect()
-  end
 end
 
 ---
@@ -116,7 +84,7 @@ end
 --
 --@return Os membros da sessão.
 ---
-function getMembers(self)
+function Session:getMembers()
   local members = {}
   for _, member in pairs(self.sessionMembers) do
     table.insert(members, member)
@@ -129,6 +97,39 @@ end
 --
 --@return O identificador de membro de sessão.
 ---
-function generateMemberIdentifier()
+function Session:generateMemberIdentifier()
   return luuid.new("time")
 end
+
+--------------------------------------------------------------------------------
+-- Faceta SessionEventSink
+--------------------------------------------------------------------------------
+
+SessionEventSink = oop.class{eventSinks = {}}
+
+---
+--Repassa evento para membros da sessão.
+--
+--@param event O evento.
+---
+function SessionEventSink:push(event)
+  Log:service("Repassando evento "..event.type.." para membros de sessão")
+  for _, sink in pairs(self.eventSinks) do
+    local result, errorMsg = oil.pcall(sink.push, sink, event)
+    if not result then
+      Log:service("Erro ao enviar evento para membro de sessão: "..errorMsg)
+    end
+  end
+end
+
+---
+--Solicita a desconexão de todos os membros da sessão.
+---
+function SessionEventSink:disconnect(self)
+  Log:service("Desconectando os membros da sessão")
+  for _, sink in pairs(self.eventSinks) do
+    sink:disconnect()
+  end
+end
+
+

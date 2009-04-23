@@ -11,29 +11,61 @@ local Log = require "openbus.common.Log"
 
 local oop = require "loop.base"
 
+local scs = require "scs.core.base"
+
+local tostring = tostring
+local table    = table
+local pairs    = pairs
+local ipairs   = ipairs
+
 ---
 --Faceta que disponibiliza a funcionalidade básica do serviço de sessão.
 ---
-module("core.services.session.SessionService", oop.class)
+module "core.services.session.SessionService"
 
-invalidMemberIdentifier = ""
+--------------------------------------------------------------------------------
+-- Faceta ISessionService
+--------------------------------------------------------------------------------
 
----
---Cria a facete de um Serviço de Sessão.
---
---@param accessControlService O Serviço de Controle de Acesso.
---@param serverInterceptor O interceptador de servidor que será instalado para
---este serviço.
---
---@return A faceta do Serviço de Sessão.
----
-function __init(self, accessControlService, serverInterceptor)
-  return oop.rawnew(self, {
-    sessions = {},
-    serverInterceptor = serverInterceptor,
-    accessControlService = accessControlService,
-  })
-end
+SessionService = oop.class{sessions = {}, invalidMemberIdentifier = ""}
+
+-----------------------------------------------------------------------------
+-- Descricoes do Componente Sessao
+-----------------------------------------------------------------------------
+
+-- Facet Descriptions
+local facetDescriptions = {}
+facetDescriptions.IComponent       = {}
+facetDescriptions.IMetaInterface   = {}
+facetDescriptions.SessionEventSink = {}
+facetDescriptions.ISession         = {}
+
+facetDescriptions.IComponent.name                 = "IComponent"
+facetDescriptions.IComponent.interface_name       = "IDL:scs/core/IComponent:1.0"
+facetDescriptions.IComponent.class                = scs.Component
+
+facetDescriptions.IMetaInterface.name             = "IMetaInterface"
+facetDescriptions.IMetaInterface.interface_name   = "IDL:scs/core/IMetaInterface:1.0"
+facetDescriptions.IMetaInterface.class            = scs.MetaInterface
+
+facetDescriptions.SessionEventSink.name           = "SessionEventSink"
+facetDescriptions.SessionEventSink.interface_name = "IDL:openbusidl/ss/SessionEventSink:1.0"
+facetDescriptions.SessionEventSink.class          = Session.SessionEventSink
+
+facetDescriptions.ISession.name                   = "ISession"
+facetDescriptions.ISession.interface_name         = "IDL:openbusidl/ss/ISession:1.0"
+facetDescriptions.ISession.class                  = Session.Session
+
+-- Receptacle Descriptions
+local receptacleDescriptions = {}
+
+-- component id
+local componentId = {}
+componentId.name = "Session"
+componentId.major_version = 1
+componentId.minor_version = 0
+componentId.patch_version = 0
+componentId.platform_spec = ""
 
 ---
 --Cria uma sessão associada a uma credencial. A credencial em questão é
@@ -46,32 +78,23 @@ end
 --@return true, a sessão e o identificador de membro da sessão em caso de
 --sucesso, ou false, caso contrário.
 ---
-function createSession(self, member)
+function SessionService:createSession(member)
   local credential = self.serverInterceptor:getCredential()
   if self.sessions[credential.identifier] then
     Log:err("Tentativa de criar sessão já existente")
     return false, nil, self.invalidMemberIdentifier
   end
-  Log:service("Vou criar sessão")
-  local session = Session(self:generateIdentifier(), credential)
-  session = orb:newservant(session, nil, "IDL:openbusidl/ss/ISession:1.0")
-  self.sessions[credential.identifier] = session
-  Log:service("Sessão criada!")
+  Log:service("Criando sessão")
+  local session = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+  session.ISession.identifier = self:generateIdentifier()
+  session.ISession.credential = credential
+  self.sessions[credential.identifier] = session.ISession
+  Log:service("Sessao criada com id "..tostring(session.ISession.identifier).." !")
 
   -- A credencial deve ser observada!
   if not self.observerId then
-    local observer = {
-      sessionService = self,
-      credentialWasDeleted =
-        function(self, credential)
-          self.sessionService:credentialWasDeleted(credential)
-        end
-    }
-    self.observer = orb:newservant(observer,
-                                  "SessionServiceCredentialObserver",
-                                  "IDL:openbusidl/acs/ICredentialObserver:1.0")
     self.observerId =
-      self.accessControlService:addObserver(self.observer,
+      self.accessControlService:addObserver(self.context.ICredentialObserver,
                                             {credential.identifier})
   else
     self.accessControlService:addCredentialToObserver(self.observerId,
@@ -79,8 +102,8 @@ function createSession(self, member)
   end
 
   -- Adiciona o membro à sessão
-  local memberID = session:addMember(member)
-  return true, session, memberID
+  local memberID = session.ISession:addMember(member)
+  return true, session.ISession, memberID
 end
 
 ---
@@ -88,7 +111,7 @@ end
 --
 --@param credential A credencial removida.
 ---
-function credentialWasDeleted(self, credential)
+function SessionService:credentialWasDeleted(credential)
 
   -- Remove a sessão
   local session = self.sessions[credential.identifier]
@@ -105,7 +128,7 @@ end
 --
 --@return Um identificador de sessão.
 ---
-function generateIdentifier()
+function SessionService:generateIdentifier()
   return luuid.new("time")
 end
 
@@ -116,7 +139,7 @@ end
 --
 --@return A sessão, ou nil, caso não exista sessão para a credencial do membro.
 ---
-function getSession(self)
+function SessionService:getSession()
   local credential = self.serverInterceptor:getCredential()
   local session = self.sessions[credential.identifier]
   if not session then
@@ -129,7 +152,7 @@ end
 ---
 --Procedimento após a reconexão do serviço.
 ---
-function wasReconnected(self)
+function SessionService:wasReconnected()
 
   -- registra novamente o observador de credenciais
   self.observerId = self.accessControlService:addObserver(self.observer, {})
@@ -154,7 +177,7 @@ end
 ---
 --Finaliza o serviço.
 ---
-function shutdown(self)
+function SessionService:shutdown()
   if self.observerId then
     self.accessControlService:removeObserver(self.observerId)
     self.observer:_deactivate()
@@ -162,3 +185,14 @@ function shutdown(self)
     self.observerId = nil
   end
 end
+
+--------------------------------------------------------------------------------
+-- Faceta ICredentialObserver
+--------------------------------------------------------------------------------
+
+Observer = oop.class{}
+
+function Observer:credentialWasDeleted(credential)
+  self.context.ISessionService:credentialWasDeleted(credential)
+end
+

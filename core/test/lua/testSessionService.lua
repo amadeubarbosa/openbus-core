@@ -9,7 +9,7 @@ local orb = oil.orb
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
 
-local IComponent = require "scs.core.IComponent"
+local scs = require "scs.core.base"
 
 local Check = require "latt.Check"
 
@@ -58,15 +58,19 @@ Suite = {
     end,
 
     testCreateSession = function(self)
-      local member1 = IComponent("membro1", 1, 0, 0, "")
-      member1 = orb:newservant(member1, nil, "IDL:scs/core/IComponent:1.0")
-      local success, session, id1 = self.sessionService:createSession(member1)
+      local facetDescriptions = {}
+      facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0", 
+                                       class = scs.Component}
+      local componentId = {major_version = 1, minor_version = 0, patch_version = 0, platform_spec = ""}
+      componentId.name = "membro1"
+      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
+      local success, session, id1 = self.sessionService:createSession(member1.IComponent)
       Check.assertTrue(success)
-      local member2 = IComponent("membro2", 1, 0, 0, "")
-      member2 = orb:newservant(member2, nil, "IDL:scs/core/IComponent:1.0")
+      componentId.name = "membro2"
+      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
       local session2 = self.sessionService:getSession()
       Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
-      local id2 = session:addMember(member2)
+      local id2 = session:addMember(member2.IComponent)
       Check.assertNotEquals(id1, id2)
       session:removeMember(id1)
       session:removeMember(id2)

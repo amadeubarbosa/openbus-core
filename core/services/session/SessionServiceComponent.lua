@@ -18,37 +18,23 @@ local ServerConnectionManager = require "openbus.common.ServerConnectionManager"
 
 local Log = require "openbus.common.Log"
 
-local IComponent = require "scs.core.IComponent"
+local scs = require "scs.core.base"
 
 local oop = require "loop.simple"
 
 ---
---Componente (membro) responsável pelo Serviço de Sessão.
+-- IComponent (membro) do Serviço de Sessão.
 ---
-module("core.services.session.SessionServiceComponent")
+module "core.services.session.SessionServiceComponent"
 
-oop.class(_M, IComponent)
-
----
---Cria um Serviço de Sessão.
---
---@param name O nome do componente.
---@param config As configurações do componente.
---
---@return O Serviço de Sessão.
----
-function __init(self, name, config)
-  local component = IComponent:__init(name, 1, 0, 0, "")
-  component.config = config
-  return oop.rawnew(self, component)
-end
+SessionServiceComponent = oop.class({}, scs.Component)
 
 ---
 --Inicia o componente.
 --
 --@see scs.core.IComponent#startup
 ---
-function startup(self)
+function SessionServiceComponent:startup()
   Log:service("Pedido de startup para o serviço de sessão")
 
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -97,21 +83,20 @@ function startup(self)
   end
 
   -- autentica o serviço, conectando-o ao barramento
-  local success = self.connectionManager:connect(self.componentId.name,
+  local success = self.connectionManager:connect(self.context._componentId.name,
       function() self.wasReconnected(self) end)
   if not success then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
-  -- cria e instala a faceta servidora
-  self.sessionService = SessionService(self.accessControlService,
-                                       self.serverInterceptor)
-  local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
-  self:addFacet("sessionService", sessionServiceInterface, self.sessionService)
+  -- configura faceta ISessionService
+  self.sessionService = self.context.ISessionService
+  self.sessionService.serverInterceptor = self.serverInterceptor
+  self.sessionService.accessControlService = self.accessControlService
 
   -- registra sua oferta de serviço junto ao Serviço de Registro
   self.serviceOffer = {
-    member = self,
+    member = self.context.IComponent,
     properties = {
       {name = "facets", value = {"sessionService"}},
     },
@@ -137,7 +122,7 @@ end
 ---
 --Procedimento após a reconexão do serviço.
 ---
-function wasReconnected(self)
+function SessionServiceComponent:wasReconnected()
 Log:service("Serviço de sessão foi reconectado")
 
   -- Procedimento realizado pela faceta
@@ -165,7 +150,7 @@ end
 --
 --@see scs.core.IComponent#shutdown
 ---
-function shutdown(self)
+function SessionServiceComponent:shutdown()
   Log:service("Pedido de shutdown para o serviço de sessão")
   if not self.started then
     Log:error("Servico ja foi finalizado.\n")
@@ -188,6 +173,5 @@ function shutdown(self)
 
   self.connectionManager:disconnect()
 
-  self:removeFacets()
   Log:service("Serviço de sessão finalizado")
 end

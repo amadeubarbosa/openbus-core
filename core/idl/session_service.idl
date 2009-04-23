@@ -43,7 +43,7 @@ interface SessionEventSink {
 /**
  * \brief Representa uma sessão.
  */
-interface ISession : SessionEventSink {
+interface ISession {
     /**
      * \brief Obtém o identificador da sessão.
      *

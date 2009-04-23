@@ -11,6 +11,7 @@
 #include "RegistryService.h"
 
 #include <omg/orb.hh>
+#include "../stubs/scs.hh"
 #include "../stubs/access_control_service.hh"
 #include "../stubs/registry_service.hh"
 
@@ -20,8 +21,12 @@ namespace openbus {
       private:
       /* Ponteiro para ORB utilizado. */
         CORBA::ORB* orb;
-      /* Ponteiro para o serviço de acesso. */
+      /* Ponteiro para a faceta IComponent. */
+        scs::core::IComponent* iComponent;
+      /* Ponteiro para a faceta IAccessControlService. */
         openbusidl::acs::IAccessControlService* iAccessControlService;
+      /* Ponteiro para a faceta ILeaseProvider. */
+        openbusidl::acs::ILeaseProvider* iLeaseProvider;
       public:
       /*
       * host: host do barramento.

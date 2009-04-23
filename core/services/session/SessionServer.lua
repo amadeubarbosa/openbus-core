@@ -30,8 +30,11 @@ local orb = oil.init { flavor = "intercepted;corba;typed;cooperative;base",
 
 oil.orb = orb
 
+local scs = require "scs.core.base"
+
 local SessionServiceComponent =
     require "core.services.session.SessionServiceComponent"
+local SessionService = require "core.services.session.SessionService"
 
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/SessionServerConfiguration.lua"))()
@@ -56,6 +59,44 @@ orb:loadidlfile (idlfile)
 idlfile = IDLPATH_DIR.."/registry_service.idl"
 orb:loadidlfile (idlfile)
 
+-----------------------------------------------------------------------------
+-- Descricoes do Componente Servico de Sessao
+-----------------------------------------------------------------------------
+
+-- Facet Descriptions
+local facetDescriptions = {}
+facetDescriptions.IComponent          = {}
+facetDescriptions.IMetaInterface      = {}
+facetDescriptions.ISessionService     = {}
+facetDescriptions.ICredentialObserver = {}
+
+facetDescriptions.IComponent.name                    = "IComponent"
+facetDescriptions.IComponent.interface_name          = "IDL:scs/core/IComponent:1.0"
+facetDescriptions.IComponent.class                   = SessionServiceComponent.SessionServiceComponent
+
+facetDescriptions.IMetaInterface.name                = "IMetaInterface"
+facetDescriptions.IMetaInterface.interface_name      = "IDL:scs/core/IMetaInterface:1.0"
+facetDescriptions.IMetaInterface.class               = scs.MetaInterface
+
+facetDescriptions.ISessionService.name               = "ISessionService"
+facetDescriptions.ISessionService.interface_name     = "IDL:openbusidl/ss/ISessionService:1.0"
+facetDescriptions.ISessionService.class              = SessionService.SessionService
+
+facetDescriptions.ICredentialObserver.name           = "SessionServiceCredentialObserver"
+facetDescriptions.ICredentialObserver.interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0"
+facetDescriptions.ICredentialObserver.class          = SessionService.Observer
+
+-- Receptacle Descriptions
+local receptacleDescriptions = {}
+
+-- component id
+local componentId = {}
+componentId.name = "SessionService"
+componentId.major_version = 1
+componentId.minor_version = 0
+componentId.patch_version = 0
+componentId.platform_spec = ""
+
 function main()
   -- Aloca uma thread para o orb
   local success, res = oil.pcall(oil.newthread, orb.run, orb)
@@ -64,16 +105,18 @@ function main()
     os.exit(1)
   end
 
+print("Component: ", facetDescriptions.IComponent.class)
+print("MetaInterface: ", facetDescriptions.IMetaInterface.class)
+print("SessionService: ", facetDescriptions.ISessionService.class)
   -- Cria o componente responsável pelo Serviço de Sessão
-  success, res = oil.pcall(orb.newservant, orb,
-      SessionServiceComponent("SessionService", SessionServerConfiguration),
-      nil,
-      "IDL:scs/core/IComponent:1.0")
+  success, res = oil.pcall(scs.newComponent, facetDescriptions, receptacleDescriptions,
+      componentId)
   if not success then
-    Log:error("Falha criando SessionServiceComponent: "..tostring(res).."\n")
+    Log:error("Falha criando componente: "..tostring(res).."\n")
     os.exit(1)
   end
-  local sessionServiceComponent = res
+  res.IComponent.config = SessionServerConfiguration
+  local sessionServiceComponent = res.IComponent
   success, res = oil.pcall(sessionServiceComponent.startup,
       sessionServiceComponent)
   if not success then

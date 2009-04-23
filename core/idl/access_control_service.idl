@@ -62,7 +62,7 @@ interface ILeaseProvider {
 /**
  * \brief Representa o serviço de controle de acesso.
  */
-interface IAccessControlService : scs::core::IComponent, ILeaseProvider {
+interface IAccessControlService {
     /**
      * \brief Autentica uma entidade através de um nome e uma senha.
      *
