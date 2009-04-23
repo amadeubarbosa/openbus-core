@@ -70,7 +70,7 @@ namespace openbus {
       const char* OPENBUS_HOME = getenv("OPENBUS_HOME");
       char* configPath = new char[BUFFER_SIZE];
       strcpy(configPath, OPENBUS_HOME);
-      strcat(configPath, "/core/conf/advanced/InterceptorsConfiguration.lua");
+      strcat(configPath, "/data/conf/advanced/InterceptorsConfiguration.lua");
     #if VERBOSE
       printf("\t[Tamanho da pilha de Lua: %d]\n" , lua_gettop(LuaVM));
       printf("\t[Carregando arquivo de cofiguracao: %s]\n" , configPath);

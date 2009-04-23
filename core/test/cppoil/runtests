@@ -1,6 +1,6 @@
 #!/bin/ksh
 
-. ${OPENBUS_HOME}/core/conf/config
+. ${OPENBUS_HOME}/data/conf/config
 echo ${CORE_IDL_DIR}
 
 bin/${TEC_UNAME}/$1
