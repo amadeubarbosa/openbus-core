@@ -10,7 +10,7 @@
 #include <it_ts/termination_handler.h>
 
 #include <openbus.h>
-#include <scs/core/ComponentBuilderOrbix.h>
+#include <ComponentBuilderOrbix.h>
 
 #include "stubs/helloS.hh"
 

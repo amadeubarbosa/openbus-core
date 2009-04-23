@@ -4,7 +4,7 @@ APPNAME= acs
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/cxxtest ${OPENBUSINC}/tolua5.1 ${OPENBUSINC}/scs
+INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/cxxtest ${OPENBUSINC}/tolua5.1 ${OPENBUSINC}/scs/cppoil
 LDIR= ${OPENBUSLIB}
 
 LIBS= dl 

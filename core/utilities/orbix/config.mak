@@ -14,7 +14,7 @@ DEFINES=VERBOSE
 OBJROOT= obj
 TARGETROOT= lib
 
-INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs
+INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs/orbix
 LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix

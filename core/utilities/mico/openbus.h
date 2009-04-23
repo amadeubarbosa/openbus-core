@@ -9,7 +9,7 @@
 #include "openbus/common/CredentialManager.h"
 #include "openbus/common/ORBInitializerImpl.h"
 #include "openbus/common/ServerInterceptor.h"
-#include <scs/core/IComponentMico.h>
+#include <IComponentMico.h>
 
 #endif
 

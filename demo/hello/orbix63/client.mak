@@ -13,7 +13,7 @@ DEFINES=VERBOSE
 TARGETROOT=bin
 OBJROOT=obj
 
-INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs
+INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs/orbix
 LDIR= ${ORBIXLDIR} 
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor

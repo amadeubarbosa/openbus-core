@@ -6,15 +6,15 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 EXTRA_CONFIG=../config
 
-CPPFLAGS= -g3 -mtune=pentium3 -march=i586 -pipe -D_REENTRANT -Wno-sign-compare
+CPPFLAGS= -g3 -pipe -D_REENTRANT -Wno-sign-compare
 LFLAGS= $(CPPFLAGS) -rdynamic -L/usr/local/lib -Wl,-t -lpthread -lrt
 
 CPPC=g++
 
-TARGETROOT=bin
-OBJROOT=obj
+#TARGETROOT=bin
+#OBJROOT=obj
 
-INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs ${OPENBUSINC}/cxxtest
+INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs/orbix ${OPENBUSINC}/cxxtest
 LDIR= ${ORBIXLDIR} 
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor

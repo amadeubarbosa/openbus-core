@@ -14,7 +14,7 @@ DEFINES=${VERBOSE}
 TARGETROOT=bin
 OBJROOT=obj
 
-INCLUDES= . ${MICOINC} ${OPENBUS_HOME}/core/utilities/mico ${OPENBUSINC}/scs
+INCLUDES= . ${MICOINC} ${OPENBUS_HOME}/core/utilities/mico ${OPENBUSINC}/scs/mico
 LDIR= ${MICOLDIR} 
 
 LIBS= mico2.3.13

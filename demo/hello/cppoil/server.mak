@@ -7,7 +7,7 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 OBJROOT= obj
 TARGETROOT= bin
 
-INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/tolua5.1 ${OPENBUSINC}/scs
+INCLUDES= ${OPENBUS_HOME}/core/utilities/cppoil ${OPENBUSINC}/tolua5.1 ${OPENBUSINC}/scs/cppoil
 LDIR= ${OPENBUSLIB} ${OPENBUS_HOME}/core/utilities/cppoil/lib/${TEC_UNAME}
 
 LIBS= dl
