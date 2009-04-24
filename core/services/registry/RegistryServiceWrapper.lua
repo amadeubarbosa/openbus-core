@@ -117,53 +117,6 @@ function obj:offersLookupInReplicas(criteria,notInHostAdd)
 end
 
 
-function obj:getNextService(notInHostAdd)
-  local service = nil
-  local indexCurrTmp = self.indexCurr
-
-	local numberOfHosts = # self.hostsAdd
-
-	if indexCurrTmp == numberOfHosts then
-	   indexCurrTmp = 1
-	else
-	  indexCurrTmp = indexCurrTmp + 1
-	end
-
-	if self.hostsAdd[indexCurrTmp] ~= notInHostAdd then
-		local objRef = "corbaloc::"..tostring(self.hostsAdd[indexCurrTmp]).."/"..self.objRefName	
-
-		local success	
-		success, service = oil.pcall(orb.newproxy, orb, objRef, self.objType)
-
-		Log:faulttolerance("[getNextService]"..objRef.."-TYPE:"..self.objType)
-
-		 if success then 
-			 --TODO: Quando o bug do oil for consertado, mudar para: if not service:_non_existent() then
-			 --local succ, non_existent = service.__try:_non_existent()
-			 --if succ and not non_existent then
-			if OilUtilities:existent(service) then
-		 	     --OK
-			     Log:faulttolerance("[getNextService] Servico encontrado.")
-
-			     --TODO: Essa linha é devido a um outro bug no OiL: type_id = ""
-			     service.__reference.type_id = self.objType
-			     -- fim do TODO
-			 end
-	 	 end
-
-	 end
-
-
-  if service == nil or service ==false then
-     Log:faulttolerance("[getNextService] Servico nao encontrado.")
-     return nil
-  end
-
-  return service
-
-end
-
-
 function obj:getRegistryService()
    self:checkService()
    return self.service

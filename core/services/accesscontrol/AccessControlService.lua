@@ -61,7 +61,7 @@ local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 ---
 invalidCredential = {identifier = "", owner = "", delegate = ""}
 invalidLease = -1
-deltaT = 30 -- lease fixo (por enquanto) em segundos
+deltaT = 60 -- lease fixo (por enquanto) em segundos
 
 faultDescription = {_isAlive = false, _errorMsg = "" }
 
@@ -310,13 +310,17 @@ function isValid(self, credential)
 	--VAI BUSCAR NAS REPLICAS
 
 	local acsWrapper = AccessControlServiceWrapper
-	entry = acsWrapper:credentialLookupInReplicas(credential)
-
-	if not entry.certified then
+	entry = acsWrapper:credentialLookupInReplicas(credential, 
+				self.config.hostName..":"..tostring(self.config.hostPort))
+        if entry ~= nil then
+ 	    if not entry.certified then
 		return false
-	else
-	--ADICIONA LOCALMENTE
+	    else
+	       --ADICIONA LOCALMENTE
 		entry = self:addEntryCredential(entry)
+	    end
+	else
+		return false
 	end
   end
 

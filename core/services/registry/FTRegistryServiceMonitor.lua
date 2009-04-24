@@ -15,8 +15,6 @@ local OilUtilities = require "openbus.common.OilUtilities"
 
 local oop = require "loop.simple"
 
-local RegistryService = require "core.services.registry.RegistryService"
-
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
 
@@ -65,8 +63,9 @@ end
 --
 --@see scs.core.IComponent#startup
 ---
+local BIN_DIR
 function startup(self)
-  local BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "../../core/bin"
+  BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
   return self
 end
 
@@ -134,31 +133,35 @@ function monitor(self)
 
         if reinit then
 
-	        Log:faulttolerance("[Monitor SR] Espera 3 minutos (180 segundos) para que dê tempo do Oil liberar porta...")
-
-                os.execute("sleep 180")
-
-	        Log:faulttolerance("[Monitor SR] Levantando Servico de registro...")
-                                      
-		  --Criando novo processo assincrono
-		if self:isUnix() then
- 		    os.execute(BIN_DIR.."/run_ft_registry_server.sh ".. self.config.accessControlServerHostPort..
-									" & > log_registry_server-"..tostring(t)..".txt")
-		else
-  		    os.execute("start "..BIN_DIR.."/run_ft_registry_server.sh "..
-							 self.config.accessControlServerHostPort..
-							"> log_registry_server-"..tostring(t)..".txt")
-		end
-
-                -- Espera 5 segundos para que dê tempo do SR ter sido levantado
-                os.execute("sleep 5")
-
 		local timeToTry = 0
 
-		self.registryService = nil
-
 		repeat
-			local registry = orb:newproxy("corbaloc::"..self.config.accessControlServerHost.."/RS",
+		        Log:faulttolerance("[Monitor SR] Espera 3 minutos para que dê tempo do Oil liberar porta...")
+
+	                os.execute("sleep 180")
+
+		        Log:faulttolerance("[Monitor SR] Levantando Servico de registro...")
+                                      
+			  --Criando novo processo assincrono
+			if self:isUnix() then
+ 			    os.execute(BIN_DIR.."/run_ft_registry_server.sh ".. self.config.registryServerHostPort)
+ 			    --os.execute(BIN_DIR.."/run_ft_registry_server.sh ".. self.config.registryServerHostPort..
+			--						" & > log_registry_server-"..tostring(t)..".txt")
+			else
+  			    os.execute("start "..BIN_DIR.."/run_ft_registry_server.sh "..
+							 self.config.registryServerHostPort)
+  			    --os.execute("start "..BIN_DIR.."/run_ft_registry_server.sh "..
+		--					 self.config.registryServerHostPort..
+		--					"> log_registry_server-"..tostring(t)..".txt")
+			end
+
+        	        -- Espera 5 segundos para que dê tempo do SR ter sido levantado
+        	        os.execute("sleep 5")
+
+			self.registryService = nil
+
+
+			local registry = orb:newproxy("corbaloc::"..self.config.registryServerHost.."/RS",
 					             "IDL:openbusidl/rs/IRegistryService:1.0")
 
 			 --TODO: Quando o bug do oil for consertado, mudar para: if not registry:_non_existent() then

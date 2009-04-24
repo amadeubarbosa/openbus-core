@@ -63,13 +63,15 @@ local obj = ServiceWrapper:__init("ACS", "IDL:openbusidl/acs/IAccessControlServi
 
 package.loaded["core.services.accesscontrol.AccessControlServiceWrapper"] = obj
 
-function obj:credentialLookupInReplicas(credential)
-  Log:faulttolerance("[credentialLookupInReplicas] Buscando credenciais nas replicas.")
+function obj:credentialLookupInReplicas(credential, notInHostAdd)
+  Log:faulttolerance("[credentialLookupInReplicas] Buscando credencial nas replicas exceto em "..notInHostAdd)
   local entryCredential = nil
   local i = 0
   repeat
-     self:fetchNewService(#self.hostsAdd)
-     entryCredential = self.service:getEntryCredential(credential)
+     local acs = self:getNextService(notInHostAdd)
+     if acs ~= nil then
+	     entryCredential = acs:getEntryCredential(credential)
+     end
      i = i + 1 	
   until entryCredential ~= nil or i == # self.hostsAdd
 

@@ -1,6 +1,8 @@
 -----------------------------------------------------------------------------
 -- Inicialização do Serviço de Registro Tolerante a Falhas
 -----------------------------------------------------------------------------
+
+local tostring = tostring
 local oil = require "oil"
 
 local Log = require "openbus.common.Log"
@@ -27,7 +29,7 @@ end
 if RegistryServerConfiguration.oilVerboseLevel then
   oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
 end
-
+print(RegistryServerConfiguration.registryServerHost)
 local hostPort = arg[1]
 if hostPort == nil then
    Log:error("É necessario passar o numero da porta.\n")
@@ -37,7 +39,7 @@ RegistryServerConfiguration.registryServerHostPort = tonumber(hostPort)
 
 RegistryServerConfiguration.registryServerHost = 
     RegistryServerConfiguration.registryServerHostName..":"..
-    RegistryServerConfiguration.registryServerHostPort
+    tostring(RegistryServerConfiguration.registryServerHostPort)
 
 print(RegistryServerConfiguration.registryServerHost)
 -- Inicializa o ORB, fixando a localização do serviço em uma porta específica

@@ -6,6 +6,7 @@
 local ipairs = ipairs
 local tonumber = tonumber
 local tostring = tostring
+local print = print
 
 local Log = require "openbus.common.Log"
 local oil = require "oil"
@@ -42,12 +43,12 @@ if hostPort == nil then
    Log:error("É necessario passar o numero da porta.\n")
     os.exit(1)
 end
-RegistryServerConfiguration.accessControlServerHostPort = tonumber(hostPort)
+RegistryServerConfiguration.registryServerHostPort = tonumber(hostPort)
 
-RegistryServerConfiguration.accessControlServerHost = 
-    RegistryServerConfiguration.accessControlServerHostName..":"..hostPort
+RegistryServerConfiguration.registryServerHost = 
+    RegistryServerConfiguration.registryServerHostName..":"..hostPort
     
-local hostAdd = RegistryServerConfiguration.accessControlServerHost
+local hostAdd = RegistryServerConfiguration.registryServerHost
 
 
 -- Inicializa o ORB

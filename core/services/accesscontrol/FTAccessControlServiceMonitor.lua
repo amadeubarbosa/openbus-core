@@ -16,8 +16,6 @@ local OilUtilities = require "openbus.common.OilUtilities"
 
 local oop = require "loop.simple"
 
-local AccessControlService = require "core.services.accesscontrol.AccessControlService"
-
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
 
@@ -66,8 +64,9 @@ end
 --
 --@see scs.core.IComponent#startup
 ---
+local BIN_DIR
 function startup(self)
-  local BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "../../core/bin"
+  BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
   return self
 end
 
@@ -135,32 +134,32 @@ function monitor(self)
 	end
 
         if reinit then
-
-	        Log:faulttolerance("[Monitor SCA] Espera 3 minutos (180 segundos) para que dê tempo do Oil liberar porta...")
-
-                os.execute("sleep 180")
-
-	        Log:faulttolerance("[Monitor SCA] Levantando Servico de Controle de Acesso...")
-
-		  --Criando novo processo assincrono
-		if self:isUnix() then
-			--os.execute(BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort..
-			--						" &  > log_access_control_server-"..tostring(t)..".txt")
-			os.execute(BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort)
-		else
-			--os.execute("start "..BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort..
-			--						" > log_access_control_server-"..tostring(t)..".txt")
-			os.execute("start "..BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort)
-		end
-
-                -- Espera 5 segundos para que dê tempo do SCA ter sido levantado
-                os.execute("sleep 5")
-
 		local timeToTry = 0
 
-		self.accessControlService = nil
-
 		repeat
+
+		        Log:faulttolerance("[Monitor SCA] Espera 3 minutos para que dê tempo do Oil liberar porta...")
+
+	                os.execute("sleep 180")
+
+		        Log:faulttolerance("[Monitor SCA] Levantando Servico de Controle de Acesso...")
+
+			  --Criando novo processo assincrono
+			if self:isUnix() then
+			--os.execute(BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort..
+			--						" &  > log_access_control_server-"..tostring(t)..".txt")
+				os.execute(BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort)
+			else
+			--os.execute("start "..BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort..
+			--						" > log_access_control_server-"..tostring(t)..".txt")
+				os.execute("start "..BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort)
+			end
+
+	                -- Espera 5 segundos para que dê tempo do SCA ter sido levantado
+	                os.execute("sleep 5")
+
+			self.accessControlService = nil
+
 			local acs = orb:newproxy("corbaloc::"..self.config.hostName..":"..self.config.hostPort.."/ACS",
 					             "IDL:openbusidl/acs/IAccessControlService:1.0")
 
@@ -169,16 +168,16 @@ function monitor(self)
 			 --if success and not non_existent then
 			if OilUtilities:existent(acs) then
 			     self.accessControlService = acs
-			 end
+			end
 
-			 timeToTry = timeToTry + 1
+			timeToTry = timeToTry + 1
 
 		--TODO: colocar o timeToTry de acordo com o tempo do monitor da réplica?
 		until self.accessControlService ~= nil or timeToTry == 1000
 		    
 
 		if self.accessControlService == nil then
-		     log:faulttolerance("[Monitor SCA] Servico de controle de acesso nao encontrado.")
+		     log:faulttolerance("[Monitor SCA] Servico de controle de acesso nao pode ser levantado.")
 		     return nil
 		end
 

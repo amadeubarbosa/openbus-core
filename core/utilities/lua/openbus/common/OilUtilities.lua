@@ -18,12 +18,14 @@ function existent(self, proxy)
 
 	local thread = coroutine.create(function()
 		--TODO: Quando o bug do oil for consertado, mudar para: if not proxy:_non_existent() then
+oil.verbose:print("proxy", proxy.__reference)
 	       succ, not_exists = proxy.__try:_non_existent()
 	       oil.tasks:resume(parent)
 	end)
 
 	oil.tasks:resume(thread)
 	oil.tasks:suspend(5)
+	oil.tasks:remove(thread)
 
 	if not_exists ~= nil then
 	        Log:warn("Ele existe ?", not not_exists)
@@ -37,3 +39,5 @@ function existent(self, proxy)
 		return false
 	end
 end
+
+
