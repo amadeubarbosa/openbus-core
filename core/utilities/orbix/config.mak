@@ -1,7 +1,12 @@
 PROJNAME= openbus
 LIBNAME= ${PROJNAME}
 
-ORBIX_HOME= /opt/iona/asp/6.3
+ifeq "$(TEC_UNAME)" "SunOS58"
+  CPPC=CC
+  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
+endif
+
+ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
 ORBIXINC= ${ORBIX_HOME}/include
 ORBIXLDIR=${ORBIX_HOME}/lib
 
@@ -39,3 +44,7 @@ genstubs:
 	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/core.idl
 	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/scs.idl
 	
+sunos58:
+	CC -xar -instances=extern -o lib/SunOS58/libopenbus.a \
+  obj/SunOS58/*.o
+

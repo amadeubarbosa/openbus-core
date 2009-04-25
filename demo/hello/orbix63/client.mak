@@ -6,7 +6,10 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 EXTRA_CONFIG=config
 
-CPPC=g++
+ifeq "$(TEC_UNAME)" "SunOS58"
+  CPPC=CC
+  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
+endif
 
 DEFINES=VERBOSE
 
