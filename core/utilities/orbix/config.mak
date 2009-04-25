@@ -46,5 +46,6 @@ genstubs:
 	
 sunos58:
 	CC -xar -instances=extern -o lib/SunOS58/libopenbus.a \
-  obj/SunOS58/*.o
-
+        obj/SunOS58/*.o
+	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbus.so \
+        obj/SunOS58/*.o
