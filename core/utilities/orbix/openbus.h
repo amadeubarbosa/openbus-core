@@ -110,6 +110,7 @@ namespace openbus {
           RenewLeaseThread(Openbus* _bus);
           void* run();
       };
+      friend class Openbus::RenewLeaseThread;
 
     public:
 
