@@ -1,5 +1,0 @@
-#!/bin/ksh
-
-. ${OPENBUS_HOME}/core/conf/config
-
-exec ${OPENBUS_HOME}/core/bin/$TEC_UNAME/servicelauncher server.lua
