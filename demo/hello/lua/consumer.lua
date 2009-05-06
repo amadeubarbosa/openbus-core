@@ -15,8 +15,6 @@ oil.orb = orb
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
 
-local IComponent = require "scs.core.IComponent"
-
 --  oil.verbose:level(0)
 orb:loadidlfile "../idl/hello.idl"
 
