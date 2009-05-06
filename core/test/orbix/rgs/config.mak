@@ -6,10 +6,13 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 EXTRA_CONFIG=../config
 
-CPPFLAGS= -g3 -pipe -D_REENTRANT -Wno-sign-compare
-LFLAGS= $(CPPFLAGS) -rdynamic -L/usr/local/lib -Wl,-t -lpthread -lrt
-
-CPPC=g++
+ifeq "$(TEC_UNAME)" "SunOS58"
+  USE_CC=Yes
+  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
+endif
+#CPPFLAGS= -g3 -pipe -D_REENTRANT -Wno-sign-compare
+#LFLAGS= $(CPPFLAGS) -rdynamic -L/usr/local/lib -Wl,-t -lpthread -lrt
+#CPPC=g++
 
 #TARGETROOT=bin
 #OBJROOT=obj

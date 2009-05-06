@@ -22,7 +22,7 @@ openbus::Openbus* bus;
 openbus::services::RegistryService* registryService;
 char* registryId;
 
-class HelloImpl : virtual public POA_Hello {
+class HelloImpl : virtual public POA_demoidl::hello::IHello {
   private:
     scs::core::ComponentContext* componentContext;
     HelloImpl(scs::core::ComponentContext* componentContext) {

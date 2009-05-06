@@ -30,5 +30,5 @@ SRC= server.cpp \
 
 genstubs:
 	mkdir -p stubs
-	cd stubs ; ${ORBIXBIN}/idl -base -poa ../hello.idl
+	cd stubs ; ${ORBIXBIN}/idl -base -poa ../../idl/hello.idl
 

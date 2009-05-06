@@ -2,7 +2,7 @@ PROJNAME= openbus
 LIBNAME= ${PROJNAME}
 
 ifeq "$(TEC_UNAME)" "SunOS58"
-  CPPC=CC
+  USE_CC=Yes
 endif
 
 ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
@@ -43,11 +43,9 @@ genstubs:
 	cd stubs ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/core.idl
 	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/scs.idl
 	
-sunos58:
+sunos58: $(OBJS)
 	rm -f lib/SunOS58/libopenbus.a
-	CC -xar -instances=extern -o lib/SunOS58/libopenbus.a \
-        obj/SunOS58/*.o
+	CC -xar -instances=extern -o lib/SunOS58/libopenbus.a $(OBJS)
 	rm -f lib/SunOS58/libopenbus.so
-	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbus.so \
-        obj/SunOS58/*.o
+	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbus.so $(OBJS)
 

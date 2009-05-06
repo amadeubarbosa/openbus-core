@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 
   scs::core::IComponent* component = serviceOffer.member;
   CORBA::Object* obj = component->getFacet("IDL:demoidl/hello/IHello:1.0");
-  Hello* hello = Hello::_narrow(obj);
+  demoidl::hello::IHello* hello = demoidl::hello::IHello::_narrow(obj);
   hello->sayHello();
 
   bus->disconnect();
