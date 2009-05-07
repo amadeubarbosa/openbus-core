@@ -37,7 +37,7 @@ public class HelloServer {
     props.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
     props.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
-    ORBWrapper orb = new ORBWrapper(props);
+    ORBWrapper orb = new ORBWrapper(args, props);
     Registry.getInstance().setORBWrapper(orb);
 
     POA rootPOA = orb.getRootPOA();
@@ -65,7 +65,8 @@ public class HelloServer {
       new AccessControlServiceWrapper(orb, "localhost", 2089);
     Registry.getInstance().setACS(acs);
 
-    assert (acs.loginByCertificate("HelloService", privateKey, acsCertificate));
+    //    assert (acs.loginByCertificate("HelloService", privateKey, acsCertificate));
+    acs.loginByPassword("tester", "tester");
 
     RegistryServiceWrapper registryService = acs.getRegistryService();
     assert (registryService != null);

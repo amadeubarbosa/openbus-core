@@ -25,7 +25,7 @@ public class HelloClient {
     props.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
     props.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
-    ORBWrapper orb = new ORBWrapper(props);
+    ORBWrapper orb = new ORBWrapper(args, props);
     Registry.getInstance().setORBWrapper(orb);
 
     AccessControlServiceWrapper acs =
