@@ -38,7 +38,8 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
     void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
       cout << endl << "Servant diz: HELLO!" << endl;
       openbus::Credential_var credential = bus->getCredentialIntercepted();
-      cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in() << endl;
+      cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in()
+        << endl;
     };
 };
 
@@ -63,9 +64,10 @@ int main(int argc, char* argv[]) {
 */
   bus->init();
 
-/* Conexão com o barramento. */
+/* Conexão com o barramento através de certificado. */
   try {
-    registryService = bus->connect("tester", "tester");
+    registryService = bus->connect("HelloService", "HelloService.key",
+      "AccessControlService.crt");
   } catch (openbus::COMMUNICATION_FAILURE& e) {
     cout << "** Não foi possível se conectar ao barramento. **" << endl \
          << "* Falha na comunicação. *" << endl;
@@ -74,16 +76,23 @@ int main(int argc, char* argv[]) {
     cout << "** Não foi possível se conectar ao barramento. **" << endl \
          << "* Par usuário/senha inválido. *" << endl;
     exit(-1);
+  } catch (openbus::SECURITY_EXCEPTION& e) {
+    cout << e.what() << endl;
+    exit(-1);
   }
 
-/* Criação do componente */
+/* Fábrica de componentes */
   scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
+
+/* Definição do componente. */
   scs::core::ComponentId componentId;
   componentId.name = "HelloComponent";
   componentId.major_version = '1';
   componentId.minor_version = '0';
   componentId.patch_version = '0';
   componentId.platform_spec = "nenhuma";
+
+/* Descrição das facetas. */
   std::list<scs::core::ExtendedFacetDescription> extFacets;
   scs::core::ExtendedFacetDescription helloDesc;
   helloDesc.name = "IHello";
@@ -91,7 +100,8 @@ int main(int argc, char* argv[]) {
   helloDesc.instantiator = HelloImpl::instantiate;
   helloDesc.destructor = HelloImpl::destruct;
   extFacets.push_back(helloDesc);
-  scs::core::ComponentContext* componentContext = componentBuilder->newFullComponent(extFacets, componentId);
+  scs::core::ComponentContext* componentContext =
+    componentBuilder->newFullComponent(extFacets, componentId);
 
 /* Definição de uma lista de propriedades que caracteriza o serviço de interesse.
 *  O trabalho de criação da lista e facilitado pelo uso da classe PropertyListHelper.
@@ -103,7 +113,7 @@ int main(int argc, char* argv[]) {
   openbus::services::ServiceOffer serviceOffer;
   serviceOffer.properties = propertyListHelper->getPropertyList();
   serviceOffer.member = componentContext->getIComponent();
-  /* Registro do serviço no barramento. */
+/* Registro do serviço no barramento. */
   registryService->Register(serviceOffer, registryId);
   cout << "\n\nServiço HELLO registrado no OpenBus..." << endl;
 

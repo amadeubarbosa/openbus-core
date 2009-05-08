@@ -18,10 +18,10 @@ DEFINES=VERBOSE
 OBJROOT= obj
 TARGETROOT= lib
 
-INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs/orbix
-LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
+INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs/orbix ${OPENBUSINC}/openssl-0.9.9
+LDIR= ${ORBIXLDIR} ${OPENBUSLIB} ${ORBIXLDIR}
 
-LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix
+LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix crypto
 
 SRC= openbus/common/ClientInterceptor.cpp \
      openbus/common/ServerInterceptor.cpp \

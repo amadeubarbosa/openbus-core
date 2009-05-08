@@ -4,11 +4,16 @@
 
 #include "openbus.h"
 
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
 #include <omg/orb.hh>
 #include <it_ts/thread.h>
 #include <sstream>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+#define CHALLENGE_SIZE 36
 
 namespace openbus {
   common::ORBInitializerImpl* Openbus::ini = 0;
@@ -202,20 +207,25 @@ namespace openbus {
         cout << "\torb = "<<  orb << endl;
       #endif
         if (accessControlService == 0) {
-          accessControlService = new openbus::services::AccessControlService(hostBus, portBus, orb);
+          accessControlService = new openbus::services::AccessControlService(
+            hostBus, portBus, orb);
         }
-        IAccessControlService* iAccessControlService = accessControlService->getStub();
+        IAccessControlService* iAccessControlService =
+          accessControlService->getStub();
       #ifdef VERBOSE
         cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
       #endif
         mutex->lock();
-        if (!iAccessControlService->loginByPassword(user, password, credential, lease)) {
+        if (!iAccessControlService->loginByPassword(user, password, credential,
+          lease))
+        {
           mutex->unlock();
           throw LOGIN_FAILURE();
         } else {
         #ifdef VERBOSE
           cout << "\tCrendencial recebida: " << credential->identifier << endl;
-          cout << "\tAssociando credencial " << credential << " ao ORB " << orb << endl;
+          cout << "\tAssociando credencial " << credential << " ao ORB " << orb
+            << endl;
         #endif
           connectionState = CONNECTED;
           openbus::common::ClientInterceptor::credentials[orb] = &credential;
@@ -237,6 +247,143 @@ namespace openbus {
     cout << "[Openbus::connect() END]" << endl << endl;
   #endif
   }
+
+  services::RegistryService* Openbus::connect(
+    const char* entity,
+    const char* privateKeyFilename,
+    const char* ACSCertificateFilename)
+    throw (COMMUNICATION_FAILURE, LOGIN_FAILURE, SECURITY_EXCEPTION)
+  {
+  #ifdef VERBOSE
+    cout << "[Openbus::connect() BEGIN]" << endl;
+  #endif
+    if (connectionState == DISCONNECTED) {
+      try {
+      #ifdef VERBOSE
+        cout << "\thost = "<< hostBus << endl;
+        cout << "\tport = "<< portBus << endl;
+        cout << "\tentity = "<< entity << endl;
+        cout << "\tprivateKeyFilename = "<< privateKeyFilename << endl;
+        cout << "\torb = "<< orb << endl;
+      #endif
+        if (accessControlService == 0) {
+          accessControlService = new openbus::services::AccessControlService(
+            hostBus, portBus, orb);
+        }
+
+        IAccessControlService* iAccessControlService =
+          accessControlService->getStub();
+
+      /* Requisição de um "desafio" que somente poderá ser decifrado através
+      *  da chave privada da entidade reconhecida pelo barramento.
+      */
+        openbusidl::OctetSeq* octetSeq =
+          iAccessControlService->getChallenge(entity);
+        unsigned char* challange = octetSeq->get_buffer();
+
+      /* Leitura da chave privada da entidade. */
+        FILE* fp = fopen(privateKeyFilename, "r");
+        if (fp == 0) {
+        #ifdef VERBOSE
+          cout << "\tNão foi possível abrir o arquivo: " << privateKeyFilename
+            << endl;
+        #endif
+          throw SECURITY_EXCEPTION(
+            "Não foi possível abrir o arquivo que armazena a chave privada.");
+        }
+        EVP_PKEY* privateKey = PEM_read_PrivateKey(fp, 0, 0, 0);
+        if (privateKey == 0) {
+        #ifdef VERBOSE
+          cout << "\tNão foi possível obter a chave privada da entidade."
+            << endl;
+        #endif
+          throw SECURITY_EXCEPTION(
+            "Não foi possível obter a chave privada da entidade.");
+        }
+
+        int RSAModulusSize = EVP_PKEY_size(privateKey);
+
+      /* Decifrando o desafio. */
+        unsigned char* challengePlainText =
+          (unsigned char*) malloc(RSAModulusSize);
+        RSA_private_decrypt(RSAModulusSize, challange, challengePlainText,
+          privateKey->pkey.rsa, RSA_PKCS1_PADDING);
+
+      /* Leitura do certificado do ACS. */
+        FILE* certificateFile = fopen(ACSCertificateFilename, "rb");
+        if (certificateFile == 0) {
+          free(challengePlainText);
+        #ifdef VERBOSE
+          cout << "\tNão foi possível abrir o arquivo: " <<
+            ACSCertificateFilename << endl;
+        #endif
+          throw SECURITY_EXCEPTION(
+            "Não foi possível abrir o arquivo que armazena o certificado ACS.");
+        }
+        X509* x509 = d2i_X509_fp(certificateFile, 0);
+
+      /* Obtenção da chave pública do ACS. */
+        EVP_PKEY* publicKey = X509_get_pubkey(x509);
+        if (publicKey == 0) {
+        #ifdef VERBOSE
+          cout << "\tNão foi possível obter a chave pública do ACS." << endl;
+        #endif
+          throw SECURITY_EXCEPTION(
+            "Não foi possível obter a chave pública do ACS.");
+        }
+
+      /* Reposta ao desafio, ou seja, cifra do desafio utilizando a chave
+      *  pública do ACS.
+      */
+        unsigned char* answer = (unsigned char*) malloc(RSAModulusSize);
+        RSA_public_encrypt(CHALLENGE_SIZE, challengePlainText, answer,
+          publicKey->pkey.rsa, RSA_PKCS1_PADDING);
+
+        free(challengePlainText);
+
+        openbusidl::OctetSeq_var answerOctetSeq = new openbusidl::OctetSeq(
+          (CORBA::ULong) RSAModulusSize, (CORBA::ULong) RSAModulusSize,
+          (CORBA::Octet*)answer, 0);
+
+      #ifdef VERBOSE
+        cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
+      #endif
+        mutex->lock();
+        if (!iAccessControlService->loginByCertificate(entity, answerOctetSeq,
+          credential, lease))
+        {
+          free(answer);
+          mutex->unlock();
+          throw LOGIN_FAILURE();
+        } else {
+          free(answer);
+        #ifdef VERBOSE
+          cout << "\tCrendencial recebida: " << credential->identifier << endl;
+          cout << "\tAssociando credencial " << credential << " ao ORB " << orb
+            << endl;
+        #endif
+          connectionState = CONNECTED;
+          openbus::common::ClientInterceptor::credentials[orb] = &credential;
+          timeRenewing = lease;
+          mutex->unlock();
+          RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
+          renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread,
+            IT_ThreadFactory::attached, 0);
+          registryService = accessControlService->getRegistryService();
+          return registryService;
+        }
+      } catch (const CORBA::SystemException& systemException) {
+        mutex->unlock();
+        throw COMMUNICATION_FAILURE();
+      }
+    } else {
+      return registryService;
+    }
+  #ifdef VERBOSE
+    cout << "[Openbus::connect() END]" << endl;
+  #endif
+  }
+
 
   bool Openbus::disconnect() {
   #ifdef VERBOSE

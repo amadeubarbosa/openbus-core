@@ -15,14 +15,25 @@
 #include <it_ts/thread.h>
 #include <it_ts/mutex.h>
 
+#include <stdexcept>
 #include <set>
 
 using namespace openbusidl::acs;
 IT_USING_NAMESPACE_STD
 
 namespace openbus {
-  class COMMUNICATION_FAILURE {};
-  class LOGIN_FAILURE {};
+  class COMMUNICATION_FAILURE : public runtime_error {
+    public:
+      COMMUNICATION_FAILURE(const string& msg = "") : runtime_error(msg) {}
+  };
+  class LOGIN_FAILURE : public runtime_error {
+    public:
+      LOGIN_FAILURE(const string& msg = "") : runtime_error(msg) {}
+  };
+  class SECURITY_EXCEPTION : public runtime_error {
+    public:
+      SECURITY_EXCEPTION(const string& msg = "") : runtime_error(msg) {}
+  };
 
   typedef openbusidl::acs::Credential_var Credential_var;
 
@@ -121,7 +132,8 @@ namespace openbus {
 
     /* Construtor
     *  Cria uma referência para um determinado barramento.
-    *  A localização do barramento pode ser fornecida através dos parâmetros de linha comando
+    *  A localização do barramento pode ser fornecida através dos parâmetros
+    *    de linha comando
     *  -OpenbusHost e -OpenbusPort.
     */
       Openbus(
@@ -130,7 +142,8 @@ namespace openbus {
 
     /* Construtor
     *  Cria uma referência para um determinado barramento.
-    *  A localização do barramento é fornecida através dos parâmetros host e port.
+    *  A localização do barramento é fornecida através dos parâmetros host e
+    *  port.
     */
       Openbus(
         int argc,
@@ -176,18 +189,46 @@ namespace openbus {
       Lease getLease();
 
     /* Realiza uma tentativa de conexão com o barramento.
+    *
     *  Parâmetros de entrada:
     *    user: Nome do usuário.
     *    password: Senha do usuário.
-    *  Se a tentativa for bem sucedida, uma instância que representa o serviço de registro é retornada,
+    *  Se a tentativa for bem sucedida, uma instância que representa o serviço
+    *    de registro é retornada,
     *  caso contrário duas exceções podem ser lançadas:
     *    LOGIN_FAILURE: O par nome de usuário e senha não foram validados.
-    *    COMMUNICATION_FAILURE: Alguma falha de comunicação com o barramento ocorreu.
+    *    COMMUNICATION_FAILURE: Alguma falha de comunicação com o barramento
+    *      ocorreu.
     */
       services::RegistryService* connect(
         const char* user,
         const char* password)
         throw (COMMUNICATION_FAILURE, LOGIN_FAILURE);
+
+    /* Realiza uma tentativa de conexão com o barramento utilizando o
+    *    mecanismo de certificação para o processo de login.
+    *
+    *  Parâmetros de entrada:
+    *    entity: Nome da entidade a ser autenticada através de um
+    *      certificado digital.
+    *    privateKeyFilename: Nome do arquivo que armazena a chave
+    *      privada do serviço.
+    *    ACSCertificateFilename: Nome do arquivo que armazena o
+    *      certificado do serviço.
+    *  Se a tentativa for bem sucedida, uma instância que representa
+    *    o serviço de registro é retornada,
+    *  caso contrário duas exceções podem ser lançadas:
+    *    LOGIN_FAILURE: O par nome de usuário e senha não foram validados.
+    *    COMMUNICATION_FAILURE: Alguma falha de comunicação com o barramento
+    *      ocorreu.
+    *    SECURITY_EXCEPTION: Falha na manipulação da chave privada da entidade
+    *      ou do certificado do ACS.
+    */
+      services::RegistryService* connect(
+        const char* entity,
+        const char* privateKeyFilename,
+        const char* ACSCertificateFilename)
+        throw (COMMUNICATION_FAILURE, LOGIN_FAILURE, SECURITY_EXCEPTION);
 
     /* Desfaz a conexão atual.
     *  Uma requisição remota logout() é realizada.

@@ -51,10 +51,10 @@ int main(int argc, char* argv[]) {
 *  Uma lista de *ofertas de serviço* é retornada para o usuário.
 *  OBS.: Neste demo somente há uma oferta de serviço.
 */
-  openbus::services::ServiceOfferList_var soList = registryService->find(propertiesHelper->getPropertyList());
+  openbus::services::ServiceOfferList_var serviceOfferList = registryService->find(propertiesHelper->getPropertyList());
 
   CORBA::ULong idx = 0;
-  openbus::services::ServiceOffer serviceOffer = soList[idx];
+  openbus::services::ServiceOffer serviceOffer = serviceOfferList[idx];
 
   scs::core::IComponent* component = serviceOffer.member;
   CORBA::Object* obj = component->getFacet("IDL:demoidl/hello/IHello:1.0");
