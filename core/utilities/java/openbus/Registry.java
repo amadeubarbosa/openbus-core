@@ -70,7 +70,6 @@ public final class Registry {
    * Cria o registro.
    */
   private Registry() {
-    this.reset();
   }
 
   /**
@@ -205,19 +204,5 @@ public final class Registry {
    */
   public ISession getSession() {
     return this.session;
-  }
-
-  /**
-   * Retorna para o seu estado inicial, ou seja, desfaz as definições de
-   * atributos realizadas.
-   */
-  public void reset() {
-    this.threadLocalCredential = new ThreadLocal<Credential>();
-    this.requestCredentialSlot = -1;
-    this.orbWrapper = null;
-    this.poa = null;
-    this.acs = null;
-    this.credential = null;
-    this.session = null;
   }
 }
