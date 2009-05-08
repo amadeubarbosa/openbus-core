@@ -1,3 +1,3 @@
 #!/bin/ksh
 
-./servicelauncher ${OPENBUS_HOME}/core/services/session/SessionServer.lua
+exec ./servicelauncher ${OPENBUS_HOME}/core/services/session/SessionServer.lua

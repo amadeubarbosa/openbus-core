@@ -17,10 +17,10 @@ endif
 #TARGETROOT=bin
 #OBJROOT=obj
 
-INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs/orbix ${OPENBUSINC}/cxxtest
+INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs/orbix ${OPENBUSINC}/cxxtest ${OPENBUSINC}/openssl-0.9.9
 LDIR= ${ORBIXLDIR} 
 
-LIBS= it_poa it_art it_ifc it_portable_interceptor
+LIBS= crypto it_poa it_art it_ifc it_portable_interceptor
 
 SLIB= ${OPENBUSLIB}/libscsorbix.a \
       ${OPENBUS_HOME}/core/utilities/orbix/lib/${TEC_UNAME}/libopenbus.a
