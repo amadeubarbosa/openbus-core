@@ -23,7 +23,7 @@ Suite = {
       end
       local idlfile = IDLPATH_DIR.."/access_control_service.idl"
 
-      oil.verbose:level(5)
+      oil.verbose:level(0)
       orb:loadidlfile(idlfile)
 
       self.user = "tester"
