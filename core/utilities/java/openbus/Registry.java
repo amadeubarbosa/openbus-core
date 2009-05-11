@@ -70,6 +70,7 @@ public final class Registry {
    * Cria o registro.
    */
   private Registry() {
+    this.threadLocalCredential = new ThreadLocal<Credential>();
   }
 
   /**
