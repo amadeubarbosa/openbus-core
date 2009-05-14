@@ -118,7 +118,7 @@ function SessionService:credentialWasDeleted(credential)
   if session then
   Log:service("Removendo sessão de credencial deletada ("..
               credential.identifier..")")
-    session:_deactivate()
+    orb:deactivate(session)
     self.sessions[credential.identifier] = nil
   end
 end
