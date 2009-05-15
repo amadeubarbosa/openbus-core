@@ -128,7 +128,10 @@ end
 function SessionEventSink:disconnect(self)
   Log:service("Desconectando os membros da sessão")
   for _, sink in pairs(self.eventSinks) do
-    sink:disconnect()
+    local result, errorMsg = oil.pcall(sink.disconnect, sink)
+    if not result then
+      Log:service("Erro ao tentar desconectar membro de sessão: "..errorMsg)
+    end
   end
 end
 
