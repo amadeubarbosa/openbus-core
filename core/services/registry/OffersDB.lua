@@ -3,14 +3,9 @@ local io = io
 local string = string
 local os = os
 
-local ipairs = ipairs
-local pairs = pairs
-local dofile = dofile
-local type = type
-local tostring = tostring
-local tonumber = tonumber
+local error = error
 
-local lposix = require "posix"
+local lfs = require "lfs"
 local oil = require "oil"
 local orb = oil.orb
 
@@ -37,12 +32,13 @@ FILE_SEPARATOR = "/"
 --@return O banco de dados de ofertas de serviço.
 ---
 function __init(self, databaseDirectory)
-  if not lposix.dir(databaseDirectory) then
+  local mode = lfs.attributes(databaseDirectory, "mode")
+  if not mode then
     Log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. "..
         "Criando...")
-    local status, errorMessage = lposix.mkdir(databaseDirectory)
+    local status, errorMessage = lfs.mkdir(databaseDirectory)
     if not status then
-      Log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
+      Log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."]: "..errorMessage)
       error(errorMessage)
     end
   end
@@ -58,9 +54,9 @@ end
 --@return As ofertas de serviço.
 ---
 function retrieveAll(self)
-  local offerFiles = lposix.dir(self.databaseDirectory)
+  local offerFiles = lfs.dir(self.databaseDirectory)
   local offerEntries = {}
-  for _, fileName in ipairs(offerFiles) do
+  for fileName in offerFiles do
     if string.sub(fileName, -(#self.FILE_SUFFIX)) == self.FILE_SUFFIX then
       local offerFile = io.open(self.databaseDirectory..self.FILE_SEPARATOR..fileName)
       local stream = FileStream{

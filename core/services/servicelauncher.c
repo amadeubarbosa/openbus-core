@@ -21,7 +21,7 @@
 #include "oilall.h"
 #include "scsall.h"
 #include "luuid.h"
-#include "lposix.h"
+#include "lfs.h"
 #include "lce.h"
 #include "lualdap.h"
 
@@ -362,7 +362,7 @@ static int pmain (lua_State *L) {
   luapreload_oilall(L);
   luapreload_scsall(L);
   luaopen_uuid(L);
-  luaopen_posix(L);
+  luaopen_lfs(L);
   luaopen_lualdap(L);
   luaopen_lce(L);
 

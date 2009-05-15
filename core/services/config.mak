@@ -9,7 +9,7 @@ SRC = servicelauncher.c
 INCLUDES += . \
 	    ${OPENBUSINC}/oil04 \
             ${OPENBUSINC}/luasocket2 \
-            ${OPENBUSINC}/lposix \
+            ${OPENBUSINC}/luafilesystem \
             ${OPENBUSINC}/luuid \
             ${OPENBUSINC}/lce \
             ${OPENBUSINC}/lualdap-1.0.1 \
@@ -23,6 +23,18 @@ NO_SCRIPTS = YES
 #############################
 # Usa bibliotecas dinâmicas #
 #############################
-LIBS += oilall scsall luasocket lposix luuid lce lualdap
 
-LIBS += dl uuid crypto ldap
+LIBS += dl crypto ldap
+ifneq "$(TEC_SYSNAME)" "Darwin"
+	LIBS += uuid
+endif
+
+LIBS = oilall scsall luasocket lfs luuid lce lualdap
+
+# SLIB += ${OPENBUSLIB}/liboilall.a
+# SLIB += ${OPENBUSLIB}/libscsall.a
+# SLIB += ${OPENBUSLIB}/libluasocket.a
+# SLIB += ${OPENBUSLIB}/liblfs.a
+# SLIB += ${OPENBUSLIB}/libluuid.a
+# SLIB += ${OPENBUSLIB}/liblce.a
+# SLIB += ${OPENBUSLIB}/liblualdap.a

@@ -4,14 +4,9 @@ local io = io
 local string = string
 local os = os
 
-local ipairs = ipairs
-local type = type
-local dofile = dofile
-local pairs = pairs
-local tostring = tostring
-local tonumber = tonumber
+local error = error
 
-local lposix = require "posix"
+local lfs = require "lfs"
 local oil = require "oil"
 local orb = oil.orb
 
@@ -38,12 +33,13 @@ FILE_SEPARATOR = "/"
 --@return O banco de dados de credenciais.
 ---
 function __init(self, databaseDirectory)
-  if not lposix.dir(databaseDirectory) then
+  local mode = lfs.attributes(databaseDirectory, "mode")
+  if not mode then
     Log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. "..
         "Criando...")
-    local status, errorMessage = lposix.mkdir(databaseDirectory)
+    local status, errorMessage = lfs.mkdir(databaseDirectory)
     if not status then
-      Log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."].")
+      Log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."]: "..errorMessage)
       error(errorMessage)
     end
   end
@@ -59,9 +55,9 @@ end
 --@return As credenciais.
 ---
 function retrieveAll(self)
-  local credentialFiles = lposix.dir(self.databaseDirectory)
+  local credentialFiles = lfs.dir(self.databaseDirectory)
   local entries = {}
-  for _, fileName in ipairs(credentialFiles) do
+  for fileName in credentialFiles do
     if string.sub(fileName, -(#self.FILE_SUFFIX)) == self.FILE_SUFFIX then
       local credentialFile = io.open(self.databaseDirectory..self.FILE_SEPARATOR..fileName)
       local stream = FileStream{
