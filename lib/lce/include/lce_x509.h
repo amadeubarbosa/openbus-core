@@ -11,6 +11,8 @@
 #define X509_FIELD "__x509"
 
 int lce_x509_readfromderfile(lua_State *L);
+int lce_x509_readfromderstring(lua_State *L);
+
 int lce_x509_getpublickey(lua_State *L);
 int lce_x509_release(lua_State *L);
 

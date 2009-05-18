@@ -8,7 +8,10 @@
 #include <openssl/pem.h>
 #include <openssl/err.h>
 
-static const char * readPEMPrivateKey(const char *filePath, EVP_PKEY **privateKey);
+static const char * readPEMPrivateKeyFile(const char *filePath, EVP_PKEY **privateKey);
+static const char * readPEMPrivateKeyMemory(void *data, int dataLength,
+    EVP_PKEY **privateKey);
+static int pushKey(lua_State* L, EVP_PKEY *privateKey);
 
 int lce_key_release(lua_State* L) {
   EVP_PKEY *key;
@@ -22,18 +25,42 @@ int lce_key_release(lua_State* L) {
 int lce_key_readprivatefrompemfile(lua_State* L) {
   const char *filePath;
   EVP_PKEY *privateKey;
-  EVP_PKEY **privateKeyUD;
   const char *errorMessage;
 
-  filePath = luaL_checkstring(L, -1);
+  filePath = luaL_checkstring(L, 1);
   luaL_argcheck(L, filePath != NULL, 1, "file name expected");
 
-  errorMessage = readPEMPrivateKey(filePath, &privateKey);
+  errorMessage = readPEMPrivateKeyFile(filePath, &privateKey);
   if (errorMessage != NULL) {
     lua_pushnil(L);
     lua_pushstring(L, errorMessage);
     return 2;
   }
+
+  return pushKey(L, privateKey);
+}
+
+int lce_key_readprivatefrompemstring(lua_State* L) {
+  const char *data;
+  size_t dataLength;
+  EVP_PKEY *privateKey;
+  const char *errorMessage;
+
+  data = luaL_checklstring(L, 1, &dataLength);
+  luaL_argcheck(L, data != NULL, 1, "data expected");
+
+  errorMessage = readPEMPrivateKeyMemory((void *) data, dataLength, &privateKey);
+  if (errorMessage != NULL) {
+    lua_pushnil(L);
+    lua_pushstring(L, errorMessage);
+    return 2;
+  }
+
+  return pushKey(L, privateKey);
+}
+
+static int pushKey(lua_State* L, EVP_PKEY *privateKey) {
+  EVP_PKEY **privateKeyUD;
 
   lua_newtable(L);
   lua_pushstring(L, KEY_FIELD);
@@ -69,7 +96,7 @@ const char * getKeyAlgorithm(EVP_PKEY *key) {
   }
 }
 
-static const char * readPEMPrivateKey(const char *filePath, EVP_PKEY **privateKey) {
+static const char * readPEMPrivateKeyFile(const char *filePath, EVP_PKEY **privateKey) {
   FILE *privateKeyFile;
 
   privateKeyFile = fopen(filePath, "r");
@@ -79,6 +106,25 @@ static const char * readPEMPrivateKey(const char *filePath, EVP_PKEY **privateKe
 
   *privateKey = PEM_read_PrivateKey(privateKeyFile, NULL, NULL, NULL);
   fclose(privateKeyFile);
+
+  if (*privateKey == NULL) {
+    return ERR_error_string(ERR_get_error(), NULL);
+  }
+
+  return NULL;
+}
+
+static const char * readPEMPrivateKeyMemory(void *data, int dataLength,
+      EVP_PKEY **privateKey) {
+  BIO *privateKeyMemory;
+
+  privateKeyMemory = BIO_new_mem_buf(data, dataLength);
+  if (privateKeyMemory == NULL) {
+    return strerror(errno);
+  }
+
+  *privateKey = PEM_read_bio_PrivateKey(privateKeyMemory, NULL, NULL, NULL);
+  BIO_free(privateKeyMemory);
 
   if (*privateKey == NULL) {
     return ERR_error_string(ERR_get_error(), NULL);

@@ -10,6 +10,7 @@
 
 static const struct luaL_reg lce_x509[] = {
   {"readfromderfile", lce_x509_readfromderfile},
+  {"readfromderstring", lce_x509_readfromderstring},
   {NULL, NULL}
 };
 
@@ -20,6 +21,7 @@ static const struct luaL_reg lce_x509_methods[] = {
 
 static const struct luaL_reg lce_key[] = {
   {"readprivatefrompemfile", lce_key_readprivatefrompemfile},
+  {"readprivatefrompemstring", lce_key_readprivatefrompemstring},
   {NULL, NULL}
 };
 

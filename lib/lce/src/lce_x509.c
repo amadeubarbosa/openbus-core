@@ -10,24 +10,51 @@
 
 #include <lce_key.h>
 
-static const char * readDERCertificate(const char *filePath, X509 **x509);
+static const char * readDERCertificateFile(const char *filePath, X509 **x509);
+static const char * readDERCertificateMemory(void *data, int dataLength,
+    X509 **x509);
+static int pushX509(lua_State *L, X509 *x509);
 static const char * getPublicKey(X509 * x509, EVP_PKEY **publicKey);
 
 int lce_x509_readfromderfile(lua_State *L) {
   const char *filePath;
   X509 *x509;
-  X509 **x509UD;
   const char *errorMessage;
 
   filePath = luaL_checkstring(L, -1);
   luaL_argcheck(L, filePath != NULL, 1, "file name expected");
 
-  errorMessage = readDERCertificate(filePath, &x509);
+  errorMessage = readDERCertificateFile(filePath, &x509);
   if (errorMessage != NULL) {
     lua_pushnil(L);
     lua_pushstring(L, errorMessage);
     return 2;
   }
+
+  return pushX509(L, x509);
+}
+
+int lce_x509_readfromderstring(lua_State *L) {
+  const char *data;
+  size_t dataLength;
+  X509 *x509;
+  const char *errorMessage;
+
+  data = luaL_checklstring(L, 1, &dataLength);
+  luaL_argcheck(L, data != NULL, 1, "data expected");
+
+  errorMessage = readDERCertificateMemory((void *) data, dataLength, &x509);
+  if (errorMessage != NULL) {
+    lua_pushnil(L);
+    lua_pushstring(L, errorMessage);
+    return 2;
+  }
+
+  return pushX509(L, x509);
+}
+
+static int pushX509(lua_State *L, X509 *x509) {
+  X509 **x509UD;
 
   lua_newtable(L);
   lua_pushstring(L, X509_FIELD);
@@ -95,7 +122,7 @@ int lce_x509_getpublickey(lua_State *L) {
   return 1;
 }
 
-static const char * readDERCertificate(const char *filePath, X509 **x509) {
+static const char * readDERCertificateFile(const char *filePath, X509 **x509) {
   FILE *certificateFile;
 
   certificateFile = fopen(filePath, "rb");
@@ -105,6 +132,25 @@ static const char * readDERCertificate(const char *filePath, X509 **x509) {
 
   *x509 = d2i_X509_fp(certificateFile, NULL);
   fclose(certificateFile);
+
+  if (*x509 == NULL ) {
+    return ERR_error_string(ERR_get_error(), NULL);
+  }
+
+  return NULL;
+}
+
+static const char * readDERCertificateMemory(void *data, int dataLength,
+    X509 **x509) {
+  BIO *certificateMemory;
+
+  certificateMemory = BIO_new_mem_buf(data, dataLength);
+  if (certificateMemory == NULL) {
+    return strerror(errno);
+  }
+
+  *x509 = d2i_X509_bio(certificateMemory, NULL);
+  BIO_free(certificateMemory);
 
   if (*x509 == NULL ) {
     return ERR_error_string(ERR_get_error(), NULL);

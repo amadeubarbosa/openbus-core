@@ -5,19 +5,58 @@ if #arg ~= 3 then
   os.exit(1)
 end
 
-local x509file = arg[1]
-local privatekeyfile = arg[2]
+local x509File = arg[1]
+local privateKeyFile = arg[2]
 local plainText = arg[3]
 
-local x509 = assert(lce.x509.readfromderfile(x509file))
-local publicKey = x509:getpublickey()
-x509:release()
+function getPublicKeyFromX509DERFile()
+  local x509 = assert(lce.x509.readfromderfile(x509File))
+  return x509:getpublickey()
+end
 
-local cryptedText = lce.cipher.encrypt(publicKey, plainText)
-publicKey:release()
+function getPublicKeyFromX509StringDERFile()
+  local certificateFile = assert(io.open(x509File))
+  local x509String = certificateFile:read("*a")
+  certificateFile:close()
 
-local privateKey = assert(lce.key.readprivatefrompemfile(privatekeyfile))
-local decryptedText = lce.cipher.decrypt(privateKey, cryptedText)
-privateKey:release()
+  local x509 = assert(lce.x509.readfromderstring(x509String))
+  return x509:getpublickey()
+end
 
-print(decryptedText)
+function encrypt(publicKey)
+  return assert(lce.cipher.encrypt(publicKey, plainText))
+end
+
+function readPrivateKeyFromPEMFile()
+  return assert(lce.key.readprivatefrompemfile(privateKeyFile))
+end
+
+function readPrivateKeyFromStringPEMFile()
+  local keyFile = assert(io.open(privateKeyFile))
+  local privateKeyString = keyFile:read("*a")
+  keyFile:close()
+
+  return assert(lce.key.readprivatefrompemstring(privateKeyString))
+end
+
+function decrypt(privateKey, cryptedText)
+  return assert(lce.cipher.decrypt(privateKey, cryptedText))
+end
+
+local publicKey
+local cryptedText
+local privateKey
+
+publicKey = getPublicKeyFromX509DERFile()
+cryptedText = encrypt(publicKey)
+privateKey = readPrivateKeyFromPEMFile()
+print(decrypt(privateKey, cryptedText))
+privateKey = readPrivateKeyFromStringPEMFile()
+print(decrypt(privateKey, cryptedText))
+
+publicKey = getPublicKeyFromX509StringDERFile()
+cryptedText = encrypt(publicKey)
+privateKey = readPrivateKeyFromPEMFile()
+print(decrypt(privateKey, cryptedText))
+privateKey = readPrivateKeyFromStringPEMFile()
+print(decrypt(privateKey, cryptedText))

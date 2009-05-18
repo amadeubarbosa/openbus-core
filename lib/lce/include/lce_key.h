@@ -15,6 +15,7 @@
 
 int lce_key_release(lua_State *L);
 int lce_key_readprivatefrompemfile(lua_State *L);
+int lce_key_readprivatefrompemstring(lua_State *L);
 
 const char * getKeyAlgorithm(EVP_PKEY *key);
 
