@@ -1,0 +1,10 @@
+#!/bin/ksh
+
+./server&
+serverPID=$!
+trap "kill $pid > /dev/null 2> /dev/null" 0
+
+sleep 3
+
+./client 
+

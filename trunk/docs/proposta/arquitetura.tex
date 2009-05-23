@@ -1,0 +1,126 @@
+\section{Arquitetura}
+\label{arquitetura}
+
+O \openbus\/ é baseado no {\em middleware} CORBA
+e em alguns dos serviços padronizados para sua arquitetura.
+Seu barramento é formado por componentes que podem oferecer
+serviços ou podem apenas consultar serviços de outros componentes.
+A infraestrutura do \openbus\/ provê alguns serviços básicos que podem ser
+oferecidos por um único componente ou podem estar
+distribuídos em diversos componentes em diferentes máquinas.
+A medida que as aplicações se conectam ao barramento, o espaço
+de serviços que o \openbus\/ oferece cresce. 
+Desta forma, o \openbus\/ pode ser estendido com serviços para acesso a
+repositórios de dados (Base integrada, OpenSpirit),
+acesso a dados de uma aplicação (Websintesi, v3o2), etc.
+(Figura~\ref{fig:architecture}.)
+
+\begin{figure} [htb]
+\centering
+\includegraphics[width=14cm]{figs/arquitetura.pdf} %height=3in, 
+\caption{Arquitetura do \openbus}
+\label{fig:architecture}
+\end{figure}
+
+Qualquer aplicação que queira fazer parte do barramento deve
+implementar um componente para o \openbus. Através desse componente
+é possível acessar todos os serviços existentes no barramento.
+Para isso, o componente deve ser capaz de se conectar ao barramento e se
+autenticar.
+Através dos serviços oferecidos pelo \openbus, o componente pode acessar
+um serviço previamente conhecido, ou pode consultar o serviço de
+localização para descobrir qual componente oferece o serviço que ele
+deseja acessar.
+Para oferecer um serviço, uma aplicação pode usar o mesmo componente ou
+implementar outro. Tal componente deve ser capaz de publicar no
+barramento a interface do serviço que deseja oferecer.
+
+%\subsection{Serviços básicos}
+
+Entre os serviços básicos oferecidos pelo \openbus\/ podemos destacar os
+serviços de autenticação, localização, troca de mensagens e colaboração.
+
+\begin{itemize}
+%%%%%%%%%%
+\item Serviço de autenticação 
+%%%%%%%%%%
+
+Para fazer parte do barramento, um componente deve se autenticar a ele.
+Existem tipicamente duas formas de autenticação para um
+componente. Uma onde o componente usa a credencial de um usuário e outra
+onde o componente (ou aplicação) possui uma credencial própria.
+
+Aplicações como o VGE, onde o usuário fornece seu identificador e sua
+senha, podem usar a própria credencial do usuário para 
+autenticar seus componentes no barramento.
+Já as aplicações que executam como um {\em daemon} podem utilizar uma
+credencial própria.
+
+Como apenas um componente do barramento pode acessar serviços de outro
+componente e todos os componentes do barramento já foram autenticados,
+os componentes do barramento são considerados confiáveis.
+Entretanto, cabe a cada serviço verificar se um componente possui a
+devida autorização para acessar seus serviços.
+
+%%%%%%%%%%
+\item Serviço de localização 
+%%%%%%%%%%
+
+O serviço de localização é baseado no serviço de {\em trading} de 
+CORBA. Este serviço facilita a oferta e o descobrimento de instâncias de
+serviços de tipos específicos.
+Com este serviço, componentes podem publicar suas características
+e outros componentes podem encontrar os serviços desejados
+através das características publicadas.
+
+Para publicar um serviço, um componente provê ao serviço de localização
+uma descrição de seu serviço e a sua localização.
+Para encontrar um serviço, um componente pergunta ao serviço
+de localização se existe algum serviço com determinadas características.
+O serviço de localização procura entre as descrições que possui e
+responde com a localização da interface do serviço selecionado.
+O componente que solicitou o serviço pode então acessá-lo.
+
+%%%%%%%%%%
+\item Serviço de troca de mensagens
+%%%%%%%%%%
+
+O serviço de troca de mensagens é baseado no serviço de notificação de 
+CORBA.
+Através dele, as aplicações podem comunicar-se livremente,
+trocando mensagens diretas ou registrando interesse em receber 
+mensagens quando algum even\-to ocorre na outra aplicação.
+
+Quando duas aplicações estão vendo o mesmo dado e uma delas o altera, 
+através desse serviço, ela pode enviar uma mensagem para a outra
+aplicação para que ela atualize a sua cópia do dado.
+
+%\begin{figure} [htb]
+%\centering
+%\includegraphics[width=8cm]{figs/eventos.pdf} %height=3in, 
+%\caption{Troca de mensagens}
+%\label{fig:datachange}
+%\end{figure}
+
+%%%%%%%%%%
+\item Serviço de colaboração
+%%%%%%%%%%
+
+O serviço de colaboração usa o serviço de troca de mensagens.
+Através dele, um componente pode criar uma sessão de
+colaboração e definir quem são os componentes participantes.
+Inicialmente, cada componente é convidado pelo serviço de colaboração
+a fazer parte desta sessão.
+
+Cada sessão de colaboração possui atributos específicos e pode envolver
+mais de um tipo de aplicação de diferentes usuários.
+Por exemplo, uma colaboração entre diferentes instâncias 
+do v3o2 pode ter atributos de câmera, para que as diferentes instâncias
+tenham a mesma visão do volume (Figura~\ref{fig:architecture}.)
+Através de uma sessão, os componentes envolvidos podem compartilhar
+diferentes tipos de eventos, como por exemplo, eventos de interação
+de usuário (seleção e alteração de dados, movimentação de cursor). Cada
+componente pode gerar e receber esses eventos.
+
+\end{itemize}
+

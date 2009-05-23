@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Protótipo OpenBus Fase 1" company="" webLink="" view-date="2007-01-27" view-index="0" gantt-divider-location="500" resource-divider-location="322" version="2.0">
+<description></description>
+<view zooming-state="default:0"/>
+<!-- -->
+<calendars>
+<day-types>
+<day-type id="0"/>
+<day-type id="1"/>
+<calendar id="1" name="default">
+<default-week sun="1" mon="0" tue="0" wed="0" thu="0" fri="0" sat="1"/>
+<overriden-day-types/>
+<days/>
+</calendar>
+</day-types>
+<date year="" month="1" date="1"/>
+<date year="" month="4" date="21"/>
+<date year="" month="5" date="1"/>
+<date year="" month="9" date="7"/>
+<date year="" month="10" date="12"/>
+<date year="" month="11" date="2"/>
+<date year="" month="11" date="15"/>
+<date year="" month="12" date="25"/>
+<date year="2005" month="3" date="25"/>
+<date year="2006" month="4" date="14"/>
+<date year="2007" month="2" date="19"/>
+<date year="2007" month="2" date="20"/>
+<date year="2007" month="4" date="6"/>
+<date year="2007" month="6" date="7"/>
+<date year="2008" month="3" date="21"/>
+<date year="2009" month="4" date="10"/>
+<date year="2010" month="4" date="2"/>
+</calendars>
+<tasks color="#99ccff">
+<taskproperties>
+<taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
+<taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
+<taskproperty id="tpd2" name="info" type="default" valuetype="icon"/>
+<taskproperty id="tpd3" name="name" type="default" valuetype="text"/>
+<taskproperty id="tpd4" name="begindate" type="default" valuetype="date"/>
+<taskproperty id="tpd5" name="enddate" type="default" valuetype="date"/>
+<taskproperty id="tpd6" name="duration" type="default" valuetype="int"/>
+<taskproperty id="tpd7" name="completion" type="default" valuetype="int"/>
+<taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
+<taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
+</taskproperties>
+<task id="6" name="Infraestrutura Básica" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<task id="7" name="Implementação SCS (Java, C++, Lua)" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<notes><![CDATA[Funcionalidade básica: IComponent + IMetaInterface]]></notes>
+<depend id="41" type="2" difference="0" hardness="Strong"/>
+<depend id="45" type="2" difference="0" hardness="Strong"/>
+</task>
+<task id="8" name="Implementação da biblioteca Lua para openSSL" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<depend id="17" type="2" difference="0" hardness="Strong"/>
+</task>
+<task id="9" name="Implementação de PI para OiL" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<depend id="18" type="2" difference="0" hardness="Strong"/>
+<depend id="21" type="2" difference="0" hardness="Strong"/>
+<depend id="39" type="2" difference="0" hardness="Strong"/>
+</task>
+</task>
+<task id="0" name="Documentação do Protótipo (Fase 1)" color="#99ccff" meeting="false" start="2007-01-29" duration="4" complete="0" priority="1" expand="true">
+<task id="1" name="Finalizar Documentação Preliminar" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<notes><![CDATA[Mecanismos e Serviços Básicos
+Serviço de Projetos
+Casos de Uso]]></notes>
+</task>
+<task id="33" name="Complementação da Documentação" color="#99ccff" meeting="false" start="2007-02-01" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+<task id="10" name="Mecanismos Básicos" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<task id="13" name="Mecanismo de Leasing" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<depend id="16" type="2" difference="0" hardness="Strong"/>
+<depend id="24" type="2" difference="0" hardness="Strong"/>
+<depend id="30" type="2" difference="0" hardness="Strong"/>
+<depend id="35" type="2" difference="0" hardness="Strong"/>
+<depend id="41" type="2" difference="0" hardness="Strong"/>
+<depend id="45" type="2" difference="0" hardness="Strong"/>
+</task>
+<task id="11" name="Mecanismo de Interceptação" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<notes><![CDATA[Definição do mecanismo para inclusão da credencial na requisição
+Obtenção da credencial para validação e repasse para Current (thread de invocação do serviço)]]></notes>
+<depend id="18" type="2" difference="0" hardness="Strong"/>
+<depend id="21" type="2" difference="0" hardness="Strong"/>
+<depend id="30" type="2" difference="0" hardness="Strong"/>
+<depend id="35" type="2" difference="0" hardness="Strong"/>
+<depend id="39" type="2" difference="0" hardness="Strong"/>
+<depend id="41" type="2" difference="0" hardness="Strong"/>
+<depend id="45" type="2" difference="0" hardness="Strong"/>
+</task>
+</task>
+<task id="14" name="Serviço de Acesso" color="#99ccff" meeting="false" start="2007-01-29" duration="3" complete="0" priority="1" expand="true">
+<depend id="33" type="2" difference="0" hardness="Strong"/>
+<task id="15" name="Mecanismo de Persistência de Credenciais" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true"/>
+<task id="16" name="Incorporar o Mecanismo de Leasing" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true"/>
+<task id="17" name="Login via Certificado" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true">
+<notes><![CDATA[Incorporar biblioteca de openSSL
+Mecanismo de cadastro e persistência de certificados]]></notes>
+<depend id="38" type="2" difference="0" hardness="Strong"/>
+<depend id="40" type="2" difference="0" hardness="Strong"/>
+</task>
+<task id="18" name="Incorporar interceptadores" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+<task id="19" name="Serviço de Registro" color="#99ccff" meeting="false" start="2007-01-29" duration="3" complete="0" priority="1" expand="true">
+<depend id="33" type="2" difference="0" hardness="Strong"/>
+<task id="20" name="Mecanismo de Persistência de Ofertas de Serviço" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true">
+<notes><![CDATA[Preparar repositório para permitir uso de um BD]]></notes>
+</task>
+<task id="21" name="Incorporar interceptadores" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true"/>
+<task id="38" name="Autenticação via Certificado" color="#99ccff" meeting="false" start="2007-01-31" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+<task id="23" name="Serviço de Sessão" color="#99ccff" meeting="false" start="2007-01-29" duration="3" complete="0" priority="1" expand="true">
+<depend id="33" type="2" difference="0" hardness="Strong"/>
+<depend id="48" type="2" difference="0" hardness="Strong"/>
+<task id="25" name="Mecanismo de troca de mensagens" color="#99ccff" meeting="false" start="2007-01-29" duration="1" complete="0" priority="1" expand="true"/>
+<task id="24" name="Incorporar mecanismo de leasing" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true">
+<notes><![CDATA[Manutenção da sessão + credencial]]></notes>
+</task>
+<task id="39" name="Incorporar Interceptadores" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true"/>
+<task id="40" name="Autenticação via Certificado" color="#99ccff" meeting="false" start="2007-01-31" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+<task id="27" name="Serviço de Projetos" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true">
+<depend id="33" type="2" difference="0" hardness="Strong"/>
+<depend id="42" type="2" difference="0" hardness="Strong"/>
+<depend id="46" type="2" difference="0" hardness="Strong"/>
+<depend id="49" type="2" difference="0" hardness="Strong"/>
+<task id="30" name="Procedimento comum a todos os serviços" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true">
+<notes><![CDATA[Autenticação
+Leasing credencial
+Exportação do serviço
+Incorporação de Interceptadores]]></notes>
+<depend id="55" type="2" difference="0" hardness="Strong"/>
+<depend id="56" type="2" difference="0" hardness="Strong"/>
+</task>
+<task id="31" name="Implementação do serviço (CSBase/Java)" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true">
+<task id="55" name="Serviço de Dados" color="#99ccff" meeting="false" start="2007-01-31" duration="1" complete="0" priority="1" expand="true"/>
+<task id="56" name="Serviço de Arquivos" color="#99ccff" meeting="false" start="2007-01-31" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+</task>
+<task id="43" name="Clientes Básicos" color="#99ccff" meeting="false" start="2007-01-30" duration="6" complete="0" priority="1" expand="true">
+<depend id="48" type="2" difference="0" hardness="Strong"/>
+<task id="35" name="Cliente C++" color="#99ccff" meeting="false" start="2007-01-30" duration="2" complete="0" priority="1" expand="true">
+<notes><![CDATA[autenticação
+interceptadores
+importação oferta de serviço]]></notes>
+<depend id="47" type="2" difference="0" hardness="Strong"/>
+<task id="41" name="Procedimento comum" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true"/>
+<task id="42" name="Teste de uso do serviço de projetos" color="#99ccff" meeting="false" start="2007-01-31" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+<task id="44" name="Cliente Java" color="#99ccff" meeting="false" start="2007-01-30" duration="2" complete="0" priority="1" expand="true">
+<depend id="47" type="2" difference="0" hardness="Strong"/>
+<task id="45" name="Procedimento comum" color="#99ccff" meeting="false" start="2007-01-30" duration="1" complete="0" priority="1" expand="true"/>
+<task id="46" name="Teste de uso do serviço de projetos" color="#99ccff" meeting="false" start="2007-01-31" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+</task>
+<task id="47" name="Testes de Uso de Sessão" color="#99ccff" meeting="false" start="2007-02-01" duration="2" complete="0" priority="1" expand="true">
+<depend id="50" type="2" difference="0" hardness="Strong"/>
+<task id="48" name="Procedimento de formação de sessão" color="#99ccff" meeting="false" start="2007-02-01" duration="1" complete="0" priority="1" expand="true">
+<depend id="49" type="2" difference="0" hardness="Strong"/>
+</task>
+<task id="49" name="Teste de uso com serviço de projetos" color="#99ccff" meeting="false" start="2007-02-02" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+<task id="50" name="Construção de Bibliotecas" color="#99ccff" meeting="false" start="2007-02-05" duration="1" complete="0" priority="1" expand="false">
+<task id="51" name="Biblioteca para cliente C++" color="#99ccff" meeting="false" start="2007-02-05" duration="1" complete="0" priority="1" expand="true"/>
+<task id="52" name="Biblioteca para cliente Java" color="#99ccff" meeting="false" start="2007-02-05" duration="1" complete="0" priority="1" expand="true"/>
+<task id="53" name="Biblioteca para servidor C++" color="#99ccff" meeting="false" start="2007-02-05" duration="1" complete="0" priority="1" expand="true"/>
+<task id="54" name="Biblioteca para servidor Java" color="#99ccff" meeting="false" start="2007-02-05" duration="1" complete="0" priority="1" expand="true"/>
+</task>
+</tasks>
+<resources>
+<resource id="0" name="Ana Moura" function="SoftwareDevelopment:2" contacts="moura@tecgraf.puc-rio.br" phone=""/>
+<resource id="1" name="Rodrigo Henrique" function="SoftwareDevelopment:2" contacts="rodrigoh@tecgraf.puc-rio.br" phone=""/>
+<resource id="2" name="Cristina Ururahy" function="SoftwareDevelopment:2" contacts="ururahy@tecgraf.puc-rio.br" phone=""/>
+</resources>
+<allocations/>
+<vacations/>
+<taskdisplaycolumns>
+<displaycolumn property-id="tpd3" order="0" width="184"/>
+<displaycolumn property-id="tpd4" order="1" width="16"/>
+<displaycolumn property-id="tpd5" order="2" width="71"/>
+</taskdisplaycolumns>
+<previous/>
+<roles roleset-name="Default"/>
+<roles roleset-name="SoftwareDevelopment"/>
+</project>

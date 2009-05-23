@@ -1,0 +1,169 @@
+\section{Estado da arte}
+\subsection{Soluções de mercado para a integração de dados e aplicações de E\&P}
+A solução para a integração de aplicações de E\&P mais abrangente disponível
+no mercado é a plataforma OpenSpirit \cite{openspirit}. O desenvolvimento dessa plataforma resultou de um consórcio
+--- a OpenSpirit Alliance ---
+que uniu esforços de diferentes companhias de petróleo e fabricantes de
+software para a definição de um {\em framework} de integração de aplicações
+que suportasse tanto o compartilhamento de dados mantidos em diferentes
+repositórios, 
+como também a colaboração entre diferentes aplicações.
+Esse {\em framework} é comercializado hoje por uma companhia de software
+independente --- a OpenSpirit Corporation --- que conta com um grupo de investidores
+que inclui tanto companhias de petróleo, como Chevron e Shell, como também
+provedores de software e serviços, como Schlumberger e Paradigm.
+
+O {\em framework} OpenSpirit é composto por três elementos principais:
+o {\em OpenSpirit Runtime}, conectores de dados ({\em Data Connectors})
+e adaptadores de aplicações ({\em Application Adapters}).
+\begin{itemize}
+\item OpenSpirit Runtime
+
+O OpenSpirit Runtime provê a infraestrutura de suporte para a integração de 
+aplicações e dados. Essa infraestrutura oferece uma série de serviços 
+utilizados pelos
+conectores de dados e adaptadores de aplicações, como, 
+por exemplo, a conexão de uma aplicação ao ambiente
+de integração, a disponibilização de informações sobre os repositórios de
+dados acessíveis, e a difusão de mensagens (eventos de colaboração) entre
+aplicações. 
+
+Para garantir a independência da plataforma de execução e da linguagem de
+desenvolvimento das aplicações 
+--- um requisito essencial à ampla interoperabilidade pretendida 
+pelo {\em framework} ---
+a infraestrutura de suporte de integração implementada pelo OpenSpirit
+é baseada no {\em middleware} CORBA, e em alguns dos serviços padronizados
+para sua arquitetura.
+
+\item Conectores de Dados
+
+Conectores de dados, ou {\em data servers}, são os elementos responsáveis por
+implementar os serviços de acesso aos diferentes repositórios, ou
+{\em datastores}.
+Esses conectores provêem às aplicações uma visão uniforme e homogênea dos
+dados acessados, independente dos formatos internos adotados
+por cada tipo de repositório.
+Essa visão uniforme é baseada em um modelo de dados genérico 
+({\em OpenSpirit Data Model}),
+oferecido pelos conectores de dados em sua interface de acesso;
+é responsabilidade de cada tipo de conector realizar o mapeamento desse modelo
+para um repositório específico.
+
+É importante observar que o modelo de dados atualmente implementado 
+pela OpenSpirit
+é restrito ao domínio da Geologia e Geofísica, o que impede
+a integração de aplicações de outros domínios, como Engenharia
+e Química.
+Além disso, apenas a própria OpenSpirit desenvolve e comercializa 
+conectores de dados; não existe um {\em toolkit} para o desenvolvimento
+desses conectores.
+Essa restrição impede que repositórios de dados providos
+por aplicações e sistemas desenvolvidos pela Petrobras sejam incorporados
+ao ambiente de integração, a menos que a própria OpenSpirit seja
+contratada para desenvolver os conectores necessários.
+
+A OpenSpirit disponibiliza, atualmente, conectores 
+para os seguintes repositórios: Open\-Works/Seisworks, GeoFrame/IESX/Charisma,
+GOCAD, Kingdom, Petra,
+Finder,
+Managed SEGY (dados SEGY 2D e 3D armazenados em um sistema de arquivos),
+Recall e ArcSDE.
+Contudo, conectores específicos podem não suportar
+todos os tipos de dados de um repositório;
+o conector para o GOCAD, por exemplo, oferece por enquanto apenas o acesso a 
+volumes sísmicos. 
+
+\item Adaptadores de Aplicações
+
+Adaptadores de aplicações (ou {\em application plug-ins}),
+são os componentes responsáveis por integrar as diferentes aplicações
+ao ambiente OpenSpirit.
+Esses componentes utilizam a
+API oferecida pelo {\em toolkit} de desenvolvimento
+para prover às aplicações o acesso aos serviços de dados e de 
+colaboração disponibilizados pelo {\em framework}.
+O {\em toolkit} de desenvolvimento está 
+disponível atualmente para diferentes linguagens (Java, C++, C\#, VB, Delphi)
+e plataformas (Windows, Solaris, Linux, Irix).
+Diversos fornecedores de software, como Schlumberger (Petrel),
+Landmark (OpenWire), Earth Decision (Gocad) e Hampson-Russell (AVO),
+provêem adaptadores para suas aplicações.
+A própria Petrobras é licenciada como desenvolvedor OpenSpirit,
+e está implementando para o WebSintesi/VGE
+o acesso, via {\em framework} OpenSpirit, a repositórios de dados como 
+Open\-Works/Seisworks e GeoFrame/IESX.
+
+Como vimos anteriormente, os serviços de acesso a dados são
+oferecidos por conectores específicos para cada repositório.
+Através de um mecanismo de {\em query} oferecido pela API, aplicações podem 
+criar, ler, atualizar
+e remover dados com base no modelo de dados genérico oferecido por
+esses conectores.
+O mecanismo de {\em query}, contudo, não permite o acesso a {\em bulk data}, 
+como volumes sísmicos e horizontes 3D. Para esse tipo de acesso, 
+a API provê a representação dos dados como objetos remotos.
+
+A colaboração entre aplicações é baseada em 
+um serviço de difusão de mensagens (notificações),
+oferecido pelo OpenSpirit Runtime.
+Esse serviço permite que aplicações 
+que operam sobre um mesmo conjunto de dados
+compartilhem {\em eventos} 
+de interação de usuário (seleção e alteração de dados, movimentação de cursor,
+definição de áreas de interesse).
+A API provida pelo {\em toolkit} oferece mecanismos para que as aplicações
+possam gerar e receber esses eventos, encapsulando o acesso ao
+serviço de notificações.
+
+Um fator limitante para a colaboração entre aplicações através do 
+{\em framework} é a restrição do escopo dessa colaboração
+a uma sessão OpenSpirit. Essa sessão, determinada no momento de conexão 
+da aplicação ao ambiente, estabelece também
+o conjunto de dados, ou projetos ({\em ProjectSet}) acessíveis 
+pela aplicação durante a conexão.
+No ambiente de integração OpenSpirit, cada usuário ({\em userid}) é 
+associado a uma configuração particular, que inclui a definição das sessões
+às quais as aplicações iniciadas por esse usuário poderão conectar-se.
+Como sessões não são compartilhadas entre usuários, não há colaboração entre
+aplicações iniciadas por usuários diferentes.
+
+Além de eventos de colaboração, o {\em framework} OpenSpirit permite 
+que aplicações recebam notificações de eventos de alteração dos dados 
+de um repositório (criação, alteração e remoção),
+enviada pelo conector correspondente.
+Essa facilidade depende da capacidade do conector 
+gerar esse tipo de evento; atualmente, apenas os conectores OpenWorks e Geoframe
+possuem essa capacidade.
+
+\end{itemize}
+Uma outra solução disponível no mercado para a integração de aplicações e
+repositórios de dados de E\&P é o PowerHub, comercializado pela Landmark.
+Assim como o modelo de dados genérico implementado pelo {\em framework}
+OpenSpirit, a plataforma PowerHub oferece um modelo de dados 
+que abstrai formas de armazenamento proprietárias,
+permitindo às aplicações acessar de maneira uniforme dados providos 
+por diferentes repositórios.
+
+Diferentemente do {\em framework} OpenSpirit, é possível desenvolver
+conectores para a integração de repositórios de dados à plataforma PowerHub, o
+que, em princípio, permitiria a integração de dados disponibilizados por
+aplicações e sistemas desenvolvidos pela Petrobras.
+Contudo, a API para acesso aos repositórios
+consiste apenas de uma interface de
+{\em query} para acesso a bases de dados, baseada em Java JDBC;
+essa API não oferece acesso a {\em bulk data}, como volumes sísmicos.
+Para acessar esse tipo de dado, é necessário que as aplicações implementem
+seus próprios mecanismos, baseados em {\em toolkits} providos
+pelos fornecedores das aplicações que mantém os repositórios.
+
+Uma outra restrição com respeito ao uso da plataforma PowerHub
+como solução de integração de aplicações e dados de E\&P é a imposição do 
+uso da linguagem Java para a conexão de aplicações ao PowerHub.
+Essa restrição impõe dificuldades relevantes para a integração de
+diversas aplicações desenvolvidas pela Petrobras, como o SIGEO e o v3o2.
+
+Finalmente, a plataforma PowerHub contempla apenas o acesso integrado a
+diferentes repositórios de dados;
+facilidades para a colaboração entre aplicações não são oferecidas
+por essa plataforma.

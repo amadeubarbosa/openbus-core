@@ -1,0 +1,7 @@
+#!/bin/ksh
+
+source ${OPENBUS_HOME}/core/conf/config
+echo ${CORE_IDL_DIR}
+
+./ps
+

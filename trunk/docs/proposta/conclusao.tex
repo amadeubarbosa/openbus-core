@@ -1,0 +1,49 @@
+\section{Conclusões}
+\label{conclusoes}
+
+A integração entre as aplicações da área de E\&P da Petrobras e, em especial,
+ entre essas aplicações e as bases de dados corporativas é uma necessidade
+ clara para os fluxos de trabalho atuais.
+Entre as diferentes formas de estabelecer esta integração, a mais adequada, em
+ nossa opinião, é através de um barramento comum de serviços, o que ainda se
+ mostra alinhado com as diretrizes corporativas da Companhia.
+Através do barramento de serviços, não apenas alcançamos a integração básica,
+ por cópia de dados, mas também viabilizamos, na mesma infra-estrutura, formas
+ mais ricas de integração, como a monitoração de dados compartilhados e
+ mecanismos de colaboração.
+
+As ferramentas disponíveis no mercado, voltadas a este fim, não atendem aos
+ rígidos requisitos que a área de E\&P estabelece.
+Em função disso, propomos a construção de uma arquitetura de integração de
+ aplicações, baseada em um barramento de serviços, que chamamos de \openbus.
+
+Após uma análise das tecnologias disponíveis atualmente para a construção de
+ uma arquitetura de serviços, concluímos que a arquitetura \openbus\/ deve ser
+ implementada sobre o {\em middleware} CORBA.
+Essa escolha se justifica pelo fato de que CORBA oferece a forma mais adequada
+ para implementar uma arquitetura de serviços cujos componentes sejam
+ heterogêneos e os requisitos de escalabilidade e desempenho sejam críticos.
+Em função desses requisitos, e do contexto mais amplo da Petrobras, definimos
+ que a arquitetura \openbus\/ deverá:
+
+\begin{itemize}
+\item Ser aberta e extensível a domínios fora do E\&P.
+\item Permitir a troca de dados estruturados de forma adequada ao domínio.
+\item Permitir a integração de aplicações escritas em diferentes linguagens.
+\item Facilitar a integração de provedores e consumidores de dados.
+\item Permitir a troca de mensagens genéricas entre aplicações.
+\item Apresentar eficiência na troca de dados de grande volume.
+\item Apresentar escalabilidade na troca de grandes volumes de mensagens.
+\item Prover suporte a mecanismos de autenticação e autorização.
+\item Prover suporte para a implementação de colaboração.
+\end{itemize}
+
+A implementação da arquitetura deverá prover os serviços básicos de
+ autenticação, localização, mensageria e colaboração de forma operacional, para
+ que esta estrutura possa ser reutilizada em diferentes contextos da Companhia.
+Dentro do foco no E\&P, esta estrutura será especializada para modelar os dados
+ dos domínios de geologia e geofísica.
+Por fim, serão codificadas as pontes de ligação da Base Integrada e das
+ aplicações WebSintesi, VGE, v3o2 e Sigeo que os conectarão ao barramento,
+ permitindo sua integração e servindo de prova de conceito para a arquitetura
+ \openbus.

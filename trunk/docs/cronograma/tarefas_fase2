@@ -1,0 +1,38 @@
+FASE 2: PROTÓTIPO COM SERVIÇO DE POÇO
+-----------------------------------------
+
+INTERFACE DO SERVIÇO
+====================
+
+- Definir o tipo de dado a ser provido inicialmente
+- Definir a(s) IDL(s) do serviço
+
+IMPLEMENTAÇÔES DO SERVIÇO DE POÇO "OpenBUS"
+===========================================
+
+- Implementar o serviço de acesso à base integrada (JAVA)
+- Implementar o serviço de acesso a ... (?)
+
+CLIENTE V3O2
+============
+
+- Incorporar bibliotecas do cliente C++
+- Incorporar facilidades (interface/funcionalidade) para uso do serviço de poço:
+   - Conexão ao OpenBUS/criação de sessão
+   - Ativação do VGE para compartilhar a sessão
+   - Recepção de mensagem com o resultado da execução do VGE (pesquisa do poço)
+   - Acesso ao serviço de registro, importação de ofertas
+   - Interface para usuário determinar o serviço adequado
+   - Acesso ao serviço para obtenção do dado
+   - Fechamento da conexão ao OpenBUS
+
+CLIENTE VGE
+===========
+
+- Incorporar bibliotecas do cliente JAVA
+- Incorporar facilidades (interface/funcionalidade) para participação no uso do
+  serviço de poço em colaboração com o V3O2:
+    - Ativação "especial" via v3o2 com repasse da credencial
+    - Adição à sessão (conexão implicita ao OpenBUS)
+    - Envio de mensagem com resultado da pesquisa de poço
+    - Remoção da sessão (desconexão implicita do OpenBUS)
