@@ -1,8 +1,7 @@
-/*
-** AccessControlService.h
-**
-** Header do módulo wrapper do serviço de acesso.
-**
+/**
+* \file AccessControlService.h
+*
+* \brief API do serviço de acesso.
 */
 
 #ifndef ACCESSCONTROLSERVICE_H_

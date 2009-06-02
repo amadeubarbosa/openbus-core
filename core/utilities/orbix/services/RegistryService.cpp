@@ -32,7 +32,8 @@ namespace openbus {
       propertyList->length(numElements + 1);
       openbusidl::rs::Property_var property = new openbusidl::rs::Property;
       property->name = key;
-      openbusidl::rs::PropertyValue_var propertyValue = new openbusidl::rs::PropertyValue(1);
+      openbusidl::rs::PropertyValue_var propertyValue = \
+        new openbusidl::rs::PropertyValue(1);
       propertyValue->length(1);
       propertyValue[0] = value;
       property->value = propertyValue;
