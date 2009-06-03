@@ -103,6 +103,7 @@ function ACSFacet:loginByCertificate(name, answer)
     Log:error(errorMessage)
     return false, self.invalidCredential, self.invalidLease
   end
+  self.challenges[name] = nil
   local entry = self:addEntry(name, true)
   return true, entry.credential, entry.lease.duration
 end
