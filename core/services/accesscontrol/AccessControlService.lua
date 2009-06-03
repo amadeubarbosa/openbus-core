@@ -195,9 +195,6 @@ function ACSFacet:isValid(credential)
   if not entry then
     return false
   end
-  if entry.credential.identifier ~= credential.identifier then
-    return false
-  end
   if entry.credential.delegate ~= "" and not entry.certified then
     return false
   end
