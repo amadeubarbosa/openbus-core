@@ -4,15 +4,14 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Properties;
 
-import openbus.AccessControlServiceWrapper;
-import openbus.ORBWrapper;
 import openbus.Registry;
-import openbus.RegistryServiceWrapper;
 import openbus.common.CryptoUtils;
+import openbusidl.rs.IRegistryService;
 import openbusidl.rs.Property;
 import openbusidl.rs.ServiceOffer;
 
-import org.omg.PortableServer.POA;
+import org.omg.CORBA.ORB;
+import org.omg.CORBA.StringHolder;
 
 import scs.core.ComponentId;
 import scs.core.IComponent;
@@ -32,25 +31,23 @@ public class HelloServer {
     X509Certificate acsCertificate =
       CryptoUtils.readCertificate("AccessControlService.crt");
 
-    // Cria o ORB.
     Properties props = new Properties();
     props.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
     props.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
-    ORBWrapper orb = new ORBWrapper(args, props);
-    Registry.getInstance().setORBWrapper(orb);
 
-    POA rootPOA = orb.getRootPOA();
-    Registry.getInstance().setPOA(rootPOA);
+    Registry bus = Registry.getInstance();
+    bus.resetAndInitialize(args, props, "localhost", 2089);
+    ORB orb = bus.getORB();
 
     // Cria o componente.
-    ComponentBuilder builder = new ComponentBuilder(rootPOA, orb.getORB());
+    ComponentBuilder builder = new ComponentBuilder(bus.getRootPOA(), orb);
     ExtendedFacetDescription[] descriptions = new ExtendedFacetDescription[3];
     descriptions[0] =
       new ExtendedFacetDescription("IComponent", "IDL:scs/core/IComponent:1.0",
         IComponentServant.class.getCanonicalName());
     descriptions[1] =
-      new ExtendedFacetDescription("Hello", "IDL:demoidl/hello/IHello:1.0",
+      new ExtendedFacetDescription("IHello", "IDL:demoidl/hello/IHello:1.0",
         HelloImpl.class.getCanonicalName());
     descriptions[2] =
       new ExtendedFacetDescription("IMetaInterface",
@@ -61,24 +58,16 @@ public class HelloServer {
         (byte) 1, (byte) 0, (byte) 0, "Java"));
 
     // Acessa o OpenBus
-    AccessControlServiceWrapper acs =
-      new AccessControlServiceWrapper(orb, "localhost", 2089);
-    Registry.getInstance().setACS(acs);
-
-    //    assert (acs.loginByCertificate("HelloService", privateKey, acsCertificate));
-    acs.loginByPassword("tester", "tester");
-
-    RegistryServiceWrapper registryService = acs.getRegistryService();
+    IRegistryService registryService =
+      bus.connect("HelloService", privateKey, acsCertificate);
     assert (registryService != null);
 
     org.omg.CORBA.Object obj = context.getIComponent();
     IComponent component = IComponentHelper.narrow(obj);
     ServiceOffer serviceOffer = new ServiceOffer(new Property[0], component);
-    registryService.register(serviceOffer);
+    StringHolder registrationId = new StringHolder();
+    registryService.register(serviceOffer, registrationId);
 
     orb.run();
-
-    assert (acs.logout());
-    System.out.println("Finalizando...");
   }
 }

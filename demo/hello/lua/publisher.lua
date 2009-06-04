@@ -67,10 +67,11 @@ function main ()
     local facetDescriptions = {}
     facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0",
                                      class = scs.Component}
+    facetDescriptions.IMetaInterface = {name = "IMetaInterface", interface_name = "IDL:scs/core/IMetaInterface:1.0", class = scs.MetaInterface}
     facetDescriptions.IHello = {name = "IHello", interface_name = "IDL:demoidl/hello/IHello:1.0", class = Hello}
     local componentId = {name = "Membro", major_version = 1, minor_version = 0, patch_version = 0, platform_spec = ""}
     local component = scs.newComponent(facetDescriptions, {}, componentId)
-    success, registryIdentifier = registryService:register({ properties = {{name = "type", value = {"type"}}}, 
+    success, registryIdentifier = registryService:register({ properties = {}, 
       member = component.IComponent})
     print("*********************************************\n")
     print("PUBLISHER\nServiço Hello registrado no barramento do OpenBus.\n")

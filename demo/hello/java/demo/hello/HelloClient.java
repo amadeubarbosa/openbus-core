@@ -2,11 +2,9 @@ package demo.hello;
 
 import java.util.Properties;
 
-import openbus.AccessControlServiceWrapper;
-import openbus.ORBWrapper;
 import openbus.Registry;
-import openbus.RegistryServiceWrapper;
 import openbus.common.exception.OpenBusException;
+import openbusidl.rs.IRegistryService;
 import openbusidl.rs.Property;
 import openbusidl.rs.ServiceOffer;
 
@@ -25,30 +23,24 @@ public class HelloClient {
     props.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
     props.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
-    ORBWrapper orb = new ORBWrapper(args, props);
-    Registry.getInstance().setORBWrapper(orb);
+    Registry bus = Registry.getInstance();
+    bus.resetAndInitialize(args, props, "localhost", 2089);
 
-    AccessControlServiceWrapper acs =
-      new AccessControlServiceWrapper(orb, "localhost", 2089);
-    Registry.getInstance().setACS(acs);
-
-    assert (acs.loginByPassword(userLogin, userPassword));
-
-    RegistryServiceWrapper registryService = acs.getRegistryService();
+    IRegistryService registryService = bus.connect(userLogin, userPassword);
     assert (registryService != null);
 
-    Property property = new Property("facets", new String[] { "Hello" });
+    Property property = new Property("facets", new String[] { "IHello" });
     ServiceOffer[] servicesOffers =
       registryService.find(new Property[] { property });
     assert (servicesOffers.length == 1);
     ServiceOffer serviceOffer = servicesOffers[0];
     IComponent component = serviceOffer.member;
 
-    Object helloObject = component.getFacetByName("Hello");
+    Object helloObject = component.getFacetByName("IHello");
     IHello hello = IHelloHelper.narrow(helloObject);
     hello.sayHello();
 
-    assert (acs.logout());
+    bus.disconnect();
     System.out.println("Finalizando...");
   }
 }
