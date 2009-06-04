@@ -4,7 +4,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Properties;
 
-import openbus.Registry;
+import openbus.Openbus;
 import openbus.common.CryptoUtils;
 import openbusidl.rs.IRegistryService;
 import openbusidl.rs.Property;
@@ -36,7 +36,7 @@ public class HelloServer {
     props.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
 
-    Registry bus = Registry.getInstance();
+    Openbus bus = Openbus.getInstance();
     bus.resetAndInitialize(args, props, "localhost", 2089);
     ORB orb = bus.getORB();
 

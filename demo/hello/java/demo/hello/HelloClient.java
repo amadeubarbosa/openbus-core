@@ -2,7 +2,7 @@ package demo.hello;
 
 import java.util.Properties;
 
-import openbus.Registry;
+import openbus.Openbus;
 import openbus.common.exception.OpenBusException;
 import openbusidl.rs.IRegistryService;
 import openbusidl.rs.Property;
@@ -23,7 +23,7 @@ public class HelloClient {
     props.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
     props.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
-    Registry bus = Registry.getInstance();
+    Openbus bus = Openbus.getInstance();
     bus.resetAndInitialize(args, props, "localhost", 2089);
 
     IRegistryService registryService = bus.connect(userLogin, userPassword);
