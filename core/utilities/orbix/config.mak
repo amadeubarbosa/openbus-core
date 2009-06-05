@@ -9,11 +9,15 @@ ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
 ORBIXINC= ${ORBIX_HOME}/include
 ORBIXLDIR=${ORBIX_HOME}/lib
 
+ifeq "$(TEC_UNAME)" "Linux26g4_64"
+  ORBIXLDIR=${ORBIX_HOME}/lib/lib64
+endif
+
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
-DEFINES=VERBOSE
+DEFINES+=VERBOSE
 
 OBJROOT= obj
 TARGETROOT= lib
@@ -22,6 +26,11 @@ INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs/orbix ${OPENBUSINC}/openssl-0.9.9
 LDIR= ${ORBIXLDIR} ${OPENBUSLIB} ${ORBIXLDIR}
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix crypto
+
+INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs/orbix
+LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
+
+LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix
 
 SRC= openbus/common/ClientInterceptor.cpp \
      openbus/common/ServerInterceptor.cpp \
