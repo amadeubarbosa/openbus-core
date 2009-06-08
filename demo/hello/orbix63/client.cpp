@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 /* Conexão com o barramento. */
   try {
     registryService = bus->connect("tester", "tester");
-  } catch (openbus::COMMUNICATION_FAILURE& e) {
+  } catch (CORBA::SystemException& e) {
     cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
          << "* Falha na comunicacao. *" << endl;
     exit(-1);

@@ -46,18 +46,6 @@ namespace openbusidl {
 namespace openbus {
 
 /**
-* \brief Falha de comunicação com o barramento. 
-* Possíveis causas:
-*   \li Os valores que definem a localização do barramento(host e port) estão 
-*       incorretos.
-*   \li O mecanismo de interceptação de CORBA não está sendo ativado.
-*/
-  class COMMUNICATION_FAILURE : public runtime_error {
-    public:
-      COMMUNICATION_FAILURE(const string& msg = "") : runtime_error(msg) {}
-  };
-
-/**
 * \brief Falha no processo de login, ou seja, o par nome de usuário e senha não
 * foi validado.
 */
@@ -310,7 +298,7 @@ namespace openbus {
     *  @param[in] user Nome do usuário.
     *  @param[in] password Senha do usuário.
     *  @throw LOGIN_FAILURE O par nome de usuário e senha não foram validados.
-    *  @throw COMMUNICATION_FAILURE Alguma falha de comunicação com o 
+    *  @throw CORBA::SystemException Alguma falha de comunicação com o 
     *    barramento ocorreu.
     *  @return  Se a tentativa de conexão for bem sucedida, uma instância que 
     *    representa o serviço é retornada.
@@ -318,7 +306,7 @@ namespace openbus {
       services::RegistryService* connect(
         const char* user,
         const char* password)
-        throw (COMMUNICATION_FAILURE, LOGIN_FAILURE);
+        throw (CORBA::SystemException, LOGIN_FAILURE);
 
     /**
     *  Realiza uma tentativa de conexão com o barramento utilizando o
@@ -331,7 +319,7 @@ namespace openbus {
     *  @param[in] ACSCertificateFilename Nome do arquivo que armazena o
     *    certificado do serviço.
     *  @throw LOGIN_FAILURE O par nome de usuário e senha não foram validados.
-    *  @throw COMMUNICATION_FAILURE Alguma falha de comunicação com o 
+    *  @throw CORBA::SystemException Alguma falha de comunicação com o 
     *    barramento ocorreu.
     *  @throw SECURITY_EXCEPTION Falha na manipulação da chave privada da 
     *    entidade ou do certificado do ACS.
@@ -342,7 +330,7 @@ namespace openbus {
         const char* entity,
         const char* privateKeyFilename,
         const char* ACSCertificateFilename)
-        throw (COMMUNICATION_FAILURE, LOGIN_FAILURE, SECURITY_EXCEPTION);
+        throw (CORBA::SystemException, LOGIN_FAILURE, SECURITY_EXCEPTION);
 
     /**
     *  Desfaz a conexão atual.

@@ -183,7 +183,7 @@ namespace openbus {
   openbus::services::RegistryService* Openbus::connect(
     const char* user,
     const char* password)
-    throw (COMMUNICATION_FAILURE, LOGIN_FAILURE)
+    throw (CORBA::SystemException, LOGIN_FAILURE)
   {
   #ifdef VERBOSE
     cout << "[Openbus::connect() BEGIN]" << endl;
@@ -228,9 +228,9 @@ namespace openbus {
           registryService = accessControlService->getRegistryService();
           return registryService;
         }
-      } catch (const CORBA::SystemException& systemException) {
+      } catch (const CORBA::SystemException* systemException) {
         mutex->unlock();
-        throw COMMUNICATION_FAILURE();
+        throw systemException;
       }
     } else {
       return registryService;
@@ -244,7 +244,7 @@ namespace openbus {
     const char* entity,
     const char* privateKeyFilename,
     const char* ACSCertificateFilename)
-    throw (COMMUNICATION_FAILURE, LOGIN_FAILURE, SECURITY_EXCEPTION)
+    throw (CORBA::SystemException, LOGIN_FAILURE, SECURITY_EXCEPTION)
   {
   #ifdef VERBOSE
     cout << "[Openbus::connect() BEGIN]" << endl;
@@ -368,9 +368,9 @@ namespace openbus {
           registryService = accessControlService->getRegistryService();
           return registryService;
         }
-      } catch (const CORBA::SystemException& systemException) {
+      } catch (const CORBA::SystemException* systemException) {
         mutex->unlock();
-        throw COMMUNICATION_FAILURE();
+        throw systemException;
       }
     } else {
       return registryService;

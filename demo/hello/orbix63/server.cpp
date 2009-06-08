@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
   try {
     registryService = bus->connect("HelloService", "HelloService.key",
       "AccessControlService.crt");
-  } catch (openbus::COMMUNICATION_FAILURE& e) {
+  } catch (CORBA::SystemException& e) {
     cout << "** Não foi possível se conectar ao barramento. **" << endl \
          << "* Falha na comunicação. *" << endl;
     exit(-1);
