@@ -16,16 +16,7 @@ int main(int argc, char* argv[]) {
   openbus::services::RegistryService* registryService;
 
   bus = new openbus::Openbus(argc, argv);
-
-/* Se o usuário desejar criar o seu próprio ORB/POA:
-*  CORBA::ORB* orb = CORBA::ORB_init(argc, argv);
-*  CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
-*  PortableServer::POA* poa = PortableServer::POA::_narrow(poa_obj);
-*  PortableServer::POAManager_var poa_manager = poa->the_POAManager();
-*  poa_manager->activate();
-*
-*  bus->init(orb, poa);
-*/
+  
   bus->init();
 
 /* Conexão com o barramento. */
@@ -42,16 +33,19 @@ int main(int argc, char* argv[]) {
   }
 
 /* Define uma lista de propriedades que caracteriza o serviço de interesse.
-*  O trabalho de criação da lista é facilitado pelo uso da classe PropertyListHelper.
+*  O trabalho de criação da lista é facilitado pelo uso da classe 
+*   PropertyListHelper.
 */
-  openbus::services::PropertyListHelper* propertiesHelper = new openbus::services::PropertyListHelper();
+  openbus::services::PropertyListHelper* propertiesHelper = \
+    new openbus::services::PropertyListHelper();
   propertiesHelper->add("facet", "IHello");
 
 /* Busca no barramento o serviço desejado.
 *  Uma lista de *ofertas de serviço* é retornada para o usuário.
 *  OBS.: Neste demo somente há uma oferta de serviço.
 */
-  openbus::services::ServiceOfferList_var serviceOfferList = registryService->find(propertiesHelper->getPropertyList());
+  openbus::services::ServiceOfferList_var serviceOfferList = \
+    registryService->find(propertiesHelper->getPropertyList());
 
   CORBA::ULong idx = 0;
   openbus::services::ServiceOffer serviceOffer = serviceOfferList[idx];

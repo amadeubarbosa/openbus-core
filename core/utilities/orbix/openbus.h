@@ -200,8 +200,8 @@ namespace openbus {
       IT_Thread renewLeaseIT_Thread;
 
     /**
-    * Thread responsável pela renovação da credencial do usuário que está logado
-    * neste barramento.
+    * Thread responsável pela renovação da credencial do usuário que está 
+    * logado neste barramento.
     */
       class RenewLeaseThread : public IT_ThreadBody {
         private:
@@ -261,23 +261,12 @@ namespace openbus {
     /**
     *  Inicializa uma referência a um barramento.
     *  Um ORB e POA são criado implicitamente.
-    *  Os parâmetros argc e argv são repassados para a função CORBA::ORB_init().
+    *  Os parâmetros argc e argv são repassados para a função 
+    *   CORBA::ORB_init().
     *  A fábrica de componentes SCS é criada.
     *  Os argumentos Openbus de linha de comando (argc e argv) são tratados.
     */
       void init();
-
-    /**
-    *  Inicializa uma referência a um barramento.
-    *  Um ORB e POA são passados explicitamente pelo usuário.
-    *  A fábrica de componentes SCS é criada.
-    *  Os argumentos Openbus de linha de comando (argc e argv) são tratados.
-    *  @param[in] _orb ORB a ser utilizado
-    *  @param[in] _poa POA a ser utilizado
-    */
-      void init(
-        CORBA::ORB_ptr _orb,
-        PortableServer::POA* _poa);
 
     /**
     *  Retorna o ORB utilizado.
@@ -321,8 +310,8 @@ namespace openbus {
     *  @param[in] user Nome do usuário.
     *  @param[in] password Senha do usuário.
     *  @throw LOGIN_FAILURE O par nome de usuário e senha não foram validados.
-    *  @throw COMMUNICATION_FAILURE Alguma falha de comunicação com o barramento
-    *    ocorreu.
+    *  @throw COMMUNICATION_FAILURE Alguma falha de comunicação com o 
+    *    barramento ocorreu.
     *  @return  Se a tentativa de conexão for bem sucedida, uma instância que 
     *    representa o serviço é retornada.
     */

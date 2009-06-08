@@ -53,15 +53,6 @@ int main(int argc, char* argv[]) {
 
   bus = new openbus::Openbus(argc, argv);
 
-/* Se o usuário desejar criar o seu próprio ORB/POA:
-*  CORBA::ORB* orb = CORBA::ORB_init(argc, argv);
-*  CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
-*  PortableServer::POA* poa = PortableServer::POA::_narrow(poa_obj);
-*  PortableServer::POAManager_var poa_manager = poa->the_POAManager();
-*  poa_manager->activate();
-*
-*  bus->init(orb, poa);
-*/
   bus->init();
 
 /* Conexão com o barramento através de certificado. */
@@ -103,10 +94,13 @@ int main(int argc, char* argv[]) {
   scs::core::ComponentContext* componentContext =
     componentBuilder->newFullComponent(extFacets, componentId);
 
-/* Definição de uma lista de propriedades que caracteriza o serviço de interesse.
-*  O trabalho de criação da lista e facilitado pelo uso da classe PropertyListHelper.
+/* Definição de uma lista de propriedades que caracteriza o 
+*  serviço de interesse.
+*  O trabalho de criação da lista e facilitado pelo uso da 
+*  classe PropertyListHelper.
 */
-  openbus::services::PropertyListHelper* propertyListHelper = new openbus::services::PropertyListHelper();
+  openbus::services::PropertyListHelper* propertyListHelper = \
+    new openbus::services::PropertyListHelper();
   propertyListHelper->add("facet", "IHello");
 
 /* Criação de uma *oferta de serviço*. */

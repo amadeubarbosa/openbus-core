@@ -156,15 +156,6 @@ namespace openbus {
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
   }
 
-  void Openbus::init(
-    CORBA::ORB_ptr _orb,
-    PortableServer::POA* _poa)
-  {
-    orb = _orb;
-    poa = _poa;
-    componentBuilder = new scs::core::ComponentBuilder(orb, poa);
-  }
-
   CORBA::ORB* Openbus::getORB() {
     return orb;
   }
@@ -232,7 +223,8 @@ namespace openbus {
           timeRenewing = lease;
           mutex->unlock();
           RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
-          renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, IT_ThreadFactory::attached, 0);
+          renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, 
+            IT_ThreadFactory::attached, 0);
           registryService = accessControlService->getRegistryService();
           return registryService;
         }
@@ -279,7 +271,11 @@ namespace openbus {
       */
         openbusidl::OctetSeq* octetSeq =
           iAccessControlService->getChallenge(entity);
-        unsigned char* challange = octetSeq->get_buffer();
+        if (octetSeq->length() == 0) {
+          throw SECURITY_EXCEPTION(
+            "O ACS não encontrou o certificado do serviço.");
+        }
+        unsigned char* challenge = octetSeq->get_buffer();
 
       /* Leitura da chave privada da entidade. */
         FILE* fp = fopen(privateKeyFilename, "r");
@@ -306,7 +302,7 @@ namespace openbus {
       /* Decifrando o desafio. */
         unsigned char* challengePlainText =
           (unsigned char*) malloc(RSAModulusSize);
-        RSA_private_decrypt(RSAModulusSize, challange, challengePlainText,
+        RSA_private_decrypt(RSAModulusSize, challenge, challengePlainText,
           privateKey->pkey.rsa, RSA_PKCS1_PADDING);
 
       /* Leitura do certificado do ACS. */
