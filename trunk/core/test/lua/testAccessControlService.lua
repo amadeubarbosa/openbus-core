@@ -6,6 +6,7 @@ require "oil"
 local orb = oil.orb
 
 local ClientInterceptor = require "openbus.common.ClientInterceptor"
+--local ClientInterceptor = require "openbus.common.FTClientInterceptor"
 local CredentialManager = require "openbus.common.CredentialManager"
 
 local Check = require "latt.Check"

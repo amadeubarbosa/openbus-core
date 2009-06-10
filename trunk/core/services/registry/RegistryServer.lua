@@ -4,19 +4,8 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-local oil = require "oil"
-
--- Inicializa o ORB
-local orb = oil.init { flavor = "intercepted;corba;typed;cooperative;base", }
-oil.orb = orb
-
-local scs = require "scs.core.base"
 local Log = require "openbus.common.Log"
-
--- Inicialização do nível de verbose do openbus.
-Log:level(1)
-
-local RegistryService = require "core.services.registry.RegistryService"
+local oil = require "oil"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
@@ -45,10 +34,32 @@ if RegistryServerConfiguration.oilVerboseLevel then
   oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
 end
 
+
+
+-- Inicializa o ORB
+local orb = oil.init { host = RegistryServerConfiguration.registryServerHostName,
+                       port = RegistryServerConfiguration.registryServerHostPort,
+                       flavor = "intercepted;corba;typed;cooperative;base",
+                       tcpoptions = {reuseaddr = true}
+                     }
+oil.orb = orb
+
+local scs = require "scs.core.base"
+
+
+-- Inicialização do nível de verbose do openbus.
+Log:level(4)
+
+local RegistryService = require "core.services.registry.RegistryService"
+local FaultTolerantService = require "core.services.faulttolerance.FaultTolerantService"
+
+
 -- Carrega a interface do serviço
 local idlfile = IDLPATH_DIR.."/registry_service.idl"
 orb:loadidlfile(idlfile)
 idlfile = IDLPATH_DIR.."/access_control_service.idl"
+orb:loadidlfile(idlfile)
+idlfile = IDLPATH_DIR.."/ft_service.idl"
 orb:loadidlfile(idlfile)
 
 -----------------------------------------------------------------------------
@@ -60,6 +71,7 @@ local facetDescriptions = {}
 facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
+facetDescriptions.IFaultTolerantService	= {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
 facetDescriptions.IComponent.interface_name        = "IDL:scs/core/IComponent:1.0"
@@ -72,6 +84,11 @@ facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 facetDescriptions.IRegistryService.name            = "IRegistryService"
 facetDescriptions.IRegistryService.interface_name  = "IDL:openbusidl/rs/IRegistryService:1.0"
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
+
+facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
+facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
+facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService.key                   = "FTRS"
 
 ---- Receptacle Descriptions
 local receptacleDescriptions = {}
@@ -92,7 +109,7 @@ function main()
     os.exit(1)
   end
 
-  -- Cria o componente responsï¿½vel pelo Serviï¿½o de Controle de Acesso
+  -- Cria o componente responsï¿½vel pelo Serviï¿½o de Registro
   rsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
 
   -- Configuracoes

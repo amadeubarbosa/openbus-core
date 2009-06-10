@@ -19,6 +19,26 @@ typedef UUID Identifier;
 /** \brief Representa uma sequência de bytes. */
 typedef sequence<octet> OctetSeq;
 
+/** \brief Representa o identificador de uma credencial. */
+typedef Identifier CredentialIdentifier;
+
+/** \brief Representa uma sequência de identificadores de credenciais. */
+typedef sequence<CredentialIdentifier> CredentialIdentifierList;
+
+/** \brief Representa o identificador de um observador de credencial. */
+typedef Identifier CredentialObserverIdentifier;
+
+typedef sequence<CredentialObserverIdentifier> CredentialObserverIdentifierList;
+
+/**
+ * \brief Representa a credencial de um membro.
+ */
+struct Credential {
+  CredentialIdentifier identifier; /**< \brief Identificador único. */
+  string owner; /**< \brief Nome da entidade dona. */
+  string delegate; /**< \brief Nome da entidade delegada (opcional). */
+};
+
 };
 
 #endif

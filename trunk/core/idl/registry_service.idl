@@ -4,6 +4,7 @@
 #include "core.idl"
 #include "scs.idl"
 
+
 module openbusidl {
 
 /**
@@ -33,6 +34,18 @@ typedef sequence<ServiceOffer> ServiceOfferList;
 
 /** \brief O identificador do registro de um serviço. */
 typedef Identifier RegistryIdentifier;
+
+/**
+ * \brief Representa uma entrada de oferta de serviço.
+ */
+struct ServiceOfferEntry {
+	ServiceOffer offer; /**< \brief Oferta de servico. */
+		openbusidl::Credential credential;/**< \brief Credential do servico que disponibiliza a oferta. */
+	RegistryIdentifier identifier;/** \brief O identificador do registro de um serviço. */
+
+};
+
+typedef sequence<ServiceOfferEntry> ServiceOfferEntryList;
 
 /**
  * \brief Representa o serviço de registro.

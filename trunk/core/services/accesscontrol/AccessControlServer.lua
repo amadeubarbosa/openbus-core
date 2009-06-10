@@ -49,8 +49,11 @@ oil.orb = orb
 
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
+local FaultTolerantService = require "core.services.faulttolerance.FaultTolerantService"
 
 orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
+
+orb:loadidlfile(IDLPATH_DIR.."/ft_service.idl")
 
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
@@ -62,6 +65,7 @@ facetDescriptions.IComponent          	= {}
 facetDescriptions.IMetaInterface      	= {}
 facetDescriptions.IAccessControlService = {}
 facetDescriptions.ILeaseProvider       	= {}
+facetDescriptions.IFaultTolerantService	= {}
 
 facetDescriptions.IComponent.name                     = "IComponent"
 facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
@@ -81,6 +85,13 @@ facetDescriptions.ILeaseProvider.name                  = "ILeaseProvider"
 facetDescriptions.ILeaseProvider.interface_name        = "IDL:openbusidl/acs/ILeaseProvider:1.0"
 facetDescriptions.ILeaseProvider.class                 = AccessControlService.LeaseProviderFacet
 facetDescriptions.ILeaseProvider.key                   = "LP"
+
+facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
+facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
+facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService.key                   = "FTACS"
+
+--Log:faulttolerance(facetDescriptions)
 
 -- Receptacle Descriptions
 local receptacleDescriptions = {}

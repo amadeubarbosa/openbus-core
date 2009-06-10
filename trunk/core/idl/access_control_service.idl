@@ -5,6 +5,7 @@
 #include "scs.idl"
 #include "registry_service.idl"
 
+
 module openbusidl {
 
 /**
@@ -12,23 +13,6 @@ module openbusidl {
  */
 module acs {
 
-/** \brief Representa o identificador de uma credencial. */
-typedef Identifier CredentialIdentifier;
-
-/** \brief Representa uma sequência de identificadores de credenciais. */
-typedef sequence<CredentialIdentifier> CredentialIdentifierList;
-
-/** \brief Representa o identificador de um observador de credencial. */
-typedef Identifier CredentialObserverIdentifier;
-
-/**
- * \brief Representa a credencial de um membro.
- */
-struct Credential {
-  CredentialIdentifier identifier; /**< \brief Identificador único. */
-  string owner; /**< \brief Nome da entidade dona. */
-  string delegate; /**< \brief Nome da entidade delegada (opcional). */
-};
 
 /**
  * \brief Representa um observador de credenciais. Esse observador será
@@ -40,7 +24,7 @@ interface ICredentialObserver {
      *
      * \param aCredential A credencial que foi removida.
      */
-    void credentialWasDeleted(in Credential aCredential);
+    void credentialWasDeleted(in openbusidl::Credential aCredential);
 };
 
 /** \brief Representa a validade de uma credencial (s). */
@@ -56,8 +40,20 @@ interface ILeaseProvider {
      * \return \c true, caso o \c lease seja renovado, ou \c false, caso
      * contrário.
      */
-     boolean renewLease (in Credential aCredential, out Lease aLease);
+     boolean renewLease (in openbusidl::Credential aCredential, out Lease aLease);
 };
+
+/**
+ * \brief Representa a entrada completa de uma credencial de um membro.
+ */
+struct EntryCredential {
+    openbusidl::Credential credential;
+    boolean certified;
+    openbusidl::acs::Lease lease;
+    CredentialObserverIdentifierList observers;
+    CredentialObserverIdentifier observedBy;
+};
+
 
 /**
  * \brief Representa o serviço de controle de acesso.
@@ -75,7 +71,7 @@ interface IAccessControlService {
      * caso contrário.
      */
     boolean loginByPassword (in string name, in string password,
-      out Credential aCredential, out Lease aLease);
+      out openbusidl::Credential aCredential, out Lease aLease);
     /**
      * \brief Autentica uma entidade através de um nome e de uma resposta para um desafio
      * previamente obtido.
@@ -91,7 +87,7 @@ interface IAccessControlService {
      * \see getChallenge
      */
     boolean loginByCertificate (in string name, in OctetSeq answer,
-      out Credential aCredential, out Lease aLease);
+      out openbusidl::Credential aCredential, out Lease aLease);
     /**
      * \brief Obtém um desafio para uma entidade.
      *
@@ -110,7 +106,7 @@ interface IAccessControlService {
      * \return \c true, caso o \c logout seja realizado, ou \c false, caso
      * contrário.
      */
-    boolean logout (in Credential aCredential);
+    boolean logout (in openbusidl::Credential aCredential);
     /**
      * \brief Verifica se uma determinada credencial está válida.
      *
@@ -119,7 +115,18 @@ interface IAccessControlService {
      * \return \c true, caso a credencial esteja válida, ou \c false, caso
      * contrário.
      */
-    boolean isValid (in Credential aCredential);
+    boolean isValid (in openbusidl::Credential aCredential);
+	
+	/**
+     * \brief Retorna uma entrada de credencial válida.
+     *
+     * \param aCredential A credencial.
+     *
+     * \return \c a credencial se existente, ou \c nil, caso
+     * contrário.
+     */
+    EntryCredential getEntryCredential (in openbusidl::Credential aCredential);
+	
     /**
      * \brief Define o serviço de registro que poderá ser obtido pelos membros
      * autenticados.

@@ -55,7 +55,7 @@ ACSFacet = oop.class{}
 ACSFacet.invalidCredential = {identifier = "", owner = "", delegate = ""}
 ACSFacet.invalidLease = -1
 ACSFacet.deltaT = 30 -- lease fixo (por enquanto) em segundos
-
+ACSFacet.faultDescription = {_isAlive = false, _errorMsg = "" }
 ---
 --Realiza um login de uma entidade através de usuário e senha.
 --
@@ -103,6 +103,7 @@ function ACSFacet:loginByCertificate(name, answer)
     Log:error(errorMessage)
     return false, self.invalidCredential, self.invalidLease
   end
+  self.challenges[name] = nil
   local entry = self:addEntry(name, true)
   return true, entry.credential, entry.lease.duration
 end
@@ -194,13 +195,35 @@ function ACSFacet:isValid(credential)
   if not entry then
     return false
   end
-  if entry.credential.identifier ~= credential.identifier then
-    return false
-  end
   if entry.credential.delegate ~= "" and not entry.certified then
     return false
   end
   return true
+end
+
+---
+--Verifica se uma credencial é válida e retorna sua entrada completa.
+--
+--@param credential A credencial.
+--
+--@return a credencial caso exista, ou nil caso contrário.
+---
+function ACSFacet:getEntryCredential(credential)
+  local emptyEntry = {     credential = {  identifier = "",  owner = "",  delegate = "" },
+			    certified = false,
+			    lease = 0,
+			    observers = {},
+			    observedBy = ""
+			}
+  local entry = self.entries[credential.identifier]
+
+  if not entry or entry == nil then
+    return emptyEntry
+  end
+  if entry.credential.delegate ~= "" and not entry.certified then
+    return emptyEntry
+  end
+  return entry
 end
 
 ---
@@ -503,6 +526,20 @@ function startup(self)
     end
   end
   self.leaseProvider = LeaseProvider(self.checkExpiredLeases, self.deltaT)
+  --self = self.context.IFaultTolerantService
+  self.context.IFaultTolerantService:setStatus(true)
 end
 
-
+---
+--Finaliza o serviço.
+--
+--@see scs.core.IComponent#shutdown
+---
+function shutdown(self)
+	Log:service("Pedido de shutdown para serviço de controle de acesso")
+	self = self.context.IAccessControlService
+    self.leaseProvider:stopCheck()
+    orb:deactivate(self)
+    orb:shutdown()
+    Log:faulttolerance("Servico de Controle de Acesso matou seu processo.")
+end

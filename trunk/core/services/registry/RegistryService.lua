@@ -340,6 +340,7 @@ function RSFacet:generateIdentifier()
     return luuid.new("time")
 end
 
+
 --------------------------------------------------------------------------------
 -- Faceta IComponent
 --------------------------------------------------------------------------------
@@ -449,8 +450,10 @@ function startup(self)
       self.offersDB:delete(offerEntry)
     end
   end
-
   self.started = true
+  
+  self.context.IFaultTolerantService:setStatus(true)
+  
   Log:service("Serviço de registro iniciado")
 end
 
@@ -477,5 +480,9 @@ function shutdown(self)
   self.connectionManager:disconnect()
 
   Log:service("Serviço de registro finalizado")
+  
+   orb:deactivate(self)
+   orb:shutdown()
+   Log:faulttolerance("Servico de Registro matou seu processo.")
 end
 
