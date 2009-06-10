@@ -5,7 +5,7 @@
 --
 AccessControlServerConfiguration = {
   hostName = "localhost",
-  hostPort = 2089,
+  hostPort = 2019,
   ldapHosts = {
     {name = "segall.tecgraf.puc-rio.br", port = 389,},
   },

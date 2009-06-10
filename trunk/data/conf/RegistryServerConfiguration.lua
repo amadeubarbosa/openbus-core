@@ -5,7 +5,9 @@
 --
 RegistryServerConfiguration = {
   accessControlServerHostName = "localhost",
-  accessControlServerHostPort = 2089,
+  accessControlServerHostPort = 2019,
+  registryServerHostName = "localhost",
+  registryServerHostPort = 2089,
   privateKeyFile = "certificates/RegistryService.key",
   accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
   databaseDirectory = "offers",
