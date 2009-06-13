@@ -16,7 +16,9 @@ using namespace PortableInterceptor;
 
 namespace openbus {
   namespace common {
-    class ClientInterceptor : public ClientRequestInterceptor, public IT_CORBA::RefCountedLocalObject {
+    class ClientInterceptor : public ClientRequestInterceptor, 
+      public IT_CORBA::RefCountedLocalObject 
+    {
       private:
         IOP::Codec_ptr cdr_codec;
       public:
@@ -29,8 +31,10 @@ namespace openbus {
           CORBA::SystemException,
           PortableInterceptor::ForwardRequest
         ));
-        void send_poll(ClientRequestInfo_ptr ri) IT_THROW_DECL((CORBA::SystemException));
-        void receive_reply(ClientRequestInfo_ptr ri) IT_THROW_DECL((CORBA::SystemException));
+        void send_poll(ClientRequestInfo_ptr ri) 
+          IT_THROW_DECL((CORBA::SystemException));
+        void receive_reply(ClientRequestInfo_ptr ri) 
+          IT_THROW_DECL((CORBA::SystemException));
         void receive_exception(ClientRequestInfo_ptr ri) IT_THROW_DECL((
           CORBA::SystemException,
           PortableInterceptor::ForwardRequest

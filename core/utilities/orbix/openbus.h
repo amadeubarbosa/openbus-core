@@ -72,9 +72,9 @@ namespace openbus {
     private:
 
     /**
-    * Conjunto dos barramentos instanciados. 
+    * A instância única do barramento.
     */
-      static std::set<Openbus*> busSet;
+      static Openbus* bus;
 
     /**
     * Parâmetro argc da linha de comando. 
@@ -200,7 +200,64 @@ namespace openbus {
       };
       friend class Openbus::RenewLeaseThread;
 
+      Openbus(
+        int argc,
+        char** argv);
+
+      Openbus(
+        int argc,
+        char** argv,
+        char* host,
+        unsigned short port);
+
     public:
+
+    /**
+    * Fornece a única instância do barramento.
+    * A localização do barramento pode ser fornecida através dos parâmetros
+    *   de linha comando -OpenbusHost e -OpenbusPort.
+    * @warning Caso o usuário esteje criando um ORB explicitamente ou 
+    *   utilizando um ORB externo, a instanciação da classe Openbus 
+    *   deve ocorrer antes da chamada orb_init().
+    *
+    * @param[in] argc
+    * @param[in] argv
+    *
+    * @return Openbus
+    */
+
+      static Openbus* getInstance(
+        int argc,
+        char** argv);
+
+    /**
+    * Fornece a única instância do barramento.
+    * A localização do barramento é fornecida através dos parâmetros host e
+    * port.
+    * @warning Caso o usuário esteje criando um ORB explicitamente ou 
+    *   utilizando um ORB externo, a instanciação da classe Openbus 
+    *   deve ocorrer antes da chamada orb_init().
+    *
+    * @param[in] argc
+    * @param[in] argv
+    * @param[in] host Máquina em que se encontra o barramento.
+    * @param[in] port A porta do barramento
+    *
+    * @return Openbus
+    */
+      static Openbus* getInstance(
+        int argc,
+        char** argv,
+        char* host,
+        unsigned short port);
+
+    /**
+    * Informa o estado de conexão com o barramento.
+    *
+    * @return true caso a conexão esteja ativa, ou false, caso
+    * contrário.
+    */
+      bool isConnected();
 
     /** 
     *  Termination Handler disponível para a classe IT_TerminationHandler()
@@ -209,40 +266,6 @@ namespace openbus {
     *  @param signalType
     */
       static void terminationHandlerCallback(long signalType);
-
-    /**
-    *  Cria uma referência para um determinado barramento.
-    *  A localização do barramento pode ser fornecida através dos parâmetros
-    *    de linha comando -OpenbusHost e -OpenbusPort.
-    *  @warning Caso o usuário esteje criando um ORB explicitamente ou 
-    *    utilizando um ORB externo, a instanciação da classe Openbus 
-    *    deve ocorrer antes da chamada orb_init().
-    *
-    *  @param[in] argc
-    *  @param[in] argv
-    */
-      Openbus(
-        int argc,
-        char** argv);
-
-    /**
-    *  Cria uma referência para um determinado barramento.
-    *  A localização do barramento é fornecida através dos parâmetros host e
-    *  port.
-    *  @warning Caso o usuário esteje criando um ORB explicitamente ou 
-    *    utilizando um ORB externo, a instanciação da classe Openbus 
-    *    deve ocorrer antes da chamada orb_init().
-    *
-    *  @param[in] argc
-    *  @param[in] argv
-    *  @param[in] host Máquina em que se encontra o barramento.
-    *  @param[in] port A porta do barramento
-    */
-      Openbus(
-        int argc,
-        char** argv,
-        char* host,
-        unsigned short port);
 
       ~Openbus();
 
@@ -263,6 +286,15 @@ namespace openbus {
       CORBA::ORB* getORB();
 
     /**
+    *  Retorna o RootPOA.
+    *
+    *  OBS: A chamada a este método ativa o POAManager.
+    *
+    *  @return POA
+    */
+      PortableServer::POA* getRootPOA();
+
+    /**
     * Retorna a fábrica de componentes. 
     * @return Fábrica de componentes
     */
@@ -272,13 +304,19 @@ namespace openbus {
     * Retorna a credencial interceptada pelo interceptador servidor. 
     * @return Credencial. \see openbusidl::acs::Credential
     */
-      Credential_var getCredentialIntercepted();
+      Credential_var getInterceptedCredential();
 
     /**
     * Retorna o serviço de acesso. 
     * @return Serviço de acesso
     */
       services::AccessControlService* getAccessControlService();
+
+    /**
+    * Retorna o serviço de registro. 
+    * @return Serviço de registro
+    */
+      services::RegistryService* getRegistryService();
 
     /**
     * Retorna a credencial de identificação do usuário frente ao barramento. 
@@ -348,7 +386,16 @@ namespace openbus {
     * Loop que processa requisições CORBA. [execução do orb->run()]. 
     */
       void run();
+
+    /**
+    * Finaliza a execução do ORB.
+    *
+    * @param[in] bool force Se a finalização deve ser forçada ou não.
+    */
+      void finish(bool force);
+
   };
 }
 
 #endif
+

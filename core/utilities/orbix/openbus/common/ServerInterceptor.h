@@ -15,13 +15,17 @@ using namespace PortableInterceptor;
 namespace openbus {
   namespace common {
 
-    class ServerInterceptor : public ServerRequestInterceptor, public IT_CORBA::RefCountedLocalObject {
+    class ServerInterceptor : public ServerRequestInterceptor, 
+      public IT_CORBA::RefCountedLocalObject 
+    {
       private:
         Current* picurrent;
         SlotId slotid;
         IOP::Codec_ptr cdr_codec;
       public:
-        ServerInterceptor(Current* ppicurrent, SlotId pslotid, IOP::Codec_ptr pcdr_codec);
+        ServerInterceptor(Current* ppicurrent, 
+          SlotId pslotid, 
+          IOP::Codec_ptr pcdr_codec);
         ~ServerInterceptor();
         void receive_request_service_contexts(ServerRequestInfo*);
         void receive_request(ServerRequestInfo_ptr ri);

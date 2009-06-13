@@ -37,7 +37,7 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
     }
     void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
       cout << endl << "Servant diz: HELLO!" << endl;
-      openbus::Credential_var credential = bus->getCredentialIntercepted();
+      openbus::Credential_var credential = bus->getInterceptedCredential();
       cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in()
         << endl;
     };
@@ -51,7 +51,7 @@ static void myTerminationHandler(long signal) {
 int main(int argc, char* argv[]) {
   IT_TerminationHandler termination_handler(myTerminationHandler);
 
-  bus = new openbus::Openbus(argc, argv);
+  bus = openbus::Openbus::getInstance(argc, argv);
 
   bus->init();
 

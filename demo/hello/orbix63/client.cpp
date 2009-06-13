@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
   openbus::Openbus* bus;
   openbus::services::RegistryService* registryService;
 
-  bus = new openbus::Openbus(argc, argv);
+  bus = openbus::Openbus::getInstance(argc, argv);
   
   bus->init();
 

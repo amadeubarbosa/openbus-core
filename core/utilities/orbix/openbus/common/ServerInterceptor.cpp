@@ -50,7 +50,8 @@ namespace openbus {
                    context_data.get_buffer(),
                    IT_FALSE);
 
-      CORBA::Any_var any = cdr_codec->decode_value(octets, openbusidl::acs::_tc_Credential);
+      CORBA::Any_var any = cdr_codec->decode_value(octets, 
+        openbusidl::acs::_tc_Credential);
       picurrent->set_slot(slotid, any);
 
     #ifdef VERBOSE
@@ -61,7 +62,8 @@ namespace openbus {
       cout << "[credential->delegate: " << c->delegate << "]" << endl;
     #endif
     }
-    void ServerInterceptor::receive_request_service_contexts(ServerRequestInfo*) {}
+    void ServerInterceptor::receive_request_service_contexts(ServerRequestInfo*)
+      {}
     void ServerInterceptor::send_reply(ServerRequestInfo*) {}
     void ServerInterceptor::send_exception(ServerRequestInfo*) {}
     void ServerInterceptor::send_other(ServerRequestInfo*) {}

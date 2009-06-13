@@ -18,10 +18,13 @@ using namespace openbusidl::acs;
 namespace openbus {
   namespace common {
 
-    std::map<CORBA::ORB*, openbusidl::acs::Credential**> ClientInterceptor::credentials;
+    std::map<CORBA::ORB*, openbusidl::acs::Credential**> 
+      ClientInterceptor::credentials;
     openbusidl::acs::Credential** ClientInterceptor::credential = 0;
 
-    ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec) IT_THROW_DECL(()) {
+    ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec) 
+      IT_THROW_DECL(()) 
+    {
     #ifdef VERBOSE
       cout << "\n\n[ClientInterceptor::ClientInterceptor() BEGIN]" << endl;
     #endif
@@ -40,7 +43,8 @@ namespace openbus {
     #endif
     }
 
-    void ClientInterceptor::send_request(ClientRequestInfo_ptr ri) IT_THROW_DECL((
+    void ClientInterceptor::send_request(ClientRequestInfo_ptr ri) 
+    IT_THROW_DECL((
       CORBA::SystemException,
       PortableInterceptor::ForwardRequest
     ))
@@ -55,8 +59,10 @@ namespace openbus {
       credential = credentials[orb];
       if (credential != NULL) {
       #ifdef VERBOSE
-        cout << "credencial referente ao ORB " << orb << ": "<< *credential << endl;
-        cout << "credential->identifier: " << (*credential)->identifier << endl;
+        cout << "credencial referente ao ORB " << orb << ": "<< *credential << 
+          endl;
+        cout << "credential->identifier: " << (*credential)->identifier << 
+          endl;
       #endif
         IOP::ServiceContext sc;
         sc.context_id = 1234;
@@ -93,15 +99,19 @@ IOP::ServiceContext::_context_data_seq seq(
     char* ClientInterceptor::name() IT_THROW_DECL((CORBA::SystemException)) {
       return CORBA::it_string_dup_eh("AccessControl");
     }
-    void ClientInterceptor::send_poll( ClientRequestInfo_ptr ri ) IT_THROW_DECL((CORBA::SystemException)) {}
-    void ClientInterceptor::receive_reply( ClientRequestInfo_ptr ri ) IT_THROW_DECL((CORBA::SystemException)) {}
-    void ClientInterceptor::receive_exception( ClientRequestInfo_ptr ri ) IT_THROW_DECL((
-      CORBA::SystemException,
-      PortableInterceptor::ForwardRequest
+    void ClientInterceptor::send_poll( ClientRequestInfo_ptr ri ) 
+      IT_THROW_DECL((CORBA::SystemException)) {}
+    void ClientInterceptor::receive_reply( ClientRequestInfo_ptr ri ) 
+      IT_THROW_DECL((CORBA::SystemException)) {}
+    void ClientInterceptor::receive_exception( ClientRequestInfo_ptr ri ) 
+      IT_THROW_DECL((
+        CORBA::SystemException,
+        PortableInterceptor::ForwardRequest
     )){}
-    void ClientInterceptor::receive_other( ClientRequestInfo_ptr ri ) IT_THROW_DECL((
-      CORBA::SystemException,
-      PortableInterceptor::ForwardRequest
+    void ClientInterceptor::receive_other( ClientRequestInfo_ptr ri ) 
+      IT_THROW_DECL((
+        CORBA::SystemException,
+        PortableInterceptor::ForwardRequest
     )){}
   }
 }

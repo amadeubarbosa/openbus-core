@@ -17,19 +17,15 @@
 
 namespace openbus {
   common::ORBInitializerImpl* Openbus::ini = 0;
-  std::set<Openbus*> Openbus::busSet;
+  Openbus* Openbus::bus = 0;
 
   void Openbus::terminationHandlerCallback(long signalType) {
   #ifdef VERBOSE
     cout << "[Openbus::terminationHandlerCallback() BEGIN]" << endl;
   #endif
-    std::set<Openbus*>::iterator it;
-    for (it = busSet.begin(); it != busSet.end(); it++) {
-      Openbus* bus = *it;
-      bus->disconnect();
-      if (!CORBA::is_nil(bus->orb)) {
-        bus->orb->shutdown(0);
-      }
+    bus->disconnect();
+    if (!CORBA::is_nil(bus->orb)) {
+      bus->orb->shutdown(0);
     }
   #ifdef VERBOSE
     cout << "[Openbus::terminationHandlerCallback() END]" << endl;
@@ -88,10 +84,7 @@ namespace openbus {
 
   void Openbus::createOrbPoa() {
     orb = CORBA::ORB_init(_argc, _argv);
-    CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
-    poa = PortableServer::POA::_narrow(poa_obj);
-    poa_manager = poa->the_POAManager();
-    poa_manager->activate();
+    getRootPOA();
   }
 
   void Openbus::registerInterceptors() {
@@ -120,7 +113,6 @@ namespace openbus {
     }
     initialize();
     commandLineParse(_argc, _argv);
-    busSet.insert(this);
   }
 
   Openbus::Openbus(
@@ -141,11 +133,38 @@ namespace openbus {
     hostBus = (char*) malloc(sizeof(char) * strlen(host) + 1);
     hostBus = (char*) memcpy(hostBus, host, strlen(host) + 1);
     portBus = port;
-    busSet.insert(this);
+  }
+
+  Openbus* Openbus::getInstance(
+    int argc,
+    char** argv)
+  {
+    if (!bus) {
+      bus = new Openbus(argc, argv);
+    }
+    return bus;
+  }
+
+  Openbus* Openbus::getInstance(
+    int argc,
+    char** argv,
+    char* host,
+    unsigned short port)
+  {
+    if (!bus) {
+      bus = new Openbus(argc, argv, host, port);
+    }
+    return bus;
+  }
+  
+  bool Openbus::isConnected() {
+    if (connectionState == CONNECTED) {
+      return true;
+    }
+    return false;
   }
 
   Openbus::~Openbus() {
-    busSet.erase(this);
     delete componentBuilder;
     delete mutex;
     delete hostBus;
@@ -160,17 +179,31 @@ namespace openbus {
     return orb;
   }
 
+  PortableServer::POA* Openbus::getRootPOA() {
+    if (!poa) {
+      CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
+      poa = PortableServer::POA::_narrow(poa_obj);
+      poa_manager = poa->the_POAManager();
+      poa_manager->activate();
+    }
+    return poa;
+  }
+
   scs::core::ComponentBuilder* Openbus::getComponentBuilder() {
     return componentBuilder;
   }
 
-  Credential_var Openbus::getCredentialIntercepted() {
+  Credential_var Openbus::getInterceptedCredential() {
     return ini->getServerInterceptor()->getCredential();
   }
 
   openbus::services::AccessControlService* Openbus::getAccessControlService() {
     return accessControlService;
   }
+
+  services::RegistryService* Openbus::getRegistryService() {
+    return accessControlService->getRegistryService();
+  } 
 
   Credential* Openbus::getCredential() {
     return credential;
@@ -413,4 +446,10 @@ namespace openbus {
   void Openbus::run() {
     orb->run();
   }
+
+  void Openbus::finish(bool force) {
+    orb->shutdown(force);
+    orb->destroy();
+  }
 }
+

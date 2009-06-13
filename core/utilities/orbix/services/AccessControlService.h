@@ -32,7 +32,10 @@ namespace openbus {
       * port: porta do barramento.
       * _orb: ORB utilizado pelo cliente.
       */
-        AccessControlService(const char* host, short unsigned int port, CORBA::ORB* _orb) throw (CORBA::SystemException);
+        AccessControlService(
+          const char* host, 
+          short unsigned int port, 
+          CORBA::ORB* _orb) throw (CORBA::SystemException);
 
       /*
       * Retorna um ponteiro para o serviço de registro.
@@ -44,7 +47,8 @@ namespace openbus {
       * credential: Credencial a ser renovada.
       * lease: Tempo de renovação da credencial.
       */
-        bool renewLease(openbusidl::acs::Credential credential, openbusidl::acs::Lease lease);
+        bool renewLease(openbusidl::acs::Credential credential, 
+          openbusidl::acs::Lease lease);
 
       /*
       * Efetua logout de uma determinada credencial.
@@ -53,7 +57,8 @@ namespace openbus {
         bool logout(openbusidl::acs::Credential credential);
 
       /*
-      * Retorna o stub que representa o serviço de acesso, ou seja, um ponteiro para o serviço de acesso.
+      * Retorna o stub que representa o serviço de acesso, ou seja, 
+      * um ponteiro para o serviço de acesso.
       */
         openbusidl::acs::IAccessControlService* getStub();
     };
