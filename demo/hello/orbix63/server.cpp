@@ -51,9 +51,9 @@ static void myTerminationHandler(long signal) {
 int main(int argc, char* argv[]) {
   IT_TerminationHandler termination_handler(myTerminationHandler);
 
-  bus = openbus::Openbus::getInstance(argc, argv);
+  bus = openbus::Openbus::getInstance();
 
-  bus->init();
+  bus->init(argc, argv);
 
 /* Conexão com o barramento através de certificado. */
   try {

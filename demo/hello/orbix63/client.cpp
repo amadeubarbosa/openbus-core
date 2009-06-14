@@ -15,9 +15,9 @@ int main(int argc, char* argv[]) {
   openbus::Openbus* bus;
   openbus::services::RegistryService* registryService;
 
-  bus = openbus::Openbus::getInstance(argc, argv);
-  
-  bus->init();
+  bus = openbus::Openbus::getInstance();
+
+  bus->init(argc, argv);
 
 /* Conexão com o barramento. */
   try {

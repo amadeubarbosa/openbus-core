@@ -3,6 +3,7 @@
 */
 
 #include "ServerInterceptor.h"
+#include "../../openbus.h"
 
 #ifdef VERBOSE
   #include <iostream>
@@ -52,15 +53,21 @@ namespace openbus {
 
       CORBA::Any_var any = cdr_codec->decode_value(octets, 
         openbusidl::acs::_tc_Credential);
-      picurrent->set_slot(slotid, any);
-
-    #ifdef VERBOSE
       openbusidl::acs::Credential* c = new openbusidl::acs::Credential;
       any >>= c;
+    #ifdef VERBOSE
       cout << "[credential->owner: " << c->owner << "]" << endl;
       cout << "[credential->identifier: " << c->identifier << "]" << endl;
       cout << "[credential->delegate: " << c->delegate << "]" << endl;
     #endif
+      openbus::Openbus* bus = openbus::Openbus::getInstance();
+      if(bus->getAccessControlService()->getStub()->isValid(*c))
+      {
+        picurrent->set_slot(slotid, any);
+      } else {
+        throw CORBA::NO_PERMISSION();
+      }
+
     }
     void ServerInterceptor::receive_request_service_contexts(ServerRequestInfo*)
       {}

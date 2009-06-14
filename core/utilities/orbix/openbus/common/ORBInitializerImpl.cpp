@@ -40,13 +40,18 @@ namespace openbus {
       info->add_client_request_interceptor(clientInterceptor);
 
       slotid = info->allocate_slot_id();
-      CORBA::Object_var init_ref = info->resolve_initial_references("PICurrent");
+      CORBA::Object_var init_ref = 
+        info->resolve_initial_references("PICurrent");
       Current_var pi_current = PortableInterceptor::Current::_narrow(init_ref);
 
       codec_factory = info->codec_factory();
-      serverInterceptor = new ServerInterceptor(pi_current, slotid, codec_factory->create_codec(cdr_encoding));
+      serverInterceptor = new ServerInterceptor(
+        pi_current, 
+        slotid, 
+        codec_factory->create_codec(cdr_encoding));
 
-      PortableInterceptor::ServerRequestInterceptor_var serverRequestInterceptor = serverInterceptor ;
+      PortableInterceptor::ServerRequestInterceptor_var 
+        serverRequestInterceptor = serverInterceptor ;
       info->add_server_request_interceptor(serverRequestInterceptor) ;
     #ifdef VERBOSE
       cout << "[ORBInitializerImpl::pre_init() END]" << endl;

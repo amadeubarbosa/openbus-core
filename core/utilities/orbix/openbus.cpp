@@ -100,63 +100,43 @@ namespace openbus {
     accessControlService = 0;
   }
 
-  Openbus::Openbus(
+  Openbus::Openbus() {
+    newState();
+    cout << "Registrando interceptadores ..." << endl;
+    registerInterceptors();
+    initialize();
+  }
+
+  Openbus* Openbus::getInstance() {
+    if (!bus) {
+      bus = new Openbus();
+    }
+    return bus;
+  }
+
+  void Openbus::init(
     int argc,
     char** argv)
   {
     _argc = argc;
     _argv = argv;
-    newState();
-    if (!ini) {
-      cout << "Registrando interceptadores ..." << endl;
-      registerInterceptors();
-    }
-    initialize();
     commandLineParse(_argc, _argv);
+    createOrbPoa();
+    componentBuilder = new scs::core::ComponentBuilder(orb, poa);
   }
 
-  Openbus::Openbus(
+  void Openbus::init(
     int argc,
     char** argv,
     char* host,
     unsigned short port)
   {
-    _argc = argc;
-    _argv = argv;
-    newState();
-    if (ini == 0) {
-      cout << "Registrando interceptadores ..." << endl;
-      registerInterceptors();
-    }
-    initialize();
-    commandLineParse(_argc, _argv);
+    init(argc, argv);
     hostBus = (char*) malloc(sizeof(char) * strlen(host) + 1);
     hostBus = (char*) memcpy(hostBus, host, strlen(host) + 1);
     portBus = port;
   }
 
-  Openbus* Openbus::getInstance(
-    int argc,
-    char** argv)
-  {
-    if (!bus) {
-      bus = new Openbus(argc, argv);
-    }
-    return bus;
-  }
-
-  Openbus* Openbus::getInstance(
-    int argc,
-    char** argv,
-    char* host,
-    unsigned short port)
-  {
-    if (!bus) {
-      bus = new Openbus(argc, argv, host, port);
-    }
-    return bus;
-  }
-  
   bool Openbus::isConnected() {
     if (connectionState == CONNECTED) {
       return true;
@@ -168,11 +148,6 @@ namespace openbus {
     delete componentBuilder;
     delete mutex;
     delete hostBus;
-  }
-
-  void Openbus::init() {
-    createOrbPoa();
-    componentBuilder = new scs::core::ComponentBuilder(orb, poa);
   }
 
   CORBA::ORB* Openbus::getORB() {

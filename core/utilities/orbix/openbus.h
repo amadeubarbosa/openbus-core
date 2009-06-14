@@ -200,56 +200,16 @@ namespace openbus {
       };
       friend class Openbus::RenewLeaseThread;
 
-      Openbus(
-        int argc,
-        char** argv);
-
-      Openbus(
-        int argc,
-        char** argv,
-        char* host,
-        unsigned short port);
+      Openbus();
 
     public:
 
     /**
     * Fornece a única instância do barramento.
-    * A localização do barramento pode ser fornecida através dos parâmetros
-    *   de linha comando -OpenbusHost e -OpenbusPort.
-    * @warning Caso o usuário esteje criando um ORB explicitamente ou 
-    *   utilizando um ORB externo, a instanciação da classe Openbus 
-    *   deve ocorrer antes da chamada orb_init().
-    *
-    * @param[in] argc
-    * @param[in] argv
     *
     * @return Openbus
     */
-
-      static Openbus* getInstance(
-        int argc,
-        char** argv);
-
-    /**
-    * Fornece a única instância do barramento.
-    * A localização do barramento é fornecida através dos parâmetros host e
-    * port.
-    * @warning Caso o usuário esteje criando um ORB explicitamente ou 
-    *   utilizando um ORB externo, a instanciação da classe Openbus 
-    *   deve ocorrer antes da chamada orb_init().
-    *
-    * @param[in] argc
-    * @param[in] argv
-    * @param[in] host Máquina em que se encontra o barramento.
-    * @param[in] port A porta do barramento
-    *
-    * @return Openbus
-    */
-      static Openbus* getInstance(
-        int argc,
-        char** argv,
-        char* host,
-        unsigned short port);
+      static Openbus* getInstance();
 
     /**
     * Informa o estado de conexão com o barramento.
@@ -270,14 +230,40 @@ namespace openbus {
       ~Openbus();
 
     /**
-    *  Inicializa uma referência a um barramento.
-    *  Um ORB e POA são criado implicitamente.
-    *  Os parâmetros argc e argv são repassados para a função 
-    *   CORBA::ORB_init().
-    *  A fábrica de componentes SCS é criada.
-    *  Os argumentos Openbus de linha de comando (argc e argv) são tratados.
+    * Inicializa uma referência a um barramento.
+    *
+    * Um ORB e POA são criado implicitamente.
+    * A fábrica de componentes SCS é criada.
+    * Os argumentos Openbus de linha de comando (argc e argv) são tratados.
+    * A localização do barramento é fornecida através dos parâmetros host e
+    * port.
+    *
+    * @param[in] argc
+    * @param[in] argv
+    * @param[in] host Máquina em que se encontra o barramento.
+    * @param[in] port A porta do barramento
     */
-      void init();
+      void init(
+        int argc,
+        char** argv,
+        char* host,
+        unsigned short port);
+
+    /**
+    * Inicializa uma referência a um barramento.
+    *
+    * Um ORB e POA são criado implicitamente.
+    * A fábrica de componentes SCS é criada.
+    * Os argumentos Openbus de linha de comando (argc e argv) são tratados.
+    * A localização do barramento pode ser fornecida através dos parâmetros
+    *   de linha comando -OpenbusHost e -OpenbusPort.
+    *
+    * @param[in] argc
+    * @param[in] argv
+    */
+      void init(
+        int argc,
+        char** argv);
 
     /**
     *  Retorna o ORB utilizado.
