@@ -49,7 +49,7 @@ namespace openbus {
       #ifdef VERBOSE
         cout << "\t[Renovando credencial...]" << endl;
       #endif
-        bus->accessControlService->renewLease(*bus->credential, bus->lease);
+        bus->iLeaseProvider->renewLease(*bus->credential, bus->lease);
       }
       bus->mutex->unlock();
     }
@@ -97,7 +97,29 @@ namespace openbus {
     credential = 0;
     lease = 0;
     registryService = 0;
-    accessControlService = 0;
+    iAccessControlService = 0;
+    iLeaseProvider = 0;
+  }
+
+  void Openbus::createProxyToIAccessControlService() {
+  #ifdef VERBOSE
+    cout << "[Openbus::createProxyToIAccessControlService() BEGIN]" << endl;
+  #endif
+    std::stringstream corbalocACS;
+    std::stringstream corbalocLP;
+    corbalocACS << "corbaloc::" << hostBus << ":" << portBus << "/ACS";
+    corbalocLP << "corbaloc::" << hostBus << ":" << portBus << "/LP";
+    CORBA::Object_var objACS = 
+      orb->string_to_object(corbalocACS.str().c_str());
+    CORBA::Object_var objLP = 
+      orb->string_to_object(corbalocLP.str().c_str());
+    iAccessControlService = 
+      openbusidl::acs::IAccessControlService::_narrow(objACS);
+    iLeaseProvider = openbusidl::acs::ILeaseProvider::_narrow(objLP);
+    cout << "iLeaseProvider:" << iLeaseProvider << endl;
+#ifdef VERBOSE
+    cout << "[Openbus::createProxyToIAccessControlService() END]" << endl;
+  #endif
   }
 
   Openbus::Openbus() {
@@ -172,12 +194,16 @@ namespace openbus {
     return ini->getServerInterceptor()->getCredential();
   }
 
-  openbus::services::AccessControlService* Openbus::getAccessControlService() {
-    return accessControlService;
+  openbusidl::acs::IAccessControlService* Openbus::getAccessControlService() {
+    return iAccessControlService;
   }
 
-  services::RegistryService* Openbus::getRegistryService() {
-    return accessControlService->getRegistryService();
+  openbus::services::RegistryService* Openbus::getRegistryService() {
+    if (!registryService) {
+     registryService = new openbus::services::RegistryService(
+      iAccessControlService->getRegistryService());
+    }
+    return registryService;
   } 
 
   Credential* Openbus::getCredential() {
@@ -205,12 +231,9 @@ namespace openbus {
         cout << "\tpassword = "<<  password << endl;
         cout << "\torb = "<<  orb << endl;
       #endif
-        if (accessControlService == 0) {
-          accessControlService = new openbus::services::AccessControlService(
-            hostBus, portBus, orb);
+        if (!iAccessControlService) {
+          createProxyToIAccessControlService();
         }
-        IAccessControlService* iAccessControlService =
-          accessControlService->getStub();
       #ifdef VERBOSE
         cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
       #endif
@@ -233,7 +256,7 @@ namespace openbus {
           RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
           renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, 
             IT_ThreadFactory::attached, 0);
-          registryService = accessControlService->getRegistryService();
+          registryService = getRegistryService();
           return registryService;
         }
       } catch (const CORBA::SystemException* systemException) {
@@ -266,13 +289,9 @@ namespace openbus {
         cout << "\tprivateKeyFilename = "<< privateKeyFilename << endl;
         cout << "\torb = "<< orb << endl;
       #endif
-        if (accessControlService == 0) {
-          accessControlService = new openbus::services::AccessControlService(
-            hostBus, portBus, orb);
+        if (!iAccessControlService) {
+          createProxyToIAccessControlService();
         }
-
-        IAccessControlService* iAccessControlService =
-          accessControlService->getStub();
 
       /* Requisição de um "desafio" que somente poderá ser decifrado através
       *  da chave privada da entidade reconhecida pelo barramento.
@@ -373,7 +392,7 @@ namespace openbus {
           RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
           renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread,
             IT_ThreadFactory::attached, 0);
-          registryService = accessControlService->getRegistryService();
+          registryService = getRegistryService();
           return registryService;
         }
       } catch (const CORBA::SystemException* systemException) {
@@ -395,10 +414,9 @@ namespace openbus {
   #endif
     mutex->lock();
     if (connectionState == CONNECTED) {
-      bool status = accessControlService->logout(*credential);
+      bool status = iAccessControlService->logout(*credential);
       if (status) {
         openbus::common::ClientInterceptor::credentials[orb] = 0;
-        delete accessControlService;
         newState();
       } else {
         connectionState = CONNECTED;

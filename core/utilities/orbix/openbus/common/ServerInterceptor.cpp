@@ -61,7 +61,7 @@ namespace openbus {
       cout << "[credential->delegate: " << c->delegate << "]" << endl;
     #endif
       openbus::Openbus* bus = openbus::Openbus::getInstance();
-      if(bus->getAccessControlService()->getStub()->isValid(*c))
+      if(bus->getAccessControlService()->isValid(*c))
       {
         picurrent->set_slot(slotid, any);
       } else {

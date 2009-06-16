@@ -6,7 +6,7 @@
 #ifndef OPENBUS_H_
 #define OPENBUS_H_
 
-#include "services/AccessControlService.h"
+#include "stubs/access_control_service.hh"
 #include "services/RegistryService.h"
 
 #include "openbus/common/ORBInitializerImpl.h"
@@ -85,6 +85,16 @@ namespace openbus {
     * Parâmetro argv da linha de comando. 
     */
       char** _argv;
+      
+    /**
+    * Ponteiro para o stub do serviço de acesso.
+    */
+      openbusidl::acs::IAccessControlService* iAccessControlService;
+
+    /**
+    * Ponteiro para a faceta ILeaseProvider. 
+    */
+      openbusidl::acs::ILeaseProvider* iLeaseProvider;
 
     /**
     * Inicializador do ORB. 
@@ -110,11 +120,6 @@ namespace openbus {
     * Gerenciador do POA. 
     */
       PortableServer::POAManager_var poa_manager;
-
-    /**
-    * Serviço de acesso. 
-    */
-      services::AccessControlService* accessControlService;
 
     /**
     * Serviço de registro. 
@@ -184,6 +189,11 @@ namespace openbus {
     * Cria um estado novo. 
     */
       void newState();
+      
+    /**
+    * Cria o proxy para o serviço de acesso.
+    */
+      void createProxyToIAccessControlService();
 
       IT_Thread renewLeaseIT_Thread;
 
@@ -296,7 +306,7 @@ namespace openbus {
     * Retorna o serviço de acesso. 
     * @return Serviço de acesso
     */
-      services::AccessControlService* getAccessControlService();
+      openbusidl::acs::IAccessControlService* getAccessControlService();
 
     /**
     * Retorna o serviço de registro. 

@@ -35,7 +35,6 @@ SRC= openbus/common/ClientInterceptor.cpp \
      stubs/session_serviceC.cxx \
      stubs/coreC.cxx \
      stubs/scsC.cxx \
-     services/AccessControlService.cpp \
      openbus.cpp \
      services/RegistryService.cpp
 
