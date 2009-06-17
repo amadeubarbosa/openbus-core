@@ -259,9 +259,9 @@ namespace openbus {
           registryService = getRegistryService();
           return registryService;
         }
-      } catch (const CORBA::SystemException* systemException) {
+      } catch (const CORBA::SystemException& systemException) {
         mutex->unlock();
-        throw systemException;
+        throw;
       }
     } else {
       return registryService;
@@ -395,9 +395,9 @@ namespace openbus {
           registryService = getRegistryService();
           return registryService;
         }
-      } catch (const CORBA::SystemException* systemException) {
+      } catch (const CORBA::SystemException& systemException) {
         mutex->unlock();
-        throw systemException;
+        throw;
       }
     } else {
       return registryService;
