@@ -2,13 +2,14 @@
 
 local os = os
 local table = table
+local string = string
 
 local loadfile = loadfile
 local assert = assert
 local pairs = pairs
 local ipairs = ipairs
 local error = error
-local string = string
+local next = next
 
 local luuid = require "uuid"
 local oil = require "oil"
