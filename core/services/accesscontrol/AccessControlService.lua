@@ -250,14 +250,21 @@ end
 ---
 function ACSFacet:addObserver(observer, credentialIdentifiers)
   local observerId = self:generateObserverIdentifier()
+
   local observerEntry = {observer = observer, credentials = {}}
   self.observers[observerId] = observerEntry
-  for _, credentialId in ipairs(credentialIdentifiers) do
-    self.entries[credentialId].observedBy[observerId] = true
-    observerEntry.credentials[credentialId] = true
-  end
+
   local credential = self.serverInterceptor:getCredential()
   self.entries[credential.identifier].observers[observerId] = true
+
+  for _, credentialId in ipairs(credentialIdentifiers) do
+    local entry = self.entries[credentialId]
+    if entry then
+      entry.observedBy[observerId] = true
+      observerEntry.credentials[credentialId] = true
+    end
+  end
+
   return observerId
 end
 
@@ -270,7 +277,8 @@ end
 --@return true caso a credencil tenha sido adicionada, ou false caso contrário.
 ---
 function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifier)
-  if not self.entries[credentialIdentifier] then
+  local entry = self.entries[credentialIdentifier]
+  if not entry then
     return false
   end
 
@@ -278,8 +286,10 @@ function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifi
   if not observerEntry then
     return false
   end
+
+  entry.observedBy[observerIdentifier] = true
   observerEntry.credentials[credentialIdentifier] = true
-  self.entries[credentialIdentifier].observedBy[observerIdentifier] = true
+
   return true
 end
 
