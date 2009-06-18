@@ -181,7 +181,7 @@ function RSFacet:unregister(identifier)
                 credential.identifier)
     return true
   end
-  if #credentialOffers == 0 then
+  if not next (credentialOffers) then
     -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
     Log:service("Última oferta da credencial: remove credencial do observador")
