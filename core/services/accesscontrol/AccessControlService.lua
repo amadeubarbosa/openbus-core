@@ -120,7 +120,7 @@ end
 function ACSFacet:getChallenge(name)
   local certificate, errorMessage = self:getCertificate(name)
   if not certificate then
-    Log:error("Nao foi encontrado o certificado de "..name)
+    Log:error("O certificado da entidade "..name.." não pôde ser carregado:")
     Log:error(errorMessage)
     return ""
   end

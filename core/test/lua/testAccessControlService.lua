@@ -67,6 +67,10 @@ Suite = {
       self.credentialManager:invalidate(credential)
       Check.assertError(self.accessControlService.logout,self.accessControlService,credential)
     end,
+
+    testGetChallenge = function(self)
+      Check.assertEquals("", self.accessControlService:getChallenge(""))
+    end,
   },
 
   Test2 = {
