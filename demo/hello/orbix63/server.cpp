@@ -94,14 +94,8 @@ int main(int argc, char* argv[]) {
   scs::core::ComponentContext* componentContext =
     componentBuilder->newFullComponent(extFacets, componentId);
 
-/* Definição de uma lista de propriedades que caracteriza o 
-*  serviço de interesse.
-*  O trabalho de criação da lista e facilitado pelo uso da 
-*  classe PropertyListHelper.
-*/
   openbus::services::PropertyListHelper* propertyListHelper = \
     new openbus::services::PropertyListHelper();
-  propertyListHelper->add("facet", "IHello");
 
 /* Criação de uma *oferta de serviço*. */
   openbus::services::ServiceOffer serviceOffer;
