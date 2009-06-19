@@ -16,8 +16,16 @@ local Check = require "latt.Check"
 
 ---- Facet Descriptions
 local facetDescriptions = {}
-facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0", class = scs.Component}
-facetDescriptions.IMetaInterface = {name = "IMetaInterface", interface_name = "IDL:scs/core/IMetaInterface:1.0", class = scs.MetaInterface}
+facetDescriptions.IComponent = {
+  name = "IComponent", 
+  interface_name = "IDL:scs/core/IComponent:1.0", 
+  class = scs.Component
+}
+facetDescriptions.IMetaInterface = {
+  name = "IMetaInterface", 
+  interface_name = "IDL:scs/core/IMetaInterface:1.0", 
+  class = scs.MetaInterface
+}
 
 -- Receptacle Descriptions
 local receptacleDescriptions = {}
@@ -50,22 +58,29 @@ Suite = {
       local user = "tester"
       local password = "tester"
 
-      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", 
+        "IDL:openbusidl/acs/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-      local config = assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
+      local config = assert(loadfile(
+        DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
       self.credentialManager = CredentialManager()
-      orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
+      orb:setclientinterceptor(ClientInterceptor(config, 
+        self.credentialManager))
 
       local success
-      success, self.credential = self.accessControlService:loginByPassword(user, password)
+      success, self.credential = self.accessControlService:loginByPassword(
+        user, 
+        password)
       self.credentialManager:setValue(self.credential)
       self.registryService = self.accessControlService:getRegistryService()
     end,
-
+    
     testRegister = function(self)
-      local member = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+      local member = scs.newComponent(facetDescriptions, 
+        receptacleDescriptions, 
+        componentId)
       local success, registryIdentifier = self.registryService:register({
         properties = {
           {name = "type", value = {"type1"}},
@@ -79,7 +94,9 @@ Suite = {
     end,
 
     testFind = function(self)
-      local member = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+      local member = scs.newComponent(facetDescriptions, 
+        receptacleDescriptions, 
+        componentId)
       local success, registryIdentifier = self.registryService:register({
         properties = {
           {name = "type", value = {"X"}},
@@ -89,35 +106,36 @@ Suite = {
       })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
-      local offers = self.registryService:find({
-        {name = "type", value = {"X"}},
-      })
+      local offers = self.registryService:find({"IComponent"})
       Check.assertEquals(1, #offers)
       for name, values in pairs (offers[1].properties) do
         if name == "description" then
           Check.assertEquals("bla", value[1])
         end
       end
-      offers = self.registryService:find({
-        {name = "type", value = {"Y"}}
-      })
+      offers = self.registryService:find({"IDataService"})
       Check.assertEquals(0, #offers)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 
     testUpdate = function(self)
-      local member = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+      local member = scs.newComponent(facetDescriptions, 
+        receptacleDescriptions, componentId)
       local serviceOffer = {
         properties = {
           {name = "type", value = {"X"}},
           {name = "description", value = {"bla"}},
         }, member = member.IComponent, }
       Check.assertFalse(self.registryService:update("", {}))
-      local success, registryIdentifier = self.registryService:register(serviceOffer)
+      local success, registryIdentifier = 
+        self.registryService:register(serviceOffer)
       Check.assertTrue(success)
-      local offers = self.registryService:find({
-        {name = "type", value = {"X"}},
-        {name = "p1", value = {"b"}}
+      local offers = self.registryService:findByCriteria(
+        {"IComponent"},
+        {
+          {name = "type", value = {"X"}},
+          {name = "p1", value = {"b"}
+        }
       })
       Check.assertEquals(0, #offers)
       local newProps = {
@@ -125,10 +143,14 @@ Suite = {
         {name = "description", value = {"bla"}},
         {name = "p1", value = {"c", "a", "b"}}
       }
-      Check.assertTrue(self.registryService:update(registryIdentifier, newProps))
-      offers = self.registryService:find({
-        {name = "type", value = {"X"}},
-        {name = "p1", value = {"b"}}
+      Check.assertTrue(self.registryService:update(registryIdentifier, 
+        newProps))
+      offers = self.registryService:findByCriteria(
+        {"IComponent"},
+        {
+          {name = "type", value = {"X"}},
+          {name = "p1", value = {"b"}
+        }
       })
       Check.assertEquals(1, #offers)
       Check.assertEquals(offers[1].member:getComponentId().name,
@@ -140,11 +162,18 @@ Suite = {
       local dummyObserver = oop.class{
         credentialWasDeleted = function(self, credential) end
       }
-      facetDescriptions.ICredentialObserver = {name = "facet1", interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0",
-                                                class = dummyObserver}
-      facetDescriptions.ICredentialObserver2 = {name = "facet2", interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0",
-                                                class = dummyObserver}
-      local member = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+      facetDescriptions.ICredentialObserver = {
+        name = "facet1", 
+        interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0",
+        class = dummyObserver
+      }
+      facetDescriptions.ICredentialObserver2 = {
+        name = "facet2", 
+        interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0",
+        class = dummyObserver
+      }
+      local member = scs.newComponent(facetDescriptions,  
+        receptacleDescriptions, componentId)
       local serviceOffer = {
         properties = {
           {name = "type", value = {"WithFacets"}},
@@ -153,23 +182,14 @@ Suite = {
         },
         member = member.IComponent
       }
-      local success, registryIdentifier = self.registryService:register(serviceOffer)
+      local success, registryIdentifier = 
+        self.registryService:register(serviceOffer)
       Check.assertTrue(success)
-      local offers = self.registryService:find({
-        {name = "type", value = {"WithFacets"}},
-        {name = "p1", value = {"b"}}
-      })
+      local offers = self.registryService:find({"facet1", "facet2"})
       Check.assertEquals(1, #offers)
-      offers = self.registryService:find({
-        {name = "type", value = {"WithFacets"}},
-        {name = "p1", value = {"b"}},
-        {name = "facets", value = {"facet2"}}
-      })
+      offers = self.registryService:find({"facet2"})
       Check.assertEquals(1, #offers)
-      offers = self.registryService:find({
-        {name = "type", value = {"WithFacets"}},
-        {name = "facets", value = {"facet3"}}
-      })
+      offers = self.registryService:find({"facet3"})
       Check.assertEquals(0, #offers)
       local newProps = {
         {name = "type", value = {"WithFacets"}},
@@ -177,17 +197,11 @@ Suite = {
         {name = "p1", value = {"b"}},
         {name = "facets", value = {"facet1"}}
       }
-      Check.assertTrue(self.registryService:update(registryIdentifier, newProps))
-      offers = self.registryService:find({
-        {name = "type", value = {"WithFacets"}},
-        {name = "p1", value = {"b"}},
-        {name = "facets", value = {"facet2"}}
-      })
+      Check.assertTrue(self.registryService:update(registryIdentifier, 
+        newProps))
+      offers = self.registryService:find({"facet1", "facet4"})
       Check.assertEquals(0, #offers)
-      offers = self.registryService:find({
-        {name = "type", value = {"WithFacets"}},
-        {name = "facets", value = {"facet1"}}
-      })
+      offers = self.registryService:find({"facet1"})
       Check.assertEquals(1, #offers)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
@@ -195,7 +209,7 @@ Suite = {
     testNoCredential = function(self)
       self.credentialManager:invalidate()
       Check.assertError(self.registryService.find, self.registryService,
-        {name = "type", value = {"Y"}})
+        {"IComponent"}, {name = "type", value = {"Y"}})
       self.credentialManager:setValue(self.credential)
     end,
 

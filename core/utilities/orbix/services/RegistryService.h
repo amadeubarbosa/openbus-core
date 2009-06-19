@@ -22,6 +22,16 @@ namespace openbusidl {
   namespace rs {
 
   /**
+  * \typedef Facet
+  * \brief Representa uma facet através de uma string.
+  */
+
+  /**
+  * \class FacetList
+  * \brief Lista de facetas.
+  */
+
+  /**
   * \class PropertyValue
   * \brief Representa um valor de uma propriedade. 
   *
@@ -69,10 +79,25 @@ namespace openbus {
 */
   namespace services {
 
+    typedef openbusidl::rs::FacetList FacetList;
     typedef openbusidl::rs::PropertyList PropertyList;
     typedef openbusidl::rs::ServiceOffer ServiceOffer;
     typedef openbusidl::rs::ServiceOfferList ServiceOfferList;
     typedef openbusidl::rs::ServiceOfferList_var ServiceOfferList_var;
+
+  /**
+  * \brief Auxilia na construção de uma lista de facetas.
+  */
+    class FacetListHelper {
+      private:
+        openbusidl::rs::FacetList_var facetList;
+        int numElements;
+      public:
+        FacetListHelper();
+        ~FacetListHelper();
+        void add(const char* facet);
+        openbusidl::rs::FacetList_var getFacetList();
+    };
 
   /**
   * \brief Auxilia na construção de uma lista de propriedades.
@@ -110,12 +135,24 @@ namespace openbus {
 
       /**
       * Busca serviços.
+      * @param[in] facets Lista de facetas.
+      * @return A lista de ofertas de serviço que implementam as facetas 
+      *   discriminadas no parâmetro facets.
+      */
+        ServiceOfferList* find(FacetList facets);
+
+      /**
+      * Busca serviços.
+      * @param[in] facets Lista de facetas.
       * @param[in] criteria Lista de propriedades que descrevem o serviço 
       *   desejado.
       * @return A lista de ofertas de serviço que atendem aos critérios 
-      *   especificados no parâmetro criteria.
+      *   especificados no parâmetro criteria, e, implementam as facetas
+      *   discriminadas no parâmetro facets.
       */
-        ServiceOfferList* find(PropertyList criteria);
+        ServiceOfferList* findByCriteria(
+          FacetList facets, 
+          PropertyList criteria);
 
       /**
       * Registra um serviço

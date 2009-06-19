@@ -37,10 +37,8 @@ module("core.services.registry.RegistryService")
 RSFacet = oop.class{}
 
 ---
---Registra uma nova oferta de serviço. A oferta de serviço  representada por
+--Registra uma nova oferta de serviço. A oferta de serviço é representada por
 --uma tabela com os campos:
---   type: tipo da oferta (string)
---   description: descrição (textual) da oferta
 --   properties: lista de propriedades associadas à oferta (opcional)
 --               cada propriedade é um par nome/valor (lista de strings)
 --   member: refeêrncia para o membro que faz a oferta
@@ -53,11 +51,15 @@ RSFacet = oop.class{}
 function RSFacet:register(serviceOffer)
   local identifier = self:generateIdentifier()
   local credential = self.serverInterceptor:getCredential()
+  local properties = self:createPropertyIndex(serviceOffer.properties, 
+    serviceOffer.member)
 
   local offerEntry = {
     offer = serviceOffer,
-    properties = self:createPropertyIndex(serviceOffer.properties,
-                                          serviceOffer.member),
+  -- Mapeia as propriedades.
+    properties = properties,
+  -- Mapeia as facetas do componente.
+    facets = self:createFacetIndex(properties, serviceOffer.member),
     credential = credential,
     identifier = identifier
   }
@@ -114,37 +116,38 @@ function RSFacet:createPropertyIndex(offerProperties, member)
       properties[property.name][val] = true
     end
   end
-
   local componentId = member:getComponentId()
   properties["component_id"] = {}
+  properties["component_id"].name = componentId.name
   properties["component_id"][componentId.name..":"..componentId.major_version..componentId.minor_version..
     componentId.patch_version] = true
-
-  local memberName = componentId.name
-  -- se não foi definida uma propriedade "facets", discriminando as facetas
-  -- disponibilizadas, assume que todas as facetas do membro são oferecidas
-  if not properties["facets"] then
-    Log:service("Oferta de serviço sem facetas para o membro "..memberName)
-    local metaInterface = member:getFacetByName("IMetaInterface")
-    if metaInterface then
-      metaInterface = orb:narrow(metaInterface,
-          "IDL:scs/core/IMetaInterface:1.0")
-      local facet_descriptions = metaInterface:getFacets()
-      if #facet_descriptions == 0 then
-        Log:service("Membro "..memberName.." não possui facetas")
-      else
-        Log:service("Membro "..memberName.." possui facetas")
-        properties["facets"] = {}
-        for _,facet in ipairs(facet_descriptions) do
-          properties["facets"][facet.name] = true
-        end
-      end
-    else
-      Log:service("Membro "..memberName.." não disponibiliza a interface"..
-          " IMetaInterface.")
-    end
-  end
   return properties
+end
+
+function RSFacet:createFacetIndex(properties, member)
+  local facets
+  local memberName = properties.component_id.name
+  Log:service("Oferta de serviço sem facetas para o membro "..memberName)
+  local metaInterface = member:getFacetByName("IMetaInterface")
+  if metaInterface then
+    metaInterface = orb:narrow(metaInterface, 
+      "IDL:scs/core/IMetaInterface:1.0")
+    local facet_descriptions = metaInterface:getFacets()
+    if (#facet_descriptions == 0) then
+      Log:service("Membro '"..memberName.."' não possui facetas")
+    else
+      Log:service("Membro '"..memberName.."' possui "..#facet_descriptions..
+        " facetas")
+      facets = {}
+      for _,facet in ipairs(facet_descriptions) do
+        facets[facet.name] = true
+      end
+    end
+  else
+    Log:service("Membro "..memberName.." não disponibiliza a interface"..
+      " IMetaInterface.")
+  end
+  return facets
 end
 
 ---
@@ -227,27 +230,79 @@ function RSFacet:update(identifier, properties)
 end
 
 ---
---Busca por ofertas de serviço de um determinado tipo, que atendam aos
---critérios (propriedades) especificados. A especificação de critrios
---é opcional.
+--Busca por ofertas de serviço que implementam as facetas descritas.
+--Se nenhuma faceta for fornecida, todas as facetas são retornadas.
 --
---@param criteria Os critérios da busca.
+--@param facets As facetas da busca.
 --
---@return As ofertas de serviço que correspondem aos critérios.
+--@return As ofertas de serviço que foram encontradas.
 ---
-function RSFacet:find(criteria)
+function RSFacet:find(facets)
   local selectedOffers = {}
-  if #criteria == 0 then
+-- Se nenhuma faceta foi discriminada, todas as ofertas de serviço
+-- são retornadas.
+  if (#facets == 0) then
     for _, offerEntry in pairs(self.offersByIdentifier) do
       table.insert(selectedOffers, offerEntry.offer)
     end
   else
+  -- Para cada oferta de serviço disponível, selecionar-se
+  -- a oferta que implementa todas as facetas discriminadas.
     for _, offerEntry in pairs(self.offersByIdentifier) do
-      if self:meetsCriteria(criteria, offerEntry.properties) then
+      local hasAllFacets = true
+      for _, facet in ipairs(facets) do
+        if not offerEntry.facets[facet] then
+          hasAllFacets = false
+          break
+        end
+      end
+      if hasAllFacets then
         table.insert(selectedOffers, offerEntry.offer)
       end
     end
-     Log:service("Com critério, encontrei "..#selectedOffers.." ofertas")
+     Log:service("Encontrei "..#selectedOffers.." ofertas "..
+      "que implementam as facetas discriminadas.")
+  end
+  return selectedOffers
+end
+
+---
+--Busca por ofertas de serviço que implementam as facetas descritas, e, 
+--que atendam aos critérios (propriedades) especificados. 
+--
+--@param facets As facetas da busca.
+--@param criteria Os critérios da busca.
+--
+--@return As ofertas de serviço que foram encontradas.
+---
+function RSFacet:findByCriteria(facets, criteria)
+  local selectedOffers = {}
+-- Se nenhuma faceta foi discriminada e nenhum critério foi 
+-- definido, todas as ofertas de serviço são retornadas.
+  if (#facets == 0 and #criteria == 0) then
+    for _, offerEntry in pairs(self.offersByIdentifier) do
+      table.insert(selectedOffers, offerEntry.offer)
+    end
+  else
+-- Para cada oferta de serviço disponível, seleciona-se 
+-- a oferta que implementa todas as facetas discriminadas, 
+-- e, possui todos os critérios especificados.
+    for _, offerEntry in pairs(self.offersByIdentifier) do
+      if self:meetsCriteria(criteria, offerEntry.properties) then
+        local hasAllFacets = true
+        for _, facet in ipairs(facets) do
+          if not offerEntry.facets[facet] then
+            hasAllFacets = false
+            break
+          end
+        end
+        if hasAllFacets then
+          table.insert(selectedOffers, offerEntry.offer)
+        end
+      end
+    end
+     Log:service("Com critério, encontrei "..#selectedOffers.." ofertas "..
+      "que implementam as facetas discriminadas.")
   end
   return selectedOffers
 end

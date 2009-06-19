@@ -32,20 +32,20 @@ int main(int argc, char* argv[]) {
     exit(-1);
   }
 
-/* Define uma lista de propriedades que caracteriza o serviço de interesse.
+/* Define a lista de facetas que caracteriza o serviço implementa.
 *  O trabalho de criação da lista é facilitado pelo uso da classe 
-*   PropertyListHelper.
+*  FacetListHelper.
 */
-  openbus::services::PropertyListHelper* propertiesHelper = \
-    new openbus::services::PropertyListHelper();
-  propertiesHelper->add("facet", "IHello");
+  openbus::services::FacetListHelper* facetListHelper = \
+    new openbus::services::FacetListHelper();
+  facetListHelper->add("IHello");
 
 /* Busca no barramento o serviço desejado.
 *  Uma lista de *ofertas de serviço* é retornada para o usuário.
 *  OBS.: Neste demo somente há uma oferta de serviço.
 */
   openbus::services::ServiceOfferList_var serviceOfferList = \
-    registryService->find(propertiesHelper->getPropertyList());
+    registryService->find(facetListHelper->getFacetList());
 
   CORBA::ULong idx = 0;
   openbus::services::ServiceOffer serviceOffer = serviceOfferList[idx];

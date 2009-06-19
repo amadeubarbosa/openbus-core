@@ -35,6 +35,12 @@ typedef sequence<ServiceOffer> ServiceOfferList;
 typedef Identifier RegistryIdentifier;
 
 /**
+ * \brief Representa uma faceta.
+ */
+typedef string Facet;
+typedef sequence<Facet> FacetList;
+
+/**
  * \brief Representa o serviço de registro.
  */
 interface IRegistryService {
@@ -71,13 +77,31 @@ interface IRegistryService {
     boolean update(in RegistryIdentifier identifier, in PropertyList newProperties);
 
     /**
-     * \brief Realiza uma busca por ofertas que satisfaçam a determinados critérios.
+     * \brief Realiza uma busca por ofertas através de uma lista de facetas.
      *
+     *   Serão selecionadas as ofertas de serviços que implementam todas as 
+     *   facetas descritas em facets.
+     *
+     * \param facets As facetas da busca.
+     *
+     * \return As ofertas encontradas.
+     */
+    ServiceOfferList find (in FacetList facets);
+
+    /**
+     * \brief Realiza uma busca por ofertas através de uma lista de facetas e 
+     *   critérios.
+     * 
+     *   Serão selecionadas as ofertas de serviços que implementam todas as 
+     *   facetas descritas em facets, e, que satisfaçam aos critérios 
+     *   especificados.
+     *
+     * \param facets As facetas da busca.
      * \param criteria Os critérios da busca.
      *
-     * \return Os membros encontrados.
+     * \return As ofertas encontradas.
      */
-    ServiceOfferList find (in PropertyList criteria);
+    ServiceOfferList findByCriteria (in FacetList facets, in PropertyList criteria);
 };
 
 };

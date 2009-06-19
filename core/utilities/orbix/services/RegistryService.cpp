@@ -17,6 +17,24 @@
 namespace openbus {
   namespace services {
 
+    FacetListHelper::FacetListHelper() {
+      facetList = new openbusidl::rs::FacetList();
+      numElements = 0;
+    }
+
+    FacetListHelper::~FacetListHelper() {
+    }
+
+    void FacetListHelper::add(const char* facet) {
+      facetList->length(numElements + 1);
+      facetList[numElements] = facet;
+      numElements++;
+    }
+
+    openbusidl::rs::FacetList_var FacetListHelper::getFacetList() {
+      return facetList;
+    }
+
     PropertyListHelper::PropertyListHelper() {
       propertyList = new openbusidl::rs::PropertyList();
       numElements = 0;
@@ -49,13 +67,27 @@ namespace openbus {
       rgs = _rgs;
     }
 
-    ServiceOfferList* RegistryService::find(PropertyList criteria) {
+    ServiceOfferList* RegistryService::find(FacetList facets) {
     #ifdef VERBOSE
       cout << "[RegistryService::find() BEGIN]" << endl;
     #endif
-      ServiceOfferList* serviceOfferList = rgs->find(criteria);
+      ServiceOfferList* serviceOfferList = rgs->find(facets);
     #ifdef VERBOSE
       cout << "[RegistryService::find() END]" << endl;
+    #endif
+      return serviceOfferList;
+    }
+
+    ServiceOfferList* RegistryService::findByCriteria(
+      FacetList facets, 
+      PropertyList criteria) 
+    {
+    #ifdef VERBOSE
+      cout << "[RegistryService::findByCriteria() BEGIN]" << endl;
+    #endif
+      ServiceOfferList* serviceOfferList = rgs->findByCriteria(facets, criteria);
+    #ifdef VERBOSE
+      cout << "[RegistryService::findByCriteria() END]" << endl;
     #endif
       return serviceOfferList;
     }

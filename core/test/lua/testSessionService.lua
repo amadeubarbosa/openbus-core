@@ -47,9 +47,7 @@ Suite = {
 
       local registryService = self.accessControlService:getRegistryService()
 
-      local serviceOffers = registryService:find({
-        {name = "facets", value = {"sessionService"}},
-      })
+      local serviceOffers = registryService:find({"ISessionService"})
       Check.assertNotEquals(#serviceOffers, 0)
       local sessionServiceComponent = orb:narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
       local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
