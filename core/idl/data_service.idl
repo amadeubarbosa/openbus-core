@@ -5,8 +5,6 @@ module tecgraf {
 
 module openbus {
 
-module corba {
-
 /**
  * \brief Módulo do Serviço de Dados Estruturados.
  */
@@ -261,8 +259,6 @@ interface IHDataService {
 };
 
 }; // data_service
-
-}; // corba
 
 }; // openbus
 
