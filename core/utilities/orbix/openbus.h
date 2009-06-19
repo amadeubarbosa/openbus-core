@@ -214,6 +214,8 @@ namespace openbus {
 
     public:
 
+      ~Openbus();
+
     /**
     * Fornece a única instância do barramento.
     *
@@ -222,22 +224,20 @@ namespace openbus {
       static Openbus* getInstance();
 
     /**
-    * Informa o estado de conexão com o barramento.
+    * Inicializa uma referência a um barramento.
     *
-    * @return true caso a conexão esteja ativa, ou false, caso
-    * contrário.
-    */
-      bool isConnected();
-
-    /** 
-    *  Termination Handler disponível para a classe IT_TerminationHandler()
-    *  Este método desfaz a conexão para cada instância de barramento.
+    * Um ORB e POA são criado implicitamente.
+    * A fábrica de componentes SCS é criada.
+    * Os argumentos Openbus de linha de comando (argc e argv) são tratados.
+    * A localização do barramento pode ser fornecida através dos parâmetros
+    *   de linha comando -OpenbusHost e -OpenbusPort.
     *
-    *  @param signalType
+    * @param[in] argc
+    * @param[in] argv
     */
-      static void terminationHandlerCallback(long signalType);
-
-      ~Openbus();
+      void init(
+        int argc,
+        char** argv);
 
     /**
     * Inicializa uma referência a um barramento.
@@ -260,20 +260,19 @@ namespace openbus {
         unsigned short port);
 
     /**
-    * Inicializa uma referência a um barramento.
+    * Informa o estado de conexão com o barramento.
     *
-    * Um ORB e POA são criado implicitamente.
-    * A fábrica de componentes SCS é criada.
-    * Os argumentos Openbus de linha de comando (argc e argv) são tratados.
-    * A localização do barramento pode ser fornecida através dos parâmetros
-    *   de linha comando -OpenbusHost e -OpenbusPort.
-    *
-    * @param[in] argc
-    * @param[in] argv
+    * @return true caso a conexão esteja ativa, ou false, caso
+    * contrário.
     */
-      void init(
-        int argc,
-        char** argv);
+      bool isConnected();
+
+    /** 
+    *  Termination Handler disponível para a classe IT_TerminationHandler()
+    *
+    *  @param signalType
+    */
+      static void terminationHandlerCallback(long signalType);
 
     /**
     *  Retorna o ORB utilizado.
@@ -319,12 +318,6 @@ namespace openbus {
     * @return credencial
     */
       Credential* getCredential();
-
-    /**
-    * Retorna o intervalo de tempo que determina quando a credencial expira. 
-    * @return lease
-    */
-      Lease getLease();
 
     /**
     *  Realiza uma tentativa de conexão com o barramento.

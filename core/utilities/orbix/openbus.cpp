@@ -210,10 +210,6 @@ namespace openbus {
     return credential;
   }
 
-  Lease Openbus::getLease() {
-    return lease;
-  }
-
   openbus::services::RegistryService* Openbus::connect(
     const char* user,
     const char* password)
