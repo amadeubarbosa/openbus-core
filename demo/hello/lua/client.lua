@@ -33,11 +33,13 @@ function main ()
   local user = "tester"
   local password = "tester"
 
-  accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+  accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", 
+    "IDL:openbusidl/acs/IAccessControlService:1.0")
 
 -- instala o interceptador de cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-  local config = assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
+  local config = assert(loadfile(
+    DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
   credentialManager = CredentialManager()
   orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
 
@@ -47,7 +49,7 @@ function main ()
 
   registryService = accessControlService:getRegistryService()
 
-  local offers = registryService:find({name = "facets", value = "Hello"})
+  local offers = registryService:find({"IHello"})
   -- Assume que o publisher é o único serviço cadastrado.
   SS = orb:narrow(offers[1].member, "IDL:scs/core/IComponent:1.0")
   local facet = SS:getFacet("IDL:demoidl/hello/IHello:1.0")

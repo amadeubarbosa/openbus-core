@@ -39,11 +39,13 @@ function main ()
   local user = "tester"
   local password = "tester"
 
-  accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+  accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", 
+    "IDL:openbusidl/acs/IAccessControlService:1.0")
 
   -- instala o interceptador de cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-  local config = assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
+  local config = assert(loadfile(
+    DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
   credentialManager = CredentialManager()
   orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
   serverInterceptor = ServerInterceptor(config, accessControlService)
@@ -61,15 +63,33 @@ function main ()
     function Hello:sayHello()
       local user = serverInterceptor:getCredential().owner
       print "HELLO!\n\n"
-      print(string.format("O usuário OpenBus %s requisitou a operação sayHello.", user))
+      print(string.format(
+        "O usuário OpenBus %s requisitou a operação sayHello.", user))
       registryService:unregister(registryIdentifier)
     end
     local facetDescriptions = {}
-    facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0",
-                                     class = scs.Component}
-    facetDescriptions.IMetaInterface = {name = "IMetaInterface", interface_name = "IDL:scs/core/IMetaInterface:1.0", class = scs.MetaInterface}
-    facetDescriptions.IHello = {name = "IHello", interface_name = "IDL:demoidl/hello/IHello:1.0", class = Hello}
-    local componentId = {name = "Membro", major_version = 1, minor_version = 0, patch_version = 0, platform_spec = ""}
+    facetDescriptions.IComponent = {
+      name = "IComponent", 
+      interface_name = "IDL:scs/core/IComponent:1.0",
+      class = scs.Component
+    }
+    facetDescriptions.IMetaInterface = {
+      name = "IMetaInterface", 
+      interface_name = "IDL:scs/core/IMetaInterface:1.0", 
+      class = scs.MetaInterface
+    }
+    facetDescriptions.IHello = {
+      name = "IHello", 
+      interface_name = "IDL:demoidl/hello/IHello:1.0", 
+      class = Hello
+    }
+    local componentId = {
+      name = "Membro", 
+      major_version = 1, 
+      minor_version = 0, 
+      patch_version = 0, 
+      platform_spec = ""
+    }
     local component = scs.newComponent(facetDescriptions, {}, componentId)
     success, registryIdentifier = registryService:register({ properties = {}, 
       member = component.IComponent})
