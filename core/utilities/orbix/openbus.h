@@ -8,6 +8,7 @@
 
 #include "stubs/access_control_service.hh"
 #include "services/RegistryService.h"
+#include "stubs/session_service.hh"
 
 #include "openbus/common/ORBInitializerImpl.h"
 #include <ComponentBuilderOrbix.h>
@@ -63,7 +64,23 @@ namespace openbus {
       SECURITY_EXCEPTION(const string& msg = "") : runtime_error(msg) {}
   };
 
-  typedef openbusidl::acs::Credential_var Credential_var;
+/**
+* \brief Não há conexão estabelecida com nenhum barramento.
+*/
+  class NO_CONNECTED : public runtime_error {
+    public:
+      NO_CONNECTED(const string& msg = "") : runtime_error(msg) {}
+  };
+
+/**
+* \brief Não é possível obter o serviço de sessão no barramento em uso.
+*/
+  class NO_SESSION_SERVICE : public runtime_error {
+    public:
+      NO_SESSION_SERVICE(const string& msg = "") : runtime_error(msg) {}
+  };
+
+typedef openbusidl::acs::Credential_var Credential_var;
 
   /**
   * \brief Representa um barramento.
@@ -90,6 +107,11 @@ namespace openbus {
     * Ponteiro para o stub do serviço de acesso.
     */
       openbusidl::acs::IAccessControlService* iAccessControlService;
+
+    /**
+    * Ponteiro para o stub do serviço de sessão.
+    */
+      openbusidl::ss::ISessionService* iSessionService;
 
     /**
     * Ponteiro para a faceta ILeaseProvider. 
@@ -312,6 +334,13 @@ namespace openbus {
     * @return Serviço de registro
     */
       services::RegistryService* getRegistryService();
+
+    /**
+    * Retorna o serviço de sessão. 
+    * @return Serviço de sessão.
+    */
+      openbusidl::ss::ISessionService* getSessionService() 
+        throw(NO_CONNECTED, NO_SESSION_SERVICE);
 
     /**
     * Retorna a credencial de identificação do usuário frente ao barramento. 

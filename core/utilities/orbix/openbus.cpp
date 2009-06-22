@@ -98,6 +98,7 @@ namespace openbus {
     lease = 0;
     registryService = 0;
     iAccessControlService = 0;
+    iSessionService = 0;
     iLeaseProvider = 0;
   }
 
@@ -205,6 +206,31 @@ namespace openbus {
     }
     return registryService;
   } 
+
+  openbusidl::ss::ISessionService* Openbus::getSessionService() 
+    throw(NO_CONNECTED, NO_SESSION_SERVICE)
+  {
+    if (connectionState != CONNECTED) {
+      throw NO_CONNECTED();
+    } else {
+      if (!iSessionService) {
+        try {
+          openbusidl::rs::FacetList_var facetList = new openbusidl::rs::FacetList();
+          facetList->length(1);
+          facetList[0] = "ISessionService";
+          openbus::services::ServiceOfferList_var serviceOfferList = \
+            registryService->find(facetList);
+          openbus::services::ServiceOffer serviceOffer = serviceOfferList[0];
+          scs::core::IComponent* component = serviceOffer.member;
+          CORBA::Object* obj = component->getFacet("IDL:openbusidl/ss/ISessionService:1.0");
+          iSessionService = openbusidl::ss::ISessionService::_narrow(obj);
+        } catch (CORBA::Exception& e) {
+          throw NO_SESSION_SERVICE();
+        }
+      }
+    }
+    return iSessionService;
+  }
 
   Credential* Openbus::getCredential() {
     return credential;
