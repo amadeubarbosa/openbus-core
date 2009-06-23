@@ -1,5 +1,9 @@
 package tecgraf.openbus.demo.hello;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Properties;
@@ -10,6 +14,7 @@ import openbusidl.rs.ServiceOffer;
 
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.StringHolder;
+import org.omg.CORBA.UserException;
 
 import scs.core.ComponentId;
 import scs.core.IComponent;
@@ -20,24 +25,43 @@ import scs.core.servant.ExtendedFacetDescription;
 import scs.core.servant.IComponentServant;
 import scs.core.servant.IMetaInterfaceServant;
 import tecgraf.openbus.Openbus;
+import tecgraf.openbus.exception.OpenBusException;
+import tecgraf.openbus.exception.RSUnavailableException;
 import tecgraf.openbus.util.CryptoUtils;
 
 public class HelloServer {
-  public static void main(String[] args) throws Exception {
-    // Obtencão da chave privada deste servidor.
-    RSAPrivateKey privateKey = CryptoUtils.readPrivateKey("HelloService.key");
-
-    // Obtencão do certificado do Servico de Controle de Acesso.
-    X509Certificate acsCertificate =
-      CryptoUtils.readCertificate("AccessControlService.crt");
-
+  public static void main(String[] args) throws IOException, UserException,
+    GeneralSecurityException, SecurityException, InstantiationException,
+    IllegalAccessException, ClassNotFoundException, InvocationTargetException,
+    NoSuchMethodException, OpenBusException {
     Properties props = new Properties();
-    props.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
-    props.setProperty("org.omg.CORBA.ORBSingletonClass",
-      "org.jacorb.orb.ORBSingleton");
+    InputStream in = HelloClient.class.getResourceAsStream("/Hello.properties");
+    try {
+      props.load(in);
+    }
+    finally {
+      in.close();
+    }
 
+    String host = props.getProperty("host.name");
+    String portString = props.getProperty("host.port");
+    int port = Integer.valueOf(portString);
+
+    Properties orbProps = new Properties();
+    orbProps.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
+    orbProps.setProperty("org.omg.CORBA.ORBSingletonClass",
+      "org.jacorb.orb.ORBSingleton");
     Openbus bus = Openbus.getInstance();
-    bus.resetAndInitialize(args, props, "localhost", 2089);
+    bus.resetAndInitialize(args, orbProps, host, port);
+
+    String entityName = props.getProperty("entity.name");
+    String privateKeyFile = props.getProperty("private.key");
+    String acsCertificateFile = props.getProperty("acs.certificate");
+
+    RSAPrivateKey privateKey = CryptoUtils.readPrivateKey(privateKeyFile);
+    X509Certificate acsCertificate =
+      CryptoUtils.readCertificate(acsCertificateFile);
+
     ORB orb = bus.getORB();
 
     // Cria o componente.
@@ -57,10 +81,11 @@ public class HelloServer {
       builder.newComponent(descriptions, null, new ComponentId("Hello",
         (byte) 1, (byte) 0, (byte) 0, "Java"));
 
-    // Acessa o OpenBus
     IRegistryService registryService =
-      bus.connect("HelloService", privateKey, acsCertificate);
-    assert (registryService != null);
+      bus.connect(entityName, privateKey, acsCertificate);
+    if (registryService == null) {
+      throw new RSUnavailableException();
+    }
 
     org.omg.CORBA.Object obj = context.getIComponent();
     IComponent component = IComponentHelper.narrow(obj);
@@ -68,6 +93,18 @@ public class HelloServer {
     StringHolder registrationId = new StringHolder();
     registryService.register(serviceOffer, registrationId);
 
+    Runtime.getRuntime().addShutdownHook(new ShutdownThread());
+
     orb.run();
+  }
+
+  private static class ShutdownThread extends Thread {
+    @Override
+    public void run() {
+      Openbus bus = Openbus.getInstance();
+      bus.disconnect();
+      bus.getORB().shutdown(true);
+      bus.getORB().destroy();
+    }
   }
 }
