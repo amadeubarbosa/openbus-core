@@ -1,0 +1,65 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>br.puc-rio.tecgraf.openbus</groupId>
+    <artifactId>openbus</artifactId>
+    <version>1.4-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>openbus-idl-jacorb</artifactId>
+  <packaging>jar</packaging>
+
+  <name>OpenBus IDL JacORB</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>idlj-maven-plugin</artifactId>
+        <version>1.1</version>
+
+        <dependencies>
+          <dependency>
+            <groupId>org.jacorb</groupId>
+            <artifactId>jacorb-idl-compiler</artifactId>
+            <version>${jacorb.version}</version>
+          </dependency> 
+        </dependencies>
+        
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <configuration>
+          <compiler>jacorb</compiler>
+
+          <sourceDirectory>.</sourceDirectory>
+
+          <sources>
+            <source>
+              <excludes>
+                <exclude>scs.idl</exclude>
+              </excludes>
+            </source>
+          </sources>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>br.puc-rio.tecgraf.scs</groupId>
+      <artifactId>scs-idl-jacorb</artifactId>
+    </dependency>
+  </dependencies>
+</project>
+

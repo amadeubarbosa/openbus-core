@@ -1,0 +1,90 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>br.puc-rio.tecgraf.openbus</groupId>
+  <artifactId>openbus</artifactId>
+  <packaging>pom</packaging>
+  <version>1.4-SNAPSHOT</version>
+
+  <name>OpenBus</name>
+  <url>https://subversion.tecgraf.puc-rio.br/engsoftware/openbus</url>
+
+  <modules>
+    <module>idl</module>
+    <module>api</module>
+    <module>demo</module>
+  </modules>
+
+  <scm>
+    <connection>scm:svn:https://subversion.tecgraf.puc-rio.br/engsoftware/openbus/trunk</connection>
+    <developerConnection>scm:svn:https://subversion.tecgraf.puc-rio.br/engsoftware/openbus/trunk</developerConnection>
+    <url>https://subversion.tecgraf.puc-rio.br/engsoftware/openbus</url>
+  </scm>
+
+  <properties>
+    <java.version>1.6</java.version>
+    <junit.version>4.6</junit.version>
+    <scs.version>1.0.0</scs.version>
+    <jacorb.version>2.3.0</jacorb.version>
+
+    <source.encoding>ISO-8859-1</source.encoding>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <compilerArgument>-Xbootclasspath/p:${settings.localRepository}/org/jacorb/jacorb/${jacorb.version}/jacorb-${jacorb.version}.jar</compilerArgument>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <configuration>
+          <encoding>${source.encoding}</encoding>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>br.puc-rio.tecgraf.scs</groupId>
+        <artifactId>scs-core</artifactId>
+        <version>${scs.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>br.puc-rio.tecgraf.scs</groupId>
+        <artifactId>scs-idl-jacorb</artifactId>
+        <version>${scs.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jacorb</groupId>
+        <artifactId>jacorb</artifactId>
+         <version>${jacorb.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jacorb</groupId>
+        <artifactId>jacorb-idl-compiler</artifactId>
+         <version>${jacorb.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
+
