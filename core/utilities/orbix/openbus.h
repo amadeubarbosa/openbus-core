@@ -349,6 +349,15 @@ typedef openbusidl::acs::Credential_var Credential_var;
       Credential* getCredential();
 
     /**
+    * Define uma credencial a ser utilizada no lugar da credencial corrente. 
+    * Útil para fornecer uma credencial com o campo delegate preenchido.
+    * 
+    * @param[in] credential Credencial a ser utilizada nas requisições a serem
+    *   realizadas.
+    */
+      void setThreadCredential(Credential* credential);
+
+    /**
     *  Realiza uma tentativa de conexão com o barramento.
     *
     *  @param[in] user Nome do usuário.

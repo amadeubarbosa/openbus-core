@@ -238,6 +238,11 @@ namespace openbus {
     return credential;
   }
 
+  void Openbus::setThreadCredential(Credential* credential) {
+    this->credential = credential;
+    openbus::common::ClientInterceptor::credentials[orb] = &credential;
+  }
+
   openbus::services::RegistryService* Openbus::connect(
     const char* user,
     const char* password)
