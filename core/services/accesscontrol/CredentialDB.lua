@@ -12,7 +12,7 @@ local orb = oil.orb
 
 local FileStream = require "loop.serial.FileStream"
 
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 
 local oop = require "loop.base"
 
@@ -71,7 +71,7 @@ function retrieveAll(self)
 
       -- caso especial para referencias a membros
       if entry.component then
-        entry.component = orb:newproxy(entry.component) 
+        entry.component = orb:newproxy(entry.component)
       end
 
       entries[credential.identifier] = entry
@@ -162,7 +162,7 @@ function writeCredential(self, entry)
     stream[component] = "'"..orb:tostring(component).."'"
   end
   stream:put(entry)
-  
+
   credentialFile:close()
 
   return true

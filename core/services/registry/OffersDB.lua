@@ -11,7 +11,7 @@ local orb = oil.orb
 
 local FileStream = require "loop.serial.FileStream"
 
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 
 local oop = require "loop.base"
 

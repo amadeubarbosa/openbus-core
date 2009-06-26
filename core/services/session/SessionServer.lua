@@ -6,7 +6,7 @@
 -----------------------------------------------------------------------------
 local oil = require "oil"
 
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)

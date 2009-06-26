@@ -16,12 +16,12 @@ local oil = require "oil"
 local orb = oil.orb
 
 local OffersDB = require "core.services.registry.OffersDB"
-local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local CredentialManager = require "openbus.common.CredentialManager"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
+local ServerInterceptor = require "openbus.interceptors.ServerInterceptor"
+local CredentialManager = require "openbus.util.CredentialManager"
 local ServerConnectionManager = require "openbus.common.ServerConnectionManager"
 
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 
 local oop = require "loop.simple"
 
@@ -51,7 +51,7 @@ RSFacet = oop.class{}
 function RSFacet:register(serviceOffer)
   local identifier = self:generateIdentifier()
   local credential = self.serverInterceptor:getCredential()
-  local properties = self:createPropertyIndex(serviceOffer.properties, 
+  local properties = self:createPropertyIndex(serviceOffer.properties,
     serviceOffer.member)
 
   local offerEntry = {
@@ -130,7 +130,7 @@ function RSFacet:createFacetIndex(properties, member)
   Log:service("Oferta de serviço sem facetas para o membro "..memberName)
   local metaInterface = member:getFacetByName("IMetaInterface")
   if metaInterface then
-    metaInterface = orb:narrow(metaInterface, 
+    metaInterface = orb:narrow(metaInterface,
       "IDL:scs/core/IMetaInterface:1.0")
     local facet_descriptions = metaInterface:getFacets()
     if (#facet_descriptions == 0) then
@@ -267,8 +267,8 @@ function RSFacet:find(facets)
 end
 
 ---
---Busca por ofertas de serviço que implementam as facetas descritas, e, 
---que atendam aos critérios (propriedades) especificados. 
+--Busca por ofertas de serviço que implementam as facetas descritas, e,
+--que atendam aos critérios (propriedades) especificados.
 --
 --@param facets As facetas da busca.
 --@param criteria Os critérios da busca.
@@ -277,15 +277,15 @@ end
 ---
 function RSFacet:findByCriteria(facets, criteria)
   local selectedOffers = {}
--- Se nenhuma faceta foi discriminada e nenhum critério foi 
+-- Se nenhuma faceta foi discriminada e nenhum critério foi
 -- definido, todas as ofertas de serviço são retornadas.
   if (#facets == 0 and #criteria == 0) then
     for _, offerEntry in pairs(self.offersByIdentifier) do
       table.insert(selectedOffers, offerEntry.offer)
     end
   else
--- Para cada oferta de serviço disponível, seleciona-se 
--- a oferta que implementa todas as facetas discriminadas, 
+-- Para cada oferta de serviço disponível, seleciona-se
+-- a oferta que implementa todas as facetas discriminadas,
 -- e, possui todos os critérios especificados.
     for _, offerEntry in pairs(self.offersByIdentifier) do
       if self:meetsCriteria(criteria, offerEntry.properties) then

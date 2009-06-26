@@ -11,12 +11,12 @@ local oil = require "oil"
 local orb = oil.orb
 
 local SessionService = require "core.services.session.SessionService"
-local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local CredentialManager = require "openbus.common.CredentialManager"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
+local ServerInterceptor = require "openbus.interceptors.ServerInterceptor"
+local CredentialManager = require "openbus.util.CredentialManager"
 local ServerConnectionManager = require "openbus.common.ServerConnectionManager"
 
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 
 local scs = require "scs.core.base"
 

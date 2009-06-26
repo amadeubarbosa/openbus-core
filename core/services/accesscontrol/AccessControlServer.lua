@@ -4,7 +4,7 @@
 --Inicialização do Serviço de Controle de Acesso
 ---
 
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 local LDAPLoginPasswordValidator =
     require "core.services.accesscontrol.LDAPLoginPasswordValidator"
 local TestLoginPasswordValidator =
@@ -108,7 +108,7 @@ function main()
 
   -- Configurações
   acsInst.IComponent.startup = AccessControlService.startup
-  
+
   local acs = acsInst.IAccessControlService
   acs.config = AccessControlServerConfiguration
   acs.entries = {}

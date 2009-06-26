@@ -15,15 +15,15 @@ local oil = require "oil"
 local orb = oil.orb
 
 local CredentialDB = require "core.services.accesscontrol.CredentialDB"
-local ServerInterceptor = require "openbus.common.ServerInterceptor"
-local LeaseProvider = require "openbus.common.LeaseProvider"
+local ServerInterceptor = require "openbus.interceptors.ServerInterceptor"
+local LeaseProvider = require "openbus.lease.LeaseProvider"
 
 --local LDAPLoginPasswordValidator =
 --    require "core.services.accesscontrol.LDAPLoginPasswordValidator"
 --local TestLoginPasswordValidator =
 --    require "core.services.accesscontrol.TestLoginPasswordValidator"
 
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 
 local scs = require "scs.core.base"
 

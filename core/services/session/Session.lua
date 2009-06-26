@@ -9,7 +9,7 @@ local orb = oil.orb
 
 local luuid = require "uuid"
 
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 
 local oop = require "loop.base"
 

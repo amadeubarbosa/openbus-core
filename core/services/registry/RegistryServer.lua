@@ -11,7 +11,7 @@ local orb = oil.init { flavor = "intercepted;corba;typed;cooperative;base", }
 oil.orb = orb
 
 local scs = require "scs.core.base"
-local Log = require "openbus.common.Log"
+local Log = require "openbus.util.Log"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
@@ -33,7 +33,7 @@ end
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 
-RegistryServerConfiguration.accessControlServerHost = 
+RegistryServerConfiguration.accessControlServerHost =
     RegistryServerConfiguration.accessControlServerHostName..":"..
     RegistryServerConfiguration.accessControlServerHostPort
 
