@@ -110,7 +110,7 @@ Suite = {
     end,
 
     testGetRegistryService = function(self)
-      Check.assertNil(self.accessControlService:getRegistryService())
+      Check.assertTrue(self.accessControlService:getRegistryService())
     end,
 
     testSetRegistryService = function(self)

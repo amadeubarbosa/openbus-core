@@ -107,7 +107,7 @@ Suite = {
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
       local offers = self.registryService:find({"IComponent"})
-      Check.assertEquals(1, #offers)
+      Check.assertNotEquals(0, #offers)
       for name, values in pairs (offers[1].properties) do
         if name == "description" then
           Check.assertEquals("bla", value[1])
