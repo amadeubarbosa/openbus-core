@@ -154,6 +154,17 @@ typedef openbusidl::acs::Credential_var Credential_var;
       Lease lease;
 
     /**
+    * Tipo da callback para a notificação de que um lease expirou.
+    */
+      typedef void (*LeaseExpiredCallback)();
+
+    /**
+    * Conjunto de callbacks registradas para a notificação da 
+    * expiração do lease.
+    */
+      static std::set<LeaseExpiredCallback> leaseExpiredCallbackSet;
+
+    /**
     * Credencial de identificação do usuário frente ao barramento. 
     */
       Credential* credential;
@@ -356,6 +367,27 @@ typedef openbusidl::acs::Credential_var Credential_var;
     *   realizadas.
     */
       void setThreadCredential(Credential* credential);
+
+    /**
+    * Registra uma callback para a notificação de que o lease da credencial
+    * de identificação do usuário, frente ao barramento, expirou.
+    *
+    * @param[in] A callback a ser registrada.
+    * @return True se a callback foi registrada com sucesso, ou false 
+    * se a callback já estava registrada.
+    */
+      bool addLeaseExpiredCallback(
+        LeaseExpiredCallback leaseExpiredCallback);
+    /**
+    * Remove uma callback previamente registra para a notificação de lease 
+    * expirado.
+    *
+    * @param[in] A callback a ser removida.
+    * @return True se a callback foi removida com sucesso, ou false 
+    * caso contrário.
+    */
+      bool removeLeaseExpiredCallback(
+        LeaseExpiredCallback leaseExpiredCallback);
 
     /**
     *  Realiza uma tentativa de conexão com o barramento.
