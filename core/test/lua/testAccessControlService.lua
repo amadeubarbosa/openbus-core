@@ -5,15 +5,15 @@
 require "oil"
 local orb = oil.orb
 
-local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local CredentialManager = require "openbus.common.CredentialManager"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
+local CredentialManager = require "openbus.util.CredentialManager"
 
 local Check = require "latt.Check"
 
 Suite = {
   --
   -- este teste não precisa inserir credencial no contexto das requisições
-  -- 
+  --
   Test1 = {
     beforeTestCase = function(self)
       local IDLPATH_DIR = os.getenv("IDLPATH_DIR")

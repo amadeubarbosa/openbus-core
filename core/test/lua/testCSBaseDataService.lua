@@ -7,8 +7,8 @@ require "oil"
 oil.orb = oil.init {flavor = "intercepted;corba;typed;cooperative;base"}
 local orb = oil.orb
 
-local CredentialManager = require "openbus.common.CredentialManager"
-local ClientInterceptor = require "openbus.common.ClientInterceptor"
+local CredentialManager = require "openbus.util.CredentialManager"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then

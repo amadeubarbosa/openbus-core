@@ -6,8 +6,8 @@
 local oil = require "oil"
 local orb = oil.orb
 
-local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local CredentialManager = require "openbus.common.CredentialManager"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
+local CredentialManager = require "openbus.util.CredentialManager"
 
 local scs = require "scs.core.base"
 
@@ -57,7 +57,7 @@ Suite = {
 
     testCreateSession = function(self)
       local facetDescriptions = {}
-      facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0", 
+      facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0",
                                        class = scs.Component}
       local componentId = {major_version = 1, minor_version = 0, patch_version = 0, platform_spec = ""}
       componentId.name = "membro1"

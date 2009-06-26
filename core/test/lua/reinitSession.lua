@@ -8,8 +8,8 @@ local oil = require "oil"
 local orb = oil.init {flavor = "intercepted;corba;typed;cooperative;base",}
 oil.orb = orb
 
-local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local CredentialManager = require "openbus.common.CredentialManager"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
+local CredentialManager = require "openbus.util.CredentialManager"
 local ClientConnectionManager = require "openbus.common.ClientConnectionManager"
 
 oil.verbose:level(3)
@@ -49,14 +49,14 @@ function main()
   if DATA_DIR == nil then
     error("ERRO: A variavel OPENBUS_DATADIR nao foi definida.\n")
   end
-    local config = 
+    local config =
       assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
     orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
-  
+
   -- autentica o cliente
   success = connectionManager:connect()
   print("Cliente autenticado!")
-  
+
   local registryService = accessControlService:getRegistryService()
   if not registryService then
     error("ERRO: Não obteve referência para serviço de registro")
@@ -72,10 +72,10 @@ function main()
   if #offers == 0 then
     error("ERRO: Não obteve oferta de serviço de sessão")
   end
-  local sessionServiceComponent = orb:narrow(offers[1].member, 
+  local sessionServiceComponent = orb:narrow(offers[1].member,
                  "IDL:scs/core/IComponent:1.0")
   local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
-  local sessionService = 
+  local sessionService =
     sessionServiceComponent:getFacet(sessionServiceInterface)
   sessionService = orb:narrow(sessionService, sessionServiceInterface)
   print("Obteve referencia para o serviço de sessão")

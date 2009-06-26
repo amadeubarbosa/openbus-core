@@ -6,8 +6,8 @@
 local oil = require "oil"
 local orb = oil.orb
 
-local CredentialManager = require "openbus.common.CredentialManager"
-local ClientInterceptor = require "openbus.common.ClientInterceptor"
+local CredentialManager = require "openbus.util.CredentialManager"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local Utils = require "openbus.util.Utils"
 
 Suite = {

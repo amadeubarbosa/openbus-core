@@ -7,8 +7,8 @@ package.loaded["oil.component"] = require "loop.component.wrapped"
 package.loaded["oil.port"]      = require "loop.component.intercepted"
 local oil = require "oil"
 
-local ClientInterceptor = require "openbus.common.ClientInterceptor"
-local CredentialManager = require "openbus.common.CredentialManager"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
+local CredentialManager = require "openbus.util.CredentialManager"
 local ClientConnectionManager = require "openbus.common.ClientConnectionManager"
 
 local IComponent = require "scs.core.IComponent"
