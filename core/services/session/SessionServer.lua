@@ -5,17 +5,11 @@
 --   $Id$
 -----------------------------------------------------------------------------
 local oil = require "oil"
-
+local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
-
-local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-if IDLPATH_DIR == nil then
-  Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
-  os.exit(1)
-end
 
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
@@ -23,25 +17,10 @@ if DATA_DIR == nil then
   os.exit(1)
 end
 
--- Inicializa o ORB, fixando a localização do serviço em uma porta específica
-local orb = oil.init { flavor = "intercepted;corba;typed;cooperative;base",
-                       tcpoptions = {reuseaddr = true}
-                     }
-
-oil.orb = orb
-
-local scs = require "scs.core.base"
-
-local SessionServiceComponent =
-    require "core.services.session.SessionServiceComponent"
-local SessionService = require "core.services.session.SessionService"
-
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/SessionServerConfiguration.lua"))()
-
-SessionServerConfiguration.accessControlServerHost =
-    SessionServerConfiguration.accessControlServerHostName..":"..
-    SessionServerConfiguration.accessControlServerHostPort
+local iConfig =
+  assert(loadfile(DATA_DIR.."/conf/advanced/SSInterceptorsConfiguration.lua"))()
 
 -- Seta os níveis de verbose para o openbus e para o oil
 if SessionServerConfiguration.logLevel then
@@ -51,13 +30,17 @@ if SessionServerConfiguration.oilVerboseLevel then
   oil.verbose:level(SessionServerConfiguration.oilVerboseLevel)
 end
 
--- Carrega a interface do serviço
-local idlfile = IDLPATH_DIR.."/session_service.idl"
-orb:loadidlfile (idlfile)
-idlfile = IDLPATH_DIR.."/access_control_service.idl"
-orb:loadidlfile (idlfile)
-idlfile = IDLPATH_DIR.."/registry_service.idl"
-orb:loadidlfile (idlfile)
+-- Inicializa o barramento
+Openbus:resetAndInitialize(
+  SessionServerConfiguration.accessControlServerHostName,
+  SessionServerConfiguration.accessControlServerHostPort,
+  nil, iConfig, iConfig)
+local orb = Openbus:getORB()
+
+local scs = require "scs.core.base"
+local SessionServiceComponent =
+  require "core.services.session.SessionServiceComponent"
+local SessionService = require "core.services.session.SessionService"
 
 -----------------------------------------------------------------------------
 -- Descricoes do Componente Servico de Sessao
@@ -98,16 +81,9 @@ componentId.patch_version = 0
 componentId.platform_spec = ""
 
 function main()
-  -- Aloca uma thread para o orb
-  local success, res = oil.pcall(oil.newthread, orb.run, orb)
-  if not success then
-    Log:error("Falha na execução do ORB: "..tostring(res).."\n")
-    os.exit(1)
-  end
+  -- Aloca uma thread do OiL para o orb
+  Openbus:run()
 
-print("Component: ", facetDescriptions.IComponent.class)
-print("MetaInterface: ", facetDescriptions.IMetaInterface.class)
-print("SessionService: ", facetDescriptions.ISessionService.class)
   -- Cria o componente responsável pelo Serviço de Sessão
   success, res = oil.pcall(scs.newComponent, facetDescriptions, receptacleDescriptions,
       componentId)

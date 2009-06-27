@@ -5,24 +5,11 @@
 --   $Id$
 -----------------------------------------------------------------------------
 local oil = require "oil"
-
--- Inicializa o ORB
-local orb = oil.init { flavor = "intercepted;corba;typed;cooperative;base", }
-oil.orb = orb
-
-local scs = require "scs.core.base"
+local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
-
-local RegistryService = require "core.services.registry.RegistryService"
-
-local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-if IDLPATH_DIR == nil then
-  Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
-  os.exit(1)
-end
 
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
@@ -32,12 +19,10 @@ end
 
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
+local iConfig =
+  assert(loadfile(DATA_DIR.."/conf/advanced/RSInterceptorsConfiguration.lua"))()
 
-RegistryServerConfiguration.accessControlServerHost =
-    RegistryServerConfiguration.accessControlServerHostName..":"..
-    RegistryServerConfiguration.accessControlServerHostPort
-
--- Seta os níveis de verbose para o openbus e para o oil
+-- Define os níveis de verbose para o openbus e para o oil
 if RegistryServerConfiguration.logLevel then
   Log:level(RegistryServerConfiguration.logLevel)
 end
@@ -45,11 +30,15 @@ if RegistryServerConfiguration.oilVerboseLevel then
   oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
 end
 
--- Carrega a interface do serviço
-local idlfile = IDLPATH_DIR.."/registry_service.idl"
-orb:loadidlfile(idlfile)
-idlfile = IDLPATH_DIR.."/access_control_service.idl"
-orb:loadidlfile(idlfile)
+-- Inicializa o barramento
+Openbus:resetAndInitialize(
+  RegistryServerConfiguration.accessControlServerHostName,
+  RegistryServerConfiguration.accessControlServerHostPort,
+  nil, iConfig, iConfig)
+local orb = Openbus:getORB()
+
+local scs = require "scs.core.base"
+local RegistryService = require "core.services.registry.RegistryService"
 
 -----------------------------------------------------------------------------
 ---- RegistryService Descriptions
@@ -85,14 +74,10 @@ componentId.patch_version = 0
 componentId.platform_spec = ""
 
 function main()
-  -- Aloca uma thread para o orb
-  local success, res = oil.pcall(oil.newthread, orb.run, orb)
-  if not success then
-    Log:error("Falha na execução do ORB: "..tostring(res).."\n")
-    os.exit(1)
-  end
+  -- Aloca uma thread do OiL para o orb
+  Openbus:run()
 
-  -- Cria o componente responsï¿½vel pelo Serviï¿½o de Controle de Acesso
+  -- Cria o componente responsável pelo Serviço de Registro
   rsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
 
   -- Configuracoes

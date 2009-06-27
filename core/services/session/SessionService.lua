@@ -1,6 +1,7 @@
 -- $Id$
 
 local oil = require "oil"
+local Openbus = require "openbus.Openbus"
 local orb = oil.orb
 
 local luuid = require "uuid"
@@ -79,7 +80,7 @@ componentId.platform_spec = ""
 --sucesso, ou false, caso contrário.
 ---
 function SessionService:createSession(member)
-  local credential = self.serverInterceptor:getCredential()
+  local credential = Openbus:getInterceptedCredential()
   if self.sessions[credential.identifier] then
     Log:err("Tentativa de criar sessão já existente")
     return false, nil, self.invalidMemberIdentifier
@@ -140,7 +141,7 @@ end
 --@return A sessão, ou nil, caso não exista sessão para a credencial do membro.
 ---
 function SessionService:getSession()
-  local credential = self.serverInterceptor:getCredential()
+  local credential = Openbus:getInterceptedCredential()
   local session = self.sessions[credential.identifier]
   if not session then
    Log:warn("Não há sessão para "..credential.identifier)

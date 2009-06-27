@@ -4,23 +4,18 @@
 --Inicialização do Serviço de Controle de Acesso
 ---
 
+local oil = require "oil"
+local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local LDAPLoginPasswordValidator =
     require "core.services.accesscontrol.LDAPLoginPasswordValidator"
 local TestLoginPasswordValidator =
     require "core.services.accesscontrol.TestLoginPasswordValidator"
 
-local oil = require "oil"
-
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-if IDLPATH_DIR == nil then
-  Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
-  os.exit(1)
-end
-
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
   Log:error("A variavel OPENBUS_DATADIR nao foi definida.\n")
@@ -29,6 +24,8 @@ end
 
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/AccessControlServerConfiguration.lua"))()
+local iconfig = assert(loadfile(DATA_DIR ..
+  "/conf/advanced/ACSInterceptorsConfiguration.lua"))()
 
 -- Define os níveis de verbose para o OpenBus e para o OiL.
 if AccessControlServerConfiguration.logLevel then
@@ -37,20 +34,16 @@ end
 if AccessControlServerConfiguration.oilVerboseLevel then
   oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
 end
+local props = { host = AccessControlServerConfiguration.hostName,
+  port = AccessControlServerConfiguration.hostPort}
 
--- Inicializa o ORB, fixando a localização do serviço em uma porta específica
-local orb = oil.init { host = AccessControlServerConfiguration.hostName,
-                       port = AccessControlServerConfiguration.hostPort,
-                       flavor = "intercepted;corba;typed;cooperative;base",
-                       tcpoptions = {reuseaddr = true}
-                     }
-
-oil.orb = orb
+-- Inicializa o barramento
+Openbus:resetAndInitialize( AccessControlServerConfiguration.hostName,
+  AccessControlServerConfiguration.hostPort, props, iconfig)
+local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
-
-orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
 
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
@@ -97,11 +90,8 @@ componentId.platform_spec = ""
 --Função que será executada pelo OiL em modo protegido.
 ---
 function main()
-  local success, res = oil.pcall(oil.newthread, orb.run, orb)
-  if not success then
-    Log:error("Falha na execução do ORB: "..tostring(res).."\n")
-    os.exit(1)
-  end
+  -- Aloca uma thread do OiL para o orb
+  Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Controle de Acesso
   acsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)

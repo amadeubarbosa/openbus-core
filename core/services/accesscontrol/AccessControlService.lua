@@ -12,10 +12,9 @@ local tostring = tostring
 local luuid = require "uuid"
 local lce = require "lce"
 local oil = require "oil"
-local orb = oil.orb
+local Openbus = require "openbus.Openbus"
 
 local CredentialDB = require "core.services.accesscontrol.CredentialDB"
-local ServerInterceptor = require "openbus.interceptors.ServerInterceptor"
 local LeaseProvider = require "openbus.lease.LeaseProvider"
 
 --local LDAPLoginPasswordValidator =
@@ -222,7 +221,7 @@ end
 --@return true caso o componente seja definido, ou false caso contrário.
 ---
 function ACSFacet:setRegistryService(registryServiceComponent)
-  local credential = self.serverInterceptor:getCredential()
+  local credential = Openbus:getInterceptedCredential()
   if credential.owner == "RegistryService" then
     self.registryService = {
       credential = credential,
@@ -254,7 +253,7 @@ function ACSFacet:addObserver(observer, credentialIdentifiers)
   local observerEntry = {observer = observer, credentials = {}}
   self.observers[observerId] = observerEntry
 
-  local credential = self.serverInterceptor:getCredential()
+  local credential = Openbus:getInterceptedCredential()
   self.entries[credential.identifier].observers[observerId] = true
 
   for _, credentialId in ipairs(credentialIdentifiers) do
@@ -310,7 +309,7 @@ function ACSFacet:removeObserver(observerIdentifier, credential)
     self.entries[credentialId].observedBy[observerIdentifier] = nil
   end
   self.observers[observerIdentifier] = nil
-  credential = credential or self.serverInterceptor:getCredential()
+  credential = credential or Openbus:getInterceptedCredential()
   self.entries[credential.identifier].observers[observerIdentifier] = nil
   return true
 end
@@ -457,11 +456,10 @@ end
 ---
 function startup(self)
   self = self.context.IAccessControlService
-  -- instala o interceptador do serviço
-  local iconfig =
-    assert(loadfile(DATA_DIR.."/conf/advanced/ACSInterceptorsConfiguration.lua"))()
-  self.serverInterceptor = ServerInterceptor(iconfig, self)
-  orb:setserverinterceptor(self.serverInterceptor)
+
+  -- O ACS precisa setar os interceptadores manualmente pois não realiza conexão
+  Openbus.acs = self
+  Openbus:_setInterceptors()
 
   -- inicializa repositorio de credenciais
   local privateKeyFile
