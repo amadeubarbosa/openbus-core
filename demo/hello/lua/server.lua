@@ -8,7 +8,7 @@ local oop = require "loop.base"
 local openbus = require "openbus.Openbus"
 
 -- Inicialização do barramento
-openbus:resetAndInitialize("localhost", 2089, orbinit)
+openbus:resetAndInitialize("localhost", 2089)
 local orb = openbus:getORB()
 
 local scs = require "scs.core.base"
