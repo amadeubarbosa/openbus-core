@@ -41,7 +41,7 @@
         <configuration>
           <compiler>jacorb</compiler>
 
-          <sourceDirectory>.</sourceDirectory>
+          <sourceDirectory>$env.OPENBUS_HOME/idlpath</sourceDirectory>
 
           <sources>
             <source>
