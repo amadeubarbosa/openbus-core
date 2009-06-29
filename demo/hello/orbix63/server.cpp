@@ -44,7 +44,11 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
 };
 
 static void myTerminationHandler(long signal) {
-  registryService->unregister(registryId);
+  try {
+    registryService->unregister(registryId);
+  } catch(CORBA::Exception& e) {
+    cout << "Não foi possível remover a oferta de serviço." << endl;
+  }
   openbus::Openbus::terminationHandlerCallback(signal);
 }
 

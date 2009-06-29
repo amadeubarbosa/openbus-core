@@ -24,7 +24,14 @@ namespace openbus {
   #ifdef VERBOSE
     cout << "[Openbus::terminationHandlerCallback() BEGIN]" << endl;
   #endif
-    bus->disconnect();
+    try {
+      bus->disconnect();
+    } catch(CORBA::Exception& e) {
+    #ifdef VERBOSE
+      cout << "[Não foi possível se desconectar corretamente do barramento.]" 
+        << endl;
+    #endif
+    }
     if (!CORBA::is_nil(bus->orb)) {
       bus->orb->shutdown(0);
     }
