@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
   helloDesc.destructor = HelloImpl::destruct;
   extFacets.push_back(helloDesc);
   scs::core::ComponentContext* componentContext =
-    componentBuilder->newFullComponent(extFacets, componentId);
+    componentBuilder->newComponent(extFacets, componentId);
 
   openbus::services::PropertyListHelper* propertyListHelper = \
     new openbus::services::PropertyListHelper();
