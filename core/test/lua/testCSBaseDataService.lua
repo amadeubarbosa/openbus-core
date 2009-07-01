@@ -80,9 +80,7 @@ function main()
 
   local registryService= accessControlService:getRegistryService()
 
-  local serviceOffers = registryService:find({
-    {name = "facets", value = {"projectDataService"}}
-  })
+  local serviceOffers = registryService:find({"projectDataService"})
 
   if #serviceOffers == 0 then
     print("Serviço de projetos não registrado!!!")

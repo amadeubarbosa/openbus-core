@@ -66,9 +66,7 @@ function main()
   print("Aguardando...\n")
   io.read()
 
-  local offers = registryService:find({
-        {name = "facets", value = {"sessionService"}},
-      })
+  local offers = registryService:find({"sessionService"})
   if #offers == 0 then
     error("ERRO: Não obteve oferta de serviço de sessão")
   end
