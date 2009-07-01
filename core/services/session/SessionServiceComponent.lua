@@ -85,9 +85,7 @@ function SessionServiceComponent:startup()
   -- registra sua oferta de serviço junto ao Serviço de Registro
   self.serviceOffer = {
     member = self.context.IComponent,
-    properties = {
-      {name = "facets", value = {"sessionService"}},
-    },
+    properties = {},
   }
   local registryService = self.accessControlService:getRegistryService()
   if not registryService then
