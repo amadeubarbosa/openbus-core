@@ -85,20 +85,22 @@ interface ISessionService {
      * \brief Cria uma sessão associada a uma credencial.
      *
      * \param[in] member referência para o membro que está criando a sessão
-     * \param[out] session A sessão criada.
+     * \param[out] session O componente da sessão criada.
      * \param[out] identifier A identificação do membro para a sessão
      *
-     * \return \c true, caso a sessão tenha sido criada, ou \c false, caso contrário.
+     * \return \c true, caso a sessão tenha sido criada, ou \c false, caso ela
+     * já exista.
      */
     boolean createSession(in scs::core::IComponent member,
-        out ISession session, out MemberIdentifier identifier);
+        out scs::core::IComponent session, out MemberIdentifier identifier);
+
     /**
-     * \brief Obtém a sessão associada a uma credencial.
+     * \brief Obtém o componente da sessão associada a uma credencial.
      *
-     * \return A sessão ou \c nil, caso a credencial esteja inválida ou não exista sessão
+     * \return O componente da sessão ou \c nil, caso não exista sessão
      * associada à credencial.
      */
-    ISession getSession();
+    scs::core::IComponent getSession();
 };
 
 };

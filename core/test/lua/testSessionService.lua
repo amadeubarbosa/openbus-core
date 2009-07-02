@@ -57,16 +57,26 @@ Suite = {
 
     testCreateSession = function(self)
       local facetDescriptions = {}
-      facetDescriptions.IComponent = {name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0",
-                                       class = scs.Component}
-      local componentId = {major_version = 1, minor_version = 0, patch_version = 0, platform_spec = ""}
+      facetDescriptions.IComponent = {
+          name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0",
+          class = scs.Component
+      }
+      local componentId = {
+          major_version = 1, minor_version = 0, patch_version = 0,
+          platform_spec = ""
+      }
       componentId.name = "membro1"
       local member1 = scs.newComponent(facetDescriptions, {}, componentId)
-      local success, session, id1 = self.sessionService:createSession(member1.IComponent)
+      local success, session, id1 =
+          self.sessionService:createSession(member1.IComponent)
       Check.assertTrue(success)
+      session = session:getFacet("IDL:openbusidl/ss/ISession:1.0")
+      session = orb:narrow(session, "IDL:openbusidl/ss/ISession:1.0")
       componentId.name = "membro2"
       local member2 = scs.newComponent(facetDescriptions, {}, componentId)
       local session2 = self.sessionService:getSession()
+      session2 = session2:getFacet("IDL:openbusidl/ss/ISession:1.0")
+      session2 = orb:narrow(session2, "IDL:openbusidl/ss/ISession:1.0")
       Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
       local id2 = session:addMember(member2.IComponent)
       Check.assertNotEquals(id1, id2)

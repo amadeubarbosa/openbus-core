@@ -89,7 +89,7 @@ function SessionService:createSession(member)
   local session = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
   session.ISession.identifier = self:generateIdentifier()
   session.ISession.credential = credential
-  self.sessions[credential.identifier] = session.ISession
+  self.sessions[credential.identifier] = session
   Log:service("Sessao criada com id "..tostring(session.ISession.identifier).." !")
 
   -- A credencial deve ser observada!
@@ -104,7 +104,7 @@ function SessionService:createSession(member)
 
   -- Adiciona o membro à sessão
   local memberID = session.ISession:addMember(member)
-  return true, session.ISession, memberID
+  return true, session.IComponent, memberID
 end
 
 ---
@@ -119,7 +119,7 @@ function SessionService:credentialWasDeleted(credential)
   if session then
   Log:service("Removendo sessão de credencial deletada ("..
               credential.identifier..")")
-    orb:deactivate(session)
+    orb:deactivate(session.ISession)
     self.sessions[credential.identifier] = nil
   end
 end
@@ -147,7 +147,7 @@ function SessionService:getSession()
    Log:warn("Não há sessão para "..credential.identifier)
     return nil
   end
-  return session
+  return session.IComponent
 end
 
 ---
@@ -163,7 +163,7 @@ function SessionService:wasReconnected()
   local invalidCredentials = {}
   for credentialId, session in pairs(self.sessions) do
     if not self.accessService:addCredentialToObserver(self.observerId,
-                                                      credentialId) then
+        credentialId) then
       Log:service("Sessão para "..credentialId.." será removida")
       table.insert(invalidCredentials, credentialId)
     else
