@@ -49,7 +49,7 @@ function run()
 
   -- Testando se o usuário de teste está habilitado
   success, credential = accessControlService:loginByPassword("tester", "tester")
-  if success then
+  if not success then
      print("[ERRO] O usuario de testes esta habilitado.")
      os.exit(1)
   end
