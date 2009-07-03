@@ -1,4 +1,6 @@
 #!/bin/ksh
+TMPFILE=`mktemp`
+
 echo
 echo --- Testes do Openbus ---
 
@@ -17,6 +19,10 @@ read PASSWORD
 stty echo 
 echo
 
+echo props = "{ host ='"${HOST}"',port ='"${PORT}"',user='"${USER}"',password ='"${PASSWORD}"'}" > ${TMPFILE}
+chmod 400 ${TMPFILE}
+
 echo
 echo Iniciando testes.
-${OPENBUS_HOME}/core/bin/servicelauncher checkInstall.lua  ${HOST} ${PORT} ${USER} ${PASSWORD}
+${OPENBUS_HOME}/core/bin/servicelauncher checkInstall.lua ${TMPFILE}
+rm -f ${TMPFILE}

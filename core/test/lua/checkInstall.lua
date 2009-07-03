@@ -11,15 +11,22 @@ oil.verbose:level(0)
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 
-if #arg < 4 then
-   print("Parametros insuficientes, e necessario passar host, porta, usuario e senha, nesta ordem")
+if #arg < 1 then
+   print("[ERRO] Parametros insuficientes, e necessario um arquivo de configuracao.")
    os.exit(1)
 end
 
-local host = arg[1]
-local port = arg[2]
-local user = arg[3]
-local password = arg[4]
+local f, err = loadfile(arg[1])
+if not f then
+   print("[ERRO] Ao abrir o arquivo.")
+   os.exit(1)
+end
+f()
+
+local host = props.host
+local port = props.port
+local user = props.user
+local password = props.password
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
