@@ -8,6 +8,7 @@ local orb = oil.orb
 
 local tostring = tostring
 local print = print
+local pairs = pairs
 
 --local IComponent = require "scs.core.IComponent"
 local Log = require "openbus.common.Log"
@@ -29,6 +30,8 @@ if DATA_DIR == nil then
   Log:error("A variavel OPENBUS_DATADIR nao foi definida.\n")
   os.exit(1)
 end
+
+local BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
 
 Log:level(4)
 oil.verbose:level(2)
@@ -106,24 +109,45 @@ function FTRSMonitorFacet:monitor()
 
 		repeat
 		
-			--self.registryService = nil
-			self:getService():disconnect(self._nextConnId)
+		    if self.recConnId ~= nil then
+				local status, ftRecD = 
+					oil.pcall(self.context.IComponent.getFacet, self.context.IComponent, "IDL:scs/core/IReceptacles:1.0")
+
+				if not status then
+					print("[IReceptacles::IComponent] Error while calling getFacet(IDL:scs/core/IReceptacles:1.0)")
+					print("[IReceptacles::IComponent] Error: " .. ftRecD)
+					return
+				end
+				ftRecD = orb:narrow(ftRecD)
 			
-		    Log:faulttolerance("[Monitor SR] Espera 3 minutos para que dê tempo do Oil liberar porta...")
+				local status, void = oil.pcall(ftRecD.disconnect, ftRecD, self.recConnId)
+				if not status then
+					print("[IReceptacles::IReceptacles] Error while calling disconnect")
+					print("[IReceptacles::IReceptacles] Error: " .. void)
+					return
+				end
+			
+				Log:faulttolerance("[Monitor SR] disconnect executed successfully!")
+			
+				Log:faulttolerance("[Monitor SR] Espera 3 minutos para que dê tempo do Oil liberar porta...")
 
-	        os.execute("sleep 180")
+				os.execute("sleep 180")
+				
+			end
 
-		    Log:faulttolerance("[Monitor SR] Levantando Servico de registro...")
+			Log:faulttolerance("[Monitor SR] Levantando Servico de registro...")
+				
                                       
 			--Criando novo processo assincrono
+			
 			if self:isUnix() then
- 			    os.execute(BIN_DIR.."/run_ft_registry_server.sh ".. self.config.registryServerHostPort)
- 			    --os.execute(BIN_DIR.."/run_ft_registry_server.sh ".. self.config.registryServerHostPort..
+ 			    os.execute(BIN_DIR.."/run_registry_server.sh ".. self.config.registryServerHostPort)
+ 			    --os.execute(BIN_DIR.."/run_registry_server.sh ".. self.config.registryServerHostPort..
 			--						" & > log_registry_server-"..tostring(t)..".txt")
 			else
-  			    os.execute("start "..BIN_DIR.."/run_ft_registry_server.sh "..
+  			    os.execute("start "..BIN_DIR.."/run_registry_server.sh "..
 							 self.config.registryServerHostPort)
-  			    --os.execute("start "..BIN_DIR.."/run_ft_registry_server.sh "..
+  			    --os.execute("start "..BIN_DIR.."/run_registry_server.sh "..
 		--					 self.config.registryServerHostPort..
 		--					"> log_registry_server-"..tostring(t)..".txt")
 			end
@@ -131,18 +155,16 @@ function FTRSMonitorFacet:monitor()
         	-- Espera 5 segundos para que dê tempo do SR ter sido levantado
         	os.execute("sleep 5")
 
-			local ftrsService = orb:newproxy("corbaloc::"..self.config.hostName..":"..self.config.hostPort.."/FTRS",
-					             "IDL:openbusidl/ft/IFaultTolerantService:1.0")
+			local ftrsService = orb:newproxy("corbaloc::"..self.config.registryServerHostName..
+											":"..self.config.registryServerHostPort.."/FTRS",
+											"IDL:openbusidl/ft/IFaultTolerantService:1.0")
 
-			local connId = nil
+			self.recConnId = nil
 			if OilUtilities:existent(ftrsService) then
-			
-			    --self.accessControlService = acs
-				 
 				local ftRec = self:getFacetByName("IReceptacles")
 				ftRec = orb:narrow(ftRec)
-				connId = ftRec:connect("IFaultTolerantService",ftrsService)
-				if not connId then
+				self.recConnId = ftRec:connect("IFaultTolerantService",ftrsService)
+				if not self.recConnId then
 					Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTRSMonitor")
 					os.exit(1)
 				end
@@ -151,10 +173,10 @@ function FTRSMonitorFacet:monitor()
 
 			 timeToTry = timeToTry + 1
 
-		until connId ~= nil or timeToTry == 1000
+		until self.recConnId ~= nil or timeToTry == 1000
 		    
 
-		if connId == nil then
+		if self.recConnId == nil then
 		     log:faulttolerance("[Monitor SR] Servico de registro nao encontrado.")
 		     return nil
 		end
@@ -170,17 +192,5 @@ function FTRSMonitorFacet:monitor()
     end
 end
 
-------------------------------------------------------------------------------
--- Faceta IComponent
-------------------------------------------------------------------------------
----
---Inicia o componente.
---
---@see scs.core.IComponent#startup
----
-local BIN_DIR
-function startup(self)
-  BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
-  return self
-end
+
 

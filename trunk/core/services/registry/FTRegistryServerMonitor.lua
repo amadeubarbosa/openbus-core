@@ -129,8 +129,10 @@ function main()
   local ftRec = ftrsInst.IComponent:getFacetByName("IReceptacles")
   
   ftRec = orb:narrow(ftRec)
-  local ok = ftRec:connect("IFaultTolerantService",ftregistryService)
-  if not ok then
+  local recConnId = ftRec:connect("IFaultTolerantService",ftregistryService)
+  print("ConnectionId:")
+  print(recConnId)
+  if not recConnId then
 	Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTRSMonitor")
     os.exit(1)
   end
@@ -140,6 +142,7 @@ function main()
   
   local ftrs = ftrsInst.IFTRegistryServiceMonitor
   ftrs.config = RegistryServerConfiguration
+  ftrs.recConnId = recConnId
   
   -- Inicialização
   success, res = oil.pcall(ftrsInst.IComponent.startup, ftrsInst.IComponent)

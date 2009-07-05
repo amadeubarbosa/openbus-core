@@ -5,16 +5,20 @@
 ---
 local ipairs = ipairs
 local tonumber = tonumber
+local tostring = tostring
+local print = print
 
 local Log = require "openbus.common.Log"
 local oil = require "oil"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
+
 if IDLPATH_DIR == nil then
   Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
   os.exit(1)
 end
+
 
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
@@ -33,7 +37,6 @@ end
 if AccessControlServerConfiguration.oilVerboseLevel then
   oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
 end
-
 local hostPort = arg[1]
 if hostPort == nil then
    Log:error("É necessario passar o numero da porta.\n")
@@ -42,8 +45,8 @@ end
 
 AccessControlServerConfiguration.hostPort = tonumber(hostPort)
 
-local addr = "corbaloc::"..AccessControlServerConfiguration.hostName..":"
-				..AccessControlServerConfiguration.hostPort.."/FTACS"
+local hostAdd = AccessControlServerConfiguration.hostName..":"..hostPort
+
 
 -- Inicializa o ORB, fixando a localização do serviço em uma porta específica
 local orb = oil.init {  flavor = "intercepted;corba;typed;cooperative;base",
@@ -56,7 +59,7 @@ oil.verbose:level(2)
 local FTAccessControlServiceMonitor = require "core.services.accesscontrol.FTAccessControlServiceMonitor"
 local scs = require "scs.core.base"
 
-assert(orb:loadidlfile(IDLPATH_DIR.."/ft_service_monitor.idl"))
+orb:loadidlfile(IDLPATH_DIR.."/ft_service_monitor.idl")
 
 -----------------------------------------------------------------------------
 -- FTAccessControlServiceMonitor Descriptions
@@ -67,7 +70,7 @@ local facetDescriptions = {}
 facetDescriptions.IComponent        		  	 = {}
 facetDescriptions.IReceptacles					 = {}
 facetDescriptions.IMetaInterface     			 = {}
-facetDescriptions.IFTServiceMonitor				 = {}
+facetDescriptions.IFTAccessControlServiceMonitor = {}
 
 facetDescriptions.IComponent.name                     = "IComponent"
 facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
@@ -82,10 +85,10 @@ facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IFTServiceMonitor.name 			 = "IFTServiceMonitor"
-facetDescriptions.IFTServiceMonitor.interface_name   = "IDL:openbusidl/ft/IFTServiceMonitor:1.0"
-facetDescriptions.IFTServiceMonitor.class            = FTAccessControlServiceMonitor.FTACSMonitorFacet
-facetDescriptions.IFTServiceMonitor.key              = "FTACSMonitor"
+facetDescriptions.IFTAccessControlServiceMonitor.name 			  = "IFTServiceMonitor"
+facetDescriptions.IFTAccessControlServiceMonitor.interface_name   = "IDL:openbusidl/ft/IFTServiceMonitor:1.0"
+facetDescriptions.IFTAccessControlServiceMonitor.class            =  FTAccessControlServiceMonitor.FTACSMonitorFacet
+facetDescriptions.IFTAccessControlServiceMonitor.key              = "FTACSMonitor"
 
 -- Receptacle Descriptions
 local receptacleDescriptions = {}
@@ -94,7 +97,6 @@ receptacleDescriptions.IFaultTolerantService.name 			= "IFaultTolerantService"
 receptacleDescriptions.IFaultTolerantService.interface_name = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
 receptacleDescriptions.IFaultTolerantService.is_multiplex 	= false
 receptacleDescriptions.IFaultTolerantService.type   		= "Receptacle"
-
 
 -- component id
 local componentId = {}
@@ -109,7 +111,7 @@ componentId.platform_spec = ""
 ---
 function main()
 
-  local ftacsService = orb:newproxy(addr,"IDL:openbusidl/ft/IFaultTolerantService:1.0")
+  local ftacsService = orb:newproxy("corbaloc::"..hostAdd.."/FTACS","IDL:openbusidl/ft/IFaultTolerantService:1.0")
   if ftacsService:_non_existent() then
       Log:error("Faceta FT do Servico de controle de acesso nao encontrado.")
       os.exit(1)
@@ -122,11 +124,13 @@ function main()
 
   -- Cria o componente responsável pelo Monitor do Serviço de Controle de Acesso
   local ftacsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
-  --TODO TESTAR
+  
+  
   local ftRec = ftacsInst.IComponent:getFacetByName("IReceptacles")
+  
   ftRec = orb:narrow(ftRec)
-  local ok = ftRec:connect("IFaultTolerantService",ftacsService)
-  if not ok then
+  local connId = ftRec:connect("IFaultTolerantService",ftacsService)
+  if not connId then
 	Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTACSMonitor")
     os.exit(1)
   end
@@ -134,8 +138,9 @@ function main()
   -- Configurações
   ftacsInst.IComponent.startup = FTAccessControlServiceMonitor.startup
     
-  local ftacs = ftacsInst.IFTServiceMonitor
+  local ftacs = ftacsInst.IFTAccessControlServiceMonitor
   ftacs.config = AccessControlServerConfiguration
+  ftacs.recConnId = connId
 
   -- Inicialização
   success, res = oil.pcall(ftacsInst.IComponent.startup, ftacsInst.IComponent)
@@ -144,6 +149,7 @@ function main()
         tostring(res).."\n")
     os.exit(1)
   end  
+  
   Log:faulttolerance("Monitor do servico de controle de acesso iniciado com sucesso")
 
   local success, res = oil.pcall(oil.newthread, ftacs.monitor, ftacs)
