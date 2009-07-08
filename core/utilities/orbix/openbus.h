@@ -6,6 +6,7 @@
 #ifndef OPENBUS_H_
 #define OPENBUS_H_
 
+#include "verbose.h"
 #include "stubs/access_control_service.hh"
 #include "services/RegistryService.h"
 #include "stubs/session_service.hh"
@@ -172,7 +173,7 @@ typedef openbusidl::acs::Credential_var Credential_var;
     /**
     * Host de localização do barramento. 
     */
-      char* hostBus;
+      string hostBus;
 
     /**
     * Porta de localização do barramento. 
@@ -246,6 +247,10 @@ typedef openbusidl::acs::Credential_var Credential_var;
       Openbus();
 
     public:
+
+    #ifdef VERBOSE
+      static Verbose* verbose;
+    #endif
 
       ~Openbus();
 

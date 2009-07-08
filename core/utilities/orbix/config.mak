@@ -17,7 +17,7 @@ OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
-DEFINES=VERBOSE
+#DEFINES=VERBOSE
 
 OBJROOT= obj
 TARGETROOT= lib
@@ -36,7 +36,8 @@ SRC= openbus/common/ClientInterceptor.cpp \
      stubs/coreC.cxx \
      stubs/scsC.cxx \
      openbus.cpp \
-     services/RegistryService.cpp
+     services/RegistryService.cpp \
+     verbose.cpp
 
 genstubs:
 	mkdir -p stubs

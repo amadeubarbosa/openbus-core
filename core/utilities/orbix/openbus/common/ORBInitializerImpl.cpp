@@ -5,6 +5,7 @@
 #include <omg/IOP.hh>
 
 #include "ORBInitializerImpl.h"
+#include "../../openbus.h"
 
 #ifdef VERBOSE
   using namespace std;
@@ -17,21 +18,22 @@ namespace openbus {
     ORBInitializerImpl::ORBInitializerImpl()
     {
     #ifdef VERBOSE
-      cout << "[ORBInitializerImpl::ORBInitializerImpl() BEGIN]" << endl;
+      Openbus::verbose->print("ORBInitializerImpl::ORBInitializerImpl() BEGIN");
+      Openbus::verbose->indent();
     #endif
     #ifdef VERBOSE
-      cout << "[ORBInitializerImpl::ORBInitializerImpl() END]" << endl;
+      Openbus::verbose->dedent();
+      Openbus::verbose->print("ORBInitializerImpl::ORBInitializerImpl() END");
     #endif
     }
 
-    ORBInitializerImpl::~ORBInitializerImpl() {
-
-    }
+    ORBInitializerImpl::~ORBInitializerImpl() { }
 
     void ORBInitializerImpl::pre_init(ORBInitInfo_ptr info)
     {
     #ifdef VERBOSE
-      cout << "[ORBInitializerImpl::pre_init() BEGIN]" << endl;
+      Openbus::verbose->print("ORBInitializerImpl::pre_init() BEGIN");
+      Openbus::verbose->indent();
     #endif
       IOP::CodecFactory_var codec_factory = info->codec_factory();
       IOP::Encoding cdr_encoding = {IOP::ENCODING_CDR_ENCAPS, 1, 2};
@@ -54,19 +56,12 @@ namespace openbus {
         serverRequestInterceptor = serverInterceptor ;
       info->add_server_request_interceptor(serverRequestInterceptor) ;
     #ifdef VERBOSE
-      cout << "[ORBInitializerImpl::pre_init() END]" << endl;
+      Openbus::verbose->dedent();
+      Openbus::verbose->print("ORBInitializerImpl::pre_init() END");
     #endif
     }
 
-    void ORBInitializerImpl::post_init(ORBInitInfo_ptr info)
-    {
-    #ifdef VERBOSE
-      cout << "[ORBInitializerImpl::post_init() BEGIN]" << endl;
-    #endif
-    #ifdef VERBOSE
-      cout << "[ORBInitializerImpl::post_init() END]" << endl;
-    #endif
-    }
+    void ORBInitializerImpl::post_init(ORBInitInfo_ptr info) { }
 
     ServerInterceptor* ORBInitializerImpl::getServerInterceptor() {
       return serverInterceptor;

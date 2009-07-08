@@ -21,13 +21,15 @@ namespace openbus {
                                           IOP::Codec_ptr pcdr_codec)
     {
     #ifdef VERBOSE
-      cout << "\n\n[ServerInterceptor::ServerInterceptor() BEGIN]" << endl;
+      Openbus::verbose->print("ServerInterceptor::ServerInterceptor() BEGIN");
+      Openbus::verbose->indent();
     #endif
       slotid = pslotid;
       picurrent = ppicurrent;
       cdr_codec = pcdr_codec;
     #ifdef VERBOSE
-      cout << "\n\n[ServerInterceptor::ServerInterceptor() END]" << endl;
+      Openbus::verbose->dedent();
+      Openbus::verbose->print("ServerInterceptor::ServerInterceptor() END");
     #endif
     }
 
@@ -36,12 +38,18 @@ namespace openbus {
     void ServerInterceptor::receive_request(ServerRequestInfo_ptr ri) {
       ::IOP::ServiceContext* sc = ri->get_request_service_context(1234);
     #ifdef VERBOSE
-      cout << "[Receive a request: " << ri->operation() << "]" << endl;
+      Openbus::verbose->print("ServerInterceptor::receive_request() BEGIN");
+      Openbus::verbose->indent();
+      stringstream request;
+      request << "Receive a request: " << ri->operation();
+      Openbus::verbose->print(request.str());
       CORBA::ULong z;
-      cout << "[Context Data:]";
+      stringstream contextData;
+      contextData << "Context Data: ";
       for (z = 0; z < sc->context_data.length(); z++) {
-        printf("%u ", sc->context_data[ z ]);
+        contextData << (unsigned) sc->context_data[ z ];
       }
+      Openbus::verbose->print(contextData.str());
     #endif
 
       IOP::ServiceContext::_context_data_seq& context_data = sc->context_data;
@@ -56,18 +64,28 @@ namespace openbus {
       openbusidl::acs::Credential* c = new openbusidl::acs::Credential;
       any >>= c;
     #ifdef VERBOSE
-      cout << "[credential->owner: " << c->owner << "]" << endl;
-      cout << "[credential->identifier: " << c->identifier << "]" << endl;
-      cout << "[credential->delegate: " << c->delegate << "]" << endl;
+      Openbus::verbose->print("credential->owner: " + (string) c->owner);
+      Openbus::verbose->print("credential->identifier: " + 
+        (string) c->identifier);
+      Openbus::verbose->print("credential->delegate: " + 
+        (string) c->delegate);
     #endif
       openbus::Openbus* bus = openbus::Openbus::getInstance();
       if(bus->getAccessControlService()->isValid(*c))
       {
         picurrent->set_slot(slotid, any);
       } else {
+      #ifdef VERBOSE
+        Openbus::verbose->print("Throwing CORBA::NO_PERMISSION...");
+        Openbus::verbose->dedent();
+        Openbus::verbose->print("ServerInterceptor::receive_request() END");
+      #endif
         throw CORBA::NO_PERMISSION();
       }
-
+    #ifdef VERBOSE
+      Openbus::verbose->dedent();
+      Openbus::verbose->print("ServerInterceptor::receive_request() END");
+    #endif
     }
     void ServerInterceptor::receive_request_service_contexts(ServerRequestInfo*)
       {}
@@ -83,7 +101,8 @@ namespace openbus {
 
     openbusidl::acs::Credential_var ServerInterceptor::getCredential() {
     #ifdef VERBOSE
-      cout << "\n\n[ServerInterceptor::getCredential() BEGIN]" << endl;
+      Openbus::verbose->print("ServerInterceptor::getCredential() BEGIN");
+      Openbus::verbose->indent();
     #endif
       CORBA::Any_var any = picurrent->get_slot(slotid);
 
@@ -91,17 +110,26 @@ namespace openbus {
       any >>= c;
       if (c) {
       #ifdef VERBOSE
-        cout << "\t[credential->owner: " << c->owner << "]" << endl;
-        cout << "\t[credential->identifier: " << c->identifier << "]" << endl;
-        cout << "\t[credential->delegate: " << c->delegate << "]" << endl;
-        cout << "[ServerInterceptor::getCredential() END]" << endl;
+        Openbus::verbose->print("credential->owner: " + (string) c->owner);
+        Openbus::verbose->print("credential->identifier: " + 
+          (string) c->identifier);
+        Openbus::verbose->print("credential->delegate: " + 
+          (string) c->delegate);
       #endif
         openbusidl::acs::Credential_var ret = new openbusidl::acs::Credential;
         ret->owner = c->owner;
         ret->identifier = c->identifier;
         ret->delegate = c->delegate;
+      #ifdef VERBOSE
+        Openbus::verbose->dedent();
+        Openbus::verbose->print("ServerInterceptor::getCredential() END");
+      #endif
         return ret._retn();
       } else {
+      #ifdef VERBOSE
+        Openbus::verbose->dedent();
+        Openbus::verbose->print("ServerInterceptor::getCredential() END");
+      #endif
         return 0;
       }
     }

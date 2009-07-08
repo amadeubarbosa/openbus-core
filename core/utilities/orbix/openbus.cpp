@@ -16,27 +16,32 @@
 #define CHALLENGE_SIZE 36
 
 namespace openbus {
+#ifdef VERBOSE
+  Verbose* Openbus::verbose = 0;
+#endif
   common::ORBInitializerImpl* Openbus::ini = 0;
   Openbus* Openbus::bus = 0;
   std::set<Openbus::LeaseExpiredCallback> Openbus::leaseExpiredCallbackSet;
 
   void Openbus::terminationHandlerCallback(long signalType) {
   #ifdef VERBOSE
-    cout << "[Openbus::terminationHandlerCallback() BEGIN]" << endl;
+    verbose->print("Openbus::terminationHandlerCallback() BEGIN");
+    verbose->indent();
   #endif
     try {
       bus->disconnect();
     } catch(CORBA::Exception& e) {
     #ifdef VERBOSE
-      cout << "[Não foi possível se desconectar corretamente do barramento.]" 
-        << endl;
+      verbose->print(
+        "Não foi possível se desconectar corretamente do barramento."); 
     #endif
     }
     if (!CORBA::is_nil(bus->orb)) {
       bus->orb->shutdown(0);
     }
   #ifdef VERBOSE
-    cout << "[Openbus::terminationHandlerCallback() END]" << endl;
+    verbose->dedent();
+    verbose->print("Openbus::terminationHandlerCallback() END");
   #endif
   }
 
@@ -47,7 +52,7 @@ namespace openbus {
   void* Openbus::RenewLeaseThread::run() {
     unsigned long time;
   #ifdef VERBOSE
-    cout << "[Openbus::RenewLeaseThread::run() BEGIN]" << endl;
+    verbose->print("Openbus::RenewLeaseThread::run() BEGIN");
   #endif
     while (true) {
       time = ((bus->timeRenewing)/2)*300;
@@ -55,11 +60,11 @@ namespace openbus {
       bus->mutex->lock();
       if (bus->connectionState == CONNECTED) {
       #ifdef VERBOSE
-        cout << "\t[Renovando credencial...]" << endl;
+        verbose->print("Renovando credencial...");
       #endif
         if (!bus->iLeaseProvider->renewLease(*bus->credential, bus->lease)) {
         #ifdef VERBOSE
-          cout << "\t[Não foi possível renovar a credencial!]" << endl;
+          verbose->print("Não foi possível renovar a credencial!");
         #endif
           std::set<LeaseExpiredCallback>::iterator it;
           for(it = leaseExpiredCallbackSet.begin(); 
@@ -70,15 +75,16 @@ namespace openbus {
           } 
         } else {
         #ifdef VERBOSE
-          cout << "\t[Credencial renovada!]" << endl;
+          verbose->print("Credencial renovada!");
         #endif
         }
       }
       bus->mutex->unlock();
     }
   #ifdef VERBOSE
-    cout << "[Mecanismo de renovação de credencial *desativado*...]" << endl;
-    cout << "[Openbus::RenewLeaseThread::run() END]" << endl;
+    verbose->print("Mecanismo de renovação de credencial *desativado*...");
+    verbose->dedent();
+    verbose->print("Openbus::RenewLeaseThread::run() END");
   #endif
     return 0;
   }
@@ -87,22 +93,12 @@ namespace openbus {
     for (short idx = 1; idx < argc; idx++) {
       if (!strcmp(argv[idx], "-OpenbusHost")) {
         idx++;
-        hostBus = (char*) malloc(sizeof(char) * strlen(argv[idx]) + 1);
-        hostBus = (char*) memcpy(hostBus, argv[idx], strlen(argv[idx]) + 1);
+        hostBus = argv[idx];
       } else if (!strcmp(argv[idx], "-OpenbusPort")) {
         idx++;
         portBus = atoi(argv[idx]);
       }
     }
-  }
-
-  void Openbus::initialize() {
-    hostBus = (char*) "";
-    portBus = 2089;
-    orb = 0;
-    poa = 0;
-    componentBuilder = 0;
-    mutex = new IT_Mutex();
   }
 
   void Openbus::createOrbPoa() {
@@ -111,8 +107,10 @@ namespace openbus {
   }
 
   void Openbus::registerInterceptors() {
-    ini = new common::ORBInitializerImpl();
-    PortableInterceptor::register_orb_initializer(ini);
+    if (!ini) {
+      ini = new common::ORBInitializerImpl();
+      PortableInterceptor::register_orb_initializer(ini);
+    }
   }
 
   void Openbus::newState() {
@@ -125,14 +123,30 @@ namespace openbus {
     iLeaseProvider = 0;
   }
 
-  void Openbus::createProxyToIAccessControlService() {
+  void Openbus::initialize() {
+    hostBus = "";
+    portBus = 2089;
+    orb = 0;
+    poa = 0;
+    componentBuilder = 0;
+    mutex = new IT_Mutex();
+  }
+
+ void Openbus::createProxyToIAccessControlService() {
   #ifdef VERBOSE
-    cout << "[Openbus::createProxyToIAccessControlService() BEGIN]" << endl;
+    verbose->print("Openbus::createProxyToIAccessControlService() BEGIN");
+    verbose->indent();
   #endif
     std::stringstream corbalocACS;
     std::stringstream corbalocLP;
     corbalocACS << "corbaloc::" << hostBus << ":" << portBus << "/ACS";
+  #ifdef VERBOSE
+    verbose->print("corbaloc ACS: " + corbalocACS.str());
+  #endif
     corbalocLP << "corbaloc::" << hostBus << ":" << portBus << "/LP";
+  #ifdef VERBOSE
+    verbose->print("corbaloc LeaseProvider: " + corbalocLP.str());
+  #endif
     CORBA::Object_var objACS = 
       orb->string_to_object(corbalocACS.str().c_str());
     CORBA::Object_var objLP = 
@@ -140,23 +154,65 @@ namespace openbus {
     iAccessControlService = 
       openbusidl::acs::IAccessControlService::_narrow(objACS);
     iLeaseProvider = openbusidl::acs::ILeaseProvider::_narrow(objLP);
-    cout << "iLeaseProvider:" << iLeaseProvider << endl;
-#ifdef VERBOSE
-    cout << "[Openbus::createProxyToIAccessControlService() END]" << endl;
+  #ifdef VERBOSE
+    verbose->dedent();
+    verbose->print("Openbus::createProxyToIAccessControlService() END");
   #endif
   }
 
   Openbus::Openbus() {
+  #ifdef VERBOSE
+    verbose->print("Openbus::Openbus() BEGIN");
+    verbose->indent();
+  #endif
     newState();
-    cout << "Registrando interceptadores ..." << endl;
+  #ifdef VERBOSE
+    verbose->print("Registrando interceptadores ...");
+  #endif
     registerInterceptors();
     initialize();
+  #ifdef VERBOSE
+    verbose->dedent();
+    verbose->print("Openbus::Openbus() END");
+  #endif
+  }
+
+  Openbus::~Openbus() {
+  #ifdef VERBOSE
+    verbose->print("Openbus::~Openbus() BEGIN");
+    verbose->indent();
+    verbose->print("Deletando objeto componentBuilder...");
+  #endif
+    delete componentBuilder;
+  #ifdef VERBOSE
+    verbose->print("Deletando objeto mutex...");
+  #endif
+    delete mutex;
+    bus = 0;
+  #ifdef VERBOSE
+    verbose->dedent();
+    verbose->print("Openbus::~Openbus() END");
+  #endif
   }
 
   Openbus* Openbus::getInstance() {
+  #ifdef VERBOSE
+    if (!verbose) {
+      verbose = new Verbose();
+    }
+    verbose->print("Openbus::getInstance() BEGIN");
+    verbose->indent();
+  #endif
     if (!bus) {
+    #ifdef VERBOSE
+      verbose->print("Criando novo objeto...");
+    #endif
       bus = new Openbus();
     }
+  #ifdef VERBOSE
+    verbose->dedent();
+    verbose->print("Openbus::getInstance() END");
+  #endif
     return bus;
   }
 
@@ -164,11 +220,22 @@ namespace openbus {
     int argc,
     char** argv)
   {
+  #ifdef VERBOSE
+    verbose->print("Openbus::init(int argc, char** argv) BEGIN");
+    verbose->indent();
+  #endif
     _argc = argc;
     _argv = argv;
     commandLineParse(_argc, _argv);
     createOrbPoa();
+    if (componentBuilder) {
+      delete componentBuilder;
+    }
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
+  #ifdef VERBOSE
+    verbose->dedent();
+    verbose->print("Openbus::init() END");
+  #endif
   }
 
   void Openbus::init(
@@ -177,23 +244,37 @@ namespace openbus {
     char* host,
     unsigned short port)
   {
+  #ifdef VERBOSE
+    verbose->print("Openbus::init(int argc, char** argv, char* host, \
+      unsigned short port) BEGIN");
+    verbose->indent();
+  #endif
     init(argc, argv);
-    hostBus = (char*) malloc(sizeof(char) * strlen(host) + 1);
-    hostBus = (char*) memcpy(hostBus, host, strlen(host) + 1);
+    hostBus = host;
     portBus = port;
+  #ifdef VERBOSE
+    verbose->dedent();
+    verbose->print("Openbus::init(int argc, char** argv, char* host, \
+      unsigned short port) END");
+  #endif
   }
 
   bool Openbus::isConnected() {
+  #ifdef VERBOSE
+    verbose->print("Openbus::isConnected() BEGIN");
+    verbose->indent();
+  #endif
     if (connectionState == CONNECTED) {
+    #ifdef VERBOSE
+      verbose->print("Openbus::isConnected() END");
+    #endif
       return true;
     }
+  #ifdef VERBOSE
+    verbose->print("Openbus::isConnected() END");
+    verbose->dedent();
+  #endif
     return false;
-  }
-
-  Openbus::~Openbus() {
-    delete componentBuilder;
-    delete mutex;
-    delete hostBus;
   }
 
   CORBA::ORB* Openbus::getORB() {
@@ -201,12 +282,20 @@ namespace openbus {
   }
 
   PortableServer::POA* Openbus::getRootPOA() {
+  #ifdef VERBOSE
+    verbose->print("Openbus::getRootPOA() BEGIN");
+    verbose->indent();
+  #endif
     if (!poa) {
       CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
       poa = PortableServer::POA::_narrow(poa_obj);
       poa_manager = poa->the_POAManager();
       poa_manager->activate();
     }
+  #ifdef VERBOSE
+    verbose->dedent();
+    verbose->print("Openbus::getRootPOA() END");
+  #endif
     return poa;
   }
 
@@ -286,34 +375,50 @@ namespace openbus {
     throw (CORBA::SystemException, LOGIN_FAILURE)
   {
   #ifdef VERBOSE
-    cout << "[Openbus::connect() BEGIN]" << endl;
+    verbose->print("Openbus::connect() BEGIN");
+    verbose->indent();
   #endif
     if (connectionState == DISCONNECTED) {
       try {
       #ifdef VERBOSE
-        cout << "\thost = "<<  hostBus << endl;
-        cout << "\tport = "<<  portBus << endl;
-        cout << "\tuser = "<<  user << endl;
-        cout << "\tpassword = "<<  password << endl;
-        cout << "\torb = "<<  orb << endl;
+        std::stringstream portMSG;
+        std::stringstream userMSG;
+        std::stringstream passwordMSG;
+        std::stringstream orbMSG;
+        verbose->print("host = " + hostBus);
+        portMSG << "port = " << portBus; 
+        verbose->print(portMSG.str());
+        userMSG << "username = " << user;
+        verbose->print(userMSG.str());
+        passwordMSG<< "password = " << password;
+        verbose->print(passwordMSG.str());
+        orbMSG<< "orb = " << orb;
+        verbose->print(orbMSG.str());
       #endif
         if (!iAccessControlService) {
           createProxyToIAccessControlService();
         }
       #ifdef VERBOSE
-        cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
+        stringstream iACSMSG;
+        iACSMSG << "iAccessControlService = " << iAccessControlService; 
+        verbose->print(iACSMSG.str());
       #endif
         mutex->lock();
         if (!iAccessControlService->loginByPassword(user, password, credential,
           lease))
         {
           mutex->unlock();
+        #ifdef VERBOSE
+          verbose->dedent();
+          verbose->print("Throwing LOGIN_FAILURE...");
+          verbose->print("Openbus::connect() END");
+        #endif
           throw LOGIN_FAILURE();
         } else {
         #ifdef VERBOSE
-          cout << "\tCrendencial recebida: " << credential->identifier << endl;
-          cout << "\tAssociando credencial " << credential << " ao ORB " << orb
-            << endl;
+          stringstream msg;
+          msg << "Associando credencial " << credential << " ao ORB " << orb;
+          verbose->print(msg.str());
         #endif
           connectionState = CONNECTED;
           openbus::common::ClientInterceptor::credentials[orb] = &credential;
@@ -323,18 +428,28 @@ namespace openbus {
           renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, 
             IT_ThreadFactory::attached, 0);
           registryService = getRegistryService();
+        #ifdef VERBOSE
+          verbose->dedent();
+          verbose->print("Openbus::connect() END");
+        #endif
           return registryService;
         }
       } catch (const CORBA::SystemException& systemException) {
         mutex->unlock();
+      #ifdef VERBOSE
+        verbose->dedent();
+        verbose->print("Throwing CORBA::SystemException...");
+        verbose->print("Openbus::connect() END");
+      #endif
         throw;
       }
     } else {
+    #ifdef VERBOSE
+      verbose->dedent();
+      verbose->print("Openbus::connect() END");
+    #endif
       return registryService;
     }
-  #ifdef VERBOSE
-    cout << "[Openbus::connect() END]" << endl << endl;
-  #endif
   }
 
   services::RegistryService* Openbus::connect(
@@ -344,17 +459,27 @@ namespace openbus {
     throw (CORBA::SystemException, LOGIN_FAILURE, SECURITY_EXCEPTION)
   {
   #ifdef VERBOSE
-    cout << "[Openbus::connect() BEGIN]" << endl;
+    verbose->print("Openbus::connect() BEGIN");
+    verbose->indent();
   #endif
     if (connectionState == DISCONNECTED) {
       try {
       #ifdef VERBOSE
-        cout << "\thost = "<< hostBus << endl;
-        cout << "\tport = "<< portBus << endl;
-        cout << "\tentity = "<< entity << endl;
-        cout << "\tprivateKeyFilename = "<< privateKeyFilename << endl;
-        cout << "\torb = "<< orb << endl;
-      #endif
+        std::stringstream portMSG;
+        std::stringstream entityMSG;
+        std::stringstream privateKeyFilenameMSG;
+        std::stringstream ACSCertificateFilenameMSG;
+        verbose->print("host = " + hostBus);
+        portMSG << "port = " << portBus; 
+        verbose->print(portMSG.str());
+        entityMSG << "entity = " << entity;
+        verbose->print(entityMSG.str());
+        privateKeyFilenameMSG << "privateKeyFilename = " << privateKeyFilename;
+        verbose->print(privateKeyFilenameMSG.str());
+        ACSCertificateFilenameMSG << "ACSCertificateFilename = " << 
+          ACSCertificateFilename;
+        verbose->print(ACSCertificateFilenameMSG.str());
+       #endif
         if (!iAccessControlService) {
           createProxyToIAccessControlService();
         }
@@ -365,6 +490,11 @@ namespace openbus {
         openbusidl::OctetSeq* octetSeq =
           iAccessControlService->getChallenge(entity);
         if (octetSeq->length() == 0) {
+        #ifdef VERBOSE
+          verbose->dedent();
+          verbose->print("Throwing SECURITY_EXCEPTION...");
+          verbose->print("Openbus::connect() END");
+        #endif
           throw SECURITY_EXCEPTION(
             "O ACS não encontrou o certificado do serviço.");
         }
@@ -374,8 +504,15 @@ namespace openbus {
         FILE* fp = fopen(privateKeyFilename, "r");
         if (fp == 0) {
         #ifdef VERBOSE
-          cout << "\tNão foi possível abrir o arquivo: " << privateKeyFilename
-            << endl;
+          stringstream filename;
+          filename << "Não foi possível abrir o arquivo: " << 
+            privateKeyFilename;
+          verbose->print(filename.str());
+        #endif
+        #ifdef VERBOSE
+          verbose->dedent();
+          verbose->print("Throwing SECURITY_EXCEPTION...");
+          verbose->print("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "Não foi possível abrir o arquivo que armazena a chave privada.");
@@ -383,8 +520,12 @@ namespace openbus {
         EVP_PKEY* privateKey = PEM_read_PrivateKey(fp, 0, 0, 0);
         if (privateKey == 0) {
         #ifdef VERBOSE
-          cout << "\tNão foi possível obter a chave privada da entidade."
-            << endl;
+          verbose->print("Não foi possível obter a chave privada da entidade.");
+        #endif
+        #ifdef VERBOSE
+          verbose->dedent();
+          verbose->print("Throwing SECURITY_EXCEPTION...");
+          verbose->print("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "Não foi possível obter a chave privada da entidade.");
@@ -403,8 +544,15 @@ namespace openbus {
         if (certificateFile == 0) {
           free(challengePlainText);
         #ifdef VERBOSE
-          cout << "\tNão foi possível abrir o arquivo: " <<
-            ACSCertificateFilename << endl;
+          stringstream filename;
+          filename << "Não foi possível abrir o arquivo: " << 
+            ACSCertificateFilename;
+          verbose->print(filename.str());
+        #endif
+        #ifdef VERBOSE
+          verbose->dedent();
+          verbose->print("Throwing SECURITY_EXCEPTION...");
+          verbose->print("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "Não foi possível abrir o arquivo que armazena o certificado ACS.");
@@ -415,7 +563,12 @@ namespace openbus {
         EVP_PKEY* publicKey = X509_get_pubkey(x509);
         if (publicKey == 0) {
         #ifdef VERBOSE
-          cout << "\tNão foi possível obter a chave pública do ACS." << endl;
+          verbose->print("Não foi possível obter a chave pública do ACS.");
+        #endif
+        #ifdef VERBOSE
+          verbose->dedent();
+          verbose->print("Throwing SECURITY_EXCEPTION...");
+          verbose->print("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "Não foi possível obter a chave pública do ACS.");
@@ -435,7 +588,9 @@ namespace openbus {
           (CORBA::Octet*)answer, 0);
 
       #ifdef VERBOSE
-        cout << "\tiAccessControlService = "<<  iAccessControlService << endl;
+        stringstream iACSMSG;
+        iACSMSG << "iAccessControlService = " << iAccessControlService; 
+        verbose->print(iACSMSG.str());
       #endif
         mutex->lock();
         if (!iAccessControlService->loginByCertificate(entity, answerOctetSeq,
@@ -447,9 +602,9 @@ namespace openbus {
         } else {
           free(answer);
         #ifdef VERBOSE
-          cout << "\tCrendencial recebida: " << credential->identifier << endl;
-          cout << "\tAssociando credencial " << credential << " ao ORB " << orb
-            << endl;
+          stringstream msg;
+          msg << "Associando credencial " << credential << " ao ORB " << orb;
+          verbose->print(msg.str());
         #endif
           connectionState = CONNECTED;
           openbus::common::ClientInterceptor::credentials[orb] = &credential;
@@ -459,24 +614,35 @@ namespace openbus {
           renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread,
             IT_ThreadFactory::attached, 0);
           registryService = getRegistryService();
+        #ifdef VERBOSE
+          verbose->dedent();
+          verbose->print("Openbus::connect() END");
+        #endif
           return registryService;
         }
       } catch (const CORBA::SystemException& systemException) {
         mutex->unlock();
+      #ifdef VERBOSE
+        verbose->dedent();
+        verbose->print("Throwing CORBA::SystemException...");
+        verbose->print("Openbus::connect() END");
+      #endif
         throw;
       }
     } else {
+    #ifdef VERBOSE
+      verbose->dedent();
+      verbose->print("Openbus::connect() END");
+    #endif
       return registryService;
     }
-  #ifdef VERBOSE
-    cout << "[Openbus::connect() END]" << endl;
-  #endif
   }
 
 
   bool Openbus::disconnect() {
   #ifdef VERBOSE
-    cout << "[Openbus::disconnect() BEGIN]" << endl;
+    verbose->print("Openbus::disconnect() BEGIN");
+    verbose->indent();
   #endif
     mutex->lock();
     if (connectionState == CONNECTED) {
@@ -488,14 +654,16 @@ namespace openbus {
         connectionState = CONNECTED;
       }
     #ifdef VERBOSE
-      cout << "[Openbus::disconnect() END]" << endl;
+      verbose->dedent();
+      verbose->print("Openbus::disconnect() END");
     #endif
       mutex->unlock();
       return status;
     } else {
     #ifdef VERBOSE
-      cout << "[Não há conexão a ser desfeita.]" << endl;
-      cout << "[Openbus::disconnect() END]" << endl;
+      verbose->print("Não há conexão a ser desfeita.");
+      verbose->dedent();
+      verbose->print("Openbus::disconnect() END");
     #endif
       mutex->unlock();
       return false;

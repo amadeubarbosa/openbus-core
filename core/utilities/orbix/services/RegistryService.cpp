@@ -11,6 +11,7 @@
 #define VECTORSIZE 256
 
 #ifdef VERBOSE
+  #include "../openbus.h"
   using namespace std;
 #endif
 
@@ -69,11 +70,13 @@ namespace openbus {
 
     ServiceOfferList* RegistryService::find(FacetList facets) {
     #ifdef VERBOSE
-      cout << "[RegistryService::find() BEGIN]" << endl;
+      Openbus::verbose->print("RegistryService::find() BEGIN");
+      Openbus::verbose->indent();
     #endif
       ServiceOfferList* serviceOfferList = rgs->find(facets);
     #ifdef VERBOSE
-      cout << "[RegistryService::find() END]" << endl;
+      Openbus::verbose->dedent();
+      Openbus::verbose->print("RegistryService::find() END");
     #endif
       return serviceOfferList;
     }
@@ -83,11 +86,13 @@ namespace openbus {
       PropertyList criteria) 
     {
     #ifdef VERBOSE
-      cout << "[RegistryService::findByCriteria() BEGIN]" << endl;
+      Openbus::verbose->print("RegistryService::findByCriteria() BEGIN");
+      Openbus::verbose->indent();
     #endif
       ServiceOfferList* serviceOfferList = rgs->findByCriteria(facets, criteria);
     #ifdef VERBOSE
-      cout << "[RegistryService::findByCriteria() END]" << endl;
+      Openbus::verbose->dedent();
+      Openbus::verbose->print("RegistryService::findByCriteria() END");
     #endif
       return serviceOfferList;
     }
@@ -97,27 +102,37 @@ namespace openbus {
       char*& registryId)
     {
     #ifdef VERBOSE
-      cout << "[RegistryService::Register() BEGIN]" << endl;
+      Openbus::verbose->print("RegistryService::Register() BEGIN");
+      Openbus::verbose->indent();
     #endif
       openbusidl::rs::RegistryIdentifier_var _registryId;
       bool returnValue = rgs->_cxx_register(serviceOffer, _registryId);
       registryId = _registryId._retn();
     #ifdef VERBOSE
-      cout << "\treturnValue = " << returnValue << endl;
-      cout << "\tregistryId = (" << registryId << ")" << endl;
-      cout << "[RegistryService::Register() END]" << endl;
+      stringstream returnValueMsg;
+      returnValueMsg << "returnValue = " << returnValue; 
+      Openbus::verbose->print(returnValueMsg.str());
+      stringstream registryIdMsg;
+      registryIdMsg << "returnValue = " << registryId; 
+      Openbus::verbose->print(registryIdMsg.str());
+      Openbus::verbose->dedent();
+      Openbus::verbose->print("RegistryService::Register() END");
     #endif
       return returnValue;
     }
 
     bool RegistryService::unregister(char* registryId) {
     #ifdef VERBOSE
-      cout << "[RegistryService::unregister() BEGIN]" << endl;
-      cout << "\tregistryId = (" << registryId << ")" << endl;
+      Openbus::verbose->print("RegistryService::unregister() BEGIN");
+      Openbus::verbose->indent();
+      stringstream registryIdMsg;
+      registryIdMsg << "registryId = " << registryId; 
+      Openbus::verbose->print(registryIdMsg.str());
     #endif
       bool returnValue = rgs->unregister(registryId);
     #ifdef VERBOSE
-      cout << "[RegistryService::unregister() END]" << endl;
+      Openbus::verbose->dedent();
+      Openbus::verbose->print("RegistryService::unregister() END");
     #endif
       return returnValue;
     }
