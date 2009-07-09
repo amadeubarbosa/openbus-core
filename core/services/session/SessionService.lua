@@ -179,17 +179,6 @@ function SessionService:wasReconnected()
   end
 end
 
----
---Finaliza o serviço.
----
-function SessionService:shutdown()
-  if self.observerId then
-    self.accessControlService:removeObserver(self.observerId)
-    self.observer = nil
-    self.observerId = nil
-  end
-end
-
 --------------------------------------------------------------------------------
 -- Faceta ICredentialObserver
 --------------------------------------------------------------------------------

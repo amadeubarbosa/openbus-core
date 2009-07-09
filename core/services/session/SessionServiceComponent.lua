@@ -155,7 +155,10 @@ function SessionServiceComponent:shutdown()
     self.registryIdentifier = nil
   end
 
-  self.sessionService:shutdown()
+  if self.sessionService.observerId then
+    self.sessionService.accessControlService:removeObserver(self.sessionService.observerId)
+    self.sessionService.observerId = nil
+  end
 
   if Openbus:isConnected() then
     Openbus:disconnect()
