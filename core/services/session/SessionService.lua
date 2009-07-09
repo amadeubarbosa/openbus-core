@@ -185,7 +185,6 @@ end
 function SessionService:shutdown()
   if self.observerId then
     self.accessControlService:removeObserver(self.observerId)
-    self.observer:_deactivate()
     self.observer = nil
     self.observerId = nil
   end
