@@ -160,7 +160,7 @@ end
 function SessionService:wasReconnected()
 
   -- registra novamente o observador de credenciais
-  self.observerId = self.accessControlService:addObserver(self.observer, {})
+  self.observerId = self.accessControlService:addObserver(self.context.ICredentialObserver, {})
   Log:service("Observador recadastrado")
 
   -- Mantém apenas as sessões com credenciais válidas
