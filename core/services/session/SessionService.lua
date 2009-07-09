@@ -117,9 +117,13 @@ function SessionService:credentialWasDeleted(credential)
   -- Remove a sessão
   local session = self.sessions[credential.identifier]
   if session then
-  Log:service("Removendo sessão de credencial deletada ("..
-              credential.identifier..")")
+    Log:service("Removendo sessão de credencial deletada ("..
+      credential.identifier..")")
     orb:deactivate(session.ISession)
+    orb:deactivate(session.IMetaInterface)
+    orb:deactivate(session.SessionEventSink)
+    orb:deactivate(session.IComponent)
+
     self.sessions[credential.identifier] = nil
   end
 end
