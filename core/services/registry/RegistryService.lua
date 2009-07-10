@@ -19,7 +19,6 @@ local OffersDB = require "core.services.registry.OffersDB"
 local Openbus = require "openbus.Openbus"
 
 local Log = require "openbus.util.Log"
-Log:level(1)
 local oop = require "loop.simple"
 
 ---

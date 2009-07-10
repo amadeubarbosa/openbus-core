@@ -164,6 +164,14 @@ namespace openbus {
   #endif
   }
 
+  services::RegistryService* Openbus::setRegistryService() {
+    if (!registryService) {
+     registryService = new openbus::services::RegistryService(
+      iAccessControlService->getRegistryService());
+    }
+    return registryService;
+  }
+
   Openbus::Openbus() {
   #ifdef VERBOSE
     verbose->print("Openbus::Openbus() BEGIN");
@@ -313,10 +321,6 @@ namespace openbus {
   }
 
   openbus::services::RegistryService* Openbus::getRegistryService() {
-    if (!registryService) {
-     registryService = new openbus::services::RegistryService(
-      iAccessControlService->getRegistryService());
-    }
     return registryService;
   } 
 
@@ -427,7 +431,7 @@ namespace openbus {
           RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
           renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread, 
             IT_ThreadFactory::attached, 0);
-          registryService = getRegistryService();
+          registryService = setRegistryService();
         #ifdef VERBOSE
           verbose->dedent("Openbus::connect() END");
         #endif
@@ -605,7 +609,7 @@ namespace openbus {
           RenewLeaseThread* renewLeaseThread = new RenewLeaseThread(this);
           renewLeaseIT_Thread = IT_ThreadFactory::smf_start(*renewLeaseThread,
             IT_ThreadFactory::attached, 0);
-          registryService = getRegistryService();
+          registryService = setRegistryService();
         #ifdef VERBOSE
           verbose->dedent("Openbus::connect() END");
         #endif

@@ -11,14 +11,13 @@
 #include <fstream>
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
-#include <services/AccessControlService.h>
 
 using namespace openbus;
 
 class RGSTestSuite: public CxxTest::TestSuite {
   private:
     Openbus* bus;
-    services::AccessControlService* acs;
+    openbusidl::acs::IAccessControlService* iAccessControlService;
     services::RegistryService* rgs;
     Credential* credential;
     Lease lease;
@@ -49,7 +48,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         std::ifstream inFile;
         inFile.open(OPENBUS_HOME.c_str());
         if (!inFile) {
-          temp = "Nï¿½o foi possï¿½vel carregar o arquivo " + OPENBUS_HOME + ".";
+          temp = "Não foi possível carregar o arquivo " + OPENBUS_HOME + ".";
           TS_FAIL( temp );
         }
         while (inFile >> temp) {
@@ -71,11 +70,15 @@ class RGSTestSuite: public CxxTest::TestSuite {
           }
         }
         inFile.close();
-        bus = new Openbus(0, NULL, const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), OPENBUS_SERVER_PORT);
-        bus->init();
+        bus = Openbus::getInstance();
+        bus->init(
+          0, 
+          NULL, 
+          const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), 
+          OPENBUS_SERVER_PORT);
         credential = new Credential;
-        rgs = bus->connect( OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str() );
-        acs = bus->getAccessControlService();
+        rgs = bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
+        iAccessControlService = bus->getAccessControlService();
       }
       catch ( const char* errmsg ) {
         TS_FAIL( errmsg );
@@ -84,7 +87,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     ~RGSTestSuite() {
       try {
-        if ( NULL != bus ) {
+        if (bus) {
           if (bus->disconnect())
             delete bus;
         }
@@ -92,10 +95,10 @@ class RGSTestSuite: public CxxTest::TestSuite {
         delete propertyListHelper2;
         delete credential;
         delete rgs;
-        delete acs;
+        delete iAccessControlService;
       }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg );
+      catch (const char* errmsg ) {
+        TS_FAIL(errmsg);
       }
     }
 
@@ -107,9 +110,8 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     void testGetRGS() {
       try {
-        delete rgs;
-        rgs = acs->getRegistryService();
-        TS_ASSERT( NULL != rgs );
+        rgs = bus->getRegistryService();
+        TS_ASSERT(rgs);
       } catch (const char* errmsg) {
         TS_FAIL(errmsg);
       }
@@ -117,36 +119,60 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     void testRegister() {
       try {
-        scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
+        scs::core::ComponentBuilder* componentBuilder = 
+          bus->getComponentBuilder();
+
         scs::core::ComponentId id;
         fillComponentId(id);
+
         std::list<scs::core::ExtendedFacetDescription> extFacets;
-        scs::core::ComponentContext* context = componentBuilder->newComponent(extFacets, id);
+        scs::core::ComponentContext* context = 
+          componentBuilder->newComponent(extFacets, id);
         component = context->getIComponent();
+
         propertyListHelper = new openbus::services::PropertyListHelper();
-        propertyListHelper->add("type", "type1");
+        propertyListHelper->add("description", "blabla");
+
         openbusidl::rs::ServiceOffer serviceOffer;
         serviceOffer.properties = propertyListHelper->getPropertyList();
         serviceOffer.member = component;
-        TS_ASSERT( rgs->Register(serviceOffer, registryIdentifier) );
+        TS_ASSERT(rgs->Register(serviceOffer, registryIdentifier));
+
         propertyListHelper2 = new openbus::services::PropertyListHelper();
-        propertyListHelper2->add("type", "type2");
         serviceOffer.properties = propertyListHelper2->getPropertyList();
         serviceOffer.member = component;
-        TS_ASSERT( rgs->Register(serviceOffer, registryIdentifier2) );
+        TS_ASSERT(rgs->Register(serviceOffer, registryIdentifier2));
       } catch (const char* errmsg) {
         TS_FAIL(errmsg);
       }
     }
 
     void testFind() {
-      openbusidl::rs::ServiceOfferList* serviceOfferList = rgs->find(propertyListHelper->getPropertyList());
+      openbus::services::FacetListHelper* facetListHelper = \
+        new openbus::services::FacetListHelper();
+      facetListHelper->add("IComponent");
+
+      openbusidl::rs::ServiceOfferList* serviceOfferList = 
+        rgs->find(facetListHelper->getFacetList());
+      TS_ASSERT(serviceOfferList->length() == 2);
+      delete serviceOfferList;
+      delete facetListHelper;
+    }
+
+    void testFindByCriteria() {
+      openbus::services::FacetListHelper* facetListHelper = \
+        new openbus::services::FacetListHelper();
+      facetListHelper->add("IComponent");
+
+      openbusidl::rs::ServiceOfferList* serviceOfferList = \
+        rgs->findByCriteria(
+          facetListHelper->getFacetList(),
+          propertyListHelper->getPropertyList());
       TS_ASSERT(serviceOfferList->length() == 1);
       delete serviceOfferList;
-      serviceOfferList = rgs->find(propertyListHelper2->getPropertyList());
-      TS_ASSERT(serviceOfferList->length() == 1);
-      delete serviceOfferList;
+      delete facetListHelper;
     }
 };
 
 #endif
+

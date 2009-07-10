@@ -229,6 +229,11 @@ typedef openbusidl::acs::Credential_var Credential_var;
     */
       void createProxyToIAccessControlService();
 
+    /**
+    * Cria o objeto registryService.
+    */
+      services::RegistryService* setRegistryService();
+
       IT_Thread renewLeaseIT_Thread;
 
     /**

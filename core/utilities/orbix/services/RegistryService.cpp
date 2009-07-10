@@ -64,13 +64,26 @@ namespace openbus {
     }
 
     RegistryService::RegistryService(openbusidl::rs::IRegistryService* _rgs) {
+    #ifdef VERBOSE
+      Openbus::verbose->print("RegistryService::RegistryService() BEGIN");
+      Openbus::verbose->indent();
+    #endif
       rgs = _rgs;
+    #ifdef VERBOSE
+      stringstream msg;
+      msg << "iRegistryService: " << rgs;
+      Openbus::verbose->print(msg.str());
+      Openbus::verbose->dedent("RegistryService::RegistryService() END");
+    #endif
     }
 
     ServiceOfferList* RegistryService::find(FacetList facets) {
     #ifdef VERBOSE
       Openbus::verbose->print("RegistryService::find() BEGIN");
       Openbus::verbose->indent();
+      stringstream msg;
+      msg << "iRegistryService: " << rgs;
+      Openbus::verbose->print(msg.str());
     #endif
       ServiceOfferList* serviceOfferList = rgs->find(facets);
     #ifdef VERBOSE
@@ -86,6 +99,9 @@ namespace openbus {
     #ifdef VERBOSE
       Openbus::verbose->print("RegistryService::findByCriteria() BEGIN");
       Openbus::verbose->indent();
+      stringstream msg;
+      msg << "iRegistryService: " << rgs;
+      Openbus::verbose->print(msg.str());
     #endif
       ServiceOfferList* serviceOfferList = rgs->findByCriteria(facets, criteria);
     #ifdef VERBOSE
@@ -101,6 +117,9 @@ namespace openbus {
     #ifdef VERBOSE
       Openbus::verbose->print("RegistryService::Register() BEGIN");
       Openbus::verbose->indent();
+      stringstream msg;
+      msg << "iRegistryService: " << rgs;
+      Openbus::verbose->print(msg.str());
     #endif
       openbusidl::rs::RegistryIdentifier_var _registryId;
       bool returnValue = rgs->_cxx_register(serviceOffer, _registryId);
@@ -121,6 +140,9 @@ namespace openbus {
     #ifdef VERBOSE
       Openbus::verbose->print("RegistryService::unregister() BEGIN");
       Openbus::verbose->indent();
+      stringstream msg;
+      msg << "iRegistryService: " << rgs;
+      Openbus::verbose->print(msg.str());
       stringstream registryIdMsg;
       registryIdMsg << "registryId = " << registryId; 
       Openbus::verbose->print(registryIdMsg.str());
