@@ -10,10 +10,6 @@
   #include <string.h>
 #endif
 
-#ifdef VERBOSE
-  using namespace std;
-#endif
-
 namespace openbus {
   namespace common {
     ServerInterceptor::ServerInterceptor(Current* ppicurrent, \
@@ -28,8 +24,7 @@ namespace openbus {
       picurrent = ppicurrent;
       cdr_codec = pcdr_codec;
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("ServerInterceptor::ServerInterceptor() END");
+      Openbus::verbose->dedent("ServerInterceptor::ServerInterceptor() END");
     #endif
     }
 
@@ -77,14 +72,12 @@ namespace openbus {
       } else {
       #ifdef VERBOSE
         Openbus::verbose->print("Throwing CORBA::NO_PERMISSION...");
-        Openbus::verbose->dedent();
-        Openbus::verbose->print("ServerInterceptor::receive_request() END");
+        Openbus::verbose->dedent("ServerInterceptor::receive_request() END");
       #endif
         throw CORBA::NO_PERMISSION();
       }
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("ServerInterceptor::receive_request() END");
+      Openbus::verbose->dedent("ServerInterceptor::receive_request() END");
     #endif
     }
     void ServerInterceptor::receive_request_service_contexts(ServerRequestInfo*)
@@ -121,14 +114,12 @@ namespace openbus {
         ret->identifier = c->identifier;
         ret->delegate = c->delegate;
       #ifdef VERBOSE
-        Openbus::verbose->dedent();
-        Openbus::verbose->print("ServerInterceptor::getCredential() END");
+        Openbus::verbose->dedent("ServerInterceptor::getCredential() END");
       #endif
         return ret._retn();
       } else {
       #ifdef VERBOSE
-        Openbus::verbose->dedent();
-        Openbus::verbose->print("ServerInterceptor::getCredential() END");
+        Openbus::verbose->dedent("ServerInterceptor::getCredential() END");
       #endif
         return 0;
       }

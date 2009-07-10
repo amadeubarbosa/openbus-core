@@ -14,14 +14,6 @@ Verbose::~Verbose() {
 
 }
 
-void Verbose::indent() {
-  numIndent++;
-}
-
-void Verbose::dedent() {
-  numIndent--;
-}
-
 void Verbose::print(string msg) {
   stringstream msgStream;
   stringstream spaces;
@@ -40,6 +32,28 @@ void Verbose::print(string msg) {
     }
   } else {
     cout << spaces.str() << msgStream.str() << endl;
+  }
+}
+
+void Verbose::indent() {
+  numIndent++;
+}
+
+void Verbose::indent(string msg) {
+  indent();
+  print(msg);
+  cout << endl;
+}
+
+void Verbose::dedent() {
+  numIndent--;
+}
+
+void Verbose::dedent(string msg) {
+  dedent();
+  print(msg);
+  if (!numIndent) {
+    cout << endl;
   }
 }
 

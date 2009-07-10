@@ -18,8 +18,11 @@ class Verbose {
     ~Verbose();
 
     void indent();
+    void indent(string msg);
     void dedent();
+    void dedent(string msg);
     void print(string msg);
+    void println(string msg);
 };
 
 #endif

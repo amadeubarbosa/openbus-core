@@ -11,9 +11,6 @@
 #include "../../openbus.h"
 
 using namespace openbusidl::acs;
-#ifdef VERBOSE
-  using namespace std;
-#endif
 
 namespace openbus {
   namespace common {
@@ -31,8 +28,7 @@ namespace openbus {
     #endif
       cdr_codec = pcdr_codec;
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("ClientInterceptor::ClientInterceptor() END");
+      Openbus::verbose->dedent("ClientInterceptor::ClientInterceptor() END");
     #endif
     }
 
@@ -87,8 +83,7 @@ namespace openbus {
         ri->add_request_service_context(sc, true);
       }
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("ClientInterceptor::send_request() END");
+      Openbus::verbose->dedent("ClientInterceptor::send_request() END");
     #endif
     }
 

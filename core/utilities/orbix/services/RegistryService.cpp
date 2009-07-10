@@ -12,7 +12,6 @@
 
 #ifdef VERBOSE
   #include "../openbus.h"
-  using namespace std;
 #endif
 
 namespace openbus {
@@ -75,8 +74,7 @@ namespace openbus {
     #endif
       ServiceOfferList* serviceOfferList = rgs->find(facets);
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("RegistryService::find() END");
+      Openbus::verbose->dedent("RegistryService::find() END");
     #endif
       return serviceOfferList;
     }
@@ -91,8 +89,7 @@ namespace openbus {
     #endif
       ServiceOfferList* serviceOfferList = rgs->findByCriteria(facets, criteria);
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("RegistryService::findByCriteria() END");
+      Openbus::verbose->dedent("RegistryService::findByCriteria() END");
     #endif
       return serviceOfferList;
     }
@@ -115,8 +112,7 @@ namespace openbus {
       stringstream registryIdMsg;
       registryIdMsg << "returnValue = " << registryId; 
       Openbus::verbose->print(registryIdMsg.str());
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("RegistryService::Register() END");
+      Openbus::verbose->dedent("RegistryService::Register() END");
     #endif
       return returnValue;
     }
@@ -131,8 +127,7 @@ namespace openbus {
     #endif
       bool returnValue = rgs->unregister(registryId);
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("RegistryService::unregister() END");
+      Openbus::verbose->dedent("RegistryService::unregister() END");
     #endif
       return returnValue;
     }

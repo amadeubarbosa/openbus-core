@@ -40,8 +40,7 @@ namespace openbus {
       bus->orb->shutdown(0);
     }
   #ifdef VERBOSE
-    verbose->dedent();
-    verbose->print("Openbus::terminationHandlerCallback() END");
+    verbose->dedent("Openbus::terminationHandlerCallback() END");
   #endif
   }
 
@@ -57,6 +56,10 @@ namespace openbus {
     while (true) {
       time = ((bus->timeRenewing)/2)*300;
       IT_CurrentThread::sleep(time);
+    #ifdef VERBOSE
+      verbose->print("Openbus::RenewLeaseThread::run() RUN");
+      verbose->indent();
+    #endif
       bus->mutex->lock();
       if (bus->connectionState == CONNECTED) {
       #ifdef VERBOSE
@@ -80,10 +83,12 @@ namespace openbus {
         }
       }
       bus->mutex->unlock();
+    #ifdef VERBOSE
+      verbose->dedent("Openbus::RenewLeaseThread::run() SLEEP");
+    #endif
     }
   #ifdef VERBOSE
     verbose->print("Mecanismo de renovação de credencial *desativado*...");
-    verbose->dedent();
     verbose->print("Openbus::RenewLeaseThread::run() END");
   #endif
     return 0;
@@ -155,8 +160,7 @@ namespace openbus {
       openbusidl::acs::IAccessControlService::_narrow(objACS);
     iLeaseProvider = openbusidl::acs::ILeaseProvider::_narrow(objLP);
   #ifdef VERBOSE
-    verbose->dedent();
-    verbose->print("Openbus::createProxyToIAccessControlService() END");
+    verbose->dedent("Openbus::createProxyToIAccessControlService() END");
   #endif
   }
 
@@ -172,8 +176,7 @@ namespace openbus {
     registerInterceptors();
     initialize();
   #ifdef VERBOSE
-    verbose->dedent();
-    verbose->print("Openbus::Openbus() END");
+    verbose->dedent("Openbus::Openbus() END");
   #endif
   }
 
@@ -190,8 +193,7 @@ namespace openbus {
     delete mutex;
     bus = 0;
   #ifdef VERBOSE
-    verbose->dedent();
-    verbose->print("Openbus::~Openbus() END");
+    verbose->dedent("Openbus::~Openbus() END");
   #endif
   }
 
@@ -199,6 +201,9 @@ namespace openbus {
   #ifdef VERBOSE
     if (!verbose) {
       verbose = new Verbose();
+      scs::core::ComponentBuilder::verbose = verbose;
+      scs::core::IComponentImpl::verbose = verbose;
+      scs::core::IMetaInterfaceImpl::verbose = verbose;
     }
     verbose->print("Openbus::getInstance() BEGIN");
     verbose->indent();
@@ -210,8 +215,7 @@ namespace openbus {
       bus = new Openbus();
     }
   #ifdef VERBOSE
-    verbose->dedent();
-    verbose->print("Openbus::getInstance() END");
+    verbose->dedent("Openbus::getInstance() END");
   #endif
     return bus;
   }
@@ -233,8 +237,7 @@ namespace openbus {
     }
     componentBuilder = new scs::core::ComponentBuilder(orb, poa);
   #ifdef VERBOSE
-    verbose->dedent();
-    verbose->print("Openbus::init() END");
+    verbose->dedent("Openbus::init() END");
   #endif
   }
 
@@ -253,8 +256,7 @@ namespace openbus {
     hostBus = host;
     portBus = port;
   #ifdef VERBOSE
-    verbose->dedent();
-    verbose->print("Openbus::init(int argc, char** argv, char* host, \
+    verbose->dedent("Openbus::init(int argc, char** argv, char* host, \
       unsigned short port) END");
   #endif
   }
@@ -266,12 +268,12 @@ namespace openbus {
   #endif
     if (connectionState == CONNECTED) {
     #ifdef VERBOSE
-      verbose->print("Openbus::isConnected() END");
+      verbose->dedent("Openbus::isConnected() END");
     #endif
       return true;
     }
   #ifdef VERBOSE
-    verbose->print("Openbus::isConnected() END");
+    verbose->dedent("Openbus::isConnected() END");
     verbose->dedent();
   #endif
     return false;
@@ -293,8 +295,7 @@ namespace openbus {
       poa_manager->activate();
     }
   #ifdef VERBOSE
-    verbose->dedent();
-    verbose->print("Openbus::getRootPOA() END");
+    verbose->dedent("Openbus::getRootPOA() END");
   #endif
     return poa;
   }
@@ -409,9 +410,8 @@ namespace openbus {
         {
           mutex->unlock();
         #ifdef VERBOSE
-          verbose->dedent();
           verbose->print("Throwing LOGIN_FAILURE...");
-          verbose->print("Openbus::connect() END");
+          verbose->dedent("Openbus::connect() END");
         #endif
           throw LOGIN_FAILURE();
         } else {
@@ -429,24 +429,21 @@ namespace openbus {
             IT_ThreadFactory::attached, 0);
           registryService = getRegistryService();
         #ifdef VERBOSE
-          verbose->dedent();
-          verbose->print("Openbus::connect() END");
+          verbose->dedent("Openbus::connect() END");
         #endif
           return registryService;
         }
       } catch (const CORBA::SystemException& systemException) {
         mutex->unlock();
       #ifdef VERBOSE
-        verbose->dedent();
         verbose->print("Throwing CORBA::SystemException...");
-        verbose->print("Openbus::connect() END");
+        verbose->dedent("Openbus::connect() END");
       #endif
         throw;
       }
     } else {
     #ifdef VERBOSE
-      verbose->dedent();
-      verbose->print("Openbus::connect() END");
+      verbose->dedent("Openbus::connect() END");
     #endif
       return registryService;
     }
@@ -491,9 +488,8 @@ namespace openbus {
           iAccessControlService->getChallenge(entity);
         if (octetSeq->length() == 0) {
         #ifdef VERBOSE
-          verbose->dedent();
           verbose->print("Throwing SECURITY_EXCEPTION...");
-          verbose->print("Openbus::connect() END");
+          verbose->dedent("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "O ACS não encontrou o certificado do serviço.");
@@ -510,9 +506,8 @@ namespace openbus {
           verbose->print(filename.str());
         #endif
         #ifdef VERBOSE
-          verbose->dedent();
           verbose->print("Throwing SECURITY_EXCEPTION...");
-          verbose->print("Openbus::connect() END");
+          verbose->dedent("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "Não foi possível abrir o arquivo que armazena a chave privada.");
@@ -523,9 +518,8 @@ namespace openbus {
           verbose->print("Não foi possível obter a chave privada da entidade.");
         #endif
         #ifdef VERBOSE
-          verbose->dedent();
           verbose->print("Throwing SECURITY_EXCEPTION...");
-          verbose->print("Openbus::connect() END");
+          verbose->dedent("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "Não foi possível obter a chave privada da entidade.");
@@ -550,9 +544,8 @@ namespace openbus {
           verbose->print(filename.str());
         #endif
         #ifdef VERBOSE
-          verbose->dedent();
           verbose->print("Throwing SECURITY_EXCEPTION...");
-          verbose->print("Openbus::connect() END");
+          verbose->dedent("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "Não foi possível abrir o arquivo que armazena o certificado ACS.");
@@ -566,9 +559,8 @@ namespace openbus {
           verbose->print("Não foi possível obter a chave pública do ACS.");
         #endif
         #ifdef VERBOSE
-          verbose->dedent();
           verbose->print("Throwing SECURITY_EXCEPTION...");
-          verbose->print("Openbus::connect() END");
+          verbose->dedent("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
             "Não foi possível obter a chave pública do ACS.");
@@ -615,24 +607,21 @@ namespace openbus {
             IT_ThreadFactory::attached, 0);
           registryService = getRegistryService();
         #ifdef VERBOSE
-          verbose->dedent();
-          verbose->print("Openbus::connect() END");
+          verbose->dedent("Openbus::connect() END");
         #endif
           return registryService;
         }
       } catch (const CORBA::SystemException& systemException) {
         mutex->unlock();
       #ifdef VERBOSE
-        verbose->dedent();
         verbose->print("Throwing CORBA::SystemException...");
-        verbose->print("Openbus::connect() END");
+        verbose->dedent("Openbus::connect() END");
       #endif
         throw;
       }
     } else {
     #ifdef VERBOSE
-      verbose->dedent();
-      verbose->print("Openbus::connect() END");
+      verbose->dedent("Openbus::connect() END");
     #endif
       return registryService;
     }
@@ -654,16 +643,14 @@ namespace openbus {
         connectionState = CONNECTED;
       }
     #ifdef VERBOSE
-      verbose->dedent();
-      verbose->print("Openbus::disconnect() END");
+      verbose->dedent("Openbus::disconnect() END");
     #endif
       mutex->unlock();
       return status;
     } else {
     #ifdef VERBOSE
       verbose->print("Não há conexão a ser desfeita.");
-      verbose->dedent();
-      verbose->print("Openbus::disconnect() END");
+      verbose->dedent("Openbus::disconnect() END");
     #endif
       mutex->unlock();
       return false;

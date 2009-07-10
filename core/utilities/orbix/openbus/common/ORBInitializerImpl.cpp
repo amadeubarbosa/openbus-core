@@ -7,10 +7,6 @@
 #include "ORBInitializerImpl.h"
 #include "../../openbus.h"
 
-#ifdef VERBOSE
-  using namespace std;
-#endif
-
 IT_USING_NAMESPACE_STD
 
 namespace openbus {
@@ -22,8 +18,7 @@ namespace openbus {
       Openbus::verbose->indent();
     #endif
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("ORBInitializerImpl::ORBInitializerImpl() END");
+      Openbus::verbose->dedent("ORBInitializerImpl::ORBInitializerImpl() END");
     #endif
     }
 
@@ -56,8 +51,7 @@ namespace openbus {
         serverRequestInterceptor = serverInterceptor ;
       info->add_server_request_interceptor(serverRequestInterceptor) ;
     #ifdef VERBOSE
-      Openbus::verbose->dedent();
-      Openbus::verbose->print("ORBInitializerImpl::pre_init() END");
+      Openbus::verbose->dedent("ORBInitializerImpl::pre_init() END");
     #endif
     }
 
