@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <cxxtest/TestSuite.h>
 #include <openbus.h>
-#include <services/AccessControlService.h>
 #include <fstream>
 
 using namespace openbus;
@@ -18,8 +17,7 @@ using namespace openbus;
 class ACSTestSuite: public CxxTest::TestSuite {
   private:
     Openbus* bus;
-    services::AccessControlService* acs;
-    openbusidl::acs::IAccessControlService* iacs;
+    openbusidl::acs::IAccessControlService* iAccessControlService;
     services::RegistryService* rgs;
     Credential* credential;
     Credential* credential2;
@@ -39,8 +37,8 @@ class ACSTestSuite: public CxxTest::TestSuite {
         std::ifstream inFile;
         inFile.open(OPENBUS_HOME.c_str());
         if (!inFile) {
-          temp = "Nï¿½o foi possï¿½vel carregar o arquivo " + OPENBUS_HOME + ".";
-          TS_FAIL( temp );
+          temp = "Não foi possível carregar o arquivo " + OPENBUS_HOME + ".";
+          TS_FAIL(temp);
         }
         while (inFile >> temp) {
           if (temp.compare("OPENBUS_SERVER_HOST") == 0) {
@@ -61,27 +59,29 @@ class ACSTestSuite: public CxxTest::TestSuite {
           }
         }
         inFile.close();
-        bus = new Openbus(0, NULL, const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), OPENBUS_SERVER_PORT);
-        bus->init();
+        bus = Openbus::getInstance();
+        bus->init(
+          0, 
+          NULL,
+          const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), 
+          OPENBUS_SERVER_PORT);
         credential2 = new Credential;
       }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg );
+      catch (const char* errmsg) {
+        TS_FAIL(errmsg);
       }
     }
 
     ~ACSTestSuite() {
       try {
-        if ( NULL != bus ) {
+        if (bus) {
           if (bus->disconnect())
             delete bus;
         }
         delete credential2;
-        delete rgs;
-        delete acs;
       }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg );
+      catch (const char* errmsg) {
+        TS_FAIL(errmsg);
       }
     }
 
@@ -91,100 +91,105 @@ class ACSTestSuite: public CxxTest::TestSuite {
     void tearDown() {
     }
 
-    void testConnect() {
+    void testInitWithArgcArgv() {
       try {
-        rgs = bus->connect( OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str() );
-        TS_ASSERT( NULL != rgs );
-        credential = bus->getCredential();
-        lease = bus->getLease();
-        TS_ASSERT( NULL != credential );
-      }
-      catch (openbus::COMMUNICATION_FAILURE& e) {
-        TS_FAIL( "** Nao foi possivel se conectar ao barramento. **" );
-      }
-      catch (openbus::LOGIN_FAILURE& e) {
-        TS_FAIL( "** Nao foi possivel se conectar ao barramento. Par usuario/senha invï¿½lido. **" );
-      }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg );
-      }
-    }
-
-    void testGetACS() {
-      try {
-        acs = bus->getAccessControlService();
-        TS_ASSERT( NULL != acs );
-      }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg ) ;
+        delete bus;
+        bus = Openbus::getInstance();
+        char* argv[] = {
+          "exec", 
+          "-OpenbusHost", 
+          "localhost", 
+          "-OpenbusPort", 
+          "2089"}; 
+        bus->init(5, argv);
+#if 0
+        bus->init(
+          0, 
+          NULL,
+          const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), 
+          OPENBUS_SERVER_PORT);
+#endif
+        bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
+      } catch(CORBA::SystemException& e) {
+  cout << "entrou" << endl;
+        TS_FAIL("** Não foi possível se conectar ao barramento. **");
       }
     }
 
-    void testGetRegistryService() {
-      try {
-        delete rgs;
-        rgs = acs->getRegistryService();
-        TS_ASSERT( NULL != rgs );
-      }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg );
-      }
-    }
-
-    void testGetStub() {
-      try {
-        iacs = acs->getStub();
-        TS_ASSERT( NULL != iacs );
-      }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg ) ;
-      }
-    }
-
-    void testRenewLease() {
-      try {
-        TS_ASSERT( acs->renewLease( *credential, lease ) );
-        TS_ASSERT_EQUALS( 30, lease );
-        credential2->identifier = "";
-        credential2->owner = "";
-        credential2->delegate = "";
-        TS_ASSERT( !acs->renewLease( *credential2, lease ) );
-      }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg );
-      }
-    }
-
-    void testLogout() {
-      iacs->loginByPassword( OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str(), credential2, lease2 );
-      TS_ASSERT( acs->logout( *credential2 ) );
-      credential2->owner = OPENBUS_USERNAME.c_str();
-      credential2->identifier = "dadadsa";
-      credential2->delegate = "";
-      TS_ASSERT( ! acs->logout( *credential2 ) );
-    }
-
-    void testLoginByCertificate() {
-      const char* certificate = "AccessControlService";
-      openbusidl::OctetSeq* bytes = iacs->getChallenge( certificate );
-      TS_ASSERT( iacs->loginByCertificate( certificate, *bytes, credential2, lease2 ) );
-      delete bytes;
-    }
-
-    void testIsValid() {
-      try {
-        TS_ASSERT( iacs->isValid( *credential2 ) );
-        credential2->identifier = "123";
-        credential2->owner = OPENBUS_USERNAME.c_str();
-        credential2->delegate = "";
-        TS_ASSERT( !iacs->isValid( *credential2 ) );
-        iacs->logout( *credential2 );
-        TS_ASSERT( ! iacs->isValid( *credential2 ) );
-      }
-      catch ( const char* errmsg ) {
-        TS_FAIL( errmsg );
-      }
-    }
+//   void testConnect() {
+//     try {
+//       rgs = bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
+//       TS_ASSERT(rgs);
+//       credential = bus->getCredential();
+//       TS_ASSERT(credential);
+//     }
+//     catch (CORBA::COMM_FAILURE& e) {
+//       TS_FAIL("** Não foi possível se conectar ao barramento. **");
+//     }
+//     catch (openbus::LOGIN_FAILURE& e) {
+//       TS_FAIL(
+//         "** Não foi possível se conectar ao barramento. \
+//         Par usuario/senha inválido. **");
+//     }
+//     catch (const char* errmsg) {
+//       TS_FAIL(errmsg);
+//     }
+//   }
+//
+//   void testGetACS() {
+//     try {
+//       iAccessControlService = bus->getAccessControlService();
+//       TS_ASSERT(iAccessControlService);
+//     }
+//     catch (const char* errmsg) {
+//       TS_FAIL(errmsg) ;
+//     }
+//   }
+//
+//   void testGetRegistryService() {
+//     try {
+//       delete rgs;
+//       rgs = bus->getRegistryService();
+//       TS_ASSERT(rgs);
+//     }
+//     catch (const char* errmsg) {
+//       TS_FAIL(errmsg);
+//     }
+//   }
+//
+//   void testLogout() {
+//     iAccessControlService->loginByPassword(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str(),
+//       credential2, lease2);
+//     TS_ASSERT(iAccessControlService->logout(*credential2));
+//     credential2->owner = OPENBUS_USERNAME.c_str();
+//     credential2->identifier = "dadadsa";
+//     credential2->delegate = "";
+//     TS_ASSERT(!iAccessControlService->logout(*credential2));
+//   }
+//
+//   void testLoginByCertificate() {
+//     const char* certificate = "AccessControlService";
+//     openbusidl::OctetSeq* bytes = iAccessControlService->getChallenge(certificate);
+//     TS_ASSERT(iAccessControlService->loginByCertificate(certificate, *bytes, credential2, 
+//       lease2));
+//     delete bytes;
+//   }
+//
+//   void testIsValid() {
+//     try {
+//       TS_ASSERT(iAccessControlService->isValid(*credential2));
+//       credential2->identifier = "123";
+//       credential2->owner = OPENBUS_USERNAME.c_str();
+//       credential2->delegate = "";
+//       TS_ASSERT(!iAccessControlService->isValid(*credential2));
+//       iAccessControlService->logout(*credential2);
+//       TS_ASSERT(!iAccessControlService->isValid(*credential2));
+//     }
+//     catch (const char* errmsg) {
+//       TS_FAIL(errmsg);
+//     }
+//   }
+//
 };
 
 #endif
