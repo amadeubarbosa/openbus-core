@@ -108,7 +108,8 @@ valuetype UnstructuredData supports DataView {
   public unsigned long port; /**< \brief A porta do \i host de origem do
       dado. */
   public OctetSeq accessKey; /**< \brief A chave de acesso ao dado. */
-  public OctetSeq dataIdentifier; /**< \brief O identificador do dado. */
+  public DataKey dataIdentifier; /**< \brief O identificador do dado. */
+  public string interfaceName; /**< \brief O nome desta interface do dado. */ 
   public boolean writable; /**< \brief Indica se é possível alterar no dado. */
 };
 
