@@ -5,13 +5,12 @@ local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 local config =
   assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
 
--- Acrescenta informação sobre a(s) interface(s) a ser(em) checada(s)
+-- Acrescenta informação sobre operacões a serem liberadas
 config.interfaces = {
-  { interface = "IDL:openbusidl/ss/ISessionService:1.0",
-    excluded_ops = { }
+  {
+    interface = "IDL:openbusidl/acs/ICredentialObserver:1.0",
+    excluded_ops = {"credentialWasDeleted"},
   },
-  { interface = "IDL:openbusidl/ss/ISession:1.0",
-    excluded_ops = { }
-  }
 }
+
 return config
