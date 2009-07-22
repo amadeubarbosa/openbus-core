@@ -14,6 +14,12 @@
 
 using namespace openbus;
 
+bool leaseExpiredCallbackOk;
+
+void leaseExpiredCallback() {
+  leaseExpiredCallbackOk = true;
+}
+
 class ACSTestSuite: public CxxTest::TestSuite {
   private:
     Openbus* bus;
@@ -105,9 +111,9 @@ class ACSTestSuite: public CxxTest::TestSuite {
         bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
         bus->disconnect();
       } catch(CORBA::SystemException& e) {
-  cout << "entrou" << endl;
         TS_FAIL("** Não foi possível se conectar ao barramento. **");
       }
+
     }
 
    void testConnect() {
@@ -128,6 +134,37 @@ class ACSTestSuite: public CxxTest::TestSuite {
      catch (const char* errmsg) {
        TS_FAIL(errmsg);
      }
+   }
+
+   void testIsConnected() {
+     TS_ASSERT(bus->isConnected());
+     bus->disconnect();
+     TS_ASSERT(!bus->isConnected());
+     try {
+       rgs = bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
+       TS_ASSERT(rgs);
+       credential = bus->getCredential();
+       TS_ASSERT(credential);
+     }
+     catch (CORBA::COMM_FAILURE& e) {
+       TS_FAIL("** Não foi possível se conectar ao barramento. **");
+     }
+     catch (openbus::LOGIN_FAILURE& e) {
+       TS_FAIL(
+         "** Não foi possível se conectar ao barramento. \
+         Par usuario/senha inválido. **");
+     }
+     catch (const char* errmsg) {
+       TS_FAIL(errmsg);
+     }
+   }
+
+   void testGetORB() {
+     TS_ASSERT(bus->getORB());
+   }
+
+   void testGetComponentBuilder() {
+     TS_ASSERT(bus->getComponentBuilder());
    }
 
    void testGetACS() {
@@ -152,7 +189,8 @@ class ACSTestSuite: public CxxTest::TestSuite {
    }
 
    void testLogout() {
-     iAccessControlService->loginByPassword(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str(),
+     iAccessControlService->loginByPassword(OPENBUS_USERNAME.c_str(), 
+       OPENBUS_PASSWORD.c_str(),
        credential2, lease2);
      TS_ASSERT(iAccessControlService->logout(*credential2));
      credential2->owner = OPENBUS_USERNAME.c_str();
@@ -163,9 +201,10 @@ class ACSTestSuite: public CxxTest::TestSuite {
 
    void testLoginByCertificate() {
      const char* certificate = "AccessControlService";
-     openbusidl::OctetSeq* bytes = iAccessControlService->getChallenge(certificate);
-     TS_ASSERT(iAccessControlService->loginByCertificate(certificate, *bytes, credential2, 
-       lease2));
+     openbusidl::OctetSeq* bytes = iAccessControlService->getChallenge(
+       certificate);
+     TS_ASSERT(iAccessControlService->loginByCertificate(
+       certificate, *bytes, credential2, lease2));
      delete bytes;
    }
 
@@ -181,6 +220,37 @@ class ACSTestSuite: public CxxTest::TestSuite {
      }
      catch (const char* errmsg) {
        TS_FAIL(errmsg);
+     }
+   }
+
+   void testFinish() {
+     bus->finish(true);
+     try {
+       bus->getORB()->perform_work();
+       TS_FAIL("ORB não finalizado.");
+     } catch(CORBA::SystemException& e) {
+     }
+     delete bus;
+   }
+
+   void testLeaseExpiredCallback() {
+     bus = Openbus::getInstance();
+     char* argv[] = {
+       "exec", 
+       "-OpenbusHost", 
+       "localhost", 
+       "-OpenbusPort", 
+       "2089",
+       "-TimeRenewing",
+       "95000"}; 
+     bus->init(7, argv);
+     leaseExpiredCallbackOk = false;
+     bus->addLeaseExpiredCallback(leaseExpiredCallback);
+     bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
+     TS_TRACE("Dormindo por 100 segundos...");
+     sleep(100);
+     if (!leaseExpiredCallbackOk) {
+       TS_FAIL("Função leaseExpiredCallback() não foi chamada.");
      }
    }
 
