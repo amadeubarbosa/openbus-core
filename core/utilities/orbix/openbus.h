@@ -90,6 +90,11 @@ typedef openbusidl::acs::Credential_var Credential_var;
     private:
 
     /**
+    * Mutex 
+    */
+      static IT_Mutex mutex;
+
+    /**
     * A instância única do barramento.
     */
       static Openbus* bus;
@@ -181,11 +186,6 @@ typedef openbusidl::acs::Credential_var Credential_var;
       unsigned short portBus;
 
     /**
-    * Mutex 
-    */
-      IT_Mutex* mutex;
-
-    /**
     * Possíveis estados para a conexão. 
     */
       enum ConnectionStates {
@@ -198,6 +198,9 @@ typedef openbusidl::acs::Credential_var Credential_var;
     */
       ConnectionStates connectionState;
 
+    /**
+    * Intervalo de tempo que determina quando que a credencial será renovada.
+    */
       unsigned long timeRenewing;
 
       void commandLineParse(
@@ -248,6 +251,11 @@ typedef openbusidl::acs::Credential_var Credential_var;
           void* run();
       };
       friend class Openbus::RenewLeaseThread;
+
+    /**
+    * Thread responsável pela renovação de credencial.
+    */
+      static RenewLeaseThread* renewLeaseThread;
 
       Openbus();
 
