@@ -46,8 +46,7 @@ namespace openbus {
   #endif
   }
 
-  Openbus::RenewLeaseThread::RenewLeaseThread(Openbus* _bus) {
-    bus = _bus;
+  Openbus::RenewLeaseThread::RenewLeaseThread() {
   }
 
   void* Openbus::RenewLeaseThread::run() {
@@ -454,7 +453,7 @@ namespace openbus {
           openbus::common::ClientInterceptor::credentials[orb] = &credential;
           timeRenewing = (lease/2)*300;
           if (!renewLeaseThread) {
-            renewLeaseThread = new RenewLeaseThread(this);
+            renewLeaseThread = new RenewLeaseThread();
             renewLeaseIT_Thread = IT_ThreadFactory::smf_start(
               *renewLeaseThread, 
               IT_ThreadFactory::attached, 0);
@@ -635,7 +634,7 @@ namespace openbus {
           openbus::common::ClientInterceptor::credentials[orb] = &credential;
           timeRenewing = (lease/2)*300;
           if (!renewLeaseThread) {
-            renewLeaseThread = new RenewLeaseThread(this);
+            renewLeaseThread = new RenewLeaseThread();
             renewLeaseIT_Thread = IT_ThreadFactory::smf_start(
               *renewLeaseThread, 
               IT_ThreadFactory::attached, 0);

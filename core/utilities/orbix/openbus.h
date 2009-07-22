@@ -244,10 +244,8 @@ typedef openbusidl::acs::Credential_var Credential_var;
     * logado neste barramento.
     */
       class RenewLeaseThread : public IT_ThreadBody {
-        private:
-          Openbus* bus;
         public:
-          RenewLeaseThread(Openbus* _bus);
+          RenewLeaseThread();
           void* run();
       };
       friend class Openbus::RenewLeaseThread;
