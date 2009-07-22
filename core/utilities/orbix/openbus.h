@@ -203,6 +203,11 @@ typedef openbusidl::acs::Credential_var Credential_var;
     */
       unsigned long timeRenewing;
 
+    /**
+    * Especifica se o tempo de renovação de credencial é fixo.
+    */
+      bool timeRenewingFixe;
+
       void commandLineParse(
         int argc,
         char** argv);

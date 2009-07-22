@@ -78,10 +78,12 @@ namespace openbus {
       #endif
         bool status = bus->iLeaseProvider->renewLease(*bus->credential, 
           bus->lease);
-        bus->timeRenewing = (bus->lease/2)*300;
+        if (!bus->timeRenewingFixe) {
+          bus->timeRenewing = (bus->lease/2)*300;
+        }
       #ifdef VERBOSE
         stringstream msg;
-        msg << "Tempo de renovação: " << bus->timeRenewing;
+        msg << "Próximo intervalo de renovação: " << bus->timeRenewing << "ms";
         verbose->print(msg.str());
       #endif
         if (!status) {
@@ -95,6 +97,9 @@ namespace openbus {
           {
             (*it)();
           } 
+        /* "Desconecta" o usuário. */
+          openbus::common::ClientInterceptor::credentials[bus->orb] = 0;
+          bus->newState();
         } else {
         #ifdef VERBOSE
           verbose->print("Credencial renovada!");
@@ -118,6 +123,7 @@ namespace openbus {
   }
 
   void Openbus::commandLineParse(int argc, char** argv) {
+    timeRenewingFixe = false;
     for (short idx = 1; idx < argc; idx++) {
       if (!strcmp(argv[idx], "-OpenbusHost")) {
         idx++;
@@ -126,7 +132,8 @@ namespace openbus {
         idx++;
         portBus = atoi(argv[idx]);
       } else if (!strcmp(argv[idx], "-TimeRenewing")) {
-        timeRenewing = (unsigned int) atoi(argv[idx++]);
+        timeRenewing = (unsigned int) atoi(argv[++idx]);
+        timeRenewingFixe = true;
       }
     }
   }
@@ -451,7 +458,9 @@ namespace openbus {
         #endif
           connectionState = CONNECTED;
           openbus::common::ClientInterceptor::credentials[orb] = &credential;
-          timeRenewing = (lease/2)*300;
+          if (!timeRenewingFixe) {
+            timeRenewing = (lease/2)*300;
+          }
           if (!renewLeaseThread) {
             renewLeaseThread = new RenewLeaseThread();
             renewLeaseIT_Thread = IT_ThreadFactory::smf_start(
@@ -632,7 +641,9 @@ namespace openbus {
         #endif
           connectionState = CONNECTED;
           openbus::common::ClientInterceptor::credentials[orb] = &credential;
-          timeRenewing = (lease/2)*300;
+          if (!timeRenewingFixe) {
+            timeRenewing = (lease/2)*300;
+          }
           if (!renewLeaseThread) {
             renewLeaseThread = new RenewLeaseThread();
             renewLeaseIT_Thread = IT_ThreadFactory::smf_start(
@@ -661,7 +672,6 @@ namespace openbus {
       return registryService;
     }
   }
-
 
   bool Openbus::disconnect() {
   #ifdef VERBOSE
