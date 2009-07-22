@@ -1,0 +1,168 @@
+%
+%  Package for inclusion of figures and source code samples
+%
+%  Created by Renato Maia on 2007-05-21.
+%  Copyright (c) 2007 PUC-Rio. All rights reserved.
+%
+
+% Package for including code in the document
+\usepackage{listings}
+
+% Package used to write text with different colors
+\usepackage{color}
+
+% Package used to control floating elements
+\usepackage{float}
+
+% This is now the recommended way for checking for PDFLaTeX:
+\usepackage{ifpdf}
+
+%--- Language Definitions ------------------------------------------------------
+
+\lstdefinelanguage{lua}{%
+	morekeywords=[1]{%
+		do, end, while, repeat, until, if, then, else, elseif, return, break, for,%
+		in, function, local, nil, false, true, and, or, not%
+	},%
+	morekeywords=[2]{%
+		assert, collectgarbage, dofile, error, getfenv, getmetatable, gcinfo,%
+		loadfile, ipairs, loadlib, loadstring, next, pairs, pcall, print, rawequal,%
+		rawget, rawset, require, select, setfenv, setmetatable, tonumber, tostring,%
+		type, unpack, xpcall,%
+		coroutine.create, coroutine.resume, coroutine.status, coroutine.wrap,%
+		coroutine.yield,%
+		string.byte, string.char, string.dump, string.find, string.len,%
+		string.lower, string.rep, string.sub, string.upper, string.format,%
+		string.gfind, string.gsub,%
+		table.concat, table.foreach, table.foreachi, table.getn, table.sort,%
+		table.insert, table.remove, table.setn,%
+		math.abs, math.acos, math.asin, math.atan, math.atan2, math.ceil, math.cos,%
+		math.deg, math.exp, math.floor, math.log, math.log10, math.max, math.min,%
+		math.mod, math.pow, math.rad, math.sin, math.sqrt, math.tan, math.frexp,%
+		math.ldexp, math.random, math.randomseed,%
+		io.close, io.flush, io.input, io.lines, io.open, io.output, io.read,%
+		io.tmpfile, io.type, io.write,%
+		os.clock, os.date, os.difftime, os.execute, os.exit, os.getenv, os.remove,%
+		os.rename, os.setlocale, os.time, os.tmpname,%
+		debug.debug, debug.gethook, debug.getinfo, debug.getlocal,%
+		debug.getupvalue, debug.setlocal, debug.setupvalue, debug.sethook,%
+		debug.traceback%
+	},%
+	sensitive=true,%
+	morestring=[b]{"},%
+	morestring=[b]{'},%
+	morecomment=[l]--,%
+	morecomment=[s]{--\[\[}{\]\]}%
+}
+
+%--- Code Style Specifications -------------------------------------------------
+
+\lstdefinestyle{numbered}{
+	numbers=left,%
+	stepnumber=1,%
+	numberfirstline=true,%
+	numbersep=5pt,%
+	numberstyle=\tiny,%
+	escapechar=\$
+}
+
+\lstdefinestyle{standard}{
+	basicstyle=\scriptsize\sffamily,%
+	showstringspaces=false,%
+	xleftmargin=12pt,%
+	tabsize=2
+}
+
+\lstdefinestyle{monochrome}{
+	style=standard,%
+	keywordstyle=[1]\bfseries,%
+	keywordstyle=[2]\bfseries,%
+	commentstyle=\itshape,%
+	stringstyle=\itshape%
+}
+
+\lstdefinestyle{grayscale}{
+	style=standard,%
+	keywordstyle=[1]\color[gray]{0.2}\bfseries,%
+	keywordstyle=[2]\bfseries,%
+	commentstyle=\color[gray]{0.4}\itshape,%
+	stringstyle=\color[gray]{0.3}\itshape%
+}
+
+\lstdefinestyle{colorful}{
+	style=standard,%
+	keywordstyle=[1]\color[rgb]{0,0,0.6}\bfseries,%
+	keywordstyle=[2]\color[rgb]{0.6,0,0}\bfseries,%
+	commentstyle=\color[rgb]{0.3,0.3,1}\itshape,%
+	stringstyle=\color[rgb]{0,0.3,0}\itshape%
+}
+
+%--- Input Listings ------------------------------------------------------------
+
+\newcommand{\@srclang}{lua}
+\newcommand{\codelanguage}[1]{\renewcommand{\@srclang}{#1}}
+
+\newcommand{\@srcstyle}{monochrome}
+\newcommand{\codestyle}[1]{\renewcommand{\@srcstyle}{#1}}
+
+\newcommand{\@srcfloatplacement}{htbH}
+\newcommand{\codeplacement}[1]{\renewcommand{\@srcfloatplacement}{#1}}
+
+\newcommand{\@srcdir}{src}
+\newcommand{\sourcebase}[1]{\renewcommand{\@srcdir}{#1}}
+
+\newcommand{\inputsource}[2][\@srclang]
+	{\lstinputlisting[
+		style=\@srcstyle,language=#1]{\@srcdir/#2}}
+
+\newcommand{\labeledsource}[3][\@srclang]
+	{\lstinputlisting[
+		float=\@srcfloatplacement,frame=t,style=numbered,style=\@srcstyle,%
+		language=#1,label=lst:#2,caption=#3]{\@srcdir/#2}}
+
+\lstnewenvironment{samplecode}[1][\@srclang]
+	{\lstset{style=\@srcstyle,language=#1}}
+	{}
+
+\lstnewenvironment{labeledcode}[3][\@srclang]
+	{\lstset{
+		float=\@srcfloatplacement,frame=t,style=numbered,style=\@srcstyle,%
+		language=#1,label=lst:#2,caption=#3}}
+	{}
+
+%--- Input Figures -------------------------------------------------------------
+
+\floatplacement{figure}{hbtH}
+
+\newcommand{\@figdir}{img}
+\newcommand{\figuredir}[1]{\renewcommand{\@figdir}{#1}}
+
+\newcommand{\@figscale}{1}
+\newcommand{\figurescale}[1]{\renewcommand{\@figscale}{#1}}
+
+\newcommand{\inputfigure}[3][scale=\@figscale]{
+	\begin{figure}
+		\begin{center}
+			\caption{#3}\label{fig:#2}
+			\includegraphics[#1]{\@figdir/#2}
+		\end{center}
+	\end{figure}
+}
+
+\newcommand{\spanningfigure}[3][\@figscale]{
+	\begin{figure*}
+		\begin{center}
+			\caption{#3}\label{fig:#2}
+			\includegraphics[scale=#1]{\@figdir/#2}
+		\end{center}
+	\end{figure*}
+}
+
+%--- Input Text ----------------------------------------------------------------
+
+\newcommand{\inputsection}[2]{\section{#2}\label{sec:#1}\input{#1.tex}}
+\newcommand{\inputchapter}[2]{\chapter{#2}\label{cha:#1}\input{#1.tex}}
+
+%--- Input Tables --------------------------------------------------------------
+
+\floatplacement{table}{hbtH}
