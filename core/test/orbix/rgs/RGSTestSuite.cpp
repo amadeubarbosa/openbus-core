@@ -108,7 +108,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
     void tearDown() {
     }
 
-    void testGetRGS() {
+    void testGetRegisterService() {
       try {
         rgs = bus->getRegistryService();
         TS_ASSERT(rgs);
@@ -171,6 +171,12 @@ class RGSTestSuite: public CxxTest::TestSuite {
       TS_ASSERT(serviceOfferList->length() == 1);
       delete serviceOfferList;
       delete facetListHelper;
+    }
+
+    void testUnregister() {
+      TS_ASSERT(rgs->unregister(registryIdentifier));
+      TS_ASSERT(rgs->unregister(registryIdentifier2));
+      TS_ASSERT(!rgs->unregister("ID"));
     }
 };
 
