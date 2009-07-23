@@ -1,0 +1,29 @@
+#ifndef __TECGRAF_OPENBUS_FILE_SYSTEM_DEMO_IDL__
+#define __TECGRAF_OPENBUS_FILE_SYSTEM_DEMO_IDL__
+
+#include "data_service.idl"
+
+module tecgraf{
+
+module openbus{
+
+module file_system{
+
+valuetype FileDataDescription : data_service::DataDescription {
+  public long fSize;
+  public string fOwner;
+  public boolean fIsContainer;
+};
+
+interface ILogFileView : data_service::DataView {
+ string getLastLine();
+ void deactivate();
+};
+
+};
+
+};
+
+};
+
+#endif
