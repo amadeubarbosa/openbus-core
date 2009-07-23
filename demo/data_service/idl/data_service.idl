@@ -1,29 +1,267 @@
-#ifndef __TECGRAF_OPENBUS_FILE_SYSTEM_DEMO_IDL__
-#define __TECGRAF_OPENBUS_FILE_SYSTEM_DEMO_IDL__
+#ifndef __TECGRAF_OPENBUS_DATA_SERVICE_IDL__
+#define __TECGRAF_OPENBUS_DATA_SERVICE_IDL__
 
-#include "data_service.idl"
+module tecgraf {
 
-module tecgraf{
+module openbus {
 
-module openbus{
+/**
+ * \brief Módulo do Serviço de Dados Estruturados.
+ */
+module data_service {
 
-module file_system{
+/** \brief Sequência de octetos. */
+typedef sequence<octet> OctetSeq;
 
-valuetype FileDataDescription : data_service::DataDescription {
-  public long fSize;
-  public string fOwner;
-  public boolean fIsContainer;
+/** \brief Sequência de strings. */
+typedef sequence<string> StringSeq;
+
+/** \brief Tempo em (\b milisegundos) desde 1 de janeiro de 1970. */
+typedef long long TimeStamp;
+
+/** \brief O identificador unívoco de um dado.
+ *
+ * Através do identificador unívoco é possível identificar, além do dado 
+ * em si, o serviço que o hospeda. Ou seja, dado o identificador de um
+ * dado é possível achá-lo no barramento de forma unívoca.
+ * É importante não amarrar o identificador de um dado a um servidor
+ * específico. No caso de um serviço mudar de servidor, devemos ainda ser
+ * capazes de achar um dado seu através do identificador.
+ */
+typedef OctetSeq DataKey;
+
+/** \brief Sequência de identificadores. */
+typedef  sequence<DataKey> DataKeySeq;
+
+/**
+ * \brief Indica a tentativa de se tratar um dado que não possui visões
+ * conhecidas.
+ */
+exception UnknownViews {};
+
+/** \brief Indica que a chave de um dado é inválida. */
+exception InvalidDataKey {
+  DataKey key; /**< \brief A chave inválida. */
 };
 
-interface ILogFileView : data_service::DataView {
- string getLastLine();
- void deactivate();
+/** \brief Indica que uma operacao não é oferecida por um serviço. */
+exception OperationNotSupported {};
+
+/** \brief O nome de um metadado. */
+typedef string MetadataName;
+
+/** \brief O valor de um metadado. */
+typedef any MetadataValue;
+
+/** \brief Metadado. */
+struct Metadata {
+  MetadataName name; /**< \brief O nome. */
+  MetadataValue value;  /**< \brief O valor. */
+};
+typedef sequence<Metadata> MetadataSeq; /**< \brief Sequência de metadados. */
+
+/**
+ * \brief A descrição de um dado.
+ *
+ * A descrição deve ter informações suficientes para que um determinado dado
+ * seja identificado.
+ */
+valuetype DataDescription {
+  public DataKey key;  /**< \brief A chave unívoca do dado. */
+  public string name; /**< \brief O nome simbólico do dado. */
+  public StringSeq views; /**< \brief As visões oferecidas pelo dado. */
+  public MetadataSeq metadata; /**< \brief Metadados (\b opcionais) do dado. */
+};
+typedef sequence<DataDescription> DataDescriptionSeq; /**< \brief Sequência de
+    descrições de dados. */
+
+/**
+ * \brief Visão oferecida para um dado.
+ *
+ * Os dados são oferecidos pelos serviços através de visões. Um dado pode ser
+ * exposto através de uma ou mais visões.
+ */
+abstract interface DataView {
+  /**
+   * \brief Obtém o identificador unívoco do dado.
+   *
+   * \return O identificador unívoco do dado.
+   */
+  DataKey getKey();
+
+  /**
+   * \brief Obtém o nome da interface.
+   * 
+   * \return O nome da interface.
+   */
+  string getInterfaceName();
+};
+typedef sequence<DataView> DataViewSeq; /**< \brief Sequência de visões de um
+    dado. */
+
+/**
+ * \brief Visão não-estruturada de um dado para a transferncia de seu conteúdo
+ * via \i socket.
+ */
+valuetype UnstructuredData supports DataView {
+  public string host; /**< \brief O nome do \i host de origem do dado. */
+  public unsigned long port; /**< \brief A porta do \i host de origem do
+      dado. */
+  public OctetSeq accessKey; /**< \brief A chave de acesso ao dado. */
+  public OctetSeq dataIdentifier; /**< \brief O identificador do dado. */
+  public boolean writable; /**< \brief Indica se é possível alterar no dado. */
 };
 
+/**
+ * \brief Serviço de dados estruturados com navegação hierárquica.
+ */
+interface IHDataService {
+ /**
+  * \brief Obtém os descritores dos dados que representam as raízes da
+  * hierarquia.
+  *
+  * \return Os descritores dos dados que representam as raízes da hierarquia.
+  */
+  DataDescriptionSeq getRoots();
+
+ /**
+  * \brief Obtém os descritores dos dados descendentes de um determinado dado.
+  *
+  * \param [in] key A chave do dado que se deseja os descendentes.
+  *
+  * \return Os dados descendentes.
+  *
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  DataDescriptionSeq getChildren(in DataKey key) raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém o descritor do ascendente de um dado.
+  *
+  * \param [in] key A chave do dado que se deseja o ascendente.
+  *
+  * \return O dado ascendente.
+  *
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  DataDescription getParent(in DataKey key) raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém o descritor de um dado.
+  *
+  * \param [in] key A chave do dado.
+  *
+  * \return O descritor do dado.
+  *
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  DataDescription getDataDescription(in DataKey key) raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém uma visão de um dado.
+  *
+  * \param [in] key A chave do dado.
+  * \param [in] viewInterface O nome da interface da visão desejada.
+  *
+  * \return A visão.
+  *
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  DataView getDataView(in DataKey key, in string viewInterface)
+      raises (InvalidDataKey);
+
+ /**
+  * \brief Obtém uma visão de um conjunto de dados.
+  *
+  * \param [in] keys As chaves dos dados.
+  * \param [in] viewInterface O nome da interface da visão desejada.
+  *
+  * \return A visão dos conjuntos de dados.
+  *
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  DataViewSeq getDataViewSeq(in DataKeySeq keys, in string viewInterface)
+      raises (InvalidDataKey);
+
+ /**
+  * \brief Cria um dado.
+  *
+  * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho)
+  * será criado.
+  * \param [in] prototype Um protótipo do DataView que será criado.
+  *
+  * \return A chave do dado criado. 
+  *
+  * \exception OperationNotSupported Caso esta operação não seja oferecida
+  * pelo serviço.
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  DataKey createData(in DataKey parent_key, in DataDescription prototype)
+      raises (OperationNotSupported, InvalidDataKey);
+
+ /**
+  * \brief Cria um dado a partir de um dado de origem.
+  *
+  * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho) será
+  * criado.
+  * \param [in] source_key A chave do dado de origem.
+  *
+  * \return O dado criado.
+  *
+  * \exception OperationNotSupported Caso esta operação não seja oferecida
+  * pelo serviço.
+  * \exception UnknownViews Caso o dado não possua visões conhecidas para o
+  * novo dado.
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  DataKey createDataFrom(in DataKey parent_key, in DataKey source_key)
+      raises (OperationNotSupported, UnknownViews, InvalidDataKey);
+
+ /**
+  * \brief Move o dado.
+  *
+  * \param [in] source_key A chave do dado de origem.
+  * \param [in] parent_destination_key A chave do dado do pai de destino.
+  * 
+  * \exception OperationNotSupported Caso esta operação não seja oferecida
+  * pelo serviço.
+  * \exception UnknownViews O dado não possui tipos suportados para o novo dado.
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  void moveData(in DataKey source_key, in DataKey parent_destination_key)
+      raises (OperationNotSupported, UnknownViews, InvalidDataKey);
+
+ /**
+  * \brief Copia o dado.
+  *
+  * \param [in] source_key A chave do dado de origem.
+  * \param [in] parent_destination_key A chave do dado de destino.
+  *
+  * \exception OperationNotSupported Caso esta operação não seja oferecida
+  * pelo serviço.
+  * \exception UnknownViews O dado não possui tipos suportados para o novo dado.
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  void copyData(in DataKey source_key, in DataKey target_key)
+      raises (OperationNotSupported, UnknownViews, InvalidDataKey);
+
+ /**
+  * \brief Remove um dado.
+  *
+  * \param [in] keys A chave do dado.
+  *
+  * \exception OperationNotSupported Caso esta operação não seja oferecida
+  * pelo serviço.
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  void deleteData(in DataKey key) raises (OperationNotSupported,
+      InvalidDataKey);
 };
 
-};
+}; // data_service
 
-};
+}; // openbus
+
+}; // tecgraf
 
 #endif
