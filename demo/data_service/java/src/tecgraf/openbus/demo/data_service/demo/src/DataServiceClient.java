@@ -26,7 +26,7 @@ import tecgraf.openbus.exception.OpenBusException;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
 import tecgraf.openbus.util.Log;
 
-public class OpenBus_Client {
+public class DataServiceClient {
   public static void main(String[] args) throws UserException, OpenBusException {
     String userLogin = "tester";
     String userPassword = "tester";

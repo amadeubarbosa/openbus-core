@@ -34,7 +34,7 @@ import tecgraf.openbus.demo.data_service.utils.DataKeyManager;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
 import tecgraf.openbus.util.Log;
 
-public class OpenBus_Server {
+public class DataServiceServer {
   public static void main(String[] args) throws Exception {
 
     Log.setLogsLevel(Level.WARNING);
