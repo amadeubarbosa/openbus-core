@@ -1,7 +1,8 @@
 package tecgraf.openbus.demo.data_service.demo.src;
 
-
-
+import java.io.InputStream;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -11,8 +12,6 @@ import openbusidl.rs.ServiceOffer;
 
 import org.omg.CORBA.StringHolder;
 import org.omg.CORBA_2_3.ORB;
-
-
 
 import scs.core.ComponentId;
 import scs.core.IComponent;
@@ -25,27 +24,45 @@ import scs.core.servant.IMetaInterfaceServant;
 import tecgraf.openbus.Openbus;
 import tecgraf.openbus.data_service.DataDescriptionHelper;
 import tecgraf.openbus.data_service.UnstructuredDataHelper;
-import tecgraf.openbus.demo.data_service.demo.util.DataServiceTester;
 import tecgraf.openbus.demo.data_service.factorys.DataDescriptionDefaultFactory;
 import tecgraf.openbus.demo.data_service.factorys.FileDataDescriptionDefaultFactory;
 import tecgraf.openbus.demo.data_service.factorys.UnstructuredDataDefaultFactory;
 import tecgraf.openbus.demo.data_service.impl.DataService;
 import tecgraf.openbus.demo.data_service.utils.DataKeyManager;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
+import tecgraf.openbus.util.CryptoUtils;
 import tecgraf.openbus.util.Log;
 
 public class DataServiceServer {
-  public static void main(String[] args) throws Exception {
 
+  public static void main(String[] args) throws Exception {
     Log.setLogsLevel(Level.WARNING);
-    // Cria o ORB.
     Properties props = new Properties();
-    props.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
-    props.setProperty("org.omg.CORBA.ORBSingletonClass",
+    InputStream in =
+      DataServiceServer.class.getResourceAsStream("/DataService.properties");
+    try {
+      props.load(in);
+    }
+    finally {
+      in.close();
+    }
+
+    String host = props.getProperty("host.name");
+    String portString = props.getProperty("host.port");
+    int port = Integer.valueOf(portString);
+
+    String entityName = props.getProperty("entity.name");
+    String privateKeyFile = props.getProperty("private.key");
+    String acsCertificateFile = props.getProperty("acs.certificate");
+
+    // Cria o ORB.
+    Properties orbProps = new Properties();
+    orbProps.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
+    orbProps.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
 
     Openbus openbus = Openbus.getInstance();
-    openbus.resetAndInitialize(args, props, "localhost", 2089);
+    openbus.resetAndInitialize(args, orbProps, host, port);
     ORB orb = (ORB) openbus.getORB();
     orb.register_value_factory(DataDescriptionHelper.id(),
       new DataDescriptionDefaultFactory());
@@ -53,6 +70,9 @@ public class DataServiceServer {
       new FileDataDescriptionDefaultFactory());
     orb.register_value_factory(UnstructuredDataHelper.id(),
       new UnstructuredDataDefaultFactory());
+
+    String componentName = props.getProperty("component.name");
+    String facetName = props.getProperty("component.facetName");
 
     // Cria o componente.
     ComponentBuilder builder =
@@ -62,24 +82,31 @@ public class DataServiceServer {
       new ExtendedFacetDescription("IComponent", "IDL:scs/core/IComponent:1.0",
         IComponentServant.class.getCanonicalName());
     descriptions[1] =
-      new ExtendedFacetDescription("IDataService", "IDL:idls/IDataService:1.0",
+      new ExtendedFacetDescription(facetName, "IDL:idls/IDataService:1.0",
         DataService.class.getCanonicalName());
     descriptions[2] =
       new ExtendedFacetDescription("IMetaInterface",
         "IDL:scs/core/IMetaInterface:1.0", IMetaInterfaceServant.class
           .getCanonicalName());
     ComponentContext context =
-      builder.newComponent(descriptions, null, new ComponentId("IDataService",
+      builder.newComponent(descriptions, null, new ComponentId(componentName,
         (byte) 1, (byte) 0, (byte) 0, "Java"));
 
-    DataKeyManager rootKey =
-      new DataKeyManager("IDataService", DataServiceTester.rootPath);
+    String demoPath = props.getProperty("demo.path");
+
+    DataKeyManager rootKey = new DataKeyManager(componentName, demoPath);
     byte[] rootDataKey = rootKey.getDataKey();
-    ((DataService) context.getFacets().get("IDataService"))
-      .addRoots(rootDataKey);
+    ((DataService) context.getFacets().get(facetName)).addRoots(rootDataKey);
 
-    IRegistryService registryService = openbus.connect("tester", "tester");
+    // Loga no Openbus por certificado
+    RSAPrivateKey privateKey = CryptoUtils.readPrivateKey(privateKeyFile);
+    X509Certificate acsCertificate =
+      CryptoUtils.readCertificate(acsCertificateFile);
 
+    IRegistryService registryService =
+      openbus.connect(entityName, privateKey, acsCertificate);
+
+    // Adiciona o componente no serviço de registro
     org.omg.CORBA.Object obj = context.getIComponent();
     IComponent component = IComponentHelper.narrow(obj);
     ServiceOffer serviceOffer = new ServiceOffer(new Property[0], component);
@@ -101,5 +128,4 @@ public class DataServiceServer {
     openbus.run();
 
   }
-
 }

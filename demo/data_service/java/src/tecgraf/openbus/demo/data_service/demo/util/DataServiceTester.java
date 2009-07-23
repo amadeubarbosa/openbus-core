@@ -23,11 +23,12 @@ public class DataServiceTester {
 
   private IHDataService dataService;
   private ORB orb;
-  public static final String rootPath = "DemoDataServiceTemp/";
+  public String rootPath;
 
-  public DataServiceTester(IHDataService dataService, ORB orb) {
+  public DataServiceTester(IHDataService dataService, ORB orb, String path) {
     this.dataService = dataService;
     this.orb = orb;
+    this.rootPath = path;
   }
 
   public void buildFiles() {
@@ -35,21 +36,21 @@ public class DataServiceTester {
       File root = new File(rootPath);
       root.mkdirs();
 
-      File project1 = new File(rootPath + "Project1");
+      File project1 = new File(rootPath + "/Project1");
       project1.mkdir();
 
-      File project2 = new File(rootPath + "Project2");
+      File project2 = new File(rootPath + "/Project2");
       project2.mkdir();
 
       BufferedWriter file1 =
-        new BufferedWriter(
-          new FileWriter(rootPath + "Project1/file2.txt", true));
+        new BufferedWriter(new FileWriter(rootPath + "/Project1/file2.txt",
+          true));
       file1
         .write("Aqui temos um contúdo muito interessante sobre o proejto1\n blablabla blablabla\n");
       file1.close();
 
       BufferedWriter logFile1 =
-        new BufferedWriter(new FileWriter(rootPath + "Project2/file1.log"));
+        new BufferedWriter(new FileWriter(rootPath + "/Project2/file1.log"));
       logFile1
         .write("Teste\nProjeto1 \n[LOG] PENULTIMA LINHA\n[LOG] Ultima Linha\n");
       logFile1.close();
@@ -175,10 +176,10 @@ public class DataServiceTester {
 
   public boolean removeFile() {
     boolean result = true;
-    File logFile1 = new File(rootPath + "Project2/file1.log");
-    File file1 = new File(rootPath + "Project1/file2.txt");
-    File project2 = new File(rootPath + "Project2");
-    File project1 = new File(rootPath + "Project1");
+    File logFile1 = new File(rootPath + "/Project2/file1.log");
+    File file1 = new File(rootPath + "/Project1/file2.txt");
+    File project2 = new File(rootPath + "/Project2");
+    File project1 = new File(rootPath + "/Project1");
     File root = new File(rootPath);
 
     result = result && file1.delete();

@@ -1,5 +1,7 @@
 package tecgraf.openbus.demo.data_service.demo.src;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -9,7 +11,6 @@ import openbusidl.rs.ServiceOffer;
 import org.omg.CORBA.Object;
 import org.omg.CORBA.UserException;
 import org.omg.CORBA_2_3.ORB;
-
 
 import scs.core.IComponent;
 import tecgraf.openbus.Openbus;
@@ -27,12 +28,28 @@ import tecgraf.openbus.file_system.FileDataDescriptionHelper;
 import tecgraf.openbus.util.Log;
 
 public class DataServiceClient {
-  public static void main(String[] args) throws UserException, OpenBusException {
-    String userLogin = "tester";
-    String userPassword = "tester";
+  public static void main(String[] args) throws UserException,
+    OpenBusException, IOException {
+    Log.setLogsLevel(Level.WARNING);
     boolean result = true;
 
-    Log.setLogsLevel(Level.WARNING);
+    Properties props = new Properties();
+    InputStream in =
+      DataServiceServer.class.getResourceAsStream("/DataService.properties");
+    try {
+      props.load(in);
+    }
+    finally {
+      in.close();
+    }
+
+    String host = props.getProperty("host.name");
+    String portString = props.getProperty("host.port");
+    int port = Integer.valueOf(portString);
+
+    String userLogin = props.getProperty("login");
+    String userPassword = props.getProperty("password");
+
     // Pega um login da linha de comando.
     if (args.length > 1) {
       userLogin = args[0];
@@ -40,13 +57,13 @@ public class DataServiceClient {
     }
 
     // Cria o Orb utilizando o JacORB
-    Properties props = new Properties();
-    props.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
-    props.setProperty("org.omg.CORBA.ORBSingletonClass",
+    Properties orbProps = new Properties();
+    orbProps.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
+    orbProps.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
 
     Openbus openbus = Openbus.getInstance();
-    openbus.resetAndInitialize(args, props, "localhost", 2089);
+    openbus.resetAndInitialize(args, orbProps, host, port);
     ORB orb = (ORB) openbus.getORB();
     orb.register_value_factory(DataDescriptionHelper.id(),
       new DataDescriptionDefaultFactory());
@@ -58,18 +75,23 @@ public class DataServiceClient {
     // Acessa o OpenBus
     IRegistryService registryService = openbus.connect(userLogin, userPassword);
 
+    String componentName = props.getProperty("component.name");
+    String facetName = props.getProperty("component.facetName");
+
     ServiceOffer[] servicesOffers =
-      registryService.find(new String[] { "IDataService" });
+      registryService.find(new String[] { componentName });
     ServiceOffer serviceOffer = servicesOffers[0];
     IComponent component = serviceOffer.member;
 
-    Object dataServiceObject = component.getFacetByName("IDataService");
+    Object dataServiceObject = component.getFacetByName(facetName);
     IHDataService dataService = IHDataServiceHelper.narrow(dataServiceObject);
 
     // Inicio dos testes
+    String demoPath = props.getProperty("demo.path");
+
     DataServiceTester tester =
-      new DataServiceTester(dataService, openbus.getORB());
-    DataKeyManager.setServerComponentId("IDataService");
+      new DataServiceTester(dataService, openbus.getORB(), demoPath);
+    DataKeyManager.setServerComponentId(componentName);
 
     System.out
       .println("<---- Criando a árvore de arquivos destinados para teste. ---->");
