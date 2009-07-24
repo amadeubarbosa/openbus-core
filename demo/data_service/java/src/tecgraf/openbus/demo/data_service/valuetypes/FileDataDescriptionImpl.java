@@ -1,7 +1,6 @@
 package tecgraf.openbus.demo.data_service.valuetypes;
 
 import tecgraf.openbus.data_service.Metadata;
-import tecgraf.openbus.demo.data_service.utils.DataKeyManager;
 import tecgraf.openbus.file_system.FileDataDescription;
 
 public class FileDataDescriptionImpl extends FileDataDescription {
@@ -15,10 +14,10 @@ public class FileDataDescriptionImpl extends FileDataDescription {
     this.fIsContainer = false;
   }
 
-  public FileDataDescriptionImpl(String name, String path, String[] views,
+  public FileDataDescriptionImpl(String name, byte[] key, String[] views,
     Metadata[] metadata, int size, String owner, boolean isContainer) {
     this.name = name;
-    this.key = new DataKeyManager(path).getDataKey();
+    this.key = key;
     this.views = views;
     this.metadata = metadata;
     this.fSize = size;

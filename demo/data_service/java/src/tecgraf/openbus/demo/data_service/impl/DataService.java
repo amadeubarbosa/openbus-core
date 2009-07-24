@@ -20,8 +20,7 @@ import tecgraf.openbus.data_service.InvalidDataKey;
 import tecgraf.openbus.data_service.Metadata;
 import tecgraf.openbus.data_service.ServiceFailure;
 import tecgraf.openbus.data_service.UnknownViews;
-import tecgraf.openbus.demo.data_service.utils.DataKeyManager;
-import tecgraf.openbus.demo.data_service.valuetypes.DataDescriptionImpl;
+import tecgraf.openbus.demo.data_service.utils.DataKey;
 import tecgraf.openbus.demo.data_service.valuetypes.FileDataDescriptionImpl;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
 import tecgraf.openbus.file_system.ILogFileViewHelper;
@@ -38,33 +37,32 @@ public class DataService extends IHierarchicalDataServicePOA {
     this.poa = (POA) Openbus.getInstance().getRootPOA();
   }
 
-  public void addRoots(byte[] rootKey) {
-    DataKeyManager dataKey = new DataKeyManager(rootKey);
-    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
+  public void addRoots(byte[] rootKey) throws InvalidDataKey {
+    DataKey dataKey = new DataKey(rootKey);
+    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
-    String path = dataKey.getKey();
+    String path = dataKey.getDataId();
 
     File file = new File(path);
-
     roots.add(file);
   }
 
   @Override
   public byte[] createData(byte[] parentKey, DataDescription prototype)
     throws ServiceFailure, InvalidDataKey {
-    DataKeyManager parentDataKey = new DataKeyManager(parentKey);
+    DataKey parentDataKey = new DataKey(parentKey);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
-    String parentPath = parentDataKey.getKey();
+    String parentPath = parentDataKey.getDataId();
 
     File file = new File(parentPath);
     if (!file.isDirectory())
       throw new ServiceFailure("parentKey não é um diretório.");
 
     String dataPath = parentPath + "/" + prototype.name;
-    DataKeyManager dataKey = new DataKeyManager(dataPath);
+    DataKey dataKey = new DataKey(dataPath);
 
     try {
       File newFile = new File(dataPath);
@@ -74,7 +72,7 @@ public class DataService extends IHierarchicalDataServicePOA {
       throw new ServiceFailure();
     }
 
-    return dataKey.getDataKey();
+    return dataKey.getKey();
   }
 
   @Override
@@ -85,11 +83,11 @@ public class DataService extends IHierarchicalDataServicePOA {
 
   @Override
   public void deleteData(byte[] key) throws ServiceFailure, InvalidDataKey {
-    DataKeyManager parentDataKey = new DataKeyManager(key);
+    DataKey parentDataKey = new DataKey(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
-    String path = parentDataKey.getKey();
+    String path = parentDataKey.getDataId();
 
     File file = new File(path);
     if (!file.delete())
@@ -99,11 +97,11 @@ public class DataService extends IHierarchicalDataServicePOA {
   @Override
   public DataDescription[] getChildren(byte[] key) throws ServiceFailure,
     InvalidDataKey {
-    DataKeyManager dataKey = new DataKeyManager(key);
+    DataKey dataKey = new DataKey(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
-    String path = dataKey.getKey();
+    String path = dataKey.getDataId();
 
     File file = new File(path);
     if (!file.isDirectory())
@@ -111,7 +109,7 @@ public class DataService extends IHierarchicalDataServicePOA {
 
     File[] childrenFile = file.listFiles();
     if ((childrenFile == null) || (childrenFile.length == 0))
-      return new DataDescriptionImpl[0]; // ERRO
+      throw new ServiceFailure();
 
     DataDescription[] childrenView = new DataDescription[childrenFile.length];
     for (int i = 0; i < childrenFile.length; i++) {
@@ -125,11 +123,11 @@ public class DataService extends IHierarchicalDataServicePOA {
   @Override
   public DataDescription getDataDescription(byte[] key) throws ServiceFailure,
     InvalidDataKey {
-    DataKeyManager dataKey = new DataKeyManager(key);
+    DataKey dataKey = new DataKey(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
-    String path = dataKey.getKey();
+    String path = dataKey.getDataId();
 
     File file = new File(path);
     if (file.isFile())
@@ -142,11 +140,11 @@ public class DataService extends IHierarchicalDataServicePOA {
   public DataView getDataView(byte[] key, String viewInterface)
     throws ServiceFailure, tecgraf.openbus.data_service.UnknownViewInterface,
     InvalidDataKey {
-    DataKeyManager dataKey = new DataKeyManager(key);
+    DataKey dataKey = new DataKey(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
-    String path = dataKey.getKey();
+    String path = dataKey.getDataId();
 
     File file = new File(path);
     if (file.isDirectory())
@@ -157,8 +155,8 @@ public class DataService extends IHierarchicalDataServicePOA {
       if (view.equals(viewInterface))
         return createDataView(key, file, viewInterface);
     }
-    return null;
 
+    return null;
   }
 
   @Override
@@ -175,11 +173,11 @@ public class DataService extends IHierarchicalDataServicePOA {
   @Override
   public DataDescription getParent(byte[] key) throws ServiceFailure,
     InvalidDataKey {
-    DataKeyManager dataKey = new DataKeyManager(key);
+    DataKey dataKey = new DataKey(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
-    String path = dataKey.getKey();
+    String path = dataKey.getDataId();
 
     File file = new File(path);
     File parentFile = file.getParentFile();
@@ -188,13 +186,19 @@ public class DataService extends IHierarchicalDataServicePOA {
       throw new ServiceFailure();
 
     return createDataDescription(parentFile);
+
   }
 
   @Override
   public DataDescription[] getRoots() throws ServiceFailure {
     List<DataDescription> dataDesList = new ArrayList<DataDescription>();
-    for (File file : this.roots) {
-      dataDesList.add(createDataDescription(file));
+    try {
+      for (File file : this.roots) {
+        dataDesList.add(createDataDescription(file));
+      }
+    }
+    catch (InvalidDataKey e) {
+      e.printStackTrace();
     }
     DataDescription[] dataList =
       dataDesList.toArray(new DataDescription[dataDesList.size()]);
@@ -207,7 +211,8 @@ public class DataService extends IHierarchicalDataServicePOA {
     throw new ServiceFailure("Not implemented");
   }
 
-  private DataDescription createDataDescription(File file) {
+  private DataDescription createDataDescription(File file)
+    throws InvalidDataKey {
     int dotPos = file.getName().lastIndexOf(".");
     String[] view;
     if (dotPos > 0) {
@@ -222,7 +227,8 @@ public class DataService extends IHierarchicalDataServicePOA {
     view[0] = FileDataDescriptionHelper.id();
 
     // TODO Como fazer para pegar o Owner.
-    return new FileDataDescriptionImpl(file.getName(), file.getPath(), view,
+    DataKey key = new DataKey(file.getPath());
+    return new FileDataDescriptionImpl(file.getName(), key.getKey(), view,
       new Metadata[0], (int) file.length(), file.getName(), file.isDirectory());
   }
 

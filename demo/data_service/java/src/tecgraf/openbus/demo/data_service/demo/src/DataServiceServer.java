@@ -28,7 +28,7 @@ import tecgraf.openbus.demo.data_service.factorys.DataDescriptionDefaultFactory;
 import tecgraf.openbus.demo.data_service.factorys.FileDataDescriptionDefaultFactory;
 import tecgraf.openbus.demo.data_service.factorys.UnstructuredDataDefaultFactory;
 import tecgraf.openbus.demo.data_service.impl.DataService;
-import tecgraf.openbus.demo.data_service.utils.DataKeyManager;
+import tecgraf.openbus.demo.data_service.utils.DataKey;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
 import tecgraf.openbus.util.CryptoUtils;
 import tecgraf.openbus.util.Log;
@@ -88,14 +88,15 @@ public class DataServiceServer {
       new ExtendedFacetDescription("IMetaInterface",
         "IDL:scs/core/IMetaInterface:1.0", IMetaInterfaceServant.class
           .getCanonicalName());
+    ComponentId componentId =
+      new ComponentId(componentName, (byte) 1, (byte) 0, (byte) 0, "Java");
     ComponentContext context =
-      builder.newComponent(descriptions, null, new ComponentId(componentName,
-        (byte) 1, (byte) 0, (byte) 0, "Java"));
+      builder.newComponent(descriptions, null, componentId);
 
     String demoPath = props.getProperty("demo.path");
 
-    DataKeyManager rootKey = new DataKeyManager(componentName, demoPath);
-    byte[] rootDataKey = rootKey.getDataKey();
+    DataKey rootKey = new DataKey(demoPath, null, componentId, null, demoPath);
+    byte[] rootDataKey = rootKey.getKey();
     ((DataService) context.getFacets().get(facetName)).addRoots(rootDataKey);
 
     // Loga no Openbus por certificado

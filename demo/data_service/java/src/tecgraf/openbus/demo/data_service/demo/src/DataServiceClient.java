@@ -22,7 +22,6 @@ import tecgraf.openbus.demo.data_service.demo.util.DataServiceTester;
 import tecgraf.openbus.demo.data_service.factorys.DataDescriptionDefaultFactory;
 import tecgraf.openbus.demo.data_service.factorys.FileDataDescriptionDefaultFactory;
 import tecgraf.openbus.demo.data_service.factorys.UnstructuredDataDefaultFactory;
-import tecgraf.openbus.demo.data_service.utils.DataKeyManager;
 import tecgraf.openbus.exception.OpenBusException;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
 import tecgraf.openbus.util.Log;
@@ -92,7 +91,6 @@ public class DataServiceClient {
 
     DataServiceTester tester =
       new DataServiceTester(dataService, openbus.getORB(), demoPath);
-    DataKeyManager.setServerComponentId(componentName);
 
     System.out
       .println("<---- Criando a árvore de arquivos destinados para teste. ---->");
