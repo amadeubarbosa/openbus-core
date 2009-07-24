@@ -15,10 +15,10 @@ import tecgraf.openbus.Openbus;
 import tecgraf.openbus.data_service.DataDescription;
 import tecgraf.openbus.data_service.DataView;
 import tecgraf.openbus.data_service.DataViewHelper;
-import tecgraf.openbus.data_service.IHDataServicePOA;
+import tecgraf.openbus.data_service.IHierarchicalDataServicePOA;
 import tecgraf.openbus.data_service.InvalidDataKey;
 import tecgraf.openbus.data_service.Metadata;
-import tecgraf.openbus.data_service.OperationNotSupported;
+import tecgraf.openbus.data_service.ServiceFailure;
 import tecgraf.openbus.data_service.UnknownViews;
 import tecgraf.openbus.demo.data_service.utils.DataKeyManager;
 import tecgraf.openbus.demo.data_service.valuetypes.DataDescriptionImpl;
@@ -26,7 +26,7 @@ import tecgraf.openbus.demo.data_service.valuetypes.FileDataDescriptionImpl;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
 import tecgraf.openbus.file_system.ILogFileViewHelper;
 
-public class DataService extends IHDataServicePOA {
+public class DataService extends IHierarchicalDataServicePOA {
 
   private ComponentContext context;
   private List<File> roots;
@@ -46,22 +46,14 @@ public class DataService extends IHDataServicePOA {
     String path = dataKey.getKey();
 
     File file = new File(path);
-    if (file.isDirectory())
-      return; // Erro - não tem DataView
 
     roots.add(file);
   }
 
   @Override
-  public void copyData(byte[] source_key, byte[] target_key)
-    throws UnknownViews, InvalidDataKey, OperationNotSupported {
-    throw new OperationNotSupported();
-  }
-
-  @Override
-  public byte[] createData(byte[] parent_key, DataDescription prototype)
-    throws InvalidDataKey, OperationNotSupported {
-    DataKeyManager parentDataKey = new DataKeyManager(parent_key);
+  public byte[] createData(byte[] parentKey, DataDescription prototype)
+    throws ServiceFailure, InvalidDataKey {
+    DataKeyManager parentDataKey = new DataKeyManager(parentKey);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
@@ -69,7 +61,7 @@ public class DataService extends IHDataServicePOA {
 
     File file = new File(parentPath);
     if (!file.isDirectory())
-      return null; // Erro - não da para criar
+      throw new ServiceFailure("parentKey não é um diretório.");
 
     String dataPath = parentPath + "/" + prototype.name;
     DataKeyManager dataKey = new DataKeyManager(dataPath);
@@ -79,21 +71,20 @@ public class DataService extends IHDataServicePOA {
       newFile.createNewFile();
     }
     catch (IOException e) {
-      return null; // Erro - não da para criar
+      throw new ServiceFailure();
     }
 
     return dataKey.getDataKey();
   }
 
   @Override
-  public byte[] createDataFrom(byte[] parent_key, byte[] source_key)
-    throws UnknownViews, InvalidDataKey, OperationNotSupported {
-    throw new OperationNotSupported();
-  }
+  public byte[] copyData(byte[] parentKey, byte[] sourceKey)
+    throws ServiceFailure, UnknownViews, InvalidDataKey {
+    throw new ServiceFailure("Not implemented");
+  };
 
   @Override
-  public void deleteData(byte[] key) throws InvalidDataKey,
-    OperationNotSupported {
+  public void deleteData(byte[] key) throws ServiceFailure, InvalidDataKey {
     DataKeyManager parentDataKey = new DataKeyManager(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
@@ -102,11 +93,12 @@ public class DataService extends IHDataServicePOA {
 
     File file = new File(path);
     if (!file.delete())
-      return; // Erro - não conseguiu remover o arquivo
+      throw new ServiceFailure("Não é possível remover este arquivo");
   }
 
   @Override
-  public DataDescription[] getChildren(byte[] key) throws InvalidDataKey {
+  public DataDescription[] getChildren(byte[] key) throws ServiceFailure,
+    InvalidDataKey {
     DataKeyManager dataKey = new DataKeyManager(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
@@ -115,7 +107,7 @@ public class DataService extends IHDataServicePOA {
 
     File file = new File(path);
     if (!file.isDirectory())
-      return new DataDescriptionImpl[0]; // EROO
+      throw new ServiceFailure("parentKey não é um diretório.");
 
     File[] childrenFile = file.listFiles();
     if ((childrenFile == null) || (childrenFile.length == 0))
@@ -131,7 +123,8 @@ public class DataService extends IHDataServicePOA {
   }
 
   @Override
-  public DataDescription getDataDescription(byte[] key) throws InvalidDataKey {
+  public DataDescription getDataDescription(byte[] key) throws ServiceFailure,
+    InvalidDataKey {
     DataKeyManager dataKey = new DataKeyManager(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
@@ -147,7 +140,8 @@ public class DataService extends IHDataServicePOA {
 
   @Override
   public DataView getDataView(byte[] key, String viewInterface)
-    throws InvalidDataKey {
+    throws ServiceFailure, tecgraf.openbus.data_service.UnknownViewInterface,
+    InvalidDataKey {
     DataKeyManager dataKey = new DataKeyManager(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
@@ -156,7 +150,7 @@ public class DataService extends IHDataServicePOA {
 
     File file = new File(path);
     if (file.isDirectory())
-      return null; // Erro - não tem DataView
+      throw new ServiceFailure("parentKey é um diretório.");
 
     String[] views = getViews(file);
     for (String view : views) {
@@ -169,7 +163,8 @@ public class DataService extends IHDataServicePOA {
 
   @Override
   public DataView[] getDataViewSeq(byte[][] keys, String viewInterface)
-    throws InvalidDataKey {
+    throws ServiceFailure, tecgraf.openbus.data_service.UnknownViewInterface,
+    InvalidDataKey {
     List<DataView> dataViewList = new ArrayList<DataView>();
     for (byte[] key : keys) {
       dataViewList.add(getDataView(key, viewInterface));
@@ -178,26 +173,25 @@ public class DataService extends IHDataServicePOA {
   }
 
   @Override
-  public DataDescription getParent(byte[] key) throws InvalidDataKey {
+  public DataDescription getParent(byte[] key) throws ServiceFailure,
+    InvalidDataKey {
     DataKeyManager dataKey = new DataKeyManager(key);
     // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
     // throw InvalidDataKey().
     // TODO Testar se o usuário tem permissão de acesso.
     String path = dataKey.getKey();
-    // String parentPath = path.substring(0, path.lastIndexOf(File.separator));
-    // File parentFile = new File(parentPath);
 
     File file = new File(path);
     File parentFile = file.getParentFile();
 
     if (!parentFile.isDirectory())
-      return null; // Erro - é uma pasta nao é um arquivo.
+      throw new ServiceFailure();
 
     return createDataDescription(parentFile);
   }
 
   @Override
-  public DataDescription[] getRoots() {
+  public DataDescription[] getRoots() throws ServiceFailure {
     List<DataDescription> dataDesList = new ArrayList<DataDescription>();
     for (File file : this.roots) {
       dataDesList.add(createDataDescription(file));
@@ -208,9 +202,9 @@ public class DataService extends IHDataServicePOA {
   }
 
   @Override
-  public void moveData(byte[] source_key, byte[] parent_destination_key)
-    throws UnknownViews, InvalidDataKey, OperationNotSupported {
-    throw new OperationNotSupported();
+  public void moveData(byte[] key, byte[] newParentKey) throws ServiceFailure,
+    UnknownViews, InvalidDataKey {
+    throw new ServiceFailure("Not implemented");
   }
 
   private DataDescription createDataDescription(File file) {
@@ -230,7 +224,30 @@ public class DataService extends IHDataServicePOA {
     // TODO Como fazer para pegar o Owner.
     return new FileDataDescriptionImpl(file.getName(), file.getPath(), view,
       new Metadata[0], (int) file.length(), file.getName(), file.isDirectory());
+  }
 
+  @Override
+  public org.omg.CORBA.Object _get_component() {
+    return context.getIComponent();
+  }
+
+  @Override
+  public void updateData(byte[] key, byte[] sourceKey) throws ServiceFailure,
+    UnknownViews, InvalidDataKey {
+    throw new ServiceFailure("Not implemented");
+
+  }
+
+  @Override
+  public byte[] copyDataFrom(byte[] parentKey, byte[] sourceKey)
+    throws ServiceFailure, UnknownViews, InvalidDataKey {
+    throw new ServiceFailure("Not implemented");
+  }
+
+  @Override
+  public void updateDataFrom(byte[] key, byte[] sourceKey)
+    throws ServiceFailure, UnknownViews, InvalidDataKey {
+    throw new ServiceFailure("Not implemented");
   }
 
   private String[] getViews(File file) {
@@ -261,16 +278,10 @@ public class DataService extends IHDataServicePOA {
         e.printStackTrace();
       }
       catch (ServantNotActive e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       }
     }
     return null;
-  }
-
-  @Override
-  public org.omg.CORBA.Object _get_component() {
-    return context.getIComponent();
   }
 
 }

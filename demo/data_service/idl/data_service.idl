@@ -33,6 +33,11 @@ typedef OctetSeq DataKey;
 /** \brief Sequência de identificadores. */
 typedef  sequence<DataKey> DataKeySeq;
 
+/** \brief Indica que uma visão desconhecida foi solicitada. */
+exception UnknownViewInterface {
+  string name; /**< \brief O nome da visão. */
+};
+
 /**
  * \brief Indica a tentativa de se tratar um dado que não possui visões
  * conhecidas.
@@ -44,19 +49,13 @@ exception InvalidDataKey {
   DataKey key; /**< \brief A chave inválida. */
 };
 
-/** \brief Indica que uma operacao não é oferecida por um serviço. */
-exception OperationNotSupported {};
-
-/** \brief O nome de um metadado. */
-typedef string MetadataName;
-
-/** \brief O valor de um metadado. */
-typedef any MetadataValue;
+/** \brief Indica que houve uma falha no serviço. */
+exception ServiceFailure {};
 
 /** \brief Metadado. */
 struct Metadata {
-  MetadataName name; /**< \brief O nome. */
-  MetadataValue value;  /**< \brief O valor. */
+  string name; /**< \brief O nome. */
+  any value;  /**< \brief O valor. */
 };
 typedef sequence<Metadata> MetadataSeq; /**< \brief Sequência de metadados. */
 
@@ -91,7 +90,7 @@ abstract interface DataView {
 
   /**
    * \brief Obtém o nome da interface.
-   * 
+   *
    * \return O nome da interface.
    */
   string getInterfaceName();
@@ -101,28 +100,30 @@ typedef sequence<DataView> DataViewSeq; /**< \brief Sequência de visões de um
 
 /**
  * \brief Visão não-estruturada de um dado para a transferncia de seu conteúdo
- * via \i socket.
+ * através de um \i socket.
  */
 valuetype UnstructuredData supports DataView {
+  public DataKey key; /**< \brief O identificador unívoco do dado. */
   public string host; /**< \brief O nome do \i host de origem do dado. */
   public unsigned long port; /**< \brief A porta do \i host de origem do
       dado. */
   public OctetSeq accessKey; /**< \brief A chave de acesso ao dado. */
-  public OctetSeq dataIdentifier; /**< \brief O identificador do dado. */
   public boolean writable; /**< \brief Indica se é possível alterar no dado. */
 };
 
 /**
- * \brief Serviço de dados estruturados com navegação hierárquica.
+ * \brief Serviço de Navegação Hierárquica em Dados Estruturados.
  */
-interface IHDataService {
+interface IHierarchicalNavigationDataService {
  /**
   * \brief Obtém os descritores dos dados que representam as raízes da
   * hierarquia.
   *
   * \return Os descritores dos dados que representam as raízes da hierarquia.
+  *
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   */
-  DataDescriptionSeq getRoots();
+  DataDescriptionSeq getRoots() raises (ServiceFailure);
 
  /**
   * \brief Obtém os descritores dos dados descendentes de um determinado dado.
@@ -131,9 +132,11 @@ interface IHDataService {
   *
   * \return Os dados descendentes.
   *
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
   */
-  DataDescriptionSeq getChildren(in DataKey key) raises (InvalidDataKey);
+  DataDescriptionSeq getChildren(in DataKey key) raises (ServiceFailure,
+      InvalidDataKey);
 
  /**
   * \brief Obtém o descritor do ascendente de um dado.
@@ -142,9 +145,11 @@ interface IHDataService {
   *
   * \return O dado ascendente.
   *
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
   */
-  DataDescription getParent(in DataKey key) raises (InvalidDataKey);
+  DataDescription getParent(in DataKey key) raises (ServiceFailure,
+      InvalidDataKey);
 
  /**
   * \brief Obtém o descritor de um dado.
@@ -153,9 +158,11 @@ interface IHDataService {
   *
   * \return O descritor do dado.
   *
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
   */
-  DataDescription getDataDescription(in DataKey key) raises (InvalidDataKey);
+  DataDescription getDataDescription(in DataKey key) raises (ServiceFailure,
+      InvalidDataKey);
 
  /**
   * \brief Obtém uma visão de um dado.
@@ -165,97 +172,151 @@ interface IHDataService {
   *
   * \return A visão.
   *
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  * \exception UnknownViewInterface Indica que uma visão desconhecida foi
+  * solicitada.
   */
   DataView getDataView(in DataKey key, in string viewInterface)
-      raises (InvalidDataKey);
+      raises (ServiceFailure, InvalidDataKey, UnknownViewInterface);
 
  /**
-  * \brief Obtém uma visão de um conjunto de dados.
+  * \brief Obtém um conjunto de visões para um conjunto de dados.
+  *
+  * Todas as visões no conjunto implementam a mesma interface solicitada.
   *
   * \param [in] keys As chaves dos dados.
   * \param [in] viewInterface O nome da interface da visão desejada.
   *
-  * \return A visão dos conjuntos de dados.
+  * \return O conjunto de visões.
   *
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  * \exception UnknownViewInterface Indica que uma visão desconhecida foi
+  * solicitada.
   */
   DataViewSeq getDataViewSeq(in DataKeySeq keys, in string viewInterface)
-      raises (InvalidDataKey);
+      raises (ServiceFailure, InvalidDataKey, UnknownViewInterface);
+};
 
+/**
+ * \brief Serviço de Gerenciamento de Hierarquia de Dados Estruturados.
+ */
+interface IHierarchicalManagementDataService {
  /**
-  * \brief Cria um dado.
+  * \brief Cria um dado a partir de informações contidas em um protótipo.
   *
-  * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho)
+  * \param [in] parentKey A chave do dado (pai) onde o novo dado (filho)
   * será criado.
-  * \param [in] prototype Um protótipo do DataView que será criado.
+  * \param [in] prototype O protótipo.
   *
   * \return A chave do dado criado. 
   *
-  * \exception OperationNotSupported Caso esta operação não seja oferecida
-  * pelo serviço.
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
   */
-  DataKey createData(in DataKey parent_key, in DataDescription prototype)
-      raises (OperationNotSupported, InvalidDataKey);
+  DataKey createData(in DataKey parentKey, in DataDescription prototype)
+      raises (ServiceFailure, InvalidDataKey);
 
  /**
-  * \brief Cria um dado a partir de um dado de origem.
+  * \brief Copia um dado para uma determinada localização.
   *
-  * \param [in] parent_key A chave do dado (pai) onde o novo dado (filho) será
+  * \param [in] parentKey A chave do dado (pai) onde o novo dado (filho) será
   * criado.
-  * \param [in] source_key A chave do dado de origem.
+  * \param [in] sourceKey A chave do dado de origem.
   *
   * \return O dado criado.
   *
-  * \exception OperationNotSupported Caso esta operação não seja oferecida
-  * pelo serviço.
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception UnknownViews Caso o dado não possua visões conhecidas para o
   * novo dado.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
   */
-  DataKey createDataFrom(in DataKey parent_key, in DataKey source_key)
-      raises (OperationNotSupported, UnknownViews, InvalidDataKey);
+  DataKey copyData(in DataKey parentKey, in DataKey sourceKey)
+      raises (ServiceFailure, UnknownViews, InvalidDataKey);
 
  /**
-  * \brief Move o dado.
+  * \brief Move determinado dado.
   *
-  * \param [in] source_key A chave do dado de origem.
-  * \param [in] parent_destination_key A chave do dado do pai de destino.
+  * \param [in] key A chave do dado que se deseja mover.
+  * \param [in] newParentKey A chave do dado do pai de destino.
   * 
-  * \exception OperationNotSupported Caso esta operação não seja oferecida
-  * pelo serviço.
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception UnknownViews O dado não possui tipos suportados para o novo dado.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
   */
-  void moveData(in DataKey source_key, in DataKey parent_destination_key)
-      raises (OperationNotSupported, UnknownViews, InvalidDataKey);
+  void moveData(in DataKey key, in DataKey newParentKey)
+      raises (ServiceFailure, UnknownViews, InvalidDataKey);
 
  /**
-  * \brief Copia o dado.
+  * \brief Atualiza um dado a partir do conteúdo de um outro dado qualquer.
   *
-  * \param [in] source_key A chave do dado de origem.
-  * \param [in] parent_destination_key A chave do dado de destino.
+  * \param [in] key A chave do dado que se deseja atualizar.
+  * \param [in] sourceKey A chave do dado de origem.
   *
-  * \exception OperationNotSupported Caso esta operação não seja oferecida
-  * pelo serviço.
-  * \exception UnknownViews O dado não possui tipos suportados para o novo dado.
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
+  * \exception UnknownViews O dado de origem não oferece visões suportadas
+  * pelo dado que está sendo atualizado.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
   */
-  void copyData(in DataKey source_key, in DataKey target_key)
-      raises (OperationNotSupported, UnknownViews, InvalidDataKey);
+  void updateData(in DataKey key, in DataKey sourceKey)
+      raises (ServiceFailure, UnknownViews, InvalidDataKey);
 
  /**
   * \brief Remove um dado.
   *
-  * \param [in] keys A chave do dado.
+  * \param [in] key A chave do dado.
   *
-  * \exception OperationNotSupported Caso esta operação não seja oferecida
-  * pelo serviço.
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
   * \exception InvalidDataKey Caso a chave do dado não seja válida.
   */
-  void deleteData(in DataKey key) raises (OperationNotSupported,
-      InvalidDataKey);
+  void deleteData(in DataKey key) raises (ServiceFailure, InvalidDataKey);
+};
+
+/**
+ * \brief Serviço de Transferência de Dados Estruturados.
+ */
+interface IHierarchicalTransferDataService {
+ /**
+  * \brief Copia um dado para uma determinada localização.
+  *
+  * \param [in] parentKey A chave do dado (pai) onde o novo dado (filho) será
+  * criado.
+  * \param [in] sourceKey A chave do dado de origem.
+  *
+  * \return O dado criado.
+  *
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
+  * \exception UnknownViews Caso o dado não possua visões conhecidas para o
+  * novo dado.
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  DataKey copyDataFrom(in DataKey parentKey, in DataKey sourceKey)
+      raises (ServiceFailure, UnknownViews, InvalidDataKey);
+
+ /**
+  * \brief Atualiza um dado a partir do conteúdo de um outro dado qualquer.
+  *
+  * \param [in] key A chave do dado que se deseja atualizar.
+  * \param [in] sourceKey A chave do dado de origem.
+  *
+  * \exception ServiceFailure Caso ocorra uma falha na operação.
+  * \exception UnknownViews O dado de origem não oferece visões suportadas
+  * pelo dado que está sendo atualizado.
+  * \exception InvalidDataKey Caso a chave do dado não seja válida.
+  */
+  void updateDataFrom(in DataKey key, in DataKey sourceKey)
+      raises (ServiceFailure, UnknownViews, InvalidDataKey);
+};
+
+/**
+ * \brief Serviço de Hierarquia de Dados Estruturados.
+ *
+ * Este serviço trata da navegação, gerenciamento e transferência de dados
+ * estruturados que estejam organizados de maneira hierárquica.
+ */
+interface IHierarchicalDataService : IHierarchicalNavigationDataService,
+    IHierarchicalManagementDataService, IHierarchicalTransferDataService {
 };
 
 }; // data_service

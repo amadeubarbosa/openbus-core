@@ -9,10 +9,11 @@ import org.omg.CORBA.ORB;
 
 import tecgraf.openbus.data_service.DataDescription;
 import tecgraf.openbus.data_service.DataView;
-import tecgraf.openbus.data_service.IHDataService;
+import tecgraf.openbus.data_service.IHierarchicalDataService;
 import tecgraf.openbus.data_service.InvalidDataKey;
 import tecgraf.openbus.data_service.Metadata;
-import tecgraf.openbus.data_service.OperationNotSupported;
+import tecgraf.openbus.data_service.ServiceFailure;
+import tecgraf.openbus.data_service.UnknownViewInterface;
 import tecgraf.openbus.demo.data_service.valuetypes.DataDescriptionImpl;
 import tecgraf.openbus.file_system.FileDataDescription;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
@@ -21,11 +22,12 @@ import tecgraf.openbus.file_system.ILogFileViewHelper;
 
 public class DataServiceTester {
 
-  private IHDataService dataService;
+  private IHierarchicalDataService dataService;
   private ORB orb;
   public String rootPath;
 
-  public DataServiceTester(IHDataService dataService, ORB orb, String path) {
+  public DataServiceTester(IHierarchicalDataService dataService, ORB orb,
+    String path) {
     this.dataService = dataService;
     this.orb = orb;
     this.rootPath = path;
@@ -58,21 +60,23 @@ public class DataServiceTester {
     catch (IOException e) {
       e.printStackTrace();
     }
+    System.out.println("Done.");
   }
 
   public boolean getSomeDataDescriptions() {
-
-    DataDescription[] rootDescList = dataService.getRoots();
-    if (rootDescList.length < 1)
-      return false;
-
-    DataDescription rootDesc = rootDescList[0];
-    if (!(rootDesc instanceof FileDataDescription))
-      return false;
-
+    DataDescription rootDesc = null;
     DataDescription projectDesc = null;
     DataDescription fileDesc = null;
+
     try {
+      DataDescription[] rootDescList = dataService.getRoots();
+      if (rootDescList.length < 1)
+        return false;
+
+      rootDesc = rootDescList[0];
+      if (!(rootDesc instanceof FileDataDescription))
+        return false;
+
       DataDescription[] children = dataService.getChildren(rootDesc.key);
       if (children.length < 1)
         return false;
@@ -88,6 +92,9 @@ public class DataServiceTester {
       e.printStackTrace();
       return false;
     }
+    catch (ServiceFailure e) {
+      e.printStackTrace();
+    }
 
     printFileDataDescription((FileDataDescription) rootDesc);
     printFileDataDescription((FileDataDescription) projectDesc);
@@ -96,15 +103,15 @@ public class DataServiceTester {
   }
 
   public boolean getLogView() {
-    DataDescription[] rootDescList = dataService.getRoots();
-    if (rootDescList.length < 1)
-      return false;
-
-    DataDescription rootDesc = rootDescList[0];
     DataDescription projectDesc = null;
     DataDescription logFileDesc = null;
     ILogFileView logFileView = null;
     try {
+      DataDescription[] rootDescList = dataService.getRoots();
+      if (rootDescList.length < 1)
+        return false;
+      DataDescription rootDesc = rootDescList[0];
+
       DataDescription[] children = dataService.getChildren(rootDesc.key);
       if (children.length < 2)
         return false;
@@ -123,7 +130,14 @@ public class DataServiceTester {
       e.printStackTrace();
       return false;
     }
+    catch (ServiceFailure e) {
+      e.printStackTrace();
+    }
+    catch (UnknownViewInterface e) {
+      e.printStackTrace();
+    }
     String line = logFileView.getLastLine();
+    logFileView.deactivate();
 
     printFileDataDescription((FileDataDescription) projectDesc);
     printFileDataDescription((FileDataDescription) logFileDesc);
@@ -132,16 +146,16 @@ public class DataServiceTester {
   }
 
   public boolean createAndRemoveData() {
-    DataDescription[] rootDescList = dataService.getRoots();
-    if (rootDescList.length < 1)
-      return false;
-
-    DataDescription rootDesc = rootDescList[0];
-    if (!(rootDesc instanceof FileDataDescription))
-      return false;
-
-    DataDescription projectDesc = null;
     try {
+      DataDescription[] rootDescList = dataService.getRoots();
+      if (rootDescList.length < 1)
+        return false;
+
+      DataDescription rootDesc = rootDescList[0];
+      if (!(rootDesc instanceof FileDataDescription))
+        return false;
+
+      DataDescription projectDesc = null;
       DataDescription[] children = dataService.getChildren(rootDesc.key);
       if (children.length < 1)
         return false;
@@ -166,10 +180,53 @@ public class DataServiceTester {
       e.printStackTrace();
       return false;
     }
-    catch (OperationNotSupported e) {
+    catch (ServiceFailure e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return true;
+  }
+
+  public boolean testDeactivateLogInterface() {
+    DataDescription projectDesc = null;
+    DataDescription logFileDesc = null;
+    ILogFileView logFileView = null;
+
+    try {
+      DataDescription[] rootDescList = dataService.getRoots();
+      if (rootDescList.length < 1)
+        return false;
+
+      DataDescription rootDesc = rootDescList[0];
+
+      DataDescription[] children = dataService.getChildren(rootDesc.key);
+      if (children.length < 2)
+        return false;
+      projectDesc = children[1];
+
+      children = dataService.getChildren(projectDesc.key);
+      if (children.length < 1)
+        return false;
+      logFileDesc = children[0];
+      DataView dataView =
+        dataService.getDataView(logFileDesc.key, ILogFileViewHelper.id());
+      logFileView = ILogFileViewHelper.narrow(dataView);
+
+    }
+    catch (InvalidDataKey e) {
       e.printStackTrace();
       return false;
     }
+    catch (ServiceFailure e) {
+      e.printStackTrace();
+    }
+    catch (UnknownViewInterface e) {
+      e.printStackTrace();
+    }
+    logFileView.getLastLine();
+    logFileView.deactivate();
+    logFileView.getLastLine();
 
     return true;
   }
@@ -188,10 +245,17 @@ public class DataServiceTester {
     result = result && project1.delete();
     result = result && root.delete();
 
+    if (result)
+      System.out.println("Done.");
+
     return result;
   }
 
   private void printFileDataDescription(FileDataDescription data) {
+    if (data == null) {
+      System.out.println(" <-- FileDataDescription está nulo -->");
+      return;
+    }
     System.out.println("Elemento " + data.name);
     System.out.println("  Key = " + data.key);
     System.out.println("  Folder = " + data.fIsContainer);

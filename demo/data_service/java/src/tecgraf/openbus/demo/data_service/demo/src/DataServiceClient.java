@@ -15,8 +15,8 @@ import org.omg.CORBA_2_3.ORB;
 import scs.core.IComponent;
 import tecgraf.openbus.Openbus;
 import tecgraf.openbus.data_service.DataDescriptionHelper;
-import tecgraf.openbus.data_service.IHDataService;
-import tecgraf.openbus.data_service.IHDataServiceHelper;
+import tecgraf.openbus.data_service.IHierarchicalDataService;
+import tecgraf.openbus.data_service.IHierarchicalDataServiceHelper;
 import tecgraf.openbus.data_service.UnstructuredDataHelper;
 import tecgraf.openbus.demo.data_service.demo.util.DataServiceTester;
 import tecgraf.openbus.demo.data_service.factorys.DataDescriptionDefaultFactory;
@@ -84,7 +84,8 @@ public class DataServiceClient {
     IComponent component = serviceOffer.member;
 
     Object dataServiceObject = component.getFacetByName(facetName);
-    IHDataService dataService = IHDataServiceHelper.narrow(dataServiceObject);
+    IHierarchicalDataService dataService =
+      IHierarchicalDataServiceHelper.narrow(dataServiceObject);
 
     // Inicio dos testes
     String demoPath = props.getProperty("demo.path");
@@ -108,6 +109,10 @@ public class DataServiceClient {
     System.out
       .println("\n\n<---- Criando, verifica se foi criado e remove um arquivo ---->");
     result = result && tester.createAndRemoveData();
+
+    System.out
+      .println("\n\n<---- Verifica se o LogFileView está sendo desativado corretamente ---->");
+    result = result && tester.testDeactivateLogInterface();
 
     System.out
       .println("\n\n<---- Removendo a árvore de arquivos de teste ---->");
