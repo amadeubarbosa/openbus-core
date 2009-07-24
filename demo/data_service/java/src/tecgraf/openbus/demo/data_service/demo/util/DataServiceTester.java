@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.omg.CORBA.OBJECT_NOT_EXIST;
 import org.omg.CORBA.ORB;
 
 import tecgraf.openbus.data_service.DataDescription;
@@ -226,7 +227,12 @@ public class DataServiceTester {
     }
     logFileView.getLastLine();
     logFileView.deactivate();
-    logFileView.getLastLine();
+
+    try {
+      logFileView.getLastLine();
+    }
+    catch (OBJECT_NOT_EXIST e) {
+    }
 
     return true;
   }

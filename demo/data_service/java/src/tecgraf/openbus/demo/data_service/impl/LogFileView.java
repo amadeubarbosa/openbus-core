@@ -5,6 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import org.omg.PortableServer.POA;
+import org.omg.PortableServer.POAPackage.ObjectNotActive;
+import org.omg.PortableServer.POAPackage.ServantNotActive;
+import org.omg.PortableServer.POAPackage.WrongPolicy;
+
+import tecgraf.openbus.Openbus;
 import tecgraf.openbus.file_system.ILogFileViewHelper;
 import tecgraf.openbus.file_system.ILogFileViewPOA;
 
@@ -33,10 +39,10 @@ public class LogFileView extends ILogFileViewPOA {
         ranFile.seek(pos);
         c = (char) ranFile.read();
       }
-      ranFile.seek(pos + 1);
+      ranFile.seek(pos + 2);
       String line = ranFile.readLine();
       ranFile.close();
-      return line;
+      return line == null ? "" : line;
     }
     catch (FileNotFoundException e) {
       e.printStackTrace();
@@ -48,8 +54,21 @@ public class LogFileView extends ILogFileViewPOA {
   }
 
   @Override
-  public void deactivate(){
-    return;
+  public void deactivate() {
+    POA poa = Openbus.getInstance().getRootPOA();
+    try {
+      byte[] oid = poa.servant_to_id(this);
+      poa.deactivate_object(oid);
+    }
+    catch (ServantNotActive e) {
+      e.printStackTrace();
+    }
+    catch (WrongPolicy e) {
+      e.printStackTrace();
+    }
+    catch (ObjectNotActive e) {
+      e.printStackTrace();
+    }
   }
 
   @Override

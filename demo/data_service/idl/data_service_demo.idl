@@ -17,7 +17,7 @@ valuetype FileDataDescription : data_service::DataDescription {
 
 interface ILogFileView : data_service::DataView {
  string getLastLine();
- void deactivate();
+ oneway void deactivate();
 };
 
 };

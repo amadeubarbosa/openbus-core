@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jacorb.poa.POA;
+import org.omg.PortableServer.POA;
 import org.omg.PortableServer.Servant;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
@@ -34,7 +34,7 @@ public class DataService extends IHierarchicalDataServicePOA {
   public DataService(ComponentContext context) {
     this.context = context;
     this.roots = new ArrayList<File>();
-    this.poa = (POA) Openbus.getInstance().getRootPOA();
+    this.poa = Openbus.getInstance().getRootPOA();
   }
 
   public void addRoots(byte[] rootKey) throws InvalidDataKey {
@@ -277,7 +277,7 @@ public class DataService extends IHierarchicalDataServicePOA {
     if (viewInterface.equals(ILogFileViewHelper.id())) {
       Servant fileView = new LogFileView(file.getPath(), key);
       try {
-        Object obj = poa.servant_to_reference(fileView);
+        org.omg.CORBA.Object obj = poa.servant_to_reference(fileView);
         return DataViewHelper.narrow(obj);
       }
       catch (WrongPolicy e) {
