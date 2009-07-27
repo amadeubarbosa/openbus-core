@@ -10,6 +10,7 @@ import org.omg.PortableServer.Servant;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
+import scs.core.ComponentId;
 import scs.core.servant.ComponentContext;
 import tecgraf.openbus.Openbus;
 import tecgraf.openbus.data_service.DataDescription;
@@ -30,17 +31,26 @@ public class DataService extends IHierarchicalDataServicePOA {
   private ComponentContext context;
   private List<File> roots;
   private POA poa;
+  private ComponentId componentId;
+  private String facetName;
 
   public DataService(ComponentContext context) {
     this.context = context;
     this.roots = new ArrayList<File>();
     this.poa = Openbus.getInstance().getRootPOA();
+    this.componentId = new ComponentId();
+    this.facetName = "";
+  }
+
+  public void setComponent(ComponentId componentId, String facetName) {
+    this.componentId = componentId;
+    this.facetName = facetName;
   }
 
   public void addRoots(byte[] rootKey) throws InvalidDataKey {
     DataKey dataKey = new DataKey(rootKey);
-    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL
-    // throw InvalidDataKey().
+    if (!verifyKey(dataKey))
+      throw new InvalidDataKey();
     // TODO Testar se o usuário tem permissão de acesso.
     String path = dataKey.getDataId();
 
@@ -52,8 +62,8 @@ public class DataService extends IHierarchicalDataServicePOA {
   public byte[] createData(byte[] parentKey, DataDescription prototype)
     throws ServiceFailure, InvalidDataKey {
     DataKey parentDataKey = new DataKey(parentKey);
-    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
-    // throw InvalidDataKey().
+    if (!verifyKey(parentDataKey))
+      throw new InvalidDataKey();
     // TODO Testar se o usuário tem permissão de acesso.
     String parentPath = parentDataKey.getDataId();
 
@@ -62,7 +72,7 @@ public class DataService extends IHierarchicalDataServicePOA {
       throw new ServiceFailure("parentKey não é um diretório.");
 
     String dataPath = parentPath + "/" + prototype.name;
-    DataKey dataKey = new DataKey(dataPath);
+    DataKey dataKey = new DataKey(dataPath, null, componentId, facetName, null);
 
     try {
       File newFile = new File(dataPath);
@@ -84,8 +94,8 @@ public class DataService extends IHierarchicalDataServicePOA {
   @Override
   public void deleteData(byte[] key) throws ServiceFailure, InvalidDataKey {
     DataKey parentDataKey = new DataKey(key);
-    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
-    // throw InvalidDataKey().
+    if (!verifyKey(parentDataKey))
+      throw new InvalidDataKey();
     // TODO Testar se o usuário tem permissão de acesso.
     String path = parentDataKey.getDataId();
 
@@ -98,8 +108,8 @@ public class DataService extends IHierarchicalDataServicePOA {
   public DataDescription[] getChildren(byte[] key) throws ServiceFailure,
     InvalidDataKey {
     DataKey dataKey = new DataKey(key);
-    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
-    // throw InvalidDataKey().
+    if (!verifyKey(dataKey))
+      throw new InvalidDataKey();
     // TODO Testar se o usuário tem permissão de acesso.
     String path = dataKey.getDataId();
 
@@ -124,8 +134,8 @@ public class DataService extends IHierarchicalDataServicePOA {
   public DataDescription getDataDescription(byte[] key) throws ServiceFailure,
     InvalidDataKey {
     DataKey dataKey = new DataKey(key);
-    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
-    // throw InvalidDataKey().
+    if (!verifyKey(dataKey))
+      throw new InvalidDataKey();
     // TODO Testar se o usuário tem permissão de acesso.
     String path = dataKey.getDataId();
 
@@ -141,8 +151,8 @@ public class DataService extends IHierarchicalDataServicePOA {
     throws ServiceFailure, tecgraf.openbus.data_service.UnknownViewInterface,
     InvalidDataKey {
     DataKey dataKey = new DataKey(key);
-    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
-    // throw InvalidDataKey().
+    if (!verifyKey(dataKey))
+      throw new InvalidDataKey();
     // TODO Testar se o usuário tem permissão de acesso.
     String path = dataKey.getDataId();
 
@@ -174,8 +184,8 @@ public class DataService extends IHierarchicalDataServicePOA {
   public DataDescription getParent(byte[] key) throws ServiceFailure,
     InvalidDataKey {
     DataKey dataKey = new DataKey(key);
-    // TODO Verificar se o DataKey está no mesmo componente com a mesma IDL ---
-    // throw InvalidDataKey().
+    if (!verifyKey(dataKey))
+      throw new InvalidDataKey();
     // TODO Testar se o usuário tem permissão de acesso.
     String path = dataKey.getDataId();
 
@@ -211,6 +221,29 @@ public class DataService extends IHierarchicalDataServicePOA {
     throw new ServiceFailure("Not implemented");
   }
 
+  @Override
+  public org.omg.CORBA.Object _get_component() {
+    return context.getIComponent();
+  }
+
+  @Override
+  public void updateData(byte[] key, byte[] sourceKey) throws ServiceFailure,
+    UnknownViews, InvalidDataKey {
+    throw new ServiceFailure("Not implemented");
+  }
+
+  @Override
+  public byte[] copyDataFrom(byte[] parentKey, byte[] sourceKey)
+    throws ServiceFailure, UnknownViews, InvalidDataKey {
+    throw new ServiceFailure("Not implemented");
+  }
+
+  @Override
+  public void updateDataFrom(byte[] key, byte[] sourceKey)
+    throws ServiceFailure, UnknownViews, InvalidDataKey {
+    throw new ServiceFailure("Not implemented");
+  }
+
   private DataDescription createDataDescription(File file)
     throws InvalidDataKey {
     int dotPos = file.getName().lastIndexOf(".");
@@ -227,33 +260,22 @@ public class DataService extends IHierarchicalDataServicePOA {
     view[0] = FileDataDescriptionHelper.id();
 
     // TODO Como fazer para pegar o Owner.
-    DataKey key = new DataKey(file.getPath());
+    DataKey key =
+      new DataKey(file.getPath(), null, componentId, facetName, null);
     return new FileDataDescriptionImpl(file.getName(), key.getKey(), view,
       new Metadata[0], (int) file.length(), file.getName(), file.isDirectory());
   }
 
-  @Override
-  public org.omg.CORBA.Object _get_component() {
-    return context.getIComponent();
-  }
+  private boolean verifyKey(DataKey key) {
+    if ((key.getServiceComponentId() == null)
+      || key.getServiceInterfaceName() == null)
+      return false;
+    if (key.getServiceComponentId().name.compareTo(this.componentId.name) != 0)
+      return false;
+    if (key.getServiceFacetName().compareTo(this.facetName) != 0)
+      return false;
 
-  @Override
-  public void updateData(byte[] key, byte[] sourceKey) throws ServiceFailure,
-    UnknownViews, InvalidDataKey {
-    throw new ServiceFailure("Not implemented");
-
-  }
-
-  @Override
-  public byte[] copyDataFrom(byte[] parentKey, byte[] sourceKey)
-    throws ServiceFailure, UnknownViews, InvalidDataKey {
-    throw new ServiceFailure("Not implemented");
-  }
-
-  @Override
-  public void updateDataFrom(byte[] key, byte[] sourceKey)
-    throws ServiceFailure, UnknownViews, InvalidDataKey {
-    throw new ServiceFailure("Not implemented");
+    return true;
   }
 
   private String[] getViews(File file) {

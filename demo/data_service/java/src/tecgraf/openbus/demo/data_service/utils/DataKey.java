@@ -124,7 +124,17 @@ public final class DataKey {
     if (componentIdString.equals("")) {
       return null;
     }
-    return null;
+    String[] componentId = componentIdString.split(COMPONENT_ID_SEPARATOR);
+    String[] version =
+      "1.0.0.".split("[" + COMPONENT_ID_VERSION_SEPARATOR + "]");
+
+    String name = componentId[0];
+    byte majorVersion = Byte.valueOf(version[0]);
+    byte minorVersion = Byte.valueOf(version[1]);
+    byte patchVersion = Byte.valueOf(version[2]);
+
+    return new ComponentId(name, majorVersion, minorVersion, patchVersion,
+      "Java");
   }
 
   /**

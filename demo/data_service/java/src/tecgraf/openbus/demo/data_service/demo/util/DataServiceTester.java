@@ -182,7 +182,6 @@ public class DataServiceTester {
       return false;
     }
     catch (ServiceFailure e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
 

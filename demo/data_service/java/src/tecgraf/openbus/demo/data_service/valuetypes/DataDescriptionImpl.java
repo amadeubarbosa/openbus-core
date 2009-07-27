@@ -18,4 +18,10 @@ public class DataDescriptionImpl extends DataDescription {
     this.views = views;
     this.metadata = metadata;
   }
+
+  public DataDescriptionImpl(String name, byte[] key, String[] views,
+    Metadata[] metadata) {
+    this(name, views, metadata);
+    this.key = key;
+  }
 }

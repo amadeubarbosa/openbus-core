@@ -95,8 +95,10 @@ public class DataServiceServer {
 
     String demoPath = props.getProperty("demo.path");
 
-    DataKey rootKey = new DataKey(demoPath, null, componentId, null, demoPath);
+    DataKey rootKey = new DataKey(demoPath, null, componentId, facetName, null);
     byte[] rootDataKey = rootKey.getKey();
+    ((DataService) context.getFacets().get(facetName)).setComponent(
+      componentId, facetName);
     ((DataService) context.getFacets().get(facetName)).addRoots(rootDataKey);
 
     // Loga no Openbus por certificado
