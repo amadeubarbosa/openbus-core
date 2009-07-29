@@ -157,7 +157,7 @@ end
 ---
 --Procedimento após a reconexão do serviço.
 ---
-function SessionService:wasReconnected()
+function SessionService:expired()
 
   -- registra novamente o observador de credenciais
   self.observerId = self.accessControlService:addObserver(self.context.ICredentialObserver, {})

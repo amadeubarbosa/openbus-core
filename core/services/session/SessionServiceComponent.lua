@@ -67,10 +67,7 @@ function SessionServiceComponent:startup()
   end
 
   -- Cadastra callback para LeaseExpired
-  --TODO: função passada abaixo para addLeaseExpiredCallback está com bug. Não
-  --      existe self já que não recebe por parâmetro, nem receberá mesmo que
-  --      espere por um.
-  Openbus:addLeaseExpiredCallback( function() self.wasReconnected(self) end )
+  Openbus:addLeaseExpiredCallback( self )
 
   -- obtém a referência para o Serviço de Controle de Acesso
   self.accessControlService = Openbus:getAccessControlService()
@@ -108,11 +105,11 @@ end
 ---
 --Procedimento após a reconexão do serviço.
 ---
-function SessionServiceComponent:wasReconnected()
+function SessionServiceComponent:expired()
 Log:service("Serviço de sessão foi reconectado")
 
   -- Procedimento realizado pela faceta
-  self.sessionService:wasReconnected()
+  self.sessionService:expired()
 
   -- Registra novamente a oferta de serviço, pois a credencial associada
   -- agora é outra

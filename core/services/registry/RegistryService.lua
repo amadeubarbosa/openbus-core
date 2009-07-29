@@ -352,7 +352,7 @@ end
 ---
 --Procedimento após reconexão do serviço.
 ---
-function RSFacet:wasReconnected()
+function RSFacet:expired()
  Log:service("Serviço de registro foi reconectado")
  -- atualiza a referência junto ao serviço de controle de acesso
   self.accessControlService:setRegistryService(self)
@@ -447,10 +447,7 @@ function startup(self)
   end
 
   -- Cadastra callback para LeaseExpired
-  --TODO: função passada abaixo para addLeaseExpiredCallback está com bug. Não
-  --      existe self já que não recebe por parâmetro, nem receberá mesmo que
-  --      espere por um, de acordo com o código da LeaseRenewer.
-  Openbus:addLeaseExpiredCallback( function() self.wasReconnected(self) end )
+  Openbus:addLeaseExpiredCallback( self )
 
   -- obtém a referência para o Serviço de Controle de Acesso
   self.accessControlService = Openbus:getAccessControlService()
