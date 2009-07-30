@@ -16,6 +16,7 @@ import org.omg.CORBA_2_3.ORB;
 import scs.core.ComponentId;
 import scs.core.IComponent;
 import scs.core.IComponentHelper;
+import scs.core.IMetaInterfaceHelper;
 import scs.core.servant.ComponentBuilder;
 import scs.core.servant.ComponentContext;
 import scs.core.servant.ExtendedFacetDescription;
@@ -23,6 +24,7 @@ import scs.core.servant.IComponentServant;
 import scs.core.servant.IMetaInterfaceServant;
 import tecgraf.openbus.Openbus;
 import tecgraf.openbus.data_service.DataDescriptionHelper;
+import tecgraf.openbus.data_service.IHierarchicalDataServiceHelper;
 import tecgraf.openbus.data_service.UnstructuredDataHelper;
 import tecgraf.openbus.demo.data_service.factorys.DataDescriptionDefaultFactory;
 import tecgraf.openbus.demo.data_service.factorys.FileDataDescriptionDefaultFactory;
@@ -60,6 +62,7 @@ public class DataServiceServer {
     orbProps.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
     orbProps.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
+    orbProps.setProperty("jacorb.log.default.verbosity", "4");
 
     Openbus openbus = Openbus.getInstance();
     openbus.resetAndInitialize(args, orbProps, host, port);
@@ -79,15 +82,14 @@ public class DataServiceServer {
       new ComponentBuilder(openbus.getRootPOA(), openbus.getORB());
     ExtendedFacetDescription[] descriptions = new ExtendedFacetDescription[3];
     descriptions[0] =
-      new ExtendedFacetDescription("IComponent", "IDL:scs/core/IComponent:1.0",
+      new ExtendedFacetDescription("IComponent", IComponentHelper.id(),
         IComponentServant.class.getCanonicalName());
     descriptions[1] =
-      new ExtendedFacetDescription(facetName, "IDL:idls/IDataService:1.0",
-        DataService.class.getCanonicalName());
+      new ExtendedFacetDescription(facetName, IHierarchicalDataServiceHelper
+        .id(), DataService.class.getCanonicalName());
     descriptions[2] =
-      new ExtendedFacetDescription("IMetaInterface",
-        "IDL:scs/core/IMetaInterface:1.0", IMetaInterfaceServant.class
-          .getCanonicalName());
+      new ExtendedFacetDescription("IMetaInterface", IMetaInterfaceHelper.id(),
+        IMetaInterfaceServant.class.getCanonicalName());
     ComponentId componentId =
       new ComponentId(componentName, (byte) 1, (byte) 0, (byte) 0, "Java");
     ComponentContext context =
@@ -106,25 +108,25 @@ public class DataServiceServer {
     X509Certificate acsCertificate =
       CryptoUtils.readCertificate(acsCertificateFile);
 
-    IRegistryService registryService =
+    final IRegistryService registryService =
       openbus.connect(entityName, privateKey, acsCertificate);
 
     // Adiciona o componente no serviço de registro
     org.omg.CORBA.Object obj = context.getIComponent();
     IComponent component = IComponentHelper.narrow(obj);
     ServiceOffer serviceOffer = new ServiceOffer(new Property[0], component);
-    StringHolder registrationId = new StringHolder();
+    final StringHolder registrationId = new StringHolder();
     registryService.register(serviceOffer, registrationId);
 
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
       public void run() {
+        registryService.unregister(registrationId.value);
         Openbus openbus = Openbus.getInstance();
         openbus.disconnect();
         openbus.getORB().shutdown(true);
         openbus.getORB().destroy();
         System.out.println("Finalizando...");
-        super.run();
       }
     });
 

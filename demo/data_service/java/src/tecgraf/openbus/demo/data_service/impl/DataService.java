@@ -23,6 +23,7 @@ import tecgraf.openbus.data_service.ServiceFailure;
 import tecgraf.openbus.data_service.UnknownViews;
 import tecgraf.openbus.demo.data_service.utils.DataKey;
 import tecgraf.openbus.demo.data_service.valuetypes.FileDataDescriptionImpl;
+import tecgraf.openbus.file_system.FileDataDescription;
 import tecgraf.openbus.file_system.FileDataDescriptionHelper;
 import tecgraf.openbus.file_system.ILogFileViewHelper;
 
@@ -76,7 +77,16 @@ public class DataService extends IHierarchicalDataServicePOA {
 
     try {
       File newFile = new File(dataPath);
-      newFile.createNewFile();
+      System.out.println(dataPath);
+      FileDataDescription fdDescription = (FileDataDescription) prototype;
+
+      if (fdDescription.fIsContainer) {
+        newFile.mkdir();
+      }
+      else {
+        newFile.createNewFile();
+      }
+
     }
     catch (IOException e) {
       throw new ServiceFailure();
@@ -100,7 +110,7 @@ public class DataService extends IHierarchicalDataServicePOA {
     String path = parentDataKey.getDataId();
 
     File file = new File(path);
-    if (!file.delete())
+    if (!deleteDir(file))
       throw new ServiceFailure("Não é possível remover este arquivo");
   }
 
@@ -118,8 +128,8 @@ public class DataService extends IHierarchicalDataServicePOA {
       throw new ServiceFailure("parentKey não é um diretório.");
 
     File[] childrenFile = file.listFiles();
-    if ((childrenFile == null) || (childrenFile.length == 0))
-      throw new ServiceFailure();
+    if (childrenFile == null)
+      throw new ServiceFailure("diretório não contém entradas");
 
     DataDescription[] childrenView = new DataDescription[childrenFile.length];
     for (int i = 0; i < childrenFile.length; i++) {
@@ -247,7 +257,10 @@ public class DataService extends IHierarchicalDataServicePOA {
   private DataDescription createDataDescription(File file)
     throws InvalidDataKey {
     int dotPos = file.getName().lastIndexOf(".");
-    String[] view;
+
+    String[] view = new String[1];
+    view[0] = FileDataDescriptionHelper.id();
+
     if (dotPos > 0) {
       String extension = file.getName().substring(dotPos);
       if (extension.contains("log")) {
@@ -256,8 +269,6 @@ public class DataService extends IHierarchicalDataServicePOA {
         view[1] = ILogFileViewHelper.id();
       }
     }
-    view = new String[1];
-    view[0] = FileDataDescriptionHelper.id();
 
     // TODO Como fazer para pegar o Owner.
     DataKey key =
@@ -312,4 +323,18 @@ public class DataService extends IHierarchicalDataServicePOA {
     return null;
   }
 
+  public static boolean deleteDir(File dir) {
+    if (dir.isDirectory()) {
+      String[] children = dir.list();
+      for (int i = 0; i < children.length; i++) {
+        boolean success = deleteDir(new File(dir, children[i]));
+        if (!success) {
+          return false;
+        }
+      }
+    }
+
+    // The directory is now empty so delete it
+    return dir.delete();
+  }
 }
