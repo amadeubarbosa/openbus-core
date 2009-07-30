@@ -16,7 +16,7 @@ typedef sequence<octet> OctetSeq;
 /** \brief Sequência de strings. */
 typedef sequence<string> StringSeq;
 
-/** \brief Tempo em (\b milisegundos) desde 1 de janeiro de 1970. */
+/** \brief Tempo em (\b milissegundos) desde 1 de janeiro de 1970. */
 typedef long long TimeStamp;
 
 /** \brief O identificador unívoco de um dado.
