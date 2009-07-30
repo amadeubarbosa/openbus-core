@@ -6,9 +6,14 @@
 local oil = require "oil"
 oil.verbose:level(3)
 local openbus = require "openbus.Openbus"
+local scsutils = require ("scs.core.utils").Utils()
 
--- Inicialização do barramento
-openbus:resetAndInitialize("localhost", 2089, orbinit)
+-- Inicializaï¿½ï¿½o do barramento
+local props = {}
+scsutils:readProperties(props, "Hello.properties")
+local host = props["host.name"].value
+local port = props["host.port"].value
+openbus:resetAndInitialize(host, tonumber(port))
 local orb = openbus:getORB()
 
 -- Execução
@@ -17,9 +22,9 @@ function main ()
   orb:loadidlfile("../idl/hello.idl")
 
   -- Conexão com o barramento e obtenção do componente HelloComponent
-  local user = "tester"
-  local password = "tester"
-  local registryService = openbus:connect(user, password)
+  local login = props.login.value
+  local password = props.password.value
+  local registryService = openbus:connect(login, password)
   if not registryService then
     io.stderr:write("HelloClient: Erro ao conectar ao barramento.\n")
     os.exit(1)

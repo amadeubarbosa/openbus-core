@@ -6,9 +6,14 @@
 local oil = require "oil"
 local oop = require "loop.base"
 local openbus = require "openbus.Openbus"
+local scsutils = require ("scs.core.utils").Utils()
 
 -- Inicialização do barramento
-openbus:resetAndInitialize("localhost", 2089)
+local props = {}
+scsutils:readProperties(props, "Hello.properties")
+local host = props["host.name"].value
+local port = props["host.port"].value
+openbus:resetAndInitialize(host, tonumber(port))
 local orb = openbus:getORB()
 
 local scs = require "scs.core.base"
@@ -58,9 +63,10 @@ function main ()
   local component = scs.newComponent(facetDescriptions, {}, componentId)
 
   -- Conexão com o barramento e registro do componente
-  local user = "tester"
-  local password = "tester"
-  local registryService = openbus:connect(user, password)
+  local entityName = props["entity.name"].value
+  local privateKeyFile = props["private.key"].value
+  local acsCertificateFile = props["acs.certificate"].value
+  local registryService = openbus:connectByCertificate(entityName, privateKeyFile, acsCertificateFile)
   if not registryService then
     io.stderr:write("HelloServer: Erro ao conectar ao barramento.\n")
     os.exit(1)
