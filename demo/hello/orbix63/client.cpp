@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 *  O trabalho de criação da lista é facilitado pelo uso da classe 
 *  FacetListHelper.
 */
-  openbus::services::FacetListHelper* facetListHelper = \
+  openbus::services::FacetListHelper* facetListHelper =
     new openbus::services::FacetListHelper();
   facetListHelper->add("IHello");
 
@@ -44,18 +44,21 @@ int main(int argc, char* argv[]) {
 *  Uma lista de *ofertas de serviço* é retornada para o usuário.
 *  OBS.: Neste demo somente há uma oferta de serviço.
 */
-  openbus::services::ServiceOfferList_var serviceOfferList = \
+  openbus::services::ServiceOfferList_var serviceOfferList =
     registryService->find(facetListHelper->getFacetList());
+  delete facetListHelper;
 
   CORBA::ULong idx = 0;
   openbus::services::ServiceOffer serviceOffer = serviceOfferList[idx];
 
-  scs::core::IComponent* component = serviceOffer.member;
-  CORBA::Object* obj = component->getFacet("IDL:demoidl/hello/IHello:1.0");
-  demoidl::hello::IHello* hello = demoidl::hello::IHello::_narrow(obj);
+  scs::core::IComponent_var component = serviceOffer.member;
+  CORBA::Object_var obj = component->getFacet("IDL:demoidl/hello/IHello:1.0");
+  demoidl::hello::IHello_var hello = demoidl::hello::IHello::_narrow(obj);
   hello->sayHello();
 
   bus->disconnect();
+  delete bus;
 
   return 0;
 }
+

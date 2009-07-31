@@ -21,6 +21,7 @@ IT_USING_NAMESPACE_STD
 openbus::Openbus* bus;
 openbus::services::RegistryService* registryService;
 char* registryId;
+scs::core::ComponentContext* componentContext;
 
 class HelloImpl : virtual public POA_demoidl::hello::IHello {
   private:
@@ -37,7 +38,8 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
     }
     void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
       cout << endl << "Servant diz: HELLO!" << endl;
-      openbus::Credential_var credential = bus->getInterceptedCredential();
+      openbusidl::acs::Credential_var credential = 
+        bus->getInterceptedCredential();
       cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in()
         << endl;
     };
@@ -49,6 +51,7 @@ static void myTerminationHandler(long signal) {
   } catch(CORBA::Exception& e) {
     cout << "Não foi possível remover a oferta de serviço." << endl;
   }
+  delete componentContext;
   openbus::Openbus::terminationHandlerCallback(signal);
 }
 
@@ -95,8 +98,7 @@ int main(int argc, char* argv[]) {
   helloDesc.instantiator = HelloImpl::instantiate;
   helloDesc.destructor = HelloImpl::destruct;
   extFacets.push_back(helloDesc);
-  scs::core::ComponentContext* componentContext =
-    componentBuilder->newComponent(extFacets, componentId);
+  componentContext = componentBuilder->newComponent(extFacets, componentId);
 
   openbus::services::PropertyListHelper* propertyListHelper = \
     new openbus::services::PropertyListHelper();
@@ -105,6 +107,8 @@ int main(int argc, char* argv[]) {
   openbus::services::ServiceOffer serviceOffer;
   serviceOffer.properties = propertyListHelper->getPropertyList();
   serviceOffer.member = componentContext->getIComponent();
+  delete propertyListHelper;
+
 /* Registro do serviço no barramento. */
   registryService->Register(serviceOffer, registryId);
   cout << "\n\nServiço HELLO registrado no OpenBus..." << endl;

@@ -31,16 +31,16 @@ namespace openbus {
     verbose->indent();
   #endif
     try {
-      bus->disconnect();
+      if (bus->isConnected()) {
+        bus->disconnect();
+      }
     } catch(CORBA::Exception& e) {
     #ifdef VERBOSE
       verbose->print(
         "Não foi possível se desconectar corretamente do barramento."); 
     #endif
     }
-    if (!CORBA::is_nil(bus->orb)) {
-      bus->orb->shutdown(0);
-    }
+    delete bus;
   #ifdef VERBOSE
     verbose->dedent("Openbus::terminationHandlerCallback() END");
   #endif

@@ -269,7 +269,6 @@ class ACSTestSuite: public CxxTest::TestSuite {
        TS_FAIL("Função leaseExpiredCallback() não foi chamada.");
      }
    }
-
 };
 
 #endif
