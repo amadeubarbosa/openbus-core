@@ -1,6 +1,10 @@
 PROJNAME= openbus
 LIBNAME= ${PROJNAME}
 
+#Descomente as duas linhas abaixo para o uso em Valgrind.
+#DBG=YES
+#CPPFLAGS= -fno-inline
+
 ifeq "$(TEC_UNAME)" "SunOS58"
   USE_CC=Yes
 endif

@@ -12,9 +12,10 @@
 
 namespace openbus {
   namespace common {
-    ServerInterceptor::ServerInterceptor(Current* ppicurrent, \
-                                          SlotId pslotid, \
-                                          IOP::Codec_ptr pcdr_codec)
+    ServerInterceptor::ServerInterceptor(
+      Current* ppicurrent,
+      SlotId pslotid,
+      IOP::Codec_ptr pcdr_codec)
     {
     #ifdef VERBOSE
       Openbus::verbose->print("ServerInterceptor::ServerInterceptor() BEGIN");
@@ -35,9 +36,9 @@ namespace openbus {
     #ifdef VERBOSE
       Openbus::verbose->print("ServerInterceptor::receive_request() BEGIN");
       Openbus::verbose->indent();
-      stringstream request;
-      request << "Receive a request: " << ri->operation();
-      Openbus::verbose->print(request.str());
+//      stringstream request;
+//      request << "Receive a request: " << ri->operation();
+//      Openbus::verbose->print(request.str());
       CORBA::ULong z;
       stringstream contextData;
       contextData << "Context Data: ";
@@ -56,7 +57,7 @@ namespace openbus {
 
       CORBA::Any_var any = cdr_codec->decode_value(octets, 
         openbusidl::acs::_tc_Credential);
-      openbusidl::acs::Credential* c = new openbusidl::acs::Credential;
+      openbusidl::acs::Credential_var c = new openbusidl::acs::Credential;
       any >>= c;
     #ifdef VERBOSE
       Openbus::verbose->print("credential->owner: " + (string) c->owner);
@@ -99,7 +100,7 @@ namespace openbus {
     #endif
       CORBA::Any_var any = picurrent->get_slot(slotid);
 
-      openbusidl::acs::Credential* c = new openbusidl::acs::Credential;
+      openbusidl::acs::Credential_var c = new openbusidl::acs::Credential;
       any >>= c;
       if (c) {
       #ifdef VERBOSE

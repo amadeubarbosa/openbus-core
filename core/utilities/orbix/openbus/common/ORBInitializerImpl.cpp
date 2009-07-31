@@ -22,7 +22,8 @@ namespace openbus {
     #endif
     }
 
-    ORBInitializerImpl::~ORBInitializerImpl() { }
+    ORBInitializerImpl::~ORBInitializerImpl() {
+    }
 
     void ORBInitializerImpl::pre_init(ORBInitInfo_ptr info)
     {
@@ -32,24 +33,27 @@ namespace openbus {
     #endif
       IOP::CodecFactory_var codec_factory = info->codec_factory();
       IOP::Encoding cdr_encoding = {IOP::ENCODING_CDR_ENCAPS, 1, 2};
+      IOP::Codec_var codec = codec_factory->create_codec(cdr_encoding);
+
       PortableInterceptor::ClientRequestInterceptor_var clientInterceptor = \
-          new ClientInterceptor(codec_factory->create_codec(cdr_encoding));
+          new ClientInterceptor(codec);
       info->add_client_request_interceptor(clientInterceptor);
 
       slotid = info->allocate_slot_id();
+
       CORBA::Object_var init_ref = 
         info->resolve_initial_references("PICurrent");
       Current_var pi_current = PortableInterceptor::Current::_narrow(init_ref);
 
-      codec_factory = info->codec_factory();
       serverInterceptor = new ServerInterceptor(
         pi_current, 
         slotid, 
-        codec_factory->create_codec(cdr_encoding));
+        codec);
 
       PortableInterceptor::ServerRequestInterceptor_var 
         serverRequestInterceptor = serverInterceptor ;
       info->add_server_request_interceptor(serverRequestInterceptor) ;
+
     #ifdef VERBOSE
       Openbus::verbose->dedent("ORBInitializerImpl::pre_init() END");
     #endif

@@ -14,10 +14,7 @@ using namespace openbusidl::acs;
 
 namespace openbus {
   namespace common {
-
-    std::map<CORBA::ORB*, openbusidl::acs::Credential**> 
-      ClientInterceptor::credentials;
-    openbusidl::acs::Credential** ClientInterceptor::credential = 0;
+    openbusidl::acs::Credential_var ClientInterceptor::credential = 0;
 
     ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec) 
       IT_THROW_DECL(()) 
@@ -40,27 +37,25 @@ namespace openbus {
       PortableInterceptor::ForwardRequest
     ))
     {
-      CORBA::ORB_ptr orb;
-      orb = ri->target()->_it_get_orb();
     #ifdef VERBOSE
       Openbus::verbose->print("ClientInterceptor::send_request() BEGIN");
       Openbus::verbose->indent();
-      stringstream msg;
-      msg << "Method: " << ri->operation();
-      Openbus::verbose->print(msg.str());
+//      stringstream msg;
+//      char * operation = ri->operation();
+//      msg << "Method: " << operation;
+//      Openbus::verbose->print(msg.str());
     #endif
-      credential = credentials[orb];
-      if (credential != NULL) {
+      if (credential) {
       #ifdef VERBOSE
         stringstream msg;
-        msg << "Credential identifier: " << (*credential)->identifier;
+        msg << "Credential identifier: " << credential->identifier;
         Openbus::verbose->print(msg.str());
       #endif
         IOP::ServiceContext sc;
         sc.context_id = 1234;
 
         CORBA::Any_var any;
-        any <<= **credential;
+        any <<= *credential;
         CORBA::OctetSeq_var octets;
         octets = cdr_codec->encode_value(any);
         IOP::ServiceContext::_context_data_seq seq(

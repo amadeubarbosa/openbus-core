@@ -22,8 +22,7 @@ namespace openbus {
       private:
         IOP::Codec_ptr cdr_codec;
       public:
-        static std::map<CORBA::ORB*, openbusidl::acs::Credential**> credentials;
-        static openbusidl::acs::Credential** credential;
+        static openbusidl::acs::Credential_var credential;
 
         ClientInterceptor(IOP::Codec_ptr pcdr_codec) IT_THROW_DECL(());
         ~ClientInterceptor();

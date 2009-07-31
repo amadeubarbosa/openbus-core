@@ -81,8 +81,6 @@ namespace openbus {
       NO_SESSION_SERVICE(const string& msg = "") : runtime_error(msg) {}
   };
 
-typedef openbusidl::acs::Credential_var Credential_var;
-
   /**
   * \brief Representa um barramento.
   */
@@ -112,7 +110,12 @@ typedef openbusidl::acs::Credential_var Credential_var;
     /**
     * Ponteiro para o stub do serviço de acesso.
     */
-      openbusidl::acs::IAccessControlService* iAccessControlService;
+      openbusidl::acs::IAccessControlService_var iAccessControlService;
+
+    /**
+    * Ponteiro para o stub do serviço de registro.
+    */
+      openbusidl::rs::IRegistryService* iRegistryService;
 
     /**
     * Ponteiro para o stub do serviço de sessão.
@@ -122,7 +125,7 @@ typedef openbusidl::acs::Credential_var Credential_var;
     /**
     * Ponteiro para a faceta ILeaseProvider. 
     */
-      openbusidl::acs::ILeaseProvider* iLeaseProvider;
+      openbusidl::acs::ILeaseProvider_var iLeaseProvider;
 
     /**
     * Inicializador do ORB. 
@@ -132,12 +135,12 @@ typedef openbusidl::acs::Credential_var Credential_var;
     /**
     * ORB 
     */
-      CORBA::ORB* orb;
+      CORBA::ORB_var orb;
 
     /**
     * POA 
     */
-      PortableServer::POA* poa;
+      PortableServer::POA_var poa;
 
     /**
     * Fábrica de componentes SCS. 
@@ -173,7 +176,7 @@ typedef openbusidl::acs::Credential_var Credential_var;
     /**
     * Credencial de identificação do usuário frente ao barramento. 
     */
-      Credential* credential;
+      openbusidl::acs::Credential_var credential;
 
     /**
     * Host de localização do barramento. 
@@ -236,6 +239,11 @@ typedef openbusidl::acs::Credential_var Credential_var;
     * Cria o proxy para o serviço de acesso.
     */
       void createProxyToIAccessControlService();
+
+    /**
+    * Desconexão local.
+    */
+      void localDisconnect();
 
     /**
     * Cria o objeto registryService.
