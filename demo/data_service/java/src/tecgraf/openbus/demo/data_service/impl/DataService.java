@@ -29,26 +29,31 @@ import tecgraf.openbus.file_system.ILogFileViewHelper;
 
 public class DataService extends IHierarchicalDataServicePOA {
 
+  /** Campo de acesso ao componente (campo obrigatório). */
   private ComponentContext context;
+  /** Armazena as raizes das árvores de diretório. */
   private List<File> roots;
   private POA poa;
-  private ComponentId componentId;
   private String facetName;
 
+  /**
+   * Construtor. Todas as classes que tiverem o comportamento de facetas devem
+   * possuir um construtor com esta assinatura.
+   * 
+   * @param context
+   */
   public DataService(ComponentContext context) {
     this.context = context;
     this.roots = new ArrayList<File>();
     this.poa = Openbus.getInstance().getRootPOA();
-    this.componentId = new ComponentId();
     this.facetName = "";
   }
 
-  public void setComponent(ComponentId componentId, String facetName) {
-    this.componentId = componentId;
+  public void setFacetName(String facetName) {
     this.facetName = facetName;
   }
 
-  public void addRoots(byte[] rootKey) throws InvalidDataKey {
+  public void addRoot(byte[] rootKey) throws InvalidDataKey {
     DataKey dataKey = new DataKey(rootKey);
     if (!verifyKey(dataKey))
       throw new InvalidDataKey();
@@ -72,6 +77,7 @@ public class DataService extends IHierarchicalDataServicePOA {
     if (!file.isDirectory())
       throw new ServiceFailure("parentKey não é um diretório.");
 
+    ComponentId componentId = context.getComponentId();
     String dataPath = parentPath + "/" + prototype.name;
     DataKey dataKey = new DataKey(dataPath, null, componentId, facetName, null);
 
@@ -232,11 +238,6 @@ public class DataService extends IHierarchicalDataServicePOA {
   }
 
   @Override
-  public org.omg.CORBA.Object _get_component() {
-    return context.getIComponent();
-  }
-
-  @Override
   public void updateData(byte[] key, byte[] sourceKey) throws ServiceFailure,
     UnknownViews, InvalidDataKey {
     throw new ServiceFailure("Not implemented");
@@ -254,6 +255,13 @@ public class DataService extends IHierarchicalDataServicePOA {
     throw new ServiceFailure("Not implemented");
   }
 
+  /**
+   * Cria um DataDescription a partir de um arquivo
+   * 
+   * @param file O arquivo utilizado para criar o DataDescription
+   * @return O DataDescription criado.
+   * @throws InvalidDataKey
+   */
   private DataDescription createDataDescription(File file)
     throws InvalidDataKey {
     int dotPos = file.getName().lastIndexOf(".");
@@ -271,17 +279,26 @@ public class DataService extends IHierarchicalDataServicePOA {
     }
 
     // TODO Como fazer para pegar o Owner.
+    ComponentId componentId = context.getComponentId();
     DataKey key =
       new DataKey(file.getPath(), null, componentId, facetName, null);
     return new FileDataDescriptionImpl(file.getName(), key.getKey(), view,
       new Metadata[0], (int) file.length(), file.getName(), file.isDirectory());
   }
 
+  /**
+   * Verifica se a {@code key} pertence ao DataService em questão.
+   * 
+   * @param key a chave que será verificada
+   * @return {@code true} caso a chave pertença ao serviço. {@code false} caso
+   *         contrário.
+   */
   private boolean verifyKey(DataKey key) {
+    ComponentId componentId = context.getComponentId();
     if ((key.getServiceComponentId() == null)
       || key.getServiceInterfaceName() == null)
       return false;
-    if (key.getServiceComponentId().name.compareTo(this.componentId.name) != 0)
+    if (key.getServiceComponentId().name.compareTo(componentId.name) != 0)
       return false;
     if (key.getServiceFacetName().compareTo(this.facetName) != 0)
       return false;
@@ -289,6 +306,12 @@ public class DataService extends IHierarchicalDataServicePOA {
     return true;
   }
 
+  /**
+   * Retorna as visões de um dado a partir do arquivo.
+   * 
+   * @param file
+   * @return As visões do arquivo.
+   */
   private String[] getViews(File file) {
     int dotPos = file.getName().lastIndexOf(".");
     String extension = file.getName().substring(dotPos);
@@ -306,6 +329,14 @@ public class DataService extends IHierarchicalDataServicePOA {
     return view;
   }
 
+  /**
+   * Cria uma visão do dado a partir do arquivo e da visão desejada
+   * 
+   * @param key
+   * @param file
+   * @param viewInterface
+   * @return A visão do dado.
+   */
   private DataView createDataView(byte[] key, File file, String viewInterface) {
     if (viewInterface.equals(ILogFileViewHelper.id())) {
       Servant fileView = new LogFileView(file.getPath(), key);
@@ -323,6 +354,13 @@ public class DataService extends IHierarchicalDataServicePOA {
     return null;
   }
 
+  /**
+   * Deleta um diretório. O diretório é deletado mesmo contendo arquivos.
+   * 
+   * @param dir
+   * @return {@code true} caso o diretório tenha sido removido. {@code False}
+   *         caso contrário.
+   */
   public static boolean deleteDir(File dir) {
     if (dir.isDirectory()) {
       String[] children = dir.list();
@@ -337,4 +375,15 @@ public class DataService extends IHierarchicalDataServicePOA {
     // The directory is now empty so delete it
     return dir.delete();
   }
+
+  /**
+   * Método obrigatório.
+   * 
+   * {@inheritDoc}
+   */
+  @Override
+  public org.omg.CORBA.Object _get_component() {
+    return context.getIComponent();
+  }
+
 }

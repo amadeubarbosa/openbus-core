@@ -99,9 +99,8 @@ public class DataServiceServer {
 
     DataKey rootKey = new DataKey(demoPath, null, componentId, facetName, null);
     byte[] rootDataKey = rootKey.getKey();
-    ((DataService) context.getFacets().get(facetName)).setComponent(
-      componentId, facetName);
-    ((DataService) context.getFacets().get(facetName)).addRoots(rootDataKey);
+    ((DataService) context.getFacets().get(facetName)).setFacetName(facetName);
+    ((DataService) context.getFacets().get(facetName)).addRoot(rootDataKey);
 
     // Loga no Openbus por certificado
     RSAPrivateKey privateKey = CryptoUtils.readPrivateKey(privateKeyFile);

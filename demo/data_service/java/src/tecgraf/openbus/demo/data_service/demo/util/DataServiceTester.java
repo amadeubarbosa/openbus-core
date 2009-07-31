@@ -34,6 +34,9 @@ public class DataServiceTester {
     this.rootPath = path;
   }
 
+  /**
+   * Constroi a árvore de arquivos criada para o teste.
+   */
   public void buildFiles() {
     try {
       File root = new File(rootPath);
@@ -64,6 +67,12 @@ public class DataServiceTester {
     System.out.println("Done.");
   }
 
+  /**
+   * Verifica o DataDescription de alguns arquivos imprimindo-os na tela.
+   * 
+   * @return Retorna {@code true} caso o método finalize corretamente. {@code
+   *         False} caso contrário.
+   */
   public boolean getSomeDataDescriptions() {
     DataDescription rootDesc = null;
     DataDescription projectDesc = null;
@@ -100,9 +109,18 @@ public class DataServiceTester {
     printFileDataDescription((FileDataDescription) rootDesc);
     printFileDataDescription((FileDataDescription) projectDesc);
     printFileDataDescription((FileDataDescription) fileDesc);
+
+    System.out.println("Done.");
     return true;
   }
 
+  /**
+   * Testa o funcionamento da visão LogView, uma interface remota que estende
+   * DataView.
+   * 
+   * @return Retorna {@code true} caso o método finalize corretamente. {@code
+   *         False} caso contrário.
+   */
   public boolean getLogView() {
     DataDescription projectDesc = null;
     DataDescription logFileDesc = null;
@@ -143,9 +161,17 @@ public class DataServiceTester {
     printFileDataDescription((FileDataDescription) projectDesc);
     printFileDataDescription((FileDataDescription) logFileDesc);
     System.out.println("$ tail " + logFileDesc.name + "\n> " + line);
+
+    System.out.println("Done.");
     return true;
   }
 
+  /**
+   * Testa a criação e remoção de um dado.
+   * 
+   * @return Retorna {@code true} caso o método finalize corretamente. {@code
+   *         False} caso contrário.
+   */
   public boolean createAndRemoveData() {
     try {
       DataDescription[] rootDescList = dataService.getRoots();
@@ -185,9 +211,16 @@ public class DataServiceTester {
       e.printStackTrace();
     }
 
+    System.out.println("Done.");
     return true;
   }
 
+  /**
+   * Testa se a interface remota Log está sendo desativada corretamente.
+   * 
+   * @return Retorna {@code true} caso o método finalize corretamente. {@code
+   *         False} caso contrário.
+   */
   public boolean testDeactivateLogInterface() {
     DataDescription projectDesc = null;
     DataDescription logFileDesc = null;
@@ -233,9 +266,16 @@ public class DataServiceTester {
     catch (OBJECT_NOT_EXIST e) {
     }
 
+    System.out.println("Done.");
     return true;
   }
 
+  /**
+   * Remove a árvore de arquivos criada para o teste.
+   * 
+   * @return Retorna {@code true} caso o método finalize corretamente. {@code
+   *         False} caso contrário.
+   */
   public boolean removeFile() {
     boolean result = true;
     File logFile1 = new File(rootPath + "/Project2/file1.log");
@@ -252,10 +292,14 @@ public class DataServiceTester {
 
     if (result)
       System.out.println("Done.");
-
     return result;
   }
 
+  /**
+   * Imprime um FileDataDescritpon na tela.
+   * 
+   * @param data
+   */
   private void printFileDataDescription(FileDataDescription data) {
     if (data == null) {
       System.out.println(" <-- FileDataDescription está nulo -->");
