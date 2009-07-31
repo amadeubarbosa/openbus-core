@@ -7,6 +7,7 @@ import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import openbusidl.rs.IRegistryService;
 import openbusidl.rs.Property;
@@ -19,6 +20,7 @@ import org.omg.CORBA.UserException;
 import scs.core.ComponentId;
 import scs.core.IComponent;
 import scs.core.IComponentHelper;
+import scs.core.IMetaInterfaceHelper;
 import scs.core.servant.ComponentBuilder;
 import scs.core.servant.ComponentContext;
 import scs.core.servant.ExtendedFacetDescription;
@@ -28,6 +30,8 @@ import tecgraf.openbus.Openbus;
 import tecgraf.openbus.exception.OpenBusException;
 import tecgraf.openbus.exception.RSUnavailableException;
 import tecgraf.openbus.util.CryptoUtils;
+import tecgraf.openbus.util.Log;
+import demoidl.hello.IHelloHelper;
 
 public class HelloServer {
   public static void main(String[] args) throws IOException, UserException,
@@ -47,6 +51,7 @@ public class HelloServer {
     String portString = props.getProperty("host.port");
     int port = Integer.valueOf(portString);
 
+    Log.setLogsLevel(Level.WARNING);
     Properties orbProps = new Properties();
     orbProps.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
     orbProps.setProperty("org.omg.CORBA.ORBSingletonClass",
@@ -68,15 +73,14 @@ public class HelloServer {
     ComponentBuilder builder = new ComponentBuilder(bus.getRootPOA(), orb);
     ExtendedFacetDescription[] descriptions = new ExtendedFacetDescription[3];
     descriptions[0] =
-      new ExtendedFacetDescription("IComponent", "IDL:scs/core/IComponent:1.0",
+      new ExtendedFacetDescription("IComponent", IComponentHelper.id(),
         IComponentServant.class.getCanonicalName());
     descriptions[1] =
-      new ExtendedFacetDescription("IHello", "IDL:demoidl/hello/IHello:1.0",
-        HelloImpl.class.getCanonicalName());
+      new ExtendedFacetDescription("IHello", IHelloHelper.id(), HelloImpl.class
+        .getCanonicalName());
     descriptions[2] =
-      new ExtendedFacetDescription("IMetaInterface",
-        "IDL:scs/core/IMetaInterface:1.0", IMetaInterfaceServant.class
-          .getCanonicalName());
+      new ExtendedFacetDescription("IMetaInterface", IMetaInterfaceHelper.id(),
+        IMetaInterfaceServant.class.getCanonicalName());
     ComponentContext context =
       builder.newComponent(descriptions, null, new ComponentId("Hello",
         (byte) 1, (byte) 0, (byte) 0, "Java"));
