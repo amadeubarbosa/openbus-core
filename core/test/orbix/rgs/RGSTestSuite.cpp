@@ -30,6 +30,8 @@ class RGSTestSuite: public CxxTest::TestSuite {
     unsigned short OPENBUS_SERVER_PORT;
     std::string OPENBUS_USERNAME;
     std::string OPENBUS_PASSWORD;
+    scs::core::ComponentBuilder* componentBuilder;
+    scs::core::ComponentContext* context;
 
     void fillComponentId(scs::core::ComponentId& id) {
       id.name = "RGSTestSuiteComponent";
@@ -87,6 +89,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     ~RGSTestSuite() {
       try {
+        delete context;
         if (bus) {
           if (bus->disconnect())
             delete bus;
@@ -94,8 +97,6 @@ class RGSTestSuite: public CxxTest::TestSuite {
         delete propertyListHelper;
         delete propertyListHelper2;
         delete credential;
-        delete rgs;
-        delete iAccessControlService;
       }
       catch (const char* errmsg ) {
         TS_FAIL(errmsg);
@@ -119,15 +120,13 @@ class RGSTestSuite: public CxxTest::TestSuite {
 
     void testRegister() {
       try {
-        scs::core::ComponentBuilder* componentBuilder = 
-          bus->getComponentBuilder();
+        componentBuilder = bus->getComponentBuilder();
 
         scs::core::ComponentId id;
         fillComponentId(id);
 
         std::list<scs::core::ExtendedFacetDescription> extFacets;
-        scs::core::ComponentContext* context = 
-          componentBuilder->newComponent(extFacets, id);
+        context = componentBuilder->newComponent(extFacets, id);
         component = context->getIComponent();
 
         propertyListHelper = new openbus::services::PropertyListHelper();
@@ -176,7 +175,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
     void testUnregister() {
       TS_ASSERT(rgs->unregister(registryIdentifier));
       TS_ASSERT(rgs->unregister(registryIdentifier2));
-      TS_ASSERT(!rgs->unregister("ID"));
+      TS_ASSERT(!rgs->unregister((char*) "ID"));
     }
 };
 
