@@ -106,10 +106,13 @@ end
 --Procedimento após a reconexão do serviço.
 ---
 function SessionServiceComponent:expired()
-Log:service("Serviço de sessão foi reconectado")
+  Openbus:connectByCertificate(self.context._componentId.name,
+      self.privateKeyFile, self.accessControlServiceCertificateFile)
 
   -- Procedimento realizado pela faceta
   self.sessionService:expired()
+
+  Log:service("Serviço de sessão foi reconectado")
 
   -- Registra novamente a oferta de serviço, pois a credencial associada
   -- agora é outra

@@ -158,9 +158,10 @@ end
 --Procedimento após a reconexão do serviço.
 ---
 function SessionService:expired()
-
   -- registra novamente o observador de credenciais
-  self.observerId = self.accessControlService:addObserver(self.context.ICredentialObserver, {})
+  self.observerId = self.accessControlService:addObserver(
+      self.context.ICredentialObserver, {}
+  )
   Log:service("Observador recadastrado")
 
   -- Mantém apenas as sessões com credenciais válidas

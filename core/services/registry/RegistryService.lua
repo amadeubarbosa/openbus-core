@@ -353,14 +353,16 @@ end
 --Procedimento após reconexão do serviço.
 ---
 function RSFacet:expired()
- Log:service("Serviço de registro foi reconectado")
+  Openbus:connectByCertificate(self.context._componentId.name,
+      self.privateKeyFile, self.accessControlServiceCertificateFile)
+
  -- atualiza a referência junto ao serviço de controle de acesso
   self.accessControlService:setRegistryService(self)
 
   -- registra novamente o observador de credenciais
   self.observerId =
     self.accessControlService:addObserver(self.observer, {})
- Log:service("Observador recadastrado")
+  Log:service("Observador recadastrado")
 
   -- Mantém no repositório apenas ofertas com credenciais válidas
   local offerEntries = self.offersByIdentifier
@@ -381,6 +383,8 @@ function RSFacet:expired()
   for _, credential in ipairs(invalidCredentials) do
     self:credentialWasDeleted(credential)
   end
+
+  Log:service("Serviço de registro foi reconectado")
 end
 
 ---
@@ -467,10 +471,9 @@ function startup(self)
       self.registryService:credentialWasDeleted(credential)
     end
   }
-  self.observer = orb:newservant(observer,
-                                "RegistryServiceCredentialObserver",
-                                "IDL:openbusidl/acs/ICredentialObserver:1.0"
-                                )
+  self.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
+    "IDL:openbusidl/acs/ICredentialObserver:1.0"
+  )
   self.observerId =
     self.accessControlService:addObserver(self.observer, {})
   Log:service("Cadastrado observador para a credencial")
