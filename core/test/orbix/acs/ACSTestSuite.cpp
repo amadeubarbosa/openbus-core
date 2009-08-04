@@ -16,10 +16,14 @@ using namespace openbus;
 
 bool leaseExpiredCallbackOk;
 
-void leaseExpiredCallback() {
-  TS_TRACE("Executando leaseExpiredCallback()...");
-  leaseExpiredCallbackOk = true;
-}
+class MyCallback : public Openbus::LeaseExpiredCallback {
+  public:
+    MyCallback() {}
+    void expired() {
+      TS_TRACE("Executando leaseExpiredCallback()...");
+      leaseExpiredCallbackOk = true;
+    }
+};
 
 class ACSTestSuite: public CxxTest::TestSuite {
   private:
@@ -261,8 +265,9 @@ class ACSTestSuite: public CxxTest::TestSuite {
        "95000"}; 
      bus->init(7, (char**) argv);
      leaseExpiredCallbackOk = false;
-     bus->addLeaseExpiredCallback(leaseExpiredCallback);
+     MyCallback myCallback;
      bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
+     bus->addLeaseExpiredCallback(&myCallback);
      TS_TRACE("Dormindo por 100 segundos...");
      sleep(100);
      if (!leaseExpiredCallbackOk) {
