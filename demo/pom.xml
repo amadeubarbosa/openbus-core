@@ -17,6 +17,5 @@
 
   <modules>
     <module>hello</module>
-    <module>data_service</module>
   </modules>
 </project>
