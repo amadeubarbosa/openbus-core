@@ -36,7 +36,7 @@ namespace openbusidl {
 
   /**
   * \class Credential
-  * \brief Credencial
+  * \brief Credencial de acesso ao barramento.
   */
 
   }
@@ -57,8 +57,11 @@ namespace openbus {
   };
 
 /**
-* \brief Falha na manipulação da chave privada da entidade ou do certificado 
-* ACS.
+* \brief Falha no mecanismo de autenticação por certificado digital.
+* Algumas possíveis causas:
+*  + Não foi possível obter o desafio.
+*  + Falha na manipulação de uma chave privada ou pública.
+*  + Falha na manipulação de um certificado.
 */
   class SECURITY_EXCEPTION : public runtime_error {
     public:
@@ -91,7 +94,7 @@ namespace openbus {
     private:
 
     /**
-    * Mutex 
+    * Mutex. 
     */
       static IT_Mutex mutex;
 
@@ -136,12 +139,12 @@ namespace openbus {
       static common::ORBInitializerImpl* ini;
 
     /**
-    * ORB 
+    * ORB. 
     */
       CORBA::ORB_var orb;
 
     /**
-    * POA 
+    * POA.
     */
       PortableServer::POA_var poa;
 
@@ -171,12 +174,12 @@ namespace openbus {
       openbusidl::acs::Credential_var credential;
 
     /**
-    * Host de localização do barramento. 
+    * Máquina em que está o barramento. 
     */
       string hostBus;
 
     /**
-    * Porta de localização do barramento. 
+    * A porta da máquina em que se encontra o barramento.
     */
       unsigned short portBus;
 
@@ -203,12 +206,15 @@ namespace openbus {
     */
       bool timeRenewingFixe;
 
+    /**
+    * Trata os parâmetros de linha de comando.
+    */
       void commandLineParse(
         int argc,
         char** argv);
 
     /**
-    * Inicializa um valor default para o host e porta do barramento. 
+    * Inicializa um valor default para a máquina e porta do barramento. 
     */
       void initialize();
 
@@ -287,11 +293,13 @@ namespace openbus {
     /**
     * Inicializa uma referência a um barramento.
     *
-    * Um ORB e POA são criado implicitamente.
+    * Um ORB e um POA são criados implicitamente.
     * A fábrica de componentes SCS é criada.
     * Os argumentos Openbus de linha de comando (argc e argv) são tratados.
-    * A localização do barramento pode ser fornecida através dos parâmetros
-    *   de linha comando -OpenbusHost e -OpenbusPort.
+    * Parâmetros de linha de comando: 
+    *   "-OpenbusHost": Host do barramento.
+    *   "-OpenbusPort": Porta do barramento.
+    *   "-TimeRenewing": Tempo em milisegundos de renovação da credencial.
     *
     * @param[in] argc
     * @param[in] argv
@@ -303,16 +311,18 @@ namespace openbus {
     /**
     * Inicializa uma referência a um barramento.
     *
-    * Um ORB e POA são criado implicitamente.
+    * Um ORB e um POA são criados implicitamente.
     * A fábrica de componentes SCS é criada.
     * Os argumentos Openbus de linha de comando (argc e argv) são tratados.
-    * A localização do barramento é fornecida através dos parâmetros host e
-    * port.
+    * Parâmetros de linha de comando: 
+    *   "-OpenbusHost": Máquina em que se encontra o barramento.
+    *   "-OpenbusPort": Porta do barramento.
+    *   "-TimeRenewing": Tempo em milisegundos de renovação da credencial.
     *
     * @param[in] argc
     * @param[in] argv
     * @param[in] host Máquina em que se encontra o barramento.
-    * @param[in] port A porta do barramento
+    * @param[in] port A porta da máquina em que se encontra o barramento.
     */
       void init(
         int argc,
@@ -414,6 +424,7 @@ namespace openbus {
     */
       void addLeaseExpiredCallback(
         LeaseExpiredCallback* leaseExpiredCallback);
+
     /**
     * Remove uma callback previamente registra para a notificação de lease 
     * expirado.
@@ -453,8 +464,13 @@ namespace openbus {
     *  @throw LOGIN_FAILURE O par nome de usuário e senha não foram validados.
     *  @throw CORBA::SystemException Alguma falha de comunicação com o 
     *    barramento ocorreu.
-    *  @throw SECURITY_EXCEPTION Falha na manipulação da chave privada da 
-    *    entidade ou do certificado do ACS.
+    *  @throw SECURITY_EXCEPTION Falha no mecanismo de autenticação por 
+    *    certificado digital.
+    *    Algumas possíveis causas:
+    *     + Não foi possível obter o desafio.
+    *     + Falha na manipulação de uma chave privada ou pública.
+    *     + Falha na manipulação de um certificado.
+    *       entidade ou do certificado do ACS.
     *  @return  Se a tentativa de conexão for bem sucedida, uma instância que 
     *    representa o serviço é retornada.
     */
@@ -466,10 +482,6 @@ namespace openbus {
 
     /**
     *  Desfaz a conexão atual.
-    *  Uma requisição remota logout() é realizada.
-    *  Antes da chamada logout() um estado de *desconectando* é assumido,
-    *  impedindo assim que a renovação de credencial seja realizada durante
-    *  o processo.
     *
     *  @return Caso a conexão seja desfeita, true é retornado, caso contrário,
     *  o valor de retorno é false.
