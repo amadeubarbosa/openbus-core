@@ -85,6 +85,9 @@ namespace openbus {
   * \brief Representa um barramento.
   */
   class Openbus {
+    public:
+      class LeaseExpiredCallback;
+
     private:
 
     /**
@@ -161,17 +164,6 @@ namespace openbus {
     * Intervalo de tempo que determina quando a credencial expira. 
     */
       Lease lease;
-
-    /**
-    * Tipo da callback para a notificação de que um lease expirou.
-    */
-      typedef void (*LeaseExpiredCallback)();
-
-    /**
-    * Conjunto de callbacks registradas para a notificação da 
-    * expiração do lease.
-    */
-      static std::set<LeaseExpiredCallback> leaseExpiredCallbackSet;
 
     /**
     * Credencial de identificação do usuário frente ao barramento. 
@@ -257,8 +249,15 @@ namespace openbus {
     * logado neste barramento.
     */
       class RenewLeaseThread : public IT_ThreadBody {
+        private:
+        /**
+        * Callback registrada para a notificação da 
+        * expiração do lease.
+        */
+          LeaseExpiredCallback* leaseExpiredCallback;
         public:
           RenewLeaseThread();
+          void setLeaseExpiredCallback(LeaseExpiredCallback* obj);
           void* run();
       };
       friend class Openbus::RenewLeaseThread;
@@ -398,6 +397,14 @@ namespace openbus {
       void setThreadCredential(Credential* credential);
 
     /**
+    * Representa uma callback para a notificação de que um lease expirou.
+    */
+      class LeaseExpiredCallback {
+        public:
+          virtual void expired() = 0;
+      };
+
+    /**
     * Registra uma callback para a notificação de que o lease da credencial
     * de identificação do usuário, frente ao barramento, expirou.
     *
@@ -405,8 +412,8 @@ namespace openbus {
     * @return True se a callback foi registrada com sucesso, ou false 
     * se a callback já estava registrada.
     */
-      bool addLeaseExpiredCallback(
-        LeaseExpiredCallback leaseExpiredCallback);
+      void addLeaseExpiredCallback(
+        LeaseExpiredCallback* leaseExpiredCallback);
     /**
     * Remove uma callback previamente registra para a notificação de lease 
     * expirado.
@@ -415,8 +422,7 @@ namespace openbus {
     * @return True se a callback foi removida com sucesso, ou false 
     * caso contrário.
     */
-      bool removeLeaseExpiredCallback(
-        LeaseExpiredCallback leaseExpiredCallback);
+      void removeLeaseExpiredCallback();
 
     /**
     *  Realiza uma tentativa de conexão com o barramento.

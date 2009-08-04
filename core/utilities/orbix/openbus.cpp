@@ -22,7 +22,6 @@ namespace openbus {
   common::ORBInitializerImpl* Openbus::ini = 0;
   IT_Mutex Openbus::mutex;
   Openbus* Openbus::bus = 0;
-  std::set<Openbus::LeaseExpiredCallback> Openbus::leaseExpiredCallbackSet;
   Openbus::RenewLeaseThread* Openbus::renewLeaseThread = 0;
 
   void Openbus::terminationHandlerCallback(long signalType) {
@@ -58,6 +57,13 @@ namespace openbus {
   }
 
   Openbus::RenewLeaseThread::RenewLeaseThread() {
+    leaseExpiredCallback = 0;
+  }
+
+  void Openbus::RenewLeaseThread::setLeaseExpiredCallback(
+    LeaseExpiredCallback* obj) 
+  {
+    leaseExpiredCallback = obj;
   }
 
   void* Openbus::RenewLeaseThread::run() {
@@ -101,13 +107,9 @@ namespace openbus {
           #ifdef VERBOSE
             verbose->print("Não foi possível renovar a credencial!");
           #endif
-            std::set<LeaseExpiredCallback>::iterator it;
-            for(it = leaseExpiredCallbackSet.begin(); 
-                it != leaseExpiredCallbackSet.end();
-                it++)
-            {
-              (*it)();
-            } 
+            if (leaseExpiredCallback) {
+              leaseExpiredCallback->expired();
+            }
           /* "Desconecta" o usuário. */
             bus->localDisconnect();
           } else {
@@ -119,13 +121,9 @@ namespace openbus {
         #ifdef VERBOSE
           verbose->print("Não foi possível renovar a credencial!");
         #endif
-          std::set<LeaseExpiredCallback>::iterator it;
-          for(it = leaseExpiredCallbackSet.begin(); 
-              it != leaseExpiredCallbackSet.end();
-              it++)
-          {
-            (*it)();
-          } 
+          if (leaseExpiredCallback) {
+            leaseExpiredCallback->expired();
+          }
         /* "Desconecta" o usuário. ? */
           bus->localDisconnect();
         }
@@ -437,18 +435,19 @@ namespace openbus {
     openbus::common::ClientInterceptor::credential = credential;
   }
 
-  bool Openbus::addLeaseExpiredCallback( \
-    LeaseExpiredCallback leaseExpiredCallback) 
+  void Openbus::addLeaseExpiredCallback(
+    LeaseExpiredCallback* leaseExpiredCallback) 
   {
-    std::pair<set<LeaseExpiredCallback>::iterator, bool> ret; 
-    ret = leaseExpiredCallbackSet.insert(leaseExpiredCallback);
-    return ret.second;
+    if (renewLeaseThread) {
+      renewLeaseThread->setLeaseExpiredCallback(leaseExpiredCallback);
+    }
   }
 
-  bool Openbus::removeLeaseExpiredCallback( \
-    LeaseExpiredCallback leaseExpiredCallback) 
+  void Openbus::removeLeaseExpiredCallback()
   {
-    return (bool) leaseExpiredCallbackSet.erase(leaseExpiredCallback);
+    if (renewLeaseThread) {
+      renewLeaseThread->setLeaseExpiredCallback(0);
+    }
   }
 
   openbus::services::RegistryService* Openbus::connect(
