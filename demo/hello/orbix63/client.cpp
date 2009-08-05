@@ -19,6 +19,8 @@ int main(int argc, char* argv[]) {
 
   bus->init(argc, argv);
 
+  cout << "Conectando no barramento..." << endl;
+
 /* Conexão com o barramento. */
   try {
     registryService = bus->connect("tester", "tester");
@@ -31,6 +33,8 @@ int main(int argc, char* argv[]) {
          << "* Par usuario/senha inválido. *" << endl;
     exit(-1);
   }
+
+  cout << "Conexão com o barramento estabelecida com sucesso!" << endl;
 
 /* Define a lista de facetas que caracteriza o serviço implementa.
 *  O trabalho de criação da lista é facilitado pelo uso da classe 
@@ -54,7 +58,12 @@ int main(int argc, char* argv[]) {
   scs::core::IComponent_var component = serviceOffer.member;
   CORBA::Object_var obj = component->getFacet("IDL:demoidl/hello/IHello:1.0");
   demoidl::hello::IHello_var hello = demoidl::hello::IHello::_narrow(obj);
+
+  cout << "Fazendo chamada remota sayHello()..." << endl;
+
   hello->sayHello();
+
+  cout << "Desconectando-se do barramento..." << endl;
 
   bus->disconnect();
   delete bus;

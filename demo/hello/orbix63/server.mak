@@ -15,8 +15,6 @@ ifeq "$(TEC_UNAME)" "SunOS58"
   CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
 endif
 
-DEFINES=VERBOSE
-
 TARGETROOT=bin
 OBJROOT=obj
 

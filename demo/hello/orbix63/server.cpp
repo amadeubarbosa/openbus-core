@@ -37,7 +37,7 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
       delete (HelloImpl*) obj;
     }
     void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
-      cout << endl << "Servant diz: HELLO!" << endl;
+      cout << "Servant diz: HELLO!" << endl;
       openbusidl::acs::Credential_var credential = 
         bus->getInterceptedCredential();
       cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in()
@@ -46,6 +46,7 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
 };
 
 static void myTerminationHandler(long signal) {
+  cout << "Encerrando o processo servidor..." << endl;
   try {
     registryService->unregister(registryId);
   } catch(CORBA::Exception& e) {
@@ -61,6 +62,8 @@ int main(int argc, char* argv[]) {
   bus = openbus::Openbus::getInstance();
 
   bus->init(argc, argv);
+
+  cout << "Conectando no barramento..." << endl;
 
 /* Conexão com o barramento através de certificado. */
   try {
@@ -78,6 +81,8 @@ int main(int argc, char* argv[]) {
     cout << e.what() << endl;
     exit(-1);
   }
+
+  cout << "Conexão com o barramento estabelecida com sucesso!" << endl;
 
 /* Fábrica de componentes */
   scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
@@ -109,11 +114,15 @@ int main(int argc, char* argv[]) {
   serviceOffer.member = componentContext->getIComponent();
   delete propertyListHelper;
 
+  cout << "Registrando serviço IHello no barramento..." << endl;
+
 /* Registro do serviço no barramento. */
   registryService->Register(serviceOffer, registryId);
-  cout << "\n\nServiço HELLO registrado no OpenBus..." << endl;
+  cout << "Serviço IHello registrado." << endl;
+  cout << "Aguardando requisições..." << endl;
 
   bus->run();
 
   return 0;
 }
+

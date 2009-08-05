@@ -1,14 +1,14 @@
 PROJNAME= ACSTester
 APPNAME= acs
 
+#Descomente as duas linhas abaixo para o uso em Valgrind.
+#DBG=YES
+#CPPFLAGS= -fno-inline
+
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 EXTRA_CONFIG=../config
-
-#Descomente as duas linhas abaixo para o uso em Valgrind.
-#DBG=YES
-#CPPFLAGS= -fno-inline
 
 ifeq "$(TEC_UNAME)" "SunOS58"
   USE_CC=Yes

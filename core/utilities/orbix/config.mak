@@ -5,6 +5,9 @@ LIBNAME= ${PROJNAME}
 #DBG=YES
 #CPPFLAGS= -fno-inline
 
+#Descomente a linha abaixo caso deseje ativar o VERBOSE
+#DEFINES=VERBOSE
+
 ifeq "$(TEC_UNAME)" "SunOS58"
   USE_CC=Yes
 endif
@@ -19,9 +22,6 @@ endif
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
-
-#Descomente a linha abaixo caso deseje ativar o VERBOSE
-#DEFINES=VERBOSE
 
 OBJROOT= obj
 TARGETROOT= lib
