@@ -40,10 +40,11 @@ namespace openbus {
     #ifdef VERBOSE
       Openbus::verbose->print("ClientInterceptor::send_request() BEGIN");
       Openbus::verbose->indent();
-//      stringstream msg;
-//      char * operation = ri->operation();
-//      msg << "Method: " << operation;
-//      Openbus::verbose->print(msg.str());
+      stringstream msg;
+      char * operation = ri->operation();
+      msg << "Method: " << operation;
+      Openbus::verbose->print(msg.str());
+      free(operation);
     #endif
       if (credential) {
       #ifdef VERBOSE

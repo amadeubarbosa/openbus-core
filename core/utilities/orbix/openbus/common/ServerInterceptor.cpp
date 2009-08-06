@@ -36,9 +36,11 @@ namespace openbus {
     #ifdef VERBOSE
       Openbus::verbose->print("ServerInterceptor::receive_request() BEGIN");
       Openbus::verbose->indent();
-//      stringstream request;
-//      request << "Receive a request: " << ri->operation();
-//      Openbus::verbose->print(request.str());
+      stringstream request;
+      char * operation = ri->operation();
+      request << "Receive a request: " << operation;
+      Openbus::verbose->print(request.str());
+      free(operation);
       CORBA::ULong z;
       stringstream contextData;
       contextData << "Context Data: ";
