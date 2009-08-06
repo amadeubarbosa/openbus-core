@@ -71,7 +71,7 @@ function ACSFacet:loginByPassword(name, password)
       local entry = self:addEntry(name)
       return true, entry.credential, entry.lease.duration
     else
-      Log:warn("Erro ao validar o usuário "..name..".\n".. err)
+      Log:warn("Erro ao validar o usuário "..name..": ".. err)
     end
   end
   Log:error("Usuário "..name.." não pôde ser validado no sistema.")
