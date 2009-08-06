@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>br.puc-rio.tecgraf.openbus</groupId>
+  <groupId>tecgraf.openbus</groupId>
   <artifactId>openbus</artifactId>
   <packaging>pom</packaging>
   <version>1.4-SNAPSHOT</version>
@@ -56,13 +56,13 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>br.puc-rio.tecgraf.scs</groupId>
+        <groupId>tecgraf.scs</groupId>
         <artifactId>scs-core</artifactId>
         <version>${scs.version}</version>
       </dependency>
 
       <dependency>
-        <groupId>br.puc-rio.tecgraf.scs</groupId>
+        <groupId>tecgraf.scs</groupId>
         <artifactId>scs-idl-jacorb</artifactId>
         <version>${scs.version}</version>
       </dependency>

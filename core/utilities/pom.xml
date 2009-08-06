@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>br.puc-rio.tecgraf.openbus</groupId>
+    <groupId>tecgraf.openbus</groupId>
     <artifactId>openbus</artifactId>
     <version>1.4-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
@@ -32,18 +32,18 @@
 
   <dependencies>
     <dependency>
-      <groupId>br.puc-rio.tecgraf.openbus</groupId>
+      <groupId>tecgraf.openbus</groupId>
       <artifactId>openbus-idl-jacorb</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-    	<groupId>br.puc-rio.tecgraf.scs</groupId>
+    	<groupId>tecgraf.scs</groupId>
     	<artifactId>scs-idl-jacorb</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>br.puc-rio.tecgraf.scs</groupId>
+      <groupId>tecgraf.scs</groupId>
       <artifactId>scs-core</artifactId>
     </dependency>
 
