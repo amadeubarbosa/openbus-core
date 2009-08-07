@@ -53,6 +53,9 @@ namespace openbus {
       delete registryService;
     }
     openbus::common::ClientInterceptor::credential = 0;
+    if (credential) {
+      delete credential;
+    }
     newState();
   }
 
@@ -272,6 +275,9 @@ namespace openbus {
     #endif
       delete renewLeaseThread;
       renewLeaseThread = 0;
+      if (credential) {
+        delete credential;
+      }
     }
   #ifdef VERBOSE
     verbose->dedent("Openbus::~Openbus() END");
@@ -701,7 +707,7 @@ namespace openbus {
           free(answer);
         #ifdef VERBOSE
           stringstream msg;
-          msg << "Associando credencial " << &credential << " ao ORB."; 
+          msg << "Associando credencial " << credential << " ao ORB."; 
           verbose->print(msg.str());
         #endif
           connectionState = CONNECTED;
@@ -755,6 +761,9 @@ namespace openbus {
       bool status = iAccessControlService->logout(*credential);
       if (status) {
         openbus::common::ClientInterceptor::credential = 0;
+        if (credential) {
+          delete credential;
+        }
         newState();
       } else {
         connectionState = CONNECTED;

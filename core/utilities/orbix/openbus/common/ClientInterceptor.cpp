@@ -14,7 +14,7 @@ using namespace openbusidl::acs;
 
 namespace openbus {
   namespace common {
-    openbusidl::acs::Credential_var ClientInterceptor::credential = 0;
+    openbusidl::acs::Credential* ClientInterceptor::credential = 0;
 
     ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec) 
       IT_THROW_DECL(()) 
