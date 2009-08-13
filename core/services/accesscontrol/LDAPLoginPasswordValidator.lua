@@ -35,7 +35,7 @@ function validate(self, name, password)
   for _, ldapHost in ipairs(self.ldapHosts) do
     for _, ldapSuffix in ipairs(self.ldapSuffixes) do
       local connection, err = lualdap.open_simple(
-          ldapHost.name..":"..ldapHost.port, name..ldapSuffix, password, false)
+          ldapHost.name..":"..ldapHost.port, name..ldapSuffix, password, false,5)
       if connection then
         connection:close()
         return true
