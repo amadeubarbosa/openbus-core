@@ -58,7 +58,6 @@ function run()
   success, credential = accessControlService:loginByPassword("tester", "tester")
   if success then
      print("[ERRO] O usuario de testes esta habilitado.")
-     os.exit(1)
   end
 
   success, credential = accessControlService:loginByPassword(user, password)
