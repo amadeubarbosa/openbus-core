@@ -107,8 +107,6 @@ public class HelloServer {
     public void run() {
       Openbus bus = Openbus.getInstance();
       bus.disconnect();
-      bus.getORB().shutdown(true);
-      bus.getORB().destroy();
     }
   }
 }
