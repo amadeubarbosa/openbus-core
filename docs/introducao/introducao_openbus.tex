@@ -1,0 +1,173 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage{a4}
+\usepackage[latin1]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{epsf}
+\usepackage[dvips]{graphicx}
+
+\lstset{
+  language = c++, 
+  breaklines = true,
+  breakatwhitespace = true,
+  showlines = true
+}
+
+\title{Openbus - Integrador de dados e aplicações}
+\date{27 de agosto de 2009}
+
+\begin{document}
+\maketitle
+
+\section{O que é ?}
+O Openbus é uma arquitetura aberta e orientada a serviços 
+(\emph{Service-Oriented Architecture}, ou SOA) para integrar dados e aplicações
+heterogêneas de domínios distintos ou não. A arquitetura é baseada em um 
+\emph{barramento} em que os usuários se conectam para consumir ou prover 
+serviços.
+
+\section{Por que utilizar o Openbus ?}
+Quando há necessidade de integração entre aplicações, algumas soluções podem 
+ser apresentadas conforme a complexidade do ambiente a ser integrado. 
+Caso o problema se resuma a troca de dados entre as aplicações, uma primeira 
+solução é a integração externa, que consiste na exportação do dado em um 
+determinado formato padronizado que por sua vez possa ser carregado pela
+aplicação de destino. Este processo é normalmente manual, deixando a cargo 
+do usuário ou, do \emph{job} que automatiza o processo, a responsabilidade pela
+sua execução. Um outro problema é a possibilidade de ocorrer perda de 
+informação quando o formato padrão utilizado não consegue representar 
+corretamente o dado de origem. 
+
+As opções de soluções disponíveis para a integração, podem ser ampliadas 
+quando há a presença de aplicações de código aberto ou que ofereçam
+interfaces de programação. Para estes casos, uma integração programática 
+pode ser realizada de forma direta, através de uma implementação que  
+permita ao usuário comandar a transferência de dados. Este modo de interação 
+agrega mais qualidade, diminuindo as chances de perda de informação durante a 
+transferência do dado, pois os metadados das aplicações envolvidas podem ser 
+considerados. Além da troca de dados, há a possibilidade 
+de troca de mensagens entre as aplicações. O problema desta solução é que 
+uma ponte deve ser desenvolvida para cada par de aplicações, o que resulta em 
+um número quadrático de codificações de pontes em relação ao número de 
+aplicações. Por exemplo, para integrar 10 aplicações precisamos implementar 
+45 pontes. Além disso, a troca de mensagens é naturalmente 
+limitada entre cada par de aplicações.
+
+Os problemas apresentados acima pela programática direta, podem ser eliminados 
+com a adoção de uma plataforma comum de integração entre aplicações. Como por 
+exemplo um \emph{barramento}, em que cada aplicação se conecta 
+a este, segundo um protocolo próprio deste barramento, e carrega ou 
+exporta dados para outras aplicações também conectadas ao barramento. Essa
+arquitetura define uma linguagem comum entre todas as aplicações, e, induz o 
+compartilhamento de interfaces bem definidas para os serviços comuns entre as 
+aplicações envolvidas, desta forma o esforço de codificação das pontes 
+pode ser reduzido para um esforço linear, ou seja, para se integrar 
+\emph{n} aplicações, \emph{n} pontes são necessárias.
+No mais, a troca de mensagens dinâmicas entre todas as aplicações passa 
+a ser possível, possibilitando um ambiente de colaboração entre as aplicações.
+
+\section{Arquitetura}
+
+O Openbus é baseado no \emph{middleware} CORBA. Seu barramento é formado por 
+componentes que podem oferecer serviços ou podem apenas consultar serviços de 
+outros componentes. Estes componentes são implementados através de um sistema 
+de componentes para CORBA chamado SCS(Sistema de Componentes de Software).
+No SCS, os componentes são compostos por facetas que representam as interfaces 
+que estes componentes oferecem.
+
+A infraestrutura do Openbus provê dois serviços básicos necessários para que 
+o usuário possa utilizar o barramento, o serviço de acesso e o serviço de 
+registro. Um terceiro serviço auxilia o compartilhamento de informações entre 
+um grupo de clientes, que é o serviço de sessão. Por último, a arquitetura do 
+Openbus disponibiliza uma interface comum para a implementação de um serviço 
+de dados.
+
+\begin{figure} [htb]
+\centering
+\includegraphics[width=14cm]{figs/arquitetura.eps} %height=3in, 
+\caption{Arquitetura do openbus}
+\label{fig:architecture}
+\end{figure}
+
+\begin{description}
+  \item[Serviço de Acesso] É o ponto de entrada no barramento. Sua refererência
+  é conhecida por todos. Para que um usuário possa entrar no barramento para 
+  consumir ou prover serviços, é necessário que ele se autentique no mesmo
+  adquirindo uma credencial de acesso. A autenticação pode ser realizada 
+  através de um par usuário/senha ou através de um certificado digital.
+  Tipicamente, aplicações "clientes" se autenticam com um par usuário/senha, 
+  que normalmente será a identificação e a senha do usuário que iniciou a 
+  aplicação. Servidores tipicamente se autenticam através de um certificado.
+
+  Após a autenticação, uma credencial é emitida para o usuário para que o mesmo 
+  possa acessar os serviços disponibilizados pelo barramento. Essa credencial é 
+  composta por uma identificador unívoco e por um nome de uma entidade à 
+  qual está associada, que pode ser um usuário ou um serviço. Essa credencial 
+  tem um ciclo de vida e deve ser renovada para que não expire.
+
+  \item[Serviço de Registro] Responsável por controlar as ofertas de 
+  serviços disponí-veis no barramento. Um componente que queira oferecer um 
+  serviço deve explicitamente registrar sua oferta no serviço de registro. 
+  Componentes que desejam utilizar um serviço podem obter a localização e 
+  as propriedades de 
+  provedores desse servico através de consultas ao serviço de registro. 
+
+  \item[Serviço de Sessão] Oferece um mecanismo simplificado de troca de 
+  mensagens entre os componentes que compartilham uma mesma sessão.
+
+  \item[Serviço de Dados] Disponibilização de uma interface para a 
+  implementação de um serviço de acesso a dados hierárquicos ou não. A 
+  interface 
+  provê uma faceta para a navegação e outra para o acesso ao dado.
+\end{description}
+
+\section{Como usar ?}
+
+O barramento é utilizado através de uma programação sobre uma biblioteca.
+Essa biblioteca é disponbilizada conforme a linguagem de programação que 
+o usuário deseja desenvolver, e, conforme o ORB utilizado caso o usuário já
+utilize um em específico. As bibliotecas são oferecidas em \emph{C++}, 
+\emph{Java} e \emph{Lua},
+e os ORB's contemplados são o \emph{Orbix C++}, \emph{JacORB}, \emph{Mico} 
+e \emph{OiL}. Se nenhuma das 
+bibliotecas ofertadas atenderem ao ambiente do usuário, o Openbus pode ser 
+utilizado através das IDL's que são fornecidas para os serviços básicos.
+
+Ainda não há um guia de programação para o usuário, mas temos um tutorial 
+de programação para cada uma das linguagens suportadas oficialmente(\emph{C++}, 
+\emph{Java} e \emph{Lua}).
+
+\section{Plataformas suportadas}
+
+Algumas plataformas são suportadas oficialmente através de pacotes específicos 
+que sofreram um processo de validação. Como o \emph{software} é distribuído em 
+código aberto, nada impede o usuário de realizar uma compilação em uma 
+plataforma em específico que não é suportada oficialmente.
+
+As plataformas suportadas são:
+\begin{itemize}
+  \item \verb!Linux 2.6  x86  32bits GCC 4.x!
+  \item \verb!Linux 2.6  x86  64bits GCC 4.x!
+  \item \verb!Linux 2.6  x86  32bits GCC 3.x!
+  \item \verb!Linux 2.6  x86  64bits GCC 3.x!
+  \item \verb!Linux 2.6  ia64 64bits GCC 3.x!
+  \item \verb!Linux 2.4  x86  32bits GCC 3.x!
+  \item \verb!Linux 2.4  x86  64bits GCC 3.x!
+  \item \verb!Solaris 8  sparc!
+  \item \verb!Solaris 10 x86!
+  \item \verb!Solaris 10 sparc!
+\end{itemize}
+
+\section{Onde adquirir o pacote ?}
+
+Os pacotes do Openbus podem ser adquiridos através do link:
+
+\verb!https://jira.tecgraf.puc-rio.br/confluence/display/ESDPUB/Download.! 
+
+Há um pacote para cada plataforma que é suportada oficialmente. O pacote 
+disponibiliza as bibliotecas referentes a cada uma das linguagens suportadas, 
+e, o barramento em si.
+
+\end{document}
+
