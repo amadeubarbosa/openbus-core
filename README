@@ -1,0 +1,20 @@
+--
+Copyright (C) 2006-2009 Tecgraf/PUC-Rio. All rights reserved.
+--
+The Openbus software is a middleware to integrate applications written under
+different languages and compatible with many operating systems
+(POSIX-compliant, Windows, MacOSX and others). This software is composed by:
+ - three core services: AccessControlService , RegistryService and
+   SessionService;
+ - libraries to support the development of new services to be plugged in this
+   middleware (one per language supported);
+ - a set of demo applications;
+ - programming manual and documentation;
+ - utilities to support the deployment of both: the middleware and the new
+   services developed for him.
+
+All these contents are licensed under the terms described in the LICENSE file
+present in this distribution.
+
+See the Openbus official site for additional informations:
+http://jira.tecgraf.puc-rio.br/confluence/display/ESDPUB/Openbus
