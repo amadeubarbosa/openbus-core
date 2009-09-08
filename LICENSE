@@ -102,11 +102,10 @@ copyright notes are provided individually as following:
  - Some Openbus and SCS utility libraries for C++ was developed using the Orbix
    6.3 ORB for the CORBA (R) middleware. The Orbix is copyright 1993-2009 by
    the PROGRESS Software Corporation (http://www.progress.com). Our libraries
-   were developed using an evaluation license and they are publicly available
-   under the Openbus license (a MIT compatible license). 
+   are publicly available under the Openbus license (a MIT compatible license). 
      You must obtain a commercial license from the PROGRESS Software
-   Corporation to use our libraries with Orbix software. Please report yourself
-   to the Orbix copyright holder for more details.
+   Corporation to use our libraries with Orbix runtime software. Please report
+   yourself to the Orbix copyright holder for more details.
      CORBA is a registered trademark of the Object Management Group, Inc.
 
                          (end of Openbus License)
