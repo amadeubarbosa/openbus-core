@@ -11,6 +11,12 @@ packages = {
 	{ name = "scs",
 	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/scs/trunk",
 	},
+	{ name = "licenses",
+	  install_files = {
+		[SVNDIR.."/LICENSE"] = ".",
+		[SVNDIR.."/README"]  = ".",
+	  },
+	},
 	{ name = "lua5.1",
 	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/trunk/lua5.1.2",
 	  build = {
@@ -321,7 +327,7 @@ packages = {
 	  },
 	  dev_files = {
 			["lib/${TEC_UNAME}/libopenbus*.*"] = "core/utilities/orbix/lib/${TEC_UNAME}",
-			["openbus.h"] = "core/utilities/orbix", --include
+			["*.h"] = "core/utilities/orbix", --include
 			["openbus/common/*.h"] = "core/utilities/orbix/openbus/common/",    --include
 			["services/*.h"] = "core/utilities/orbix/services/",    --include
 			["stubs"] = "core/utilities/orbix",     --include
