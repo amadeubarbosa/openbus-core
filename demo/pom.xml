@@ -5,7 +5,7 @@
   <parent>
     <groupId>tecgraf.openbus</groupId>
     <artifactId>openbus</artifactId>
-    <version>1.4.1</version>
+    <version>1.4.2</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -13,7 +13,7 @@
   <packaging>pom</packaging>
 
   <name>OpenBus Demo</name>
-  <url>https://subversion.tecgraf.puc-rio.br/engsoftware/openbus</url>
+  <url>https://subversion.tecgraf.puc-rio.br/engdist/openbus</url>
 
   <modules>
     <module>hello</module>
