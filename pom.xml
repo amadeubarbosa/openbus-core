@@ -5,10 +5,10 @@
   <groupId>tecgraf.openbus</groupId>
   <artifactId>openbus</artifactId>
   <packaging>pom</packaging>
-  <version>1.4.1</version>
+  <version>1.4.2</version>
 
   <name>OpenBus</name>
-  <url>https://subversion.tecgraf.puc-rio.br/engsoftware/openbus</url>
+  <url>https://subversion.tecgraf.puc-rio.br/engdist/openbus</url>
 
   <modules>
     <module>idl</module>
@@ -17,9 +17,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://subversion.tecgraf.puc-rio.br/engsoftware/openbus/trunk</connection>
-    <developerConnection>scm:svn:https://subversion.tecgraf.puc-rio.br/engsoftware/openbus/trunk</developerConnection>
-    <url>https://subversion.tecgraf.puc-rio.br/engsoftware/openbus</url>
+    <connection>scm:svn:https://subversion.tecgraf.puc-rio.br/engdist/openbus/branches/OB_v1_04_2009_08_07</connection>
+    <developerConnection>scm:svn:https://subversion.tecgraf.puc-rio.br/engdist/openbus/branches/OB_v1_04_2009_08_07</developerConnection>
+    <url>https://subversion.tecgraf.puc-rio.br/engdist/openbus</url>
   </scm>
 
   <properties>
@@ -27,6 +27,11 @@
     <junit.version>4.6</junit.version>
     <scs.version>1.0.1</scs.version>
     <jacorb.version>2.3.0</jacorb.version>
+    <logkit.version>1.2</logkit.version>
+    <avalon.version>4.1.5</avalon.version>
+    <picocontainer.version>1.2</picocontainer.version>
+    <wrapper.version>3.1.0</wrapper.version>
+    <backport.version>CURRENT</backport.version>
 
     <source.encoding>ISO-8859-1</source.encoding>
   </properties>
@@ -84,6 +89,37 @@
         <artifactId>jacorb-idl-compiler</artifactId>
          <version>${jacorb.version}</version>
       </dependency>
+      
+      <dependency>
+        <groupId>org.apache</groupId>
+        <artifactId>logkit</artifactId>
+         <version>${logkit.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache</groupId>
+        <artifactId>avalon-framework</artifactId>
+         <version>${avalon.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.picocontainer</groupId>
+        <artifactId>picocontainer</artifactId>
+         <version>${picocontainer.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.tanukisoftware</groupId>
+        <artifactId>wrapper</artifactId>
+         <version>${wrapper.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>edu.emory</groupId>
+        <artifactId>backport-util-concurrent</artifactId>
+         <version>${backport.version}</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 </project>
