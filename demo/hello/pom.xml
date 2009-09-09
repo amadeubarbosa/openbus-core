@@ -41,6 +41,11 @@
             <artifactId>jacorb-idl-compiler</artifactId>
             <version>${jacorb.version}</version>
           </dependency> 
+          <dependency>
+            <groupId>org.apache</groupId>
+            <artifactId>logkit</artifactId>
+            <version>${logkit.version}</version>
+          </dependency> 
         </dependencies>
         
         <executions>
