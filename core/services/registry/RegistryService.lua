@@ -113,10 +113,11 @@ function RSFacet:createPropertyIndex(offerProperties, member)
     end
   end
   local componentId = member:getComponentId()
+  local compId = componentId.name..":"..componentId.major_version.. '.'
+      .. componentId.minor_version..'.'..componentId.patch_version
   properties["component_id"] = {}
   properties["component_id"].name = componentId.name
-  properties["component_id"][componentId.name..":"..componentId.major_version..componentId.minor_version..
-    componentId.patch_version] = true
+  properties["component_id"][compId] = true
   return properties
 end
 

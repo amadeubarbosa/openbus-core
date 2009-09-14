@@ -117,6 +117,28 @@ Suite = {
       Check.assertEquals(0, #offers)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
+ 
+    testFindByCriteria = function(self)
+       local member = scs.newComponent(facetDescriptions,
+        receptacleDescriptions,
+        componentId)
+      local success, registryIdentifier = self.registryService:register({
+        properties = {},
+        member = member.IComponent, 
+      })
+      Check.assertTrue(success)
+      Check.assertNotEquals("", registryIdentifier)
+      local compId = componentId.name..":"..componentId.major_version.. '.'
+        .. componentId.minor_version..'.'..componentId.patch_version
+      local offers = self.registryService:findByCriteria(
+        {"IComponent"},
+        {
+          {name = "component_id", value = {compId}},
+        }
+      )
+      Check.assertNotEquals(0, #offers)
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    end,
 
     testUpdate = function(self)
       local member = scs.newComponent(facetDescriptions,
