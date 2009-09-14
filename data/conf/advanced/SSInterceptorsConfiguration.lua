@@ -7,10 +7,6 @@ local config =
 
 -- Acrescenta informação sobre operacões a serem liberadas
 config.interfaces = {
-  {
-    interface = "IDL:openbusidl/acs/ICredentialObserver:1.0",
-    excluded_ops = {"credentialWasDeleted"},
-  },
 }
 
 return config
