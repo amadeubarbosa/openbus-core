@@ -9,6 +9,7 @@ local ipairs = ipairs
 local string = string
 local tostring = tostring
 
+local math = require "math"
 local luuid = require "uuid"
 local lce = require "lce"
 local oil = require "oil"
@@ -477,16 +478,28 @@ function startup(self)
   end
   self.credentialDB = CredentialDB(databaseDirectory)
   local entriesDB = self.credentialDB:retrieveAll()
+  local acsCredential
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
     self.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
-    if entry.component and entry.credential.owner == "RegistryService" then
+    if entry.credential.owner == "AccessControlService" then
+      -- Credential do ACS não precisa expirar
+      entry.lease.duration = math.huge
+      acsCredential = entry.credential
+    elseif entry.component and entry.credential.owner == "RegistryService" then
       self.registryService = {
         credential = entry.credential,
         component = entry.component,
       }
     end
   end
+  -- Credencial do ACS pode não existir (primeira execução), criar uma nova
+  if not acsCredential then
+     local entry = self:addEntry("AccessControlService", true)
+     entry.lease.duration = math.huge  -- não expira
+     acsCredential = entry.credential
+  end
+  Openbus:setCredential(acsCredential)
   self.checkExpiredLeases = function()
     -- Uma corotina só percorre a tabela de tempos em tempos
     -- ou precisamos acordar na hora "exata" que cada lease expira
@@ -510,5 +523,3 @@ function startup(self)
   end
   self.leaseProvider = LeaseProvider(self.checkExpiredLeases, self.deltaT)
 end
-
-
