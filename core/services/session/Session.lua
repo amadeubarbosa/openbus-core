@@ -125,7 +125,7 @@ end
 ---
 --Solicita a desconexão de todos os membros da sessão.
 ---
-function SessionEventSink:disconnect(self)
+function SessionEventSink:disconnect()
   Log:service("Desconectando os membros da sessão")
   for _, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.disconnect, sink)
