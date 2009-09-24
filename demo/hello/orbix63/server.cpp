@@ -16,8 +16,6 @@
 
 using namespace std;
 
-IT_USING_NAMESPACE_STD
-
 openbus::Openbus* bus;
 openbus::services::RegistryService* registryService;
 char* registryId;
