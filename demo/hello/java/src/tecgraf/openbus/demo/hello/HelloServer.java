@@ -20,12 +20,9 @@ import org.omg.CORBA.UserException;
 import scs.core.ComponentId;
 import scs.core.IComponent;
 import scs.core.IComponentHelper;
-import scs.core.IMetaInterfaceHelper;
 import scs.core.servant.ComponentBuilder;
 import scs.core.servant.ComponentContext;
 import scs.core.servant.ExtendedFacetDescription;
-import scs.core.servant.IComponentServant;
-import scs.core.servant.IMetaInterfaceServant;
 import tecgraf.openbus.Openbus;
 import tecgraf.openbus.exception.OpenBusException;
 import tecgraf.openbus.exception.RSUnavailableException;
@@ -40,11 +37,18 @@ public class HelloServer {
     NoSuchMethodException, OpenBusException {
     Properties props = new Properties();
     InputStream in = HelloClient.class.getResourceAsStream("/Hello.properties");
-    try {
-      props.load(in);
+    if (in != null) {
+      try {
+        props.load(in);
+      }
+      finally {
+        in.close();
+      }
     }
-    finally {
-      in.close();
+    else {
+      System.out
+        .println("Erro ao abrir o arquivo de configuração Hello.properties.");
+      System.exit(-1);
     }
 
     String host = props.getProperty("host.name");
@@ -71,16 +75,10 @@ public class HelloServer {
 
     // Cria o componente.
     ComponentBuilder builder = new ComponentBuilder(bus.getRootPOA(), orb);
-    ExtendedFacetDescription[] descriptions = new ExtendedFacetDescription[3];
+    ExtendedFacetDescription[] descriptions = new ExtendedFacetDescription[1];
     descriptions[0] =
-      new ExtendedFacetDescription("IComponent", IComponentHelper.id(),
-        IComponentServant.class.getCanonicalName());
-    descriptions[1] =
       new ExtendedFacetDescription("IHello", IHelloHelper.id(), HelloImpl.class
         .getCanonicalName());
-    descriptions[2] =
-      new ExtendedFacetDescription("IMetaInterface", IMetaInterfaceHelper.id(),
-        IMetaInterfaceServant.class.getCanonicalName());
     ComponentContext context =
       builder.newComponent(descriptions, null, new ComponentId("Hello",
         (byte) 1, (byte) 0, (byte) 0, "Java"));
