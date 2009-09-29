@@ -93,7 +93,7 @@ Suite = {
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
 
-    testFind = function(self)
+    testFind_byName = function(self)
       local member = scs.newComponent(facetDescriptions,
         receptacleDescriptions,
         componentId)
@@ -117,6 +117,24 @@ Suite = {
       Check.assertEquals(0, #offers)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
+    
+    testFind_byInterfaceName = function(self)
+      local member = scs.newComponent(facetDescriptions,
+        receptacleDescriptions,
+        componentId)
+      local success, registryIdentifier = self.registryService:register({
+        properties = {},
+        member = member.IComponent,
+      })
+      Check.assertTrue(success)
+      Check.assertNotEquals("", registryIdentifier)
+      local offers = self.registryService:find({"IDL:scs/core/IComponent:1.0"})
+      Check.assertNotEquals(0, #offers)
+      
+      offers = self.registryService:find({"IDL:scs/core/IComponent:2.0"})
+      Check.assertEquals(0, #offers)
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    end,
  
     testFindByCriteria = function(self)
        local member = scs.newComponent(facetDescriptions,
@@ -128,8 +146,8 @@ Suite = {
       })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
-      local compId = componentId.name..":"..componentId.major_version.. '.'
-        .. componentId.minor_version..'.'..componentId.patch_version
+      local compId = componentId.name..":"..componentId.major_version.. "."
+        .. componentId.minor_version.."."..componentId.patch_version
       local offers = self.registryService:findByCriteria(
         {"IComponent"},
         {
