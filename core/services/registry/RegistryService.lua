@@ -494,6 +494,9 @@ function startup(self)
   end
 
   self.started = true
+  
+  self.context.IFaultTolerantService:setStatus(true)
+  
   Log:service("Serviço de registro iniciado")
 end
 
@@ -522,5 +525,9 @@ function shutdown(self)
   end
 
   Log:service("Serviço de registro finalizado")
+  
+   orb:deactivate(self)
+   orb:shutdown()
+   Log:faulttolerance("Servico de Registro matou seu processo.")
 end
 

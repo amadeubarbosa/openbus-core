@@ -1,0 +1,37 @@
+#ifndef FTS_IDL
+#define FTS_IDL
+
+
+module openbusidl {
+
+/**
+ * \brief Módulo do Serviço Tolerante a Falhas.
+ */
+module ft {
+
+/**
+ * \brief Representa o serviço tolerante a falhas.
+ */
+interface IFaultTolerantService {
+    
+
+    /**
+     * \brief Verifica se o serviço está vivo ou sem erros.
+
+     *
+     * \return \c true, caso esteja vivo, ou \c false, caso
+     * esteja em estado de falha.
+     */
+    boolean isAlive ();
+
+    void setStatus(in boolean isAlive);
+
+    void kill();
+    
+};
+
+};
+
+};
+
+#endif

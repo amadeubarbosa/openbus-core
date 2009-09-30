@@ -1,0 +1,34 @@
+#ifndef FTMONITOR_IDL
+#define FTMONITOR_IDL
+
+#include "ft_service.idl"
+
+module openbusidl {
+
+	/**
+	 * \brief Módulo do Monitor do Serviço de Tolerante a Falhas.
+	 */
+	module ft {
+
+		/** \brief Representa o serviço tolerante a falhas. */
+		typedef IFaultTolerantService ftService;
+
+		/**
+		 * \brief Representa o monitor.
+		 */
+		interface IFTServiceMonitor {
+
+
+		    /**
+		     * \brief Monitora o serviço e cria uma nova réplica se necessário.
+		     *
+		     */
+		    void monitor();
+
+		};
+
+	};
+
+};
+
+#endif

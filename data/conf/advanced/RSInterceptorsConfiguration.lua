@@ -7,6 +7,10 @@ local config =
 
 -- Acrescenta informação sobre as operacões a serem liberadas
 config.interfaces = {
+ {
+    interface = "IDL:openbusidl/ft/IFaultTolerantService:1.0",
+    excluded_ops = {"isAlive"}
+  },
 }
 
 return config

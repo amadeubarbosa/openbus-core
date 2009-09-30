@@ -4,9 +4,12 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
+local tonumber = tonumber
+
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
+
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
@@ -22,6 +25,10 @@ assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 local iConfig =
   assert(loadfile(DATA_DIR.."/conf/advanced/RSInterceptorsConfiguration.lua"))()
 
+RegistryServerConfiguration.registryServerHost = 
+    RegistryServerConfiguration.registryServerHostName..":"..
+    RegistryServerConfiguration.registryServerHostPort
+
 -- Define os níveis de verbose para o openbus e para o oil
 if RegistryServerConfiguration.logLevel then
   Log:level(RegistryServerConfiguration.logLevel)
@@ -30,15 +37,22 @@ if RegistryServerConfiguration.oilVerboseLevel then
   oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
 end
 
+
+props = {  host = RegistryServerConfiguration.registryServerHostName,
+           port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}
+           
 -- Inicializa o barramento
 Openbus:resetAndInitialize(
   RegistryServerConfiguration.accessControlServerHostName,
   RegistryServerConfiguration.accessControlServerHostPort,
-  nil, iConfig, iConfig)
+  props, iConfig, iConfig)
 local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local RegistryService = require "core.services.registry.RegistryService"
+local FaultTolerantService = require "core.services.faulttolerance.FaultTolerantService"
+
+
 
 -----------------------------------------------------------------------------
 ---- RegistryService Descriptions
@@ -49,6 +63,7 @@ local facetDescriptions = {}
 facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
+facetDescriptions.IFaultTolerantService	= {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
 facetDescriptions.IComponent.interface_name        = "IDL:scs/core/IComponent:1.0"
@@ -61,6 +76,11 @@ facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 facetDescriptions.IRegistryService.name            = "IRegistryService"
 facetDescriptions.IRegistryService.interface_name  = "IDL:openbusidl/rs/IRegistryService:1.0"
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
+
+facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
+facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
+facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService.key                   = "FTRS"
 
 ---- Receptacle Descriptions
 local receptacleDescriptions = {}

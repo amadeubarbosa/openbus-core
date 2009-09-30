@@ -7,8 +7,9 @@ local oil = require "oil"
 oil.verbose:level(3)
 local openbus = require "openbus.Openbus"
 local scsutils = require ("scs.core.utils").Utils()
+local log = require "openbus.util.Log"
 
--- Inicializa��o do barramento
+-- Inicializacao do barramento
 local props = {}
 scsutils:readProperties(props, "Hello.properties")
 local host = props["host.name"].value
