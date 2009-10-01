@@ -80,8 +80,8 @@ public class HelloServer {
       new ExtendedFacetDescription("IHello", IHelloHelper.id(), HelloImpl.class
         .getCanonicalName());
     ComponentContext context =
-      builder.newComponent(descriptions, null, new ComponentId("Hello",
-        (byte) 1, (byte) 0, (byte) 0, "Java"));
+      builder.newComponent(descriptions, new ComponentId("Hello", (byte) 1,
+        (byte) 0, (byte) 0, "Java"));
 
     IRegistryService registryService =
       bus.connect(entityName, privateKey, acsCertificate);
