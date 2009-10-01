@@ -19,5 +19,5 @@ if [ -r ${OPENBUS_DATADIR}/conf/config ]; then
   . ${OPENBUS_DATADIR}/conf/config
 fi
 
-exec ${OPENBUS_BIN}/$TEC_UNAME/servicelauncher $*
+exec ${OPENBUS_BIN}/$TEC_UNAME/servicelauncher "$@"
 
