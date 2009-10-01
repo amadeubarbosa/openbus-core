@@ -557,10 +557,11 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
-	Log:service("Pedido de shutdown para serviço de controle de acesso")
-	self = self.context.IAccessControlService
-    self.leaseProvider:stopCheck()
-    orb:deactivate(self)
-    orb:shutdown()
-    Log:faulttolerance("Servico de Controle de Acesso matou seu processo.")
+  Log:service("Pedido de shutdown para serviço de controle de acesso")
+  self = self.context.IAccessControlService
+  self.leaseProvider:stopCheck()
+  local orb = Openbus:getORB()
+  orb:deactivate(self)
+  orb:shutdown()
+  Log:faulttolerance("Servico de Controle de Acesso matou seu processo.")
 end
