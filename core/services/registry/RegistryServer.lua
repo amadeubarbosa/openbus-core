@@ -10,7 +10,6 @@ local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 
-
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
 
@@ -24,10 +23,6 @@ end
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 local iConfig =
   assert(loadfile(DATA_DIR.."/conf/advanced/RSInterceptorsConfiguration.lua"))()
-
-RegistryServerConfiguration.registryServerHost = 
-    RegistryServerConfiguration.registryServerHostName..":"..
-    RegistryServerConfiguration.registryServerHostPort
 
 -- Define os níveis de verbose para o openbus e para o oil
 if RegistryServerConfiguration.logLevel then
