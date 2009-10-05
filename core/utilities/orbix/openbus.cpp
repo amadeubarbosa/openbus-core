@@ -291,6 +291,7 @@ namespace openbus {
       scs::core::ComponentBuilder::verbose = verbose;
       scs::core::IComponentImpl::verbose = verbose;
       scs::core::IMetaInterfaceImpl::verbose = verbose;
+      scs::core::IReceptaclesImpl::verbose = verbose;
     }
     verbose->print("Openbus::getInstance() BEGIN");
     verbose->indent();
