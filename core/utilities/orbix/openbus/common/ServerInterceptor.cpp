@@ -55,7 +55,7 @@ namespace openbus {
       CORBA::OctetSeq octets(context_data.length(),
                    context_data.length(),
                    context_data.get_buffer(),
-                   IT_FALSE);
+                   0);
 
       CORBA::Any_var any = cdr_codec->decode_value(
         octets, 

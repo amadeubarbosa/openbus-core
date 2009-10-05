@@ -16,8 +16,7 @@ namespace openbus {
   namespace common {
     openbusidl::acs::Credential* ClientInterceptor::credential = 0;
 
-    ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec) 
-      IT_THROW_DECL(()) 
+    ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec)  
     {
     #ifdef VERBOSE
       Openbus::verbose->print("ClientInterceptor::ClientInterceptor() BEGIN");
@@ -32,10 +31,9 @@ namespace openbus {
     ClientInterceptor::~ClientInterceptor() { }
 
     void ClientInterceptor::send_request(ClientRequestInfo_ptr ri) 
-    IT_THROW_DECL((
-      CORBA::SystemException,
-      PortableInterceptor::ForwardRequest
-    ))
+      throw(
+        CORBA::SystemException,
+        PortableInterceptor::ForwardRequest)
     {
     #ifdef VERBOSE
       Openbus::verbose->print("ClientInterceptor::send_request() BEGIN");
@@ -63,7 +61,7 @@ namespace openbus {
           octets->length(),
           octets->length(),
           octets->get_buffer(),
-          IT_FALSE);
+          0);
         sc.context_data = seq;
 
       #ifdef VERBOSE
@@ -83,23 +81,27 @@ namespace openbus {
     #endif
     }
 
-    char* ClientInterceptor::name() IT_THROW_DECL((CORBA::SystemException)) {
+    char* ClientInterceptor::name() 
+      throw(CORBA::SystemException)
+    {
       return CORBA::it_string_dup_eh("AccessControl");
     }
     void ClientInterceptor::send_poll( ClientRequestInfo_ptr ri ) 
-      IT_THROW_DECL((CORBA::SystemException)) {}
+      throw(CORBA::SystemException) 
+    {}
     void ClientInterceptor::receive_reply( ClientRequestInfo_ptr ri ) 
-      IT_THROW_DECL((CORBA::SystemException)) {}
+      throw(CORBA::SystemException) 
+    {}
     void ClientInterceptor::receive_exception( ClientRequestInfo_ptr ri ) 
-      IT_THROW_DECL((
+      throw(
         CORBA::SystemException,
-        PortableInterceptor::ForwardRequest
-    )){}
+        PortableInterceptor::ForwardRequest)
+    {}
     void ClientInterceptor::receive_other( ClientRequestInfo_ptr ri ) 
-      IT_THROW_DECL((
+      throw(
         CORBA::SystemException,
-        PortableInterceptor::ForwardRequest
-    )){}
+        PortableInterceptor::ForwardRequest)
+    {}
   }
 }
 

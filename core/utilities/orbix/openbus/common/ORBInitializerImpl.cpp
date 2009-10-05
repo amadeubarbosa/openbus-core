@@ -7,7 +7,7 @@
 #include "ORBInitializerImpl.h"
 #include "../../openbus.h"
 
-IT_USING_NAMESPACE_STD
+using namespace std;
 
 namespace openbus {
   namespace common {

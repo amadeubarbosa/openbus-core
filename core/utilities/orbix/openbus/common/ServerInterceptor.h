@@ -15,7 +15,7 @@ using namespace PortableInterceptor;
 namespace openbus {
   namespace common {
 
-    class ServerInterceptor : public ServerRequestInterceptor, 
+    class ServerInterceptor : public ServerRequestInterceptor,
       public IT_CORBA::RefCountedLocalObject 
     {
       private:

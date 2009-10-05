@@ -14,8 +14,9 @@ using namespace PortableInterceptor;
 
 namespace openbus {
   namespace common {
-    class ORBInitializerImpl : public ORBInitializer, 
-      public IT_CORBA::RefCountedLocalObject {
+    class ORBInitializerImpl : public ORBInitializer,
+      public IT_CORBA::RefCountedLocalObject 
+    {
         ServerInterceptor* serverInterceptor;
         SlotId slotid;
       public:
