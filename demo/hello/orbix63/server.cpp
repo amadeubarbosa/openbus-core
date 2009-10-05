@@ -34,7 +34,8 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
     static void destruct(void* obj) {
       delete (HelloImpl*) obj;
     }
-    void sayHello() IT_THROW_DECL((CORBA::SystemException)) {
+    void sayHello() 
+      throw(CORBA::SystemException) {
       cout << "Servant diz: HELLO!" << endl;
       openbusidl::acs::Credential_var credential = 
         bus->getInterceptedCredential();
