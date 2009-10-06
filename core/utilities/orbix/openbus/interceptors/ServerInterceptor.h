@@ -1,5 +1,5 @@
 /*
-** common/ServerInterceptor.h
+** interceptors/ServerInterceptor.h
 */
 
 #ifndef SERVERINTERCEPTOR_H_
@@ -13,7 +13,7 @@
 using namespace PortableInterceptor;
 
 namespace openbus {
-  namespace common {
+  namespace interceptors {
 
     class ServerInterceptor : public ServerRequestInterceptor,
       public IT_CORBA::RefCountedLocalObject 

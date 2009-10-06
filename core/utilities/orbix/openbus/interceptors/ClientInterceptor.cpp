@@ -1,5 +1,5 @@
 /*
-** common/ClientInterceptor.cpp
+** interceptors/ClientInterceptor.cpp
 */
 
 #include "ClientInterceptor.h"
@@ -13,7 +13,7 @@
 using namespace openbusidl::acs;
 
 namespace openbus {
-  namespace common {
+  namespace interceptors {
     openbusidl::acs::Credential* ClientInterceptor::credential = 0;
 
     ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec)  

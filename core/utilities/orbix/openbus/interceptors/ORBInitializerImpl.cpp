@@ -1,5 +1,5 @@
 /*
-** common/ORBInitializerImpl.cpp
+** interceptors/ORBInitializerImpl.cpp
 */
 
 #include <omg/IOP.hh>
@@ -10,7 +10,7 @@
 using namespace std;
 
 namespace openbus {
-  namespace common {
+  namespace interceptors {
     ORBInitializerImpl::ORBInitializerImpl()
     {
     #ifdef VERBOSE

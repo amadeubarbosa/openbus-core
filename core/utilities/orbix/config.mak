@@ -31,9 +31,9 @@ LDIR= ${ORBIXLDIR} ${OPENBUSLIB} ${ORBIXLDIR}
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix crypto
 
-SRC= openbus/common/ClientInterceptor.cpp \
-     openbus/common/ServerInterceptor.cpp \
-     openbus/common/ORBInitializerImpl.cpp \
+SRC= openbus/interceptors/ClientInterceptor.cpp \
+     openbus/interceptors/ServerInterceptor.cpp \
+     openbus/interceptors/ORBInitializerImpl.cpp \
      stubs/access_control_serviceC.cxx \
      stubs/registry_serviceC.cxx \
      stubs/session_serviceC.cxx \

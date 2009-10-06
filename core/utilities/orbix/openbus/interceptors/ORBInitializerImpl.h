@@ -1,5 +1,5 @@
 /*
-** common/ORBInitializerImpl.h
+** interceptors/ORBInitializerImpl.h
 */
 
 #ifndef ORBINITIALIZERIMPL_H_
@@ -13,7 +13,7 @@
 using namespace PortableInterceptor;
 
 namespace openbus {
-  namespace common {
+  namespace interceptors {
     class ORBInitializerImpl : public ORBInitializer,
       public IT_CORBA::RefCountedLocalObject 
     {

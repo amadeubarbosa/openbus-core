@@ -1,5 +1,5 @@
 /*
-** common/ServerInterceptor.cpp
+** interceptors/ServerInterceptor.cpp
 */
 
 #include "ServerInterceptor.h"
@@ -11,7 +11,7 @@
 #endif
 
 namespace openbus {
-  namespace common {
+  namespace interceptors {
     ServerInterceptor::ServerInterceptor(
       Current* ppicurrent,
       SlotId pslotid,

@@ -11,7 +11,7 @@
 #include "openbus/util/Helper.h"
 #include "stubs/session_service.hh"
 
-#include "openbus/common/ORBInitializerImpl.h"
+#include "openbus/interceptors/ORBInitializerImpl.h"
 #include <ComponentBuilderOrbix.h>
 
 #include <omg/orb.hh>
@@ -136,7 +136,7 @@ namespace openbus {
     /**
     * Inicializador do ORB. 
     */
-      static common::ORBInitializerImpl* ini;
+      static interceptors::ORBInitializerImpl* ini;
 
     /**
     * ORB. 

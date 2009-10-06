@@ -19,7 +19,7 @@ namespace openbus {
 #ifdef VERBOSE
   Verbose* Openbus::verbose = 0;
 #endif
-  common::ORBInitializerImpl* Openbus::ini = 0;
+  interceptors::ORBInitializerImpl* Openbus::ini = 0;
   IT_Mutex Openbus::mutex;
   Openbus* Openbus::bus = 0;
   Openbus::RenewLeaseThread* Openbus::renewLeaseThread = 0;
@@ -49,7 +49,7 @@ namespace openbus {
     if (iRegistryService) {
       delete iRegistryService;
     }
-    openbus::common::ClientInterceptor::credential = 0;
+    openbus::interceptors::ClientInterceptor::credential = 0;
     if (credential) {
       delete credential;
     }
@@ -169,7 +169,7 @@ namespace openbus {
     #ifdef VERBOSE
       verbose->print("Registrando interceptadores ...");
     #endif
-      ini = new common::ORBInitializerImpl();
+      ini = new interceptors::ORBInitializerImpl();
       PortableInterceptor::register_orb_initializer(ini);
     }
   }
@@ -432,7 +432,7 @@ namespace openbus {
 
   void Openbus::setThreadCredential(Credential* credential) {
     this->credential = credential;
-    openbus::common::ClientInterceptor::credential = credential;
+    openbus::interceptors::ClientInterceptor::credential = credential;
   }
 
   void Openbus::addLeaseExpiredCallback(
@@ -503,7 +503,7 @@ namespace openbus {
           verbose->print(msg.str());
         #endif
           connectionState = CONNECTED;
-          openbus::common::ClientInterceptor::credential = credential;
+          openbus::interceptors::ClientInterceptor::credential = credential;
           if (!timeRenewingFixe) {
             timeRenewing = (lease/2)*300;
           }
@@ -705,7 +705,7 @@ namespace openbus {
           verbose->print(msg.str());
         #endif
           connectionState = CONNECTED;
-          openbus::common::ClientInterceptor::credential = credential;
+          openbus::interceptors::ClientInterceptor::credential = credential;
           if (!timeRenewingFixe) {
             timeRenewing = (lease/2)*300;
           }
@@ -751,7 +751,7 @@ namespace openbus {
       }
       bool status = iAccessControlService->logout(*credential);
       if (status) {
-        openbus::common::ClientInterceptor::credential = 0;
+        openbus::interceptors::ClientInterceptor::credential = 0;
         if (credential) {
           delete credential;
         }
