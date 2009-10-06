@@ -40,7 +40,7 @@ SRC= openbus/common/ClientInterceptor.cpp \
      stubs/coreC.cxx \
      stubs/scsC.cxx \
      openbus.cpp \
-     services/RegistryService.cpp \
+     openbus/util/Helper.cpp \
      verbose.cpp
 
 genstubs:

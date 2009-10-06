@@ -17,7 +17,7 @@
 using namespace std;
 
 openbus::Openbus* bus;
-openbus::services::RegistryService* registryService;
+openbusidl::rs::IRegistryService* registryService;
 char* registryId;
 scs::core::ComponentContext* componentContext;
 
@@ -104,11 +104,11 @@ int main(int argc, char* argv[]) {
   extFacets.push_back(helloDesc);
   componentContext = componentBuilder->newComponent(extFacets, componentId);
 
-  openbus::services::PropertyListHelper* propertyListHelper = \
-    new openbus::services::PropertyListHelper();
+  openbus::util::PropertyListHelper* propertyListHelper = \
+    new openbus::util::PropertyListHelper();
 
 /* Criação de uma *oferta de serviço*. */
-  openbus::services::ServiceOffer serviceOffer;
+  openbus::util::ServiceOffer serviceOffer;
   serviceOffer.properties = propertyListHelper->getPropertyList();
   serviceOffer.member = componentContext->getIComponent();
   delete propertyListHelper;
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
   cout << "Registrando serviço IHello no barramento..." << endl;
 
 /* Registro do serviço no barramento. */
-  registryService->Register(serviceOffer, registryId);
+  registryService->_cxx_register(serviceOffer, registryId);
   cout << "Serviço IHello registrado." << endl;
   cout << "Aguardando requisições..." << endl;
 

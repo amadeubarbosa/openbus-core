@@ -13,7 +13,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
   openbus::Openbus* bus;
-  openbus::services::RegistryService* registryService;
+  openbusidl::rs::IRegistryService* registryService;
 
   bus = openbus::Openbus::getInstance();
 
@@ -40,20 +40,20 @@ int main(int argc, char* argv[]) {
 *  O trabalho de criação da lista é facilitado pelo uso da classe 
 *  FacetListHelper.
 */
-  openbus::services::FacetListHelper* facetListHelper =
-    new openbus::services::FacetListHelper();
+  openbus::util::FacetListHelper* facetListHelper =
+    new openbus::util::FacetListHelper();
   facetListHelper->add("IHello");
 
 /* Busca no barramento o serviço desejado.
 *  Uma lista de *ofertas de serviço* é retornada para o usuário.
 *  OBS.: Neste demo somente há uma oferta de serviço.
 */
-  openbus::services::ServiceOfferList_var serviceOfferList =
+  openbusidl::rs::ServiceOfferList_var serviceOfferList =
     registryService->find(facetListHelper->getFacetList());
   delete facetListHelper;
 
   CORBA::ULong idx = 0;
-  openbus::services::ServiceOffer serviceOffer = serviceOfferList[idx];
+  openbusidl::rs::ServiceOffer serviceOffer = serviceOfferList[idx];
 
   scs::core::IComponent_var component = serviceOffer.member;
   CORBA::Object_var obj = component->getFacet("IDL:demoidl/hello/IHello:1.0");

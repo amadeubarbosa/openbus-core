@@ -18,13 +18,13 @@ class RGSTestSuite: public CxxTest::TestSuite {
   private:
     Openbus* bus;
     openbusidl::acs::IAccessControlService* iAccessControlService;
-    services::RegistryService* rgs;
+    openbusidl::rs::IRegistryService* rgs;
     Credential* credential;
     Lease lease;
     char* registryIdentifier;
     char* registryIdentifier2;
-    openbus::services::PropertyListHelper* propertyListHelper;
-    openbus::services::PropertyListHelper* propertyListHelper2;
+    openbus::util::PropertyListHelper* propertyListHelper;
+    openbus::util::PropertyListHelper* propertyListHelper2;
     scs::core::IComponent_var component;
     std::string OPENBUS_SERVER_HOST;
     unsigned short OPENBUS_SERVER_PORT;
@@ -129,26 +129,26 @@ class RGSTestSuite: public CxxTest::TestSuite {
         context = componentBuilder->newComponent(extFacets, id);
         component = context->getIComponent();
 
-        propertyListHelper = new openbus::services::PropertyListHelper();
+        propertyListHelper = new openbus::util::PropertyListHelper();
         propertyListHelper->add("description", "blabla");
 
         openbusidl::rs::ServiceOffer serviceOffer;
         serviceOffer.properties = propertyListHelper->getPropertyList();
         serviceOffer.member = component;
-        TS_ASSERT(rgs->Register(serviceOffer, registryIdentifier));
+        TS_ASSERT(rgs->_cxx_register(serviceOffer, registryIdentifier));
 
-        propertyListHelper2 = new openbus::services::PropertyListHelper();
+        propertyListHelper2 = new openbus::util::PropertyListHelper();
         serviceOffer.properties = propertyListHelper2->getPropertyList();
         serviceOffer.member = component;
-        TS_ASSERT(rgs->Register(serviceOffer, registryIdentifier2));
+        TS_ASSERT(rgs->_cxx_register(serviceOffer, registryIdentifier2));
       } catch (const char* errmsg) {
         TS_FAIL(errmsg);
       }
     }
 
     void testFind() {
-      openbus::services::FacetListHelper* facetListHelper = \
-        new openbus::services::FacetListHelper();
+      openbus::util::FacetListHelper* facetListHelper = \
+        new openbus::util::FacetListHelper();
       facetListHelper->add("IComponent");
 
       openbusidl::rs::ServiceOfferList* serviceOfferList = 
@@ -159,8 +159,8 @@ class RGSTestSuite: public CxxTest::TestSuite {
     }
 
     void testFindByCriteria() {
-      openbus::services::FacetListHelper* facetListHelper = \
-        new openbus::services::FacetListHelper();
+      openbus::util::FacetListHelper* facetListHelper = \
+        new openbus::util::FacetListHelper();
       facetListHelper->add("IComponent");
 
       openbusidl::rs::ServiceOfferList* serviceOfferList = \

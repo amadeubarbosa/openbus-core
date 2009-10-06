@@ -8,7 +8,7 @@
 
 #include "verbose.h"
 #include "stubs/access_control_service.hh"
-#include "services/RegistryService.h"
+#include "openbus/util/Helper.h"
 #include "stubs/session_service.hh"
 
 #include "openbus/common/ORBInitializerImpl.h"
@@ -159,11 +159,6 @@ namespace openbus {
       PortableServer::POAManager_var poa_manager;
 
     /**
-    * Serviço de registro. 
-    */
-      services::RegistryService* registryService;
-
-    /**
     * Intervalo de tempo que determina quando a credencial expira. 
     */
       Lease lease;
@@ -246,7 +241,7 @@ namespace openbus {
     /**
     * Cria o objeto registryService.
     */
-      services::RegistryService* setRegistryService();
+      void setRegistryService();
 
       IT_Thread renewLeaseIT_Thread;
 
@@ -382,7 +377,7 @@ namespace openbus {
     * Retorna o serviço de registro. 
     * @return Serviço de registro
     */
-      services::RegistryService* getRegistryService();
+      openbusidl::rs::IRegistryService* getRegistryService();
 
     /**
     * Retorna o serviço de sessão. 
@@ -446,7 +441,7 @@ namespace openbus {
     *  @return  Se a tentativa de conexão for bem sucedida, uma instância que 
     *    representa o serviço é retornada.
     */
-      services::RegistryService* connect(
+      openbusidl::rs::IRegistryService* connect(
         const char* user,
         const char* password)
         throw (CORBA::SystemException, LOGIN_FAILURE);
@@ -474,7 +469,7 @@ namespace openbus {
     *  @return  Se a tentativa de conexão for bem sucedida, uma instância que 
     *    representa o serviço é retornada.
     */
-      services::RegistryService* connect(
+      openbusidl::rs::IRegistryService* connect(
         const char* entity,
         const char* privateKeyFilename,
         const char* ACSCertificateFilename)

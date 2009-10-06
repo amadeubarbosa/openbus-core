@@ -49,9 +49,6 @@ namespace openbus {
     if (iRegistryService) {
       delete iRegistryService;
     }
-    if (registryService) {
-      delete registryService;
-    }
     openbus::common::ClientInterceptor::credential = 0;
     if (credential) {
       delete credential;
@@ -181,7 +178,6 @@ namespace openbus {
     connectionState = DISCONNECTED;
     credential = 0;
     lease = 0;
-    registryService = 0;
     iAccessControlService = IAccessControlService::_nil();
     iRegistryService = 0;
     iSessionService = 0;
@@ -223,13 +219,10 @@ namespace openbus {
   #endif
   }
 
-  services::RegistryService* Openbus::setRegistryService() {
-    if (!registryService) {
+  void Openbus::setRegistryService() {
+    if (!iRegistryService) {
       iRegistryService = iAccessControlService->getRegistryService(); 
-      registryService = new openbus::services::RegistryService(
-        iRegistryService);
     }
-    return registryService;
   }
 
   Openbus::Openbus() {
@@ -402,8 +395,8 @@ namespace openbus {
     return iAccessControlService;
   }
 
-  openbus::services::RegistryService* Openbus::getRegistryService() {
-    return registryService;
+  openbusidl::rs::IRegistryService* Openbus::getRegistryService() {
+    return iRegistryService;
   } 
 
   openbusidl::ss::ISessionService* Openbus::getSessionService() 
@@ -418,9 +411,9 @@ namespace openbus {
             new openbusidl::rs::FacetList();
           facetList->length(1);
           facetList[0] = "ISessionService";
-          openbus::services::ServiceOfferList_var serviceOfferList = \
-            registryService->find(facetList);
-          openbus::services::ServiceOffer serviceOffer = serviceOfferList[0];
+          openbusidl::rs::ServiceOfferList_var serviceOfferList = \
+            iRegistryService->find(facetList);
+          openbusidl::rs::ServiceOffer serviceOffer = serviceOfferList[0];
           scs::core::IComponent* component = serviceOffer.member;
           CORBA::Object* obj = \
             component->getFacet("IDL:openbusidl/ss/ISessionService:1.0");
@@ -457,7 +450,7 @@ namespace openbus {
     }
   }
 
-  openbus::services::RegistryService* Openbus::connect(
+  openbusidl::rs::IRegistryService* Openbus::connect(
     const char* user,
     const char* password)
     throw (CORBA::SystemException, LOGIN_FAILURE)
@@ -521,11 +514,11 @@ namespace openbus {
               IT_ThreadFactory::attached, 0);
           }
           mutex.unlock();
-          registryService = setRegistryService();
+          setRegistryService();
         #ifdef VERBOSE
           verbose->dedent("Openbus::connect() END");
         #endif
-          return registryService;
+          return iRegistryService;
 
         }
 
@@ -542,11 +535,11 @@ namespace openbus {
       verbose->print("Já há uma conexão ativa.");
       verbose->dedent("Openbus::connect() END");
     #endif
-      return registryService;
+      return iRegistryService;
     }
   }
 
-  services::RegistryService* Openbus::connect(
+  openbusidl::rs::IRegistryService* Openbus::connect(
     const char* entity,
     const char* privateKeyFilename,
     const char* ACSCertificateFilename)
@@ -723,11 +716,11 @@ namespace openbus {
               IT_ThreadFactory::attached, 0);
           }
           mutex.unlock();
-          registryService = setRegistryService();
+          setRegistryService();
         #ifdef VERBOSE
           verbose->dedent("Openbus::connect() END");
         #endif
-          return registryService;
+          return iRegistryService;
         }
       } catch (const CORBA::SystemException& systemException) {
         mutex.unlock();
@@ -742,7 +735,7 @@ namespace openbus {
       verbose->print("Já há uma conexão ativa.");
       verbose->dedent("Openbus::connect() END");
     #endif
-      return registryService;
+      return iRegistryService;
     }
   }
 
@@ -755,9 +748,6 @@ namespace openbus {
     if (connectionState == CONNECTED) {
       if (iRegistryService) {
         delete iRegistryService;
-      }
-      if (registryService) {
-        delete registryService;
       }
       bool status = iAccessControlService->logout(*credential);
       if (status) {

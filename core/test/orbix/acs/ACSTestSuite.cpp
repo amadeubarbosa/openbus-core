@@ -29,7 +29,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
   private:
     Openbus* bus;
     openbusidl::acs::IAccessControlService* iAccessControlService;
-    services::RegistryService* rgs;
+    openbusidl::rs::IRegistryService* rgs;
     Credential* credential;
     Credential* credential2;
     Lease lease;
