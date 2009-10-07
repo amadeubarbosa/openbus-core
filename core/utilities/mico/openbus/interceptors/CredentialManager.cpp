@@ -1,11 +1,11 @@
 /*
-* common/CredentialManager.cpp
+* interceptors/CredentialManager.cpp
 */
 
 #include "CredentialManager.h"
 
 namespace openbus {
-  namespace common {
+  namespace interceptors {
     CredentialManager::CredentialManager() {
     #if VERBOSE
       printf( "\n\n[CredentialManager::CredentialManager() COMECO]\n" ) ;

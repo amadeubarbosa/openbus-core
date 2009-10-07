@@ -1,0 +1,111 @@
+/*
+** OpenBus Demo - Mico
+** server.cpp
+*/
+
+#include <fstream>
+#include <iostream>
+#include <CORBA.h>
+
+#include <openbus.h>
+#include <ComponentBuilderMico.h>
+
+#include "stubs/hello.h"
+
+using namespace std;
+
+openbus::Openbus* bus;
+openbusidl::rs::IRegistryService* registryService;
+char* registryId;
+scs::core::ComponentContext* componentContext;
+
+class HelloImpl : virtual public POA_demoidl::hello::IHello {
+  private:
+    scs::core::ComponentContext* componentContext;
+    HelloImpl(scs::core::ComponentContext* componentContext) {
+      this->componentContext = componentContext;
+    }
+  public:
+    static PortableServer::ServantBase* instantiate(scs::core::ComponentContext* componentContext) {
+      return (PortableServer::ServantBase*) new HelloImpl(componentContext);
+    }
+    static void destruct(void* obj) {
+      delete (HelloImpl*) obj;
+    }
+    void sayHello() throw(CORBA::SystemException) {
+      cout << "Servant diz: HELLO!" << endl;
+      openbusidl::acs::Credential_var credential = 
+        bus->getInterceptedCredential();
+      cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in()
+        << endl;
+    };
+};
+
+int main(int argc, char* argv[]) {
+  bus = openbus::Openbus::getInstance();
+
+  bus->init(argc, argv);
+
+  cout << "Conectando no barramento..." << endl;
+
+/* Conexão com o barramento através de certificado. */
+  try {
+    registryService = bus->connect("HelloService", "HelloService.key",
+      "AccessControlService.crt");
+  } catch (CORBA::SystemException& e) {
+    cout << "** Não foi possível se conectar ao barramento. **" << endl \
+         << "* Falha na comunicação. *" << endl;
+    exit(-1);
+  } catch (openbus::LOGIN_FAILURE& e) {
+    cout << "** Não foi possível se conectar ao barramento. **" << endl \
+         << "* Par usuário/senha inválido. *" << endl;
+    exit(-1);
+  } catch (openbus::SECURITY_EXCEPTION& e) {
+    cout << e.what() << endl;
+    exit(-1);
+  }
+
+  cout << "Conexão com o barramento estabelecida com sucesso!" << endl;
+
+/* Fábrica de componentes */
+  scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
+
+/* Definição do componente. */
+  scs::core::ComponentId componentId;
+  componentId.name = "HelloComponent";
+  componentId.major_version = '1';
+  componentId.minor_version = '0';
+  componentId.patch_version = '0';
+  componentId.platform_spec = "nenhuma";
+
+/* Descrição das facetas. */
+  std::list<scs::core::ExtendedFacetDescription> extFacets;
+  scs::core::ExtendedFacetDescription helloDesc;
+  helloDesc.name = "IHello";
+  helloDesc.interface_name = "IDL:demoidl/hello/IHello:1.0";
+  helloDesc.instantiator = HelloImpl::instantiate;
+  helloDesc.destructor = HelloImpl::destruct;
+  extFacets.push_back(helloDesc);
+  componentContext = componentBuilder->newComponent(extFacets, componentId);
+
+  openbus::util::PropertyListHelper* propertyListHelper = \
+    new openbus::util::PropertyListHelper();
+
+/* Criação de uma *oferta de serviço*. */
+  openbusidl::rs::ServiceOffer serviceOffer;
+  serviceOffer.properties = propertyListHelper->getPropertyList();
+  serviceOffer.member = componentContext->getIComponent();
+  delete propertyListHelper;
+
+  cout << "Registrando serviço IHello no barramento..." << endl;
+
+/* Registro do serviço no barramento. */
+  registryService->_cxx_register(serviceOffer, registryId);
+  cout << "Serviço IHello registrado." << endl;
+  cout << "Aguardando requisições..." << endl;
+
+  bus->run();
+
+  return 0;
+}
+

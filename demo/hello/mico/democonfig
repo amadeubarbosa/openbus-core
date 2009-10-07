@@ -1,0 +1,8 @@
+#Localizacao do barramento.
+
+#Máquina em que está o barramento.
+HOSTBUS='localhost'
+
+#Porta da máquina em que está o barramento.
+PORTBUS='2089'
+

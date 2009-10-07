@@ -1,41 +1,56 @@
-PROJNAME= openbus
+PROJNAME= openbus_mico
 LIBNAME= ${PROJNAME}
 
-MICOHOME=${HOME}/tools/mico
-#MICOBIN=/usr/local/bin
-MICOBIN=${MICOHOME}/idl
-MICOINC=${MICOHOME}/include
-MICOLDIR=${MICOHOME}/libs
+#Descomente as duas linhas abaixo para o uso em Valgrind.
+#DBG=YES
+#CPPFLAGS= -fno-inline
+
+#Descomente a linha abaixo caso deseje ativar o VERBOSE
+#DEFINES=VERBOSE
+
+ifeq "$(TEC_UNAME)" "SunOS58"
+  USE_CC=Yes
+endif
+
+MICO_HOME= /usr/local
+MICO_BIN= ${MICO_HOME}/bin
+MICO_INC= ${MICO_HOME}/include
+MICO_LDIR=${MICO_HOME}/lib
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-#Descomente a linha abaixo caso deseje ativar o VERBOSE
-DEFINES=VERBOSE
-
 OBJROOT= obj
 TARGETROOT= lib
 
-INCLUDES= ${OPENBUSINC}/scs ${MICOINC}
-LDIR= ${OPENBUSLIB} ${MICOLDIR}
+INCLUDES= . ${MICO_INC} ${OPENBUSINC}/scs/mico ${OPENBUSINC}/openssl-0.9.9 stubs
+LDIR= ${MICO_LDIR} ${OPENBUSLIB} ${MICO_LDIR}
 
-LIBS= mico2.3.13 scsmico
+LIBS= mico2.3.13 dl crypto
 
-SRC= openbus/common/ClientInterceptor.cpp \
-     openbus/common/ServerInterceptor.cpp \
-     openbus/common/CredentialManager.cpp \
-     openbus/common/ORBInitializerImpl.cpp \
+SRC= openbus/interceptors/ClientInterceptor.cpp \
+     openbus/interceptors/ServerInterceptor.cpp \
+     openbus/interceptors/ORBInitializerImpl.cpp \
+     openbus/util/Helper.cpp \
      stubs/access_control_service.cc \
      stubs/registry_service.cc \
      stubs/session_service.cc \
      stubs/core.cc \
-     stubs/scs.cc
+     stubs/scs.cc \
+     openbus.cpp \
+     verbose.cpp
 
 genstubs:
 	mkdir -p stubs
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/access_control_service.idl 
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/registry_service.idl
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/session_service.idl
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/core.idl
-	cd stubs ; ${MICOBIN}/idl --poa --use-quotes --no-paths --typecode --any ${OPENBUS_HOME}/idlpath/scs.idl
+	cd stubs ; ${MICO_BIN}/idl --no-paths --any --typecode ../../../../idlpath/access_control_service.idl 
+	cd stubs ; ${MICO_BIN}/idl --no-paths ../../../../idlpath/registry_service.idl
+	cd stubs ; ${MICO_BIN}/idl --no-paths ../../../../idlpath/session_service.idl
+	cd stubs ; ${MICO_BIN}/idl --no-paths --any ../../../../idlpath/core.idl
+	cd stubs ; ${MICO_BIN}/idl --no-paths --poa ../../../../idlpath/scs.idl
 	
+sunos58: $(OBJS)
+	rm -f lib/SunOS58/libopenbus_mico.a
+	CC -xar -instances=extern -o lib/SunOS58/libopenbus_mico.a $(OBJS)
+	rm -f lib/SunOS58/libopenbus_mico.so
+	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbus_mico.so $(OBJS)
+

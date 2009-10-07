@@ -1,5 +1,5 @@
 /*
-* common/CredentialManager.h
+* interceptors/CredentialManager.h
 */
 
 #ifndef CREDENTIAL_MANAGER_H_
@@ -8,7 +8,7 @@
 #include "../../stubs/access_control_service.h"
 
 namespace openbus {
-  namespace common {
+  namespace interceptors {
     class CredentialManager {
       private:
         openbusidl::acs::Credential* credentialValue ;

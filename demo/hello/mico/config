@@ -1,0 +1,7 @@
+
+MICO_HOME=/usr/local
+
+MICO_BIN=${MICO_HOME}/bin
+MICO_INC=${MICO_HOME}/include
+MICO_LDIR=${MICO_HOME}/lib
+
