@@ -21,6 +21,70 @@ namespace openbus {
   interceptors::ORBInitializerImpl* Openbus::ini = 0;
   Openbus* Openbus::bus = 0;
 
+  Openbus::RenewLeaseCallback::RenewLeaseCallback() {
+    leaseExpiredCallback = 0;
+  }
+
+  void Openbus::RenewLeaseCallback::setLeaseExpiredCallback(
+    LeaseExpiredCallback* obj) 
+  {
+    leaseExpiredCallback = obj;
+  }
+
+  void Openbus::RenewLeaseCallback::callback(
+    CORBA::Dispatcher* dispatcher, 
+    Event event) 
+  {
+  #ifdef VERBOSE
+    verbose->print("Openbus::RenewLeaseCallback::callback() BEGIN");
+    verbose->indent();
+  #endif
+    if (bus && bus->connectionState == CONNECTED) {
+    #ifdef VERBOSE
+      verbose->print("Renovando credencial...");
+    #endif
+      try {
+        bool status = bus->iLeaseProvider->renewLease(*bus->credential, 
+          bus->lease);
+        if (!bus->timeRenewingFixe) {
+          bus->timeRenewing = bus->lease*1000;
+        }
+      #ifdef VERBOSE
+        stringstream msg;
+        msg << "Próximo intervalo de renovação: " << bus->timeRenewing << "ms";
+        verbose->print(msg.str());
+      #endif
+        if (!status) {
+        #ifdef VERBOSE
+          verbose->print("Não foi possível renovar a credencial!");
+        #endif
+        if (leaseExpiredCallback) {
+          leaseExpiredCallback->expired();
+        }
+        /* "Desconecta" o usuário. */
+          bus->localDisconnect();
+        } else {
+        #ifdef VERBOSE
+          verbose->print("Credencial renovada!");
+        #endif
+        }
+      } catch (CORBA::Exception& e) {
+      #ifdef VERBOSE
+        verbose->print("Não foi possível renovar a credencial!");
+      #endif
+      if (leaseExpiredCallback) {
+        leaseExpiredCallback->expired();
+      }
+      /* "Desconecta" o usuário. ? */
+        bus->localDisconnect();
+      }
+      dispatcher->tm_event(this, bus->timeRenewing);
+    #ifdef VERBOSE
+      verbose->dedent("Openbus::RenewLeaseCallback::callback() END");
+    #endif
+    }
+  }
+
   void Openbus::terminationHandlerCallback(long signalType) {
   #ifdef VERBOSE
     verbose->print("Openbus::terminationHandlerCallback() BEGIN");
@@ -329,10 +393,12 @@ namespace openbus {
   void Openbus::addLeaseExpiredCallback(
     LeaseExpiredCallback* leaseExpiredCallback) 
   {
+    renewLeaseCallback.setLeaseExpiredCallback(leaseExpiredCallback);
   }
 
   void Openbus::removeLeaseExpiredCallback()
   {
+    renewLeaseCallback.setLeaseExpiredCallback(0);
   }
 
   openbusidl::rs::IRegistryService* Openbus::connect(
@@ -388,9 +454,11 @@ namespace openbus {
           connectionState = CONNECTED;
           openbus::interceptors::ClientInterceptor::credential = credential;
           if (!timeRenewingFixe) {
-            timeRenewing = (lease/2)*300;
+            timeRenewing = lease*1000;
           }
           setRegistryService();
+          orb->dispatcher()->tm_event(&renewLeaseCallback, 
+            timeRenewing);
         #ifdef VERBOSE
           verbose->dedent("Openbus::connect() END");
         #endif
@@ -580,9 +648,11 @@ namespace openbus {
           connectionState = CONNECTED;
           openbus::interceptors::ClientInterceptor::credential = credential;
           if (!timeRenewingFixe) {
-            timeRenewing = (lease/2)*300;
+            timeRenewing = lease*1000;
           }
           setRegistryService();
+          orb->dispatcher()->tm_event(&renewLeaseCallback, 
+            timeRenewing);
         #ifdef VERBOSE
           verbose->dedent("Openbus::connect() END");
         #endif

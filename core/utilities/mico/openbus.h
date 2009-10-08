@@ -235,6 +235,24 @@ namespace openbus {
 
       Openbus();
 
+      class RenewLeaseCallback : public CORBA::DispatcherCallback {
+        private:
+        /**
+        * Callback registrada para a notificação da 
+        * expiração do lease.
+        */
+          LeaseExpiredCallback* leaseExpiredCallback;
+        public:
+          RenewLeaseCallback();
+          void setLeaseExpiredCallback(LeaseExpiredCallback* obj);
+          void callback(CORBA::Dispatcher* dispatcher, Event event);
+      };
+
+    /**
+    * Callbak responsável por renovar a credencial.
+    */
+      RenewLeaseCallback renewLeaseCallback;
+
     public:
 
     #ifdef VERBOSE
