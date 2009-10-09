@@ -122,7 +122,7 @@ function RSFacet:createPropertyIndex(offerProperties, member)
 end
 
 function RSFacet:createFacetIndex(properties, member)
-  local facets
+  local facets = {}
   local memberName = properties.component_id.name
   Log:service("Oferta de serviço sem facetas para o membro "..memberName)
   local metaInterface = member:getFacetByName("IMetaInterface")
@@ -135,7 +135,6 @@ function RSFacet:createFacetIndex(properties, member)
     else
       Log:service("Membro '"..memberName.."' possui "..#facet_descriptions..
         " facetas")
-      facets = {}
       for _,facet in ipairs(facet_descriptions) do
         facets[facet.name] = true
         facets[facet.interface_name] = true
