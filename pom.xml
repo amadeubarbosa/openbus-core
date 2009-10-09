@@ -27,11 +27,6 @@
     <junit.version>4.6</junit.version>
     <scs.version>1.0.1</scs.version>
     <jacorb.version>2.3.0</jacorb.version>
-    <logkit.version>1.2</logkit.version>
-    <avalon.version>4.1.5</avalon.version>
-    <picocontainer.version>1.2</picocontainer.version>
-    <wrapper.version>3.1.0</wrapper.version>
-    <backport.version>CURRENT</backport.version>
 
     <source.encoding>ISO-8859-1</source.encoding>
   </properties>
@@ -77,6 +72,7 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -89,36 +85,6 @@
         <groupId>org.jacorb</groupId>
         <artifactId>jacorb-idl-compiler</artifactId>
          <version>${jacorb.version}</version>
-      </dependency>
-      
-      <dependency>
-        <groupId>org.apache</groupId>
-        <artifactId>logkit</artifactId>
-         <version>${logkit.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache</groupId>
-        <artifactId>avalon-framework</artifactId>
-         <version>${avalon.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.picocontainer</groupId>
-        <artifactId>picocontainer</artifactId>
-         <version>${picocontainer.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.tanukisoftware</groupId>
-        <artifactId>wrapper</artifactId>
-         <version>${wrapper.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>edu.emory</groupId>
-        <artifactId>backport-util-concurrent</artifactId>
-         <version>${backport.version}</version>
       </dependency>
 
     </dependencies>

@@ -201,6 +201,15 @@ packages = {
 	  	["../lib/${TEC_UNAME}/libftc.*"] = "libpath/${TEC_UNAME}",
 	  },
 	},
+	{ name = "ftc-java",
+	  build = {
+		type = "maven",
+		src = PRODAPP .."/ftc/java",
+	  },
+	  install_files = {
+		["target/ftc-*.jar"] = "libpath/java",
+	  },
+        },
 	{ name = "luatrace",
 	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_01_2009_09_09/luatrace",
 	  build = {
@@ -208,22 +217,22 @@ packages = {
 		test_libs = {"luatrace_*"},
 		external_dependencies = {},
 	  	src = PRODAPP .."/luatrace",
-		Darwin = "make clean &&  make PLAT=macosx reader static-writer dynamic-writer " ..
+		Darwin = "make PLAT=macosx reader static-writer dynamic-writer " ..
          "&& make PLAT=macosx INSTALL_TOP=" .. TMPDIR  ..  
          " install-reader install-static-writer install-dynamic-writer",
-		Linux = "make clean &&  make PLAT=linux reader static-writer dynamic-writer "..
+		Linux = "make PLAT=linux reader static-writer dynamic-writer "..
          "&& make PLAT=linux INSTALL_TOP=" .. TMPDIR  .. 
          " install-reader install-static-writer install-dynamic-writer", 
-		SunOS =  "make clean &&  make PLAT=solaris reader static-writer dynamic-writer " ..
+		SunOS =  "make PLAT=solaris reader static-writer dynamic-writer " ..
          "&& make PLAT=solaris INSTALL_TOP=" .. TMPDIR  ..  
          " install-reader install-static-writer install-dynamic-writer",
-		SunOS510 = "make clean &&  make PLAT=solaris reader static-writer dynamic-writer " ..
+		SunOS510 = "make PLAT=solaris reader static-writer dynamic-writer " ..
          "&& make PLAT=solaris INSTALL_TOP=" .. TMPDIR  ..  
          " install-reader install-static-writer install-dynamic-writer",
-		SunOS510x86 = "make clean &&  make PLAT=solaris reader static-writer dynamic-writer " ..
+		SunOS510x86 = "make PLAT=solaris reader static-writer dynamic-writer " ..
          "&& make PLAT=solaris INSTALL_TOP=" .. TMPDIR  .. 
          " install-reader install-static-writer install-dynamic-writer",
-		IRIX =  "make clean &&  make PLAT=posix reader static-writer dynamic-writer " .. 
+		IRIX =  "make PLAT=posix reader static-writer dynamic-writer " .. 
          "&& make PLAT=posix INSTALL_TOP=" .. TMPDIR  .. 
          " install-reader install-static-writer install-dynamic-writer",
 	  },
@@ -445,55 +454,26 @@ packages = {
 	  },
 	},
 	-- Java related packages	
-	{ name = "scs-java",
+	{ name = "scs-java-ant",
 	  build = {
 			type = "ant",
 			src = PRODAPP .."/scs/src/java",
 			target = "jar-core",
 	  },
-	  install_files = {
-			["../../libs/jacorb/*"] = "libpath/java/jacorb", -- all jacorb and its dependencies
-			["../../libs/scsidl.jar"] = "libpath/java/scs", -- the scs-idl
-			["../../libs/scs.jar"] = "libpath/java/scs",    -- the scs-core
-			["../../idl/scs.idl"]  = "idlpath",
-	  },
 	},
-	-- Maven installation in back-compatibility mode. 
-	-- Advanced maven integration to compile the openbus code easier.
-	{ name = "scs-java2maven",
+	{ name = "scs-java",
 	  build = {
-			type = "maven",
-			src = PRODAPP .."/scs",
-			legacymode = true,
+			type = "mavenimport",
+			src = PRODAPP .. "/scs",
 	  },
-	  maven_post_compile = { -- needed to compile the next 'openbusidl-java' package
-			["libs/jacorb/jacorb.jar"] = { 
-				groupId = "org.jacorb", artifactId = "jacorb", version = "2.3.0" 
-			},
-			["libs/jacorb/idl.jar"]    = { 
-				groupId = "org.jacorb", artifactId = "jacorb-idl-compiler", version = "2.3.0" 
-			},
-			["libs/scsidl.jar"] = { 
-				groupId = "tecgraf.scs", artifactId = "scs-idl-jacorb", version = "1.0.1" 
-			},
-			["libs/scs.jar"]    = { 
-				groupId = "tecgraf.scs", artifactId = "scs-core", version = "1.0.1" 
-			},
-			["libs/jacorb/logkit-1.2.jar"] = { 
-				groupId = "org.apache", artifactId = "logkit", version = "1.2" 
-			},
-			["libs/jacorb/avalon-framework-4.1.5.jar"] = { 
-				groupId = "org.apache", artifactId = "avalon-framework", version = "4.1.5" 
-			},
-			["libs/jacorb/picocontainer-1.2.jar"] = { 
-				groupId = "org.picocontainer", artifactId = "picocontainer", version = "1.2" 
-			},
-			["libs/jacorb/wrapper-3.1.0.jar"]     = { 
-				groupId = "org.tanukisoftware", artifactId = "wrapper", version = "3.1.0" 
-			},
-			["libs/jacorb/backport-util-concurrent.jar"] = { 
-				groupId = "edu.emory", artifactId = "backport-util-concurrent", version = "CURRENT" 
-			},
+	  parameters = { 
+			["libs/scs.jar"] = { groupId="tecgraf.scs", artifactId="scs-core",
+			 version="1.0.1" },
+			["libs/scsidl.jar"] = { groupId="tecgraf.scs", artifactId="scs-idl-jacorb",
+			 version="1.0.1" },
+	  },
+	  install_files = {
+			["idl/scs.idl"]  = "idlpath",
 	  },
 	},
 	{ name = "openbusidl-java",
@@ -503,10 +483,8 @@ packages = {
 	  },
 	  install_files = {
 			["*.idl"] = "idlpath",
-			["target/openbus-idl-jacorb-*.jar"] = "core/utilities/java",
-	  },
-	  maven_post_compile = { -- needed to compile the next 'openbus-java' package
-			["target/openbus-idl-jacorb-1.4.2.jar"] = { groupId = "tecgraf.openbus", artifactId = "openbus-idl-jacorb", version = "1.4.2" },
+			["target/openbus-idl-jacorb-*.jar"] = "libpath/java",
+			["target/dependency/*.jar"] = "libpath/java",
 	  },
 	},
 	{ name = "openbus-java",
@@ -515,10 +493,8 @@ packages = {
 	  	src = SVNDIR .."/core/utilities",	  	
 	  },
 	  install_files = {
-			["target/openbus-api-*.jar"] = "core/utilities/java",
-	  },
-	  maven_post_compile = { -- needed to compile the other packages that will use this
-			["target/openbus-api-1.4.2.jar"] = { groupId = "tecgraf.openbus", artifactId = "openbus-api", version = "1.4.2" },
+			["target/openbus-api-*.jar"] = "libpath/java",
+			["target/dependency/*.jar"] = "libpath/java",
 	  },
 	},
 	{ name = "openbus-demo-hello-java",
@@ -527,10 +503,8 @@ packages = {
 	  	src = SVNDIR .."/demo/hello",
 	  },
 	  install_files = {
-			["target/openbus-demo-hello-*.jar"] = "demo/hello/java",
-	  },
-	  maven_post_compile = { -- needed to compile the other packages that will use this
-			["target/openbus-demo-hello-1.4.2.jar"] = { groupId = "tecgraf.openbus", artifactId = "openbus-demo-hello", version = "1.4.2" },
+			["target/openbus-demo-hello-*.jar"] = "libpath/java",
+			["target/dependency/*.jar"] = "libpath/java",
 	  },
 	},
 --	{ name = "ldap-Linux26g4",
