@@ -10,9 +10,19 @@
 \usepackage{color}
 \usepackage{epsfig}
 \usepackage{mwlabinputs}
+\usepackage{hyperref}
 
 \setlength{\parskip}{6mm}
 \textheight=8.2in
+
+%% Redefines the label 'Listing' to ..                                            
+\def\lstlistingname{Código}                                                       
+\lstset{inputencoding=latin1}                                                     
+\codestyle{colorful}                                                              
+%% Removes hyperlinks borders                                                     
+\hypersetup{                                                                      
+  pdfborder = {0 0 0},                                                            
+}
 
 \newcommand{\code}[1]{\texttt{#1}}
 
@@ -53,7 +63,7 @@ O OpenBus utiliza o mecanismo de interceptação de CORBA no processo de controle 
 	
 \subsection{JacORB}\label{jacorb}
 
-Devido à máquina virtual Java contar com seu próprio ORB, certas configurações são necessárias para que o JacORB seja utilizado em seu lugar. Essas configurações podem ser vizualizadas na Listagem 1. O conjunto de propriedades deverá ser repassado posteriormente ao barramento, em sua inicialização, como veremos mais adiante.
+Devido à máquina virtual Java contar com seu próprio ORB, certas configurações são necessárias para que o JacORB seja utilizado em seu lugar. Essas configurações podem ser vizualizadas no Código~\ref{lst:jacoconfig}. O conjunto de propriedades deverá ser repassado posteriormente ao barramento, em sua inicialização, como veremos mais adiante.
 
 \begin{labeledcode}[java]{jacoconfig}{Configurações para a Carga do JacORB}
 import java.util.Properties;
@@ -80,7 +90,7 @@ Naturalmente a execução da demo necessita de um barramento em operação. A demo p
 
 \subsection{API}\label{api}
 
-A API é composta pela classe Openbus e pela classe \emph{stub} IRegistryService, referente ao Serviço de Registro. A classe Openbus atualmente é implementada como o padrão \emph{singleton}, pois suporta apenas um barramento. Para obter-se a instância do barramento e (re)inicializá-la, deve-se utilizar o código da Listagem 2.
+A API é composta pela classe Openbus e pela classe \emph{stub} IRegistryService, referente ao Serviço de Registro. A classe Openbus atualmente é implementada como o padrão \emph{singleton}, pois suporta apenas um barramento. Para obter-se a instância do barramento e (re)inicializá-la, deve-se utilizar o Código~\ref{lst:barramento}.
 
 \begin{labeledcode}[java]{barramento}{Obtenção da Instância do Barramento}
 import tecgraf.openbus.Openbus;
@@ -89,7 +99,7 @@ Openbus bus = Openbus.getInstance();
 
 // host e porta apenas para fins de exemplo.
 // args são argumentos da linha de comando e props são propriedades como as
-// da Listagem 1. Ambos serão passados ao ORB em sua inicialização.
+// do Código 1. Ambos serão passados ao ORB em sua inicialização.
 bus.resetAndInitialize(args, props, "localhost", 2089);
 \end{labeledcode}
 
@@ -167,7 +177,7 @@ O primeiro é destinado normalmente aos clientes que estão acessando o barramento
 
 No caso da autenticação via certificado, o responsável pelo serviço deve encaminhar ao administrador do barramento o certificado do serviço, ou seja, um arquivo especial que contenha a chave pública do serviço, dentre outras informações pertinentes. O administrador deve fornecer o certificado do serviço de controle de acesso.
 
-Um exemplo do código necessário para a conexão com o barramento pode ser visto na Listagem 3.
+Um exemplo do código necessário para a conexão com o barramento pode ser visto no Código~\ref{lst:conexao}.
 
 \begin{labeledcode}[java]{conexao}{Conexão com o Barramento}
 import tecgraf.openbus.Openbus;
@@ -177,7 +187,7 @@ Openbus bus = Openbus.getInstance();
 
 // host e porta apenas para fins de exemplo.
 // args são argumentos da linha de comando e props são propriedades como as
-// da Listagem 1. Ambos serão passados ao ORB em sua inicialização.
+// do Código 1. Ambos serão passados ao ORB em sua inicialização.
 bus.resetAndInitialize(args, props, "localhost", 2089);
 
 RSAPrivateKey privateKey = CryptoUtils.readPrivateKey("HelloService.key");
@@ -190,7 +200,7 @@ IRegistryService registryService =
 
 \subsubsection{Serviço de Registro}
 
-Um serviço pode ser colocado no barramento através de uma oferta de serviço (\emph{ServiceOffer}), que é uma estrutura que representa o serviço através de uma lista de propriedades (\emph{properties}) e de uma referência a um componente (\emph{member}) SCS. As definições em IDL dessas estruturas podem ser vistas na Listagem 4.
+Um serviço pode ser colocado no barramento através de uma oferta de serviço (\emph{ServiceOffer}), que é uma estrutura que representa o serviço através de uma lista de propriedades (\emph{properties}) e de uma referência a um componente (\emph{member}) SCS. As definições em IDL dessas estruturas podem ser vistas no Código~\ref{lst:offer}.
 
 \begin{labeledcode}[idl]{offer}{Definições de Ofertas de Serviço}
 typedef sequence<string> PropertyValue;
@@ -209,7 +219,7 @@ struct ServiceOffer {
 
 Através da lista de propriedades, é possível caracterizar o serviço. 
 	
-A arquitetura do Openbus é baseada no modelo de componentes SCS. Os serviços são de fato representados por componentes, que podem apresentar distintas facetas(interfaces). Sendo assim, o primeiro passo para o registro de um serviço é criar um componente que represente esse serviço. Maiores informações sobre a criação de componentes SCS podem ser obtidas nos tutoriais desse projeto, mas um exemplo pode ser conferido na Listagem 5. Nesse exemplo, \emph{HelloImpl} é o nome da classe que implementa a faceta \emph{IHello}.
+A arquitetura do Openbus é baseada no modelo de componentes SCS. Os serviços são de fato representados por componentes, que podem apresentar distintas facetas(interfaces). Sendo assim, o primeiro passo para o registro de um serviço é criar um componente que represente esse serviço. Maiores informações sobre a criação de componentes SCS podem ser obtidas nos tutoriais desse projeto, mas um exemplo pode ser conferido no Código~\ref{lst:component}. Nesse exemplo, \emph{HelloImpl} é o nome da classe que implementa a faceta \emph{IHello}.
 
 \begin{labeledcode}[java]{component}{Instanciação de um Componente SCS}
 // instanciação de um Construtor de Componentes, utilizando o ORB e POA
@@ -228,7 +238,7 @@ ComponentContext instance =
     (byte) 1, (byte) 0, (byte) 0, "Java"));
 \end{labeledcode}
 
-O serviço a ser registrado no barramento deve ser descrito através de uma oferta de serviço, que é representada pela estrutura \emph{ServiceOffer}. Pendura-se nessa estrutura o serviço em si, que é representado através de um componente SCS e, opcionalmente, uma lista de propriedades referentes ao serviço. As propriedades devem ser descritas numa estrutura que representa uma lista de propriedades. Um exemplo pode ser conferido na Listagem 6.
+O serviço a ser registrado no barramento deve ser descrito através de uma oferta de serviço, que é representada pela estrutura \emph{ServiceOffer}. Pendura-se nessa estrutura o serviço em si, que é representado através de um componente SCS e, opcionalmente, uma lista de propriedades referentes ao serviço. As propriedades devem ser descritas numa estrutura que representa uma lista de propriedades. Um exemplo pode ser conferido no Código~\ref{lst:registering}.
 
 \begin{labeledcode}[java]{registering}{Registro de uma Oferta de Serviço}
 // definição das propriedades
@@ -270,7 +280,7 @@ Até este ponto, o servidor basicamente se autenticou ao barramento e registrou o
 
 \subsubsection{Processo Cliente}
 
-Como o servidor, o cliente necessita de se autenticar ao barramento. Portanto, os mesmos passos aplicados ao servidor para a autenticação devem ser repetidos, com exceção de que o cliente geralmente se autentica através do mecanismo de usuário e senha, como na Listagem 9.
+Como o servidor, o cliente necessita de se autenticar ao barramento. Portanto, os mesmos passos aplicados ao servidor para a autenticação devem ser repetidos, com exceção de que o cliente geralmente se autentica através do mecanismo de usuário e senha, como no Código~\ref{lst:clientauth}.
 
 \begin{labeledcode}[java]{clientauth}{Autenticação da Aplicação Cliente}
 // userLogin e userPassword são variáveis String contendo o 
@@ -278,7 +288,7 @@ Como o servidor, o cliente necessita de se autenticar ao barramento. Portanto, o
 IRegistryService registryService = bus.connect(userLogin, userPassword);
 \end{labeledcode}
 
-Após a conexão bem sucedida com o barramento, o próximo passo é obter o serviço desejado. Isso pode ser feito através de uma chamada ao método \emph{find()} do Serviço de Registro, que retorna uma lista de ofertas de serviço que implementam a faceta que o usuário deseja. Um exemplo pode ser conferido na Listagem 10.
+Após a conexão bem sucedida com o barramento, o próximo passo é obter o serviço desejado. Isso pode ser feito através de uma chamada ao método \emph{find()} do Serviço de Registro, que retorna uma lista de ofertas de serviço que implementam a faceta que o usuário deseja. Um exemplo pode ser conferido no Código~\ref{lst:clientsearch}.
 
 \begin{labeledcode}[java]{clientsearch}{Busca por Ofertas de Serviço}
 // busca no barramento serviços que implementem uma faceta de nome IHello.
@@ -291,7 +301,7 @@ ServiceOffer[] servicesOffers =
 ServiceOffer serviceOffer = servicesOffers[0];
 \end{labeledcode}
 
-Como visto anteriormente, a oferta de serviço contém uma referência para um componente SCS ou, mais especificamente, para sua faceta IComponent. Como esse componente pode apresentar diversas facetas, o usuário deve obter a faceta que deseja utilizar. No exemplo há somente uma faceta além das facetas básicas do modelo SCS, que é a IHello. A faceta recebida na oferta, IComponent, oferece métodos (\emph{getFacet} e \emph{getFacetByName}) para que o usuário possa obter um objeto CORBA que represente a faceta desejada. De posse do objeto CORBA, o usuário deve efetuar um \emph{narrow} para mapeá-lo para a interface desejada e daí em diante o programador estará apto a utilizar essa faceta / serviço. Um exemplo pode ser visto na Listagem 11.
+Como visto anteriormente, a oferta de serviço contém uma referência para um componente SCS ou, mais especificamente, para sua faceta IComponent. Como esse componente pode apresentar diversas facetas, o usuário deve obter a faceta que deseja utilizar. No exemplo há somente uma faceta além das facetas básicas do modelo SCS, que é a IHello. A faceta recebida na oferta, IComponent, oferece métodos (\emph{getFacet} e \emph{getFacetByName}) para que o usuário possa obter um objeto CORBA que represente a faceta desejada. De posse do objeto CORBA, o usuário deve efetuar um \emph{narrow} para mapeá-lo para a interface desejada e daí em diante o programador estará apto a utilizar essa faceta / serviço. Um exemplo pode ser visto no Código~\ref{lst:clientfacet}.
 
 \begin{labeledcode}[java]{clientfacet}{Acesso à Faceta Desejada}
 // obtenção da faceta IHello
