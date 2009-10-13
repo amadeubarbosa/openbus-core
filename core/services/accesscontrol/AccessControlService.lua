@@ -251,7 +251,7 @@ function ACSFacet:setRegistryService(registryServiceComponent)
   if credential.owner == "RegistryService" then
     self.registryService = {
       credential = credential,
-      component = registryServiceComponent,
+      component = Openbus:getSmartRegistryService(registryServiceComponent),
     }
 
     local entry = self.entries[credential.identifier]

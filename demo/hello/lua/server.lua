@@ -14,6 +14,7 @@ scsutils:readProperties(props, "Hello.properties")
 local host = props["host.name"].value
 local port = props["host.port"].value
 openbus:resetAndInitialize(host, tonumber(port))
+--openbus:enableFaultTolerance()
 local orb = openbus:getORB()
 
 local scs = require "scs.core.base"

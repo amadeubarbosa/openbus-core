@@ -4,7 +4,7 @@
 --
 
 local oil = require "oil"
-oil.verbose:level(3)
+--oil.verbose:level(3)
 local openbus = require "openbus.Openbus"
 local scsutils = require ("scs.core.utils").Utils()
 local log = require "openbus.util.Log"
@@ -15,6 +15,7 @@ scsutils:readProperties(props, "Hello.properties")
 local host = props["host.name"].value
 local port = props["host.port"].value
 openbus:resetAndInitialize(host, tonumber(port))
+--openbus:enableFaultTolerance()
 local orb = openbus:getORB()
 
 -- Execução

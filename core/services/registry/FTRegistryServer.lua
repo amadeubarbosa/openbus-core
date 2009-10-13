@@ -1,8 +1,7 @@
 -----------------------------------------------------------------------------
--- Inicialização do Serviço de Registro
+-- Inicialização do Serviço de Registro Tolerante a Falhas
 --
--- Última alteração:
---   $Id$
+--   $Id: FTRegistryServer.lua 
 -----------------------------------------------------------------------------
 local tonumber = tonumber
 
@@ -32,6 +31,12 @@ if RegistryServerConfiguration.oilVerboseLevel then
   oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
 end
 
+local hostPort = arg[1]
+if hostPort == nil then
+   Log:error("É necessario passar o numero da porta.\n")
+    os.exit(1)
+end
+RegistryServerConfiguration.registryServerHostPort = tonumber(hostPort)
 
 props = {  host = RegistryServerConfiguration.registryServerHostName,
            port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}
@@ -41,6 +46,8 @@ Openbus:resetAndInitialize(
   RegistryServerConfiguration.accessControlServerHostName,
   RegistryServerConfiguration.accessControlServerHostPort,
   props, iConfig, iConfig)
+
+Openbus:enableFaultTolerance()
 
 local orb = Openbus:getORB()
 
