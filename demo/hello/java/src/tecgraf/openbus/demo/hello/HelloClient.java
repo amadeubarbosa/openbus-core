@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
 
+import openbusidl.ft.IFaultTolerantService;
 import openbusidl.rs.IRegistryService;
 import openbusidl.rs.ServiceOffer;
 

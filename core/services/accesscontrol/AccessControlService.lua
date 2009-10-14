@@ -29,6 +29,7 @@ local scs = require "scs.core.base"
 
 local oop = require "loop.simple"
 
+
 ---
 --Componente responsável pelo Serviço de Controle de Acesso
 ---
@@ -249,9 +250,13 @@ end
 function ACSFacet:setRegistryService(registryServiceComponent)
   local credential = Openbus:getInterceptedCredential()
   if credential.owner == "RegistryService" then
+    local registry = registryServiceComponent
+    if Openbus.isFaultToleranceEnable then
+    	registry = Openbus:getSmartProxy(registryServiceComponent)
+    end
     self.registryService = {
       credential = credential,
-      component = Openbus:getSmartRegistryService(registryServiceComponent),
+      component = registry,
     }
 
     local entry = self.entries[credential.identifier]
