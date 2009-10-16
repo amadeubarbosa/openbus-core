@@ -70,14 +70,8 @@ namespace openbus {
         (string) c.delegate);
     #endif
       openbus::Openbus* bus = openbus::Openbus::getInstance();
-/*
-* Investigar o delay gerado pela chamada remota isValid().
-*/
-#if 0
       if (bus->getAccessControlService()->isValid(c)) {
-#endif
         picurrent->set_slot(slotid, any);
-#if 0
       } else {
       #ifdef VERBOSE
         Openbus::verbose->print("Throwing CORBA::NO_PERMISSION...");
@@ -85,7 +79,6 @@ namespace openbus {
       #endif
         throw CORBA::NO_PERMISSION();
       }
-#endif
     #ifdef VERBOSE
       Openbus::verbose->dedent("ServerInterceptor::receive_request() END");
     #endif

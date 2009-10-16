@@ -18,6 +18,11 @@ namespace openbus {
 #ifdef VERBOSE
   Verbose* Openbus::verbose = 0;
 #endif
+
+#ifdef MULTITHREAD
+  Openbus::RunThread* Openbus::runThread = 0;
+#endif
+
   interceptors::ORBInitializerImpl* Openbus::ini = 0;
   Openbus* Openbus::bus = 0;
 
@@ -85,6 +90,18 @@ namespace openbus {
     }
   }
 
+#ifdef MULTITHREAD
+  void Openbus::RunThread::_run(void*) {
+  #ifdef VERBOSE
+    verbose->print("Openbus::RunThread::run() BEGIN");
+  #endif
+    bus->run();
+  #ifdef VERBOSE
+    verbose->dedent("Openbus::RunThread::run() END");
+  #endif
+  }
+#endif
+
   void Openbus::terminationHandlerCallback(long signalType) {
   #ifdef VERBOSE
     verbose->print("Openbus::terminationHandlerCallback() BEGIN");
@@ -128,7 +145,9 @@ namespace openbus {
         timeRenewingFixe = true;
       }
     }
+  #ifndef MULTITHREAD
     _argv[_argc++] = "-ORBClientReactive";
+  #endif
   }
 
   void Openbus::createOrbPoa() {
@@ -457,6 +476,12 @@ namespace openbus {
             timeRenewing = lease*1000;
           }
           setRegistryService();
+        #ifdef MULTITHREAD
+          if (!runThread) {
+            runThread = new RunThread();
+            runThread->start();
+          }
+        #endif
           orb->dispatcher()->tm_event(&renewLeaseCallback, 
             timeRenewing);
         #ifdef VERBOSE
@@ -651,6 +676,12 @@ namespace openbus {
             timeRenewing = lease*1000;
           }
           setRegistryService();
+        #ifdef MULTITHREAD
+          if (!runThread) {
+            runThread = new RunThread();
+            runThread->start();
+          }
+        #endif
           orb->dispatcher()->tm_event(&renewLeaseCallback, 
             timeRenewing);
         #ifdef VERBOSE

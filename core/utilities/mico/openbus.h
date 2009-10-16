@@ -233,6 +233,16 @@ namespace openbus {
     */
       void setRegistryService();
 
+    #ifdef MULTITHREAD
+      class RunThread : public MICOMT::Thread {
+        public:
+          void _run(void*);
+      };
+      friend class Openbus::RunThread;
+
+      static RunThread* runThread;
+    #endif
+
       Openbus();
 
       class RenewLeaseCallback : public CORBA::DispatcherCallback {

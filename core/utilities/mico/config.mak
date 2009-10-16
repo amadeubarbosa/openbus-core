@@ -1,12 +1,15 @@
 PROJNAME= openbus_mico
 LIBNAME= ${PROJNAME}
 
+#Descomente a linha abaixo para ativar o suporte a multithread.
+DEFINES=MULTITHREAD
+
 #Descomente as duas linhas abaixo para o uso em Valgrind.
 #DBG=YES
 #CPPFLAGS= -fno-inline
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
-#DEFINES=VERBOSE
+#DEFINES+=VERBOSE
 
 ifeq "$(TEC_UNAME)" "SunOS58"
   USE_CC=Yes
