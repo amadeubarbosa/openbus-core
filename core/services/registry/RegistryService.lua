@@ -118,6 +118,11 @@ function RSFacet:createPropertyIndex(offerProperties, member)
   properties["component_id"] = {}
   properties["component_id"].name = componentId.name
   properties["component_id"][compId] = true
+
+  local credential = Openbus:getInterceptedCredential()
+  properties["registered_by"] = {}
+  properties["registered_by"][credential.owner] = true
+
   return properties
 end
 

@@ -38,6 +38,10 @@ componentId.minor_version = 0
 componentId.patch_version = 0
 componentId.platform_spec = ""
 
+-- Openbus login
+local login = {}
+login.user = "tester"
+login.password = "tester"
 
 Suite = {
   Test1 = {
@@ -55,9 +59,6 @@ Suite = {
       idlfile = IDLPATH_DIR.."/access_control_service.idl"
       orb:loadidlfile(idlfile)
 
-      local user = "tester"
-      local password = "tester"
-
       self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS",
         "IDL:openbusidl/acs/IAccessControlService:1.0")
 
@@ -71,8 +72,8 @@ Suite = {
 
       local success
       success, self.credential = self.accessControlService:loginByPassword(
-        user,
-        password)
+        login.user,
+        login.password)
       self.credentialManager:setValue(self.credential)
       self.registryService = self.accessControlService:getRegistryService()
     end,
@@ -135,8 +136,8 @@ Suite = {
       Check.assertEquals(0, #offers)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
- 
-    testFindByCriteria = function(self)
+
+    testFindByCriteria_ComponentId = function(self)
        local member = scs.newComponent(facetDescriptions,
         receptacleDescriptions,
         componentId)
@@ -157,6 +158,28 @@ Suite = {
       Check.assertNotEquals(0, #offers)
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
     end,
+
+    testFindByCriteria_Owner = function(self)
+       local member = scs.newComponent(facetDescriptions,
+        receptacleDescriptions,
+        componentId)
+      local success, registryIdentifier = self.registryService:register({
+        properties = {},
+        member = member.IComponent, 
+      })
+      Check.assertTrue(success)
+      Check.assertNotEquals("", registryIdentifier)
+      local onwer = login.user
+      local offers = self.registryService:findByCriteria(
+        {"IComponent"},
+        {
+          {name = "registered_by", value = {owner}},
+        }
+      )
+      Check.assertNotEquals(0, #offers)
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    end,
+
 
     testUpdate = function(self)
       local member = scs.newComponent(facetDescriptions,
