@@ -107,8 +107,6 @@ local null = {}
 -- serão copiados para a tabela de linha de comando.
 --
 local options = {
-  login        = "tester",
-  password     = "tester",
   ["acs-host"] = "127.0.0.1",
   ["acs-port"] = 2089,
   verbose      = 0,
