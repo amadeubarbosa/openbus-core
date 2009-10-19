@@ -15,6 +15,7 @@ AccessControlServerConfiguration = {
   certificatesDirectory = "certificates",
   privateKeyFile = "certificates/AccessControlService.key",
   databaseDirectory = "credentials",
+  administrators = {},
   logLevel = 3,
   oilVerboseLevel = 1,
 }

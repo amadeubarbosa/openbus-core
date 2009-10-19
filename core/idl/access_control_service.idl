@@ -3,6 +3,7 @@
 
 #include "core.idl"
 #include "scs.idl"
+#include "access_control_service_exceptions.idl"
 #include "registry_service.idl"
 
 module openbusidl {
@@ -178,6 +179,195 @@ interface IAccessControlService {
      * observador, ou \c false, caso contrário.
      */
     boolean removeCredentialFromObserver(in CredentialObserverIdentifier observerIdentifier, in CredentialIdentifier aCredentialIdentifier);
+};
+
+
+/*--------------------------------- Sistema -------------------------------*/
+
+/** 
+ * \brief Representa os sistema que fazem parte do barramento.
+ *   Este elemento é de caráter gerencial, as implantações do sistemas
+ *   que realmente interagem com o barramento.
+ *
+ * \see SystemDeployment
+ */
+struct System {
+  string id;  /**< \brief Identificar único, no estilo login UNIX */
+  string description; /**< /brief Descrição do sistema */
+};
+
+/** \brief Seqüência de sistemas */
+typedef sequence<System> SystemList;
+
+/*------------------------------ Implantação ------------------------------*/
+
+/**
+ * \brief Representa a implantação de um sistema.
+ *   São as implantações que interagem com o barramento, exportando e
+ *   consumindo serviços.
+ */
+struct SystemDeployment {
+  string id;       /**< \brief Identificar único, no estilo login UNIX. */
+  string systemId; /**< \brief Identificador do sistema a que esta implantação
+                         está relacionada. */
+  string description; /**< \brief Descrição da implantação. */
+};
+
+/** \brief Seqüência de implantações. */
+typedef sequence<SystemDeployment> SystemDeploymentList;
+
+/** \brief Certificado que a implantação utiliza na autenticação. */
+typedef sequence<octet> SystemDeploymentCertificate;
+
+/**
+ * \brief Interface de gerenciamento de sistemas e implatações.
+ */
+interface IManagement {
+
+  /** 
+   * \brief Cadastra um novo sistema.
+   *  
+   * \param id Identificador único do sistema.
+   * \param description Descrição do sistema.
+   *
+   * \exception SystemAlreadyExists Um sistema com o mesmo identificador
+   * já está cadastrado.
+   */
+  void addSystem(in string id, in string description)
+    raises (SystemAlreadyExists);
+
+  /** 
+   * \brief Remove o sistema do barramento.
+   * Um sistema só poderá ser removido se não possuir nenhuma
+   * implantação cadastrada que o referencia.
+   *
+   * \param id Identificador do sistema.
+   *
+   * \exception SystemInUse O sistema possui alguma implantação cadastrada.
+   * \exception SystemNonExistent Sistema não cadastrado.
+   */
+  void removeSystem(in string id) raises (SystemInUse, SystemNonExistent);
+
+  /**
+   * \brief Atualiza a descrição do sistema.
+   *
+   * \param id Identificador do sistema.
+   * \param description Nova descrição para o sistema.
+   *
+   * \exception SystemNonExistent Sistema não cadastrado.
+   */
+  void setSystemDescription(in string id, in string description)
+    raises (SystemNonExistent);
+
+  /** 
+   * \brief Recupera todos os sistemas cadastrados.
+   *
+   * \return Uma seqüência de sistemas.
+   */
+  SystemList getSystems();
+
+  /** 
+   * \brief Recupera um sistema dado o seu identificador.
+   *
+   * \param id Identificador do sistema.
+   *
+   * \return Sistema referente ao identificador.
+   * \exception SystemNonExistent Sistema não cadastrado.
+   */
+  System getSystemById(in string id) raises (SystemNonExistent);
+
+  /*---------------------------- Implantações -------------------------------*/
+
+  /**
+   * \brief Cadastra uma nova implantação para um sistema.
+   *
+   * \param id Identificador único da implantação (estilo login UNIX).
+   * \param systeId Identificador do sistema a que esta implantação pertence.
+   * \param description Descrição da implantação.
+   *
+   * \exception SystemDeploymentAlreadyExists Existe outra implantação com
+   *   o identificador fornecido.
+   * \exception SystemNonExistent Sistema não cadastrado.
+   * \exception InvalidCertificate Certificado inválido.
+   */
+  void addSystemDeployment(in string id, in string systemId,
+    in string description, in SystemDeploymentCertificate certificate)
+    raises (SystemDeploymentAlreadyExists, SystemNonExistent, InvalidCertificate);
+
+  /**
+   * \brief Remove uma implantação de sistema.
+   *
+   * \param id Identificador da implantação.
+   *
+   * \exception SystemDeploymentNonExistent Implantação não cadastrada.
+   */
+  void removeSystemDeployment(in string id)
+    raises (SystemDeploymentNonExistent);
+
+  /**
+   * \brief Altera a descrição da implantação.
+   *
+   * \param id Identificador da implantação.
+   * \param description Nova descrição da implantação.
+   *
+   * \exception SystemDeploymentNonExistent Implantação não cadastrada.
+   */
+  void setSystemDeploymentDescription(in string id, in string description)
+    raises (SystemDeploymentNonExistent);
+
+  /**
+   * \brief Recupera o certificado da implantação.
+   *
+   * \param id Identificador da implantação.
+   *
+   * \return Certificado da implantação.
+   *
+   * \exception SystemDeploymentNonExistent Implantação não cadastrada.
+   * \exception SystemCertificateNonExistent Implantação não possui certificado.
+   */
+  SystemDeploymentCertificate getSystemDeploymentCertificate(in string id)
+    raises (SystemDeploymentNonExistent, CertificateNonExistent);
+
+  /**
+   * \brief Altera o certificado da implantação.
+   *
+   * \param id Identificador da implantação.
+   * \param certificate Novo certificado da implantação.
+   *
+   * \exception SystemDeploymentNonExistent Implantação não cadastrada.
+   * \exception InvalidSystemCertificate Certificado inválido.
+   */
+  void setSystemDeploymentCertificate(in string id,
+    in SystemDeploymentCertificate certificate)
+    raises (SystemDeploymentNonExistent, InvalidCertificate);
+
+  /**
+   * \brief Recupera todas implantações cadastradas.
+   *
+   * \return Uma seqüência com as implantações cadastradas. 
+   */
+  SystemDeploymentList getSystemDeployments();
+
+  /**
+   * \brief Recupera a implantação dado o seu identificador.
+   *
+   * \return Retorna a implantação referente ao identificador.
+   *
+   * \exception SystemDeploymentNonExistent Implantação não cadastrada.
+   */
+  SystemDeployment getSystemDeployment(in string id)
+    raises (SystemDeploymentNonExistent);
+
+  /**
+   * \brief Recupera todas as implantações de um dado sistema.
+   *
+   * \param systemId Identificador do sistema 
+   *
+   * \return Seqüência com as implantações referentes ao sistema informado.
+   *
+   * \exception SystemNonExistent Sistema informado não está cadastrado.
+   */
+  SystemDeploymentList getSystemDeploymentsBySystemId(in string systemId);
 };
 
 };

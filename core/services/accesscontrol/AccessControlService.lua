@@ -1,6 +1,9 @@
 -- $Id$
 
-local os = os
+local os     = os
+local string = string
+local table  = table
+local math   = math
 
 local loadfile = loadfile
 local assert = assert
@@ -8,20 +11,20 @@ local pairs = pairs
 local ipairs = ipairs
 local string = string
 local tostring = tostring
+local print = print
+local error = error
+local format = string.format
 
-local math = require "math"
 local luuid = require "uuid"
 local lce = require "lce"
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 
-local CredentialDB = require "core.services.accesscontrol.CredentialDB"
 local LeaseProvider = require "openbus.lease.LeaseProvider"
 
---local LDAPLoginPasswordValidator =
---    require "core.services.accesscontrol.LDAPLoginPasswordValidator"
---local TestLoginPasswordValidator =
---    require "core.services.accesscontrol.TestLoginPasswordValidator"
+local TableDB       = require "openbus.util.TableDB"
+local CredentialDB  = require "core.services.accesscontrol.CredentialDB"
+local CertificateDB = require "core.services.accesscontrol.CertificateDB"
 
 local Log = require "openbus.util.Log"
 
@@ -73,7 +76,7 @@ function ACSFacet:loginByPassword(name, password)
       local entry = self:addEntry(name)
       return true, entry.credential, entry.lease.duration
     else
-      Log:warn("Erro ao validar o usuário "..name..": ".. err)
+       Log:warn(format("Erro ao validar o usuário %s: %s", name, err))
     end
   end
   Log:error("Usuário "..name.." não pôde ser validado no sistema.")
@@ -100,8 +103,7 @@ function ACSFacet:loginByCertificate(name, answer)
   local errorMessage
   answer, errorMessage = lce.cipher.decrypt(self.privateKey, answer)
   if answer ~= challenge then
-    Log:error("Erro ao obter a resposta de "..name)
-    Log:error(errorMessage)
+    Log:error(format("Erro ao obter a resposta de %s: %s", name, errorMessage))
     return false, self.invalidCredential, self.invalidLease
   end
   self.challenges[name] = nil
@@ -119,31 +121,13 @@ end
 --@see loginByCertificate
 ---
 function ACSFacet:getChallenge(name)
-  local certificate, errorMessage = self:getCertificate(name)
-  if not certificate then
-    Log:error("O certificado da entidade "..name.." não pôde ser carregado:")
-    Log:error(errorMessage)
-    return ""
+  local cert, err = self.certificateDB:get(name)
+  if cert then
+    cert = lce.x509.readfromderstring(cert)
+    return self:generateChallenge(name, cert)
   end
-  return self:generateChallenge(name, certificate)
-end
-
----
---Obtém o certificado de um membro.
---
---@param name O nome do membro.
---
---@return O certificado do membro.
----
-function ACSFacet:getCertificate(name)
-  local certificatesDirectory
-  if (string.sub(self.config.certificatesDirectory,1 , 1) == "/") then
-    certificatesDirectory = self.config.certificatesDirectory
-  else
-    certificatesDirectory = DATA_DIR.."/"..self.config.certificatesDirectory
-  end
-  local certificateFile = certificatesDirectory.."/"..name..".crt"
-  return lce.x509.readfromderfile(certificateFile)
+  Log:error(format("Falha ao recuperar certificado de '%s': %s", name, err))
+  return ""
 end
 
 ---
@@ -432,6 +416,24 @@ function ACSFacet:removeEntry(entry)
   self.credentialDB:delete(entry)
 end
 
+--
+-- Invalida uma credential de um dado membro.
+--
+-- @param name OI do membro.
+--
+function ACSFacet:removeEntryById(name)
+  local found
+  for _, entry in pairs(self.entries) do
+    if entry.credential.owner == name then
+      found = entry
+      break
+    end
+  end
+  if found then
+    self:removeEntry(found)
+  end
+end
+
 ---
 --Envia aos observadores a notificação de que um credencial não existe mais.
 --
@@ -477,6 +479,356 @@ function LeaseProviderFacet:renewLease(credential)
 end
 
 --------------------------------------------------------------------------------
+-- Faceta IManagement
+--------------------------------------------------------------------------------
+
+ManagementFacet = oop.class{}
+
+---
+-- Verifica se o usuário tem permissão para executar o método.
+--
+function ManagementFacet:checkPermission()
+  local credential = Openbus:getInterceptedCredential()
+  local admin = self.admins[credential.owner] or
+                self.admins[credential.delegate]
+  if not admin then
+     error(Openbus:getORB():newexcept {
+       "IDL:omg.org/CORBA/NO_PERMISSION:1.0",
+       minor_code_value = 0,
+       completion_status = 1,
+    })
+  end
+end
+
+---
+-- Carrega os objetos das bases de dados.
+--
+function ManagementFacet:loadData()
+  -- Cache de objetos
+  self.systems = {}
+  self.deployments = {}
+  -- Carrega os sistemas
+  local data = assert(self.systemDB:getValues())
+  for _, info in ipairs(data) do
+    self.systems[info.id] = true
+  end
+  -- Carrega os dados e cria as implantações dos sistemas
+  data = assert(self.deploymentDB:getValues())
+  for _, info in ipairs(data) do
+    self.deployments[info.id] = true
+  end
+end
+
+---
+-- Cadastra um novo sistema.
+--
+-- @param id Identificador único do sistema.
+-- @param description Descrição do sistema.
+-- 
+function ManagementFacet:addSystem(id, description)
+  self:checkPermission()
+  if self.systems[id] then
+    Log:error(format("Sistema '%s' já cadastrado.", id))
+    error{"IDL:openbusidl/acs/SystemAlreadyExists:1.0"}
+  end
+  local succ, msg = self.systemDB:save(id, {
+    id = id,
+    description = description
+  })
+  if not succ then
+    Log:error(format("Falha ao salvar sistema '%s': %s", id, msg))
+  end
+  self.systems[id] = true
+end
+
+---
+-- Remove o sistema do barramento. Um sistema só poderá ser removido
+-- se não possuir nenhuma implantação cadastrada que o referencia.
+--
+-- @param id Identificador do sistema.
+--
+function ManagementFacet:removeSystem(id)
+  self:checkPermission()
+  if not self.systems[id] then
+    Log:error(format("Sistema '%s' não cadastrado.", id))
+    error{"IDL:openbusidl/acs/SystemNonExistent:1.0"}
+  end
+  local depls = self.deploymentDB:getValues()
+  for _, depl in ipairs(depls) do
+    if depl.systemId == id then
+      Log:error(format("Sistema '%s' em uso.", id))
+      error{"IDL:openbusidl/acs/SystemInUse:1.0"}
+    end
+  end
+  self.systems[id] = nil
+  local succ, msg = self.systemDB:remove(id)
+  if not succ then
+    Log:error(format("Falha ao remover sistema '%s': %s", id, msg))
+  end
+end
+
+---
+-- Atualiza a descrição do sistema.
+-- 
+-- @param id Identificador do sistema.
+-- @param description Nova descrição para o sistema.
+-- 
+function ManagementFacet:setSystemDescription(id, description)
+  self:checkPermission()
+  if not self.systems[id] then
+    Log:error(format("Sistema '%s' não cadastrado.", id))
+    error{"IDL:openbusidl/acs/SystemNonExistent:1.0"}
+  end
+  local system, msg = self.systemDB:get(id)
+  if system then
+    local succ
+    system.description = description
+    succ, msg = self.systemDB:save(id, system)
+    if not succ then
+      Log:error(format("Falha ao salvar sistema '%s': %s", id, msg))
+    end
+  else
+    Log:error(format("Falha ao recuperar sistema '%s': %s", id, msg))
+  end
+end
+
+---
+-- Recupera todos os sistemas cadastrados.
+-- 
+-- @return Uma seqüência de sistemas.
+-- 
+function ManagementFacet:getSystems()
+  local systems, msg = self.systemDB:getValues()
+  if not systems then
+    Log:error(format("Falha ao recuperar os sistemas: %s", msg))
+  end
+  return systems
+end
+
+--- 
+-- Recupera um sistema dado o seu identificador.
+--
+-- @param id Identificador do sistema.
+--
+-- @return Sistema referente ao identificador.
+--
+function ManagementFacet:getSystemById(id)
+  if not self.systems[id] then
+    Log:error(format("Sistema '%s' não cadastrado.", id))
+    error{"IDL:openbusidl/acs/SystemNonExistent:1.0"}
+  end
+  local system, msg = self.systemDB:get(id)
+  if not system then
+    Log:error(format("Falha ao recuperar os sistemas: %s", msg))
+  end
+  return system
+end
+
+-------------------------------------------------------------------------------
+
+---
+-- Cadastra uma nova implantação para um sistema.
+--
+-- @param id Identificador único da implantação (estilo login UNIX).
+-- @param systeId Identificador do sistema a que esta implantação pertence.
+-- @param description Descrição da implantação.
+--
+function ManagementFacet:addSystemDeployment(id, systemId, description, 
+                                             certificate)
+  self:checkPermission()
+  if self.deployments[id] then
+    Log:error(format("Implantação '%s' já cadastrada.", id))
+    error{"IDL:openbusidl/acs/SystemDeploymentAlreadyExists:1.0"}
+  end
+  if not self.systems[systemId] then
+    Log:error(format("Falha ao criar implantação '%s': sistema %s "..
+                     "não cadastrado.", id, systemId))
+    error{"IDL:openbusidl/acs/SystemNonExistent:1.0"}
+  end
+  local succ, msg = lce.x509.readfromderstring(certificate)
+  if not succ then
+    Log:error(format("Falha ao criar implantação '%s': certificado inválido.",
+      id))
+    error{"IDL:openbusidl/acs/InvalidCertificate:1.0"}
+  end
+  self.deployments[id] = true
+  succ, msg = self.deploymentDB:save(id, {
+    id = id,
+    systemId = systemId,
+    description = description,
+  })
+  if not succ then
+    Log:error(format("Falha ao salvar implantação %s na base de dados: %s",
+      id, msg))
+  end
+  succ, msg = self.certificateDB:save(id, certificate)
+  if not succ then
+    Log:error(format("Falha ao salvar certificado de '%s': %s", id, msg))
+  end
+end
+
+---
+-- Remove uma implantação de sistema.
+--
+-- @param id Identificador da implantação.
+--
+function ManagementFacet:removeSystemDeployment(id)
+  self:checkPermission()
+  if not self.deployments[id] then
+    Log:error(format("Implantação '%s' não cadastrada.", id))
+    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+  end
+  self.deployments[id] = nil
+  local succ, msg = self.deploymentDB:remove(id)
+  if not succ then
+    Log:error(format("Falha ao remover implantação '%s' da base de dados: %s",
+      id, msg))
+  end
+  succ, msg = self.certificateDB:remove(id)
+  if not succ and msg ~= "not found" then
+    Log:error(format("Falha ao remover certificado da implantação '%s': %s",
+      id, msg))
+  end
+  -- Invalida a credencial do membro que está sendo removido
+  local acs = self.context.IAccessControlService
+  acs:removeEntryById(id)
+  -- Remove todas as autorizações da implantação
+  local rs = acs:getRegistryService()
+  if rs then
+    local orb = Openbus:getORB()
+    local ic = rs:_component()
+    ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
+    rs = ic:getFacetByName("IManagement")
+    rs = orb:narrow(rs, "IDL:openbusidl/rs/IManagement:1.0")
+    rs.__try:removeAuthorization(id)
+  end
+end
+
+---
+-- Altera a descrição da implantação.
+--
+-- @param id Identificador da implantação.
+-- @param description Nova descrição da implantação.
+--
+function ManagementFacet:setSystemDeploymentDescription(id, description)
+  self:checkPermission()
+  if not self.deployments[id] then
+    Log:error(format("Implantação '%s' não cadastrada.", id))
+    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+  end
+  local depl, msg = self.deploymentDB:get(id)
+  if not depl then
+    Log:error(format("Falha ao recuperar implantação '%s': %s", id, msg))
+  else
+    local succ
+    depl.description = description
+    succ, msg = self.deploymentDB:save(id, depl)
+    if not succ then
+      Log:error(format("Falha ao salvar implantação '%s' na base de dados: %s",
+        id, msg))
+    end
+  end
+end
+
+---
+-- Recupera o certificado da implantação.
+-- 
+-- @param id Identificador da implantação.
+-- 
+-- @return Certificado da implantação.
+--
+function ManagementFacet:getSystemDeploymentCertificate(id)
+  if not self.deployments[id] then
+    Log:error(format("Implantação '%s' não cadastrada.", id))
+    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+  end
+  local cert, msg = self.certificateDB:get(id)
+  if cert then
+     return cert
+  elseif msg == "not found" then
+     Log:error(format("Implantação '%s' não possui certificado.", id))
+     error{"IDL:openbusidl/acs/CertificateNonExistent:1.0"}
+  else
+    Log:error(format("Falha ao recuperar certificado de '%s': %s", id, msg))
+  end
+end
+
+---
+-- Altera o certificado da implantação.
+--
+-- @param id Identificador da implantação.
+-- @param certificate Novo certificado da implantação.
+--
+function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
+  self:checkPermission()
+  if not self.deployments[id] then
+    Log:error(format("Implantação '%s' não cadastrada.", id))
+    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+  end
+  local tmp, msg = lce.x509.readfromderstring(certificate)
+  if not tmp then
+    Log:error(format("%s: certificado inválido.", id, msg))
+    error{"IDL:openbusidl/acs/InvalidCertificate:1.0"}
+  end
+  local succ, msg = self.certificateDB:save(id, certificate)
+  if not succ then
+    Log:error(format("Falha ao salvar certificado de '%s': %s", id, msg))
+  end
+end
+
+---
+-- Recupera todas implantações cadastradas.
+--
+-- @return Uma seqüência com as implantações cadastradas. 
+--
+function ManagementFacet:getSystemDeployments()
+  local depls, msg = self.deploymentDB:getValues()
+  if not depls then
+    Log:error(format("Falha ao recuperar implantações: %s", msg))
+  end
+  return depls
+end
+
+---
+-- Recupera a implantação dado o seu identificador.
+--
+-- @return Retorna a implantação referente ao identificador.
+--
+function ManagementFacet:getSystemDeployment(id)
+  if not self.deployments[id] then
+    Log:error(format("Implantação '%s' não cadastrada.", id))
+    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+  end
+  local depl, msg = self.deploymentDB:get(id)
+  if not depl then
+    Log:error(format("Falha ao recuperar implantação '%s': %s", id, msg))
+  end
+  return depl
+end
+
+---
+-- Recupera todas as implantações de um dado sistema.
+--
+-- @param systemId Identificador do sistema 
+--
+-- @return Seqüência com as implantações referentes ao sistema informado.
+--
+function ManagementFacet:getSystemDeploymentsBySystemId(systemId)
+  local array = {}
+  local depls, msg = self.deploymentDB:getValues()
+  if not depls then
+    Log:error(format("Falha ao recuperar implantações: %s", msg))
+  else
+    for _, depl in pairs(depls) do
+      if depl.systemId == systemId then
+        array[#array+1] = depl
+      end
+    end
+  end
+  return array
+end
+
+--------------------------------------------------------------------------------
 -- Faceta IComponent
 --------------------------------------------------------------------------------
 
@@ -486,55 +838,79 @@ end
 --@see scs.core.IComponent#startup
 ---
 function startup(self)
-  self = self.context.IAccessControlService
+  local path
+  local mgm = self.context.IManagement
+  local acs = self.context.IAccessControlService
+  local config = acs.config
 
-  -- O ACS precisa setar os interceptadores manualmente pois não realiza conexão
-  Openbus.acs = self
+  -- O ACS precisa configurar os interceptadores manualmente 
+  -- pois não realiza conexão.
+  Openbus.acs = acs
   Openbus:_setInterceptors()
+  
+  -- Administradores dos serviços
+  mgm.admins = {}
+  for _, name in ipairs(config.administrators) do
+     mgm.admins[name] = true
+  end
 
-  -- inicializa repositorio de credenciais
-  local privateKeyFile
-  if (string.sub(self.config.privateKeyFile,1 , 1) == "/") then
-    privateKeyFile = self.config.privateKeyFile
+  -- Inicializa as base de dados de gerenciamento
+  mgm.systemDB = TableDB(DATA_DIR .. "/acs_system.db")
+  mgm.deploymentDB = TableDB(DATA_DIR .. "/acs_deployment.db")
+  -- Carrega a cache
+  mgm:loadData()
+
+  -- Inicializa a gerência de certificados
+  if string.match(config.certificatesDirectory, "^/") then
+    path = config.certificatesDirectory
   else
-    privateKeyFile = DATA_DIR.."/"..self.config.privateKeyFile
+    path = DATA_DIR .. "/" .. config.certificatesDirectory
   end
-  self.privateKey = lce.key.readprivatefrompemfile(privateKeyFile)
-  local databaseDirectory
-  if (string.sub(self.config.databaseDirectory,1 , 1) == "/") then
-    databaseDirectory = self.config.databaseDirectory
+  acs.certificateDB = CertificateDB(path)
+  mgm.certificateDB = acs.certificateDB
+
+  -- Carrega chave privada
+  if string.match(config.privateKeyFile, "^/") then
+    path = config.privateKeyFile
   else
-    databaseDirectory = DATA_DIR.."/"..self.config.databaseDirectory
+    path = DATA_DIR .. "/" .. config.privateKeyFile
   end
-  self.credentialDB = CredentialDB(databaseDirectory)
-  local entriesDB = self.credentialDB:retrieveAll()
-  local acsCredential
+  acs.privateKey = lce.key.readprivatefrompemfile(path)
+
+  -- Inicializa repositorio de credenciais
+  local acsEntry
+  if string.match(config.databaseDirectory, "^/") then
+    path = config.databaseDirectory
+  else
+    path = DATA_DIR .. "/" .. config.databaseDirectory
+  end
+  acs.credentialDB = CredentialDB(path)
+  local entriesDB = acs.credentialDB:retrieveAll()
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
-    self.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
+    acs.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
     if entry.credential.owner == "AccessControlService" then
-      -- Credential do ACS não precisa expirar
-      entry.lease.duration = math.huge
-      acsCredential = entry.credential
+      acsEntry = entry
     elseif entry.component and entry.credential.owner == "RegistryService" then
-      self.registryService = {
+      acs.registryService = {
         credential = entry.credential,
         component = entry.component,
       }
     end
   end
-  -- Credencial do ACS pode não existir (primeira execução), criar uma nova
-  if not acsCredential then
-     local entry = self:addEntry("AccessControlService", true)
-     entry.lease.duration = math.huge  -- não expira
-     acsCredential = entry.credential
-  end
-  Openbus:setCredential(acsCredential)
-  self.checkExpiredLeases = function()
+
+  -- Se a credencial do ACS não existir (primeira execução), criar uma nova
+  acsEntry = acsEntry or acs:addEntry("AccessControlService", true)
+  -- Credencial não expira
+  acsEntry.lease.duration = math.huge
+  Openbus:setCredential(acsEntry.credential)
+
+  -- Controle de leasing
+  acs.checkExpiredLeases = function()
     -- Uma corotina só percorre a tabela de tempos em tempos
     -- ou precisamos acordar na hora "exata" que cada lease expira
     -- pra verificar?
-    for id, entry in pairs(self.entries) do
+    for id, entry in pairs(acs.entries) do
       Log:lease("Verificando a credencial de "..id)
       local credential = entry.credential
       local lastUpdate = entry.lease.lastUpdate
@@ -544,14 +920,14 @@ function startup(self)
       if (os.difftime (now, lastUpdate) > duration ) then
         if secondChance then
           Log:warn(credential.owner.. " lease expirado: LOGOUT.")
-          self:logout(credential) -- you may clear existing fields.
+          acs:logout(credential) -- you may clear existing fields.
         else
           entry.lease.secondChance = true
         end
       end
     end
   end
-  self.leaseProvider = LeaseProvider(self.checkExpiredLeases, self.deltaT)
+  acs.leaseProvider = LeaseProvider(acs.checkExpiredLeases, acs.deltaT)
   --self = self.context.IFaultTolerantService
   self.context.IFaultTolerantService:setStatus(true)
 end
@@ -563,10 +939,11 @@ end
 ---
 function shutdown(self)
   Log:service("Pedido de shutdown para serviço de controle de acesso")
-  self = self.context.IAccessControlService
-  self.leaseProvider:stopCheck()
+  local acs = self.context.IAccessControlService
+  acs.leaseProvider:stopCheck()
   local orb = Openbus:getORB()
-  orb:deactivate(self)
+  orb:deactivate(acs)
+  orb:deactivate(self.context.IManagement)
   orb:shutdown()
   Log:faulttolerance("Servico de Controle de Acesso matou seu processo.")
 end

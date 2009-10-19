@@ -3,6 +3,7 @@
 
 #include "core.idl"
 #include "scs.idl"
+#include "access_control_service_exceptions.idl"
 
 module openbusidl {
 
@@ -104,7 +105,161 @@ interface IRegistryService {
     ServiceOfferList findByCriteria (in FacetList facets, in PropertyList criteria);
 };
 
+/*----------------------------- Interface ------------------------------*/
+
+/** \brief Identificador de interface. */
+typedef string InterfaceIdentifier;
+
+/** \brief Seqüência de indetificadores de interface. */
+typedef sequence<InterfaceIdentifier> InterfaceIdentifierList;
+
+/** \brief */
+exception InterfaceIdentifierInUse {};
+
+/** \brief */
+exception InterfaceIdentifierNotFound {};
+
+/** \brief */
+exception InterfaceIdentifierNonExistent {};
+
+/** \brief */
+exception InterfaceIdentifierAlreadyExists {};
+
+/*---------------------------- Autorização -----------------------------*/
+
+/** \brief Autorização para uma implantação de sistema. */
+struct SystemDeploymentAuthorization {
+  string deploymentId; /**< Identificador da implantação */
+  string systemId;     /**< Identificador do sistema */
+  InterfaceIdentifierList authorized; /**< Interfaces autorizadas */
 };
+
+/** \brief Seqüência de autorizações. */
+typedef sequence<SystemDeploymentAuthorization> SystemDeploymentAuthorizationList;
+
+/** \brief Autorização não existe */
+exception AuthorizationNonExistent {};
+
+/** \brief */
+exception SystemDeploymentNonExistent {};
+
+
+/**
+ * \brief Interface de gerenciamento de autorizações de serviços.
+ *
+ */
+interface IManagement {
+
+  /*--------------------------- Interface ------------------------------*/
+
+  /**
+   * \brief Cadastra um identificador de interface aceito
+   *   pelo Serviço de Registro.
+   *
+   * \param ifaceId Identificador de interface.
+   * \exception InterfaceIdentifierAlreadyExists Identificador já cadastrado.
+   */
+  void addInterfaceIdentifier(in InterfaceIdentifier ifaceId)
+    raises (InterfaceIdentifierAlreadyExists);
+
+  /**
+   * \brief Remove o identificador.
+   *
+   * \param ifaceId Identificador de interface.
+   *
+   * \exception InterfaceIdentifierNonExistent Identificador não cadastrado.
+   * \exception InterfaceIdentifierInUse Identificador é referenciado por
+   *   algum elemento do sistema.
+   */
+  void removeInterfaceIdentifier(in InterfaceIdentifier ifaceId)
+    raises (InterfaceIdentifierInUse, InterfaceIdentifierNonExistent);
+
+  /**
+   * \brief Recupera todos os identificadores de interface cadastrados.
+   *
+   * \return Seqüência de identificadores de interface.
+   */
+  InterfaceIdentifierList getInterfaceIdentifiers();
+
+  /*-------------------------- Autorização -----------------------------*/
+
+  /**
+   * \brief Autoriza a implantação  a exportar a interface.  O Serviço
+   *   de  Acesso é consultado  para verificar  se a  implantação está
+   *   cadastrada.
+   *
+   * \param deploymentId Identificador da implantação.
+   * \param ifaceId Identificador da interface.
+   *
+   * \exception SystemDeploymentNonExistent Implantação não cadastrada.
+   * \exception InterfaceIdentifierNonExistent Insterface não cadastrada.
+   */
+  void grant(in string deploymentId, in InterfaceIdentifier ifaceId)
+    raises (SystemDeploymentNonExistent, InterfaceIdentifierNonExistent);
+
+  /**
+   * \brief Revoga a autorização para exportar a interface.
+   *
+   * \param deploymentId Identificador da implantação.
+   * \param ifaceId Identificador da interface.
+   *
+   * \exception AuthorizationNonExistent Implantação não possui autorização.
+   * \exception InterfaceIdentifierNonExistent Insterface não cadastrada.
+   */
+  void revoke(in string deploymentId, in InterfaceIdentifier ifaceId)
+    raises (AuthorizationNonExistent, InterfaceIdentifierNonExistent);
+
+  /**
+   * \brief Remove a autorização da implantação.
+   *
+   * \param deploymentId Identificador da implantação.
+   * \exception AuthorizationNonExistent Implantação não possui autorização.
+   */
+  void removeAuthorization(in string deploymentId)
+    raises (AuthorizationNonExistent);
+
+  /**
+   * \brief Recupera a autorização de uma implantação.
+   *
+   * \param deploymentId Identificador da implantação.
+   *
+   * \return Autorização da implantação.
+   * \exception AuthorizationNonExistent Implantação não possui autorização.
+   */
+  SystemDeploymentAuthorization getAuthorization(in string deploymentId)
+    raises (AuthorizationNonExistent);
+
+  /**
+   * \brief Recupera todas as autorizações cadastradas.
+   *
+   * \return Seqüência de autorizações.
+   */
+  SystemDeploymentAuthorizationList getAuthorizations();
+
+  /**
+   * \brief Recupera as autorizações das implantações de um dado sistema.
+   *
+   * \param systemId Identificador do sistema.
+   *
+   * \return Seqüência de autorizações.
+   */
+  SystemDeploymentAuthorizationList getAuthorizationsBySystemId(
+     in string systemId);
+
+  /**
+   * \brief Recupera as autorizações que contêm \e todas as interfaces
+   *  fornecidas em seu conjunto de interfaces autorizadas.
+   *
+   * \param systemId Identificador do sistema.
+   *
+   * \return Seqüência de autorizações.
+   */
+  SystemDeploymentAuthorizationList getAuthorizationsByInterfaceId(
+    in InterfaceIdentifierList ifaceIds);
+};
+
+};
+
 };
 
 #endif

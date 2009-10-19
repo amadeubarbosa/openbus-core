@@ -59,6 +59,7 @@ local facetDescriptions = {}
 facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
+facetDescriptions.IManagement      = {}
 facetDescriptions.IFaultTolerantService	= {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
@@ -77,6 +78,11 @@ facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantS
 facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
 facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                   = "FTRS"
+
+facetDescriptions.IManagement.name           = "IManagement"
+facetDescriptions.IManagement.interface_name = "IDL:openbusidl/rs/IManagement:1.0"
+facetDescriptions.IManagement.class          = RegistryService.ManagementFacet
+facetDescriptions.IManagement.key            = "MGM"
 
 ---- Receptacle Descriptions
 local receptacleDescriptions = {}

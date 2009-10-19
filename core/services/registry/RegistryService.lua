@@ -10,13 +10,15 @@ local pairs = pairs
 local ipairs = ipairs
 local error = error
 local next = next
+local format = string.format
 
 local luuid = require "uuid"
 local oil = require "oil"
 local orb = oil.orb
 
+local TableDB  = require "openbus.util.TableDB"
 local OffersDB = require "core.services.registry.OffersDB"
-local Openbus = require "openbus.Openbus"
+local Openbus  = require "openbus.Openbus"
 
 local Log = require "openbus.util.Log"
 local oop = require "loop.simple"
@@ -55,7 +57,8 @@ function RSFacet:register(serviceOffer)
   -- Mapeia as propriedades.
     properties = properties,
   -- Mapeia as facetas do componente.
-    facets = self:createFacetIndex(properties, serviceOffer.member),
+    facets = self:createFacetIndex(properties, serviceOffer.member,
+      credential.owner),
     credential = credential,
     identifier = identifier
   }
@@ -126,28 +129,40 @@ function RSFacet:createPropertyIndex(offerProperties, member)
   return properties
 end
 
-function RSFacet:createFacetIndex(properties, member)
+--
+-- Busca as interfaces por meio da metainterface do membro e as 
+-- disponibiza para consulta.
+--
+-- @param properties Propriedades da oferta.
+-- @param member Membro do barramento
+--
+-- @result Índice de facetas disponíveis do membro
+--
+function RSFacet:createFacetIndex(properties, member, owner)
   local facets = {}
   local memberName = properties.component_id.name
   Log:service("Oferta de serviço sem facetas para o membro "..memberName)
   local metaInterface = member:getFacetByName("IMetaInterface")
   if metaInterface then
-    metaInterface = orb:narrow(metaInterface,
-      "IDL:scs/core/IMetaInterface:1.0")
-    local facet_descriptions = metaInterface:getFacets()
-    if (#facet_descriptions == 0) then
-      Log:service("Membro '"..memberName.."' não possui facetas")
-    else
-      Log:service("Membro '"..memberName.."' possui "..#facet_descriptions..
-        " facetas")
-      for _,facet in ipairs(facet_descriptions) do
+    local count = 0
+    local mgm = self.context.IManagement
+    metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
+    for _, facet in ipairs(metaInterface:getFacets()) do
+      if mgm:hasAuthorization(owner, facet.interface_name) then
         facets[facet.name] = true
         facets[facet.interface_name] = true
+        count = count + 1
       end
     end
+    if count == 0 then
+      Log:service(format("Membro '%s' não possui facetas", memberName))
+    else
+      Log:service(format("Membro '%s' possui %d faceta(s)", memberName, count))
+    end
   else
-    Log:service("Membro "..memberName.." não disponibiliza a interface"..
-      " IMetaInterface.")
+    Log:service(format(
+      "Membro '%s' não disponibiliza a interface IMetaInterface",
+      memberName))
   end
   return facets
 end
@@ -229,6 +244,29 @@ function RSFacet:update(identifier, properties)
                                                    offerEntry.offer.member)
   self.offersDB:update(offerEntry)
   return true
+end
+
+---
+-- Atualiza as ofertas de facetas do membro.
+--
+-- @param owner Identificação do membro.
+--
+function RSFacet:updateFacets(owner)
+  for id, offerEntry in pairs(self.offersByIdentifier) do
+    if offerEntry.credential.owner == owner then
+      -- Proteção: não há garantia do membro estar ainda acessível
+      local succ, facets = oil.pcall(self.createFacetIndex, self,
+        offerEntry.properties, offerEntry.offer.member, 
+        offerEntry.credential.owner)
+      if not succ then
+        facets = {}
+        Log:error(format("Falha ao recuperar facetas do membro '%s': " ..
+                         "removendo as facetas da oferta", owner))
+      end
+      offerEntry.facets = facets
+      self.offersDB:update(offerEntry)
+    end
+  end
 end
 
 ---
@@ -415,90 +453,107 @@ function startup(self)
   Log:service("Pedido de startup para serviço de registro")
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 
-  self = self.context.IRegistryService
+  local mgm = self.context.IManagement
+  local rs = self.context.IRegistryService
+  local config = rs.config
 
   -- Verifica se é o primeiro startup
-  if not self.initialized then
+  if not rs.initialized then
     Log:service("Serviço de registro está inicializando")
-    if (string.sub(self.config.privateKeyFile,1 , 1) == "/") then
-      self.privateKeyFile = self.config.privateKeyFile
+    if string.match(config.privateKeyFile, "^/") then
+      rs.privateKeyFile = config.privateKeyFile
     else
-      self.privateKeyFile = DATA_DIR.."/"..self.config.privateKeyFile
+      rs.privateKeyFile = DATA_DIR.."/"..config.privateKeyFile
     end
-    if (string.sub(self.config.accessControlServiceCertificateFile,1 , 1) == "/") then
-      self.accessControlServiceCertificateFile =
-        self.config.accessControlServiceCertificateFile
+    if string.match(config.accessControlServiceCertificateFile, "^/") then
+      rs.accessControlServiceCertificateFile =
+        config.accessControlServiceCertificateFile
     else
-      self.accessControlServiceCertificateFile = DATA_DIR .. "/" ..
-        self.config.accessControlServiceCertificateFile
+      rs.accessControlServiceCertificateFile = DATA_DIR .. "/" ..
+        config.accessControlServiceCertificateFile
     end
 
     -- instancia mecanismo de persistencia
     local databaseDirectory
-    if (string.sub(self.config.databaseDirectory,1 , 1) == "/") then
-      databaseDirectory = self.config.databaseDirectory
+    if string.match(config.databaseDirectory, "^/") then
+      databaseDirectory = config.databaseDirectory
     else
-      databaseDirectory = DATA_DIR.."/"..self.config.databaseDirectory
+      databaseDirectory = DATA_DIR.."/"..config.databaseDirectory
     end
-    self.offersDB = OffersDB(databaseDirectory)
-    self.initialized = true
+    rs.offersDB = OffersDB(databaseDirectory)
+    rs.initialized = true
   else
     Log:service("Serviço de registro já foi inicializado")
   end
 
   -- Inicializa o repositório de ofertas
-  self.offersByIdentifier = {}   -- id -> oferta
-  self.offersByCredential = {}  -- credencial -> id -> oferta
+  rs.offersByIdentifier = {}   -- id -> oferta
+  rs.offersByCredential = {}  -- credencial -> id -> oferta
 
   -- autentica o serviço, conectando-o ao barramento
   if not Openbus:isConnected() then
     Openbus:connectByCertificate(self.context._componentId.name,
-      self.privateKeyFile, self.accessControlServiceCertificateFile)
+      rs.privateKeyFile, rs.accessControlServiceCertificateFile)
   end
 
   -- Cadastra callback para LeaseExpired
-  Openbus:addLeaseExpiredCallback( self )
+  Openbus:addLeaseExpiredCallback( rs )
 
   -- obtém a referência para o Serviço de Controle de Acesso
-  self.accessControlService = Openbus:getAccessControlService()
-  if not self.accessControlService then
+  rs.accessControlService = Openbus:getAccessControlService()
+  if not rs.accessControlService then
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
   -- atualiza a referência junto ao serviço de controle de acesso
-  self.accessControlService:setRegistryService(self)
+  rs.accessControlService:setRegistryService(rs)
 
   -- registra um observador de credenciais
   local observer = {
-    registryService = self,
+    registryService = rs,
     credentialWasDeleted = function(self, credential)
       Log:service("Observador notificado para credencial "..
                   credential.identifier)
       self.registryService:credentialWasDeleted(credential)
     end
   }
-  self.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
+  rs.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
     "IDL:openbusidl/acs/ICredentialObserver:1.0"
   )
-  self.observerId =
-    self.accessControlService:addObserver(self.observer, {})
+  rs.observerId = rs.accessControlService:addObserver(rs.observer, {})
   Log:service("Cadastrado observador para a credencial")
 
   -- recupera ofertas persistidas
   Log:service("Recuperando ofertas persistidas")
-  local offerEntriesDB = self.offersDB:retrieveAll()
+  local offerEntriesDB = rs.offersDB:retrieveAll()
   for _, offerEntry in pairs(offerEntriesDB) do
     -- somente recupera ofertas de credenciais válidas
-    if self.accessControlService:isValid(offerEntry.credential) then
-      self:addOffer(offerEntry)
+    if rs.accessControlService:isValid(offerEntry.credential) then
+      rs:addOffer(offerEntry)
     else
       Log:service("Oferta de "..offerEntry.credential.identifier.." descartada")
-      self.offersDB:delete(offerEntry)
+      rs.offersDB:delete(offerEntry)
     end
   end
 
-  self.started = true
-  
+  -- Referência à faceta de gerenciamento do ACS
+  local ic = Openbus:getAccessControlService():_component()
+  ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
+  mgm.acsmgm = ic:getFacetByName("IManagement")
+  mgm.acsmgm = orb:narrow(mgm.acsmgm, "IDL:openbusidl/acs/IManagement:1.0")
+  -- Administradores dos serviços
+  mgm.admins = {}
+  for _, name in ipairs(config.administrators) do
+     mgm.admins[name] = true
+  end
+  -- ACS é sempre administrador
+  mgm.admins.AccessControlService = true
+  -- Inicializa a base de gerenciamento
+  mgm.authDB = TableDB(DATA_DIR.."/rs_auth.db")
+  mgm.ifaceDB = TableDB(DATA_DIR.."/rs_iface.db")
+  mgm:loadData()
+
+  rs.started = true
   self.context.IFaultTolerantService:setStatus(true)
   
   Log:service("Serviço de registro iniciado")
@@ -511,17 +566,17 @@ end
 ---
 function shutdown(self)
   Log:service("Pedido de shutdown para serviço de registro")
-  self = self.context.IRegistryService
-  if not self.started then
+  local rs = self.context.IRegistryService
+  if not rs.started then
     Log:error("Servico ja foi finalizado.")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
-  self.started = false
+  rs.started = false
 
   -- Remove o observador
-  if self.observerId then
-    self.accessControlService:removeObserver(self.observerId)
-    self.observer:_deactivate()
+  if rs.observerId then
+    rs.accessControlService:removeObserver(rs.observerId)
+    rs.observer:_deactivate()
   end
 
   if Openbus:isConnected() then
@@ -530,8 +585,326 @@ function shutdown(self)
 
   Log:service("Serviço de registro finalizado")
   
-   orb:deactivate(self)
+   orb:deactivate(rs)
+   orb:deactivate(self.context.IManagement)
    orb:shutdown()
    Log:faulttolerance("Servico de Registro matou seu processo.")
 end
 
+--------------------------------------------------------------------------------
+-- Faceta IManagement
+--------------------------------------------------------------------------------
+
+ManagementFacet = oop.class{}
+
+---
+-- Verifica se o usuário tem permissão para executar o método.
+--
+function ManagementFacet:checkPermission()
+  local credential = Openbus:getInterceptedCredential()
+  local admin = self.admins[credential.owner] or
+                self.admins[credential.delegate]
+  if not admin then
+    error(Openbus:getORB():newexcept {
+      "IDL:omg.org/CORBA/NO_PERMISSION:1.0",
+      minor_code_value = 0,
+      completion_status = 1,
+    })
+  end
+end
+
+---
+-- Carrega os dados das bases de dados.
+--
+function ManagementFacet:loadData()
+  -- Cache de objetos
+  self.interfaces = {}
+  self.authorizations = {}
+  -- Carrega interfaces
+  local data = assert(self.ifaceDB:getValues())
+  for _, iface in ipairs(data) do
+    self.interfaces[iface] = true
+  end
+  -- Carrega as autorizações.
+  -- Verificar junto ao ACS se as implantações ainda existem.
+  local remove = {}
+  data = assert(self.authDB:getValues())
+  for _, auth in ipairs(data) do
+    local succ, depl = self.acsmgm.__try:getSystemDeployment(auth.deploymentId)
+    if not succ then
+      if depl[1] == "IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0" then
+        remove[auth] = true
+        Log:warn(format("Removendo autorizações de '%s': " ..
+          "removida do Serviço de Controle de Acesso.", auth.deploymentId))
+      else
+        error(depl)  -- Exceção desconhecida, repassando
+      end
+    elseif depl.systemId ~= auth.systemId then
+      remove[auth] = true
+      Log:warn(format("Removendo autorizações de '%s': " ..
+        " identificador de sistema difere.", auth.deploymentId))
+    else
+      self.authorizations[auth.deploymentId] = auth
+    end
+  end
+  for auth in pairs(remove) do
+    self.authDB:remove(auth.deploymentId)
+  end
+end
+
+---
+-- Cadastra um identificador de interface aceito pelo Serviço de Registro.
+--
+-- @param ifaceId Identificador de interface.
+--
+function ManagementFacet:addInterfaceIdentifier(ifaceId)
+  self:checkPermission()
+  if self.interfaces[ifaceId] then
+    Log:error(format("Interface '%s' já cadastrada.", ifaceId))
+    error{"IDL:openbusidl/rs/InterfaceIdentifierAlreadyExists:1.0"}
+  end
+  self.interfaces[ifaceId] = true
+  local succ, msg = self.ifaceDB:save(ifaceId, ifaceId)
+  if not succ then
+    Log:error(format("Falha ao salvar a interface '%s': %s",
+      ifaceId, msg))
+  end
+end
+
+---
+-- Remove o identificador.
+-- 
+-- @param ifaceId Identificador de interface.
+-- 
+function ManagementFacet:removeInterfaceIdentifier(ifaceId)
+  self:checkPermission()
+  if not self.interfaces[ifaceId] then
+    Log:error(format("Interface '%s' não está cadastrada.", ifaceId))
+    error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
+  end
+  for _, auth in ipairs(self.authentications) do
+    if auth.authorized[ifaceId] then
+      Log:error(format("Interface '%s' em uso.", ifaceId))
+      error{"IDL:openbusidl/rs/InterfaceIdentifierInUse:1.0"}
+    end
+  end
+  self.interfaces[ifaceId] = nil
+  local succ, msg = self.ifaceDB:remove(ifaceId)
+  if not succ then
+    Log:error(format("Falha ao remover interface '%s': %s", iface, msg))
+  end
+end
+
+---
+-- Recupera todos os identificadores de interface cadastrados.
+--
+-- @return Seqüência de identificadores de interface.
+--
+function ManagementFacet:getInterfaceIdentifiers()
+  local array = {}
+  for iface in pairs(self.interfaces) do
+    array[#array+1] = iface
+  end
+  return array
+end
+
+---
+-- Autoriza a implantação a exportar a interface.  O Serviço de Acesso
+-- é consultado para verificar se a implantação está cadastrada.
+--
+-- @param deploymentId Identificador da implantação.
+-- @param ifaceId Identificador da interface.
+--
+function ManagementFacet:grant(deploymentId, ifaceId)
+  self:checkPermission()
+  if not self.interfaces[ifaceId] then
+    Log:error(format("Interface '%s' não cadastrada.", ifaceId))
+    error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
+  end
+  local auth = self.authorizations[deploymentId]
+  if not auth then 
+    -- Cria uma nova autorização: verificar junto ao ACS se implantação existe.
+    local succ, depl = self.acsmgm.__try:getSystemDeployment(deploymentId)
+    if not succ then
+      Log:error(format("Implementação '%s' não cadastrada.",
+        deploymentId))
+      error{"IDL:openbusidl/rs/SystemDeploymentNonExistent:1.0"}
+    end
+    auth = {
+      deploymentId = deploymentId,
+      systemId = depl.systemId,
+      authorized = {},
+    }
+    self.authorizations[deploymentId] = auth
+  elseif auth and auth.authorized[ifaceId] then
+    return
+  end
+  auth.authorized[ifaceId] = true
+  local succ, msg = self.authDB:save(deploymentId, auth)
+  if not succ then
+    Log:error(format("Falha ao salvar autorização '%s': %s",
+      deploymentId, msg))
+  end
+  self.context.IRegistryService:updateFacets(deploymentId)
+end
+
+---
+-- Revoga a autorização para exportar a interface.
+--
+-- @param deploymentId Identificador da implantação.
+-- @param ifaceId Identificador da interface.
+--
+function ManagementFacet:revoke(deploymentId, ifaceId)
+  self:checkPermission()
+  local auth = self.authorizations[deploymentId]
+  if not auth then
+    Log:error(format("Não há autorização para '%s'.", deploymentId))
+    error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
+  elseif not self.interfaces[ifaceId] then
+    Log:error(format("Interface '%s' não cadastrada.", ifaceId))
+    error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
+  elseif auth.authorized[ifaceId] then
+    local succ, msg
+    auth.authorized[ifaceId] = nil
+    -- Se não houver mais autorizações, remover a entrada
+    if next(auth.authorized) then
+      succ, msg = self.authDB:save(deploymentId, auth)
+    else
+      self.authorizations[deploymentId] = nil
+      succ, msg = self.authDB:remove(deploymentId)
+    end
+    if not succ then
+      Log:error(format("Falha ao remover autorização '%s': %s",
+        deploymentId, msg))
+    end
+    self.context.IRegistryService:updateFacets(deploymentId)
+  end
+end
+
+---
+-- Remove a autorização da implantação.
+--
+-- @param deploymentId Identificador da implantação.
+--
+function ManagementFacet:removeAuthorization(deploymentId)
+  self:checkPermission()
+  if not self.authorizations[deploymentId] then
+    Log:error(format("Não há autorização para '%s'.", deploymentId))
+    error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
+  else
+    self.authorizations[deploymentId] = nil
+    local succ, msg = self.authDB:remove(deploymentId)
+    if not succ then
+      Log:error(format("Falha ao remover autorização '%s': %s",
+        deploymentId, msg))
+    end
+    self.context.IRegistryService:updateFacets(deploymentId)
+  end
+end
+
+---
+-- Duplica a autorização, mas a lista de interfaces é retornada
+-- como array e não como hash. Essa função é usada para exportar
+-- a autorização.
+--
+-- @param auth Autorização a ser duplicada.
+-- @return Cópia da autorização.
+--
+function ManagementFacet:copyAuthorization(auth)
+  local tmp = {}
+  for k, v in pairs(auth) do
+    tmp[k] = v
+  end
+  -- Muda de hash para array
+  local authorized = {}
+  for iface in pairs(tmp.authorized) do
+    authorized[#authorized+1] = iface
+  end
+  tmp.authorized = authorized
+  return tmp
+end
+
+---
+-- Verifica se a implantação é autorizada a exporta 
+-- uma determinada interface.
+--
+-- @param deploymentId Identificador da implantação.
+-- @param iface Interface a ser consultada (repID).
+--
+-- @return true se é autorizada, false caso contrário.
+--
+function ManagementFacet:hasAuthorization(deploymentId, iface)
+  local auth = self.authorizations[deploymentId]
+  return ((auth and auth.authorized[iface]) and true) or false
+end
+
+---
+-- Recupera a autorização de uma implantação.
+--
+-- @param deploymentId Identificador da implantação.
+--
+-- @return Autorização da implantação.
+--
+function ManagementFacet:getAuthorization(deploymentId)
+  local auth = self.authorizations[deploymentId]
+  if not auth then
+    Log:error(format("Não há autorização para '%s'.", deploymentId))
+    error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
+  end
+  return self:copyAuthorization(auth)
+end
+
+---
+-- Recupera todas as autorizações cadastradas.
+--
+-- @return Seqüência de autorizações.
+--
+function ManagementFacet:getAuthorizations()
+  local array = {}
+  for _, auth in pairs(self.authorizations) do
+    array[#array+1] = self:copyAuthorization(auth)
+  end
+  return array
+end
+
+---
+-- Recupera as autorizações das implantações de um dado sistema.
+--
+-- @param systemId Identificador do sistema.
+--
+-- @return Seqüência de autorizações.
+--
+function ManagementFacet:getAuthorizationsBySystemId(systemId)
+  local array = {}
+  for _, auth in pairs(self.authorizations) do
+    if systemId == auth.systemId then
+      array[#array+1] = self:copyAuthorization(auth)
+    end
+  end
+  return array
+end
+
+---
+-- Recupera as autorizações que contêm \e todas as interfaces
+-- fornecidas em seu conjunto de interfaces autorizadas.
+--
+-- @param systemId Identificador do sistema.
+--
+-- @return Seqüência de autorizações.
+--
+function ManagementFacet:getAuthorizationsByInterfaceId(ifaceIds)
+  local array = {}
+  for _, auth in pairs(self.authorizations) do
+    local found = true
+    for _, iface in ipairs(ifaceIds) do
+      if not auth.authorized[iface] then
+        found = false
+        break
+      end
+    end
+    if found then
+      array[#array+1] = self:copyAuthorization(auth)
+    end
+  end
+  return array
+end

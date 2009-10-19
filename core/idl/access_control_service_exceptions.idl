@@ -1,0 +1,36 @@
+#ifndef ACS_EXCEPTIONS_IDL
+#define ACS_EXCEPTIONS_IDL
+
+module openbusidl {
+
+module acs{
+
+/** \brief Sistema já está cadastrado. */
+exception SystemAlreadyExists {};
+
+/** 
+ * \brief Sistema não pode ser removido pois alguma entidade faz referência
+ * ao mesmo.
+ */
+exception SystemInUse {};
+
+/** \brief Sistema não existe. */
+exception SystemNonExistent {};
+
+/** \brief Certificado inválido */
+exception InvalidCertificate {};
+
+/** \brief Certificado não existente. */
+exception CertificateNonExistent {};
+
+/** \brief Implantação já está cadastrada. */
+exception SystemDeploymentAlreadyExists {};
+
+/** \brief Implantação de sistema não é cadastrada. */
+exception SystemDeploymentNonExistent {};
+
+};
+
+};
+
+#endif
