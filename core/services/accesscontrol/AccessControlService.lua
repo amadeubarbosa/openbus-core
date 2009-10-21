@@ -159,10 +159,16 @@ function ACSFacet:logout(credential)
     return false
   end
   self:removeEntry(entry)
-  if self.registryService then
-    if credential.owner == "RegistryService" and
-        credential.identifier == self.registryService.credential.identifier then
-      self.registryService = nil
+  -- removendo conexão com o serviço de registro.
+  local success, conns =
+        oil.pcall(self.context.IReceptacles.getConnections,
+                  self.context.IReceptacles, "RegistryServiceReceptacle")
+  if not success then
+    Log:warn("Erro remover conexão com serviço de registro.")
+    Log:warn(conns)
+  else
+    for _, desc in pairs(conns) do
+      self.context.IReceptacles:disconnect(desc.id)
     end
   end
   return true
@@ -209,49 +215,6 @@ function ACSFacet:getEntryCredential(credential)
     return emptyEntry
   end
   return entry
-end
-
----
---Obtém o Serviço de Registro.
---
---@return O Serviço de Registro, ou nil caso não tenha sido definido.
----
-function ACSFacet:getRegistryService()
-  if self.registryService then
-    return self.registryService.component
-  end
-  return nil
-end
-
----
---Define o componente responsável pelo Serviço de Registro.
---
---@param registryServiceComponent O componente responsável pelo Serviço de
---Registro.
---
---@return true caso o componente seja definido, ou false caso contrário.
----
-function ACSFacet:setRegistryService(registryServiceComponent)
-  local credential = Openbus:getInterceptedCredential()
-  if credential.owner == "RegistryService" then
-    local registry = registryServiceComponent
-    if Openbus.isFaultToleranceEnable then
-    	registry = Openbus:getSmartProxy(registryServiceComponent)
-    end
-    self.registryService = {
-      credential = credential,
-      component = registry,
-    }
-
-    local entry = self.entries[credential.identifier]
-    entry.component = registryServiceComponent
-    local suc, err = self.credentialDB:update(entry)
-    if not suc then
-      Log:error("Erro persistindo referencia registry service: "..err)
-    end
-    return true
-  end
-  return false
 end
 
 ---

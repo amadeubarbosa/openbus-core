@@ -86,7 +86,12 @@ facetDescriptions.IFaultTolerantService.class                 = FaultTolerantSer
 facetDescriptions.IFaultTolerantService.key                   = "FTRS"
 
 ---- Receptacle Descriptions
-local receptacleDescriptions = {}
+local receptacleDescs = {}
+receptacleDescs.AccessControlServiceReceptacle = {}
+receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
+receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:openbusidl/acs/IAccessControlService:1.0"
+receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = false
+receptacleDescs.AccessControlServiceReceptacle.type           = "Receptacle"
 
 ---- component id
 local componentId = {}
@@ -101,7 +106,7 @@ function main()
   Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Registro
-  rsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+  rsInst = scs.newComponent(facetDescriptions, receptacleDescs, componentId)
 
   -- Configuracoes
   rsInst.IComponent.startup = RegistryService.startup

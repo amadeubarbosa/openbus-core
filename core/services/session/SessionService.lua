@@ -58,7 +58,12 @@ facetDescriptions.ISession.interface_name         = "IDL:openbusidl/ss/ISession:
 facetDescriptions.ISession.class                  = Session.Session
 
 -- Receptacle Descriptions
-local receptacleDescriptions = {}
+local receptacleDescs = {}
+receptacleDescs.AccessControlServiceReceptacle = {}
+receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
+receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:openbusidl/acs/IAccessControlService:1.0"
+receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = false
+receptacleDescs.AccessControlServiceReceptacle.type           = "Receptacle"
 
 -- component id
 local componentId = {}
@@ -86,7 +91,7 @@ function SessionService:createSession(member)
     return false, nil, self.invalidMemberIdentifier
   end
   Log:service("Criando sessão")
-  local session = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+  local session = scs.newComponent(facetDescriptions, receptacleDescs, componentId)
   session.ISession.identifier = self:generateIdentifier()
   session.ISession.credential = credential
   self.sessions[credential.identifier] = session
@@ -95,10 +100,10 @@ function SessionService:createSession(member)
   -- A credencial deve ser observada!
   if not self.observerId then
     self.observerId =
-      self.accessControlService:addObserver(self.context.ICredentialObserver,
+      self.AccessControlServiceReceptacle:addObserver(self.context.ICredentialObserver,
                                             {credential.identifier})
   else
-    self.accessControlService:addCredentialToObserver(self.observerId,
+    self.AccessControlServiceReceptacle:addCredentialToObserver(self.observerId,
                                                      credential.identifier)
   end
 
@@ -159,7 +164,7 @@ end
 ---
 function SessionService:expired()
   -- registra novamente o observador de credenciais
-  self.observerId = self.accessControlService:addObserver(
+  self.observerId = self.AccessControlServiceReceptacle:addObserver(
       self.context.ICredentialObserver, {}
   )
   Log:service("Observador recadastrado")
@@ -167,7 +172,7 @@ function SessionService:expired()
   -- Mantém apenas as sessões com credenciais válidas
   local invalidCredentials = {}
   for credentialId, session in pairs(self.sessions) do
-    if not self.accessService:addCredentialToObserver(self.observerId,
+    if not self.AccessControlServiceReceptacle:addCredentialToObserver(self.observerId,
         credentialId) then
       Log:service("Sessão para "..credentialId.." será removida")
       table.insert(invalidCredentials, credentialId)

@@ -44,7 +44,7 @@ function SessionServiceComponent:startup()
     else
       self.privateKeyFile = DATA_DIR.."/"..self.config.privateKeyFile
     end
-    local accessControlServiceCertificateFile
+
     if (string.sub(self.config.accessControlServiceCertificateFile,1 , 1) == "/") then
       self.accessControlServiceCertificateFile =
         self.config.accessControlServiceCertificateFile
@@ -59,10 +59,15 @@ function SessionServiceComponent:startup()
   end
 
   -- autentica o serviço, conectando-o ao barramento
+  local registryService = false
   if not Openbus:isConnected() then
-    if not Openbus:connectByCertificate(self.context._componentId.name,
-      self.privateKeyFile, self.accessControlServiceCertificateFile) then
+    registryService = Openbus:connectByCertificate(self.context._componentId.name,
+      self.privateKeyFile, self.accessControlServiceCertificateFile)
+    if not registryService then
       error{"IDL:SCS/StartupFailed:1.0"}
+    else
+      registryService = orb:narrow(registryService,
+                                   "IDL:openbusidl/rs/IRegistryService:1.0")
     end
   end
 
@@ -70,33 +75,68 @@ function SessionServiceComponent:startup()
   Openbus:addLeaseExpiredCallback( self )
 
   -- obtém a referência para o Serviço de Controle de Acesso
-  self.accessControlService = Openbus:getAccessControlService()
-  if not self.accessControlService then
+  local accessControlService = Openbus:getAccessControlService()
+  if not accessControlService then
+    error{"IDL:SCS/StartupFailed:1.0"}
+  end
+  local acsIComp = accessControlService:_component()
+  acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
+
+  -- conecta-se com o controle de acesso:   [SS]--( 0--[ACS]
+  local acsFacet = acsIComp:getFacetByName("IAccessControlService")
+  acsFacet = orb:narrow(acsFacet,"IDL:openbusidl/acs/IAccessControlService:1.0")
+  local success, conId =
+    oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
+              "AccessControlServiceReceptacle", acsFacet)
+  if not success then
+    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
+    Log:error(conId)
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
   -- configura faceta ISessionService
   self.sessionService = self.context.ISessionService
-  self.sessionService.accessControlService = self.accessControlService
 
   -- registra sua oferta de serviço junto ao Serviço de Registro
   self.serviceOffer = {
     member = self.context.IComponent,
     properties = {},
   }
-  local registryService = self.accessControlService:getRegistryService()
+
+  if not registryService then
+    local acsIReceptacles =  acsIComp:getFacetByName("IReceptacles")
+    acsIReceptacles = orb:narrow(acsIReceptacles, "IDL:scs/core/IReceptacles:1.0")
+    local success, conns =
+        oil.pcall(acsIReceptacles.getConnections, acsIReceptacles,
+                  "RegistryServiceReceptacle")
+    if not success then
+      Log:error("Serviço de registro não encontrado.")
+      Log:error(conns)
+      Openbus:disconnect()
+      error{"IDL:SCS/StartupFailed:1.0"}
+    else
+      if conns[1] ~= nil then
+        registryService = orb:narrow(conns[1].objref,
+                                   "IDL:openbusidl/rs/IRegistryService:1.0")
+      end
+    end
+  end
   if not registryService then
     Log:error("Servico de registro nao encontrado.\n")
     Openbus:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
-  success, self.registryIdentifier = registryService:register(self.serviceOffer)
+ -- local success, identifier = registryService:register(self.serviceOffer)
+  local success, suc, identifier =
+          oil.pcall(registryService.register,registryService, self.serviceOffer)
   if not success then
     Log:error("Erro ao registrar oferta do servico de sessao.\n")
-    Openbus:disconntect()
+    Log:error(suc)
+    Openbus:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
+  self.registryIdentifier = identifier
 
   self.started = true
   Log:service("Serviço de sessão iniciado")
@@ -116,7 +156,8 @@ function SessionServiceComponent:expired()
 
   -- Registra novamente a oferta de serviço, pois a credencial associada
   -- agora é outra
-  local registryService = self.accessControlService:getRegistryService()
+  local accessControlService = self.AccessControlServiceReceptacle
+  local registryService = accessControlService.context.RegistryServiceReceptacle
   if not registryService then
     self.registryIdentifier = nil
     Log:error("Servico de registro nao encontrado.\n")
@@ -145,8 +186,8 @@ function SessionServiceComponent:shutdown()
   self.started = false
 
   if self.registryIdentifier then
-    local accessControlService = Openbus:getAccessControlService()
-    local registryService = accessControlService:getRegistryService()
+    local accessControlService = self.AccessControlServiceReceptacle
+    local registryService = accessControlService.context.RegistryServiceReceptacle
     if not registryService then
       Log:error("Serviço de registro não encontrado")
     else
@@ -156,7 +197,7 @@ function SessionServiceComponent:shutdown()
   end
 
   if self.sessionService.observerId then
-    self.sessionService.accessControlService:removeObserver(self.sessionService.observerId)
+    accessControlService:removeObserver(self.sessionService.observerId)
     self.sessionService.observerId = nil
   end
 

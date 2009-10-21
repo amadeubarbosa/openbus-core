@@ -104,7 +104,12 @@ facetDescriptions.IFaultTolerantService.key                   = "FTACS"
 --Log:faulttolerance(facetDescriptions)
 
 -- Receptacle Descriptions
-local receptacleDescriptions = {}
+local receptacleDescs = {}
+receptacleDescs.RegistryServiceReceptacle = {}
+receptacleDescs.RegistryServiceReceptacle.name           = "RegistryServiceReceptacle"
+receptacleDescs.RegistryServiceReceptacle.interface_name =  "IDL:openbusidl/rs/IRegistryService:1.0"
+receptacleDescs.RegistryServiceReceptacle.is_multiplex   = false
+receptacleDescs.RegistryServiceReceptacle.type           = "Receptacle"
 
 -- component id
 local componentId = {}
@@ -122,7 +127,7 @@ function main()
   Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Controle de Acesso
-  acsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+  acsInst = scs.newComponent(facetDescriptions, receptacleDescs, componentId)
 
   -- Configurações
   acsInst.IComponent.startup = AccessControlService.startup
