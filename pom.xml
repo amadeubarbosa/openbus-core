@@ -10,12 +10,6 @@
   <name>OpenBus</name>
   <url>https://subversion.tecgraf.puc-rio.br/engdist/openbus</url>
 
-  <modules>
-    <module>idl</module>
-    <module>api</module>
-    <module>demo</module>
-  </modules>
-
   <scm>
     <connection>scm:svn:https://subversion.tecgraf.puc-rio.br/engdist/openbus/trunk</connection>
     <developerConnection>scm:svn:https://subversion.tecgraf.puc-rio.br/engdist/openbus/trunk</developerConnection>
@@ -78,13 +72,13 @@
       <dependency>
         <groupId>org.jacorb</groupId>
         <artifactId>jacorb</artifactId>
-         <version>${jacorb.version}</version>
+        <version>${jacorb.version}</version>
       </dependency>
 
       <dependency>
         <groupId>org.jacorb</groupId>
         <artifactId>jacorb-idl-compiler</artifactId>
-         <version>${jacorb.version}</version>
+        <version>${jacorb.version}</version>
       </dependency>
 
     </dependencies>
