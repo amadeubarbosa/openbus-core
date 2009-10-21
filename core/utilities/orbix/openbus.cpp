@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stubs/scs.hh>
 
 #define CHALLENGE_SIZE 36
 
@@ -182,6 +183,7 @@ namespace openbus {
     iRegistryService = 0;
     iSessionService = 0;
     iLeaseProvider = ILeaseProvider::_nil();
+    iComponent = scs::core::IComponent::_nil();
   }
 
   void Openbus::initialize() {
@@ -199,6 +201,7 @@ namespace openbus {
   #endif
     std::stringstream corbalocACS;
     std::stringstream corbalocLP;
+    std::stringstream corbalocIC;
     corbalocACS << "corbaloc::" << hostBus << ":" << portBus << "/ACS";
   #ifdef VERBOSE
     verbose->print("corbaloc ACS: " + corbalocACS.str());
@@ -207,13 +210,20 @@ namespace openbus {
   #ifdef VERBOSE
     verbose->print("corbaloc LeaseProvider: " + corbalocLP.str());
   #endif
+    corbalocIC << "corbaloc::" << hostBus << ":" << portBus << "/IC";
+  #ifdef VERBOSE
+    verbose->print("corbaloc IComponent: " + corbalocIC.str());
+  #endif
     CORBA::Object_var objACS = 
       orb->string_to_object(corbalocACS.str().c_str());
     CORBA::Object_var objLP = 
       orb->string_to_object(corbalocLP.str().c_str());
+    CORBA::Object_var objIC = 
+      orb->string_to_object(corbalocIC.str().c_str());
     iAccessControlService = 
       openbusidl::acs::IAccessControlService::_narrow(objACS);
     iLeaseProvider = openbusidl::acs::ILeaseProvider::_narrow(objLP);
+    iComponent = scs::core::IComponent::_narrow(objIC);
   #ifdef VERBOSE
     verbose->dedent("Openbus::createProxyToIAccessControlService() END");
   #endif
@@ -221,7 +231,7 @@ namespace openbus {
 
   void Openbus::setRegistryService() {
     if (!iRegistryService) {
-      iRegistryService = iAccessControlService->getRegistryService(); 
+      iRegistryService = getRegistryService(); 
     }
   }
 
@@ -396,6 +406,24 @@ namespace openbus {
   }
 
   openbusidl::rs::IRegistryService* Openbus::getRegistryService() {
+    if (iRegistryService == NULL && ((scs::core::IComponent*)iComponent) != NULL) {
+      CORBA::Object* objRecep = iComponent->getFacetByName("IReceptacles");
+      scs::core::IReceptacles* recep = scs::core::IReceptacles::_narrow(objRecep);
+      try {
+        scs::core::ConnectionDescriptions_var conns =
+          recep->getConnections("RegistryServiceReceptacle");
+        if (conns->length() > 0) {
+          CORBA::Object* objref = conns[0].objref;
+          iRegistryService = openbusidl::rs::IRegistryService::_narrow(objref);
+        }
+      } catch (scs::core::InvalidName& e) {
+      #ifdef VERBOSE
+        Verbose->print("Openbus:getRegistryService ERRO:")
+        Verbose->print("Não foi possível obter o serviço de registro.");
+      #endif VERBOSE
+        // TODO: necessário fazer um throw?
+      }
+    }
     return iRegistryService;
   } 
 
