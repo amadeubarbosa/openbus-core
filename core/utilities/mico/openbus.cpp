@@ -93,11 +93,11 @@ namespace openbus {
 #ifdef MULTITHREAD
   void Openbus::RunThread::_run(void*) {
   #ifdef VERBOSE
-    verbose->print("Openbus::RunThread::run() BEGIN");
+    verbose->print("*** RunThread iniciada...");
   #endif
-    bus->run();
+    bus->orb->run();
   #ifdef VERBOSE
-    verbose->dedent("Openbus::RunThread::run() END");
+    verbose->print("*** RunThread encerrada...");
   #endif
   }
 #endif
@@ -128,6 +128,9 @@ namespace openbus {
       delete iRegistryService;
     }
     openbus::interceptors::ClientInterceptor::credential = 0;
+    if (credential) {
+      delete credential;
+    }
     newState();
   }
 
@@ -145,9 +148,6 @@ namespace openbus {
         timeRenewingFixe = true;
       }
     }
-  #ifndef MULTITHREAD
-    _argv[_argc++] = "-ORBClientReactive";
-  #endif
   }
 
   void Openbus::createOrbPoa() {
@@ -244,7 +244,24 @@ namespace openbus {
     #ifdef VERBOSE
       verbose->print("Desligando o orb...");
     #endif
+      orb->destroy();
       orb->shutdown(1);
+      if (credential) {
+        delete credential;
+      }
+    #ifdef MULTITHREAD
+      if (runThread) {
+      #ifdef VERBOSE
+        verbose->print("Esperando término de execução da runThread...");
+      #endif
+        runThread->wait();
+      #ifdef VERBOSE
+        verbose->print("Deletando objeto runThread...");
+      #endif
+        delete runThread;
+        runThread = 0;
+      }
+    #endif
     }
     bus = 0;
   #ifdef VERBOSE
@@ -291,6 +308,13 @@ namespace openbus {
     if (!componentBuilder) {
       componentBuilder = new scs::core::ComponentBuilder(orb, poa);
     }
+  #ifdef MULTITHREAD
+    if (!runThread) {
+      runThread = new RunThread();
+      runThread->start();
+    }
+  #endif
+
   #ifdef VERBOSE
     verbose->dedent("Openbus::init() END");
   #endif
@@ -476,12 +500,6 @@ namespace openbus {
             timeRenewing = lease*1000;
           }
           setRegistryService();
-        #ifdef MULTITHREAD
-          if (!runThread) {
-            runThread = new RunThread();
-            runThread->start();
-          }
-        #endif
           orb->dispatcher()->tm_event(&renewLeaseCallback, 
             timeRenewing);
         #ifdef VERBOSE
@@ -676,12 +694,6 @@ namespace openbus {
             timeRenewing = lease*1000;
           }
           setRegistryService();
-        #ifdef MULTITHREAD
-          if (!runThread) {
-            runThread = new RunThread();
-            runThread->start();
-          }
-        #endif
           orb->dispatcher()->tm_event(&renewLeaseCallback, 
             timeRenewing);
         #ifdef VERBOSE
@@ -711,12 +723,16 @@ namespace openbus {
     verbose->indent();
   #endif
     if (connectionState == CONNECTED) {
+      orb->dispatcher()->remove(&renewLeaseCallback, CORBA::Dispatcher::Timer);
       if (iRegistryService) {
         delete iRegistryService;
       }
       bool status = iAccessControlService->logout(*credential);
       if (status) {
         openbus::interceptors::ClientInterceptor::credential = 0;
+        if (credential) {
+          delete credential;
+        }
         newState();
       } else {
         connectionState = CONNECTED;

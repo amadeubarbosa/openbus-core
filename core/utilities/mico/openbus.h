@@ -158,7 +158,7 @@ namespace openbus {
     /**
     * Credencial de identificação do usuário frente ao barramento. 
     */
-      openbusidl::acs::Credential_var credential;
+      openbusidl::acs::Credential* credential;
 
     /**
     * Máquina em que está o barramento. 

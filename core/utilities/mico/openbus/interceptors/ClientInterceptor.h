@@ -20,7 +20,7 @@ namespace openbus {
       private:
         IOP::Codec_ptr cdr_codec;
       public:
-        static openbusidl::acs::Credential_var credential;
+        static openbusidl::acs::Credential* credential;
 
         ClientInterceptor(IOP::Codec_ptr pcdr_codec) 
           throw();

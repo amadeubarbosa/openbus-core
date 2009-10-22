@@ -14,8 +14,7 @@ using namespace openbusidl::acs;
 
 namespace openbus {
   namespace interceptors {
-    openbusidl::acs::Credential_var ClientInterceptor::credential = 0;
-//      openbusidl::acs::Credential::is_nil();
+    openbusidl::acs::Credential* ClientInterceptor::credential = 0;
 
     ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec) 
       throw() 
