@@ -18,7 +18,7 @@ endif
 MICO_HOME=/usr/local
 MICO_BIN= ${MICO_HOME}/bin
 MICO_INC= ${MICO_HOME}/include
-MICO_LDIR=${MICO_HOME}/lib
+MICO_LIB=${MICO_HOME}/lib
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
@@ -27,7 +27,7 @@ OBJROOT= obj
 TARGETROOT= lib
 
 INCLUDES= . ${MICO_INC} ${OPENBUSINC}/scs/mico ${OPENBUSINC}/openssl-0.9.9
-LDIR= ${MICO_LDIR} ${OPENBUSLIB} ${MICO_LDIR}
+LDIR= ${MICO_LIB} ${OPENBUSLIB} 
 
 LIBS= mico2.3.11 dl crypto
 

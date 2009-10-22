@@ -90,7 +90,8 @@ namespace openbus {
     void ServerInterceptor::send_other(ServerRequestInfo*) {}
 
     char* ServerInterceptor::name() {
-      return CORBA::string_dup("AccessControl");
+/*      return CORBA::string_dup("AccessControl"); */
+      return CORBA::string_dup("");
     }
 
     void ServerInterceptor::destroy() {}

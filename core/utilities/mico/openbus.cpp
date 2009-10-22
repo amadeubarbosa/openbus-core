@@ -244,6 +244,11 @@ namespace openbus {
     #ifdef VERBOSE
       verbose->print("Desligando o orb...");
     #endif
+    /*
+    * Alternativa para o problema apresentado em OPENBUS-426.
+    * Referente ao Mico 2.3.11.
+    */
+      delete PortableServer::_the_poa_current;
       orb->destroy();
       orb->shutdown(1);
       if (credential) {
