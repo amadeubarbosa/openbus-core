@@ -109,7 +109,6 @@ receptacleDescs.RegistryServiceReceptacle = {}
 receptacleDescs.RegistryServiceReceptacle.name           = "RegistryServiceReceptacle"
 receptacleDescs.RegistryServiceReceptacle.interface_name =  "IDL:openbusidl/rs/IRegistryService:1.0"
 receptacleDescs.RegistryServiceReceptacle.is_multiplex   = false
-receptacleDescs.RegistryServiceReceptacle.type           = "Receptacle"
 
 -- component id
 local componentId = {}

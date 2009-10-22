@@ -109,14 +109,6 @@ Suite = {
       end
     end,
 
-    testGetRegistryService = function(self)
-      Check.assertTrue(self.accessControlService:getRegistryService())
-    end,
-
-    testSetRegistryService = function(self)
-      Check.assertFalse(self.accessControlService:setRegistryService(self.accessControlService))
-    end,
-
     testIsValid = function(self)
       Check.assertTrue(self.accessControlService:isValid(self.credential))
       Check.assertFalse(self.accessControlService:isValid({identifier = "123", owner = self.user, delegate = "",}))

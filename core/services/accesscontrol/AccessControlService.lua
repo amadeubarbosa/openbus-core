@@ -158,19 +158,21 @@ function ACSFacet:logout(credential)
       credential.identifier)
     return false
   end
-  self:removeEntry(entry)
-  -- removendo conexão com o serviço de registro.
-  local success, conns =
-        oil.pcall(self.context.IReceptacles.getConnections,
-                  self.context.IReceptacles, "RegistryServiceReceptacle")
-  if not success then
-    Log:warn("Erro remover conexão com serviço de registro.")
-    Log:warn(conns)
-  else
-    for _, desc in pairs(conns) do
-      self.context.IReceptacles:disconnect(desc.id)
+  if credential.owner == "RegistryService" then
+    -- removendo conexão com o serviço de registro.
+    local success, conns =
+          oil.pcall(self.context.IReceptacles.getConnections,
+                    self.context.IReceptacles, "RegistryServiceReceptacle")
+    if not success then
+      Log:warn("Erro remover conexão com serviço de registro.")
+      Log:warn(conns)
+    else
+      for _, desc in pairs(conns) do
+        self.context.IReceptacles:disconnect(desc.id)
+      end
     end
   end
+  self:removeEntry(entry)
   return true
 end
 
@@ -656,7 +658,7 @@ function ManagementFacet:removeSystemDeployment(id)
   local acs = self.context.IAccessControlService
   acs:removeEntryById(id)
   -- Remove todas as autorizações da implantação
-  local rs = acs:getRegistryService()
+  local rs = self.context.RegistryServiceReceptacle
   if rs then
     local orb = Openbus:getORB()
     local ic = rs:_component()
@@ -854,11 +856,6 @@ function startup(self)
     acs.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
     if entry.credential.owner == "AccessControlService" then
       acsEntry = entry
-    elseif entry.component and entry.credential.owner == "RegistryService" then
-      acs.registryService = {
-        credential = entry.credential,
-        component = entry.component,
-      }
     end
   end
 

@@ -59,11 +59,6 @@ facetDescriptions.ISession.class                  = Session.Session
 
 -- Receptacle Descriptions
 local receptacleDescs = {}
-receptacleDescs.AccessControlServiceReceptacle = {}
-receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
-receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:openbusidl/acs/IAccessControlService:1.0"
-receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = false
-receptacleDescs.AccessControlServiceReceptacle.type           = "Receptacle"
 
 -- component id
 local componentId = {}
