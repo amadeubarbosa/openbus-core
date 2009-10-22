@@ -22,12 +22,11 @@ INCLUDES= . \
   stubs \
   ${MICO_INC} \
   ${OPENBUS_HOME}/core/utilities/mico \
-  ${OPENBUS_HOME}/core/utilities/mico/stubs \
   ${OPENBUSINC}/scs/mico
 
 LDIR= ${MICO_LDIR} ${OPENBUSLIB}
 
-LIBS= mico2.3.13 dl crypto pthread
+LIBS= mico2.3.11 dl crypto pthread
 
 SLIB= ${OPENBUS_HOME}/core/utilities/mico/lib/${TEC_UNAME}/libopenbus_mico.a \
       ${OPENBUSLIB}/libscsmico.a

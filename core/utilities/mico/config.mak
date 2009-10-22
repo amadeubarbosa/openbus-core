@@ -2,7 +2,7 @@ PROJNAME= openbus_mico
 LIBNAME= ${PROJNAME}
 
 #Descomente a linha abaixo para ativar o suporte a multithread.
-DEFINES=MULTITHREAD
+#DEFINES=MULTITHREAD
 
 #Descomente as duas linhas abaixo para o uso em Valgrind.
 #DBG=YES
@@ -15,7 +15,7 @@ ifeq "$(TEC_UNAME)" "SunOS58"
   USE_CC=Yes
 endif
 
-MICO_HOME= /usr/local
+MICO_HOME=/usr/local
 MICO_BIN= ${MICO_HOME}/bin
 MICO_INC= ${MICO_HOME}/include
 MICO_LDIR=${MICO_HOME}/lib
@@ -26,10 +26,10 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 OBJROOT= obj
 TARGETROOT= lib
 
-INCLUDES= . ${MICO_INC} ${OPENBUSINC}/scs/mico ${OPENBUSINC}/openssl-0.9.9 stubs
+INCLUDES= . ${MICO_INC} ${OPENBUSINC}/scs/mico ${OPENBUSINC}/openssl-0.9.9
 LDIR= ${MICO_LDIR} ${OPENBUSLIB} ${MICO_LDIR}
 
-LIBS= mico2.3.13 dl crypto
+LIBS= mico2.3.11 dl crypto
 
 SRC= openbus/interceptors/ClientInterceptor.cpp \
      openbus/interceptors/ServerInterceptor.cpp \
@@ -45,11 +45,16 @@ SRC= openbus/interceptors/ClientInterceptor.cpp \
 
 genstubs:
 	mkdir -p stubs
-	cd stubs ; ${MICO_BIN}/idl --no-paths --any --typecode ../../../../idlpath/access_control_service.idl 
-	cd stubs ; ${MICO_BIN}/idl --no-paths ../../../../idlpath/registry_service.idl
-	cd stubs ; ${MICO_BIN}/idl --no-paths ../../../../idlpath/session_service.idl
-	cd stubs ; ${MICO_BIN}/idl --no-paths --any ../../../../idlpath/core.idl
-	cd stubs ; ${MICO_BIN}/idl --no-paths --poa ../../../../idlpath/scs.idl
+	ln -fs ../../../../idlpath/core.idl stubs/
+	ln -fs ../../../../idlpath/scs.idl stubs/
+	ln -fs ../../../../idlpath/access_control_service.idl stubs/
+	ln -fs ../../../../idlpath/registry_service.idl stubs/
+	ln -fs ../../../../idlpath/session_service.idl stubs/
+	cd stubs ; ${MICO_BIN}/idl --any --typecode access_control_service.idl 
+	cd stubs ; ${MICO_BIN}/idl registry_service.idl
+	cd stubs ; ${MICO_BIN}/idl session_service.idl
+	cd stubs ; ${MICO_BIN}/idl core.idl
+	cd stubs ; ${MICO_BIN}/idl scs.idl
 	
 sunos58: $(OBJS)
 	rm -f lib/SunOS58/libopenbus_mico.a
