@@ -64,27 +64,27 @@ namespace openbus {
         #ifdef VERBOSE
           verbose->print("Não foi possível renovar a credencial!");
         #endif
-        if (leaseExpiredCallback) {
-          leaseExpiredCallback->expired();
-        }
         /* "Desconecta" o usuário. */
           bus->localDisconnect();
+          if (leaseExpiredCallback) {
+            leaseExpiredCallback->expired();
+          }
         } else {
         #ifdef VERBOSE
           verbose->print("Credencial renovada!");
         #endif
+          dispatcher->tm_event(this, bus->timeRenewing);
         }
       } catch (CORBA::Exception& e) {
       #ifdef VERBOSE
         verbose->print("Não foi possível renovar a credencial!");
       #endif
-      if (leaseExpiredCallback) {
-        leaseExpiredCallback->expired();
-      }
       /* "Desconecta" o usuário. ? */
         bus->localDisconnect();
+        if (leaseExpiredCallback) {
+          leaseExpiredCallback->expired();
+        }
       }
-      dispatcher->tm_event(this, bus->timeRenewing);
     #ifdef VERBOSE
       verbose->dedent("Openbus::RenewLeaseCallback::callback() END");
     #endif
@@ -125,6 +125,7 @@ namespace openbus {
   }
 
   void Openbus::localDisconnect() {
+    orb->dispatcher()->remove(&renewLeaseCallback, CORBA::Dispatcher::Timer);
     if (iRegistryService) {
       delete iRegistryService;
     }
