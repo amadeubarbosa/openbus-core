@@ -14,10 +14,11 @@ endif
 
 ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
 ORBIXINC= ${ORBIX_HOME}/include
-ORBIXLDIR=${ORBIX_HOME}/lib
 
-ifeq "$(TEC_UNAME)" "Linux26g4_64"
+ifeq ($(TEC_WORDSIZE), TEC_64)
   ORBIXLDIR=${ORBIX_HOME}/lib/lib64
+else
+  ORBIXLDIR=${ORBIX_HOME}/lib
 endif
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
