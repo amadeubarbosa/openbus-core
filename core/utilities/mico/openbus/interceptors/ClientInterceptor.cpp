@@ -10,6 +10,7 @@
 
 #include "../../openbus.h"
 #include <mico/pi_impl.h>
+
 using namespace openbusidl::acs;
 
 namespace openbus {
@@ -87,8 +88,7 @@ namespace openbus {
     char* ClientInterceptor::name() 
       throw(CORBA::SystemException) 
     {
-/*      return CORBA::string_dup("AccessControl"); */
-      return CORBA::string_dup("");
+      return CORBA::string_dup("AccessControl"); 
 
     }
     void ClientInterceptor::send_poll(ClientRequestInfo_ptr ri)

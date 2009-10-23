@@ -7,6 +7,7 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <CORBA.h>
+#include <mico/pi_impl.h>
 #include <sstream>
 #include <stdio.h>
 #include <string.h>
@@ -245,11 +246,24 @@ namespace openbus {
       verbose->print("Desligando o orb...");
     #endif
     /*
-    * Alternativa para o problema apresentado em OPENBUS-426.
+    * Alternativa para o segundo problema apresentado em OPENBUS-426.
     * Referente ao Mico 2.3.11.
     */
       delete PortableServer::_the_poa_current;
+
       orb->destroy();
+
+    /*
+    * Alternativa para o segundo problema apresentado em OPENBUS-427.
+    * Referente ao Mico 2.3.11.
+    */
+      PInterceptor::PI::S_client_req_int_.erase(
+        PInterceptor::PI::S_client_req_int_.begin(),
+        PInterceptor::PI::S_client_req_int_.end());
+      PInterceptor::PI::S_server_req_int_.erase(
+        PInterceptor::PI::S_server_req_int_.begin(),
+        PInterceptor::PI::S_server_req_int_.end());
+
       orb->shutdown(1);
       if (credential) {
         delete credential;
