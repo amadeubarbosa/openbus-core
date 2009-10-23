@@ -1,0 +1,8 @@
+
+#MICO_HOME=/usr/local
+MICO_HOME=${HOME}/tools/mico/mico2.3.11
+
+MICO_BIN=${MICO_HOME}/bin
+MICO_INC=${MICO_HOME}/include
+MICO_LIB=${MICO_HOME}/lib
+

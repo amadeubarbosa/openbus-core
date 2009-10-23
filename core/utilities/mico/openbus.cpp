@@ -252,8 +252,6 @@ namespace openbus {
     */
       delete PortableServer::_the_poa_current;
 
-      orb->destroy();
-
     /*
     * Alternativa para o segundo problema apresentado em OPENBUS-427.
     * Referente ao Mico 2.3.11.
@@ -266,6 +264,7 @@ namespace openbus {
         PInterceptor::PI::S_server_req_int_.end());
 
       orb->shutdown(1);
+      orb->destroy();
       if (credential) {
         delete credential;
       }
