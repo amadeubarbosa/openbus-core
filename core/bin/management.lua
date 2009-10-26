@@ -1113,11 +1113,11 @@ if not command then
   print("[ERRO] " .. msg)
   print("[HINT] --help")
   os.exit(1)
-elseif not command.params.login then
-  print("[ERRO] Usuário não informado")
-  os.exit(1)
 elseif command.name == "help" then
   handlers.help(command)
+  os.exit(1)
+elseif not command.params.login then
+  print("[ERRO] Usuário não informado")
   os.exit(1)
 end
 
