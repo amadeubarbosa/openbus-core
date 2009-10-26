@@ -20,9 +20,6 @@ exception SystemNonExistent {};
 /** \brief Certificado inválido */
 exception InvalidCertificate {};
 
-/** \brief Certificado não existente. */
-exception CertificateNonExistent {};
-
 /** \brief Implantação já está cadastrada. */
 exception SystemDeploymentAlreadyExists {};
 

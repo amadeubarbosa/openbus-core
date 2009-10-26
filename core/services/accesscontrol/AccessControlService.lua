@@ -708,14 +708,10 @@ function ManagementFacet:getSystemDeploymentCertificate(id)
     error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
   end
   local cert, msg = self.certificateDB:get(id)
-  if cert then
-     return cert
-  elseif msg == "not found" then
-     Log:error(format("Implantação '%s' não possui certificado.", id))
-     error{"IDL:openbusidl/acs/CertificateNonExistent:1.0"}
-  else
+  if not cert then
     Log:error(format("Falha ao recuperar certificado de '%s': %s", id, msg))
   end
+  return cert
 end
 
 ---

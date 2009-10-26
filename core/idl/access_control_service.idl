@@ -309,7 +309,7 @@ interface IManagement {
    * \exception SystemCertificateNonExistent Implantação não possui certificado.
    */
   SystemDeploymentCertificate getSystemDeploymentCertificate(in string id)
-    raises (SystemDeploymentNonExistent, CertificateNonExistent);
+    raises (SystemDeploymentNonExistent);
 
   /**
    * \brief Altera o certificado da implantação.
