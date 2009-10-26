@@ -927,7 +927,10 @@ handlers["script"] = function(cmd)
     printf("[ERRO] Falha ao carregar script: %s", err)
     return
   end
-  oil.pcall(func)
+  succ, err = oil.pcall(func)
+  if not succ then
+    printf("[ERRO] Falha ao executar o script: %s", err)
+  end
 end
 
 -------------------------------------------------------------------------------
@@ -968,7 +971,8 @@ end
 --
 function SystemDeployment(depl)
   if not (type(depl) == "table" and type(depl.id) == "string" and
-     type(depl.description) == "string" and type(depl.system) == "string")
+     type(depl.description) == "string" and type(depl.system) == "string" and
+     type(depl.certificate) == "string")
   then
     argerror()
   end
@@ -978,6 +982,7 @@ function SystemDeployment(depl)
   cmd.params[cmd.name] = depl.id
   cmd.params.system = depl.system
   cmd.params.description = depl.description
+  cmd.params.certificate = depl.certificate
   handlers[cmd.name](cmd)
 end
 
