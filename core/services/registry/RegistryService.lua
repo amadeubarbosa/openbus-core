@@ -706,7 +706,7 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
     Log:error(format("Interface '%s' não está cadastrada.", ifaceId))
     error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
   end
-  for _, auth in ipairs(self.authentications) do
+  for _, auth in ipairs(self.authorizations) do
     if auth.authorized[ifaceId] then
       Log:error(format("Interface '%s' em uso.", ifaceId))
       error{"IDL:openbusidl/rs/InterfaceIdentifierInUse:1.0"}
