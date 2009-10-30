@@ -51,14 +51,28 @@ function RSFacet:register(serviceOffer)
   local credential = Openbus:getInterceptedCredential()
   local properties = self:createPropertyIndex(serviceOffer.properties,
     serviceOffer.member)
+  local memberName = properties.component_id.name
+
+  -- Recupera todas as facetas do membro
+  local allFacets
+  local metaInterface = serviceOffer.member:getFacetByName("IMetaInterface")
+  if metaInterface then
+    metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
+    allFacets = metaInterface:getFacets()
+  else
+    allFacets = {}
+    Log:service(format(
+      "Membro '%s' (%s) não disponibiliza a interface IMetaInterface.",
+      memberName, credential.owner))
+  end
 
   local offerEntry = {
     offer = serviceOffer,
   -- Mapeia as propriedades.
     properties = properties,
   -- Mapeia as facetas do componente.
-    facets = self:createFacetIndex(properties, serviceOffer.member,
-      credential.owner),
+    facets = self:createFacetIndex(credential.owner, memberName, allFacets),
+    allFacets = allFacets,
     credential = credential,
     identifier = identifier
   }
@@ -130,41 +144,29 @@ function RSFacet:createPropertyIndex(offerProperties, member)
   return properties
 end
 
---
+---
 -- Busca as interfaces por meio da metainterface do membro e as 
 -- disponibiza para consulta.
 --
--- @param properties Propriedades da oferta.
--- @param member Membro do barramento
+-- @param owner Dono da credencial.
+-- @param memberName Membro do barramento.
+-- @param allFacets Array de facetas do membro.
 --
--- @result Índice de facetas disponíveis do membro
+-- @result Índice de facetas disponíveis do membro.
 --
-function RSFacet:createFacetIndex(properties, member, owner)
+function RSFacet:createFacetIndex(owner, memberName, allFacets)
+  local count = 0
   local facets = {}
-  local memberName = properties.component_id.name
-  Log:service("Oferta de serviço sem facetas para o membro "..memberName)
-  local metaInterface = member:getFacetByName("IMetaInterface")
-  if metaInterface then
-    local count = 0
-    local mgm = self.context.IManagement
-    metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
-    for _, facet in ipairs(metaInterface:getFacets()) do
-      if mgm:hasAuthorization(owner, facet.interface_name) then
-        facets[facet.name] = true
-        facets[facet.interface_name] = true
-        count = count + 1
-      end
+  local mgm = self.context.IManagement
+  for _, facet in ipairs(allFacets) do
+    if mgm:hasAuthorization(owner, facet.interface_name) then
+      facets[facet.name] = true
+      facets[facet.interface_name] = true
+      count = count + 1
     end
-    if count == 0 then
-      Log:service(format("Membro '%s' não possui facetas", memberName))
-    else
-      Log:service(format("Membro '%s' possui %d faceta(s)", memberName, count))
-    end
-  else
-    Log:service(format(
-      "Membro '%s' não disponibiliza a interface IMetaInterface",
-      memberName))
   end
+  Log:service(format("Membro '%s' (%s) possui %d faceta(s) autorizada(s).",
+    memberName, owner, count))
   return facets
 end
 
@@ -256,16 +258,8 @@ end
 function RSFacet:updateFacets(owner)
   for id, offerEntry in pairs(self.offersByIdentifier) do
     if offerEntry.credential.owner == owner then
-      -- Proteção: não há garantia do membro estar ainda acessível
-      local succ, facets = oil.pcall(self.createFacetIndex, self,
-        offerEntry.properties, offerEntry.offer.member, 
-        offerEntry.credential.owner)
-      if not succ then
-        facets = {}
-        Log:error(format("Falha ao recuperar facetas do membro '%s': " ..
-                         "removendo as facetas da oferta", owner))
-      end
-      offerEntry.facets = facets
+      offerEntry.facets = self:createFacetIndex(owner, 
+        offerEntry.properties.component_id.name, offerEntry.allFacets)
       self.offersDB:update(offerEntry)
     end
   end
