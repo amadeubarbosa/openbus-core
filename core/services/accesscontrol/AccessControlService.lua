@@ -121,12 +121,11 @@ end
 --@see loginByCertificate
 ---
 function ACSFacet:getChallenge(name)
-  local cert, err = self.certificateDB:get(name)
-  if cert then
-    cert = lce.x509.readfromderstring(cert)
-    return self:generateChallenge(name, cert)
+  local mgm = self.context.IManagement
+  local succ, cert = oil.pcall(mgm.getSystemDeploymentCertificate, mgm, name)
+  if succ then
+    return self:generateChallenge(name, lce.x509.readfromderstring(cert))
   end
-  Log:error(format("Falha ao recuperar certificado de '%s': %s", name, err))
   return ""
 end
 
@@ -827,8 +826,7 @@ function startup(self)
   else
     path = DATA_DIR .. "/" .. config.certificatesDirectory
   end
-  acs.certificateDB = CertificateDB(path)
-  mgm.certificateDB = acs.certificateDB
+  mgm.certificateDB = CertificateDB(path)
 
   -- Carrega chave privada
   if string.match(config.privateKeyFile, "^/") then
