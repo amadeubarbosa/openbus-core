@@ -929,7 +929,7 @@ handlers["script"] = function(cmd)
   end
   succ, err = oil.pcall(func)
   if not succ then
-    printf("[ERRO] Falha ao executar o script: %s", err)
+    printf("[ERRO] Falha ao executar o script: %s", tostring(err))
   end
 end
 
