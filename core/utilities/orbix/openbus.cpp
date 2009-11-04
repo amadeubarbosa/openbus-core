@@ -252,7 +252,15 @@ namespace openbus {
   #ifdef VERBOSE
     verbose->print("Openbus::~Openbus() BEGIN");
     verbose->indent();
+    verbose->print("Deletando lista de métodos interceptáveis...");
   #endif
+    IfaceMap::iterator iter = ifaceMap.begin();
+    while (iter != ifaceMap.end()) {
+      MethodSet *methods = iter->second;
+      ifaceMap.erase(iter++);
+      methods->clear();
+      delete methods;
+    }
     if (componentBuilder) {
     #ifdef VERBOSE
       verbose->print("Deletando objeto componentBuilder...");
@@ -820,5 +828,46 @@ namespace openbus {
     verbose->dedent("Openbus::finish() END");
   #endif
   }
+
+  void Openbus::setInterceptable(string iface, string method,
+    bool interceptable)
+  {
+    MethodSet *methods;
+    IfaceMap::iterator iter;
+    /* Guarda apenas os métodos que não são interceptados */
+    if (interceptable) {
+      iter = ifaceMap.find(iface);
+      if (iter != ifaceMap.end()) {
+        methods = iter->second;
+        methods->erase(method);
+        if (methods->size() == 0) {
+          ifaceMap.erase(iter);
+          delete methods;
+        }
+      }
+    }
+    else {
+      iter = ifaceMap.find(iface);
+      if (iter == ifaceMap.end()) {
+        methods = new MethodSet();
+        ifaceMap[iface] = methods;
+      }
+      else
+        methods = iter->second;
+      methods->insert(method);
+    }
+  }
+
+  bool Openbus::isInterceptable(string iface, string method)
+  {
+    IfaceMap::iterator iter = ifaceMap.find(iface);
+    if (iter != ifaceMap.end()) {
+      MethodSet *methods = iter->second;
+      MethodSet::iterator method_iter = methods->find(method);
+      return (method_iter == methods->end());
+    }
+    return true;
+  }
+
 }
 

@@ -19,6 +19,8 @@
 #include <it_ts/mutex.h>
 
 #include <stdexcept>
+#include <string.h>
+#include <map>
 #include <set>
 
 using namespace openbusidl::acs;
@@ -46,6 +48,9 @@ namespace openbusidl {
 * \brief openbus
 */
 namespace openbus {
+
+  typedef set<string> MethodSet;
+  typedef map<string, MethodSet*> IfaceMap;
 
 /**
 * \brief Falha no processo de login, ou seja, o par nome de usuário e senha não
@@ -205,6 +210,11 @@ namespace openbus {
     * Especifica se o tempo de renovação de credencial é fixo.
     */
       bool timeRenewingFixe;
+
+     /**
+     * Cria o objeto registryService.
+     */
+      IfaceMap ifaceMap;
 
     /**
     * Trata os parâmetros de linha de comando.
@@ -500,6 +510,25 @@ namespace openbus {
     */
       void finish(bool force);
 
+    /**
+    * Configura os métodos da interface devem ser interceptados pelo servidor.
+    *
+    * @param[in] string iface RepID da interface.
+    * @param[in] string method Nome do método.
+    * @param[in] bool interceptable Indica se o método deve ser interceptado.
+    *
+    */
+      void setInterceptable(string iface, string method, bool interceptable);
+
+    /**
+    * Consulta se o método está sendo interceptado.
+    *
+    * @param[in] string iface RepID da interface.
+    * @param[in] string method Nome do método.
+    *
+    * @return true se o método é interceptado ou false caso contrário.
+    */
+      bool isInterceptable(string iface, string method);
   };
 }
 
