@@ -112,6 +112,32 @@ interface IAccessControlService {
      * contrário.
      */
     boolean logout (in Credential aCredential);
+     /**
+     * \brief Conecta o Servico de Registro como um receptáculo do Servico de Controle de Acesso
+     *
+     * \param o Servico de Registro.
+     *
+     * \return \c true, caso caso a credencial seja do serviço de registro
+     * e o \c connect seja realizado, ou \c false, caso contrário.
+     * 
+     */
+    boolean connectRegistryService(in rs::IRegistryService registryServiceComponent);
+    
+     /**
+     * \brief Desconecta o receptáculo do Servico de Registro do Servico
+     *
+     * \return \c true, caso  o \c disconnect seja realizado, ou \c false, caso contrário.
+     * 
+     */
+    boolean disconnectRegistryService();
+    
+    /**
+     * \brief Obtém o serviço de registro.
+     *
+     * \return O serviço de registro
+     */
+    rs::IRegistryService getRegistryService ();    
+    
     /**
      * \brief Verifica se uma determinada credencial está válida.
      *

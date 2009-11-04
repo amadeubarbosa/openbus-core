@@ -70,11 +70,7 @@ facetDescriptions.ICredentialObserver.interface_name = "IDL:openbusidl/acs/ICred
 facetDescriptions.ICredentialObserver.class          = SessionService.Observer
 
 -- Receptacle Descriptions
-local receptacleDescs = {}
-receptacleDescs.AccessControlServiceReceptacle = {}
-receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
-receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:openbusidl/acs/IAccessControlService:1.0"
-receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = false
+local receptacleDescriptions = {}
 
 -- component id
 local componentId = {}
@@ -89,7 +85,7 @@ function main()
   Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Sessão
-  success, res = oil.pcall(scs.newComponent, facetDescriptions, receptacleDescs,
+  success, res = oil.pcall(scs.newComponent, facetDescriptions, receptacleDescriptions,
       componentId)
   if not success then
     Log:error("Falha criando componente: "..tostring(res).."\n")

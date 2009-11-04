@@ -13,27 +13,6 @@ local scs = require "scs.core.base"
 
 local Check = require "latt.Check"
 
-----
--- função auxiliar que recupera o Serviço de registro da conexão com o serviço
--- de controle de acesso.
-----
-function getRegistryService(acsFacet)
-  local acsIc = acsFacet:_component()
-  acsIc = orb:narrow(acsIc, "IDL:scs/core/IComponent:1.0")
-  local acsIRecep =  acsIc:getFacetByName("IReceptacles")
-  acsIRecep = orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
-  local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
-                                 "RegistryServiceReceptacle")
-  if not status then
-    return nil
-  end
-  if conns[1] ~= nil then
-    local rgs = orb:narrow(conns[1].objref,"IDL:openbusidl/rs/IRegistryService:1.0")
-    return rgs
-  else
-    return nil
-  end
-end
 
 Suite = {
   Test1 = {
@@ -67,7 +46,7 @@ Suite = {
       _, self.credential = self.accessControlService:loginByPassword(user, password)
       self.credentialManager:setValue(self.credential)
 
-      local registryService = getRegistryService(self.accessControlService)
+      local registryService = self.accessControlService:getRegistryService()
 
       local serviceOffers = registryService:find({"ISessionService"})
       Check.assertNotEquals(#serviceOffers, 0)

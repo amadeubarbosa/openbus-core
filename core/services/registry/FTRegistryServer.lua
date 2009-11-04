@@ -67,6 +67,7 @@ facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
 facetDescriptions.IFaultTolerantService	= {}
+facetDescriptions.IManagement      = {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
 facetDescriptions.IComponent.interface_name        = "IDL:scs/core/IComponent:1.0"
@@ -85,12 +86,13 @@ facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/
 facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                   = "FTRS"
 
+facetDescriptions.IManagement.name           = "IManagement"
+facetDescriptions.IManagement.interface_name = "IDL:openbusidl/rs/IManagement:1.0"
+facetDescriptions.IManagement.class          = RegistryService.ManagementFacet
+facetDescriptions.IManagement.key            = "MGM"
+
 ---- Receptacle Descriptions
 local receptacleDescs = {}
-receptacleDescs.AccessControlServiceReceptacle = {}
-receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
-receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:openbusidl/acs/IAccessControlService:1.0"
-receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = false
 
 ---- component id
 local componentId = {}

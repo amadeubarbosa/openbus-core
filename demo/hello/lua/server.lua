@@ -72,7 +72,11 @@ function main ()
     io.stderr:write("HelloServer: Erro ao conectar ao barramento.\n")
     os.exit(1)
   end
-  registryService:register({ properties = {}, member = component.IComponent})
+  local suc = registryService:register({ properties = {}, member = component.IComponent})
+  if not suc then
+      io.stderr:write("HelloServer: Erro ao registrar ofertas.\n")
+      os.exit(1)
+  end
   print("*********************************************\n")
   print("PUBLISHER\nServiço Hello registrado no barramento do OpenBus.\n")
   print("*********************************************")

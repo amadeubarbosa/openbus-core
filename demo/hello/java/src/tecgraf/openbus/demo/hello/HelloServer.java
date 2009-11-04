@@ -61,8 +61,10 @@ public class HelloServer {
     orbProps.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
     Openbus bus = Openbus.getInstance();
-    bus.resetAndInitialize(args, orbProps, host, port);
-
+    //bus.resetAndInitialize(args, orbProps, host, port);
+    bus.resetAndInitializeWithFaultTolerance(args, orbProps, host, port);
+    
+    
     String entityName = props.getProperty("entity.name");
     String privateKeyFile = props.getProperty("private.key");
     String acsCertificateFile = props.getProperty("acs.certificate");

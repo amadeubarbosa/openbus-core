@@ -95,10 +95,10 @@ function SessionService:createSession(member)
   -- A credencial deve ser observada!
   if not self.observerId then
     self.observerId =
-      self.AccessControlServiceReceptacle:addObserver(self.context.ICredentialObserver,
+      Openbus:getAccessControlService():addObserver(self.context.ICredentialObserver,
                                             {credential.identifier})
   else
-    self.AccessControlServiceReceptacle:addCredentialToObserver(self.observerId,
+    Openbus:getAccessControlService():addCredentialToObserver(self.observerId,
                                                      credential.identifier)
   end
 
@@ -159,7 +159,7 @@ end
 ---
 function SessionService:expired()
   -- registra novamente o observador de credenciais
-  self.observerId = self.AccessControlServiceReceptacle:addObserver(
+  self.observerId = Openbus:getAccessControlService():addObserver(
       self.context.ICredentialObserver, {}
   )
   Log:service("Observador recadastrado")
@@ -167,7 +167,7 @@ function SessionService:expired()
   -- Mantém apenas as sessões com credenciais válidas
   local invalidCredentials = {}
   for credentialId, session in pairs(self.sessions) do
-    if not self.AccessControlServiceReceptacle:addCredentialToObserver(self.observerId,
+    if not Openbus:getAccessControlService():addCredentialToObserver(self.observerId,
         credentialId) then
       Log:service("Sessão para "..credentialId.." será removida")
       table.insert(invalidCredentials, credentialId)

@@ -19,6 +19,8 @@ local luuid = require "uuid"
 local lce = require "lce"
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
+local SmartComponent = require "openbus.faulttolerance.SmartComponent"
+local OilUtilities = require "openbus.util.OilUtilities"
 
 local LeaseProvider = require "openbus.lease.LeaseProvider"
 
@@ -158,22 +160,150 @@ function ACSFacet:logout(credential)
     return false
   end
   if credential.owner == "RegistryService" then
-    -- removendo conexão com o serviço de registro.
-    local success, conns =
-          oil.pcall(self.context.IReceptacles.getConnections,
-                    self.context.IReceptacles, "RegistryServiceReceptacle")
-    if not success then
-      Log:warn("Erro remover conexão com serviço de registro.")
-      Log:warn(conns)
-    else
-      for _, desc in pairs(conns) do
-        self.context.IReceptacles:disconnect(desc.id)
+  	if self.registryCredential ~= nil then
+      if credential.identifier == self.registryCredential.identifier then
+    	-- removendo conexão com o serviço de registro.
+    	self:disconnectRegistryService()
       end
     end
   end
   self:removeEntry(entry)
   return true
 end
+
+function ACSFacet:getRegistryService()
+
+	local acsIRecep = self:getACSReceptacleFacet()
+	local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
+	                                   "RegistryServiceReceptacle")
+
+	if not status then
+	  Log:error("[ACSFacet] Não foi possível obter o Serviço de Registro. Erro: " ..
+	        err)
+	  Log:error(conns)
+	  return nil
+	end
+
+	if conns[1] ~= nil then 
+	    local rgs = Openbus:getORB():narrow(conns[1].objref,
+                    "IDL:openbusidl/rs/IRegistryService:1.0")
+        if Openbus.isFaultToleranceEnable then
+           if not OilUtilities:existent(rgs) then
+				status, services = self:getSmartRSInstance():_fetchSmartComponent()
+				if not status then
+					log:error("Erro ao obter as facetas do Serviço de Controle de Acesso." ..
+				 			"Erro: " .. acs)
+					return nil
+		  		end
+		  		if not services  then
+		  		-- o erro já foi pego e logado
+		  			--desloga e desconecta o SR que está em estado de falha
+		  			self:logout(self.registryCredential)
+					return nil
+		  		end
+		  		rgs = services[Utils.REGISTRY_SERVICE_KEY]
+		   end
+        end
+		return rgs                    
+    else
+      Log:error("[ACSFacet] Não foi possível obter o Serviço de Registro. Erro: " ..
+	        err)
+	  Log:error(conns)
+	  return nil
+	end
+end
+
+function ACSFacet:getSmartRSInstance()
+	if self.smartRS == nil then
+    	local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+    	local ftconfig = assert(loadfile(DATA_DIR .."/conf/FaultToleranceConfiguration.lua"))()
+    	local keys = {}
+    	keys[Utils.REGISTRY_SERVICE_KEY] = { interface = "IDL:openbusidl/rs/IRegistryService:1.0",
+    										  hosts = ftconfig.hosts.RS, }
+    	keys[Utils.FAULT_TOLERANT_RS_KEY] = { interface = "IDL:openbusidl/ft/IFaultTolerantService:1.0",
+    								  		  hosts = ftconfig.hosts.FTRS, }
+		self.smartRS = SmartComponent:__init(Openbus:getORB(), "RS", keys)
+	end
+	return self.smartRS
+end
+
+function ACSFacet:getACSReceptacleFacet()
+	local acsIRecep =  self.context.IComponent:getFacetByName("IReceptacles")
+	acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
+	return acsIRecep
+end
+
+function ACSFacet:connectRegistryService(registryService)
+
+	local credential = Openbus.serverInterceptor:getCredential()
+
+  	if credential.owner == "RegistryService" then
+
+		local acsIRecep = self:getACSReceptacleFacet()
+
+		local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
+										   "RegistryServiceReceptacle")
+		if not status then
+		  Log:error("[faulltolerance] Erro ao pegar conexoes " ..	err)
+	      Log:error(conns)
+	   	  return false		
+		else 
+			if conns[1] ~= nil then 
+				local rgs = Openbus:getORB():narrow(conns[1].objref,
+                    "IDL:openbusidl/rs/IRegistryService:1.0")
+                    
+                if rgs:_non_existent() then
+                -- se  SR nao existe, mas esta conectado, desloga (e desconecta) para poder efetuar conexao
+                	self:logout(self.registryCredential)
+                else
+                	if credential.identifier ~= self.registryCredential.identifier then
+                	--se o SR existe, esta conectado porem com outra credencial, significa que nao pode conectar
+   						self.registryCredential = credential
+						return true
+                	else
+                	--se o SR existe, esta conectado e com a mesma credencial
+                	-- nao faz nada
+                		return true
+                	end
+                end
+  			end              
+
+			--OK, pode conectar
+			--conectar RS no ACS: [ACS]--( 0--[RS]
+			local success, conId = oil.pcall(acsIRecep.connect, acsIRecep, 
+									"RegistryServiceReceptacle", registryService )
+
+			if not success then
+				Log:error("[faulltolerance] Erro durante conexão do serviço RS ao ACS.")
+				Log:error(conId)
+				error{"IDL:SCS/ConnectFailed:1.0"}
+			end
+			self.registryCredential = credential
+			local entry = self.entries[credential.identifier]
+    		entry.component = registryServiceComponent
+    		local suc, err = self.credentialDB:update(entry)
+    		if not suc then
+	      		Log:error("Erro persistindo referencia registry service: "..err)
+    		end
+			
+			return true
+		end
+	end
+end
+
+function ACSFacet:disconnectRegistryService()
+	local acsIRecep = self:getACSReceptacleFacet()
+	--desconectar RS do ACS
+	local status, void = oil.pcall(acsIRecep.disconnect, acsIRecep, 1)
+	if not status then
+		Log:error("[faulltolerance] Error while calling disconnect")
+		Log:error("[faulltolerance] Error: " .. void)
+		error{"IDL:SCS/ConnectFailed:1.0"}
+	end
+			
+	Log:faulttolerance("Disconnect executed successfully!")
+end
+
 
 ---
 --Verifica se uma credencial é válida.
@@ -882,7 +1012,6 @@ function startup(self)
     end
   end
   acs.leaseProvider = LeaseProvider(acs.checkExpiredLeases, acs.deltaT)
-  --self = self.context.IFaultTolerantService
   self.context.IFaultTolerantService:setStatus(true)
 end
 

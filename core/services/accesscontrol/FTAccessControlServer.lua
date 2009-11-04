@@ -76,6 +76,7 @@ facetDescriptions.IMetaInterface      	= {}
 facetDescriptions.IAccessControlService = {}
 facetDescriptions.ILeaseProvider       	= {}
 facetDescriptions.IFaultTolerantService	= {}
+facetDescriptions.IManagement           = {}
 
 facetDescriptions.IComponent.name                     = "IComponent"
 facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
@@ -100,6 +101,11 @@ facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantS
 facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
 facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                   = "FTACS"
+
+facetDescriptions.IManagement.name           = "IManagement"
+facetDescriptions.IManagement.interface_name = "IDL:openbusidl/acs/IManagement:1.0"
+facetDescriptions.IManagement.class          = AccessControlService.ManagementFacet
+facetDescriptions.IManagement.key            = "MGM"
 
 --Log:faulttolerance(facetDescriptions)
 

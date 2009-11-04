@@ -6,12 +6,14 @@ local loadfile = loadfile
 local assert = assert
 local error = error
 local string = string
+local print = print
 
 local oil = require "oil"
 local orb = oil.orb
 
 local SessionService = require "core.services.session.SessionService"
 local Openbus = require "openbus.Openbus"
+local OilUtilities = require "openbus.util.OilUtilities"
 
 local Log = require "openbus.util.Log"
 
@@ -65,32 +67,11 @@ function SessionServiceComponent:startup()
       self.privateKeyFile, self.accessControlServiceCertificateFile)
     if not registryService then
       error{"IDL:SCS/StartupFailed:1.0"}
-    else
-      registryService = orb:narrow(registryService,
-                                   "IDL:openbusidl/rs/IRegistryService:1.0")
     end
   end
 
   -- Cadastra callback para LeaseExpired
   Openbus:addLeaseExpiredCallback( self )
-
-  -- obtém a referência para o Serviço de Controle de Acesso
-  local acsFacet = Openbus:getAccessControlService()
-  if not acsFacet then
-    error{"IDL:SCS/StartupFailed:1.0"}
-  end
-  local acsIComp = acsFacet:_component()
-  acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
-
-  -- conecta-se com o controle de acesso:   [SS]--( 0--[ACS]
-  local success, conId =
-    oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
-              "AccessControlServiceReceptacle", acsFacet)
-  if not success then
-    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
-    Log:error(conId)
-    error{"IDL:SCS/StartupFailed:1.0"}
-  end
 
   -- configura faceta ISessionService
   self.sessionService = self.context.ISessionService
@@ -101,18 +82,9 @@ function SessionServiceComponent:startup()
     properties = {},
   }
 
-  if not registryService then
-    registryService = Openbus:getRegistryService()
-  end
-  if not registryService then
-    Log:error("Servico de registro nao encontrado.\n")
-    Openbus:disconnect()
-    error{"IDL:SCS/StartupFailed:1.0"}
-  end
-
-  -- local success, identifier = registryService:register(self.serviceOffer)
-  local success, suc, identifier =
-          oil.pcall(registryService.register,registryService, self.serviceOffer)
+  local success, identifier = registryService:register(self.serviceOffer)
+  --local success, suc, identifier =
+  --        oil.pcall(registryService.register,registryService, self.serviceOffer)
   if not success then
     Log:error("Erro ao registrar oferta do servico de sessao.\n")
     Log:error(suc)
@@ -139,7 +111,7 @@ function SessionServiceComponent:expired()
 
   -- Registra novamente a oferta de serviço, pois a credencial associada
   -- agora é outra
-  local registryService = Openbus:getRegistryService()
+  local registryService = Openbus:getAccessControlService():getRegistryService()
   if not registryService then
     self.registryIdentifier = nil
     Log:error("Servico de registro nao encontrado.\n")
@@ -169,7 +141,7 @@ function SessionServiceComponent:shutdown()
 
   local accessControlService = self.AccessControlServiceReceptacle
   if self.registryIdentifier then
-    local registryService = Openbus:getRegistryService()
+    local registryService = Openbus:getAccessControlService():getRegistryService()
     if not registryService then
       Log:error("Serviço de registro não encontrado")
     else
