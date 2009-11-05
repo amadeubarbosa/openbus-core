@@ -190,11 +190,13 @@ interface IManagement {
    *
    * \param deploymentId Identificador da implantação.
    * \param ifaceId Identificador da interface.
+   * \param strict Força que a interface esteja previamente cadastrada.
    *
    * \exception SystemDeploymentNonExistent Implantação não cadastrada.
    * \exception InterfaceIdentifierNonExistent Insterface não cadastrada.
    */
-  void grant(in string deploymentId, in InterfaceIdentifier ifaceId)
+  void grant(in string deploymentId, in InterfaceIdentifier ifaceId,
+    in boolean strict)
     raises (SystemDeploymentNonExistent, InterfaceIdentifierNonExistent);
 
   /**
@@ -204,10 +206,9 @@ interface IManagement {
    * \param ifaceId Identificador da interface.
    *
    * \exception AuthorizationNonExistent Implantação não possui autorização.
-   * \exception InterfaceIdentifierNonExistent Insterface não cadastrada.
    */
   void revoke(in string deploymentId, in InterfaceIdentifier ifaceId)
-    raises (AuthorizationNonExistent, InterfaceIdentifierNonExistent);
+    raises (AuthorizationNonExistent);
 
   /**
    * \brief Remove a autorização da implantação.

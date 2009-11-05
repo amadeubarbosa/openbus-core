@@ -673,7 +673,7 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
     Log:error(format("Interface '%s' não está cadastrada.", ifaceId))
     error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
   end
-  for _, auth in ipairs(self.authorizations) do
+  for _, auth in pairs(self.authorizations) do
     if auth.authorized[ifaceId] then
       Log:error(format("Interface '%s' em uso.", ifaceId))
       error{"IDL:openbusidl/rs/InterfaceIdentifierInUse:1.0"}
@@ -706,9 +706,9 @@ end
 -- @param deploymentId Identificador da implantação.
 -- @param ifaceId Identificador da interface.
 --
-function ManagementFacet:grant(deploymentId, ifaceId)
+function ManagementFacet:grant(deploymentId, ifaceId, strict)
   self:checkPermission()
-  if not self.interfaces[ifaceId] then
+  if strict and not self.interfaces[ifaceId] then
     Log:error(format("Interface '%s' não cadastrada.", ifaceId))
     error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
   end
@@ -727,10 +727,10 @@ function ManagementFacet:grant(deploymentId, ifaceId)
       authorized = {},
     }
     self.authorizations[deploymentId] = auth
-  elseif auth and auth.authorized[ifaceId] then
+  elseif auth and (auth.authorized[ifaceId] ~= nil) then
     return
   end
-  auth.authorized[ifaceId] = true
+  auth.authorized[ifaceId] = strict
   local succ, msg = self.authDB:save(deploymentId, auth)
   if not succ then
     Log:error(format("Falha ao salvar autorização '%s': %s",
@@ -748,13 +748,10 @@ end
 function ManagementFacet:revoke(deploymentId, ifaceId)
   self:checkPermission()
   local auth = self.authorizations[deploymentId]
-  if not auth then
+  if (not auth) or (auth.authorized[ifaceId] == nil) then
     Log:error(format("Não há autorização para '%s'.", deploymentId))
     error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
-  elseif not self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' não cadastrada.", ifaceId))
-    error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
-  elseif auth.authorized[ifaceId] then
+  else
     local succ, msg
     auth.authorized[ifaceId] = nil
     -- Se não houver mais autorizações, remover a entrada
@@ -826,7 +823,7 @@ end
 --
 function ManagementFacet:hasAuthorization(deploymentId, iface)
   local auth = self.authorizations[deploymentId]
-  return ((auth and auth.authorized[iface]) and true) or false
+  return ((auth and auth.authorized[iface] ~= nil) and true) or false
 end
 
 ---
@@ -888,7 +885,7 @@ function ManagementFacet:getAuthorizationsByInterfaceId(ifaceIds)
   for _, auth in pairs(self.authorizations) do
     local found = true
     for _, iface in ipairs(ifaceIds) do
-      if not auth.authorized[iface] then
+      if auth.authorized[iface] == nil then
         found = false
         break
       end

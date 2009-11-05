@@ -72,7 +72,7 @@ Uso: %s [opções] --login=<usuário> <comando>
 
 - Controle de Autorização
   * Conceder autorização:
-     --set-authorization=<id_implantação> --grant=<interface>
+     --set-authorization=<id_implantação> --grant=<interface> [--no-strict]
   * Revogar autorizaçãoL
      --set-authorization=<id_implantação> --revoke=<interface>
   * Remover autorização:
@@ -181,6 +181,7 @@ local commands = {
     {n = 0, params = {}}
   };
   ["set-authorization"] = {
+    {n = 1, params={grant = 1, ["no-strict"] = 0}},
     {n = 1, params={grant = 1}},
     {n = 1, params={revoke = 1}},
   };
@@ -318,9 +319,6 @@ local function parse(argv)
   end
   if not found then
     return nil, "Parâmetros inválidos"
-  end
-  for k, v in pairs(params) do
-    if v == null then params[k] = nil end
   end
   return {
     name = cmdname,
@@ -483,7 +481,7 @@ end
 handlers["list-system"] = function(cmd)
   local systems
   local acsmgm = getacsmgm()
-  if not cmd.params[cmd.name] then  -- Busca todos
+  if cmd.params[cmd.name] == null then  -- Busca todos
     systems = acsmgm:getSystems()
   else
     -- Busca um sistema específico
@@ -542,7 +540,8 @@ handlers["set-system"] = function(cmd)
   elseif err[1] == "IDL:openbusidl/acs/SystemNonExistent:1.0" then
     print(string.format("[ERRO] Sistema '%s' não cadastrado", id))
   else
-    print(string.format("[ERRO] Falha ao atualizar sistema '%s': %s", id, err[1]))
+    print(string.format("[ERRO] Falha ao atualizar sistema '%s': %s", id, 
+      err[1]))
   end
 end
 
@@ -575,7 +574,8 @@ handlers["add-deployment"] = function(cmd)
     elseif err[1] == "IDL:openbusidl/acs/SystemNonExistent:1.0" then
       printf("[ERRO] Sistema '%s' não cadastrado", cmd.params.system)
     elseif err[1] == "IDL:openbusidl/acs/InvalidCertificate:1.0" then
-      printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido", id)
+      printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido",
+        id)
     else
       printf("[ERRO] Falha ao adicionar implantação '%s': %s", id, err[1])
     end
@@ -625,13 +625,16 @@ handlers["set-deployment"] = function(cmd)
     f:close()
     local succ, err = acsmgm.__try:setSystemDeploymentCertificate(id, cert)
     if succ then
-      printf("[INFO] Certificado da implantação '%s' atualizado com sucesso", id)
+      printf("[INFO] Certificado da implantação '%s' atualizado com sucesso",
+        id)
     elseif err[1] ==  "IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0" then
       printf("[ERRO] Implantação '%s' não cadastrada", id)
     elseif err[1] == "IDL:openbusidl/acs/InvalidCertificate:1.0" then
-      printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido", id)
+      printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido",
+        id)
     else
-      printf("[ERRO] Falha ao atualizar certificado da implantação '%s': %s", id, err[1])
+      printf("[ERRO] Falha ao atualizar certificado da implantação '%s': %s",
+        id, err[1])
     end
   end
   if cmd.params.description then
@@ -642,7 +645,8 @@ handlers["set-deployment"] = function(cmd)
     elseif err[1] == "IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0" then
       printf("[ERRO] Implantação '%s' não cadastrada", id)
     else
-      printf("[ERRO] Falha ao atualizar descrição da implantação '%s': %s", id, err[1])
+      printf("[ERRO] Falha ao atualizar descrição da implantação '%s': %s",
+        id, err[1])
     end
   end
 end
@@ -658,7 +662,7 @@ handlers["list-deployment"] = function(cmd)
   local id = cmd.params[cmd.name]
   local system = cmd.params.system
   -- Busca apenas uma implantação
-  if id then
+  if id and id ~= null then
     local succ, depl = acsmgm.__try:getSystemDeployment(id)
     if succ then
       depls = { depl }
@@ -788,8 +792,8 @@ handlers["set-authorization"] = function(cmd)
   -- Concede uma autorização
   if cmd.params.grant then
     iface = cmd.params.grant
-    succ, err = rsmgm.__try:grant(depl, iface)
-    msg = string.format("[INFO] Autorização concedida à '%s': %s", depl, iface)
+    succ, err = rsmgm.__try:grant(depl, iface, not cmd.params["no-strict"])
+    msg = string.format("[INFO] Autorização concedida a '%s': %s", depl, iface)
   else
     -- Revoga autorização
     iface = cmd.params.revoke
@@ -803,7 +807,8 @@ handlers["set-authorization"] = function(cmd)
   elseif err[1] == "IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0" then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
   elseif err[1] == "IDL:openbusidl/rs/AuthorizationNonExistent:1.0" then
-    printf("[ERRO] Implantação '%s' não possui autorização", depl)
+    printf("[ERRO] Implantação '%s' não possui autorização para '%s'", 
+      depl, iface)
   else
     printf("[ERRO] Falha ao alterar autorização: %s", err[1])
   end
@@ -816,9 +821,16 @@ end
 --
 handlers["del-authorization"] = function(cmd)
   local rsmgm = getrsmgm()
-  rsmgm:removeAuthorization(cmd.params[cmd.name])
-  printf("[INFO] Autorização de '%s' removida com sucesso", 
-    cmd.params[cmd.name])
+  local depl = cmd.params[cmd.name]
+  local succ, err = rsmgm.__try:removeAuthorization(depl)
+  if succ then
+    printf("[INFO] Autorizações de '%s' removidas com sucesso", 
+      cmd.params[cmd.name])
+  elseif err[1] == "IDL:openbusidl/rs/AuthorizationNonExistent:1.0" then
+    printf("[ERRO] Implantação '%s' não possui autorizações", depl)
+  else
+    printf("[ERRO] Falha ao remover autorizações: %s", err[1])
+  end
 end
 
 ---
@@ -830,7 +842,7 @@ handlers["list-authorization"] = function(cmd)
   local auths
   local rsmgm = getrsmgm()
   local depl = cmd.params[cmd.name]
-  if depl then
+  if depl and depl ~= null then
     -- Busca de uma única implantação
     local succ, auth = rsmgm.__try:getAuthorization(depl)
     if succ then
@@ -1010,7 +1022,8 @@ end
 --
 function Grant(auth)
   if not (type(auth) == "table" and type(auth.id) == "string" and 
-     type(auth.interfaces) == "table")
+    type(auth.interfaces) == "table" and (type(auth.strict) == "nil" or
+    type(auth.strict) == "boolean"))
   then
     argerror()
   end
@@ -1018,6 +1031,9 @@ function Grant(auth)
   cmd.name = "set-authorization"
   cmd.params = {}
   cmd.params[cmd.name] = auth.id
+  if auth.strict == false then
+    cmd.params["no-strict"] = null
+  end
   for n, iface in ipairs(auth.interfaces) do
     cmd.params.grant = iface
     handlers[cmd.name](cmd)
