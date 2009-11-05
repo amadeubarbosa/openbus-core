@@ -3,10 +3,11 @@
 ---
 --Inicialização do Serviço de Controle de Acesso
 ---
-
+local string = string
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
+local util = require "openbus.util.Utils"
 local LDAPLoginPasswordValidator =
     require "core.services.accesscontrol.LDAPLoginPasswordValidator"
 local TestLoginPasswordValidator =
@@ -32,19 +33,43 @@ assert(loadfile(DATA_DIR.."/conf/AccessControlServerConfiguration.lua"))()
 local iconfig = assert(loadfile(DATA_DIR ..
   "/conf/advanced/ACSInterceptorsConfiguration.lua"))()
 
+-- Parsing arguments
+local usage_msg = [[
+	--help                   : show this help
+	--verbose                : turn ON the VERBOSE mode (show the system commands)
+	--port=<port number>     : defines the service port (padrão ]] 
+								.. tostring(AccessControlServerConfiguration.hostPort) .. [[)
+ NOTES:
+ 	The prefix '--' is optional in all options.
+	So '--help' or '-help' or yet 'help' all are the same option.]]
+local arguments = util.parse_args(arg,usage_msg,true)
+
+if arguments.verbose == "" then
+	oil.verbose:level(5)
+else
+	if AccessControlServerConfiguration.oilVerboseLevel then
+  		oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
+	end
+end
+
+if arguments.port then
+	AccessControlServerConfiguration.hostPort = tonumber(arguments.port)
+end
+
 -- Define os níveis de verbose para o OpenBus e para o OiL.
 if AccessControlServerConfiguration.logLevel then
   Log:level(AccessControlServerConfiguration.logLevel)
 end
-if AccessControlServerConfiguration.oilVerboseLevel then
-  oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
-end
+
 local props = { host = AccessControlServerConfiguration.hostName,
   port = AccessControlServerConfiguration.hostPort}
 
 -- Inicializa o barramento
 Openbus:resetAndInitialize( AccessControlServerConfiguration.hostName,
   AccessControlServerConfiguration.hostPort, props, iconfig)
+  
+Openbus:enableFaultTolerance()
+
 local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"

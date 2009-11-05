@@ -58,6 +58,9 @@ public class HelloClient {
     IComponent component = serviceOffer.member;
     org.omg.CORBA.Object helloObject = component.getFacetByName("IHello");
     IHello hello = IHelloHelper.narrow(helloObject);
+    
+    hello.sayHello();
+    
     hello.sayHello();
 
     bus.disconnect();

@@ -1,3 +1,3 @@
 #!/bin/ksh
 
-exec ./servicelauncher ${OPENBUS_HOME}/core/services/accesscontrol/AccessControlServer.lua
+exec ./servicelauncher ${OPENBUS_HOME}/core/services/accesscontrol/AccessControlServer.lua "$@"

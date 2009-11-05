@@ -90,13 +90,20 @@ public class HelloServer {
     if (registryService == null) {
       throw new RSUnavailableException();
     }
+    
+    System.out.println("Hello Server conectado.");
 
     org.omg.CORBA.Object obj = context.getIComponent();
     IComponent component = IComponentHelper.narrow(obj);
     ServiceOffer serviceOffer = new ServiceOffer(new Property[0], component);
     StringHolder registrationId = new StringHolder();
-    registryService.register(serviceOffer, registrationId);
+    boolean ok = registryService.register(serviceOffer, registrationId);
 
+    if (ok){
+    	System.out.println("Hello Server registrado.");
+    }else{
+    	System.out.println("Não foi possível registrar Hello Server.");
+    }
     Runtime.getRuntime().addShutdownHook(new ShutdownThread());
 
     orb.run();

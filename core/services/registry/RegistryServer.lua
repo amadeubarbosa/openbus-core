@@ -9,6 +9,7 @@ local tonumber = tonumber
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
+local util = require "openbus.util.Utils"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
@@ -23,13 +24,33 @@ end
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 local iConfig =
   assert(loadfile(DATA_DIR.."/conf/advanced/RSInterceptorsConfiguration.lua"))()
+  
+-- Parsing arguments
+local usage_msg = [[
+	--help                   : show this help
+	--verbose                : turn ON the VERBOSE mode (show the system commands)
+	--port=<port number>     : defines the service port (padrão ]] 
+								.. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
+ NOTES:
+ 	The prefix '--' is optional in all options.
+	So '--help' or '-help' or yet 'help' all are the same option.]]
+local arguments = util.parse_args(arg,usage_msg,true)
 
+if arguments.verbose == "" then
+	oil.verbose:level(5)
+else
+	if RegistryServerConfiguration.oilVerboseLevel then
+  		oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
+	end
+end
+
+if arguments.port then
+	RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
+end
+  
 -- Define os níveis de verbose para o openbus e para o oil
 if RegistryServerConfiguration.logLevel then
   Log:level(RegistryServerConfiguration.logLevel)
-end
-if RegistryServerConfiguration.oilVerboseLevel then
-  oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
 end
 
 
@@ -41,6 +62,8 @@ Openbus:resetAndInitialize(
   RegistryServerConfiguration.accessControlServerHostName,
   RegistryServerConfiguration.accessControlServerHostPort,
   props, iConfig, iConfig)
+  
+Openbus:enableFaultTolerance()
 
 local orb = Openbus:getORB()
 
