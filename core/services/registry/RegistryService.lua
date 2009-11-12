@@ -588,6 +588,19 @@ end
 
 ManagementFacet = oop.class{}
 
+ManagementFacet.expressions = {
+  -- IDL:foo:* , IDL:foo/bar:*
+  ["^IDL:([^%*]+):%*$"] = "^IDL:%1:%%d+%%.%%d+$",
+  -- IDL:*:* , IDL:foo/*:* , IDL:foo*:*
+  ["^IDL:([^%*]*)%*:%*$"] = "^IDL:%1.*:%%d+%%.%%d+$",
+  -- IDL:*:1.0 , IDL:foo/*:1.0 , IDL:foo*:1.0
+  ["^IDL:([^%*]*)%*:(%d+%.%d+)$"] = "^IDL:%1.*:%2$",
+  -- IDL:foo:1.*
+  ["^IDL:([^%*]+):(%d+%.)%*$"] = "^IDL:%1:%2%%d+$",
+  -- IDL:*:1.* , IDL:foo/*:1.* , IDL:foo*:1.*
+  ["^IDL:([^%*]*)%*:(%d%.)%*$"] = "^IDL:%1.*:%2%%d+$",
+}
+
 ---
 -- Verifica se o usuário tem permissão para executar o método.
 --
@@ -674,7 +687,7 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
     error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
   end
   for _, auth in pairs(self.authorizations) do
-    if auth.authorized[ifaceId] then
+    if auth.authorized[ifaceId] == "strict" then
       Log:error(format("Interface '%s' em uso.", ifaceId))
       error{"IDL:openbusidl/rs/InterfaceIdentifierInUse:1.0"}
     end
@@ -708,7 +721,19 @@ end
 --
 function ManagementFacet:grant(deploymentId, ifaceId, strict)
   self:checkPermission()
-  if strict and not self.interfaces[ifaceId] then
+  local expression
+  if string.match(ifaceId, "%*") then
+    for exp in pairs(self.expressions) do
+      if string.match(ifaceId, exp) then
+        expression = true
+        break
+      end
+    end
+    if not expression then
+      Log:error(format("Expressão regular inválida: '%s'", ifaceId))
+      error{"IDL:openbusidl/rs/InvalidRegularExpression:1.0"}
+    end
+  elseif strict and not self.interfaces[ifaceId] then
     Log:error(format("Interface '%s' não cadastrada.", ifaceId))
     error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
   end
@@ -727,10 +752,16 @@ function ManagementFacet:grant(deploymentId, ifaceId, strict)
       authorized = {},
     }
     self.authorizations[deploymentId] = auth
-  elseif auth and (auth.authorized[ifaceId] ~= nil) then
+  elseif auth and auth.authorized[ifaceId] then
     return
   end
-  auth.authorized[ifaceId] = strict
+  if expression then
+    auth.authorized[ifaceId] = "expression"
+  elseif strict then
+    auth.authorized[ifaceId] = "strict"
+  else
+    auth.authorized[ifaceId] = "normal"
+  end
   local succ, msg = self.authDB:save(deploymentId, auth)
   if not succ then
     Log:error(format("Falha ao salvar autorização '%s': %s",
@@ -748,25 +779,24 @@ end
 function ManagementFacet:revoke(deploymentId, ifaceId)
   self:checkPermission()
   local auth = self.authorizations[deploymentId]
-  if (not auth) or (auth.authorized[ifaceId] == nil) then
+  if not (auth and auth.authorized[ifaceId]) then
     Log:error(format("Não há autorização para '%s'.", deploymentId))
     error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
-  else
-    local succ, msg
-    auth.authorized[ifaceId] = nil
-    -- Se não houver mais autorizações, remover a entrada
-    if next(auth.authorized) then
-      succ, msg = self.authDB:save(deploymentId, auth)
-    else
-      self.authorizations[deploymentId] = nil
-      succ, msg = self.authDB:remove(deploymentId)
-    end
-    if not succ then
-      Log:error(format("Falha ao remover autorização '%s': %s",
-        deploymentId, msg))
-    end
-    self.context.IRegistryService:updateFacets(deploymentId)
   end
+  local succ, msg
+  auth.authorized[ifaceId] = nil
+  -- Se não houver mais autorizações, remover a entrada
+  if next(auth.authorized) then
+    succ, msg = self.authDB:save(deploymentId, auth)
+  else
+    self.authorizations[deploymentId] = nil
+    succ, msg = self.authDB:remove(deploymentId)
+  end
+  if not succ then
+    Log:error(format("Falha ao remover autorização '%s': %s",
+      deploymentId, msg))
+  end
+  self.context.IRegistryService:updateFacets(deploymentId)
 end
 
 ---
@@ -779,15 +809,14 @@ function ManagementFacet:removeAuthorization(deploymentId)
   if not self.authorizations[deploymentId] then
     Log:error(format("Não há autorização para '%s'.", deploymentId))
     error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
-  else
-    self.authorizations[deploymentId] = nil
-    local succ, msg = self.authDB:remove(deploymentId)
-    if not succ then
-      Log:error(format("Falha ao remover autorização '%s': %s",
-        deploymentId, msg))
-    end
-    self.context.IRegistryService:updateFacets(deploymentId)
   end
+  self.authorizations[deploymentId] = nil
+  local succ, msg = self.authDB:remove(deploymentId)
+  if not succ then
+    Log:error(format("Falha ao remover autorização '%s': %s",
+      deploymentId, msg))
+  end
+  self.context.IRegistryService:updateFacets(deploymentId)
 end
 
 ---
@@ -823,7 +852,23 @@ end
 --
 function ManagementFacet:hasAuthorization(deploymentId, iface)
   local auth = self.authorizations[deploymentId]
-  return ((auth and auth.authorized[iface] ~= nil) and true) or false
+  if auth and auth.authorized[iface] then
+    return true
+  elseif auth then
+    for exp, type in pairs(auth.authorized) do
+      if type == "expression" then
+        for pat, sub in pairs(self.expressions) do
+          -- Tenta criar o padrão para Lua a partir da autorização
+          pat, sub = string.gsub(exp, pat, sub)
+          -- Se o padrão foi criado, verifica se a interface é reconhecida
+          if sub == 1 and string.match(iface, pat) then
+            return true
+          end
+        end
+      end
+    end
+  end
+  return false
 end
 
 ---
@@ -885,7 +930,7 @@ function ManagementFacet:getAuthorizationsByInterfaceId(ifaceIds)
   for _, auth in pairs(self.authorizations) do
     local found = true
     for _, iface in ipairs(ifaceIds) do
-      if auth.authorized[iface] == nil then
+      if not auth.authorized[iface] then
         found = false
         break
       end

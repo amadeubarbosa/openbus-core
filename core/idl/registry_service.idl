@@ -113,16 +113,16 @@ typedef string InterfaceIdentifier;
 /** \brief Seqüência de indetificadores de interface. */
 typedef sequence<InterfaceIdentifier> InterfaceIdentifierList;
 
-/** \brief */
+/** \brief Identificador de interface em uso por alguma autorização. */
 exception InterfaceIdentifierInUse {};
 
-/** \brief */
+/** \brief Identificador de interface não encontrado. */
 exception InterfaceIdentifierNotFound {};
 
-/** \brief */
+/** \brief Identificador de interface não existente. */
 exception InterfaceIdentifierNonExistent {};
 
-/** \brief */
+/** \brief Identificador de interface já cadastrado.*/
 exception InterfaceIdentifierAlreadyExists {};
 
 /*---------------------------- Autorização -----------------------------*/
@@ -137,12 +137,14 @@ struct SystemDeploymentAuthorization {
 /** \brief Seqüência de autorizações. */
 typedef sequence<SystemDeploymentAuthorization> SystemDeploymentAuthorizationList;
 
-/** \brief Autorização não existe */
+/** \brief Autorização não existe. */
 exception AuthorizationNonExistent {};
 
-/** \brief */
+/** \brief Implantação não existe. */
 exception SystemDeploymentNonExistent {};
 
+/** \brief Expressão regular inválida. */
+exception InvalidRegularExpression {};
 
 /**
  * \brief Interface de gerenciamento de autorizações de serviços.
@@ -189,15 +191,19 @@ interface IManagement {
    *   cadastrada.
    *
    * \param deploymentId Identificador da implantação.
-   * \param ifaceId Identificador da interface.
+   * \param ifaceId Identificador da interface ou expressão regular.
    * \param strict Força que a interface esteja previamente cadastrada.
+   *   Esse parâmetro não possui efeito se ifaceId for uma expressão regular.
    *
    * \exception SystemDeploymentNonExistent Implantação não cadastrada.
-   * \exception InterfaceIdentifierNonExistent Insterface não cadastrada.
+   * \exception InterfaceIdentifierNonExistent Interface não cadastrada.
+   * \exception InvalidRegularExpression Identificador da interface possui
+   *   uma expressão regular inválida.
    */
   void grant(in string deploymentId, in InterfaceIdentifier ifaceId,
     in boolean strict)
-    raises (SystemDeploymentNonExistent, InterfaceIdentifierNonExistent);
+    raises (SystemDeploymentNonExistent, InterfaceIdentifierNonExistent,
+    InvalidRegularExpression);
 
   /**
    * \brief Revoga a autorização para exportar a interface.

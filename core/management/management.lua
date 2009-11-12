@@ -809,6 +809,8 @@ handlers["set-authorization"] = function(cmd)
   elseif err[1] == "IDL:openbusidl/rs/AuthorizationNonExistent:1.0" then
     printf("[ERRO] Implantação '%s' não possui autorização para '%s'", 
       depl, iface)
+  elseif err[1] == "IDL:openbusidl/rs/InvalidRegularExpression:1.0" then
+    printf("[ERRO] Expressão regular inválida: %s", iface)
   else
     printf("[ERRO] Falha ao alterar autorização: %s", err[1])
   end
