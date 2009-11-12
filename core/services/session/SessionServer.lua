@@ -31,8 +31,7 @@ if SessionServerConfiguration.oilVerboseLevel then
 end
 
 -- Inicializa o barramento
-Openbus:resetAndInitialize(
-  SessionServerConfiguration.accessControlServerHostName,
+Openbus:init(SessionServerConfiguration.accessControlServerHostName,
   SessionServerConfiguration.accessControlServerHostPort,
   nil, iConfig, iConfig)
 local orb = Openbus:getORB()

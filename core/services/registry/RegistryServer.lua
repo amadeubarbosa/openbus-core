@@ -58,8 +58,7 @@ props = {  host = RegistryServerConfiguration.registryServerHostName,
            port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}
            
 -- Inicializa o barramento
-Openbus:resetAndInitialize(
-  RegistryServerConfiguration.accessControlServerHostName,
+Openbus:init(RegistryServerConfiguration.accessControlServerHostName,
   RegistryServerConfiguration.accessControlServerHostPort,
   props, iConfig, iConfig)
   

@@ -1075,11 +1075,11 @@ local function connect()
     if not password then
       password = lpw.getpass("Senha: ")
     end
-    Openbus:resetAndInitialize(acshost, acsport)
+    Openbus:init(acshost, acsport)
     local orb = Openbus:getORB()
     orb:loadidlfile(IDLPATH_DIR .. "/registry_service.idl")
     orb:loadidlfile(IDLPATH_DIR .. "/access_control_service.idl")
-    if Openbus:connect(login, password) == false then
+    if Openbus:connectByLoginPassword(login, password) == false then
       print("[ERRO] Falha no login")
       os.exit(1)
     end

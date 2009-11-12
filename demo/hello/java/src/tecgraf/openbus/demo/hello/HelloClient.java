@@ -42,7 +42,7 @@ public class HelloClient {
       "org.jacorb.orb.ORBSingleton");
     Openbus bus = Openbus.getInstance();
     //bus.resetAndInitialize(args, orbProps, host, port);
-    bus.resetAndInitializeWithFaultTolerance(args, orbProps, host, port);
+    bus.initWithFaultTolerance(args, orbProps, host, port);
 
     String userLogin = props.getProperty("login");
     String userPassword = props.getProperty("password");

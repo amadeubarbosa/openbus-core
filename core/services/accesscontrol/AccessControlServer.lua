@@ -65,7 +65,7 @@ local props = { host = AccessControlServerConfiguration.hostName,
   port = AccessControlServerConfiguration.hostPort}
 
 -- Inicializa o barramento
-Openbus:resetAndInitialize( AccessControlServerConfiguration.hostName,
+Openbus:init(AccessControlServerConfiguration.hostName,
   AccessControlServerConfiguration.hostPort, props, iconfig)
   
 Openbus:enableFaultTolerance()

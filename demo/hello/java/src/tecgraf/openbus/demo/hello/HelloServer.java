@@ -62,9 +62,8 @@ public class HelloServer {
       "org.jacorb.orb.ORBSingleton");
     Openbus bus = Openbus.getInstance();
     //bus.resetAndInitialize(args, orbProps, host, port);
-    bus.resetAndInitializeWithFaultTolerance(args, orbProps, host, port);
-    
-    
+    bus.initWithFaultTolerance(args, orbProps, host, port);
+
     String entityName = props.getProperty("entity.name");
     String privateKeyFile = props.getProperty("private.key");
     String acsCertificateFile = props.getProperty("acs.certificate");
@@ -90,7 +89,7 @@ public class HelloServer {
     if (registryService == null) {
       throw new RSUnavailableException();
     }
-    
+
     System.out.println("Hello Server conectado.");
 
     org.omg.CORBA.Object obj = context.getIComponent();
@@ -99,10 +98,11 @@ public class HelloServer {
     StringHolder registrationId = new StringHolder();
     boolean ok = registryService.register(serviceOffer, registrationId);
 
-    if (ok){
-    	System.out.println("Hello Server registrado.");
-    }else{
-    	System.out.println("Não foi possível registrar Hello Server.");
+    if (ok) {
+      System.out.println("Hello Server registrado.");
+    }
+    else {
+      System.out.println("Não foi possível registrar Hello Server.");
     }
     Runtime.getRuntime().addShutdownHook(new ShutdownThread());
 

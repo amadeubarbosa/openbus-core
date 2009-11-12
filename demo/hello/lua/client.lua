@@ -14,7 +14,7 @@ local props = {}
 scsutils:readProperties(props, "Hello.properties")
 local host = props["host.name"].value
 local port = props["host.port"].value
-openbus:resetAndInitialize(host, tonumber(port))
+openbus:init(host, tonumber(port))
 --openbus:enableFaultTolerance()
 local orb = openbus:getORB()
 
@@ -26,7 +26,7 @@ function main ()
   -- Conexão com o barramento e obtenção do componente HelloComponent
   local login = props.login.value
   local password = props.password.value
-  local registryService = openbus:connect(login, password)
+  local registryService = openbus:connectByLoginPassword(login, password)
   if not registryService then
     io.stderr:write("HelloClient: Erro ao conectar ao barramento.\n")
     os.exit(1)
@@ -39,6 +39,9 @@ function main ()
   local helloFacet = helloComponent:getFacet("IDL:demoidl/hello/IHello:1.0")
   helloFacet = orb:narrow(helloFacet, "IDL:demoidl/hello/IHello:1.0")
   helloFacet:sayHello()
+
+  openbus:disconnect()
+  openbus:destroy()
 end
 
 oil.main(function()
