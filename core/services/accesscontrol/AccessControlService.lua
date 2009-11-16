@@ -21,6 +21,7 @@ local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local SmartComponent = require "openbus.faulttolerance.SmartComponent"
 local OilUtilities = require "openbus.util.OilUtilities"
+local FaultTolerantService = require "core.services.faulttolerance.FaultTolerantService"
 
 local LeaseProvider = require "openbus.lease.LeaseProvider"
 
@@ -172,18 +173,15 @@ function ACSFacet:logout(credential)
 end
 
 function ACSFacet:getRegistryService()
-
 	local acsIRecep = self:getACSReceptacleFacet()
 	local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
 	                                   "RegistryServiceReceptacle")
 
 	if not status then
 	  Log:error("[ACSFacet] Não foi possível obter o Serviço de Registro. Erro: " ..
-	        err)
-	  Log:error(conns)
+	        conns)
 	  return nil
 	end
-
 	if conns[1] ~= nil then 
 	    local rgs = Openbus:getORB():narrow(conns[1].objref,
                     "IDL:openbusidl/rs/IRegistryService:1.0")
@@ -207,8 +205,7 @@ function ACSFacet:getRegistryService()
 		return rgs                    
     else
       Log:error("[ACSFacet] Não foi possível obter o Serviço de Registro. Erro: " ..
-	        err)
-	  Log:error(conns)
+	        conns)
 	  return nil
 	end
 end
@@ -216,11 +213,11 @@ end
 function ACSFacet:getSmartRSInstance()
 	if self.smartRS == nil then
     	local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-    	local ftconfig = assert(loadfile(DATA_DIR .."/conf/FaultToleranceConfiguration.lua"))()
+    	local ftconfig = assert(loadfile(DATA_DIR .."/conf/RSFaultToleranceConfiguration.lua"))()
     	local keys = {}
-    	keys[Utils.REGISTRY_SERVICE_KEY] = { interface = "IDL:openbusidl/rs/IRegistryService:1.0",
+    	keys[Utils.REGISTRY_SERVICE_KEY] = { interface = Utils.REGISTRY_SERVICE_INTERFACE,
     										  hosts = ftconfig.hosts.RS, }
-    	keys[Utils.FAULT_TOLERANT_RS_KEY] = { interface = "IDL:openbusidl/ft/IFaultTolerantService:1.0",
+    	keys[Utils.FAULT_TOLERANT_RS_KEY] = { interface = Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
     								  		  hosts = ftconfig.hosts.FTRS, }
 		self.smartRS = SmartComponent:__init(Openbus:getORB(), "RS", keys)
 	end
@@ -244,8 +241,7 @@ function ACSFacet:connectRegistryService(registryService)
 		local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
 										   "RegistryServiceReceptacle")
 		if not status then
-		  Log:error("[faulltolerance] Erro ao pegar conexoes " ..	err)
-	      Log:error(conns)
+		  Log:error("[faulltolerance] Erro ao pegar conexoes " ..	conns)
 	   	  return false		
 		else 
 			if conns[1] ~= nil then 
@@ -257,9 +253,10 @@ function ACSFacet:connectRegistryService(registryService)
                 	self:logout(self.registryCredential)
                 else
                 	if credential.identifier ~= self.registryCredential.identifier then
-                	--se o SR existe, esta conectado porem com outra credencial, significa que nao pode conectar
-   						self.registryCredential = credential
-						return true
+                	--se o SR existe, esta conectado porem com outra credencial, 
+                	-- significa que outra replica esta tentando conectar, mas nao pode
+   						--self.registryCredential = credential
+						return false
                 	else
                 	--se o SR existe, esta conectado e com a mesma credencial
                 	-- nao faz nada
@@ -916,6 +913,17 @@ function ManagementFacet:getSystemDeploymentsBySystemId(systemId)
     end
   end
   return array
+end
+
+--------------------------------------------------------------------------------
+-- Faceta IFaultTolerantService
+--------------------------------------------------------------------------------
+
+FaultToleranceFacet = FaultTolerantService.FaultToleranceFacet
+
+function FaultToleranceFacet:updateStatus(self)
+	--Atualiza estado das credenciais
+	Log:faulttolerance("[updateStatus] Atualiza estado das credenciais.")
 end
 
 --------------------------------------------------------------------------------

@@ -40,3 +40,4 @@ end
 function FaultToleranceFacet:kill()
     self:shutdown()
 end
+

@@ -74,9 +74,6 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
-local FaultTolerantService = require "core.services.faulttolerance.FaultTolerantService"
-
-
 
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
@@ -112,7 +109,7 @@ facetDescriptions.ILeaseProvider.key                   = "LP"
 
 facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
 facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
-facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService.class                 = AccessControlService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                   = "FTACS"
 
 facetDescriptions.IManagement.name           = "IManagement"

@@ -20,6 +20,7 @@ local orb = oil.orb
 local TableDB  = require "openbus.util.TableDB"
 local OffersDB = require "core.services.registry.OffersDB"
 local Openbus  = require "openbus.Openbus"
+local FaultTolerantService = require "core.services.faulttolerance.FaultTolerantService"
 
 local Log = require "openbus.util.Log"
 local oop = require "loop.simple"
@@ -433,6 +434,17 @@ end
 ---
 function RSFacet:generateIdentifier()
     return luuid.new("time")
+end
+
+--------------------------------------------------------------------------------
+-- Faceta IFaultTolerantService
+--------------------------------------------------------------------------------
+
+FaultToleranceFacet = FaultTolerantService.FaultToleranceFacet
+
+function FaultToleranceFacet:updateStatus(self)
+	--Atualiza estado das ofertas
+	Log:faulttolerance("[updateStatus] Atualiza estado das ofertas.")
 end
 
 --------------------------------------------------------------------------------

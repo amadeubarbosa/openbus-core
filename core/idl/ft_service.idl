@@ -28,6 +28,8 @@ interface IFaultTolerantService {
 
     void kill();
     
+    void updateStatus();
+    
 };
 
 };

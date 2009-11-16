@@ -68,9 +68,6 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local RegistryService = require "core.services.registry.RegistryService"
-local FaultTolerantService = require "core.services.faulttolerance.FaultTolerantService"
-
-
 
 -----------------------------------------------------------------------------
 ---- RegistryService Descriptions
@@ -98,7 +95,7 @@ facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
 
 facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
 facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
-facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService.class                 = RegistryService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                   = "FTRS"
 
 facetDescriptions.IManagement.name           = "IManagement"
