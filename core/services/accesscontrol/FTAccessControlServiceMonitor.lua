@@ -126,13 +126,13 @@ function FTACSMonitorFacet:monitor()
 
 			--Criando novo processo assincrono
 			if self:isUnix() then
-			--os.execute(BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort..
+			--os.execute(BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort..
 			--						" &  > log_access_control_server-"..tostring(t)..".txt")
-				os.execute(BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort)
+				os.execute(BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort)
 			else
-			--os.execute("start "..BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort..
+			--os.execute("start "..BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort..
 			--						" > log_access_control_server-"..tostring(t)..".txt")
-				os.execute("start "..BIN_DIR.."/run_ft_access_control_server.sh ".. self.config.hostPort)
+				os.execute("start "..BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort)
 			end
 
 	        -- Espera 5 segundos para que dê tempo do SCA ter sido levantado

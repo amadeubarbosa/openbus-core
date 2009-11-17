@@ -141,13 +141,13 @@ function FTRSMonitorFacet:monitor()
 			--Criando novo processo assincrono
 			
 			if self:isUnix() then
- 			    os.execute(BIN_DIR.."/run_ft_registry_server.sh ".. self.config.registryServerHostPort)
- 			    --os.execute(BIN_DIR.."/run_ft_registry_server.sh ".. self.config.registryServerHostPort..
+ 			    os.execute(BIN_DIR.."/run_registry_server.sh --port=".. self.config.registryServerHostPort)
+ 			    --os.execute(BIN_DIR.."/run_registry_server.sh --port=".. self.config.registryServerHostPort..
 			--						" & > log_registry_server-"..tostring(t)..".txt")
 			else
-  			    os.execute("start "..BIN_DIR.."/run_ft_registry_server.sh "..
+  			    os.execute("start "..BIN_DIR.."/run_registry_server.sh --port="..
 							 self.config.registryServerHostPort)
-  			    --os.execute("start "..BIN_DIR.."/run_registry_server.sh "..
+  			    --os.execute("start "..BIN_DIR.."/run_registry_server.sh --port="..
 		--					 self.config.registryServerHostPort..
 		--					"> log_registry_server-"..tostring(t)..".txt")
 			end
