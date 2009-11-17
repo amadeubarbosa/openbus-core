@@ -4,6 +4,15 @@
 --Inicialização do Serviço de Controle de Acesso
 ---
 
+-- Incluíndo mecanismo para identificar descritores abertos
+local socket = require "socket.core"
+require "fileleak"
+io.open = fileleak.wrapfactory(io.open)
+socket.tcp = fileleak.wrapfactory(socket.tcp)
+socket.udp = fileleak.wrapfactory(socket.udp)
+-- Fim do mecanismo
+
+
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
@@ -119,3 +128,4 @@ function main()
 end
 
 print(oil.pcall(oil.main,main))
+fileleak.showstats()

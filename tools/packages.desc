@@ -277,6 +277,7 @@ packages = {
 			["../services/registry"] = "core/services",
 			["../services/session"] = "core/services",
 			["../utilities/lua/openbus"] = "core/utilities/lua",
+			["../utilities/lua/*.lua"] = "core/utilities/lua",
 	  },
 	  conf_files = {
 			["../../data/conf"] = "data",
