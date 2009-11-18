@@ -8,6 +8,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import openbusidl.acs.Credential;
+import openbusidl.acs.IAccessControlService;
 import openbusidl.rs.IRegistryService;
 
 import org.junit.Assert;
@@ -18,6 +19,7 @@ import org.omg.CORBA.UserException;
 
 import tecgraf.openbus.exception.ACSLoginFailureException;
 import tecgraf.openbus.exception.OpenBusException;
+import tecgraf.openbus.lease.LeaseExpiredCallback;
 import tecgraf.openbus.util.CryptoUtils;
 import tecgraf.openbus.util.Log;
 
@@ -331,4 +333,37 @@ public class OpenbusTest {
     Assert.assertTrue(openbus.disconnect());
   }
 
+  /**
+   * Testa se a callback de expiração da credencial é corretament acionada.
+   *
+   * @throws OpenBusException
+   */
+  @Test(timeout=120*1000)
+  public void credentialExpired() throws OpenBusException {
+    Openbus openbus = Openbus.getInstance();
+    IRegistryService registryService = openbus.connect(userLogin, userPassword);
+    Assert.assertNotNull(registryService);
+    class LeaseExpiredCallbackImpl implements LeaseExpiredCallback {
+      private boolean expired;
+
+      LeaseExpiredCallbackImpl() {
+        this.expired = false;
+      }
+
+      public void expired() {
+        this.expired = true;
+      }
+
+      public boolean isExpired() {
+        return this.expired;
+      }
+    }
+    LeaseExpiredCallbackImpl callback = new LeaseExpiredCallbackImpl();
+    openbus.addLeaseExpiredCallback(callback);
+    IAccessControlService acs = openbus.getAccessControlService();
+    acs.logout(openbus.getCredential());
+    while (!callback.isExpired()) {
+      ;
+    }
+  }
 }

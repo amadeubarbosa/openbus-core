@@ -9,6 +9,7 @@ import openbusidl.acs.Credential;
 import openbusidl.acs.ILeaseProvider;
 
 import org.omg.CORBA.IntHolder;
+import org.omg.CORBA.NO_PERMISSION;
 import org.omg.CORBA.SystemException;
 
 import tecgraf.openbus.util.Log;
@@ -19,6 +20,7 @@ import tecgraf.openbus.util.Log;
  * @author Tecgraf/PUC-Rio
  */
 public final class LeaseRenewer {
+  private static final int DEFAULT_LEASE = 30;
   /**
    * O provedor onde o <i>lease</i> deve ser renovado.
    */
@@ -131,31 +133,48 @@ public final class LeaseRenewer {
      */
     @Override
     public void run() {
+      int lease = DEFAULT_LEASE;
+
       while (this.mustContinue) {
         IntHolder newLease = new IntHolder();
+
         try {
-          if (!this.provider.renewLease(this.credential, newLease)) {
+          boolean expired;
+          try {
+            expired = !(this.provider.renewLease(this.credential, newLease));
+          }
+          catch (NO_PERMISSION ne) {
+            expired = true;
+          }
+
+          if (expired) {
             Log.LEASE.warning("Falha na renovação da credencial.");
             if (this.expiredCallback != null) {
               this.expiredCallback.expired();
             }
-            return;
+            this.mustContinue = false;
+          }
+          else {
+            StringBuilder msg = new StringBuilder();
+            msg.append(new Date());
+            msg.append(" - Lease renovado. Próxima renovação em ");
+            msg.append(newLease.value);
+            msg.append(" segundos.");
+            Log.LEASE.fine(msg.toString());
+            lease = newLease.value;
           }
         }
         catch (SystemException e) {
           Log.LEASE.severe(e.getMessage(), e);
         }
-        StringBuilder msg = new StringBuilder();
-        msg.append(new Date());
-        msg.append(" - Lease renovado. Próxima renovação em ");
-        msg.append(newLease.value);
-        msg.append(" segundos.");
-        Log.LEASE.fine(msg.toString());
-        try {
-          Thread.sleep(newLease.value * 1000);
-        }
-        catch (InterruptedException e) {
-          // Nada a ser feito.
+
+        if (this.mustContinue) {
+          try {
+            Thread.sleep(lease * 1000);
+          }
+          catch (InterruptedException e) {
+            // Nada a ser feito.
+          }
         }
       }
     }
@@ -177,3 +196,4 @@ public final class LeaseRenewer {
     }
   }
 }
+
