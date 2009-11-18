@@ -19,6 +19,7 @@ TOOLS_LUA= $(addprefix tools.,\
 	build.copy \
 	build.autotools \
 	build.maven \
+	build.mavenimport \
         build.ant \
 	fetch.http \
 	fetch.svn \
