@@ -57,14 +57,14 @@ namespace openbus {
         }
       #ifdef VERBOSE
         stringstream msg;
-        msg << "Próximo intervalo de renovação: " << bus->timeRenewing << "ms";
+        msg << "Proximo intervalo de renovacao: " << bus->timeRenewing << "ms";
         verbose->print(msg.str());
       #endif
         if (!status) {
         #ifdef VERBOSE
-          verbose->print("Não foi possível renovar a credencial!");
+          verbose->print("Nao foi possivel renovar a credencial!");
         #endif
-        /* "Desconecta" o usuário. */
+        /* "Desconecta" o usuario. */
           bus->localDisconnect();
           if (leaseExpiredCallback) {
             leaseExpiredCallback->expired();
@@ -77,9 +77,9 @@ namespace openbus {
         }
       } catch (CORBA::Exception& e) {
       #ifdef VERBOSE
-        verbose->print("Não foi possível renovar a credencial!");
+        verbose->print("Nao foi possivel renovar a credencial!");
       #endif
-      /* "Desconecta" o usuário. ? */
+      /* "Desconecta" o usuario. ? */
         bus->localDisconnect();
         if (leaseExpiredCallback) {
           leaseExpiredCallback->expired();
@@ -115,7 +115,7 @@ namespace openbus {
     } catch(CORBA::Exception& e) {
     #ifdef VERBOSE
       verbose->print(
-        "Não foi possível se desconectar corretamente do barramento."); 
+        "Nao foi possivel se desconectar corretamente do barramento."); 
     #endif
     }
     delete bus;
@@ -279,7 +279,7 @@ namespace openbus {
     #ifdef MULTITHREAD
       if (runThread) {
       #ifdef VERBOSE
-        verbose->print("Esperando término de execução da runThread...");
+        verbose->print("Esperando termino de execucaoo da runThread...");
       #endif
         runThread->wait();
       #ifdef VERBOSE
@@ -374,13 +374,13 @@ namespace openbus {
   #endif
     if (connectionState == CONNECTED) {
     #ifdef VERBOSE
-      verbose->print("Está conectado.");
+      verbose->print("Esta conectado.");
       verbose->dedent("Openbus::isConnected() END");
     #endif
       return true;
     }
   #ifdef VERBOSE
-    verbose->print("NÃO está conectado.");
+    verbose->print("NaO esta conectado.");
     verbose->dedent("Openbus::isConnected() END");
   #endif
     return false;
@@ -545,7 +545,7 @@ namespace openbus {
       }
     } else {
     #ifdef VERBOSE
-      verbose->print("Já há uma conexão ativa.");
+      verbose->print("Ja ha uma conexao ativa.");
       verbose->dedent("Openbus::connect() END");
     #endif
       return iRegistryService;
@@ -584,7 +584,7 @@ namespace openbus {
           createProxyToIAccessControlService();
         }
 
-      /* Requisição de um "desafio" que somente poderá ser decifrado através
+      /* Requisicao de um "desafio" que somente podera ser decifrado atraves
       *  da chave privada da entidade reconhecida pelo barramento.
       */
         openbusidl::OctetSeq_var octetSeq =
@@ -595,7 +595,7 @@ namespace openbus {
           verbose->dedent("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
-            "O ACS não encontrou o certificado do serviço.");
+            "O ACS nao encontrou o certificado do servico.");
         }
         unsigned char* challenge = octetSeq->get_buffer();
 
@@ -604,7 +604,7 @@ namespace openbus {
         if (fp == 0) {
         #ifdef VERBOSE
           stringstream filename;
-          filename << "Não foi possível abrir o arquivo: " << 
+          filename << "Nao foi possivel abrir o arquivo: " << 
             privateKeyFilename;
           verbose->print(filename.str());
         #endif
@@ -613,13 +613,13 @@ namespace openbus {
           verbose->dedent("Openbus::connect() END");
         #endif
           throw SECURITY_EXCEPTION(
-            "Não foi possível abrir o arquivo que armazena a chave privada.");
+            "Nao foi possivel abrir o arquivo que armazena a chave privada.");
         }
         EVP_PKEY* privateKey = PEM_read_PrivateKey(fp, 0, 0, 0);
         fclose(fp);
         if (privateKey == 0) {
         #ifdef VERBOSE
-          verbose->print("Não foi possível obter a chave privada da entidade.");
+          verbose->print("Nao foi possivel obter a chave privada da entidade.");
         #endif
         #ifdef VERBOSE
           verbose->print("Throwing SECURITY_EXCEPTION...");
@@ -627,7 +627,7 @@ namespace openbus {
         #endif
           EVP_PKEY_free(privateKey);
           throw SECURITY_EXCEPTION(
-            "Não foi possível obter a chave privada da entidade.");
+            "Nao foi possivel obter a chave privada da entidade.");
         }
 
         int RSAModulusSize = EVP_PKEY_size(privateKey);
@@ -646,7 +646,7 @@ namespace openbus {
           free(challengePlainText);
         #ifdef VERBOSE
           stringstream filename;
-          filename << "Não foi possível abrir o arquivo: " << 
+          filename << "Nao foi possivel abrir o arquivo: " << 
             ACSCertificateFilename;
           verbose->print(filename.str());
         #endif
@@ -657,7 +657,7 @@ namespace openbus {
           EVP_PKEY_free(privateKey);
           fclose(certificateFile);
           throw SECURITY_EXCEPTION(
-            "Não foi possível abrir o arquivo que armazena o certificado ACS.");
+            "Nao foi possivel abrir o arquivo que armazena o certificado ACS.");
         }
 
         EVP_PKEY_free(privateKey);
@@ -665,11 +665,11 @@ namespace openbus {
         X509* x509 = d2i_X509_fp(certificateFile, 0);
         fclose(certificateFile);
       
-      /* Obtenção da chave pública do ACS. */
+      /* Obtencao da chave publica do ACS. */
         EVP_PKEY* publicKey = X509_get_pubkey(x509);
         if (publicKey == 0) {
         #ifdef VERBOSE
-          verbose->print("Não foi possível obter a chave pública do ACS.");
+          verbose->print("Nao foi possivel obter a chave publica do ACS.");
         #endif
         #ifdef VERBOSE
           verbose->print("Throwing SECURITY_EXCEPTION...");
@@ -679,11 +679,11 @@ namespace openbus {
           EVP_PKEY_free(publicKey);
           X509_free(x509);
           throw SECURITY_EXCEPTION(
-            "Não foi possível obter a chave pública do ACS.");
+            "Nao foi possivel obter a chave publica do ACS.");
         }
 
       /* Reposta ao desafio, ou seja, cifra do desafio utilizando a chave
-      *  pública do ACS.
+      *  publica do ACS.
       */
         unsigned char* answer = (unsigned char*) malloc(RSAModulusSize);
         RSA_public_encrypt(CHALLENGE_SIZE, challengePlainText, answer,
@@ -737,7 +737,7 @@ namespace openbus {
       }
     } else {
     #ifdef VERBOSE
-      verbose->print("Já há uma conexão ativa.");
+      verbose->print("Ja ha uma conexao ativa.");
       verbose->dedent("Openbus::connect() END");
     #endif
       return iRegistryService;
@@ -770,7 +770,7 @@ namespace openbus {
       return status;
     } else {
     #ifdef VERBOSE
-      verbose->print("Não há conexão a ser desfeita.");
+      verbose->print("Nao ha conexao a ser desfeita.");
       verbose->dedent("Openbus::disconnect() END");
     #endif
       return false;

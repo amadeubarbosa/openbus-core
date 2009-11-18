@@ -40,7 +40,7 @@ namespace openbus {
       char * operation = ri->operation();
       request << "Receive a request: " << operation;
       Openbus::verbose->print(request.str());
-      free(operation);
+      delete operation;
       CORBA::ULong z;
       stringstream contextData;
       contextData << "Context Data: ";
@@ -90,7 +90,10 @@ namespace openbus {
     void ServerInterceptor::send_other(ServerRequestInfo*) {}
 
     char* ServerInterceptor::name() {
-      return CORBA::string_dup("AccessControl");
+    /* O Mico 2.3.11 e 2.3.13 nao adquirem propriedade desta string,
+    ** portanto nao se deve usar o string_dup().
+    */ 
+      return "AccessControl";
     }
 
     void ServerInterceptor::destroy() {}

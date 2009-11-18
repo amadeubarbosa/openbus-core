@@ -44,7 +44,7 @@ namespace openbus {
       char * operation = ri->operation();
       msg << "Method: " << operation;
       Openbus::verbose->print(msg.str());
-      free(operation);
+      delete operation;
     #endif
       if (credential) {
       #ifdef VERBOSE
@@ -60,6 +60,7 @@ namespace openbus {
         CORBA::OctetSeq_var octets;
         PICodec::Codec_impl* codec = new PICodec::Codec_impl;
         octets = codec->encode_value(any);
+        delete codec;
 //        octets = cdr_codec->encode_value(any.in());
         IOP::ServiceContext::_context_data_seq seq(
           octets->length(),
@@ -88,8 +89,10 @@ namespace openbus {
     char* ClientInterceptor::name() 
       throw(CORBA::SystemException) 
     {
-      return CORBA::string_dup("AccessControl"); 
-
+    /* O Mico 2.3.11 e 2.3.13 nao adquirem propriedade desta string,
+    ** portanto nao se deve usar o string_dup().
+    */ 
+      return "AccessControl"; 
     }
     void ClientInterceptor::send_poll(ClientRequestInfo_ptr ri)
       throw(CORBA::SystemException) {}

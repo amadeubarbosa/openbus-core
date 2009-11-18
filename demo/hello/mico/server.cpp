@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <CORBA.h>
+#include <csignal>
 
 #include <openbus.h>
 #include <ComponentBuilderMico.h>
@@ -41,36 +42,64 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
     };
 };
 
+void termination_handler(int p) {
+#ifdef VERBOSE
+  verbose->print("Openbus::terminationHandlerCallback() BEGIN");
+  verbose->indent();
+#endif
+  cout << "Encerrando o processo servidor..." << endl;
+  try {
+    registryService->unregister(registryId);
+  } catch(CORBA::Exception& e) {
+    cout << "Nao foi possivel remover a oferta de servico." << endl;
+  }
+  try {
+    if (bus->isConnected()) {
+      bus->disconnect();
+    }
+  } catch(CORBA::Exception& e) {
+  #ifdef VERBOSE
+    verbose->print(
+      "Nao foi possivel se desconectar corretamente do barramento."); 
+  #endif
+  }
+  delete bus;
+#ifdef VERBOSE
+  verbose->dedent("Openbus::terminationHandlerCallback() END");
+#endif
+}
+
 int main(int argc, char* argv[]) {
+  signal(SIGINT, termination_handler);
   bus = openbus::Openbus::getInstance();
 
   bus->init(argc, argv);
 
   cout << "Conectando no barramento..." << endl;
 
-/* Conexão com o barramento através de certificado. */
+/* Conexao com o barramento atraves de certificado. */
   try {
     registryService = bus->connect("HelloService", "HelloService.key",
       "AccessControlService.crt");
   } catch (CORBA::SystemException& e) {
-    cout << "** Não foi possível se conectar ao barramento. **" << endl \
-         << "* Falha na comunicação. *" << endl;
+    cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
+         << "* Falha na comunicacao. *" << endl;
     exit(-1);
   } catch (openbus::LOGIN_FAILURE& e) {
-    cout << "** Não foi possível se conectar ao barramento. **" << endl \
-         << "* Par usuário/senha inválido. *" << endl;
+    cout << "** Nao foi possivel se conectar ao barramento. **" << endl \
+         << "* Par usuario/senha invalido. *" << endl;
     exit(-1);
   } catch (openbus::SECURITY_EXCEPTION& e) {
     cout << e.what() << endl;
     exit(-1);
   }
 
-  cout << "Conexão com o barramento estabelecida com sucesso!" << endl;
+  cout << "Conexao com o barramento estabelecida com sucesso!" << endl;
 
-/* Fábrica de componentes */
+/* Fabrica de componentes */
   scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
 
-/* Definição do componente. */
+/* Definicao do componente. */
   scs::core::ComponentId componentId;
   componentId.name = "HelloComponent";
   componentId.major_version = '1';
@@ -78,7 +107,7 @@ int main(int argc, char* argv[]) {
   componentId.patch_version = '0';
   componentId.platform_spec = "nenhuma";
 
-/* Descrição das facetas. */
+/* Descricao das facetas. */
   std::list<scs::core::ExtendedFacetDescription> extFacets;
   scs::core::ExtendedFacetDescription helloDesc;
   helloDesc.name = "IHello";
@@ -91,18 +120,18 @@ int main(int argc, char* argv[]) {
   openbus::util::PropertyListHelper* propertyListHelper = \
     new openbus::util::PropertyListHelper();
 
-/* Criação de uma *oferta de serviço*. */
+/* Criacao de uma *oferta de servico*. */
   openbusidl::rs::ServiceOffer serviceOffer;
   serviceOffer.properties = propertyListHelper->getPropertyList();
   serviceOffer.member = componentContext->getIComponent();
   delete propertyListHelper;
 
-  cout << "Registrando serviço IHello no barramento..." << endl;
+  cout << "Registrando servico IHello no barramento..." << endl;
 
-/* Registro do serviço no barramento. */
+/* Registro do servico no barramento. */
   registryService->_cxx_register(serviceOffer, registryId);
-  cout << "Serviço IHello registrado." << endl;
-  cout << "Aguardando requisições..." << endl;
+  cout << "Servico IHello registrado." << endl;
+  cout << "Aguardando requisicoes..." << endl;
 
   bus->run();
 

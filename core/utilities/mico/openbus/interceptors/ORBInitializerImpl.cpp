@@ -15,12 +15,25 @@ namespace openbus {
       Openbus::verbose->print("ORBInitializerImpl::ORBInitializerImpl() BEGIN");
       Openbus::verbose->indent();
     #endif
+      clientInterceptor = 0;
+      serverInterceptor = 0;
+      _info = 0;
     #ifdef VERBOSE
       Openbus::verbose->dedent("ORBInitializerImpl::ORBInitializerImpl() END");
     #endif
     }
 
     ORBInitializerImpl::~ORBInitializerImpl() {
+      if (clientInterceptor) {
+        delete clientInterceptor;
+      }
+      if (serverInterceptor) {
+        delete serverInterceptor;
+      }
+      if (_info) {
+        delete _info->orb_id();
+        delete _info;
+      }
     }
 
     void ORBInitializerImpl::pre_init(ORBInitInfo_ptr info)
@@ -29,12 +42,12 @@ namespace openbus {
       Openbus::verbose->print("ORBInitializerImpl::pre_init() BEGIN");
       Openbus::verbose->indent();
     #endif
+      _info = info;
       IOP::CodecFactory_var codec_factory = info->codec_factory();
       IOP::Encoding cdr_encoding = {IOP::ENCODING_CDR_ENCAPS, 1, 2};
       codec = codec_factory->create_codec(cdr_encoding);
 
-      PortableInterceptor::ClientRequestInterceptor_var clientInterceptor = \
-          new ClientInterceptor(codec);
+      clientInterceptor = new ClientInterceptor(codec);
       info->add_client_request_interceptor(clientInterceptor);
 
       slotid = info->allocate_slot_id();
@@ -57,7 +70,8 @@ namespace openbus {
     #endif
     }
 
-    void ORBInitializerImpl::post_init(ORBInitInfo_ptr info) { }
+    void ORBInitializerImpl::post_init(ORBInitInfo_ptr info) {
+    }
 
     ServerInterceptor* ORBInitializerImpl::getServerInterceptor() {
       return serverInterceptor;

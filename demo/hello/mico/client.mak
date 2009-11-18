@@ -24,7 +24,7 @@ INCLUDES= . \
   ${OPENBUS_HOME}/core/utilities/mico \
   ${OPENBUSINC}/scs/mico
 
-LDIR= ${MICO_LDIR} ${OPENBUSLIB}
+LDIR= ${MICO_LIB} ${OPENBUSLIB}
 
 LIBS= mico2.3.11 dl crypto pthread
 
