@@ -3,7 +3,10 @@
 local oil = require "oil"
 local oop = require "loop.base"
 
+local log = require "openbus.util.Log"
+
 local setmetatable = setmetatable
+local tostring = tostring
 
 ---
 --Objeto que permite a transferência de informações de um interceptador
@@ -32,8 +35,10 @@ end
 --
 --@param value O valor.
 ---
-function setValue(self, value)
-  self.picurrentTable[oil.tasks.current] = value
+function setValue(self, credential)
+  log:interceptor("Definindo o valor {"..credential.identifier..", "..
+      credential.owner.."} na "..tostring(oil.tasks.current))
+  self.picurrentTable[oil.tasks.current] = credential
 end
 
 ---
@@ -42,5 +47,8 @@ end
 --@return O valor.
 ---
 function getValue(self)
-  return self.picurrentTable[oil.tasks.current]
+  local credential = self.picurrentTable[oil.tasks.current]
+  log:interceptor("Obtendo o valor {"..credential.identifier..", "..
+      credential.owner.."} da "..tostring(oil.tasks.current))
+  return credential
 end
