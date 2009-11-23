@@ -42,6 +42,15 @@ namespace openbus {
       Openbus::verbose->print("ORBInitializerImpl::pre_init() BEGIN");
       Openbus::verbose->indent();
     #endif
+      if (clientInterceptor) {
+        delete clientInterceptor;
+      }
+      if (serverInterceptor) {
+        delete serverInterceptor;
+      }
+      if (_info) {
+        delete _info;
+      }
       _info = info;
       IOP::CodecFactory_var codec_factory = info->codec_factory();
       IOP::Encoding cdr_encoding = {IOP::ENCODING_CDR_ENCAPS, 1, 2};

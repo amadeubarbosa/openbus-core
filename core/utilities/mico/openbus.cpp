@@ -255,10 +255,10 @@ namespace openbus {
       verbose->print("Desligando o orb...");
     #endif
     /*
-    * Alternativa para o segundo problema apresentado em OPENBUS-426.
+    * Alternativa para um memory leak.
     * Referente ao Mico 2.3.11.
     */
-      delete PortableServer::_the_poa_current;
+      CORBA::Codeset::free();
 
     /*
     * Alternativa para o segundo problema apresentado em OPENBUS-427.
@@ -395,6 +395,14 @@ namespace openbus {
     verbose->print("Openbus::getRootPOA() BEGIN");
     verbose->indent();
   #endif
+    /*
+    * Alternativa para o segundo problema apresentado em OPENBUS-426.
+    * Referente ao Mico 2.3.11.
+    */
+    if (PortableServer::_the_poa_current) {
+      delete PortableServer::_the_poa_current;
+    }
+
     if (CORBA::is_nil(poa)) {
       CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
       poa = PortableServer::POA::_narrow(poa_obj);
