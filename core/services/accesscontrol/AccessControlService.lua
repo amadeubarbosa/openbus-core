@@ -61,7 +61,6 @@ ACSFacet = oop.class{}
 ---
 ACSFacet.invalidCredential = {identifier = "", owner = "", delegate = ""}
 ACSFacet.invalidLease = -1
-ACSFacet.deltaT = 30 -- lease fixo (por enquanto) em segundos
 ACSFacet.faultDescription = {_isAlive = false, _errorMsg = "" }
 ---
 --Realiza um login de uma entidade através de usuário e senha.
@@ -456,7 +455,7 @@ function ACSFacet:addEntry(name, certified)
     owner = name,
     delegate = "",
   }
-  local duration = self.deltaT
+  local duration = self.lease
   local lease = { lastUpdate = os.time(), duration = duration }
   local entry = {
     credential = credential,
@@ -566,7 +565,7 @@ function LeaseProviderFacet:renewLease(credential)
   lease.lastUpdate = now
   lease.secondChance = false
   -- Por enquanto deixa o lease com tempo fixo
-  return true, self.deltaT
+  return true, self.lease
 end
 
 --------------------------------------------------------------------------------
@@ -952,6 +951,8 @@ function startup(self)
      mgm.admins[name] = true
   end
 
+  acs.lease = config.lease
+
   -- Inicializa as base de dados de gerenciamento
   mgm.systemDB = TableDB(DATA_DIR .. "/acs_system.db")
   mgm.deploymentDB = TableDB(DATA_DIR .. "/acs_deployment.db")
@@ -1019,7 +1020,7 @@ function startup(self)
       end
     end
   end
-  acs.leaseProvider = LeaseProvider(acs.checkExpiredLeases, acs.deltaT)
+  acs.leaseProvider = LeaseProvider(acs.checkExpiredLeases, acs.lease)
   self.context.IFaultTolerantService:setStatus(true)
 end
 
