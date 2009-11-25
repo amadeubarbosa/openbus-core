@@ -1,0 +1,27 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Test_API.Properties" GeneratedClassName="TestConfig">
+  <Profiles />
+  <Settings>
+    <Setting Name="userLogin" Type="System.String" Scope="User">
+      <Value Profile="(Default)">tester</Value>
+    </Setting>
+    <Setting Name="userPassword" Type="System.String" Scope="User">
+      <Value Profile="(Default)">tester</Value>
+    </Setting>
+    <Setting Name="hostName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ubu</Value>
+    </Setting>
+    <Setting Name="testKeyFileName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Teste.key</Value>
+    </Setting>
+    <Setting Name="acsCertificateFileName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">AccessControlService.crt</Value>
+    </Setting>
+    <Setting Name="entityName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">TesteBarramento</Value>
+    </Setting>
+    <Setting Name="hostPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3000</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
