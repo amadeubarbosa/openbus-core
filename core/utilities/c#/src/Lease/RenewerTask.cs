@@ -5,6 +5,7 @@ using openbusidl.acs;
 using OpenbusAPI.Lease;
 using System.Threading;
 using OpenbusAPI.Logger;
+using omg.org.CORBA;
 
 namespace OpenbusAPI.Lease
 {
@@ -41,6 +42,11 @@ namespace OpenbusAPI.Lease
 
     #endregion
 
+    #region Constants
+
+    private readonly static int DEFAULT_LEASE_TIME = 30;
+
+    #endregion
 
     #region Constructors
 
@@ -64,28 +70,43 @@ namespace OpenbusAPI.Lease
     /// Inicia a renovação de lease.
     /// </summary>
     public void Run() {
-      bool ok = false;
-      int newLease = -1;
-      while (this.mustContinue) {
-        try {
-          ok = this.leaseProvider.renewLease(this.credential, out newLease);
-          if (!ok) {
-            Log.LEASE.Warn("Falha na renovação da credencial.");
-            this.expiredCallback.expired();
-            return;
+      int newLease = DEFAULT_LEASE_TIME;
+      try {
+        while (this.mustContinue) {
+          try {
+            bool ok = false;
+
+            try {
+              ok = this.leaseProvider.renewLease(this.credential, out newLease);
+            }
+            catch (NO_PERMISSION) {
+              ok = false;
+            }
+
+            if (!ok) {
+              this.mustContinue = false;
+              Log.LEASE.Warn("Falha na renovação da credencial.");
+              this.expiredCallback.expired();
+            }
+            else {
+              StringBuilder msg = new StringBuilder();
+              msg.Append(DateTime.Now);
+              msg.Append(" - Lease renovado. Próxima renovação em ");
+              msg.Append(newLease + " segundos.");
+              Log.LEASE.Debug(msg.ToString());
+            }
+          }
+          catch (AbstractCORBASystemException e) {
+            Log.LEASE.Error("Erro ao tentar renovar o lease", e);
+          }
+
+          if (this.mustContinue) {
+            Thread.Sleep(newLease * 1000);
           }
         }
-        catch (System.Exception e) {
-          Log.LEASE.Error("Erro ao tentar renovar o lease", e);
-        }
-
-        StringBuilder msg = new StringBuilder();
-        msg.Append(DateTime.Now);
-        msg.Append(" - Lease renovado. Próxima renovação em ");
-        msg.Append(newLease + " segundos.");
-        Log.LEASE.Debug(msg.ToString());
-
-        Thread.Sleep(newLease * 1000);
+      }
+      catch (ThreadInterruptedException) {
+        Log.LEASE.Debug("Lease Interrompido");
       }
     }
 

@@ -48,21 +48,21 @@ namespace OpenbusAPI.Lease
     /// Define o observador do <i>lease</i>. 
     /// </summary>
     /// <param name="leaseExpiredCallback">O observador do <i>lease</i>.</param>
-    public void setLeaseExpiredCallback(LeaseExpiredCallback leaseExpiredCallback) {
+    public void SetLeaseExpiredCallback(LeaseExpiredCallback leaseExpiredCallback) {
       this.renewer.ExpiredCallback = leaseExpiredCallback;
     }
     
     /// <summary>
     /// Inicia uma renovação de <i>lease</i>.
     /// </summary>
-    public void start() {
+    public void Start() {
       this.leaseThread.Start();
     }
     
     /// <summary>
     /// Solicita o fim da renovação do <i>lease</i>.
     /// </summary>
-    public void finish() {
+    public void Finish() {
       this.renewer.Finish();
       this.renewer = null;
       this.leaseThread.Interrupt();

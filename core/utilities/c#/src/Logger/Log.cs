@@ -7,7 +7,7 @@ namespace OpenbusAPI.Logger
   /// <summary>
   /// Classe responsável pelo Log do Openbus
   /// </summary>
-  class Log
+  public class Log
   {
 
     #region Fields

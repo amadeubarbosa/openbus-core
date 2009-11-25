@@ -338,7 +338,7 @@ namespace OpenbusAPI
         throw new ACSLoginFailureException("Não foi possível conectar ao barramento.");
 
       this.leaseRenewer = new LeaseRenewer(this.credential, this.leaseProvider);
-      this.leaseRenewer.start();
+      this.leaseRenewer.Start();
 
       Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = " + leaseTime + " segundos.");
       this.registryService = /* TODO: this.GetRegistryService(); */ acs.getRegistryService();
@@ -374,7 +374,7 @@ namespace OpenbusAPI
       this.acs.loginByCertificate(name, answer, out this.credential, out leaseTime);
 
       this.leaseRenewer = new LeaseRenewer(this.credential, this.leaseProvider);
-      this.leaseRenewer.start();
+      this.leaseRenewer.Start();
 
       Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = " + leaseTime + " segundos.");
       this.registryService = /*TODO GetRegistryService();*/ acs.getRegistryService();
@@ -415,7 +415,7 @@ namespace OpenbusAPI
       if (this.acs == null)
         throw new ACSUnavailableException("O barramento não está conectado.");
 
-      this.leaseRenewer.finish();
+      this.leaseRenewer.Finish();
       this.leaseRenewer = null;
 
       status = this.acs.logout(this.credential);
@@ -447,7 +447,7 @@ namespace OpenbusAPI
     /// <param name="lec">O observador.</param>
     public void AddLeaseExpiredCallback(LeaseExpiredCallback lec) {
       if (this.leaseRenewer != null)
-        this.leaseRenewer.setLeaseExpiredCallback(lec);
+        this.leaseRenewer.SetLeaseExpiredCallback(lec);
     }
 
     /// <summary>
@@ -455,7 +455,7 @@ namespace OpenbusAPI
     /// </summary>
     public void RemoveLeaseExpiredCallback() {
       if (this.leaseRenewer != null)
-        this.leaseRenewer.setLeaseExpiredCallback(null);
+        this.leaseRenewer.SetLeaseExpiredCallback(null);
     }
 
     #endregion
