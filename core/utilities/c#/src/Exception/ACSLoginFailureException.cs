@@ -1,25 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using OpenbusAPI.Exception;
+
 
 namespace OpenbusAPI.Exception
 {
   /// <summary>
   /// Indica uma execeção de falha no serviço de controle de acesso. 
   /// </summary>
-  [Serializable()]
+  [Serializable]
   public class ACSLoginFailureException : OpenbusException
   {
     /// <inheritdoc />
-    public ACSLoginFailureException() : base() { }
-
-
+    public ACSLoginFailureException() { }
+    
     /// <inheritdoc />
     public ACSLoginFailureException(string message) : base(message) { }
-
-
+    
     /// <inheritdoc />
-    public ACSLoginFailureException(string message, System.Exception inner) : base(message, inner) { }
+    public ACSLoginFailureException(string message, System.Exception inner) 
+      : base(message, inner) { }
   }
 }

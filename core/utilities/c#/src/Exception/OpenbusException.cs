@@ -1,21 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace OpenbusAPI.Exception
 {
   /// <summary>
   /// Indica uma exceção do OpenBus.
   /// </summary>
-  [Serializable()]
-  public class OpenbusException : System.ApplicationException
+  [Serializable]
+  public class OpenbusException : ApplicationException
   {
     /// <summary>
     /// Cria uma execeção do Openbus
     /// </summary>
-    public OpenbusException() : base() { }
-
-
+    public OpenbusException() { }
+    
     /// <summary>
     /// Cria uma exceção do OpenBus com uma mensagem associada.
     /// </summary>
@@ -27,6 +25,7 @@ namespace OpenbusAPI.Exception
     /// </summary>
     /// <param name="message">A mensagem de erro</param>
     /// <param name="inner">A exceção associada</param>
-    public OpenbusException(string message, System.Exception inner) : base(message, inner) { }
+    public OpenbusException(string message, System.Exception inner) 
+      : base(message, inner) { }
   }
 }

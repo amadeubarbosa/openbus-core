@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using openbusidl.acs;
-using OpenbusAPI.Lease;
 using System.Threading;
+
 
 namespace OpenbusAPI.Lease
 {
@@ -31,8 +28,10 @@ namespace OpenbusAPI.Lease
     /// <summary>
     /// Inicializa um renovador de <i>lease</i>.
     /// </summary>
-    /// <param name="credential">A credencial correspondente ao <i>lease</i>.</param>
-    /// <param name="leaseProvider">Faceta do serviço de controle de acesso.</param>
+    /// <param name="credential">A credencial correspondente ao <i>lease</i>.
+    /// </param>
+    /// <param name="leaseProvider">Faceta do serviço de controle de acesso.
+    /// </param>
     public LeaseRenewer(Credential credential, ILeaseProvider leaseProvider) {
       this.renewer = new RenewerTask(credential, leaseProvider);
       this.leaseThread = new Thread(new ThreadStart(renewer.Run));

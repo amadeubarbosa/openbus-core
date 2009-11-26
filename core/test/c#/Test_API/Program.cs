@@ -1,4 +1,3 @@
-
 using System;
 using System.Reflection;
 
@@ -12,7 +11,7 @@ namespace Test_API
     ///
     [STAThread]
     static void Main(string[] args) {
-      String[] arguments = new String[2]{
+      String[] arguments = new String[]{
         Assembly.GetExecutingAssembly().Location,
         "/domain=none"
       };

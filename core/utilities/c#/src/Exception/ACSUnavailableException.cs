@@ -1,24 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace OpenbusAPI.Exception
 {
   /// <summary>
   /// Indica uma exceção de serviço de controle de acesso indisponível
   /// </summary>
-  [Serializable()]
+  [Serializable]
   public class ACSUnavailableException : OpenbusException
   {
     /// <inheritdoc />
-    public ACSUnavailableException() : base() { }
-
+    public ACSUnavailableException() { }
 
     /// <inheritdoc />
     public ACSUnavailableException(string message) : base(message) { }
 
-
     /// <inheritdoc />
-    public ACSUnavailableException(string message, System.Exception inner) : base(message, inner) { }
+    public ACSUnavailableException(string message, System.Exception inner) 
+      : base(message, inner) { }
   }
 }

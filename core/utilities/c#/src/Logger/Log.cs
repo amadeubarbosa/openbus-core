@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace OpenbusAPI.Logger
 {
@@ -9,7 +7,6 @@ namespace OpenbusAPI.Logger
   /// </summary>
   public class Log
   {
-
     #region Fields
 
     /// <summary>

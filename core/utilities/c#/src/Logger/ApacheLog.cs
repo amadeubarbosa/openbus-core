@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Xml;
+
 
 namespace OpenbusAPI.Logger
 {
@@ -10,9 +9,8 @@ namespace OpenbusAPI.Logger
   /// Um wrapper para a Log da Apache.
   /// Implementa o OpenbusAPI.Logger.ILogger.
   /// </summary>
-  class ApacheLog : OpenbusAPI.Logger.ILogger
+  class ApacheLog : ILogger
   {
-
     #region Fields
 
     /// <summary>
@@ -30,8 +28,8 @@ namespace OpenbusAPI.Logger
     /// </summary>
     /// <param name="loggerName">Nome do Logger.</param>
     public ApacheLog(String loggerName) {
-      XmlDocument xmlDocument = new System.Xml.XmlDocument();
-      xmlDocument.LoadXml(OpenbusAPI.Properties.Resources.LogConfigFile);
+      XmlDocument xmlDocument = new XmlDocument();
+      xmlDocument.LoadXml(Properties.Resources.LogConfigFile);
 
       XmlNodeList logNodeList = xmlDocument.GetElementsByTagName("log4net");
       if (logNodeList.Count != 1) {
@@ -49,7 +47,8 @@ namespace OpenbusAPI.Logger
     /// Inicializa um wrapper para o Log da Apache.
     /// Recebe o arquivo XML de configuração de log.
     /// </summary>
-    /// <param name="configFileName">Caminho do arquivo XML de configuração.</param>
+    /// <param name="configFileName">Caminho do arquivo XML de configuração.
+    /// </param>
     /// <param name="loggerName">Nome do Logger.</param>
     public ApacheLog(String configFileName, String loggerName) {
       FileInfo file = new FileInfo(configFileName);
@@ -64,7 +63,8 @@ namespace OpenbusAPI.Logger
 
     /// <inheritdoc />
     public void SetLevel(Level level) {
-      log4net.Repository.Hierarchy.Logger logger = (log4net.Repository.Hierarchy.Logger)this.log.Logger;
+      log4net.Repository.Hierarchy.Logger logger = this.log.Logger as
+        log4net.Repository.Hierarchy.Logger;
 
       switch (level) {
         case Level.DEBUG:
@@ -89,16 +89,16 @@ namespace OpenbusAPI.Logger
     public Level GetLevel() {
       if (this.log.IsDebugEnabled)
         return Level.DEBUG;
-      else if (this.log.IsInfoEnabled)
+      if (this.log.IsInfoEnabled)
         return Level.INFO;
-      else if (this.log.IsWarnEnabled)
+      if (this.log.IsWarnEnabled)
         return Level.WARN;
-      else if (this.log.IsErrorEnabled)
+      if (this.log.IsErrorEnabled)
         return Level.ERROR;
-      else if (this.log.IsFatalEnabled)
+      if (this.log.IsFatalEnabled)
         return Level.FATAL;
-      else
-        throw new NullReferenceException();
+
+      throw new NullReferenceException();
     }
 
     /// <inheritdoc />

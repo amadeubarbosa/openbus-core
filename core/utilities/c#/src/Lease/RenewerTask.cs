@@ -1,16 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using openbusidl.acs;
-using OpenbusAPI.Lease;
 using System.Threading;
 using OpenbusAPI.Logger;
 using omg.org.CORBA;
 
+
 namespace OpenbusAPI.Lease
 {
   /// <summary>
-  /// Tarefa responsável por renovar o <i>lease</i> perante o serviço de controle de acesso.
+  /// Tarefa responsável por renovar o <i>lease</i> perante o serviço de 
+  /// controle de acesso.
   /// </summary>
   class RenewerTask
   {
@@ -44,7 +44,7 @@ namespace OpenbusAPI.Lease
 
     #region Constants
 
-    private readonly static int DEFAULT_LEASE_TIME = 30;
+    private const int DEFAULT_LEASE_TIME = 30;
 
     #endregion
 
@@ -54,7 +54,8 @@ namespace OpenbusAPI.Lease
     /// Inicializa uma instância de renovação de <i>lease</i>.
     /// </summary>
     /// <param name="credential">A credencial.</param>
-    /// <param name="provider">A faceta do serviço de controle de acesso provedora de <i>lease</i>.</param>
+    /// <param name="provider">A faceta do serviço de controle de acesso 
+    /// provedora de <i>lease</i>.</param>
     public RenewerTask(Credential credential, ILeaseProvider provider) {
       this.credential = credential;
       this.leaseProvider = provider;

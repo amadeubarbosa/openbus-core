@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Ch.Elca.Iiop;
 using OpenbusAPI.Interceptors;
-
 using openbusidl.rs;
 using openbusidl.acs;
 using System.Runtime.Remoting;
@@ -15,11 +12,9 @@ using openbusidl.ss;
 using omg.org.CORBA;
 using OpenbusAPI.Exception;
 using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography;
 using OpenbusAPI.Security;
 using System.Runtime.Remoting.Channels;
 using OpenbusAPI.Logger;
-
 
 
 namespace OpenbusAPI
@@ -98,12 +93,13 @@ namespace OpenbusAPI
 
     #region Consts
 
-    private static readonly String ACCESS_CONTROL_SERVICE_KEY = "ACS";
-    private static readonly String LEASE_PROVIDER_KEY = "LP";
+    private const String ACCESS_CONTROL_SERVICE_KEY = "ACS";
+    private const String LEASE_PROVIDER_KEY = "LP";
     /// <summary>
-    /// Chave CORBALOC responsável pela faceta IComponent do serviço de controle de acesso.
+    /// Chave CORBALOC responsável pela faceta IComponent do serviço de 
+    /// controle de acesso.
     /// </summary>
-    private static readonly String ICOMPONENT_KEY = "IC";
+    private const String ICOMPONENT_KEY = "IC";
 
     #endregion
 
@@ -152,7 +148,8 @@ namespace OpenbusAPI
     }
 
     /// <summary>
-    /// Retorna ao seu estado inicial, ou seja, desfaz as definições de atributos realizadas.
+    /// Retorna ao seu estado inicial, ou seja, desfaz as definições de
+    /// atributos realizadas.
     /// </summary>
     private void ResetInstance() {
       this.channel = null;
@@ -173,14 +170,16 @@ namespace OpenbusAPI
       }
 
       this.leaseProvider = RemotingServices.Connect(typeof(ILeaseProvider),
-          "corbaloc::1.0@" + host + ":" + port + "/" + LEASE_PROVIDER_KEY) as ILeaseProvider;
+          "corbaloc::1.0@" + host + ":" + port + "/" + LEASE_PROVIDER_KEY) as
+          ILeaseProvider;
       if (this.leaseProvider == null) {
         Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
         throw new ACSUnavailableException();
       }
 
       this.acsComponent = RemotingServices.Connect(typeof(IComponent),
-          "corbaloc::1.0@" + host + ":" + port + "/" + ICOMPONENT_KEY) as IComponent;
+          "corbaloc::1.0@" + host + ":" + port + "/" + ICOMPONENT_KEY) as
+          IComponent;
       if (this.acsComponent == null) {
         Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
         throw new ACSUnavailableException();
@@ -201,7 +200,7 @@ namespace OpenbusAPI
       if (this.host != String.Empty)
         throw new OpenbusAlreadyInitialized();
 
-      if ((host == null) || (host == ""))
+      if (string.IsNullOrEmpty(host))
         throw new ArgumentException("O campo 'host' não é válido");
       if (port < 0)
         throw new ArgumentException("O campo 'port' não pode ser negativo.");
@@ -247,7 +246,8 @@ namespace OpenbusAPI
         return this.registryService;
 
       if (this.acsComponent == null) {
-        Log.COMMON.Fatal("O IComponent do AccessControlService não está disponível.");
+        Log.COMMON.Fatal(
+          "O IComponent do AccessControlService não está disponível.");
         return null;
       }
 
@@ -291,8 +291,10 @@ namespace OpenbusAPI
         Log.COMMON.Fatal("Não foi possível acessar o RegistryService");
         return null;
       }
-      String sessionServiceID = Repository.GetRepositoryID(typeof(ISessionService));
-      ServiceOffer[] offers = registryService.find(new String[] { sessionServiceID });
+      String sessionServiceID = Repository.GetRepositoryID(
+        typeof(ISessionService));
+      String[] facets = new String[] { sessionServiceID };
+      ServiceOffer[] offers = registryService.find(facets);
       if (offers.Length != 1)
         Log.COMMON.Warn("Existe mais de um " + sessionServiceID + " conectado.");
 
@@ -312,7 +314,6 @@ namespace OpenbusAPI
     /// <returns></returns>
     public Credential GetInterceptedCredential() {
       //TODO try
-      OrbServices orb = OrbServices.GetSingleton();
       omg.org.PortableInterceptor.Current pic = (omg.org.PortableInterceptor.Current)orb.resolve_initial_references("PICurrent");
       Any requestCredentialValue = (Any)pic.get_slot(this.requestCredentialSlot);
       if (requestCredentialValue.Type.kind().Equals(TCKind.tk_null)) {
@@ -340,17 +341,20 @@ namespace OpenbusAPI
     /// <param name="password">A senha.</param>
     /// <returns>O serviço de registro.</returns>
     public IRegistryService Connect(String user, String password) {
-      if ((user == null) || (password == null))
-        throw new ArgumentException("Os parâmetros 'user' e 'password' não podem ser nulos.");
+      if ( (String.IsNullOrEmpty(user)) || (String.IsNullOrEmpty(password)) )
+        throw new ArgumentException(
+          "Os parâmetros 'user' e 'password' não podem ser nulos.");
 
       if (this.credential.identifier != null)
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
       int leaseTime = -1;
-      bool ok = acs.loginByPassword(user, password, out this.credential, out leaseTime);
+      bool ok = acs.loginByPassword(user, password, out this.credential, 
+        out leaseTime);
       if (!ok)
-        throw new ACSLoginFailureException("Não foi possível conectar ao barramento.");
+        throw new ACSLoginFailureException(
+          "Não foi possível conectar ao barramento.");
 
       this.leaseRenewer = new LeaseRenewer(this.credential, this.leaseProvider);
       this.leaseRenewer.Start();
@@ -367,13 +371,15 @@ namespace OpenbusAPI
     /// de acesso e o serviço de registro), via certificado.
     /// </summary>
     /// <param name="name">O nome da entidade.</param>
-    /// <param name="xmlPrivateKey">A String que representa a chave privada.</param>
+    /// <param name="xmlPrivateKey">A String que representa a chave privada.
+    /// </param>
     /// <param name="acsCertificate">O certificado do 
     /// serviço de controle de acesso.</param>
     /// <returns>O serviço de registro.</returns>
     public IRegistryService Connect(String name, String xmlPrivateKey,
   X509Certificate2 acsCertificate) {
-      if ((name == null) || (xmlPrivateKey == null) || (acsCertificate == null))
+      if ((String.IsNullOrEmpty(name) ||
+        (String.IsNullOrEmpty(xmlPrivateKey)) || (acsCertificate == null)))
         throw new ArgumentException("Nenhum parâmetro pode ser nulo.");
 
       if (this.credential.identifier != null)
@@ -408,7 +414,8 @@ namespace OpenbusAPI
     /// <returns>O serviço de registro.</returns>
     public IRegistryService Connect(Credential credential) {
       if (credential.identifier == "")
-        throw new ArgumentException("O parâmetro 'credential' não pode ser nulo.");
+        throw new ArgumentException(
+          "O parâmetro 'credential' não pode ser nulo.");
 
       if (this.credential.identifier != null)
         throw new ACSLoginFailureException("O barramento já está conectado.");
@@ -425,7 +432,8 @@ namespace OpenbusAPI
     /// <summary>
     /// Desfaz a conexão.
     /// 
-    /// {@code true} caso a conexão seja desfeita, ou {@code false} se nenhuma conexão estiver ativa.
+    /// {@code true} caso a conexão seja desfeita, ou {@code false} se nenhuma
+    ///  conexão estiver ativa.
     /// </summary>
     /// <returns><code>true</code> caso a conexão seja desfeita, ou 
     /// <code>false</code> se nenhuma conexão estiver ativa. </returns>

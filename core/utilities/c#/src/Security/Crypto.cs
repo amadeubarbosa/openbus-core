@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
@@ -13,7 +11,6 @@ namespace OpenbusAPI.Security
   /// </summary>
   public static class Crypto
   {
-
     #region Members
 
     /// <summary>
@@ -24,10 +21,7 @@ namespace OpenbusAPI.Security
     public static String ReadPrivateKey(String privateKeyFileName) {
       XmlDocument doc = new XmlDocument();
       doc.Load(privateKeyFileName);
-
-      if (doc == null)
-        return null;
-
+      
       StringWriter writer = new StringWriter();
       doc.Save(writer);
 
@@ -44,10 +38,13 @@ namespace OpenbusAPI.Security
     }
 
     /// <summary>
-    /// Gera a resposta para o desafio enviado pelo serviço de controle de acesso.
+    /// Gera a resposta para o desafio enviado pelo serviço de controle 
+    /// de acesso.
     /// </summary>
-    /// <param name="challenge">O desafio do serviço de controle de acesso.</param>
-    /// <param name="XmlPrivateKey">A chave privada originária de um arquivo XML.</param>
+    /// <param name="challenge">O desafio do serviço de controle de acesso.
+    /// </param>
+    /// <param name="XmlPrivateKey">A chave privada originária de um arquivo 
+    /// XML.</param>
     /// <param name="acsCertificate">O certificado formatado em X509.</param>
     /// <returns>A resposta do desafio.</returns>
     public static byte[] GenerateAnswer(byte[] challenge, String XmlPrivateKey,
@@ -63,7 +60,8 @@ namespace OpenbusAPI.Security
     /// <summary>
     /// Descriptografa uma informação utilizando uma chave privada. 
     /// </summary>
-    /// <param name="XmlPrivateKey">A chave privada originária de um arquivo XML.</param>
+    /// <param name="XmlPrivateKey">A chave privada originária de um arquivo 
+    /// XML.</param>
     /// <param name="data">O desafio do serviço de controle de acesso.</param>
     /// <returns>A informação descriptografado.</returns>
     private static byte[] Decrypt(String XmlPrivateKey, byte[] data) {
@@ -79,8 +77,10 @@ namespace OpenbusAPI.Security
     /// <param name="acsCertificate">O certificado Digital.</param>
     /// <param name="plainData">A informação descriptografada.</param>
     /// <returns>A informação encriptografada.</returns>
-    private static byte[] Encrypt(X509Certificate2 acsCertificate, byte[] plainData) {
-      RSACryptoServiceProvider RsaProvider = acsCertificate.PublicKey.Key as RSACryptoServiceProvider;
+    private static byte[] Encrypt(X509Certificate2 acsCertificate, 
+      byte[] plainData) {
+      RSACryptoServiceProvider RsaProvider = acsCertificate.PublicKey.Key as
+        RSACryptoServiceProvider;
       return RsaProvider.Encrypt(plainData, false);
     }
 

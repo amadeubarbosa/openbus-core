@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using NUnit.Framework;
 using OpenbusAPI.Logger;
 using OpenbusAPI;
@@ -14,17 +12,16 @@ namespace Test_API
   [TestFixture]
   class OpenbusTests
   {
-
     #region Fields
 
-    public String userLogin;
-    public String userPassword;
-    public String hostName;
-    public int hostPort;
+    private String userLogin;
+    private String userPassword;
+    private String hostName;
+    private int hostPort;
 
-    public String testKeyFileName;
-    public String acsCertificateFileName;
-    public String entityName;
+    private String testKeyFileName;
+    private String acsCertificateFileName;
+    private String entityName;
 
     #endregion
 
@@ -88,7 +85,7 @@ namespace Test_API
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());
     }
-    
+
     /// <summary>
     /// Testa o connect passando login null.
     /// </summary>
@@ -112,7 +109,7 @@ namespace Test_API
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());
     }
-    
+
     /// <summary>
     /// Testa o connect passando usuário inválido.
     /// </summary>
@@ -134,11 +131,11 @@ namespace Test_API
       String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
       Assert.IsNotEmpty(xmlPrivateKey);
 
-      X509Certificate2 acsCertificate = 
+      X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFileName);
       Assert.IsNotNull(acsCertificate);
 
-      IRegistryService registryService = 
+      IRegistryService registryService =
         openbus.Connect(entityName, xmlPrivateKey, acsCertificate);
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());
@@ -158,17 +155,17 @@ namespace Test_API
       IRegistryService registryService =
         openbus.Connect("null", xmlPrivateKey, acsCertificate);
     }
-        
+
     [Test]
     [ExpectedException(typeof(ArgumentException))]
     public void ConnectByCertificateNullKey() {
       Openbus openbus = Openbus.GetInstance();
 
-      X509Certificate2 acsCertificate = 
+      X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFileName);
       Assert.IsNotNull(acsCertificate);
 
-      IRegistryService registryService = 
+      IRegistryService registryService =
         openbus.Connect(entityName, null, acsCertificate);
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());
@@ -181,7 +178,7 @@ namespace Test_API
       String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
       Assert.IsNotEmpty(xmlPrivateKey);
 
-      IRegistryService registryService = 
+      IRegistryService registryService =
         openbus.Connect(entityName, xmlPrivateKey, null);
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());

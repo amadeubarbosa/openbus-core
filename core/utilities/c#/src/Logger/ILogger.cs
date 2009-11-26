@@ -1,8 +1,8 @@
 using System;
 
+
 namespace OpenbusAPI.Logger
 {
-
   /// <summary>
   /// Interface de Log do Openbus.
   /// </summary>
@@ -89,25 +89,27 @@ namespace OpenbusAPI.Logger
   /// <summary>
   /// Define os níveis de log do Openbus.
   /// </summary>
-  public enum Level { 
+  public enum Level
+  {
     /// <summary>
     /// Nivél fatal.
     /// </summary>
-    FATAL, 
+    FATAL,
     /// <summary>
     /// Nível erro
     /// </summary>
-    ERROR, 
+    ERROR,
     /// <summary>
     /// Nível warning
     /// </summary>
-    WARN, 
+    WARN,
     /// <summary>
     /// Nível informação
     /// </summary>
-    INFO, 
+    INFO,
     /// <summary>
     /// Nível depuração.
     /// </summary>
-    DEBUG }
+    DEBUG
+  }
 }

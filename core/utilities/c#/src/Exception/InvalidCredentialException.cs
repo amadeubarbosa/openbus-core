@@ -1,24 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace OpenbusAPI.Exception
 {
   /// <summary>
   /// Indica uma exceção de credencial inválida
   /// </summary>
-  [Serializable()]
+  [Serializable]
   public class InvalidCredentialException : OpenbusException
   {
     /// <inheritdoc />
-    public InvalidCredentialException() : base() { }
-
+    public InvalidCredentialException() { }
 
     /// <inheritdoc />
     public InvalidCredentialException(string message) : base(message) { }
 
-
     /// <inheritdoc />
-    public InvalidCredentialException(string message, System.Exception inner) : base(message, inner) { }
+    public InvalidCredentialException(string message, System.Exception inner) 
+      : base(message, inner) { }
   }
 }

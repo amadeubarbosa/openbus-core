@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using openbusidl.acs;
 using omg.org.IOP;
-using omg.org.CORBA;
 using OpenbusAPI.Logger;
+using omg.org.PortableInterceptor;
+
 
 namespace OpenbusAPI.Interceptors
 {
@@ -12,9 +10,8 @@ namespace OpenbusAPI.Interceptors
   /// Representa o interceptador cliente.
   /// Implementa PortableInterceptor.ClientRequestInterceptor.
   /// </summary>
-  class ClientInterceptor : InterceptorImpl, omg.org.PortableInterceptor.ClientRequestInterceptor
+  class ClientInterceptor : InterceptorImpl, ClientRequestInterceptor
   {
-
     #region Fields
 
     /// <summary>
@@ -43,9 +40,9 @@ namespace OpenbusAPI.Interceptors
     /// Intercepta o request para inserção de informação de contexto.
     /// </summary>
     /// <remarks>Informação do cliente</remarks>
-    public void send_request(omg.org.PortableInterceptor.ClientRequestInfo ri) {
+    public void send_request(ClientRequestInfo ri) {
       Log.INTERCEPTORS.Debug("executando método: " + ri.operation);
-      
+
       /* Verifica se existe uma credencial para envio */
       Credential credential = bus.Credential;
       if ((credential.identifier == null) || (credential.identifier.Equals(""))) {
@@ -62,27 +59,27 @@ namespace OpenbusAPI.Interceptors
       catch {
         Log.INTERCEPTORS.Fatal("Erro na codificação da credencial.");
       }
-
-      ri.add_request_service_context(new ServiceContext(CONTEXT_ID, value), false);
+      ServiceContext serviceContext = new ServiceContext(CONTEXT_ID, value);
+      ri.add_request_service_context(serviceContext, false);
     }
 
     #endregion
 
     #region ClientRequestInterceptor Not Implemented
 
-    public void receive_exception(omg.org.PortableInterceptor.ClientRequestInfo ri) {
+    public void receive_exception(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
-    public void receive_other(omg.org.PortableInterceptor.ClientRequestInfo ri) {
+    public void receive_other(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
-    public void receive_reply(omg.org.PortableInterceptor.ClientRequestInfo ri) {
+    public void receive_reply(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
-    public void send_poll(omg.org.PortableInterceptor.ClientRequestInfo ri) {
+    public void send_poll(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 

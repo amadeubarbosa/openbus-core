@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using omg.org.IOP;
 using OpenbusAPI.Logger;
 
@@ -13,13 +10,12 @@ namespace OpenbusAPI.Interceptors
   /// </summary>
   public class ClientInitializer : omg.org.PortableInterceptor.ORBInitializer
   {
-
     #region ORBInitializer Members
 
     /// <inheritdoc />
     public void post_init(omg.org.PortableInterceptor.ORBInitInfo info) {
       try {
-        omg.org.IOP.Encoding encode = new omg.org.IOP.Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2);
+        Encoding encode = new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2);
         Codec codec = info.codec_factory.create_codec(encode);
         info.add_client_request_interceptor(new ClientInterceptor(codec));
         Log.INTERCEPTORS.Info("Registrei interceptador cliente.");

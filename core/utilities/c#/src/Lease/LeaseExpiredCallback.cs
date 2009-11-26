@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace OpenbusAPI.Lease
 {
@@ -10,9 +8,9 @@ namespace OpenbusAPI.Lease
   public interface LeaseExpiredCallback
   {
     /// <summary>
-    /// Informa que o <i>lease</i> expirou e não será mais renovado pelo <seealso cref=""/>
+    /// Informa que o <i>lease</i> expirou e não será mais renovado pelo
+    /// <seealso cref="LeaseRenewer"/>
     /// </summary>
-    /// /// O <i>lease</i> expirou e não será mais renovado pelo {@link LeaseRenewer};
     void expired();
   }
 }
