@@ -1,6 +1,8 @@
 PROJNAME= ACSTester
 APPNAME= acs
 
+DEFINES=SCS_MICO
+
 #Descomente as duas linhas abaixo para o uso em Valgrind.
 DBG=YES
 CPPFLAGS= -fno-inline
@@ -18,7 +20,7 @@ endif
 INCLUDES= . \
   ${ORBIXINC} \
   ${OPENBUS_HOME}/core/utilities/mico \
-  ${OPENBUSINC}/scs/mico \
+  ${OPENBUSINC}/scs \
   ${OPENBUSINC}/cxxtest \
   ${OPENBUSINC}/openssl-0.9.9 \
   ${MICO_INC}

@@ -18,7 +18,7 @@ endif
 INCLUDES= . \
   ${ORBIXINC} \
   ${OPENBUS_HOME}/core/utilities/orbix \
-  ${OPENBUSINC}/scs/orbix \
+  ${OPENBUSINC}/scs \
   ${OPENBUSINC}/cxxtest \
   ${OPENBUSINC}/openssl-0.9.9
 LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
