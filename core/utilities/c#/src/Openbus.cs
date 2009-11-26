@@ -40,6 +40,12 @@ namespace OpenbusAPI
     /// </summary>
     private int port;
     /// <summary>
+    /// O Orb do IIOP.NET.
+    /// <!-- Atenção: O orb é singleton, com isso só podemos registrar 
+    /// interceptadores uma única vez. -->
+    /// </summary>
+    OrbServices orb;
+    /// <summary>
     /// A faceta IAccessControlService do serviço de controle de acesso.
     /// </summary>
     private IAccessControlService acs;
@@ -70,7 +76,7 @@ namespace OpenbusAPI
       set { credential = value; }
     }
     private Credential credential;
-    
+
     /// <summary>
     /// O slot da credencial da requisição.
     /// </summary>
@@ -91,7 +97,7 @@ namespace OpenbusAPI
     #endregion
 
     #region Consts
-    
+
     private static readonly String ACCESS_CONTROL_SERVICE_KEY = "ACS";
     private static readonly String LEASE_PROVIDER_KEY = "LP";
     /// <summary>
@@ -137,7 +143,7 @@ namespace OpenbusAPI
       this.leaseRenewer = null;
 
       this.credential = new Credential();
-      this.channel = null;
+
 
       this.requestCredentialSlot = -1;
 
@@ -149,6 +155,7 @@ namespace OpenbusAPI
     /// Retorna ao seu estado inicial, ou seja, desfaz as definições de atributos realizadas.
     /// </summary>
     private void ResetInstance() {
+      this.channel = null;
       this.host = String.Empty;
       this.port = -1;
       Reset();
@@ -160,24 +167,30 @@ namespace OpenbusAPI
     private void FetchACS() {
       this.acs = RemotingServices.Connect(typeof(IAccessControlService),
           "corbaloc::1.0@" + host + ":" + port + "/" + ACCESS_CONTROL_SERVICE_KEY) as IAccessControlService;
-      if (this.acs == null)
+      if (this.acs == null) {
+        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
         throw new ACSUnavailableException();
+      }
 
       this.leaseProvider = RemotingServices.Connect(typeof(ILeaseProvider),
           "corbaloc::1.0@" + host + ":" + port + "/" + LEASE_PROVIDER_KEY) as ILeaseProvider;
-      if (this.leaseProvider == null)
+      if (this.leaseProvider == null) {
+        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
         throw new ACSUnavailableException();
-      
+      }
+
       this.acsComponent = RemotingServices.Connect(typeof(IComponent),
           "corbaloc::1.0@" + host + ":" + port + "/" + ICOMPONENT_KEY) as IComponent;
-      if (this.acsComponent == null)
+      if (this.acsComponent == null) {
+        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
         throw new ACSUnavailableException();
+      }
     }
 
     #endregion
 
     #region OpenbusAPI Implemented
-    
+
     /// <summary>
     /// Retorna o barramento para o seu estado inicial, ou seja, desfaz as
     /// definições de atributos realizadas. Em seguida, inicializa o Orb.
@@ -197,10 +210,12 @@ namespace OpenbusAPI
       this.port = port;
 
       //Adicionando os interceptadores
-      OrbServices orb = OrbServices.GetSingleton();
-      orb.RegisterPortableInterceptorInitalizer(new ClientInitializer());
-      //TODO Adicionar interceptador servidor.
-      orb.CompleteInterceptorRegistration();
+      if (this.orb == null) {
+        this.orb = OrbServices.GetSingleton();
+        this.orb.RegisterPortableInterceptorInitalizer(new ClientInitializer());
+        //TODO Adicionar interceptador servidor.
+        this.orb.CompleteInterceptorRegistration();
+      }
 
       //Registrando um canal
       this.channel = new IiopClientChannel();
@@ -328,7 +343,7 @@ namespace OpenbusAPI
       if ((user == null) || (password == null))
         throw new ArgumentException("Os parâmetros 'user' e 'password' não podem ser nulos.");
 
-      if (this.acs != null)
+      if (this.credential.identifier != null)
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
@@ -340,7 +355,9 @@ namespace OpenbusAPI
       this.leaseRenewer = new LeaseRenewer(this.credential, this.leaseProvider);
       this.leaseRenewer.Start();
 
-      Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = " + leaseTime + " segundos.");
+      Log.COMMON.Debug("Thread de renovação de lease está ativa. Lease = "
+        + leaseTime + " segundos.");
+
       this.registryService = /* TODO: this.GetRegistryService(); */ acs.getRegistryService();
       return this.registryService;
     }
@@ -351,14 +368,15 @@ namespace OpenbusAPI
     /// </summary>
     /// <param name="name">O nome da entidade.</param>
     /// <param name="xmlPrivateKey">A String que representa a chave privada.</param>
-    /// <param name="acsCertificate">O certificado do serviço de controle de acesso.</param>
+    /// <param name="acsCertificate">O certificado do 
+    /// serviço de controle de acesso.</param>
     /// <returns>O serviço de registro.</returns>
     public IRegistryService Connect(String name, String xmlPrivateKey,
   X509Certificate2 acsCertificate) {
       if ((name == null) || (xmlPrivateKey == null) || (acsCertificate == null))
         throw new ArgumentException("Nenhum parâmetro pode ser nulo.");
 
-      if (this.acs != null)
+      if (this.credential.identifier != null)
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
@@ -376,7 +394,8 @@ namespace OpenbusAPI
       this.leaseRenewer = new LeaseRenewer(this.credential, this.leaseProvider);
       this.leaseRenewer.Start();
 
-      Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = " + leaseTime + " segundos.");
+      Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = "
+        + leaseTime + " segundos.");
       this.registryService = /*TODO GetRegistryService();*/ acs.getRegistryService();
       return this.registryService;
     }
@@ -391,7 +410,7 @@ namespace OpenbusAPI
       if (credential.identifier == "")
         throw new ArgumentException("O parâmetro 'credential' não pode ser nulo.");
 
-      if (this.acs != null)
+      if (this.credential.identifier != null)
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
@@ -406,13 +425,13 @@ namespace OpenbusAPI
     /// <summary>
     /// Desfaz a conexão.
     /// 
-    /// {@code true} caso a conexão seja desfeita, ou {@code false} se       nenhuma conexão estiver ativa.
+    /// {@code true} caso a conexão seja desfeita, ou {@code false} se nenhuma conexão estiver ativa.
     /// </summary>
     /// <returns><code>true</code> caso a conexão seja desfeita, ou 
     /// <code>false</code> se nenhuma conexão estiver ativa. </returns>
     public bool Disconnect() {
       bool status = false;
-      if (this.acs == null)
+      if (this.credential.identifier == null)
         throw new ACSUnavailableException("O barramento não está conectado.");
 
       this.leaseRenewer.Finish();
@@ -429,8 +448,8 @@ namespace OpenbusAPI
     /// Finaliza a utilização do barramento.
     /// </summary>
     public void Destroy() {
-      ResetInstance();
       ChannelServices.UnregisterChannel(channel);
+      ResetInstance();
     }
 
     /// <summary>
@@ -438,9 +457,9 @@ namespace OpenbusAPI
     /// </summary>
     /// <returns></returns>
     public bool isConnected() {
-      return (this.acs != null);
+      return (this.credential.identifier != null);
     }
-    
+
     /// <summary>
     /// Atribui o observador para receber eventos de expiração do <i>lease</i>.
     /// </summary>

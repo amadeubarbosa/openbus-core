@@ -9,7 +9,7 @@ namespace OpenbusAPI.Exception
   /// Indica uma execeção de falha no serviço de controle de acesso. 
   /// </summary>
   [Serializable()]
-  class ACSLoginFailureException : OpenbusException
+  public class ACSLoginFailureException : OpenbusException
   {
     /// <inheritdoc />
     public ACSLoginFailureException() : base() { }

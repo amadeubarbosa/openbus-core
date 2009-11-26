@@ -8,7 +8,7 @@ namespace OpenbusAPI.Exception
   /// Indica uma exceção de serviço de controle de acesso indisponível
   /// </summary>
   [Serializable()]
-  class ACSUnavailableException : OpenbusException
+  public class ACSUnavailableException : OpenbusException
   {
     /// <inheritdoc />
     public ACSUnavailableException() : base() { }

@@ -8,7 +8,7 @@ namespace OpenbusAPI.Exception
   /// Indica uma exceção do OpenBus.
   /// </summary>
   [Serializable()]
-  class OpenbusException : System.ApplicationException
+  public class OpenbusException : System.ApplicationException
   {
     /// <summary>
     /// Cria uma execeção do Openbus

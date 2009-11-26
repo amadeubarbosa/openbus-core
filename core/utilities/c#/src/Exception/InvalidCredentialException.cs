@@ -8,7 +8,7 @@ namespace OpenbusAPI.Exception
   /// Indica uma exceção de credencial inválida
   /// </summary>
   [Serializable()]
-  class InvalidCredentialException : OpenbusException
+  public class InvalidCredentialException : OpenbusException
   {
     /// <inheritdoc />
     public InvalidCredentialException() : base() { }

@@ -8,7 +8,7 @@ namespace OpenbusAPI.Exception
   /// <summary>
   /// Indica uma exceção de Openbus já está inicializado.
   /// </summary>
-  class OpenbusAlreadyInitialized : OpenbusException
+  public class OpenbusAlreadyInitialized : OpenbusException
   {
     /// <inheritdoc />
     public OpenbusAlreadyInitialized() : base() { }
