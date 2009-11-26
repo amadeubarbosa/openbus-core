@@ -9,7 +9,7 @@
 #include <csignal>
 
 #include <openbus.h>
-#include <ComponentBuilderMico.h>
+#include <ComponentBuilder.h>
 
 #include "stubs/hello.h"
 
@@ -27,7 +27,9 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
       this->componentContext = componentContext;
     }
   public:
-    static PortableServer::ServantBase* instantiate(scs::core::ComponentContext* componentContext) {
+    static PortableServer::ServantBase* instantiate(
+      scs::core::ComponentContext* componentContext) 
+    {
       return (PortableServer::ServantBase*) new HelloImpl(componentContext);
     }
     static void destruct(void* obj) {

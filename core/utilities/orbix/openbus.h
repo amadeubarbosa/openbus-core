@@ -12,7 +12,7 @@
 #include "stubs/session_service.hh"
 
 #include "openbus/interceptors/ORBInitializerImpl.h"
-#include <ComponentBuilderOrbix.h>
+#include <ComponentBuilder.h>
 
 #include <omg/orb.hh>
 #include <it_ts/thread.h>

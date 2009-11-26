@@ -12,7 +12,7 @@
 #include "stubs/session_service.h"
 
 #include "openbus/interceptors/ORBInitializerImpl.h"
-#include <ComponentBuilderMico.h>
+#include <ComponentBuilder.h>
 
 #include <CORBA.h>
 

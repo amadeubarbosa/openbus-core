@@ -1,12 +1,14 @@
 PROJNAME= openbus
 LIBNAME= ${PROJNAME}
 
+CPPC=g++-4.3
+
 #Descomente as duas linhas abaixo para o uso em Valgrind.
-#DBG=YES
-#CPPFLAGS= -fno-inline
+DBG=YES
+CPPFLAGS= -fno-inline
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
-#DEFINES=VERBOSE
+DEFINES=VERBOSE
 
 ifeq "$(TEC_UNAME)" "SunOS58"
   USE_CC=Yes
@@ -27,7 +29,7 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 OBJROOT= obj
 TARGETROOT= lib
 
-INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs/orbix ${OPENBUSINC}/openssl-0.9.9
+INCLUDES= . ${ORBIXINC} ${OPENBUSINC}/scs ${OPENBUSINC}/openssl-0.9.9
 LDIR= ${ORBIXLDIR} ${OPENBUSLIB} ${ORBIXLDIR}
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix crypto

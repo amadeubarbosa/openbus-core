@@ -18,7 +18,7 @@ endif
 TARGETROOT=bin
 OBJROOT=obj
 
-INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs/orbix
+INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs
 LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor crypto

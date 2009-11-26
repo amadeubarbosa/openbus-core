@@ -1,6 +1,8 @@
 PROJNAME= openbus_mico
 LIBNAME= ${PROJNAME}
 
+DEFINES=SCS_MICO
+
 #Descomente a linha abaixo para ativar o suporte a multithread.
 #DEFINES=MULTITHREAD
 
@@ -26,7 +28,7 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 OBJROOT= obj
 TARGETROOT= lib
 
-INCLUDES= . ${MICO_INC} ${OPENBUSINC}/scs/mico ${OPENBUSINC}/openssl-0.9.9
+INCLUDES= . ${MICO_INC} ${OPENBUSINC}/scs ${OPENBUSINC}/openssl-0.9.9
 LDIR= ${MICO_LIB} ${OPENBUSLIB} 
 
 LIBS= mico2.3.11 dl crypto

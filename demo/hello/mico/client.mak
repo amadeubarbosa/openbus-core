@@ -1,6 +1,8 @@
 PROJNAME=client
 APPNAME=${PROJNAME}
 
+DEFINES=SCS_MICO
+
 #Descomente as duas linhas abaixo para o uso em Valgrind.
 #DBG=YES
 #CPPFLAGS= -fno-inline
@@ -22,7 +24,7 @@ INCLUDES= . \
   stubs \
   ${MICO_INC} \
   ${OPENBUS_HOME}/core/utilities/mico \
-  ${OPENBUSINC}/scs/mico
+  ${OPENBUSINC}/scs
 
 LDIR= ${MICO_LIB} ${OPENBUSLIB}
 

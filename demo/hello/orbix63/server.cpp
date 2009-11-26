@@ -10,7 +10,7 @@
 #include <it_ts/termination_handler.h>
 
 #include <openbus.h>
-#include <ComponentBuilderOrbix.h>
+#include <ComponentBuilder.h>
 
 #include "stubs/helloS.hh"
 
@@ -28,8 +28,10 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
       this->componentContext = componentContext;
     }
   public:
-    static void* instantiate(scs::core::ComponentContext* componentContext) {
-      return (void*) new HelloImpl(componentContext);
+    static PortableServer::ServantBase* instantiate(
+      scs::core::ComponentContext* componentContext) 
+    {
+      return (PortableServer::ServantBase*) new HelloImpl(componentContext);
     }
     static void destruct(void* obj) {
       delete (HelloImpl*) obj;
