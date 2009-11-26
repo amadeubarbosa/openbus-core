@@ -5,6 +5,9 @@ using NUnit.Framework;
 using OpenbusAPI.Logger;
 using OpenbusAPI;
 using openbusidl.rs;
+using OpenbusAPI.Exception;
+using OpenbusAPI.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Test_API
 {
@@ -76,7 +79,7 @@ namespace Test_API
     #region Tests
 
     /// <summary>
-    /// Testa o connect passando usuário e senha válido
+    /// Testa o connect passando usuário e senha válido.
     /// </summary>
     [Test]
     public void ConnectByPassword() {
@@ -85,22 +88,105 @@ namespace Test_API
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());
     }
+    
+    /// <summary>
+    /// Testa o connect passando login null.
+    /// </summary>
+    [Test]
+    [ExpectedException(typeof(ArgumentException))]
+    public void ConnectByPassword_NullLogin() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(null, userPassword);
+      Assert.NotNull(registryService);
+      Assert.True(openbus.Disconnect());
+    }
+
+    /// <summary>
+    /// Testa o connect passando password null.
+    /// </summary>
+    [Test]
+    [ExpectedException(typeof(ArgumentException))]
+    public void ConnectByPassword_NullPassword() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(userLogin, null);
+      Assert.NotNull(registryService);
+      Assert.True(openbus.Disconnect());
+    }
+    
+    /// <summary>
+    /// Testa o connect passando usuário inválido.
+    /// </summary>
+    [Test]
+    [ExpectedException(typeof(ACSLoginFailureException))]
+    public void ConnectByPassword_InvalidLogin() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect("null", "null");
+      Assert.NotNull(registryService);
+      Assert.True(openbus.Disconnect());
+    }
+
+    /// <summary>
+    /// Testa o connect passando o certificado.
+    /// </summary>
+    [Test]
+    public void ConnectByCertificate() {
+      Openbus openbus = Openbus.GetInstance();
+      String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
+      Assert.IsNotEmpty(xmlPrivateKey);
+
+      X509Certificate2 acsCertificate = 
+        Crypto.ReadCertificate(acsCertificateFileName);
+      Assert.IsNotNull(acsCertificate);
+
+      IRegistryService registryService = 
+        openbus.Connect(entityName, xmlPrivateKey, acsCertificate);
+      Assert.NotNull(registryService);
+      Assert.True(openbus.Disconnect());
+    }
+
+    [Test]
+    [ExpectedException(typeof(ACSLoginFailureException))]
+    public void ConnectByCertificate_InvalidEntityName() {
+      Openbus openbus = Openbus.GetInstance();
+      String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
+      Assert.IsNotEmpty(xmlPrivateKey);
+
+      X509Certificate2 acsCertificate =
+        Crypto.ReadCertificate(acsCertificateFileName);
+      Assert.IsNotNull(acsCertificate);
+
+      IRegistryService registryService =
+        openbus.Connect("null", xmlPrivateKey, acsCertificate);
+    }
+        
+    [Test]
+    [ExpectedException(typeof(ArgumentException))]
+    public void ConnectByCertificateNullKey() {
+      Openbus openbus = Openbus.GetInstance();
+
+      X509Certificate2 acsCertificate = 
+        Crypto.ReadCertificate(acsCertificateFileName);
+      Assert.IsNotNull(acsCertificate);
+
+      IRegistryService registryService = 
+        openbus.Connect(entityName, null, acsCertificate);
+      Assert.NotNull(registryService);
+      Assert.True(openbus.Disconnect());
+    }
+
+    [Test]
+    [ExpectedException(typeof(ArgumentException))]
+    public void ConnectByCertificateNullACSCertificate() {
+      Openbus openbus = Openbus.GetInstance();
+      String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
+      Assert.IsNotEmpty(xmlPrivateKey);
+
+      IRegistryService registryService = 
+        openbus.Connect(entityName, xmlPrivateKey, null);
+      Assert.NotNull(registryService);
+      Assert.True(openbus.Disconnect());
+    }
     /*
-    [Test]
-    public void ConnectByPasswordLoginNull() { }
-
-    [Test]
-    public void ConnectByPasswordInvalidLogin() { }
-
-    [Test]
-    public void ConnectByCertificate() { }
-
-    [Test]
-    public void ConnectByCertificateNullKey() { }
-
-    [Test]
-    public void ConnectByCertificateNullACSCertificate() { }
-
     [Test]
     public void ConnectByCredential() { }
 

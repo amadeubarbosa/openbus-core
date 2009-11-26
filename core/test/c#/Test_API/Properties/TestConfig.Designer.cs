@@ -61,7 +61,7 @@ namespace Test_API.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Teste.key")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Teste.xml")]
         public string testKeyFileName {
             get {
                 return ((string)(this["testKeyFileName"]));
