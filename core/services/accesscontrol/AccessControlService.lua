@@ -21,7 +21,8 @@ local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local SmartComponent = require "openbus.faulttolerance.SmartComponent"
 local OilUtilities = require "openbus.util.OilUtilities"
-local FaultTolerantService = require "core.services.faulttolerance.FaultTolerantService"
+local FaultTolerantService = 
+  require "core.services.faulttolerance.FaultTolerantService"
 
 local LeaseProvider = require "openbus.lease.LeaseProvider"
 
@@ -158,148 +159,152 @@ function ACSFacet:logout(credential)
     Log:warn("Tentativa de logout com credencial inexistente: "..
       credential.identifier)
     return false
-  end
-  if credential.owner == "RegistryService" then
-  	if self.registryCredential ~= nil then
-      if credential.identifier == self.registryCredential.identifier then
-    	-- removendo conexão com o serviço de registro.
-    	self:disconnectRegistryService()
-      end
-    end
+  elseif credential.owner == "RegistryService" and self.registryCredential and
+         credential.identifier == self.registryCredential.identifier
+  then
+    -- Removendo conexão com o Serviço de Registro.
+    self:disconnectRegistryService()
   end
   self:removeEntry(entry)
   return true
 end
 
+---
+-- Recupera a referência para o Serviço de Registro.
+--
+-- @return Serviço de Registro ou nil, se não houver uma referência ao serviço.
+--
 function ACSFacet:getRegistryService()
-	local acsIRecep = self:getACSReceptacleFacet()
-	local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
-	                                   "RegistryServiceReceptacle")
-
-	if not status then
-	  Log:error("[ACSFacet] Não foi possível obter o Serviço de Registro. Erro: " ..
-	        conns)
-	  return nil
-	end
-	if conns[1] ~= nil then 
-	    local rgs = Openbus:getORB():narrow(conns[1].objref,
-                    "IDL:openbusidl/rs/IRegistryService:1.0")
-        if Openbus.isFaultToleranceEnable then
-           if not OilUtilities:existent(rgs) then
-				status, services = self:getSmartRSInstance():_fetchSmartComponent()
-				if not status then
-					log:error("Erro ao obter as facetas do Serviço de Controle de Acesso." ..
-				 			"Erro: " .. acs)
-					return nil
-		  		end
-		  		if not services  then
-		  		-- o erro já foi pego e logado
-		  			--desloga e desconecta o SR que está em estado de falha
-		  			self:logout(self.registryCredential)
-					return nil
-		  		end
-		  		rgs = services[Utils.REGISTRY_SERVICE_KEY]
-		   end
-        end
-		return rgs                    
-    else
-      Log:error("[ACSFacet] Não foi possível obter o Serviço de Registro. Erro: " ..
-	        conns)
-	  return nil
-	end
+  local acsIRecep = self:getACSReceptacleFacet()
+  local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
+    "RegistryServiceReceptacle")
+  if not status then
+    Log:error("Não foi possível obter o Serviço de Registro: " .. conns[1])
+    return nil
+  elseif conns[1] then 
+    local rgs = Openbus:getORB():narrow(conns[1].objref,
+      "IDL:openbusidl/rs/IRegistryService:1.0")
+    if Openbus.isFaultToleranceEnable and not OilUtilities:existent(rgs) then
+      status, conns = self:getSmartRSInstance():_fetchSmartComponent()
+      if not status then
+        log:error("Erro ao obter as facetas do Serviço de Controle de Acesso: " ..
+          conns[1])
+        return nil
+      elseif not conns then
+        -- O RS conectado está em estado de falha -> desconectar
+        self:logout(self.registryCredential)
+        return nil
+      end
+      rgs = conns[Utils.REGISTRY_SERVICE_KEY]
+    end
+    return rgs
+  end
+  Log:error("Não foi possível obter o Serviço de Registro.")
+  return nil
 end
 
+---
+-- Recupera o smart proxy para o Serviço de Registro
+--
+-- @return Smart proxy
+--
 function ACSFacet:getSmartRSInstance()
-	if self.smartRS == nil then
-    	local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-    	local ftconfig = assert(loadfile(DATA_DIR .."/conf/RSFaultToleranceConfiguration.lua"))()
-    	local keys = {}
-    	keys[Utils.REGISTRY_SERVICE_KEY] = { interface = Utils.REGISTRY_SERVICE_INTERFACE,
-    										  hosts = ftconfig.hosts.RS, }
-    	keys[Utils.FAULT_TOLERANT_RS_KEY] = { interface = Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
-    								  		  hosts = ftconfig.hosts.FTRS, }
-		self.smartRS = SmartComponent:__init(Openbus:getORB(), "RS", keys)
-	end
-	return self.smartRS
+  if self.smartRS == nil then
+    local ftconfig = assert(loadfile(
+      DATA_DIR .. "/conf/RSFaultToleranceConfiguration.lua"))()
+    local keys = {}
+    keys[Utils.REGISTRY_SERVICE_KEY] = {
+      interface = Utils.REGISTRY_SERVICE_INTERFACE,
+      hosts = ftconfig.hosts.RS,
+    }
+    keys[Utils.FAULT_TOLERANT_RS_KEY] = {
+      interface = Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
+      hosts = ftconfig.hosts.FTRS,
+    }
+    self.smartRS = SmartComponent(Openbus:getORB(), "RS", keys)
+  end
+  return self.smartRS
 end
 
+---
+-- Recupera a faceta do IReceptacle do Serviço de Acesso
+--
+-- @return Faceta do IReceptacle
+--
 function ACSFacet:getACSReceptacleFacet()
-	local acsIRecep =  self.context.IComponent:getFacetByName("IReceptacles")
-	acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
-	return acsIRecep
+  local acsIRecep =  self.context.IComponent:getFacetByName("IReceptacles")
+  acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
+  return acsIRecep
 end
 
+---
+-- Conecta a faceta do Serviço de Registro ao receptáculo.
+--
+-- @param registryService Faceta do Serviço de Registro
+-- @return No caso de sucesso, retorna true. Caso contrário, retorna false
+--
 function ACSFacet:connectRegistryService(registryService)
-
-	local credential = Openbus.serverInterceptor:getCredential()
-
-  	if credential.owner == "RegistryService" then
-
-		local acsIRecep = self:getACSReceptacleFacet()
-
-		local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
-										   "RegistryServiceReceptacle")
-		if not status then
-		  Log:error("[faulltolerance] Erro ao pegar conexoes " ..	conns)
-	   	  return false		
-		else 
-			if conns[1] ~= nil then 
-				local rgs = Openbus:getORB():narrow(conns[1].objref,
-                    "IDL:openbusidl/rs/IRegistryService:1.0")
-                    
-                if rgs:_non_existent() then
-                -- se  SR nao existe, mas esta conectado, desloga (e desconecta) para poder efetuar conexao
-                	self:logout(self.registryCredential)
-                else
-                	if credential.identifier ~= self.registryCredential.identifier then
-                	--se o SR existe, esta conectado porem com outra credencial, 
-                	-- significa que outra replica esta tentando conectar, mas nao pode
-   						--self.registryCredential = credential
-						return false
-                	else
-                	--se o SR existe, esta conectado e com a mesma credencial
-                	-- nao faz nada
-                		return true
-                	end
-                end
-  			end              
-
-			--OK, pode conectar
-			--conectar RS no ACS: [ACS]--( 0--[RS]
-			local success, conId = oil.pcall(acsIRecep.connect, acsIRecep, 
-									"RegistryServiceReceptacle", registryService )
-
-			if not success then
-				Log:error("[faulltolerance] Erro durante conexão do serviço RS ao ACS.")
-				Log:error(conId)
-				error{"IDL:SCS/ConnectFailed:1.0"}
-			end
-			self.registryCredential = credential
-			local entry = self.entries[credential.identifier]
-    		entry.component = registryServiceComponent
-    		local suc, err = self.credentialDB:update(entry)
-    		if not suc then
-	      		Log:error("Erro persistindo referencia registry service: "..err)
-    		end
-			
-			return true
-		end
-	end
+  local credential = Openbus.serverInterceptor:getCredential()
+  if credential.owner ~= "RegistryService" then
+    return false
+  end
+  local acsIRecep = self:getACSReceptacleFacet()
+  local status, conns = oil.pcall(acsIRecep.getConnections, acsIRecep,
+    "RegistryServiceReceptacle")
+  if not status then
+    Log:error("Erro ao obter as conexões do receptáculo: " .. conns[1])
+    return false
+  elseif conns[1] then 
+    local rgs = Openbus:getORB():narrow(conns[1].objref,
+      "IDL:openbusidl/rs/IRegistryService:1.0")
+    if rgs:_non_existent() then
+      -- RS está com falha -> desconectar
+      self:logout(self.registryCredential)
+    elseif self.registryCredential and 
+           credential.identifier ~= self.registryCredential.identifier 
+    then
+      -- Um outro RS válido já está conectado, ignorar o atual
+      return false
+    else
+      -- Mesmo RS, não alterar
+      return true
+    end
+  end
+  -- Conectar RS no ACS
+  status, conns = oil.pcall(acsIRecep.connect, acsIRecep, 
+    "RegistryServiceReceptacle", registryService )
+  if not status then
+    Log:error("Falha ao conectar o Serviço de Registro no receptáculo: " ..
+      conns[1])
+    return false
+  end
+  self.registryConnId = conns
+  self.registryCredential = credential
+  local entry = self.entries[credential.identifier]
+  entry.component = registryService
+  local err
+  status, err = self.credentialDB:update(entry)
+  if not status then
+    Log:error("Erro ao persistir referência do Serviço de Registro: "..err)
+  end
+  return true
 end
 
+---
+-- Desconecta o Serviço de Registro do receptáculo.
+--
 function ACSFacet:disconnectRegistryService()
-	local acsIRecep = self:getACSReceptacleFacet()
-	--desconectar RS do ACS
-	local status, void = oil.pcall(acsIRecep.disconnect, acsIRecep, 1)
-	if not status then
-		Log:error("[faulltolerance] Error while calling disconnect")
-		Log:error("[faulltolerance] Error: " .. void)
-		error{"IDL:SCS/ConnectFailed:1.0"}
-	end
-			
-	Log:faulttolerance("Disconnect executed successfully!")
+  local acsIRecep = self:getACSReceptacleFacet()
+  local status, err = oil.pcall(acsIRecep.disconnect, acsIRecep, 
+    self.registryConnId)
+  if not status then
+    Log:error("Erro ao desconectar o Serviço de Registro: " .. err[1])
+  else
+    self.registryConnId = nil
+    self.registryCredential = nil
+    Log:faulttolerance("Serviço de Registro desconectado")
+  end
 end
-
 
 ---
 --Verifica se uma credencial é válida.
@@ -317,31 +322,6 @@ function ACSFacet:isValid(credential)
     return false
   end
   return true
-end
-
----
---Verifica se uma credencial é válida e retorna sua entrada completa.
---
---@param credential A credencial.
---
---@return a credencial caso exista, ou nil caso contrário.
----
-function ACSFacet:getEntryCredential(credential)
-  local emptyEntry = {     credential = {  identifier = "",  owner = "",  delegate = "" },
-			    certified = false,
-			    lease = 0,
-			    observers = {},
-			    observedBy = ""
-			}
-  local entry = self.entries[credential.identifier]
-
-  if not entry or entry == nil then
-    return emptyEntry
-  end
-  if entry.credential.delegate ~= "" and not entry.certified then
-    return emptyEntry
-  end
-  return entry
 end
 
 ---
