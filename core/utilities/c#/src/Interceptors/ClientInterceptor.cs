@@ -45,7 +45,7 @@ namespace OpenbusAPI.Interceptors
 
       /* Verifica se existe uma credencial para envio */
       Credential credential = bus.Credential;
-      if ((credential.identifier == null) || (credential.identifier.Equals(""))) {
+      if (string.IsNullOrEmpty(credential.identifier)) {
         Log.INTERCEPTORS.Info("Sem Credencial!");
         return;
       }

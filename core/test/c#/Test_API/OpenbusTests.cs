@@ -1,7 +1,9 @@
 using System;
 using NUnit.Framework;
+using omg.org.CORBA;
 using OpenbusAPI.Logger;
 using OpenbusAPI;
+using openbusidl.acs;
 using openbusidl.rs;
 using OpenbusAPI.Exception;
 using OpenbusAPI.Security;
@@ -93,9 +95,16 @@ namespace Test_API
     [ExpectedException(typeof(ArgumentException))]
     public void ConnectByPassword_NullLogin() {
       Openbus openbus = Openbus.GetInstance();
-      IRegistryService registryService = openbus.Connect(null, userPassword);
-      Assert.NotNull(registryService);
-      Assert.True(openbus.Disconnect());
+      IRegistryService registryService = null;
+      try {
+        registryService = openbus.Connect(null, userPassword);
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.False(openbus.Disconnect());
+      }
+
+
     }
 
     /// <summary>
@@ -105,9 +114,14 @@ namespace Test_API
     [ExpectedException(typeof(ArgumentException))]
     public void ConnectByPassword_NullPassword() {
       Openbus openbus = Openbus.GetInstance();
-      IRegistryService registryService = openbus.Connect(userLogin, null);
-      Assert.NotNull(registryService);
-      Assert.True(openbus.Disconnect());
+      IRegistryService registryService = null;
+      try {
+        registryService = openbus.Connect(userLogin, null);
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.False(openbus.Disconnect());
+      }
     }
 
     /// <summary>
@@ -117,13 +131,38 @@ namespace Test_API
     [ExpectedException(typeof(ACSLoginFailureException))]
     public void ConnectByPassword_InvalidLogin() {
       Openbus openbus = Openbus.GetInstance();
-      IRegistryService registryService = openbus.Connect("null", "null");
-      Assert.NotNull(registryService);
-      Assert.True(openbus.Disconnect());
+      IRegistryService registryService = null;
+      try {
+        registryService = openbus.Connect("null", "null");
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.False(openbus.Disconnect());
+      }
     }
 
     /// <summary>
-    /// Testa o connect passando o certificado.
+    /// Testa conectar duas vezes ao barramento utilizando o método connect 
+    /// por usuário e senha.
+    /// </summary>
+    [Test]
+    [ExpectedException(typeof(ACSLoginFailureException))]
+    public void ConnectByPassword_Twice() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      Assert.NotNull(registryService);
+      registryService = null;
+      try {
+        openbus.Connect(userLogin, userPassword);
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.True(openbus.Disconnect());
+      }
+    }
+
+    /// <summary>
+    /// Testa o connect utilizando o certificado.
     /// </summary>
     [Test]
     public void ConnectByCertificate() {
@@ -141,6 +180,9 @@ namespace Test_API
       Assert.True(openbus.Disconnect());
     }
 
+    /// <summary>
+    /// Testa o connect por certificado passando o entity name inválido
+    /// </summary>
     [Test]
     [ExpectedException(typeof(ACSLoginFailureException))]
     public void ConnectByCertificate_InvalidEntityName() {
@@ -151,51 +193,200 @@ namespace Test_API
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFileName);
       Assert.IsNotNull(acsCertificate);
-
-      IRegistryService registryService =
-        openbus.Connect("null", xmlPrivateKey, acsCertificate);
+      IRegistryService registryService = null;
+      try {
+        registryService = openbus.Connect("null", xmlPrivateKey, acsCertificate);
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.False(openbus.Disconnect());
+      }
     }
 
+    /// <summary>
+    /// Testa o connect por certificado passando a cheve privada nula. 
+    /// </summary>
     [Test]
     [ExpectedException(typeof(ArgumentException))]
-    public void ConnectByCertificateNullKey() {
+    public void ConnectByCertificate_NullKey() {
       Openbus openbus = Openbus.GetInstance();
 
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFileName);
       Assert.IsNotNull(acsCertificate);
 
-      IRegistryService registryService =
-        openbus.Connect(entityName, null, acsCertificate);
-      Assert.NotNull(registryService);
-      Assert.True(openbus.Disconnect());
+      IRegistryService registryService = null;
+      try {
+        registryService = openbus.Connect(entityName, null, acsCertificate);
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.False(openbus.Disconnect());
+      }
     }
 
+    /// <summary>
+    /// Testa o connect por certificado passando o certificado digital nulo. 
+    /// </summary>
     [Test]
     [ExpectedException(typeof(ArgumentException))]
-    public void ConnectByCertificateNullACSCertificate() {
+    public void ConnectByCertificate_NullACSCertificate() {
       Openbus openbus = Openbus.GetInstance();
       String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
       Assert.IsNotEmpty(xmlPrivateKey);
 
+      IRegistryService registryService = null;
+      try {
+        registryService = openbus.Connect(entityName, xmlPrivateKey, null);
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.False(openbus.Disconnect());
+      }
+    }
+
+    /// <summary>
+    /// Testa conectar duas vezes ao barramento utilizando o método connect 
+    /// por certificado
+    /// </summary>
+    [Test]
+    [ExpectedException(typeof(ACSLoginFailureException))]
+    public void ConnectByCertificate_Twice() {
+      Openbus openbus = Openbus.GetInstance();
+      String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
+      Assert.IsNotEmpty(xmlPrivateKey);
+
+      X509Certificate2 acsCertificate =
+        Crypto.ReadCertificate(acsCertificateFileName);
+      Assert.IsNotNull(acsCertificate);
+
       IRegistryService registryService =
-        openbus.Connect(entityName, xmlPrivateKey, null);
+        openbus.Connect(entityName, xmlPrivateKey, acsCertificate);
+      Assert.NotNull(registryService);
+
+      registryService = null;
+      try {
+        registryService = openbus.Connect(entityName, xmlPrivateKey, acsCertificate);
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.True(openbus.Disconnect());
+      }
+    }
+
+    /// <summary>
+    /// Testa o connect utilizando a credencial.
+    /// </summary>
+    [Test]
+    public void ConnectByCredential() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      Assert.NotNull(registryService);
+      registryService = null;
+
+      Credential myCredential = openbus.Credential;
+      openbus.Credential = new Credential();
+      registryService = openbus.Connect(myCredential);
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());
     }
+
+    /// <summary>
+    /// Testa o connect por credencial passando a credencial nula.
+    /// </summary>
+    [Test]
+    [ExpectedException(typeof(ArgumentException))]
+    public void ConnectByCredential_NullCredencial() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      Assert.NotNull(registryService);
+      registryService = null;
+
+      Credential oldCredential = openbus.Credential;
+      Credential myCredencial = new Credential();
+      openbus.Credential = new Credential();
+      try {
+        registryService = openbus.Connect(myCredencial);
+      }
+      finally {
+        Assert.Null(registryService);
+        openbus.Credential = oldCredential;
+        Assert.True(openbus.Disconnect());
+      }
+    }
+
+    /// <summary>
+    /// Testa o connect por credencial passando a credencial inválida.
+    /// </summary>
+    [Test]
+    [ExpectedException(typeof(NO_PERMISSION))]
+    public void ConnectByCredential_InvalidCredencial() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      Assert.NotNull(registryService);
+      registryService = null;
+
+      Credential oldCredential = openbus.Credential;
+      Credential myCredential = new Credential("null", "null", "");
+      openbus.Credential = new Credential();
+      try {
+        registryService = openbus.Connect(myCredential);
+      }
+      finally {
+        Assert.Null(registryService);
+        openbus.Credential = oldCredential;
+        Assert.True(openbus.Disconnect());
+      }
+    }
+
+    /// <summary>
+    /// Testa conectar duas vezes ao barramento utilizando o método connect 
+    /// por certificado
+    /// </summary>
+    [Test]
+    [ExpectedException(typeof(ACSLoginFailureException))]
+    public void ConnectByCredential_Twice() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      Assert.NotNull(registryService);
+      registryService = null;
+      try {
+        registryService = openbus.Connect(openbus.Credential);
+      }
+      finally {
+        Assert.Null(registryService);
+        Assert.True(openbus.Disconnect());
+      }
+    }
+  
+    /// <summary>
+    /// Testa o IsConnected
+    /// </summary>
+    [Test]
+    public void IsConnected()
+    {
+      Openbus openbus = Openbus.GetInstance();
+      Assert.False(openbus.isConnected());
+      Assert.NotNull(openbus.Connect(userLogin, userPassword));
+      Assert.True(openbus.isConnected());
+      Assert.True(openbus.Disconnect());
+      Assert.False(openbus.isConnected());
+    }
+    
+    /// <summary>
+    /// Testa se disconectar do barramento.
+    /// </summary>
+    [Test]
+    public void Disconnect()
+    {
+      Openbus openbus = Openbus.GetInstance();
+      Assert.False(openbus.Disconnect());
+      Assert.NotNull(openbus.Connect(userLogin, userPassword));
+      Assert.True(openbus.Disconnect());
+      Assert.False(openbus.Disconnect());
+    }
+
     /*
-    [Test]
-    public void ConnectByCredential() { }
-
-    [Test]
-    public void ConnectByCredentialNullCredential() { }
-
-    [Test]
-    public void IsConnected() { }
-
-    [Test]
-    public void Disconnect() { }
-
     [Test]
     public void GetAccessControlService() { }
 

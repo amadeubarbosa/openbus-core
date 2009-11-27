@@ -345,7 +345,7 @@ namespace OpenbusAPI
         throw new ArgumentException(
           "Os parâmetros 'user' e 'password' não podem ser nulos.");
 
-      if (this.credential.identifier != null)
+      if (!String.IsNullOrEmpty(this.credential.identifier))
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
@@ -382,7 +382,7 @@ namespace OpenbusAPI
         (String.IsNullOrEmpty(xmlPrivateKey)) || (acsCertificate == null)))
         throw new ArgumentException("Nenhum parâmetro pode ser nulo.");
 
-      if (this.credential.identifier != null)
+      if (!String.IsNullOrEmpty(this.credential.identifier))
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
@@ -413,14 +413,15 @@ namespace OpenbusAPI
     /// <param name="credential">A credencial</param>
     /// <returns>O serviço de registro.</returns>
     public IRegistryService Connect(Credential credential) {
-      if (credential.identifier == "")
+      if (String.IsNullOrEmpty(credential.identifier))
         throw new ArgumentException(
           "O parâmetro 'credential' não pode ser nulo.");
 
-      if (this.credential.identifier != null)
+      if (!String.IsNullOrEmpty(this.credential.identifier))
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
+      this.credential = credential;
       bool ok = this.acs.isValid(this.credential);
       if (!ok)
         throw new InvalidCredentialException();
@@ -431,16 +432,13 @@ namespace OpenbusAPI
 
     /// <summary>
     /// Desfaz a conexão.
-    /// 
-    /// {@code true} caso a conexão seja desfeita, ou {@code false} se nenhuma
-    ///  conexão estiver ativa.
     /// </summary>
     /// <returns><code>true</code> caso a conexão seja desfeita, ou 
     /// <code>false</code> se nenhuma conexão estiver ativa. </returns>
     public bool Disconnect() {
       bool status = false;
-      if (this.credential.identifier == null)
-        throw new ACSUnavailableException("O barramento não está conectado.");
+      if (String.IsNullOrEmpty(this.credential.identifier))
+        return false;
 
       this.leaseRenewer.Finish();
       this.leaseRenewer = null;
@@ -465,7 +463,7 @@ namespace OpenbusAPI
     /// </summary>
     /// <returns></returns>
     public bool isConnected() {
-      return (this.credential.identifier != null);
+      return (!String.IsNullOrEmpty(this.credential.identifier));
     }
 
     /// <summary>
