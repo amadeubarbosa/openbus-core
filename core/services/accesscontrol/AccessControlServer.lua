@@ -8,10 +8,6 @@ local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local util = require "openbus.util.Utils"
-local LDAPLoginPasswordValidator =
-    require "core.services.accesscontrol.LDAPLoginPasswordValidator"
-local TestLoginPasswordValidator =
-    require "core.services.accesscontrol.TestLoginPasswordValidator"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
@@ -152,9 +148,12 @@ function main()
   acs.entries = {}
   acs.observers = {}
   acs.challenges = {}
-  acs.loginPasswordValidators = {LDAPLoginPasswordValidator(acs.config.ldapHosts, acs.config.ldapSuffixes),
-    TestLoginPasswordValidator(),
-  }
+  acs.loginPasswordValidators = {}
+
+  for v,k in ipairs(AccessControlServerConfiguration.validators) do
+    local validator = require(k)
+    table.insert(acs.loginPasswordValidators, validator(acs.config))
+  end
 
   -- Inicialização
   success, res = oil.pcall(acsInst.IComponent.startup, acsInst.IComponent)

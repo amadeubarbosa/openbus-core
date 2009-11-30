@@ -19,4 +19,8 @@ AccessControlServerConfiguration = {
   lease = 60,
   logLevel = 3,
   oilVerboseLevel = 1,
+  validators = {
+    "core.services.accesscontrol.LDAPLoginPasswordValidator",
+    "core.services.accesscontrol.TestLoginPasswordValidator",
+  },
 }

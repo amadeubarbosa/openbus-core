@@ -14,17 +14,18 @@ local LoginPasswordValidator =
 module("core.services.accesscontrol.LDAPLoginPasswordValidator")
 oop.class(_M, LoginPasswordValidator)
 
+
 ---
 --Cria o validador LDAP.
 --
---@param ldapHost O endereço do servidor LDAP no formato servidor:porta.
+--@param config As configurações do AcessControlService.
 --
 --@return O validador.
 ---
-function __init(self, ldapHosts, ldapSuffixes)
+function __init(self, config)
   return oop.rawnew(self, {
-    ldapHosts = ldapHosts,
-    ldapSuffixes = ldapSuffixes,
+    ldapHosts = config.ldapHosts,
+    ldapSuffixes = config.ldapSuffixes,
   })
 end
 
