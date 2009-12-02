@@ -1,6 +1,5 @@
 using System;
 using NUnit.Framework;
-using omg.org.CORBA;
 using OpenbusAPI.Logger;
 using OpenbusAPI;
 using openbusidl.acs;
@@ -45,7 +44,7 @@ namespace Test_API
 
     #endregion
 
-    #region preparation
+    #region Preparation
 
     /// <summary>
     /// Este método é chamado antes de todos os testCases.
@@ -77,6 +76,8 @@ namespace Test_API
 
     #region Tests
 
+    #region API
+
     /// <summary>
     /// Testa o connect passando usuário e senha válido.
     /// </summary>
@@ -103,8 +104,6 @@ namespace Test_API
         Assert.Null(registryService);
         Assert.False(openbus.Disconnect());
       }
-
-
     }
 
     /// <summary>
@@ -282,7 +281,6 @@ namespace Test_API
       Openbus openbus = Openbus.GetInstance();
       IRegistryService registryService = openbus.Connect(userLogin, userPassword);
       Assert.NotNull(registryService);
-      registryService = null;
 
       Credential myCredential = openbus.Credential;
       openbus.Credential = new Credential();
@@ -302,7 +300,6 @@ namespace Test_API
       Assert.NotNull(registryService);
       registryService = null;
 
-      Credential oldCredential = openbus.Credential;
       Credential myCredencial = new Credential();
       openbus.Credential = new Credential();
       try {
@@ -310,7 +307,6 @@ namespace Test_API
       }
       finally {
         Assert.Null(registryService);
-        openbus.Credential = oldCredential;
         Assert.True(openbus.Disconnect());
       }
     }
@@ -319,14 +315,13 @@ namespace Test_API
     /// Testa o connect por credencial passando a credencial inválida.
     /// </summary>
     [Test]
-    [ExpectedException(typeof(NO_PERMISSION))]
+    [ExpectedException(typeof(InvalidCredentialException))]
     public void ConnectByCredential_InvalidCredencial() {
       Openbus openbus = Openbus.GetInstance();
       IRegistryService registryService = openbus.Connect(userLogin, userPassword);
       Assert.NotNull(registryService);
       registryService = null;
 
-      Credential oldCredential = openbus.Credential;
       Credential myCredential = new Credential("null", "null", "");
       openbus.Credential = new Credential();
       try {
@@ -334,37 +329,15 @@ namespace Test_API
       }
       finally {
         Assert.Null(registryService);
-        openbus.Credential = oldCredential;
         Assert.True(openbus.Disconnect());
       }
     }
 
     /// <summary>
-    /// Testa conectar duas vezes ao barramento utilizando o método connect 
-    /// por certificado
-    /// </summary>
-    [Test]
-    [ExpectedException(typeof(ACSLoginFailureException))]
-    public void ConnectByCredential_Twice() {
-      Openbus openbus = Openbus.GetInstance();
-      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
-      Assert.NotNull(registryService);
-      registryService = null;
-      try {
-        registryService = openbus.Connect(openbus.Credential);
-      }
-      finally {
-        Assert.Null(registryService);
-        Assert.True(openbus.Disconnect());
-      }
-    }
-  
-    /// <summary>
     /// Testa o IsConnected
     /// </summary>
     [Test]
-    public void IsConnected()
-    {
+    public void IsConnected() {
       Openbus openbus = Openbus.GetInstance();
       Assert.False(openbus.isConnected());
       Assert.NotNull(openbus.Connect(userLogin, userPassword));
@@ -372,13 +345,12 @@ namespace Test_API
       Assert.True(openbus.Disconnect());
       Assert.False(openbus.isConnected());
     }
-    
+
     /// <summary>
     /// Testa se disconectar do barramento.
     /// </summary>
     [Test]
-    public void Disconnect()
-    {
+    public void Disconnect() {
       Openbus openbus = Openbus.GetInstance();
       Assert.False(openbus.Disconnect());
       Assert.NotNull(openbus.Connect(userLogin, userPassword));
@@ -386,18 +358,48 @@ namespace Test_API
       Assert.False(openbus.Disconnect());
     }
 
-    /*
+    /// <summary>
+    /// Testa o GetAccessControlService
+    /// </summary>
     [Test]
-    public void GetAccessControlService() { }
+    public void GetAccessControlService() {
+      Openbus openbus = Openbus.GetInstance();
+      Assert.Null(openbus.GetAccessControlService());
+      Assert.NotNull(openbus.Connect(userLogin, userPassword));
+      Assert.NotNull(openbus.GetAccessControlService());
+      Assert.True(openbus.Disconnect());
+      Assert.Null(openbus.GetAccessControlService());
+    }
 
+    /// <summary>
+    /// Testa o GetRegistryService
+    /// </summary>
     [Test]
-    public void GetRegistryService() { }
+    public void GetRegistryService() {
+      Openbus openbus = Openbus.GetInstance();
+      Assert.Null(openbus.GetRegistryService());
+      Assert.NotNull(openbus.Connect(userLogin, userPassword));
+      Assert.NotNull(openbus.GetRegistryService());
+      Assert.True(openbus.Disconnect());
+      Assert.Null(openbus.GetRegistryService());
+    }
 
+    /// <summary>
+    /// Testa o GetSessionService
+    /// </summary>
     [Test]
-    public void GetSessionService() { }
-    */
+    public void GetSessionService() {
+      Openbus openbus = Openbus.GetInstance();
+      Assert.Null(openbus.GetSessionService());
+      Assert.NotNull(openbus.Connect(userLogin, userPassword));
+      Assert.NotNull(openbus.GetSessionService());
+      Assert.True(openbus.Disconnect());
+      Assert.Null(openbus.GetSessionService());
+    }
+
     #endregion
 
+    #endregion
 
   }
 }

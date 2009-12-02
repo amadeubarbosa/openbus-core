@@ -57,6 +57,10 @@ namespace OpenbusAPI
     /// O renovador de lease.
     /// </summary>
     private LeaseRenewer leaseRenewer;
+    /// <summary>
+    /// <i>Callback</i> para a notificação de que um <i>lease</i> expirou.
+    /// </summary>
+    private LeaseExpiredCallback leaseExpiredCb;
 
     /// <summary>
     /// O canal IIOP responsável pela troca de mensagens com o barramento.
@@ -66,11 +70,22 @@ namespace OpenbusAPI
     /// <summary>
     /// Credencial recebida ao se conectar ao barramento.
     /// </summary>
-    public Credential Credential {
-      get { return credential; }
-      set { credential = value; }
-    }
     private Credential credential;
+
+    /// <summary>
+    /// Credencial utilizada para trocar informações com o barramento.
+    /// Esta credencial pode ser alterada pelo usuário para adicionar a
+    /// delegação.
+    /// </summary>
+    public Credential Credential {
+      get {
+        return String.IsNullOrEmpty(currentCredential.identifier)
+          ? credential : currentCredential;
+      }
+      set { currentCredential = value; }
+    }
+    [ThreadStatic]
+    private Credential currentCredential;
 
     /// <summary>
     /// O slot da credencial da requisição.
@@ -134,13 +149,13 @@ namespace OpenbusAPI
     private void Reset() {
       this.acs = null;
       this.acsComponent = null;
-
       this.leaseProvider = null;
+
+      this.leaseExpiredCb = null;
       this.leaseRenewer = null;
 
       this.credential = new Credential();
-
-
+      this.currentCredential = new Credential();
       this.requestCredentialSlot = -1;
 
       this.registryService = null;
@@ -293,9 +308,14 @@ namespace OpenbusAPI
       }
       String sessionServiceID = Repository.GetRepositoryID(
         typeof(ISessionService));
-      String[] facets = new String[] { sessionServiceID };
+      String[] facets = new String[] { "ISessionService" };
       ServiceOffer[] offers = registryService.find(facets);
-      if (offers.Length != 1)
+
+      if (offers.Length < 1) {
+        Log.COMMON.Error("Não foi possível acessar o SessionService");
+        return null;
+      }
+      if (offers.Length > 1)
         Log.COMMON.Warn("Existe mais de um " + sessionServiceID + " conectado.");
 
       IComponent component = offers[0].member;
@@ -341,22 +361,23 @@ namespace OpenbusAPI
     /// <param name="password">A senha.</param>
     /// <returns>O serviço de registro.</returns>
     public IRegistryService Connect(String user, String password) {
-      if ( (String.IsNullOrEmpty(user)) || (String.IsNullOrEmpty(password)) )
+      if ((String.IsNullOrEmpty(user)) || (String.IsNullOrEmpty(password)))
         throw new ArgumentException(
           "Os parâmetros 'user' e 'password' não podem ser nulos.");
 
-      if (!String.IsNullOrEmpty(this.credential.identifier))
+      if (!String.IsNullOrEmpty(this.Credential.identifier))
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
       int leaseTime = -1;
-      bool ok = acs.loginByPassword(user, password, out this.credential, 
+      bool ok = acs.loginByPassword(user, password, out this.credential,
         out leaseTime);
       if (!ok)
         throw new ACSLoginFailureException(
           "Não foi possível conectar ao barramento.");
 
-      this.leaseRenewer = new LeaseRenewer(this.credential, this.leaseProvider);
+      this.leaseRenewer = new LeaseRenewer(this.Credential, this.leaseProvider,
+        this.leaseExpiredCb);
       this.leaseRenewer.Start();
 
       Log.COMMON.Debug("Thread de renovação de lease está ativa. Lease = "
@@ -377,12 +398,12 @@ namespace OpenbusAPI
     /// serviço de controle de acesso.</param>
     /// <returns>O serviço de registro.</returns>
     public IRegistryService Connect(String name, String xmlPrivateKey,
-  X509Certificate2 acsCertificate) {
+    X509Certificate2 acsCertificate) {
       if ((String.IsNullOrEmpty(name) ||
         (String.IsNullOrEmpty(xmlPrivateKey)) || (acsCertificate == null)))
         throw new ArgumentException("Nenhum parâmetro pode ser nulo.");
 
-      if (!String.IsNullOrEmpty(this.credential.identifier))
+      if (!String.IsNullOrEmpty(this.Credential.identifier))
         throw new ACSLoginFailureException("O barramento já está conectado.");
 
       FetchACS();
@@ -397,7 +418,8 @@ namespace OpenbusAPI
       int leaseTime = -1;
       this.acs.loginByCertificate(name, answer, out this.credential, out leaseTime);
 
-      this.leaseRenewer = new LeaseRenewer(this.credential, this.leaseProvider);
+      this.leaseRenewer = new LeaseRenewer(this.Credential, this.leaseProvider,
+        this.leaseExpiredCb);
       this.leaseRenewer.Start();
 
       Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = "
@@ -417,15 +439,12 @@ namespace OpenbusAPI
         throw new ArgumentException(
           "O parâmetro 'credential' não pode ser nulo.");
 
-      if (!String.IsNullOrEmpty(this.credential.identifier))
-        throw new ACSLoginFailureException("O barramento já está conectado.");
-
       FetchACS();
-      this.credential = credential;
-      bool ok = this.acs.isValid(this.credential);
+      bool ok = this.acs.isValid(credential);
       if (!ok)
         throw new InvalidCredentialException();
 
+      this.credential = credential;
       this.registryService = this.GetRegistryService();
       return this.registryService;
     }
@@ -440,9 +459,10 @@ namespace OpenbusAPI
       if (String.IsNullOrEmpty(this.credential.identifier))
         return false;
 
-      this.leaseRenewer.Finish();
-      this.leaseRenewer = null;
-
+      if (this.leaseRenewer != null) {
+        this.leaseRenewer.Finish();
+        this.leaseRenewer = null;
+      }
       status = this.acs.logout(this.credential);
       if (status)
         Reset();
@@ -469,16 +489,18 @@ namespace OpenbusAPI
     /// <summary>
     /// Atribui o observador para receber eventos de expiração do <i>lease</i>.
     /// </summary>
-    /// <param name="lec">O observador.</param>
-    public void AddLeaseExpiredCallback(LeaseExpiredCallback lec) {
+    /// <param name="leaseExpiredCallback">O observador.</param>
+    public void AddLeaseExpiredCallback(LeaseExpiredCallback leaseExpiredCallback) {
+      this.leaseExpiredCb = leaseExpiredCallback;
       if (this.leaseRenewer != null)
-        this.leaseRenewer.SetLeaseExpiredCallback(lec);
+        this.leaseRenewer.SetLeaseExpiredCallback(leaseExpiredCallback);
     }
 
     /// <summary>
     /// Remove o observador de expiração de <i>lease</i>.
     /// </summary>
     public void RemoveLeaseExpiredCallback() {
+      this.leaseExpiredCb = null;
       if (this.leaseRenewer != null)
         this.leaseRenewer.SetLeaseExpiredCallback(null);
     }
