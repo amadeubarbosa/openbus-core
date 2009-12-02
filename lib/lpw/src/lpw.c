@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <lua.h>
+#include "lpw.h"
 #include <lauxlib.h>
 
 static int lgetpass(lua_State *L)

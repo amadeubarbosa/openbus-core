@@ -12,6 +12,7 @@ INCLUDES += . \
             ${OPENBUSINC}/luafilesystem \
             ${OPENBUSINC}/luuid \
             ${OPENBUSINC}/lce \
+            ${OPENBUSINC}/lpw \
             ${OPENBUSINC}/lualdap-1.0.1 \
             ${OPENBUSINC}/scs
 
@@ -29,7 +30,7 @@ ifneq "$(TEC_SYSNAME)" "Darwin"
 	LIBS += uuid
 endif
 
-LIBS = oilall scsall luasocket lfs luuid lce lualdap
+LIBS = oilall scsall luasocket lfs luuid lce lpw lualdap
 
 # SLIB += ${OPENBUSLIB}/liboilall.a
 # SLIB += ${OPENBUSLIB}/libscsall.a
