@@ -1,0 +1,18 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="DemoHello_Client.Properties" GeneratedClassName="DemoConfig">
+  <Profiles />
+  <Settings>
+    <Setting Name="userLogin" Type="System.String" Scope="User">
+      <Value Profile="(Default)">tester</Value>
+    </Setting>
+    <Setting Name="userPassword" Type="System.String" Scope="User">
+      <Value Profile="(Default)">tester</Value>
+    </Setting>
+    <Setting Name="hostName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">localhost</Value>
+    </Setting>
+    <Setting Name="hostPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2089</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
