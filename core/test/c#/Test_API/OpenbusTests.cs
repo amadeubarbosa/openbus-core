@@ -10,6 +10,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Test_API
 {
+  /// <summary>
+  /// Classe responsável por testar a API Openbus.
+  /// </summary>
   [TestFixture]
   class OpenbusTests
   {
@@ -400,6 +403,5 @@ namespace Test_API
     #endregion
 
     #endregion
-
   }
 }

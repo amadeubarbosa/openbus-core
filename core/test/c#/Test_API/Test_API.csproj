@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OpenbusInitandDestroyTests.cs" />
     <Compile Include="OpenbusTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\TestConfig.Designer.cs">
