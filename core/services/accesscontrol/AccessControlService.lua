@@ -314,14 +314,40 @@ end
 --@return true caso a credencial seja válida, ou false caso contrário.
 ---
 function ACSFacet:isValid(credential)
+  Log:access_control("Validando a credencial {"..credential.identifier.." - "..
+      credential.owner.."/"..credential.delegate.."}")
   local entry = self.entries[credential.identifier]
   if not entry then
+    Log:access_control("A credencial {"..credential.identifier.." - "..
+        credential.owner.."/"..credential.delegate.."} não é válida.")
     return false
   end
   if entry.credential.delegate ~= "" and not entry.certified then
+    Log:access_control("A credencial {"..credential.identifier.." - "..
+        credential.owner.."/"..credential.delegate.."} não é válida.")
     return false
   end
+  Log:access_control("A credencial {"..credential.identifier.." - "..
+      credential.owner.."/"..credential.delegate.."} é válida.")
   return true
+end
+
+---
+--Verifica a validade de um array de credenciais.
+--
+--@param credentials O array de credenciais.
+--
+--@return Um array de booleanos indicando para cada credencial recebida se a
+--mesma é válida ou não.
+---
+function ACSFacet:areValid(credentials)
+  local areValid = {}
+  for _, credential in ipairs(credentials) do
+    local result = self:isValid(credential)
+    Log:access_control(credential.identifier.." - "..tostring(result))
+    table.insert(areValid, result)
+  end
+  return areValid
 end
 
 ---

@@ -119,6 +119,20 @@ Suite = {
       self.credentialManager:invalidate()
     end,
 
+    testAreValid = function(self)
+      local credentials = {self.credential, {identifier = "INVALID_IDENTIFIER", owner = self.user, delegate = "",},}
+      local results = self.accessControlService:areValid(credentials)
+      Check.assertTrue(results[1])
+      Check.assertFalse(results[2])
+      credentials = {{identifier = "INVALID_IDENTIFIER", owner = self.user, delegate = "",}, self.credential}
+      results = self.accessControlService:areValid(credentials)
+      Check.assertFalse(results[1])
+      Check.assertTrue(results[2])
+
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+    end,
+
     testObservers = function(self)
       local credentialObserver = { credential = self.credential }
       function credentialObserver:credentialWasDeleted(credential)

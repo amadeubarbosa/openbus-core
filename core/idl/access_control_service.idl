@@ -30,6 +30,7 @@ struct Credential {
   string owner; /**< \brief Nome da entidade dona. */
   string delegate; /**< \brief Nome da entidade delegada (opcional). */
 };
+typedef sequence<Credential> CredentialSeq;
 
 /**
  * \brief Representa um observador de credenciais. Esse observador será
@@ -147,6 +148,15 @@ interface IAccessControlService {
      * contrário.
      */
     boolean isValid (in Credential aCredential);
+
+    /**
+     * \brief Verifica a validade de uma sequência de credenciais.
+     *
+     * \param credentials A sequência de credenciais.
+     *
+     * \return Uma sequência indicando para cada credencial se ela é válida ou não..
+     */
+    BooleanSeq areValid (in CredentialSeq credentials);
 
     /**
      * \brief Adiciona um observador de credenciais. Esse observador será notificado apenas sobre

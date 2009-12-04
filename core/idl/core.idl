@@ -19,6 +19,9 @@ typedef UUID Identifier;
 /** \brief Representa uma sequência de bytes. */
 typedef sequence<octet> OctetSeq;
 
+/** \brief Representa uma sequência de booleanos. */
+typedef sequence<boolean> BooleanSeq;
+
 };
 
 #endif
