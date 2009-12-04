@@ -10,7 +10,7 @@
 #include <orbix/corba.hh>
 #include <omg/PortableInterceptor.hh>
 
-#include "../../stubs/access_control_service.hh"
+#include "../../stubs/orbix/access_control_service.hh"
 
 using namespace PortableInterceptor;
 

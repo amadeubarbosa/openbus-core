@@ -1,14 +1,12 @@
 PROJNAME= openbus
 LIBNAME= ${PROJNAME}
 
-CPPC=g++-4.3
-
 #Descomente as duas linhas abaixo para o uso em Valgrind.
-DBG=YES
-CPPFLAGS= -fno-inline
+#DBG=YES
+#CPPFLAGS= -fno-inline
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
-DEFINES=VERBOSE
+#DEFINES=VERBOSE
 
 ifeq "$(TEC_UNAME)" "SunOS58"
   USE_CC=Yes
@@ -37,24 +35,24 @@ LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix crypto
 SRC= openbus/interceptors/ClientInterceptor.cpp \
      openbus/interceptors/ServerInterceptor.cpp \
      openbus/interceptors/ORBInitializerImpl.cpp \
-     stubs/access_control_serviceC.cxx \
-     stubs/access_control_service_exceptionsC.cxx \
-     stubs/registry_serviceC.cxx \
-     stubs/session_serviceC.cxx \
-     stubs/coreC.cxx \
-     stubs/scsC.cxx \
+     stubs/orbix/access_control_serviceC.cxx \
+     stubs/orbix/access_control_service_exceptionsC.cxx \
+     stubs/orbix/registry_serviceC.cxx \
+     stubs/orbix/session_serviceC.cxx \
+     stubs/orbix/coreC.cxx \
+     stubs/orbix/scsC.cxx \
      openbus.cpp \
      openbus/util/Helper.cpp \
      verbose.cpp
 
 genstubs:
-	mkdir -p stubs
-	cd stubs ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/access_control_service.idl 
-	cd stubs ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/access_control_service_exceptions.idl 
-	cd stubs ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/registry_service.idl
-	cd stubs ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/session_service.idl
-	cd stubs ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/core.idl
-	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/scs.idl
+	mkdir -p stubs/orbix
+	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/access_control_service.idl 
+	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/access_control_service_exceptions.idl 
+	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/registry_service.idl
+	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/session_service.idl
+	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/core.idl
+	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/scs.idl
 	
 sunos58: $(OBJS)
 	rm -f lib/SunOS58/libopenbus.a

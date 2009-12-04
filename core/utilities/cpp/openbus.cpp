@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stubs/scs.hh>
+#include <stubs/orbix/scs.hh>
 
 #define CHALLENGE_SIZE 36
 
@@ -426,9 +426,9 @@ namespace openbus {
         }
       } catch (scs::core::InvalidName& e) {
       #ifdef VERBOSE
-        Verbose->print("Openbus:getRegistryService ERRO:")
-        Verbose->print("Não foi possível obter o serviço de registro.");
-      #endif VERBOSE
+        verbose->print("Openbus:getRegistryService ERRO:");
+        verbose->print("Não foi possível obter o serviço de registro.");
+      #endif 
         // TODO: necessário fazer um throw?
       }
     }

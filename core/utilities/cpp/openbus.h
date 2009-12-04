@@ -1,5 +1,5 @@
 /**
-* \mainpage API - Openbus Orbix C++
+* \mainpage API - Openbus C++
 * \file openbus.h
 */
 
@@ -7,9 +7,9 @@
 #define OPENBUS_H_
 
 #include "verbose.h"
-#include "stubs/access_control_service.hh"
+#include "stubs/orbix/access_control_service.hh"
 #include "openbus/util/Helper.h"
-#include "stubs/session_service.hh"
+#include "stubs/orbix/session_service.hh"
 
 #include "openbus/interceptors/ORBInitializerImpl.h"
 #include <ComponentBuilder.h>

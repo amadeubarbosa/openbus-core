@@ -18,12 +18,12 @@ endif
 TARGETROOT=bin
 OBJROOT=obj
 
-INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/orbix ${OPENBUSINC}/scs
+INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/cpp ${OPENBUSINC}/scs
 LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor crypto
 
-SLIB= ${OPENBUS_HOME}/core/utilities/orbix/lib/${TEC_UNAME}/libopenbus.a \
+SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbus.a \
       ${OPENBUSLIB}/libscsorbix.a
 
 SRC= server.cpp \

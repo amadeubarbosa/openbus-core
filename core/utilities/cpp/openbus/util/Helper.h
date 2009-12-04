@@ -9,7 +9,7 @@
 #ifndef HELPER_H_
 #define HELPER_H_
 
-#include "../../stubs/registry_service.hh"
+#include "../../stubs/orbix/registry_service.hh"
 
 /**
 * \brief openbus
