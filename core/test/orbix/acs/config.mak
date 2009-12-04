@@ -25,7 +25,7 @@ LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
 
 LIBS= crypto it_poa it_art it_ifc it_portable_interceptor
 
-SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbus.a \
+SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbusorbix.a \
       ${OPENBUSLIB}/libscsorbix.a
 
 SRC= runner.cpp

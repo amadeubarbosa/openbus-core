@@ -1,4 +1,4 @@
-PROJNAME= openbus
+PROJNAME= openbusorbix
 LIBNAME= ${PROJNAME}
 
 #Descomente as duas linhas abaixo para o uso em Valgrind.
@@ -55,8 +55,8 @@ genstubs:
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/scs.idl
 	
 sunos58: $(OBJS)
-	rm -f lib/SunOS58/libopenbus.a
-	CC -xar -instances=extern -o lib/SunOS58/libopenbus.a $(OBJS)
-	rm -f lib/SunOS58/libopenbus.so
-	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbus.so $(OBJS)
+	rm -f lib/SunOS58/libopenbusorbix.a
+	CC -xar -instances=extern -o lib/SunOS58/libopenbusorbix.a $(OBJS)
+	rm -f lib/SunOS58/libopenbusorbix.so
+	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbusorbix.so $(OBJS)
 
