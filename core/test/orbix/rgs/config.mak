@@ -17,7 +17,7 @@ endif
 
 INCLUDES= . \
   ${ORBIXINC} \
-  ${OPENBUS_HOME}/core/utilities/orbix \
+  ${OPENBUS_HOME}/core/utilities/cpp \
   ${OPENBUSINC}/scs \
   ${OPENBUSINC}/cxxtest \
   ${OPENBUSINC}/openssl-0.9.9
@@ -27,7 +27,7 @@ LDIR= ${ORBIXLDIR} \
 
 LIBS= crypto it_poa it_art it_ifc it_portable_interceptor
 
-SLIB= ${OPENBUS_HOME}/core/utilities/orbix/lib/${TEC_UNAME}/libopenbus.a \
+SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbus.a \
   ${OPENBUSLIB}/libscsorbix.a
 
 SRC= runner.cpp \
