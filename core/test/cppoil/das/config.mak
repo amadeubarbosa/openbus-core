@@ -25,6 +25,10 @@ USE_LUA51=YES
 USE_STATIC=YES
 NO_SCRIPTS=YES
 
+ifeq "${TEC_SYSNAME}" "Linux"
+	LFLAGS = -Wl,-E
+endif
+
 cxxtest:
 	cxxtestgen.pl --runner=StdioPrinter -o runner.cpp DASTestSuite.cpp
 

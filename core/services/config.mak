@@ -29,6 +29,9 @@ LIBS += dl crypto ldap
 ifneq "$(TEC_SYSNAME)" "Darwin"
 	LIBS += uuid
 endif
+ifeq "$(TEC_SYSNAME)" "Linux"
+	LFLAGS = -Wl,-E
+endif
 
 LIBS = oilall scsall luasocket lfs luuid lce lpw lualdap
 
