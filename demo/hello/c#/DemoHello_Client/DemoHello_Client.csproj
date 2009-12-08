@@ -30,19 +30,19 @@
   <ItemGroup>
     <Reference Include="IIOPChannel, Version=1.9.1.0, Culture=neutral, PublicKeyToken=86d952ca8b69eded, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\install\libpath\c#\IIOPChannel.dll</HintPath>
+      <HintPath>$(OPENBUS_HOME)\libpath\c#\IIOPChannel.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\install\libpath\c#\log4net.dll</HintPath>
+      <HintPath>$(OPENBUS_HOME)\libpath\c#\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Openbus-demo-hello-idl-iiopNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\install\libpath\c#\Openbus-demo-hello-idl-iiopNet.dll</HintPath>
+      <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-demo-hello-idl-iiopNet.dll</HintPath>
     </Reference>
     <Reference Include="Openbus-idl-iiopNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\install\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>
+      <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>
     </Reference>
     <Reference Include="OpenbusAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
