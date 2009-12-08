@@ -286,7 +286,6 @@ namespace Test_API
       Assert.NotNull(registryService);
 
       Credential myCredential = openbus.Credential;
-      openbus.Credential = new Credential();
       registryService = openbus.Connect(myCredential);
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());
@@ -304,7 +303,6 @@ namespace Test_API
       registryService = null;
 
       Credential myCredencial = new Credential();
-      openbus.Credential = new Credential();
       try {
         registryService = openbus.Connect(myCredencial);
       }
@@ -326,7 +324,6 @@ namespace Test_API
       registryService = null;
 
       Credential myCredential = new Credential("null", "null", "");
-      openbus.Credential = new Credential();
       try {
         registryService = openbus.Connect(myCredential);
       }

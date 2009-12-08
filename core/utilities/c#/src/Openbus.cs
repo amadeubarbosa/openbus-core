@@ -82,10 +82,9 @@ namespace OpenbusAPI
         return String.IsNullOrEmpty(currentCredential.identifier)
           ? credential : currentCredential;
       }
-      set { currentCredential = value; }
     }
     [ThreadStatic]
-    private Credential currentCredential;
+    static private Credential currentCredential;
 
     /// <summary>
     /// O slot da credencial da requisição.
@@ -155,7 +154,7 @@ namespace OpenbusAPI
       this.leaseRenewer = null;
 
       this.credential = new Credential();
-      this.currentCredential = new Credential();
+      currentCredential = new Credential();
       this.requestCredentialSlot = -1;
 
       this.registryService = null;
@@ -476,6 +475,18 @@ namespace OpenbusAPI
     public void Destroy() {
       ChannelServices.UnregisterChannel(channel);
       ResetInstance();
+    }
+
+    /// <summary>
+    /// Define uma credencial a ser utilizada no lugar da credencial corrente.
+    /// Útil para fornecer uma credencial com o campo delegate preenchido.
+    /// </summary>
+    /// <param name="credencial"> Credencial a ser usada nas requisições a 
+    /// serem realizadas.
+    /// </param>
+    public void setThreadCredencial(Credential credencial)
+    {
+      currentCredential = credencial;
     }
 
     /// <summary>
