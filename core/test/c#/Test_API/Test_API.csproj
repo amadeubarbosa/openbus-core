@@ -24,7 +24,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>$(OPENBUS_HOME)\libpath\c#\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -39,11 +39,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\nunit-console-runner.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework, Version=2.5.2.9222, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(OPENBUS_HOME)\libpath\c#\nunit.framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <Reference Include="nunit.framework, Version=2.5.2.9222, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL" />
     <Reference Include="Openbus-idl-iiopNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>

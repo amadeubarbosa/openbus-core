@@ -24,10 +24,11 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>$(OPENBUS_HOME)\libpath\c#\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>$(OPENBUS_HOME)\libpath\c#\OpenbusAPI-doc.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IIOPChannel, Version=1.9.1.0, Culture=neutral, PublicKeyToken=86d952ca8b69eded, processorArchitecture=MSIL">

@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("PUC-Rio")]
-[assembly: AssemblyProduct("OpenbusAPI")]
+[assembly: AssemblyProduct("Openbus API")]
 [assembly: AssemblyCopyright("Copyright © PUC-Rio 2009")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.4.2.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
