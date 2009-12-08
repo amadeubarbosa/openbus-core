@@ -34,11 +34,3 @@ ifeq "$(TEC_SYSNAME)" "Linux"
 endif
 
 LIBS = oilall scsall luasocket lfs luuid lce lpw lualdap
-
-# SLIB += ${OPENBUSLIB}/liboilall.a
-# SLIB += ${OPENBUSLIB}/libscsall.a
-# SLIB += ${OPENBUSLIB}/libluasocket.a
-# SLIB += ${OPENBUSLIB}/liblfs.a
-# SLIB += ${OPENBUSLIB}/libluuid.a
-# SLIB += ${OPENBUSLIB}/liblce.a
-# SLIB += ${OPENBUSLIB}/liblualdap.a
