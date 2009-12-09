@@ -14,6 +14,7 @@
 #ifdef OPENBUS_MICO
   #include <CORBA.h>
   #include <stubs/mico/scs.h>
+  #include <mico/pi_impl.h>
 #else
   #include <omg/orb.hh>
   #include <it_ts/thread.h>
@@ -377,6 +378,24 @@ namespace openbus {
     #ifdef VERBOSE
       verbose->print("Desligando o orb...");
     #endif
+    #ifdef OPENBUS_MICO
+    /*
+    * Alternativa para um memory leak.
+    * Referente ao Mico 2.3.11.
+    */
+      CORBA::Codeset::free();
+
+    /*
+    * Alternativa para o segundo problema apresentado em OPENBUS-427.
+    * Referente ao Mico 2.3.11.
+    */
+      PInterceptor::PI::S_client_req_int_.erase(
+        PInterceptor::PI::S_client_req_int_.begin(),
+        PInterceptor::PI::S_client_req_int_.end());
+      PInterceptor::PI::S_server_req_int_.erase(
+        PInterceptor::PI::S_server_req_int_.begin(),
+        PInterceptor::PI::S_server_req_int_.end());
+    #endif
       orb->shutdown(1);
     }
   #ifndef OPENBUS_MICO
@@ -529,8 +548,8 @@ namespace openbus {
 
   openbusidl::rs::IRegistryService* Openbus::getRegistryService() {
     if (iRegistryService == NULL && ((scs::core::IComponent*)iComponent) != NULL) {
-      CORBA::Object* objRecep = iComponent->getFacetByName("IReceptacles");
-      scs::core::IReceptacles* recep = scs::core::IReceptacles::_narrow(objRecep);
+      CORBA::Object_var objRecep = iComponent->getFacetByName("IReceptacles");
+      scs::core::IReceptacles_var recep = scs::core::IReceptacles::_narrow(objRecep);
       try {
         scs::core::ConnectionDescriptions_var conns =
           recep->getConnections("RegistryServiceReceptacle");
