@@ -2,10 +2,11 @@ PROJNAME= ACSTester
 APPNAME= acs
 
 DEFINES=SCS_MICO
+DEFINES+=OPENBUS_MICO
 
 #Descomente as duas linhas abaixo para o uso em Valgrind.
-DBG=YES
-CPPFLAGS= -fno-inline
+#DBG=YES
+#CPPFLAGS= -fno-inline
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
@@ -19,7 +20,7 @@ endif
 
 INCLUDES= . \
   ${ORBIXINC} \
-  ${OPENBUS_HOME}/core/utilities/mico \
+  ${OPENBUS_HOME}/core/utilities/cpp \
   ${OPENBUSINC}/scs \
   ${OPENBUSINC}/cxxtest \
   ${OPENBUSINC}/openssl-0.9.9 \
@@ -28,7 +29,7 @@ LDIR= ${ORBIXLDIR} ${OPENBUSLIB} ${MICO_LIB}
 
 LIBS= crypto mico2.3.11 dl
 
-SLIB= ${OPENBUS_HOME}/core/utilities/mico/lib/${TEC_UNAME}/libopenbus_mico.a \
+SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbusmico.a \
       ${OPENBUSLIB}/libscsmico.a
 
 SRC= runner.cpp

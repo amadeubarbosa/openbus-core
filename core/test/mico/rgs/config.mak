@@ -2,6 +2,7 @@ PROJNAME= RGSTester
 APPNAME= rgs
 
 DEFINES=SCS_MICO
+DEFINES+=OPENBUS_MICO
 
 #Descomente as duas linhas abaixo para o uso em Valgrind.
 #DBG=YES
@@ -19,7 +20,7 @@ endif
 
 INCLUDES= . \
   ${MICO_INC} \
-  ${OPENBUS_HOME}/core/utilities/mico \
+  ${OPENBUS_HOME}/core/utilities/cpp \
   ${OPENBUSINC}/scs \
   ${OPENBUSINC}/cxxtest \
   ${OPENBUSINC}/openssl-0.9.9
@@ -29,7 +30,7 @@ LDIR= ${MICO_LIB} \
 
 LIBS= crypto mico2.3.11 dl
 
-SLIB= ${OPENBUS_HOME}/core/utilities/mico/lib/${TEC_UNAME}/libopenbus_mico.a \
+SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbusmico.a \
   ${OPENBUSLIB}/libscsmico.a
 
 SRC= runner.cpp \
