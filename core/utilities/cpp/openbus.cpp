@@ -6,13 +6,19 @@
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
-#include <omg/orb.hh>
-#include <it_ts/thread.h>
 #include <sstream>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stubs/orbix/scs.hh>
+
+#ifdef OPENBUS_MICO
+  #include <CORBA.h>
+  #include <stubs/mico/scs.h>
+#else
+  #include <omg/orb.hh>
+  #include <it_ts/thread.h>
+  #include <stubs/orbix/scs.hh>
+#endif
 
 #define CHALLENGE_SIZE 36
 
@@ -21,9 +27,95 @@ namespace openbus {
   Verbose* Openbus::verbose = 0;
 #endif
   interceptors::ORBInitializerImpl* Openbus::ini = 0;
+#ifndef OPENBUS_MICO
   IT_Mutex Openbus::mutex;
+#endif
   Openbus* Openbus::bus = 0;
+#ifndef OPENBUS_MICO
   Openbus::RenewLeaseThread* Openbus::renewLeaseThread = 0;
+#else
+  #ifdef MULTITHREAD
+    Openbus::RunThread* Openbus::runThread = 0;
+  #endif
+#endif
+
+#ifdef OPENBUS_MICO
+  #ifdef MULTITHREAD
+    void Openbus::RunThread::_run(void*) {
+    #ifdef VERBOSE
+      verbose->print("*** RunThread iniciada...");
+    #endif
+      bus->orb->run();
+    #ifdef VERBOSE
+      verbose->print("*** RunThread encerrada...");
+    #endif
+    }
+  #else
+    Openbus::RenewLeaseCallback::RenewLeaseCallback() {
+      leaseExpiredCallback = 0;
+    }
+  
+    void Openbus::RenewLeaseCallback::setLeaseExpiredCallback(
+      LeaseExpiredCallback* obj) 
+    {
+      leaseExpiredCallback = obj;
+    }
+  
+    void Openbus::RenewLeaseCallback::callback(
+      CORBA::Dispatcher* dispatcher, 
+      Event event) 
+    {
+    #ifdef VERBOSE
+      verbose->print("Openbus::RenewLeaseCallback::callback() BEGIN");
+      verbose->indent();
+    #endif
+      if (bus && bus->connectionState == CONNECTED) {
+      #ifdef VERBOSE
+        verbose->print("Renovando credencial...");
+      #endif
+        try {
+          bool status = bus->iLeaseProvider->renewLease(*bus->credential, 
+            bus->lease);
+          if (!bus->timeRenewingFixe) {
+            bus->timeRenewing = bus->lease*1000;
+          }
+        #ifdef VERBOSE
+          stringstream msg;
+          msg << "Proximo intervalo de renovacao: " << bus->timeRenewing << "ms";
+          verbose->print(msg.str());
+        #endif
+          if (!status) {
+          #ifdef VERBOSE
+            verbose->print("Nao foi possivel renovar a credencial!");
+          #endif
+          /* "Desconecta" o usuario. */
+            bus->localDisconnect();
+            if (leaseExpiredCallback) {
+              leaseExpiredCallback->expired();
+            }
+          } else {
+          #ifdef VERBOSE
+            verbose->print("Credencial renovada!");
+          #endif
+            dispatcher->tm_event(this, bus->timeRenewing);
+          }
+        } catch (CORBA::Exception& e) {
+        #ifdef VERBOSE
+          verbose->print("Nao foi possivel renovar a credencial!");
+        #endif
+        /* "Desconecta" o usuario. ? */
+          bus->localDisconnect();
+          if (leaseExpiredCallback) {
+            leaseExpiredCallback->expired();
+          }
+        }
+      #ifdef VERBOSE
+        verbose->dedent("Openbus::RenewLeaseCallback::callback() END");
+      #endif
+      }
+    }
+  #endif
+#endif
 
   void Openbus::terminationHandlerCallback(long signalType) {
   #ifdef VERBOSE
@@ -57,6 +149,7 @@ namespace openbus {
     newState();
   }
 
+#ifndef OPENBUS_MICO
   Openbus::RenewLeaseThread::RenewLeaseThread() {
     leaseExpiredCallback = 0;
   }
@@ -73,13 +166,19 @@ namespace openbus {
     verbose->print("Openbus::RenewLeaseThread::run() BEGIN");
   #endif
     while (true) {
+    #ifndef OPENBUS_MICO
       mutex.lock();
+    #endif
       if (!bus) {
+      #ifndef OPENBUS_MICO
         mutex.unlock();
+      #endif
         break;
       }
       timeRenewing = bus->timeRenewing;
+    #ifndef OPENBUS_MICO
       mutex.unlock();
+    #endif
       IT_CurrentThread::sleep(timeRenewing);
     #ifdef VERBOSE
       verbose->print("Openbus::RenewLeaseThread::run() RUN");
@@ -88,7 +187,9 @@ namespace openbus {
       msg << "Thread: " << this;
       verbose->print(msg.str());
     #endif
+    #ifndef OPENBUS_MICO
       mutex.lock();
+    #endif
       if (bus && bus->connectionState == CONNECTED) {
       #ifdef VERBOSE
         verbose->print("Renovando credencial...");
@@ -129,10 +230,14 @@ namespace openbus {
           bus->localDisconnect();
         }
       } else {
+      #ifndef OPENBUS_MICO
         mutex.unlock();
+      #endif
         break;
       }
+    #ifndef OPENBUS_MICO
       mutex.unlock();
+    #endif
     #ifdef VERBOSE
       verbose->dedent("Openbus::RenewLeaseThread::run() SLEEP");
     #endif
@@ -143,6 +248,7 @@ namespace openbus {
   #endif
     return 0;
   }
+#endif
 
   void Openbus::commandLineParse(int argc, char** argv) {
     timeRenewingFixe = false;
@@ -273,8 +379,11 @@ namespace openbus {
     #endif
       orb->shutdown(1);
     }
+  #ifndef OPENBUS_MICO
     mutex.lock();
+  #endif
     bus = 0;
+  #ifndef OPENBUS_MICO
     mutex.unlock();
     if (renewLeaseThread) {
     #ifdef VERBOSE
@@ -290,6 +399,7 @@ namespace openbus {
         delete credential;
       }
     }
+  #endif
   #ifdef VERBOSE
     verbose->dedent("Openbus::~Openbus() END");
   #endif
@@ -311,9 +421,13 @@ namespace openbus {
     #ifdef VERBOSE
       verbose->print("Criando novo objeto...");
     #endif
+    #ifndef OPENBUS_MICO
       mutex.lock();
+    #endif
       bus = new Openbus();
+    #ifndef OPENBUS_MICO
       mutex.unlock();
+    #endif
     }
   #ifdef VERBOSE
     verbose->dedent("Openbus::getInstance() END");
@@ -421,7 +535,7 @@ namespace openbus {
         scs::core::ConnectionDescriptions_var conns =
           recep->getConnections("RegistryServiceReceptacle");
         if (conns->length() > 0) {
-          CORBA::Object* objref = conns[0].objref;
+          CORBA::Object* objref = conns[(CORBA::ULong) 0].objref;
           iRegistryService = openbusidl::rs::IRegistryService::_narrow(objref);
         }
       } catch (scs::core::InvalidName& e) {
@@ -446,10 +560,10 @@ namespace openbus {
           openbusidl::rs::FacetList_var facetList = \
             new openbusidl::rs::FacetList();
           facetList->length(1);
-          facetList[0] = "ISessionService";
+          facetList[(CORBA::ULong) 0] = "ISessionService";
           openbusidl::rs::ServiceOfferList_var serviceOfferList = \
             iRegistryService->find(facetList);
-          openbusidl::rs::ServiceOffer serviceOffer = serviceOfferList[0];
+          openbusidl::rs::ServiceOffer serviceOffer = serviceOfferList[(CORBA::ULong) 0];
           scs::core::IComponent* component = serviceOffer.member;
           CORBA::Object* obj = \
             component->getFacet("IDL:openbusidl/ss/ISessionService:1.0");
@@ -474,16 +588,24 @@ namespace openbus {
   void Openbus::addLeaseExpiredCallback(
     LeaseExpiredCallback* leaseExpiredCallback) 
   {
+  #ifdef OPENBUS_MICO
+    renewLeaseCallback.setLeaseExpiredCallback(leaseExpiredCallback);
+  #else
     if (renewLeaseThread) {
       renewLeaseThread->setLeaseExpiredCallback(leaseExpiredCallback);
     }
+  #endif
   }
 
   void Openbus::removeLeaseExpiredCallback()
   {
+  #ifdef OPENBUS_MICO
+    renewLeaseCallback.setLeaseExpiredCallback(0);
+  #else
     if (renewLeaseThread) {
       renewLeaseThread->setLeaseExpiredCallback(0);
     }
+  #endif
   }
 
   openbusidl::rs::IRegistryService* Openbus::connect(
@@ -521,11 +643,15 @@ namespace openbus {
         iACSMSG << "iAccessControlService = " << &iAccessControlService; 
         verbose->print(iACSMSG.str());
       #endif
+      #ifndef OPENBUS_MICO
         mutex.lock();
+      #endif
         if (!iAccessControlService->loginByPassword(user, password, credential,
           lease))
         {
+        #ifndef OPENBUS_MICO
           mutex.unlock();
+        #endif
         #ifdef VERBOSE
           verbose->print("Throwing LOGIN_FAILURE...");
           verbose->dedent("Openbus::connect() END");
@@ -543,6 +669,11 @@ namespace openbus {
           if (!timeRenewingFixe) {
             timeRenewing = (lease/2)*300;
           }
+          setRegistryService();
+        #ifdef OPENBUS_MICO
+          orb->dispatcher()->tm_event(&renewLeaseCallback, 
+            timeRenewing);
+        #else
           if (!renewLeaseThread) {
             renewLeaseThread = new RenewLeaseThread();
             renewLeaseIT_Thread = IT_ThreadFactory::smf_start(
@@ -550,7 +681,7 @@ namespace openbus {
               IT_ThreadFactory::attached, 0);
           }
           mutex.unlock();
-          setRegistryService();
+        #endif
         #ifdef VERBOSE
           verbose->dedent("Openbus::connect() END");
         #endif
@@ -559,7 +690,9 @@ namespace openbus {
         }
 
       } catch (const CORBA::SystemException& systemException) {
+      #ifndef OPENBUS_MICO
         mutex.unlock();
+      #endif
       #ifdef VERBOSE
         verbose->print("Throwing CORBA::SystemException...");
         verbose->dedent("Openbus::connect() END");
@@ -726,12 +859,16 @@ namespace openbus {
         iACSMSG << "iAccessControlService = " << &iAccessControlService; 
         verbose->print(iACSMSG.str());
       #endif
+      #ifndef OPENBUS_MICO
         mutex.lock();
+      #endif
         if (!iAccessControlService->loginByCertificate(entity, answerOctetSeq,
           credential, lease))
         {
           free(answer);
+        #ifndef OPENBUS_MICO
           mutex.unlock();
+        #endif
           throw LOGIN_FAILURE();
         } else {
           free(answer);
@@ -745,6 +882,11 @@ namespace openbus {
           if (!timeRenewingFixe) {
             timeRenewing = (lease/2)*300;
           }
+          setRegistryService();
+        #ifdef OPENBUS_MICO
+          orb->dispatcher()->tm_event(&renewLeaseCallback, 
+            timeRenewing);
+        #else
           if (!renewLeaseThread) {
             renewLeaseThread = new RenewLeaseThread();
             renewLeaseIT_Thread = IT_ThreadFactory::smf_start(
@@ -752,14 +894,16 @@ namespace openbus {
               IT_ThreadFactory::attached, 0);
           }
           mutex.unlock();
-          setRegistryService();
+        #endif
         #ifdef VERBOSE
           verbose->dedent("Openbus::connect() END");
         #endif
           return iRegistryService;
         }
       } catch (const CORBA::SystemException& systemException) {
+      #ifndef OPENBUS_MICO
         mutex.unlock();
+      #endif
       #ifdef VERBOSE
         verbose->print("Throwing CORBA::SystemException...");
         verbose->dedent("Openbus::connect() END");
@@ -780,7 +924,9 @@ namespace openbus {
     verbose->print("Openbus::disconnect() BEGIN");
     verbose->indent();
   #endif
+  #ifndef OPENBUS_MICO
     mutex.lock();
+  #endif
     if (connectionState == CONNECTED) {
       if (iRegistryService) {
         delete iRegistryService;
@@ -798,14 +944,18 @@ namespace openbus {
     #ifdef VERBOSE
       verbose->dedent("Openbus::disconnect() END");
     #endif
+    #ifndef OPENBUS_MICO
       mutex.unlock();
+    #endif
       return status;
     } else {
     #ifdef VERBOSE
       verbose->print("Não há conexão a ser desfeita.");
       verbose->dedent("Openbus::disconnect() END");
     #endif
+    #ifndef OPENBUS_MICO
       mutex.unlock();
+    #endif
       return false;
     }
   }

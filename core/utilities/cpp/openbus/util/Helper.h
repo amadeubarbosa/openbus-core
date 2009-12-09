@@ -9,7 +9,11 @@
 #ifndef HELPER_H_
 #define HELPER_H_
 
-#include "../../stubs/orbix/registry_service.hh"
+#ifdef OPENBUS_MICO
+  #include "../../stubs/mico/registry_service.h"
+#else
+  #include "../../stubs/orbix/registry_service.hh"
+#endif
 
 /**
 * \brief openbus
@@ -33,7 +37,7 @@ namespace openbus {
     class FacetListHelper {
       private:
         openbusidl::rs::FacetList_var facetList;
-        int numElements;
+        CORBA::ULong numElements;
       public:
         FacetListHelper();
         ~FacetListHelper();
@@ -47,7 +51,7 @@ namespace openbus {
     class PropertyListHelper {
       private:
         openbusidl::rs::PropertyList_var propertyList;
-        int numElements;
+        CORBA::ULong numElements;
       public:
         PropertyListHelper();
         ~PropertyListHelper();

@@ -7,17 +7,23 @@
 
 #include <map>
 #include <string.h>
-#include <orbix/corba.hh>
-#include <omg/PortableInterceptor.hh>
-
-#include "../../stubs/orbix/access_control_service.hh"
+#ifdef OPENBUS_MICO
+  #include <CORBA.h>
+  #include "../../stubs/mico/access_control_service.h"
+#else
+  #include <orbix/corba.hh>
+  #include <omg/PortableInterceptor.hh>
+  #include "../../stubs/orbix/access_control_service.hh"
+#endif
 
 using namespace PortableInterceptor;
 
 namespace openbus {
   namespace interceptors {
-    class ClientInterceptor : public ClientRequestInterceptor,
-      public IT_CORBA::RefCountedLocalObject 
+    class ClientInterceptor : public ClientRequestInterceptor 
+    #ifndef OPENBUS_MICO
+                              ,public IT_CORBA::RefCountedLocalObject 
+    #endif
     {
       private:
         IOP::Codec_ptr cdr_codec;
@@ -44,6 +50,7 @@ namespace openbus {
             PortableInterceptor::ForwardRequest);
         char* name() 
           throw(CORBA::SystemException);
+        void destroy();
     };
   }
 }

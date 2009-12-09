@@ -47,7 +47,7 @@ namespace openbus {
       openbusidl::rs::PropertyValue_var propertyValue = \
         new openbusidl::rs::PropertyValue(1);
       propertyValue->length(1);
-      propertyValue[0] = value;
+      propertyValue[(CORBA::ULong) 0] = value;
       property->value = propertyValue;
       propertyList[numElements] = property;
       numElements++;

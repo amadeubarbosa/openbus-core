@@ -53,7 +53,7 @@ namespace openbus {
         IOP::ServiceContext sc;
         sc.context_id = 1234;
 
-        CORBA::Any_var any;
+        CORBA::Any any;
         any <<= *credential;
         CORBA::OctetSeq_var octets;
         octets = cdr_codec->encode_value(any);
@@ -84,7 +84,7 @@ namespace openbus {
     char* ClientInterceptor::name() 
       throw(CORBA::SystemException)
     {
-      return CORBA::it_string_dup_eh("AccessControl");
+      return CORBA::string_dup("AccessControl");
     }
     void ClientInterceptor::send_poll( ClientRequestInfo_ptr ri ) 
       throw(CORBA::SystemException) 
@@ -102,6 +102,7 @@ namespace openbus {
         CORBA::SystemException,
         PortableInterceptor::ForwardRequest)
     {}
+    void ClientInterceptor::destroy() {}
   }
 }
 

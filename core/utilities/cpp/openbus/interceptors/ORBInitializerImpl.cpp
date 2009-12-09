@@ -2,7 +2,9 @@
 ** interceptors/ORBInitializerImpl.cpp
 */
 
-#include <omg/IOP.hh>
+#ifndef OPENBUS_MICO
+  #include <omg/IOP.hh>
+#endif
 
 #include "ORBInitializerImpl.h"
 #include "../../openbus.h"
@@ -17,12 +19,25 @@ namespace openbus {
       Openbus::verbose->print("ORBInitializerImpl::ORBInitializerImpl() BEGIN");
       Openbus::verbose->indent();
     #endif
+      clientInterceptor = 0;
+      serverInterceptor = 0;
+      _info = 0;
     #ifdef VERBOSE
       Openbus::verbose->dedent("ORBInitializerImpl::ORBInitializerImpl() END");
     #endif
     }
 
     ORBInitializerImpl::~ORBInitializerImpl() {
+     if (clientInterceptor) {
+        delete clientInterceptor;
+      }
+      if (serverInterceptor) {
+        delete serverInterceptor;
+      }
+      if (_info) {
+        delete _info->orb_id();
+        delete _info;
+      }
     }
 
     void ORBInitializerImpl::pre_init(ORBInitInfo_ptr info)
@@ -31,12 +46,21 @@ namespace openbus {
       Openbus::verbose->print("ORBInitializerImpl::pre_init() BEGIN");
       Openbus::verbose->indent();
     #endif
+      if (clientInterceptor) {
+        delete clientInterceptor;
+      }
+      if (serverInterceptor) {
+        delete serverInterceptor;
+      }
+      if (_info) {
+        delete _info;
+      }
+      _info = info;
       IOP::CodecFactory_var codec_factory = info->codec_factory();
       IOP::Encoding cdr_encoding = {IOP::ENCODING_CDR_ENCAPS, 1, 2};
-      IOP::Codec_var codec = codec_factory->create_codec(cdr_encoding);
+      codec = codec_factory->create_codec(cdr_encoding);
 
-      PortableInterceptor::ClientRequestInterceptor_var clientInterceptor = \
-          new ClientInterceptor(codec);
+      clientInterceptor = new ClientInterceptor(codec);
       info->add_client_request_interceptor(clientInterceptor);
 
       slotid = info->allocate_slot_id();

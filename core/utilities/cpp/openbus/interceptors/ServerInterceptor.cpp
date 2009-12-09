@@ -60,17 +60,33 @@ namespace openbus {
       CORBA::Any_var any = cdr_codec->decode_value(
         octets, 
         openbusidl::acs::_tc_Credential);
+    #ifdef OPENBUS_MICO
+      openbusidl::acs::Credential c;
+    #else
       openbusidl::acs::Credential* c;
+    #endif
       any >>= c;
-    #ifdef VERBOSE
+  #ifdef VERBOSE
+    #ifdef OPENBUS_MICO
+      Openbus::verbose->print("credential->owner: " + (string) c.owner);
+      Openbus::verbose->print("credential->identifier: " + 
+        (string) c.identifier);
+      Openbus::verbose->print("credential->delegate: " + 
+        (string) c.delegate);
+    #else
       Openbus::verbose->print("credential->owner: " + (string) c->owner);
       Openbus::verbose->print("credential->identifier: " + 
         (string) c->identifier);
       Openbus::verbose->print("credential->delegate: " + 
         (string) c->delegate);
     #endif
+  #endif
       openbus::Openbus* bus = openbus::Openbus::getInstance();
+    #ifdef OPENBUS_MICO
+      if (bus->getAccessControlService()->isValid(c)) {
+    #else
       if (bus->getAccessControlService()->isValid(*c)) {
+    #endif
         picurrent->set_slot(slotid, any);
       } else {
       #ifdef VERBOSE
@@ -90,7 +106,7 @@ namespace openbus {
     void ServerInterceptor::send_other(ServerRequestInfo*) {}
 
     char* ServerInterceptor::name() {
-      return CORBA::it_string_dup_eh("AccessControl");
+      return CORBA::string_dup("AccessControl");
     }
 
     void ServerInterceptor::destroy() {}
@@ -102,6 +118,22 @@ namespace openbus {
     #endif
       CORBA::Any_var any = picurrent->get_slot(slotid);
 
+    #ifdef OPENBUS_MICO
+      openbusidl::acs::Credential c;
+      if (any >>=c) {
+      #ifdef VERBOSE
+        Openbus::verbose->print("credential->owner: " + (string) c.owner);
+        Openbus::verbose->print("credential->identifier: " + 
+          (string) c.identifier);
+        Openbus::verbose->print("credential->delegate: " + 
+          (string) c.delegate);
+      #endif
+        openbusidl::acs::Credential_var ret = 
+          new openbusidl::acs::Credential();
+        ret->owner = CORBA::string_dup(c.owner);
+        ret->identifier = CORBA::string_dup(c.identifier);
+        ret->delegate = CORBA::string_dup(c.delegate);
+    #else
       openbusidl::acs::Credential* c = 0;
       any >>= c;
       if (c) {
@@ -117,6 +149,7 @@ namespace openbus {
         ret->owner = CORBA::string_dup(c->owner);
         ret->identifier = CORBA::string_dup(c->identifier);
         ret->delegate = CORBA::string_dup(c->delegate);
+    #endif
       #ifdef VERBOSE
         Openbus::verbose->dedent("ServerInterceptor::getCredential() END");
       #endif

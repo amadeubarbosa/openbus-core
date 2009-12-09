@@ -5,7 +5,9 @@
 #ifndef ORBINITIALIZERIMPL_H_
 #define ORBINITIALIZERIMPL_H_
 
-#include <omg/PortableInterceptor.hh>
+#ifndef OPENBUS_MICO
+  #include <omg/PortableInterceptor.hh>
+#endif
 
 #include "ClientInterceptor.h"
 #include "ServerInterceptor.h"
@@ -14,10 +16,15 @@ using namespace PortableInterceptor;
 
 namespace openbus {
   namespace interceptors {
-    class ORBInitializerImpl : public ORBInitializer,
-      public IT_CORBA::RefCountedLocalObject 
+    class ORBInitializerImpl : public ORBInitializer
+    #ifndef OPENBUS_MICO
+                              ,public IT_CORBA::RefCountedLocalObject 
+    #endif
     {
+        IOP::Codec_var codec;
         ServerInterceptor* serverInterceptor;
+        ClientInterceptor* clientInterceptor;
+        ORBInitInfo* _info;
         SlotId slotid;
       public:
         ORBInitializerImpl();

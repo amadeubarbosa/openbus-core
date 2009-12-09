@@ -7,16 +7,22 @@
 #define OPENBUS_H_
 
 #include "verbose.h"
-#include "stubs/orbix/access_control_service.hh"
 #include "openbus/util/Helper.h"
-#include "stubs/orbix/session_service.hh"
 
 #include "openbus/interceptors/ORBInitializerImpl.h"
 #include <ComponentBuilder.h>
 
-#include <omg/orb.hh>
-#include <it_ts/thread.h>
-#include <it_ts/mutex.h>
+#ifdef OPENBUS_MICO
+  #include <CORBA.h>
+  #include "stubs/mico/access_control_service.h"
+  #include "stubs/mico/session_service.h"
+#else
+  #include <omg/orb.hh>
+  #include <it_ts/thread.h>
+  #include <it_ts/mutex.h>
+  #include "stubs/orbix/access_control_service.hh"
+  #include "stubs/orbix/session_service.hh"
+#endif
 
 #include <stdexcept>
 #include <string.h>
@@ -24,7 +30,7 @@
 #include <set>
 
 using namespace openbusidl::acs;
-IT_USING_NAMESPACE_STD
+using namespace std;
 
 /**
 * \brief Stubs dos serviços básicos.
@@ -98,10 +104,12 @@ namespace openbus {
 
     private:
 
+  #ifndef OPENBUS_MICO
     /**
     * Mutex. 
     */
       static IT_Mutex mutex;
+  #endif
 
     /**
     * A instância única do barramento.
@@ -258,6 +266,7 @@ namespace openbus {
     */
       void setRegistryService();
 
+  #ifndef OPENBUS_MICO
       IT_Thread renewLeaseIT_Thread;
 
     /**
@@ -282,6 +291,38 @@ namespace openbus {
     * Thread responsável pela renovação de credencial.
     */
       static RenewLeaseThread* renewLeaseThread;
+  #endif
+
+  #ifdef OPENBUS_MICO
+
+    #ifdef MULTITHREAD
+      class RunThread : public MICOMT::Thread {
+        public:
+          void _run(void*);
+      };
+      friend class Openbus::RunThread;
+
+      static RunThread* runThread;
+    #else
+      class RenewLeaseCallback : public CORBA::DispatcherCallback {
+        private:
+        /**
+        * Callback registrada para a notificação da 
+        * expiração do lease.
+        */
+          LeaseExpiredCallback* leaseExpiredCallback;
+        public:
+          RenewLeaseCallback();
+          void setLeaseExpiredCallback(LeaseExpiredCallback* obj);
+          void callback(CORBA::Dispatcher* dispatcher, Event event);
+      };
+
+    /**
+    * Callbak responsável por renovar a credencial.
+    */
+      RenewLeaseCallback renewLeaseCallback;
+    #endif
+  #endif
 
       Openbus();
 
