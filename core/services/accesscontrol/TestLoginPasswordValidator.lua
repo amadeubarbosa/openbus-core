@@ -32,5 +32,8 @@ function validate(self, name, password)
   if name == "tester" and password == "tester" then
     return true
   end
+  if name == "test" and password == "test" then
+    return true
+  end
   return false, "O usuário "..name.." é desconhecido."
 end
