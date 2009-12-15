@@ -14,14 +14,17 @@ namespace DemoHello_Client
   class HelloClient
   {
 
+    private static Openbus openbus;
+
     static void Main(string[] args) {
+      AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
 
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
       Log.setLogsLevel(Level.WARN);
 
-      Openbus openbus = Openbus.GetInstance();
+      openbus = Openbus.GetInstance();
       openbus.Init(hostName, hostPort);
 
       string userLogin = DemoConfig.Default.userLogin;
@@ -54,11 +57,13 @@ namespace DemoHello_Client
 
       hello.sayHello();
 
-      openbus.Disconnect();
-      openbus.Destroy();
-
       Console.WriteLine("Fim.");
       Console.ReadLine();
+    }
+
+    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
+      openbus.Disconnect();
+      openbus.Destroy();
     }
   }
 
