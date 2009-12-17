@@ -3,7 +3,6 @@
 
 #include "core.idl"
 #include "scs.idl"
-#include "access_control_service_exceptions.idl"
 #include "registry_service.idl"
 
 module openbusidl {
@@ -217,6 +216,27 @@ struct System {
 
 /** \brief Seqüência de sistemas */
 typedef sequence<System> SystemList;
+
+/** \brief Sistema já está cadastrado. */
+exception SystemAlreadyExists {};
+
+/** 
+ * \brief Sistema não pode ser removido pois alguma entidade faz referência
+ * ao mesmo.
+ */
+exception SystemInUse {};
+
+/** \brief Sistema não existe. */
+exception SystemNonExistent {};
+
+/** \brief Certificado inválido */
+exception InvalidCertificate {};
+
+/** \brief Implantação já está cadastrada. */
+exception SystemDeploymentAlreadyExists {};
+
+/** \brief Implantação de sistema não é cadastrada. */
+exception SystemDeploymentNonExistent {};
 
 /*------------------------------ Implantação ------------------------------*/
 

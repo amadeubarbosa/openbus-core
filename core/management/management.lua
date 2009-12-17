@@ -1077,7 +1077,6 @@ local function connect()
     end
     Openbus:init(acshost, acsport)
     local orb = Openbus:getORB()
-    orb:loadidlfile(IDLPATH_DIR .. "/access_control_service_exceptions.idl")
     orb:loadidlfile(IDLPATH_DIR .. "/registry_service.idl")
     orb:loadidlfile(IDLPATH_DIR .. "/access_control_service.idl")
     if Openbus:connectByLoginPassword(login, password) == false then

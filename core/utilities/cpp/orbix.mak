@@ -36,7 +36,6 @@ SRC= openbus/interceptors/ClientInterceptor.cpp \
      openbus/interceptors/ServerInterceptor.cpp \
      openbus/interceptors/ORBInitializerImpl.cpp \
      stubs/orbix/access_control_serviceC.cxx \
-     stubs/orbix/access_control_service_exceptionsC.cxx \
      stubs/orbix/registry_serviceC.cxx \
      stubs/orbix/session_serviceC.cxx \
      stubs/orbix/coreC.cxx \
@@ -48,7 +47,6 @@ SRC= openbus/interceptors/ClientInterceptor.cpp \
 genstubs:
 	mkdir -p stubs/orbix
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/access_control_service.idl 
-	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/access_control_service_exceptions.idl 
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/registry_service.idl
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/session_service.idl
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/core.idl

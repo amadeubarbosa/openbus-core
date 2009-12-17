@@ -3,7 +3,6 @@
 
 #include "core.idl"
 #include "scs.idl"
-#include "access_control_service_exceptions.idl"
 
 module openbusidl {
 
