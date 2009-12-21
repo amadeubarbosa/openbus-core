@@ -28,7 +28,7 @@ namespace openbus {
     }
 
     ORBInitializerImpl::~ORBInitializerImpl() {
-     if (clientInterceptor) {
+      if (clientInterceptor) {
         delete clientInterceptor;
       }
       if (serverInterceptor) {
@@ -77,7 +77,6 @@ namespace openbus {
       PortableInterceptor::ServerRequestInterceptor_var 
         serverRequestInterceptor = serverInterceptor ;
       info->add_server_request_interceptor(serverRequestInterceptor) ;
-
     #ifdef VERBOSE
       Openbus::verbose->dedent("ORBInitializerImpl::pre_init() END");
     #endif

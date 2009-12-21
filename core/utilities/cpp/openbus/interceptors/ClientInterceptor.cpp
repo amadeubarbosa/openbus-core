@@ -84,7 +84,11 @@ namespace openbus {
     char* ClientInterceptor::name() 
       throw(CORBA::SystemException)
     {
+    #ifdef OPENBUS_MICO
       return "AccessControl";
+    #else
+      return CORBA::string_dup("AccessControl");
+    #endif
     }
     void ClientInterceptor::send_poll( ClientRequestInfo_ptr ri ) 
       throw(CORBA::SystemException) 
