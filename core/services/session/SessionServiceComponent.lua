@@ -111,7 +111,7 @@ function SessionServiceComponent:expired()
 
   -- Registra novamente a oferta de serviço, pois a credencial associada
   -- agora é outra
-  local registryService = Openbus:getAccessControlService():getRegistryService()
+  local registryService = Openbus:getRegistryService()
   if not registryService then
     self.registryIdentifier = nil
     Log:error("Servico de registro nao encontrado.\n")
@@ -141,7 +141,7 @@ function SessionServiceComponent:shutdown()
 
   local accessControlService = self.AccessControlServiceReceptacle
   if self.registryIdentifier then
-    local registryService = Openbus:getAccessControlService():getRegistryService()
+    local registryService = Openbus:getRegistryService()
     if not registryService then
       Log:error("Serviço de registro não encontrado")
     else

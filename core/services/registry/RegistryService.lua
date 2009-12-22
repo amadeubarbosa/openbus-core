@@ -510,7 +510,16 @@ function startup(self)
   -- obtém a referência para o Serviço de Controle de Acesso
   local accessControlService = Openbus:getAccessControlService()
 
-  accessControlService:connectRegistryService(rs)
+  local acsIRecep =  Openbus:getACSIComponent():getFacetByName("IReceptacles")
+  acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
+  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep, 
+    "RegistryServiceReceptacle", self.context.IComponent )
+  if not status then
+    Log:error("Falha ao conectar o Serviço de Registro no receptáculo: " ..
+      conns[1])
+    return false
+  end
+
 
   -- registra um observador de credenciais
   local observer = {

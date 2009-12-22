@@ -11,7 +11,7 @@ RegistryServerConfiguration = {
   privateKeyFile = "certificates/RegistryService.key",
   accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
   databaseDirectory = "offers",
-  administrators = {},
+  administrators = {"tester"},
   logLevel = 3,
   oilVerboseLevel = 1,
 }

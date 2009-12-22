@@ -1116,7 +1116,7 @@ function getrsmgm()
   end
   connect()
   local orb = Openbus:getORB()
-  local rs = Openbus:getAccessControlService():getRegistryService()
+  local rs = Openbus:getRegistryService()
   ic = rs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   rsmgm = ic:getFacetByName("IManagement")

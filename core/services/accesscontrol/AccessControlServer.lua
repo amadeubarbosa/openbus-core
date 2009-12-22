@@ -70,7 +70,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
-
+local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
 -----------------------------------------------------------------------------
@@ -83,6 +83,7 @@ facetDescriptions.IAccessControlService = {}
 facetDescriptions.ILeaseProvider       	= {}
 facetDescriptions.IFaultTolerantService	= {}
 facetDescriptions.IManagement           = {}
+facetDescriptions.IReceptacles          = {}
 
 facetDescriptions.IComponent.name                     = "IComponent"
 facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
@@ -113,14 +114,20 @@ facetDescriptions.IManagement.interface_name = "IDL:openbusidl/acs/IManagement:1
 facetDescriptions.IManagement.class          = AccessControlService.ManagementFacet
 facetDescriptions.IManagement.key            = "MGM"
 
+facetDescriptions.IReceptacles.name           = "IReceptacles"
+facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
+
+
 --Log:faulttolerance(facetDescriptions)
 
 -- Receptacle Descriptions
 local receptacleDescs = {}
 receptacleDescs.RegistryServiceReceptacle = {}
 receptacleDescs.RegistryServiceReceptacle.name           = "RegistryServiceReceptacle"
-receptacleDescs.RegistryServiceReceptacle.interface_name =  "IDL:openbusidl/rs/IRegistryService:1.0"
-receptacleDescs.RegistryServiceReceptacle.is_multiplex   = false
+receptacleDescs.RegistryServiceReceptacle.interface_name =  "IDL:scs/core/IComponent:1.0"
+receptacleDescs.RegistryServiceReceptacle.is_multiplex   = true
+
 
 -- component id
 local componentId = {}
