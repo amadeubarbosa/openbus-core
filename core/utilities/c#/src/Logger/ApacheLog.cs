@@ -20,6 +20,15 @@ namespace OpenbusAPI.Logger
 
     #endregion
 
+    #region Constants
+
+    /// <summary>
+    /// O nome do arquivo de configuração configurado pelo usuário.
+    /// </summary>
+    private const String LOG_FILENAME = "Openbus.config";
+
+    #endregion
+
     #region Constructors
 
     /// <summary>
@@ -28,10 +37,9 @@ namespace OpenbusAPI.Logger
     /// </summary>
     /// <param name="loggerName">Nome do Logger.</param>
     public ApacheLog(String loggerName) {
-      XmlDocument xmlDocument = new XmlDocument();
-      xmlDocument.LoadXml(Properties.Resources.LogConfigFile);
+      XmlDocument xmlConfiguration = LoadLoggerConfiguration();
 
-      XmlNodeList logNodeList = xmlDocument.GetElementsByTagName("log4net");
+      XmlNodeList logNodeList = xmlConfiguration.GetElementsByTagName("log4net");
       if (logNodeList.Count != 1) {
         Console.WriteLine("O arquivo de configuração de log está incorreto.");
         return;
@@ -149,6 +157,26 @@ namespace OpenbusAPI.Logger
     /// <inheritdoc />
     public void Debug(object message, System.Exception exception) {
       this.log.Debug(message, exception);
+    }
+
+    #endregion
+
+    #region Internal Methods
+
+    /// <summary>
+    /// Carrega o arquivo de configuraçãod o Log.
+    /// </summary>
+    /// <returns>O XmlDocument carregado com o arquivo.</returns>
+    private XmlDocument LoadLoggerConfiguration() {
+      XmlDocument xmlDocument = new XmlDocument();
+      try {
+        xmlDocument.Load(LOG_FILENAME);
+      }
+      catch (FileNotFoundException) {
+        xmlDocument.LoadXml(Properties.Resources.LogConfigFile);
+      }
+
+      return xmlDocument;
     }
 
     #endregion
