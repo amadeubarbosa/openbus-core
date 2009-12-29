@@ -115,6 +115,11 @@ namespace OpenbusAPI
     /// </summary>
     private const String ICOMPONENT_KEY = "IC";
 
+    /// <summary>
+    /// Nome do receptáculo do Serviço de Registro.
+    /// </summary>
+    private const String REGISTRY_SERVICE_RECEPTACLE_NAME = "RegistryServiceReceptacle";
+
     #endregion
 
     #region Constructors
@@ -275,7 +280,7 @@ namespace OpenbusAPI
       IReceptacles receptacles = rgsObjRef as IReceptacles;
       ConnectionDescription[] connections = null;
       try {
-        connections = receptacles.getConnections("RegistryServiceReceptacle");
+        connections = receptacles.getConnections(REGISTRY_SERVICE_RECEPTACLE_NAME);
       }
       catch (InvalidName e) {
         Log.COMMON.Error("Erro ao obter o RegistryServiceReceptacle.", e);
@@ -287,8 +292,17 @@ namespace OpenbusAPI
       if (connections.Length != 1)
         Log.COMMON.Warn("Existe mais de um RegistryService conectado.");
 
-      MarshalByRefObject objref = connections[0].objref;
-      this.registryService = objref as IRegistryService;
+      MarshalByRefObject objRef = connections[0].objref;
+      IComponent registryComponent = objRef as IComponent;
+      if(registryComponent == null){
+        Log.COMMON.Warn("A referência recebida não é um IComponent");
+        return null;
+      }
+
+      String registryServiceID = Repository.GetRepositoryID(typeof(IRegistryService));
+      MarshalByRefObject objReg = registryComponent.getFacet(registryServiceID);
+      this.registryService = objReg as IRegistryService;
+
       return this.registryService;
     }
 
@@ -307,7 +321,7 @@ namespace OpenbusAPI
       }
       String sessionServiceID = Repository.GetRepositoryID(
         typeof(ISessionService));
-      String[] facets = new String[] { "ISessionService" };
+      String[] facets = new String[] { sessionServiceID };
       ServiceOffer[] offers = registryService.find(facets);
 
       if (offers.Length < 1) {
@@ -382,7 +396,7 @@ namespace OpenbusAPI
       Log.COMMON.Debug("Thread de renovação de lease está ativa. Lease = "
         + leaseTime + " segundos.");
 
-      this.registryService = /* TODO: this.GetRegistryService(); */ acs.getRegistryService();
+      this.registryService = this.GetRegistryService();
       return this.registryService;
     }
 
@@ -423,7 +437,7 @@ namespace OpenbusAPI
 
       Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = "
         + leaseTime + " segundos.");
-      this.registryService = /*TODO GetRegistryService();*/ acs.getRegistryService();
+      this.registryService = GetRegistryService();
       return this.registryService;
     }
 
