@@ -11,6 +11,6 @@ namespace OpenbusAPI.Lease
     /// Informa que o <i>lease</i> expirou e não será mais renovado pelo
     /// <seealso cref="LeaseRenewer"/>
     /// </summary>
-    void expired();
+    void Expired();
   }
 }

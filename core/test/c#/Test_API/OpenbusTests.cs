@@ -8,6 +8,7 @@ using OpenbusAPI.Exception;
 using OpenbusAPI.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
+using OpenbusAPI.Lease;
 
 namespace Test_API
 {
@@ -27,6 +28,13 @@ namespace Test_API
     private String testKeyFileName;
     private String acsCertificateFileName;
     private String entityName;
+
+    #endregion
+
+    #region Consts
+
+    /// <summary> O tempo em segundos do lease do Barramento. </summary>
+    private const int LEASE_TIME = 60;
 
     #endregion
 
@@ -396,6 +404,49 @@ namespace Test_API
       Assert.NotNull(openbus.GetSessionService());
       Assert.True(openbus.Disconnect());
       Assert.Null(openbus.GetSessionService());
+    }
+
+    /// <summary>
+    /// Teste o expiredCallback 
+    /// </summary>
+    [Test]
+    [Timeout(2 * LEASE_TIME * 1000)]
+    public void LeaseExpireCredencial() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      Assert.NotNull(registryService);
+      LeaseExpiredCallbackImpl callback = new LeaseExpiredCallbackImpl();
+      openbus.AddLeaseExpiredCallback(callback);
+      IAccessControlService acs = openbus.GetAccessControlService();
+      Assert.True(acs.logout(openbus.Credential));
+      while (!callback.isExpired()) {
+        ;
+      }
+    }
+
+    #endregion
+
+    #region Internal Members
+
+    /// <summary>
+    /// Classe criada para testar o Lease Expired Callback. Utilizada no teste 
+    /// unitário <i>LeaseExpireCredencial</i>.
+    /// </summary>
+    private class LeaseExpiredCallbackImpl : LeaseExpiredCallback
+    {
+      private volatile bool expired;
+
+      public LeaseExpiredCallbackImpl() {
+        this.expired = false;
+      }
+
+      public void Expired() {
+        this.expired = true;
+      }
+
+      public bool isExpired() {
+        return this.expired;
+      }
     }
 
     #endregion

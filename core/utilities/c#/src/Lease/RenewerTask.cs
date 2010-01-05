@@ -88,7 +88,7 @@ namespace OpenbusAPI.Lease
               this.mustContinue = false;
               Log.LEASE.Warn("Falha na renovação da credencial.");
               if (this.expiredCallback != null)
-                this.expiredCallback.expired();
+                this.expiredCallback.Expired();
             }
             else {
               StringBuilder msg = new StringBuilder();
