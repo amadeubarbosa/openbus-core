@@ -49,7 +49,7 @@ namespace Test_API.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("ubu")]
+        [global::System.Configuration.DefaultSettingValueAttribute("localhost")]
         public string hostName {
             get {
                 return ((string)(this["hostName"]));
@@ -61,7 +61,7 @@ namespace Test_API.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Teste.xml")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Teste.key")]
         public string testKeyFileName {
             get {
                 return ((string)(this["testKeyFileName"]));
@@ -97,7 +97,7 @@ namespace Test_API.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2089")]
         public int hostPort {
             get {
                 return ((int)(this["hostPort"]));

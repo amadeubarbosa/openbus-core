@@ -7,6 +7,7 @@ using openbusidl.rs;
 using OpenbusAPI.Exception;
 using OpenbusAPI.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 
 namespace Test_API
 {
@@ -169,15 +170,15 @@ namespace Test_API
     [Test]
     public void ConnectByCertificate() {
       Openbus openbus = Openbus.GetInstance();
-      String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
-      Assert.IsNotEmpty(xmlPrivateKey);
+      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(testKeyFileName);
+      Assert.IsNotNull(privateKey);
 
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFileName);
       Assert.IsNotNull(acsCertificate);
 
       IRegistryService registryService =
-        openbus.Connect(entityName, xmlPrivateKey, acsCertificate);
+        openbus.Connect(entityName, privateKey, acsCertificate);
       Assert.NotNull(registryService);
       Assert.True(openbus.Disconnect());
     }
@@ -189,15 +190,15 @@ namespace Test_API
     [ExpectedException(typeof(ACSLoginFailureException))]
     public void ConnectByCertificate_InvalidEntityName() {
       Openbus openbus = Openbus.GetInstance();
-      String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
-      Assert.IsNotEmpty(xmlPrivateKey);
+      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(testKeyFileName);
+      Assert.IsNotNull(privateKey);
 
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFileName);
       Assert.IsNotNull(acsCertificate);
       IRegistryService registryService = null;
       try {
-        registryService = openbus.Connect("null", xmlPrivateKey, acsCertificate);
+        registryService = openbus.Connect("null", privateKey, acsCertificate);
       }
       finally {
         Assert.Null(registryService);
@@ -234,12 +235,12 @@ namespace Test_API
     [ExpectedException(typeof(ArgumentException))]
     public void ConnectByCertificate_NullACSCertificate() {
       Openbus openbus = Openbus.GetInstance();
-      String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
-      Assert.IsNotEmpty(xmlPrivateKey);
+      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(testKeyFileName);
+      Assert.IsNotNull(privateKey);
 
       IRegistryService registryService = null;
       try {
-        registryService = openbus.Connect(entityName, xmlPrivateKey, null);
+        registryService = openbus.Connect(entityName, privateKey, null);
       }
       finally {
         Assert.Null(registryService);
@@ -255,20 +256,20 @@ namespace Test_API
     [ExpectedException(typeof(ACSLoginFailureException))]
     public void ConnectByCertificate_Twice() {
       Openbus openbus = Openbus.GetInstance();
-      String xmlPrivateKey = Crypto.ReadPrivateKey(testKeyFileName);
-      Assert.IsNotEmpty(xmlPrivateKey);
+      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(testKeyFileName);
+      Assert.IsNotNull(privateKey);
 
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFileName);
       Assert.IsNotNull(acsCertificate);
 
       IRegistryService registryService =
-        openbus.Connect(entityName, xmlPrivateKey, acsCertificate);
+        openbus.Connect(entityName, privateKey, acsCertificate);
       Assert.NotNull(registryService);
 
       registryService = null;
       try {
-        registryService = openbus.Connect(entityName, xmlPrivateKey, acsCertificate);
+        registryService = openbus.Connect(entityName, privateKey, acsCertificate);
       }
       finally {
         Assert.Null(registryService);

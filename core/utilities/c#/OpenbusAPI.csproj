@@ -70,6 +70,7 @@
     <Compile Include="src\Logger\Log.cs" />
     <Compile Include="src\Openbus.cs" />
     <Compile Include="src\Security\Crypto.cs" />
+    <Compile Include="src\Security\RSAPKCS8KeyFormatter.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

@@ -15,6 +15,7 @@ using System.Security.Cryptography.X509Certificates;
 using OpenbusAPI.Security;
 using System.Runtime.Remoting.Channels;
 using OpenbusAPI.Logger;
+using System.Security.Cryptography;
 
 
 namespace OpenbusAPI
@@ -294,7 +295,7 @@ namespace OpenbusAPI
 
       MarshalByRefObject objRef = connections[0].objref;
       IComponent registryComponent = objRef as IComponent;
-      if(registryComponent == null){
+      if (registryComponent == null) {
         Log.COMMON.Warn("A referência recebida não é um IComponent");
         return null;
       }
@@ -405,15 +406,14 @@ namespace OpenbusAPI
     /// de acesso e o serviço de registro), via certificado.
     /// </summary>
     /// <param name="name">O nome da entidade.</param>
-    /// <param name="xmlPrivateKey">A String que representa a chave privada.
-    /// </param>
-    /// <param name="acsCertificate">O certificado do 
-    /// serviço de controle de acesso.</param>
+    /// <param name="privateKey">A chave privada.</param>
+    /// <param name="acsCertificate">O certificado do serviço de controle 
+    /// de acesso.</param>
     /// <returns>O serviço de registro.</returns>
-    public IRegistryService Connect(String name, String xmlPrivateKey,
-    X509Certificate2 acsCertificate) {
-      if ((String.IsNullOrEmpty(name) ||
-        (String.IsNullOrEmpty(xmlPrivateKey)) || (acsCertificate == null)))
+    public IRegistryService Connect(String name,
+      RSACryptoServiceProvider privateKey, X509Certificate2 acsCertificate) {
+      if ((String.IsNullOrEmpty(name)) || (acsCertificate == null) ||
+        (privateKey == null))
         throw new ArgumentException("Nenhum parâmetro pode ser nulo.");
 
       if (!String.IsNullOrEmpty(this.Credential.identifier))
@@ -426,7 +426,7 @@ namespace OpenbusAPI
 
       byte[] answer;
       //try -- SecurityException
-      answer = Crypto.GenerateAnswer(challenge, xmlPrivateKey, acsCertificate);
+      answer = Crypto.GenerateAnswer(challenge, privateKey, acsCertificate);
 
       int leaseTime = -1;
       this.acs.loginByCertificate(name, answer, out this.credential, out leaseTime);
@@ -498,8 +498,7 @@ namespace OpenbusAPI
     /// <param name="credencial"> Credencial a ser usada nas requisições a 
     /// serem realizadas.
     /// </param>
-    public void setThreadCredencial(Credential credencial)
-    {
+    public void setThreadCredencial(Credential credencial) {
       currentCredential = credencial;
     }
 

@@ -9,10 +9,10 @@
       <Value Profile="(Default)">tester</Value>
     </Setting>
     <Setting Name="hostName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">ubu</Value>
+      <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="testKeyFileName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Teste.xml</Value>
+      <Value Profile="(Default)">Teste.key</Value>
     </Setting>
     <Setting Name="acsCertificateFileName" Type="System.String" Scope="User">
       <Value Profile="(Default)">AccessControlService.crt</Value>
@@ -21,7 +21,7 @@
       <Value Profile="(Default)">TesteBarramento</Value>
     </Setting>
     <Setting Name="hostPort" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">3000</Value>
+      <Value Profile="(Default)">2089</Value>
     </Setting>
   </Settings>
 </SettingsFile>

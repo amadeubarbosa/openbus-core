@@ -25,6 +25,11 @@ namespace OpenbusAPI.Logger
     /// Log do mecanismo de interceptadores.
     /// </summary>
     public static readonly ILogger INTERCEPTORS = new ApacheLog("Openbus-Interceptors");
+    /// <summary>
+    /// Log do mecanismo de criptografia.
+    /// </summary>
+    public static readonly ILogger CRYPTO = new ApacheLog("Openbus-Crypto");
+
 
     #endregion
 
