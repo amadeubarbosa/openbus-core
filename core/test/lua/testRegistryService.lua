@@ -76,7 +76,16 @@ Suite = {
         login.user,
         login.password)
       self.credentialManager:setValue(self.credential)
-      self.registryService = self.accessControlService:getRegistryService()
+
+      local acsIComp = self.accessControlService:_component()
+      acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
+      local acsIRecept = acsIComp:getFacetByName("IReceptacles")
+      acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
+      local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
+      local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
+      self.registryService = rsIComp:getFacetByName("IRegistryService")
+      self.registryService = orb:narrow(self.registryService,
+        "IDL:openbusidl/rs/IRegistryService:1.0")
     end,
 
     testRegister = function(self)

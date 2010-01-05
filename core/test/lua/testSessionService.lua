@@ -46,7 +46,15 @@ Suite = {
       _, self.credential = self.accessControlService:loginByPassword(user, password)
       self.credentialManager:setValue(self.credential)
 
-      local registryService = self.accessControlService:getRegistryService()
+      local acsIComp = self.accessControlService:_component()
+      acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
+      local acsIRecept = acsIComp:getFacetByName("IReceptacles")
+      acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
+      local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
+      local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
+      local registryService = rsIComp:getFacetByName("IRegistryService")
+      registryService = orb:narrow(registryService,
+        "IDL:openbusidl/rs/IRegistryService:1.0")
 
       local serviceOffers = registryService:find({"ISessionService"})
       Check.assertNotEquals(#serviceOffers, 0)

@@ -69,10 +69,18 @@ function main()
   success = connectionManager:connect()
   print("Cliente autenticado!")
 
-  local registryService = accessControlService:getRegistryService()
-  if not registryService then
+  local acsIComp = self.accessControlService:_component()
+  acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
+  local acsIRecept = acsIComp:getFacetByName("IReceptacles")
+  acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
+  local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
+  if not conns[1] then
     error("ERRO: Não obteve referência para serviço de registro")
   end
+  local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
+  local registryService = rsIComp:getFacetByName("IRegistryService")
+  registryService = orb:narrow(registryService,
+    "IDL:openbusidl/rs/IRegistryService:1.0")
   print("Obteve referencia para o serviço de registro")
 
   local offers = registryService:find("SessionService",{})
