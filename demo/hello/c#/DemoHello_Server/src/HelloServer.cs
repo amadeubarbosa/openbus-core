@@ -4,6 +4,7 @@ using OpenbusAPI.Security;
 using System.Security.Cryptography.X509Certificates;
 using openbusidl.rs;
 using DemoHello.Properties;
+using System.Security.Cryptography;
 
 
 namespace DemoHello_Server
@@ -28,7 +29,7 @@ namespace DemoHello_Server
       string privaKeyFile = DemoConfig.Default.xmlPrivateKey;
       string acsCertificateFile = DemoConfig.Default.acsCertificateFileName;
 
-      string privateKey = Crypto.ReadPrivateKey(privaKeyFile);
+      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(privaKeyFile);
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFile);
 

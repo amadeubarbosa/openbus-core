@@ -6,7 +6,7 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Teste.xml</Value>
+      <Value Profile="(Default)">Teste.key</Value>
     </Setting>
     <Setting Name="acsCertificateFileName" Type="System.String" Scope="User">
       <Value Profile="(Default)">AccessControlService.crt</Value>

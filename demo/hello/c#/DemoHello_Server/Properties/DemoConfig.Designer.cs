@@ -37,7 +37,7 @@ namespace DemoHello.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Teste.xml")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Teste.key")]
         public string xmlPrivateKey {
             get {
                 return ((string)(this["xmlPrivateKey"]));
