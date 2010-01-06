@@ -118,12 +118,12 @@ function RSFacet:addOffer(offerEntry)
   if status then
 	    acsFacet:addCredentialToObserver(self.observerId,
                                    credential.identifier)
+        Log:service("Adicionada credencial no observador")
   else
       -- erro ja foi logado, so adiciona que nao pode adicionar
 	  Log:error("Nao foi possivel adicionar credencial ao observador")
   end                       		
   
-  Log:service("Adicionada credencial no observador")
 end
 
 ---
