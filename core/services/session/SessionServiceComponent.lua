@@ -14,6 +14,7 @@ local orb = oil.orb
 local SessionService = require "core.services.session.SessionService"
 local Openbus = require "openbus.Openbus"
 local OilUtilities = require "openbus.util.OilUtilities"
+local Utils = require "openbus.util.Utils"
 
 local Log = require "openbus.util.Log"
 
@@ -72,6 +73,17 @@ function SessionServiceComponent:startup()
 
   -- Cadastra callback para LeaseExpired
   Openbus:addLeaseExpiredCallback( self )
+  
+  -- conecta o controle de acesso:   [SS]--( 0--[ACS]
+  local acsIComp = Openbus:getACSIComponent()
+  local success, conId =
+    oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
+              "AccessControlServiceReceptacle", acsIComp)
+  if not success then
+    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
+    Log:error(conId)
+    error{"IDL:SCS/StartupFailed:1.0"}
+ end
 
   -- configura faceta ISessionService
   self.sessionService = self.context.ISessionService
@@ -139,7 +151,6 @@ function SessionServiceComponent:shutdown()
   end
   self.started = false
 
-  local accessControlService = self.AccessControlServiceReceptacle
   if self.registryIdentifier then
     local registryService = Openbus:getRegistryService()
     if not registryService then
@@ -151,7 +162,17 @@ function SessionServiceComponent:shutdown()
   end
 
   if self.sessionService.observerId then
-    accessControlService:removeObserver(self.sessionService.observerId)
+    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+  					 		  orb, 
+                         	  self.context.IComponent, 
+                         	  "AccessControlServiceReceptacle", 
+                         	  "IAccessControlService", 
+                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+    if not status then
+	    -- erro ja foi logado, só retorna
+	    return nil
+    end     
+    acsFacet:removeObserver(self.sessionService.observerId)
     self.sessionService.observerId = nil
   end
 

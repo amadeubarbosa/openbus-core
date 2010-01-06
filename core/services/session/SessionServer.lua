@@ -40,6 +40,9 @@ local scs = require "scs.core.base"
 local SessionServiceComponent =
   require "core.services.session.SessionServiceComponent"
 local SessionService = require "core.services.session.SessionService"
+local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
+
+Openbus:enableFaultTolerance()
 
 -----------------------------------------------------------------------------
 -- Descricoes do Componente Servico de Sessao
@@ -51,6 +54,7 @@ facetDescriptions.IComponent          = {}
 facetDescriptions.IMetaInterface      = {}
 facetDescriptions.ISessionService     = {}
 facetDescriptions.ICredentialObserver = {}
+facetDescriptions.IReceptacles        = {}
 
 facetDescriptions.IComponent.name                    = "IComponent"
 facetDescriptions.IComponent.interface_name          = "IDL:scs/core/IComponent:1.0"
@@ -68,8 +72,16 @@ facetDescriptions.ICredentialObserver.name           = "SessionServiceCredential
 facetDescriptions.ICredentialObserver.interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0"
 facetDescriptions.ICredentialObserver.class          = SessionService.Observer
 
+facetDescriptions.IReceptacles.name           = "IReceptacles"
+facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
+
 -- Receptacle Descriptions
-local receptacleDescriptions = {}
+local receptacleDescs = {}
+receptacleDescs.AccessControlServiceReceptacle = {}
+receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
+receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:scs/core/IComponent:1.0"
+receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = true
 
 -- component id
 local componentId = {}
@@ -84,7 +96,7 @@ function main()
   Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Sessão
-  success, res = oil.pcall(scs.newComponent, facetDescriptions, receptacleDescriptions,
+  success, res = oil.pcall(scs.newComponent, facetDescriptions, receptacleDescs,
       componentId)
   if not success then
     Log:error("Falha criando componente: "..tostring(res).."\n")

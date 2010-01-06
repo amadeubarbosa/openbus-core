@@ -24,6 +24,7 @@ local FaultTolerantService = require "core.services.faulttolerance.FaultTolerant
 
 local Log = require "openbus.util.Log"
 local oop = require "loop.simple"
+local Utils = require "openbus.util.Utils"
 
 ---
 --Componente (membro) responsável pelo Serviço de Registro.
@@ -108,8 +109,20 @@ function RSFacet:addOffer(offerEntry)
 
   -- A credencial deve ser observada, porque se for deletada as
   -- ofertas a ela relacionadas devem ser removidas
-  Openbus:getAccessControlService():addCredentialToObserver(self.observerId,
-                                               credential.identifier)
+  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+  					 		  orb, 
+                         	  self.context.IComponent, 
+                         	  "AccessControlServiceReceptacle", 
+                         	  "IAccessControlService", 
+                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+  if status then
+	    acsFacet:addCredentialToObserver(self.observerId,
+                                   credential.identifier)
+  else
+      -- erro ja foi logado, so adiciona que nao pode adicionar
+	  Log:error("Nao foi possivel adicionar credencial ao observador")
+  end                       		
+  
   Log:service("Adicionada credencial no observador")
 end
 
@@ -210,8 +223,19 @@ function RSFacet:unregister(identifier)
     -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
     Log:service("Última oferta da credencial: remove credencial do observador")
-    Openbus:getAccessControlService():removeCredentialFromObserver(self.observerId,
-                                                         credential.identifier)
+    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+  	 				 		    orb, 
+                         	    self.context.IComponent, 
+                         	    "AccessControlServiceReceptacle", 
+                         	    "IAccessControlService", 
+                         	    "IDL:openbusidl/acs/IAccessControlService:1.0")
+    if status then
+	    acsFacet:removeCredentialFromObserver(self.observerId,credential.identifier)
+	else
+	  -- erro ja foi logado, so adiciona que nao pode remover
+	  Log:error("Nao foi possivel remover credencial")
+    end     
+    acsFacet:removeCredentialFromObserver(self.observerId,credential.identifier)
   end
   self.offersDB:delete(offerEntry)
   return true
@@ -396,12 +420,31 @@ end
 function RSFacet:expired()
   Openbus:connectByCertificate(self.context._componentId.name,
       self.privateKeyFile, self.accessControlServiceCertificateFile)
-  local accessControlService = Openbus:getAccessControlService()
+  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+  					 		  orb, 
+                         	  self.context.IComponent, 
+                         	  "AccessControlServiceReceptacle", 
+                         	  "IAccessControlService", 
+                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+  if not status then
+	    --erro ja joi logado
+	    return nil
+  end     
   -- atualiza a referência junto ao serviço de controle de acesso
-  accessControlService:connectRegistryService(self)
+  -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
+  local acsIComp = acsFacet:_component()
+  local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
+  acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
+  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep, 
+    "RegistryServiceReceptacle", self.context.IComponent )
+  if not status then
+    Log:error("Falha ao conectar o Serviço de Registro no receptáculo: " ..
+      conns[1])
+    return false
+  end
 
   -- registra novamente o observador de credenciais
-  self.observerId = accessControlService:addObserver(self.observer, {})
+  self.observerId = acsFacet:addObserver(self.observer, {})
   Log:service("Observador recadastrado")
 
   -- Mantém no repositório apenas ofertas com credenciais válidas
@@ -412,8 +455,8 @@ function RSFacet:expired()
   end
   local invalidCredentials = {}
   for credentialId, credential in pairs(credentials) do
-    if not accessControlService:addCredentialToObserver(self.observerId,
-                                                            credentialId) then
+    if not acsFacet:addCredentialToObserver(self.observerId,
+                                            credentialId) then
       Log:service("Ofertas de "..credentialId.." serão removidas")
       table.insert(invalidCredentials, credential)
     else
@@ -510,7 +553,9 @@ function startup(self)
   -- obtém a referência para o Serviço de Controle de Acesso
   local accessControlService = Openbus:getAccessControlService()
 
-  local acsIRecep =  Openbus:getACSIComponent():getFacetByName("IReceptacles")
+  -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
+  local acsIComp = Openbus:getACSIComponent()
+  local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
   acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
   local status, conns = oil.pcall(acsIRecep.connect, acsIRecep, 
     "RegistryServiceReceptacle", self.context.IComponent )
@@ -519,6 +564,16 @@ function startup(self)
       conns[1])
     return false
   end
+  
+  -- conecta o controle de acesso:   [RS]--( 0--[ACS]
+  local success, conId =
+    oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
+              "AccessControlServiceReceptacle", acsIComp)
+  if not success then
+    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
+    Log:error(conId)
+    error{"IDL:SCS/StartupFailed:1.0"}
+ end
 
 
   -- registra um observador de credenciais
@@ -587,7 +642,17 @@ function shutdown(self)
 
   -- Remove o observador
   if rs.observerId then
-    Openbus:getAccessControlService():removeObserver(rs.observerId)
+    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+  					 		    orb, 
+                         	    self.context.IComponent, 
+                         	    "AccessControlServiceReceptacle", 
+                         	    "IAccessControlService", 
+                         	    "IDL:openbusidl/acs/IAccessControlService:1.0")
+    if not status then
+	    -- erro ja foi logado
+	    error{"IDL:SCS/ShutdownFailed:1.0"}
+    end     
+    acsFacet:removeObserver(rs.observerId)
     rs.observer:_deactivate()
   end
 

@@ -9,6 +9,7 @@ local luuid = require "uuid"
 local Session = require "core.services.session.Session"
 
 local Log = require "openbus.util.Log"
+local Utils = require "openbus.util.Utils"
 
 local oop = require "loop.base"
 
@@ -18,6 +19,8 @@ local tostring = tostring
 local table    = table
 local pairs    = pairs
 local ipairs   = ipairs
+
+local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
 
 ---
 --Faceta que disponibiliza a funcionalidade básica do serviço de sessão.
@@ -40,6 +43,7 @@ facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.SessionEventSink = {}
 facetDescriptions.ISession         = {}
+facetDescriptions.IReceptacles     = {}
 
 facetDescriptions.IComponent.name                 = "IComponent"
 facetDescriptions.IComponent.interface_name       = "IDL:scs/core/IComponent:1.0"
@@ -57,8 +61,16 @@ facetDescriptions.ISession.name                   = "ISession"
 facetDescriptions.ISession.interface_name         = "IDL:openbusidl/ss/ISession:1.0"
 facetDescriptions.ISession.class                  = Session.Session
 
+facetDescriptions.IReceptacles.name           = "IReceptacles"
+facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
+
 -- Receptacle Descriptions
 local receptacleDescs = {}
+receptacleDescs.AccessControlServiceReceptacle = {}
+receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
+receptacleDescs.AccessControlServiceReceptacle.interface_name = "IDL:scs/core/IComponent:1.0"
+receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = true
 
 -- component id
 local componentId = {}
@@ -93,13 +105,23 @@ function SessionService:createSession(member)
   Log:service("Sessao criada com id "..tostring(session.ISession.identifier).." !")
 
   -- A credencial deve ser observada!
+  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+  					 		  orb, 
+                         	  self.context.IComponent, 
+                         	  "AccessControlServiceReceptacle", 
+                         	  "IAccessControlService", 
+                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+  if not status then
+	    -- erro ja foi logado, só retorna
+	    return nil
+  end     
+  
   if not self.observerId then
     self.observerId =
-      Openbus:getAccessControlService():addObserver(self.context.ICredentialObserver,
-                                            {credential.identifier})
+      acsFacet:addObserver(self.context.ICredentialObserver,
+                           {credential.identifier})
   else
-    Openbus:getAccessControlService():addCredentialToObserver(self.observerId,
-                                                     credential.identifier)
+    acsFacet:addCredentialToObserver(self.observerId,credential.identifier)
   end
 
   -- Adiciona o membro à sessão
@@ -158,8 +180,19 @@ end
 --Procedimento após a reconexão do serviço.
 ---
 function SessionService:expired()
+  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+  					 		  orb, 
+                         	  self.context.IComponent, 
+                         	  "AccessControlServiceReceptacle", 
+                         	  "IAccessControlService", 
+                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+                         	  
+  if not status then
+	  -- erro ja foi logado, só retorna
+	  return nil
+  end     
   -- registra novamente o observador de credenciais
-  self.observerId = Openbus:getAccessControlService():addObserver(
+  self.observerId = acsFacet:addObserver(
       self.context.ICredentialObserver, {}
   )
   Log:service("Observador recadastrado")
@@ -167,7 +200,7 @@ function SessionService:expired()
   -- Mantém apenas as sessões com credenciais válidas
   local invalidCredentials = {}
   for credentialId, session in pairs(self.sessions) do
-    if not Openbus:getAccessControlService():addCredentialToObserver(self.observerId,
+    if not acsFacet:addCredentialToObserver(self.observerId,
         credentialId) then
       Log:service("Sessão para "..credentialId.." será removida")
       table.insert(invalidCredentials, credentialId)
@@ -180,6 +213,24 @@ function SessionService:expired()
   end
 end
 
+---
+--Inicia o componente.
+--
+--@see scs.core.IComponent#startup
+---
+function SessionService:startup()
+  -- conecta-se com o controle de acesso:   [SS]--( 0--[ACS]
+  local acsIComp = Openbus:getACSIComponent()
+  local success, conId =
+    oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
+              "AccessControlServiceReceptacle", acsIComp)
+  if not success then
+    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
+    Log:error(conId)
+    error{"IDL:SCS/StartupFailed:1.0"}
+ end
+end
+
 --------------------------------------------------------------------------------
 -- Faceta ICredentialObserver
 --------------------------------------------------------------------------------
@@ -189,4 +240,6 @@ Observer = oop.class{}
 function Observer:credentialWasDeleted(credential)
   self.context.ISessionService:credentialWasDeleted(credential)
 end
+
+
 

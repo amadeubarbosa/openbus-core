@@ -68,6 +68,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local RegistryService = require "core.services.registry.RegistryService"
+local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
 
 -----------------------------------------------------------------------------
 ---- RegistryService Descriptions
@@ -80,6 +81,7 @@ facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
 facetDescriptions.IManagement      = {}
 facetDescriptions.IFaultTolerantService	= {}
+facetDescriptions.IReceptacles          = {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
 facetDescriptions.IComponent.interface_name        = "IDL:scs/core/IComponent:1.0"
@@ -103,8 +105,16 @@ facetDescriptions.IManagement.interface_name = "IDL:openbusidl/rs/IManagement:1.
 facetDescriptions.IManagement.class          = RegistryService.ManagementFacet
 facetDescriptions.IManagement.key            = "MGM"
 
----- Receptacle Descriptions
+facetDescriptions.IReceptacles.name           = "IReceptacles"
+facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
+
+-- Receptacle Descriptions
 local receptacleDescs = {}
+receptacleDescs.AccessControlServiceReceptacle = {}
+receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
+receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:scs/core/IComponent:1.0"
+receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = true
 
 
 ---- component id

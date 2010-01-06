@@ -10,4 +10,5 @@ SessionServerConfiguration = {
   accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
   logLevel = 3,
   oilVerboseLevel = 1,
+  administrators = {"tester"},
 }
