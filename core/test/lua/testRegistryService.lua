@@ -38,11 +38,16 @@ componentId.minor_version = 0
 componentId.patch_version = 0
 componentId.platform_spec = ""
 
--- Openbus login
+-- Login do administrador
 local login = {}
 login.user = "tester"
 login.password = "tester"
 
+local systemId     = "testRegistryService"
+local deploymentId = systemId
+local testCertFile = systemId .. ".crt"
+local testKeyFile  = systemId .. ".key"
+local acsCertFile  = "AccessControlService.crt"
 
 Suite = {
   Test1 = {
@@ -70,22 +75,47 @@ Suite = {
       self.credentialManager = CredentialManager()
       orb:setclientinterceptor(ClientInterceptor(config,
         self.credentialManager))
-
-      local success
-      success, self.credential = self.accessControlService:loginByPassword(
-        login.user,
-        login.password)
-      self.credentialManager:setValue(self.credential)
-
+      -- Login do administrador para recuperar as referências aos objetos e
+      -- cadastrar as permissões
+      local succ, credential = self.accessControlService:loginByPassword(
+        login.user, login.password)
+      self.credentialManager:setValue(credential)
+      -- Recupera as referências
       local acsIComp = self.accessControlService:_component()
       acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
       local acsIRecept = acsIComp:getFacetByName("IReceptacles")
       acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
+      self.acsManagement = acsIComp:getFacetByName("IManagement")
+      self.acsManagement = orb:narrow(self.acsManagement, 
+        "IDL:openbusidl/acs/IManagement:1.0")
       local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
       local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
       self.registryService = rsIComp:getFacetByName("IRegistryService")
       self.registryService = orb:narrow(self.registryService,
         "IDL:openbusidl/rs/IRegistryService:1.0")
+      self.rsManagement = rsIComp:getFacetByName("IManagement")
+      self.rsManagement = orb:narrow(self.rsManagement,
+        "IDL:openbusidl/rs/IManagement:1.0")
+      -- Cadastra o sistema para teste e dá permissão de publicação no RS
+      local f = assert(io.open(testCertFile), testCertFile.." não encontrado")
+      local cert = f:read("*a")
+      f:close()
+      self.acsManagement.__try:addSystem(systemId, "")
+      self.acsManagement.__try:addSystemDeployment(deploymentId, systemId, 
+        "", cert)
+      self.rsManagement.__try:grant(deploymentId, "IDL:*:*", false)
+      -- Logout do administrador
+      self.accessControlService:logout(credential)
+      self.credentialManager:invalidate()
+      -- Login do serviço para a realização do teste
+      local challenge = self.accessControlService:getChallenge(deploymentId)
+      local privateKey = lce.key.readprivatefrompemfile(testKeyFile)
+      challenge = lce.cipher.decrypt(privateKey, challenge)
+      cert = lce.x509.readfromderfile(acsCertFile)
+      challenge = lce.cipher.encrypt(cert:getpublickey(), challenge)
+      succ, self.credential, self.lease = 
+        self.accessControlService:loginByCertificate(deploymentId, challenge)
+      self.credentialManager:setValue(self.credential)
     end,
 
     testRegister = function(self)
@@ -287,6 +317,9 @@ Suite = {
     end,
 
     afterTestCase = function(self)
+      self.rsManagement.__try:removeAuthorization(deploymentId)
+      self.acsManagement.__try:removeSystemDeployment(deploymentId)
+      self.acsManagement.__try:removeSystem(systemId)
       self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()
     end,
