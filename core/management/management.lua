@@ -73,21 +73,21 @@ Uso: %s [opções] --login=<usuário> <comando>
 - Controle de Autorização
   * Conceder autorização:
      --set-authorization=<id_implantação> --grant=<interface> [--no-strict]
-  * Revogar autorizaçãoL
+  * Revogar autorização:
      --set-authorization=<id_implantação> --revoke=<interface>
   * Remover autorização:
      --del-authorization=<id_implantação>
   * Mostrar todas as autorizações
      --list-authorization
-  * Mostrar uma autorização
+  * Mostrar uma autorização:
      --list-authorization=<id_implantação>
-  * Mostrar autorizações de um sistema
+  * Mostrar autorizações de um sistema:
      --list-authorization --system=<id_sistema>
-  * Mostrar todas autorizações com as interfaces
+  * Mostrar todas autorizações com as interfaces:
      --list-authorization --interface="<iface1> <iface2> ... <ifaceN>"
 
 - Script
-  * executa script Lua com um lote de comandos
+  * Executa script Lua com um lote de comandos:
      --script=<arquivo>
 -------------------------------------------------------------------------------
 ]]
