@@ -8,7 +8,6 @@ import java.util.logging.Level;
 import openbusidl.rs.IRegistryService;
 import openbusidl.rs.ServiceOffer;
 
-import org.jacorb.notification.filter.etcl.ExistOperator;
 import org.omg.CORBA.UserException;
 
 import scs.core.IComponent;
@@ -41,7 +40,6 @@ public class HelloClient {
     orbProps.setProperty("org.omg.CORBA.ORBSingletonClass",
       "org.jacorb.orb.ORBSingleton");
     Openbus bus = Openbus.getInstance();
-    //bus.resetAndInitialize(args, orbProps, host, port);
     bus.initWithFaultTolerance(args, orbProps, host, port);
 
     String userLogin = props.getProperty("login");
@@ -58,9 +56,7 @@ public class HelloClient {
     IComponent component = serviceOffer.member;
     org.omg.CORBA.Object helloObject = component.getFacetByName("IHello");
     IHello hello = IHelloHelper.narrow(helloObject);
-    
-    hello.sayHello();
-    
+
     hello.sayHello();
 
     bus.disconnect();
