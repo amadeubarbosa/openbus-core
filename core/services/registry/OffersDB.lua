@@ -34,8 +34,8 @@ FILE_SEPARATOR = "/"
 function __init(self, databaseDirectory)
   local mode = lfs.attributes(databaseDirectory, "mode")
   if not mode then
-    Log:service("O diretorio ["..databaseDirectory.."] nao foi encontrado. "..
-        "Criando...")
+    Log:registry("O diretorio ["..databaseDirectory..
+        "] nao foi encontrado. Criando...")
     local status, errorMessage = lfs.mkdir(databaseDirectory)
     if not status then
       Log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."]: "..errorMessage)

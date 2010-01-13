@@ -35,13 +35,13 @@ SessionServiceComponent = oop.class({}, scs.Component)
 --@see scs.core.IComponent#startup
 ---
 function SessionServiceComponent:startup()
-  Log:service("Pedido de startup para o serviço de sessão")
+  Log:session("Pedido de startup para o serviço de sessão")
 
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 
   -- Verifica se é o primeiro startup
   if not self.initialized then
-    Log:service("Serviço de sessão está inicializando")
+    Log:session("Serviço de sessão está inicializando")
     if (string.sub(self.config.privateKeyFile,1 , 1) == "/") then
       self.privateKeyFile = self.config.privateKeyFile
     else
@@ -58,7 +58,7 @@ function SessionServiceComponent:startup()
 
     self.initialized = true
   else
-    Log:service("Serviço de sessão já foi inicializado")
+    Log:session("Serviço de sessão já foi inicializado")
   end
 
   -- autentica o serviço, conectando-o ao barramento
@@ -106,7 +106,7 @@ function SessionServiceComponent:startup()
   self.registryIdentifier = identifier
 
   self.started = true
-  Log:service("Serviço de sessão iniciado")
+  Log:session("Serviço de sessão iniciado")
 end
 
 ---
@@ -119,7 +119,7 @@ function SessionServiceComponent:expired()
   -- Procedimento realizado pela faceta
   self.sessionService:expired()
 
-  Log:service("Serviço de sessão foi reconectado")
+  Log:session("Serviço de sessão foi reconectado")
 
   -- Registra novamente a oferta de serviço, pois a credencial associada
   -- agora é outra
@@ -144,7 +144,7 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function SessionServiceComponent:shutdown()
-  Log:service("Pedido de shutdown para o serviço de sessão")
+  Log:session("Pedido de shutdown para o serviço de sessão")
   if not self.started then
     Log:error("Servico ja foi finalizado.\n")
     error{"IDL:SCS/ShutdownFailed:1.0"}
@@ -180,5 +180,5 @@ function SessionServiceComponent:shutdown()
     Openbus:disconnect()
   end
 
-  Log:service("Serviço de sessão finalizado")
+  Log:session("Serviço de sessão finalizado")
 end

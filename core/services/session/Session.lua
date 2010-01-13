@@ -42,7 +42,7 @@ end
 ---
 function Session:addMember(member)
   local memberName = member:getComponentId().name
-  Log:service("Membro "..memberName.." adicionado a sessão")
+  Log:session("Membro "..memberName.." adicionado a sessão")
   local identifier = self:generateMemberIdentifier()
   self.sessionMembers[identifier] = member
 
@@ -50,12 +50,12 @@ function Session:addMember(member)
   local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
   local eventSink = member:getFacet(eventSinkInterface)
   if eventSink then
-    Log:service("Membro "..memberName.." receberá eventos")
+    Log:session("Membro "..memberName.." receberá eventos")
     local eventSinks = self.context.SessionEventSink.eventSinks
     eventSinks[identifier] =  orb:narrow(eventSink,
         eventSinkInterface)
   else
-    Log:service("Membro "..memberName.." não receberá eventos")
+    Log:session("Membro "..memberName.." não receberá eventos")
   end
   return identifier
 end
@@ -73,7 +73,7 @@ function Session:removeMember(identifier)
   if not member then
     return false
   end
-  Log:service("Membro "..member:getComponentId().name.." removido da sessão")
+  Log:session("Membro "..member:getComponentId().name.." removido da sessão")
   self.sessionMembers[identifier] = nil
   self.context.SessionEventSink.eventSinks[identifier] = nil
   return true
@@ -113,11 +113,11 @@ SessionEventSink = oop.class{eventSinks = {}}
 --@param event O evento.
 ---
 function SessionEventSink:push(event)
-  Log:service("Repassando evento "..event.type.." para membros de sessão")
+  Log:session("Repassando evento "..event.type.." para membros de sessão")
   for _, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.push, sink, event)
     if not result then
-      Log:service("Erro ao enviar evento para membro de sessão: "..errorMsg)
+      Log:session("Erro ao enviar evento para membro de sessão: "..errorMsg)
     end
   end
 end
@@ -126,11 +126,11 @@ end
 --Solicita a desconexão de todos os membros da sessão.
 ---
 function SessionEventSink:disconnect()
-  Log:service("Desconectando os membros da sessão")
+  Log:session("Desconectando os membros da sessão")
   for _, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.disconnect, sink)
     if not result then
-      Log:service("Erro ao tentar desconectar membro de sessão: "..errorMsg)
+      Log:session("Erro ao tentar desconectar membro de sessão: "..errorMsg)
     end
   end
 end

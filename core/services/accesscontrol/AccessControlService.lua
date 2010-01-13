@@ -917,7 +917,7 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
-  Log:service("Pedido de shutdown para serviço de controle de acesso")
+  Log:access_control("Pedido de shutdown para serviço de controle de acesso")
   local acs = self.context.IAccessControlService
   acs.leaseProvider:stopCheck()
   local orb = Openbus:getORB()

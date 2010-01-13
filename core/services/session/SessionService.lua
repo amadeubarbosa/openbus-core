@@ -97,12 +97,13 @@ function SessionService:createSession(member)
     Log:err("Tentativa de criar sessão já existente")
     return false, nil, self.invalidMemberIdentifier
   end
-  Log:service("Criando sessão")
+  Log:session("Criando sessão")
   local session = scs.newComponent(facetDescriptions, receptacleDescs, componentId)
   session.ISession.identifier = self:generateIdentifier()
   session.ISession.credential = credential
   self.sessions[credential.identifier] = session
-  Log:service("Sessao criada com id "..tostring(session.ISession.identifier).." !")
+  Log:session("Sessao criada com id "..
+      tostring(session.ISession.identifier).." !")
 
   -- A credencial deve ser observada!
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
@@ -139,8 +140,8 @@ function SessionService:credentialWasDeleted(credential)
   -- Remove a sessão
   local session = self.sessions[credential.identifier]
   if session then
-    Log:service("Removendo sessão de credencial deletada ("..
-      credential.identifier..")")
+    Log:session("Removendo sessão de credencial deletada ("..
+        credential.identifier..")")
     orb:deactivate(session.ISession)
     orb:deactivate(session.IMetaInterface)
     orb:deactivate(session.SessionEventSink)
@@ -195,17 +196,17 @@ function SessionService:expired()
   self.observerId = acsFacet:addObserver(
       self.context.ICredentialObserver, {}
   )
-  Log:service("Observador recadastrado")
+  Log:session("Observador recadastrado")
 
   -- Mantém apenas as sessões com credenciais válidas
   local invalidCredentials = {}
   for credentialId, session in pairs(self.sessions) do
     if not acsFacet:addCredentialToObserver(self.observerId,
         credentialId) then
-      Log:service("Sessão para "..credentialId.." será removida")
+      Log:session("Sessão para "..credentialId.." será removida")
       table.insert(invalidCredentials, credentialId)
     else
-      Log:service("Sessão para "..credentialId.." será mantida")
+      Log:session("Sessão para "..credentialId.." será mantida")
     end
   end
   for _, credentialId in ipairs(invalidCredentials) do

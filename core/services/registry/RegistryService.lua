@@ -64,9 +64,8 @@ function RSFacet:register(serviceOffer)
     allFacets = metaInterface:getFacets()
   else
     allFacets = {}
-    Log:service(format(
-      "Membro '%s' (%s) não disponibiliza a interface IMetaInterface.",
-      memberName, credential.owner))
+    Log:registry(format("Membro '%s' (%s) não disponibiliza a interface IMetaInterface.",
+        memberName, credential.owner))
   end
 
   local offerEntry = {
@@ -80,7 +79,7 @@ function RSFacet:register(serviceOffer)
     identifier = identifier
   }
 
-  Log:service("Registrando oferta com id "..identifier)
+  Log:registry("Registrando oferta com id "..identifier)
 
   self:addOffer(offerEntry)
   self.offersDB:insert(offerEntry)
@@ -101,7 +100,7 @@ function RSFacet:addOffer(offerEntry)
   -- Índice de ofertas por credencial
   local credential = offerEntry.credential
   if not self.offersByCredential[credential.identifier] then
-    Log:service("Primeira oferta da credencial "..credential.identifier)
+    Log:registry("Primeira oferta da credencial "..credential.identifier)
     self.offersByCredential[credential.identifier] = {}
   end
   self.offersByCredential[credential.identifier][offerEntry.identifier] =
@@ -121,9 +120,8 @@ function RSFacet:addOffer(offerEntry)
         Log:service("Adicionada credencial no observador")
   else
       -- erro ja foi logado, so adiciona que nao pode adicionar
-	  Log:error("Nao foi possivel adicionar credencial ao observador")
+	  Log:service("Nao foi possivel adicionar credencial ao observador")
   end                       		
-  
 end
 
 ---
@@ -179,8 +177,8 @@ function RSFacet:createFacetIndex(owner, memberName, allFacets)
       count = count + 1
     end
   end
-  Log:service(format("Membro '%s' (%s) possui %d faceta(s) autorizada(s).",
-    memberName, owner, count))
+  Log:registry(format("Membro '%s' (%s) possui %d faceta(s) autorizada(s).",
+      memberName, owner, count))
   return facets
 end
 
@@ -192,7 +190,7 @@ end
 --@return true caso a oferta tenha sido removida, ou false caso contrário.
 ---
 function RSFacet:unregister(identifier)
-  Log:service("Removendo oferta "..identifier)
+  Log:registry("Removendo oferta "..identifier)
 
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
@@ -215,14 +213,14 @@ function RSFacet:unregister(identifier)
   if credentialOffers then
     credentialOffers[identifier] = nil
   else
-    Log:service("Não há ofertas a remover com credencial "..
-                credential.identifier)
+    Log:registry("Não há ofertas a remover com credencial "..
+        credential.identifier)
     return true
   end
   if not next (credentialOffers) then
     -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
-    Log:service("Última oferta da credencial: remove credencial do observador")
+    Log:registry("Última oferta da credencial: remove credencial do observador")
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
   	 				 		    orb, 
                          	    self.context.IComponent, 
@@ -251,7 +249,7 @@ end
 --@return true caso a oferta seja atualizada, ou false caso contrário.
 ---
 function RSFacet:update(identifier, properties)
-  Log:service("Atualizando oferta "..identifier)
+  Log:registry("Atualizando oferta "..identifier)
 
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
@@ -321,8 +319,8 @@ function RSFacet:find(facets)
         table.insert(selectedOffers, offerEntry.offer)
       end
     end
-     Log:service("Encontrei "..#selectedOffers.." ofertas "..
-      "que implementam as facetas discriminadas.")
+     Log:registry("Encontrei "..#selectedOffers..
+         " ofertas que implementam as facetas discriminadas.")
   end
   return selectedOffers
 end
@@ -362,8 +360,8 @@ function RSFacet:findByCriteria(facets, criteria)
         end
       end
     end
-     Log:service("Com critério, encontrei "..#selectedOffers.." ofertas "..
-      "que implementam as facetas discriminadas.")
+    Log:registry("Com critério, encontrei "..#selectedOffers..
+        " ofertas que implementam as facetas discriminadas.")
   end
   return selectedOffers
 end
@@ -399,18 +397,18 @@ end
 --@param credential A credencial removida.
 ---
 function RSFacet:credentialWasDeleted(credential)
-  Log:service("Remover ofertas da credencial deletada "..credential.identifier)
+  Log:registry("Remover ofertas da credencial deletada "..credential.identifier)
   local credentialOffers = self.offersByCredential[credential.identifier]
   self.offersByCredential[credential.identifier] = nil
 
   if credentialOffers then
     for identifier, offerEntry in pairs(credentialOffers) do
       self.offersByIdentifier[identifier] = nil
-      Log:service("Removida oferta "..identifier.." do índice por id")
+      Log:registry("Removida oferta "..identifier.." do índice por id")
       self.offersDB:delete(offerEntry)
     end
   else
-    Log:service("Não havia ofertas da credencial "..credential.identifier)
+    Log:registry("Não havia ofertas da credencial "..credential.identifier)
   end
 end
 
@@ -445,7 +443,7 @@ function RSFacet:expired()
 
   -- registra novamente o observador de credenciais
   self.observerId = acsFacet:addObserver(self.observer, {})
-  Log:service("Observador recadastrado")
+  Log:registry("Observador recadastrado")
 
   -- Mantém no repositório apenas ofertas com credenciais válidas
   local offerEntries = self.offersByIdentifier
@@ -457,17 +455,17 @@ function RSFacet:expired()
   for credentialId, credential in pairs(credentials) do
     if not acsFacet:addCredentialToObserver(self.observerId,
                                             credentialId) then
-      Log:service("Ofertas de "..credentialId.." serão removidas")
+      Log:registry("Ofertas de "..credentialId.." serão removidas")
       table.insert(invalidCredentials, credential)
     else
-      Log:service("Ofertas de "..credentialId.." serão mantidas")
+      Log:registry("Ofertas de "..credentialId.." serão mantidas")
     end
   end
   for _, credential in ipairs(invalidCredentials) do
     self:credentialWasDeleted(credential)
   end
 
-  Log:service("Serviço de registro foi reconectado")
+  Log:registry("Serviço de registro foi reconectado")
 end
 
 ---
@@ -500,7 +498,7 @@ end
 --@see scs.core.IComponent#startup
 ---
 function startup(self)
-  Log:service("Pedido de startup para serviço de registro")
+  Log:registry("Pedido de startup para serviço de registro")
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 
   local mgm = self.context.IManagement
@@ -509,7 +507,7 @@ function startup(self)
 
   -- Verifica se é o primeiro startup
   if not rs.initialized then
-    Log:service("Serviço de registro está inicializando")
+    Log:registry("Serviço de registro está inicializando")
     if string.match(config.privateKeyFile, "^/") then
       rs.privateKeyFile = config.privateKeyFile
     else
@@ -533,7 +531,7 @@ function startup(self)
     rs.offersDB = OffersDB(databaseDirectory)
     rs.initialized = true
   else
-    Log:service("Serviço de registro já foi inicializado")
+    Log:registry("Serviço de registro já foi inicializado")
   end
 
   -- Inicializa o repositório de ofertas
@@ -580,8 +578,8 @@ function startup(self)
   local observer = {
     registryService = rs,
     credentialWasDeleted = function(self, credential)
-      Log:service("Observador notificado para credencial "..
-                  credential.identifier)
+      Log:registry("Observador notificado para credencial "..
+          credential.identifier)
       self.registryService:credentialWasDeleted(credential)
     end
   }
@@ -590,17 +588,17 @@ function startup(self)
   )
   rs.observerId =
     accessControlService:addObserver(rs.observer, {})
-  Log:service("Cadastrado observador para a credencial")
+  Log:registry("Cadastrado observador para a credencial")
 
   -- recupera ofertas persistidas
-  Log:service("Recuperando ofertas persistidas")
+  Log:registry("Recuperando ofertas persistidas")
   local offerEntriesDB = rs.offersDB:retrieveAll()
   for _, offerEntry in pairs(offerEntriesDB) do
     -- somente recupera ofertas de credenciais válidas
     if accessControlService:isValid(offerEntry.credential) then
       rs:addOffer(offerEntry)
     else
-      Log:service("Oferta de "..offerEntry.credential.identifier.." descartada")
+      Log:registry("Oferta de "..offerEntry.credential.identifier.." descartada")
       rs.offersDB:delete(offerEntry)
     end
   end
@@ -623,7 +621,7 @@ function startup(self)
   rs.started = true
   self.context.IFaultTolerantService:setStatus(true)
   
-  Log:service("Serviço de registro iniciado")
+  Log:registry("Serviço de registro iniciado")
 end
 
 ---
@@ -632,7 +630,7 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
-  Log:service("Pedido de shutdown para serviço de registro")
+  Log:registry("Pedido de shutdown para serviço de registro")
   local rs = self.context.IRegistryService
   if not rs.started then
     Log:error("Servico ja foi finalizado.")
@@ -660,7 +658,7 @@ function shutdown(self)
     Openbus:disconnect()
   end
 
-  Log:service("Serviço de registro finalizado")
+  Log:registry("Serviço de registro finalizado")
   
    orb:deactivate(rs)
    orb:deactivate(self.context.IManagement)
