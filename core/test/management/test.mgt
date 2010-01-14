@@ -1,0 +1,11 @@
+System {
+  id = "TesteOpenbus",
+  description = "Teste do Openbus",
+}
+
+SystemDeployment {
+  id = "TesteBarramento",
+  system = "TesteOpenbus",
+  description = "Teste do Barramento",
+  certificate = "TesteBarramento.crt",
+}
