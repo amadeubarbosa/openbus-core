@@ -117,7 +117,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
           "-OpenbusHost", 
           "localhost", 
           "-OpenbusPort", 
-          "2089"}; 
+          "2089"};
         bus->init(5, (char**) argv);
         bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
         bus->disconnect();
@@ -127,7 +127,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
     }
 
     void testConnect() {
-      try {
+     try {
         rgs = bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
         TS_ASSERT(rgs);
         credential = bus->getCredential();
@@ -215,8 +215,8 @@ class ACSTestSuite: public CxxTest::TestSuite {
       bus->disconnect();
       try {
         rgs = bus->connect(
-         "AccessControlService", 
-         "AccessControlService.key", 
+         "HelloService", 
+         "HelloService.key", 
          "AccessControlService.crt"); 
         TS_ASSERT(rgs);
       } catch (CORBA::SystemException& e) {
@@ -243,7 +243,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
     }
 
     void testSetThreadCredential() {
-      openbusidl::acs::Credential* trueCredential = bus->getCredential();
+      openbusidl::acs::Credential_var trueCredential = bus->getCredential();
       openbusidl::acs::Credential wrongCredential;
       wrongCredential.identifier = "00000000";
       wrongCredential.owner = "none";
@@ -272,7 +272,11 @@ class ACSTestSuite: public CxxTest::TestSuite {
 */
     }
 
+  /*
+   * Este caso de teste gera um sleep de 150s.
+   */
     void testLeaseExpiredCallback() {
+      bus->disconnect();
       bus = Openbus::getInstance();
       const char* argv[] = {
         "exec", 
@@ -281,13 +285,13 @@ class ACSTestSuite: public CxxTest::TestSuite {
         "-OpenbusPort", 
         "2089",
         "-TimeRenewing",
-        "90000"}; 
+        "150000"}; 
       bus->init(7, (char**) argv);
       leaseExpiredCallbackOk = false;
       MyCallback myCallback;
       bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
       bus->addLeaseExpiredCallback(&myCallback);
-      TS_TRACE("Tentativa de renovação de credencial em até 90 segundos...");
+      TS_TRACE("Tentativa de renovação de credencial em até 150 segundos...");
       bus->run();
       if (!leaseExpiredCallbackOk) {
         TS_FAIL("Função leaseExpiredCallback() não foi chamada.");
@@ -296,3 +300,4 @@ class ACSTestSuite: public CxxTest::TestSuite {
 };
 
 #endif
+

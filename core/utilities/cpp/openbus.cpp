@@ -268,6 +268,9 @@ namespace openbus {
   }
 
   void Openbus::createOrbPoa() {
+  #ifdef VERBOSE
+    verbose->print("Obtendo ORB...");
+  #endif
     orb = CORBA::ORB_init(_argc, _argv);
     getRootPOA();
   }
@@ -383,20 +386,29 @@ namespace openbus {
     * Alternativa para um memory leak.
     * Referente ao Mico 2.3.11.
     */
-      CORBA::Codeset::free();
+/*      CORBA::Codeset::free();
 
+      PInterceptor::PI::S_initializers_.erase(
+        PInterceptor::PI::S_initializers_.begin(),
+        PInterceptor::PI::S_initializers_.end());
+  */      
     /*
     * Alternativa para o segundo problema apresentado em OPENBUS-427.
     * Referente ao Mico 2.3.11.
     */
-      PInterceptor::PI::S_client_req_int_.erase(
+/*      PInterceptor::PI::S_client_req_int_.erase(
         PInterceptor::PI::S_client_req_int_.begin(),
         PInterceptor::PI::S_client_req_int_.end());
       PInterceptor::PI::S_server_req_int_.erase(
         PInterceptor::PI::S_server_req_int_.begin(),
         PInterceptor::PI::S_server_req_int_.end());
+  */      
+      orb->dispatcher()->remove(&renewLeaseCallback, CORBA::Dispatcher::Timer);
     #endif
       orb->shutdown(1);
+      orb->destroy();
+#ifdef OPENBUS_MICO
+    #endif
     }
   #ifndef OPENBUS_MICO
     mutex.lock();
@@ -522,7 +534,20 @@ namespace openbus {
     verbose->print("Openbus::getRootPOA() BEGIN");
     verbose->indent();
   #endif
+  #ifdef OPENBUS_MICO
+    /*
+    * Alternativa para o segundo problema apresentado em OPENBUS-426.
+    * Referente ao Mico 2.3.11.
+    */
+    if (PortableServer::_the_poa_current) {
+      delete PortableServer::_the_poa_current;
+    }
+  #endif
+
     if (CORBA::is_nil(poa)) {
+    #ifdef VERBOSE
+      verbose->print("Obtendo POA...");
+    #endif
       CORBA::Object_var poa_obj = orb->resolve_initial_references("RootPOA");
       poa = PortableServer::POA::_narrow(poa_obj);
       poa_manager = poa->the_POAManager();
@@ -549,7 +574,8 @@ namespace openbus {
   openbusidl::rs::IRegistryService* Openbus::getRegistryService() {
     if (iRegistryService == NULL && ((scs::core::IComponent*)iComponent) != NULL) {
       CORBA::Object_var objRecep = iComponent->getFacetByName("IReceptacles");
-      scs::core::IReceptacles_var recep = scs::core::IReceptacles::_narrow(objRecep);
+      scs::core::IReceptacles_var recep = 
+        scs::core::IReceptacles::_narrow(objRecep);
       try {
         scs::core::ConnectionDescriptions_var conns =
           recep->getConnections("RegistryServiceReceptacle");
@@ -947,6 +973,9 @@ namespace openbus {
     mutex.lock();
   #endif
     if (connectionState == CONNECTED) {
+    #ifdef OPENBUS_MICO
+      orb->dispatcher()->remove(&renewLeaseCallback, CORBA::Dispatcher::Timer);
+    #endif
       if (iRegistryService) {
         delete iRegistryService;
       }

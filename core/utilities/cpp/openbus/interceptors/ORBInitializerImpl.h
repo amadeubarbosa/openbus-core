@@ -21,6 +21,7 @@ namespace openbus {
                               ,public IT_CORBA::RefCountedLocalObject 
     #endif
     {
+        static bool singleInstance;
         IOP::Codec_var codec;
         ServerInterceptor* serverInterceptor;
         ClientInterceptor* clientInterceptor;

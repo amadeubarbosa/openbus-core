@@ -45,10 +45,6 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
 };
 
 void termination_handler(int p) {
-#ifdef VERBOSE
-  verbose->print("Openbus::terminationHandlerCallback() BEGIN");
-  verbose->indent();
-#endif
   cout << "Encerrando o processo servidor..." << endl;
   try {
     registryService->unregister(registryId);
@@ -60,15 +56,10 @@ void termination_handler(int p) {
       bus->disconnect();
     }
   } catch(CORBA::Exception& e) {
-  #ifdef VERBOSE
-    verbose->print(
-      "Nao foi possivel se desconectar corretamente do barramento."); 
-  #endif
+    cout << "Nao foi possivel se desconectar corretamente do barramento." 
+      << endl; 
   }
   delete bus;
-#ifdef VERBOSE
-  verbose->dedent("Openbus::terminationHandlerCallback() END");
-#endif
 }
 
 int main(int argc, char* argv[]) {
