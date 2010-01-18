@@ -54,7 +54,8 @@ class ClientInterceptor extends InterceptorImpl implements
    * Intercepta o request para inserção de informação de contexto.
    */
   public void send_request(ClientRequestInfo ri) {
-    Log.INTERCEPTORS.info("ATINGI PONTO DE INTERCEPTAÇÃO CLIENTE!");
+    Log.INTERCEPTORS.info("Operação {" + ri.operation()
+      + "} interceptada no cliente.");
 
     /* Verifica se já obteve o barramento */
     if (bus == null) {
@@ -69,7 +70,8 @@ class ClientInterceptor extends InterceptorImpl implements
       return;
     }
 
-    Log.INTERCEPTORS.fine("TEM CREDENCIAL!");
+    Log.INTERCEPTORS.info("Credencial: " + credential.identifier + ","
+      + credential.owner);
 
     /* Insere a credencial no contexto do serviço */
     byte[] value = null;

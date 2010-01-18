@@ -61,7 +61,8 @@ class ServerInterceptor extends InterceptorImpl implements
    * {@inheritDoc}
    */
   public void receive_request_service_contexts(ServerRequestInfo ri) {
-    Log.INTERCEPTORS.fine("ATINGI PONTO DE INTERCEPTAÇÂO SERVIDOR!");
+    Log.INTERCEPTORS.info("Operação {" + ri.operation()
+      + "} interceptada no servidor.");
 
     /*
      * Work around para o LocateRequest
@@ -104,7 +105,7 @@ class ServerInterceptor extends InterceptorImpl implements
       Credential credential =
         CredentialHelper.extract(this.getCodec().decode_value(value,
           CredentialHelper.type()));
-      Log.INTERCEPTORS.fine("CREDENCIAL: " + credential.identifier + ","
+      Log.INTERCEPTORS.info("Credencial: " + credential.identifier + ","
         + credential.owner);
 
       /* Verifica se a credencial é válida */
@@ -120,7 +121,7 @@ class ServerInterceptor extends InterceptorImpl implements
         ri.set_slot(this.credentialSlot, credentialValue);
       }
       else {
-        Log.INTERCEPTORS.info("CREDENCIAL INVALIDA!");
+        Log.INTERCEPTORS.warning("CREDENCIAL INVALIDA!");
         throw new org.omg.CORBA.NO_PERMISSION(0,
           org.omg.CORBA.CompletionStatus.COMPLETED_NO);
       }
