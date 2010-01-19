@@ -429,7 +429,13 @@ namespace OpenbusAPI
       answer = Crypto.GenerateAnswer(challenge, privateKey, acsCertificate);
 
       int leaseTime = -1;
-      this.acs.loginByCertificate(name, answer, out this.credential, out leaseTime);
+      bool connect = this.acs.loginByCertificate(name, answer,
+        out this.credential, out leaseTime);
+      if (!connect) {
+        Log.SERVICES.Fatal("Não foi possível se conectar com o barramento.");
+        return null;
+      }
+
 
       this.leaseRenewer = new LeaseRenewer(this.Credential, this.leaseProvider,
         this.leaseExpiredCb);
