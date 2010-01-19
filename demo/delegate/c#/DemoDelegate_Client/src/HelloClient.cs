@@ -84,7 +84,7 @@ namespace DemoDelegate_Client
 
       Credential credential = openbus.Credential;
       credential._delegate = name;
-      openbus.setThreadCredencial(credential);
+      openbus.setThreadCredential(credential);
 
       for (int i = 0; i < 10; i++) {
         hello.sayHello(name);

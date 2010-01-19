@@ -498,7 +498,7 @@ namespace OpenbusAPI
     /// <param name="credencial"> Credencial a ser usada nas requisições a 
     /// serem realizadas.
     /// </param>
-    public void setThreadCredencial(Credential credencial) {
+    public void setThreadCredential(Credential credencial) {
       currentCredential = credencial;
     }
 
