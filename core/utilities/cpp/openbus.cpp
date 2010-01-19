@@ -299,7 +299,11 @@ namespace openbus {
   void Openbus::initialize() {
     hostBus = "";
     portBus = 2089;
+  #ifndef OPENBUS_MICO
     orb = CORBA::ORB::_nil();
+  #else
+    orb = 0;
+  #endif
     poa = PortableServer::POA::_nil();
     componentBuilder = 0;
   }
@@ -377,7 +381,11 @@ namespace openbus {
     #endif
       delete componentBuilder;
     }
+  #ifndef OPENBUS_MICO
     if (!CORBA::is_nil(orb)) {
+  #else
+    if (orb) {
+  #endif
     #ifdef VERBOSE
       verbose->print("Desligando o orb...");
     #endif
@@ -386,9 +394,9 @@ namespace openbus {
     * Alternativa para um memory leak.
     * Referente ao Mico 2.3.11.
     */
-/*      CORBA::Codeset::free();
+      CORBA::Codeset::free();
 
-      PInterceptor::PI::S_initializers_.erase(
+  /*    PInterceptor::PI::S_initializers_.erase(
         PInterceptor::PI::S_initializers_.begin(),
         PInterceptor::PI::S_initializers_.end());
   */      
@@ -396,7 +404,7 @@ namespace openbus {
     * Alternativa para o segundo problema apresentado em OPENBUS-427.
     * Referente ao Mico 2.3.11.
     */
-/*      PInterceptor::PI::S_client_req_int_.erase(
+  /*  PInterceptor::PI::S_client_req_int_.erase(
         PInterceptor::PI::S_client_req_int_.begin(),
         PInterceptor::PI::S_client_req_int_.end());
       PInterceptor::PI::S_server_req_int_.erase(
@@ -405,9 +413,13 @@ namespace openbus {
   */      
       orb->dispatcher()->remove(&renewLeaseCallback, CORBA::Dispatcher::Timer);
     #endif
+      if (ini->_info) {
+        delete ini->_info;
+      }
       orb->shutdown(1);
       orb->destroy();
-#ifdef OPENBUS_MICO
+    #ifdef OPENBUS_MICO
+      delete orb;
     #endif
     }
   #ifndef OPENBUS_MICO
@@ -1021,7 +1033,11 @@ namespace openbus {
     verbose->print(msg.str());
   #endif
     orb->shutdown(force);
+  #ifndef OPENBUS_MICO
     orb = CORBA::ORB::_nil();
+  #else
+    orb = 0;
+  #endif
   #ifdef VERBOSE
     verbose->dedent("Openbus::finish() END");
   #endif

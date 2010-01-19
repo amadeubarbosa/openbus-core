@@ -159,7 +159,11 @@ namespace openbus {
     /**
     * ORB. 
     */
+    #ifndef OPENBUS_MICO
       CORBA::ORB_var orb;
+    #else
+      CORBA::ORB* orb;
+    #endif
 
     /**
     * POA.

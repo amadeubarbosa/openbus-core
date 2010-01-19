@@ -22,8 +22,8 @@ namespace openbus {
     #endif
 /*    clientInterceptor = 0;
       serverInterceptor = 0;
-      _info = 0;
       */
+      _info = 0;
     #ifdef VERBOSE
       Openbus::verbose->dedent("ORBInitializerImpl::ORBInitializerImpl() END");
     #endif
@@ -59,6 +59,7 @@ namespace openbus {
       Openbus::verbose->print("ORBInitializerImpl::pre_init() BEGIN");
       Openbus::verbose->indent();
     #endif
+      _info = info;
     #ifdef OPENBUS_MICO
 /*      if (clientInterceptor) {
         delete clientInterceptor;
@@ -73,8 +74,7 @@ namespace openbus {
       if (!singleInstance) {
         singleInstance = true;
     #endif
-      _info = info;
-      IOP::CodecFactory_var codec_factory = info->codec_factory();
+      IOP::CodecFactory_var codec_factory = _info->codec_factory();
       IOP::Encoding cdr_encoding = {IOP::ENCODING_CDR_ENCAPS, 1, 2};
       codec = codec_factory->create_codec(cdr_encoding);
 
@@ -85,12 +85,12 @@ namespace openbus {
       PortableInterceptor::ClientRequestInterceptor_var clientInterceptor = \
           new ClientInterceptor(codec);
     #endif
-      info->add_client_request_interceptor(clientInterceptor);
+      _info->add_client_request_interceptor(clientInterceptor);
 
-      slotid = info->allocate_slot_id();
+      slotid = _info->allocate_slot_id();
 
       CORBA::Object_var init_ref = 
-        info->resolve_initial_references("PICurrent");
+        _info->resolve_initial_references("PICurrent");
       Current_var pi_current = PortableInterceptor::Current::_narrow(init_ref);
 
       serverInterceptor = new ServerInterceptor(
@@ -100,7 +100,7 @@ namespace openbus {
 
       PortableInterceptor::ServerRequestInterceptor_var 
         serverRequestInterceptor = serverInterceptor ;
-      info->add_server_request_interceptor(serverRequestInterceptor) ;
+      _info->add_server_request_interceptor(serverRequestInterceptor) ;
     #ifdef OPENBUS_MICO
       }
     #endif

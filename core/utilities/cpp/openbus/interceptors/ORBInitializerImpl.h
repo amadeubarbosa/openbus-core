@@ -25,9 +25,9 @@ namespace openbus {
         IOP::Codec_var codec;
         ServerInterceptor* serverInterceptor;
         ClientInterceptor* clientInterceptor;
-        ORBInitInfo* _info;
         SlotId slotid;
       public:
+        ORBInitInfo* _info;
         ORBInitializerImpl();
         ~ORBInitializerImpl();
 
