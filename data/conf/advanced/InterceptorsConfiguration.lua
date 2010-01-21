@@ -3,5 +3,5 @@
 --
 return {
   contextID = 1234,
-  credential_type = "IDL:openbusidl/acs/Credential:1.0"
+  credential_type = "IDL:openbusidl/Credential:1.0"
 }

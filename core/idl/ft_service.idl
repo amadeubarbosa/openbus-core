@@ -13,8 +13,10 @@ module ft {
  * \brief Representa o serviço tolerante a falhas.
  */
 interface IFaultTolerantService {
-    
-
+    /**
+     * \brief Permite a configuracao de parametros no sturtup do componente
+	*/
+    void init();
     /**
      * \brief Verifica se o serviço está vivo ou sem erros.
 
@@ -28,7 +30,7 @@ interface IFaultTolerantService {
 
     void kill();
     
-    void updateStatus();
+    boolean updateStatus(in any param);
     
 };
 

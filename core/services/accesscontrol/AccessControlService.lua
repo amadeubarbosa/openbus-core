@@ -18,6 +18,7 @@ local format = string.format
 local luuid = require "uuid"
 local lce = require "lce"
 local oil = require "oil"
+local Utils = require "openbus.util.Utils"
 local Openbus = require "openbus.Openbus"
 local SmartComponent = require "openbus.faulttolerance.SmartComponent"
 local OilUtilities = require "openbus.util.OilUtilities"
@@ -165,29 +166,6 @@ function ACSFacet:logout(credential)
 end
 
 ---
--- Recupera o smart proxy para o Serviço de Registro
---
--- @return Smart proxy
---
-function ACSFacet:getSmartRSInstance()
-  if self.smartRS == nil then
-    local ftconfig = assert(loadfile(
-      DATA_DIR .. "/conf/RSFaultToleranceConfiguration.lua"))()
-    local keys = {}
-    keys[Utils.REGISTRY_SERVICE_KEY] = {
-      interface = Utils.REGISTRY_SERVICE_INTERFACE,
-      hosts = ftconfig.hosts.RS,
-    }
-    keys[Utils.FAULT_TOLERANT_RS_KEY] = {
-      interface = Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
-      hosts = ftconfig.hosts.FTRS,
-    }
-    self.smartRS = SmartComponent(Openbus:getORB(), "RS", keys)
-  end
-  return self.smartRS
-end
-
----
 --Verifica se uma credencial é válida.
 --
 --@param credential A credencial.
@@ -199,10 +177,22 @@ function ACSFacet:isValid(credential)
       credential.owner.."/"..credential.delegate.."}")
   local entry = self.entries[credential.identifier]
   if not entry then
-    Log:access_control("A credencial {"..credential.identifier.." - "..
+  --VAI BUSCAR NAS REPLICAS
+    local ftFacet = self.context.IFaultTolerantService
+    local gotEntry = ftFacet:updateStatus(credential)
+    if gotEntry then
+       --tenta de novo
+	   entry = self.entries[credential.identifier]
+    end
+    
+    if not entry then
+    --realmente não encontrou
+	   Log:access_control("A credencial {"..credential.identifier.." - "..
         credential.owner.."/"..credential.delegate.."} não é válida.")
-    return false
+	   return false
+	end
   end
+
   if entry.credential.delegate ~= "" and not entry.certified then
     Log:access_control("A credencial {"..credential.identifier.." - "..
         credential.owner.."/"..credential.delegate.."} não é válida.")
@@ -259,6 +249,45 @@ function ACSFacet:addObserver(observer, credentialIdentifiers)
   return observerId
 end
 
+
+---
+--Verifica se uma credencial é válida e retorna sua entrada completa.
+--
+--@param credential A credencial.
+--
+--@return a credencial caso exista, ou nil caso contrário.
+---
+function ACSFacet:getEntryCredential(self, credential)
+
+
+  local emptyEntry = {     
+                credential = {  identifier = "",  
+                                owner = "",  
+                                delegate = "" },
+			    certified = false,
+			    lease = 0,
+			    observers = {},
+			    observedBy = ""
+			}
+  local entry = self.entries[credential.identifier]
+
+  if not entry then
+    return emptyEntry
+  end
+  if entry.credential.identifier ~= credential.identifier then
+    return emptyEntry
+  end
+  if entry.credential.delegate ~= "" and not entry.certified then
+    return emptyEntry
+  end
+  return entry
+end
+
+function ACSFacet:getAllEntryCredential(self)
+  return self.entries
+end
+
+
 ---
 --Adiciona uma credencial à lista de credenciais de um observador.
 --
@@ -270,7 +299,23 @@ end
 function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifier)
   local entry = self.entries[credentialIdentifier]
   if not entry then
-    return false
+    --VAI BUSCAR NAS REPLICAS
+    local ftFacet = self.context.IFaultTolerantService
+    local params = { credential = credential, 
+				    notInHostAdd = self.config.hostName..":"
+				                   ..tostring(self.config.hostPort) }
+    local gotEntry = ftFacet:updateStatus(params)
+    if gotEntry then
+       --tenta de novo
+	   entry = self.entries[credential.identifier]
+    end
+    
+    if not entry then
+    --realmente não encontrou
+	   Log:access_control("A credencial {"..credential.identifier.." - "..
+        credential.owner.."/"..credential.delegate.."} não é válida.")
+	   return false
+	end
   end
 
   local observerEntry = self.observers[observerIdentifier]
@@ -351,6 +396,21 @@ function ACSFacet:addEntry(name, certified)
     observers = {},
     observedBy = {}
   }
+  self.credentialDB:insert(entry)
+  self.entries[entry.credential.identifier] = entry
+  return entry
+end
+
+---
+--Adiciona uma credencial ao banco de dados.
+--
+--@param name O nome da entidade para a qual a credencial será gerada.
+--
+--@return A credencial.
+---
+function ACSFacet:addEntryCredential(self, entry)
+  local duration = self.lease
+  entry.lease = { lastUpdate = os.time(), duration = duration }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
   return entry
@@ -806,11 +866,108 @@ end
 --------------------------------------------------------------------------------
 
 FaultToleranceFacet = FaultTolerantService.FaultToleranceFacet
+FaultToleranceFacet.ftconfig = {}
 
-function FaultToleranceFacet:updateStatus(self)
+function FaultToleranceFacet:init()
+  self.ftconfig = assert(loadfile(DATA_DIR .."/conf/ACSFaultToleranceConfiguration.lua"))()
+end
+
+function FaultToleranceFacet:updateStatus(params)
 	--Atualiza estado das credenciais
 	Log:faulttolerance("[updateStatus] Atualiza estado das credenciais.")
+	local acs = self.context.IAccessControlService
+
+	local notInHostAdd = acs.config.hostName..":"
+				   ..tostring(acs.config.hostPort) 
+
+	local selfRef = "corbaloc::" .. notInHostAdd .. Utils.ACCESS_CONTROL_SERVICE_KEY
+
+    if params._anyval == "all" then
+        --sincroniza todas as credenciais a mais das outras replicas 
+        --com esta
+		Log:faulttolerance("[updateStatus] Sincronizando base de credenciais com as replicas exceto em "..notInHostAdd)
+		  local updated = false
+		  local i = 1
+		  if # self.ftconfig.hosts.ACS > 1 then
+		  --nenhuma replica para buscar
+			return false
+		  end
+		  repeat
+			if self.ftconfig.hosts.ACS[i] ~= selfRef then
+			   local ret, stop, acs = oil.pcall(Utils.fetchService, 
+												Openbus:getORB(), 
+												self.ftconfig.hosts.ACS[i], 
+												Utils.ACCESS_CONTROL_SERVICE_KEY)
+				
+				if acs then
+					local repEntries = acs:getAllEntryCredential(credential)
+					local acsFacet = self.context.IAccessControlService
+					local localEntries = acsFacet.entries
+					--SINCRONIZA
+					for _,repEntry in pairs(repEntries) do
+					   local add = true
+					   for _,locEntry in pairs(locEntries) do
+							if locEntry.credential.identifier == repEntry.credential.identifier then
+								add = false
+								break
+							end
+					   end
+					   if add then
+						   acsFacet:addEntryCredential(repEntry)
+						   updated = true
+					   end
+					end
+				end
+			end
+			i = i + 1 	
+		  until i == # self.ftconfig.hosts.ACS
+		  return updated
+    else
+        --procura por uma credencial específica
+        --params._anyval contem a credencial
+        local credential = params._anyval
+        Log:faulttolerance("[updateStatus] Buscando uma credencial nas replicas exceto em "..notInHostAdd)
+  
+		local entryCredential = nil
+		local i = 1
+		  
+		if # self.ftconfig.hosts.ACS > 1 then
+		  --nenhuma replica para buscar
+			return nil
+		end
+		repeat
+			if self.ftconfig.hosts.ACS[i] ~= selfRef then
+			   local ret, stop, acs = oil.pcall(Utils.fetchService, 
+												Openbus:getORB(), 
+												self.ftconfig.hosts.ACS[i], 
+												Utils.ACCESS_CONTROL_SERVICE_KEY)
+				
+				if acs then
+					entryCredential = acs:getEntryCredential(credential)
+				end
+			end
+			 i = i + 1 	
+		until entryCredential or i == # self.ftconfig.hosts.ACS
+        
+		if entryCredential then
+			if not entryCredential.certified then
+			   return false
+			else
+			   --ADICIONA LOCALMENTE
+			   local acsFacet = self.context.IAccessControlService
+			   local entry = acsFacet:addEntryCredential(entryCredential)
+			end
+		else
+		   return false
+		end 
+    end
+  
+    return true	
 end
+
+
+
+
 
 --------------------------------------------------------------------------------
 -- Faceta IComponent
@@ -908,6 +1065,8 @@ function startup(self)
     end
   end
   acs.leaseProvider = LeaseProvider(acs.checkExpiredLeases, acs.lease)
+  
+  self.context.IFaultTolerantService:init()
   self.context.IFaultTolerantService:setStatus(true)
 end
 

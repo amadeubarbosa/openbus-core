@@ -26,6 +26,8 @@ local Log = require "openbus.util.Log"
 local oop = require "loop.simple"
 local Utils = require "openbus.util.Utils"
 
+local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+
 ---
 --Componente (membro) responsável pelo Serviço de Registro.
 ---
@@ -482,10 +484,16 @@ end
 --------------------------------------------------------------------------------
 
 FaultToleranceFacet = FaultTolerantService.FaultToleranceFacet
+FaultToleranceFacet.ftconfig = {}
 
-function FaultToleranceFacet:updateStatus(self)
+function FaultToleranceFacet:init()
+  self.ftconfig = assert(loadfile(DATA_DIR .."/conf/RSFaultToleranceConfiguration.lua"))()
+end
+
+function FaultToleranceFacet:updateStatus(params)
 	--Atualiza estado das ofertas
 	Log:faulttolerance("[updateStatus] Atualiza estado das ofertas.")
+	return false
 end
 
 --------------------------------------------------------------------------------
@@ -499,8 +507,6 @@ end
 ---
 function startup(self)
   Log:registry("Pedido de startup para serviço de registro")
-  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-
   local mgm = self.context.IManagement
   local rs = self.context.IRegistryService
   local config = rs.config
@@ -619,6 +625,8 @@ function startup(self)
   mgm:loadData()
 
   rs.started = true
+  
+  self.context.IFaultTolerantService:init()
   self.context.IFaultTolerantService:setStatus(true)
   
   Log:registry("Serviço de registro iniciado")
