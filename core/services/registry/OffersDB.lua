@@ -121,15 +121,19 @@ end
 --erro, caso contrário.
 ---
 function delete(self, offerEntry)
+  local message
   if not self.dbOffers[offerEntry.identifier] then
-    return false, "A oferta especificada não existe."
+    message = "[DB] Oferta "..offerEntry.identifier.." não existe."
+    return false, message
   end
   local status, errorMessage = self:removeOffer(offerEntry)
   if not status then
-    return false, errorMessage
+    message = "[DB] Oferta "..offerEntry.identifier.." - ERRO:" .. errorMessage
+    return false, message
   end
   self.dbOffers[offerEntry.identifier] = nil
-  return true
+  message = "[DB] Oferta "..offerEntry.identifier.." REMOVIDA."
+  return true, message
 end
 
 ---

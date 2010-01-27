@@ -12,6 +12,7 @@ local error = error
 local next = next
 local format = string.format
 local print = print
+local tostring = tostring
 
 local luuid = require "uuid"
 local oil = require "oil"
@@ -298,7 +299,12 @@ end
 --@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:find(facets)
+  local ftFacet = self.context.IFaultTolerantService
+  --atualiza estado em todas as réplicas
 
+  local params = { facets = facets, criteria = {} }
+  ftFacet:updateStatus(params)
+  
   local selectedOffers = {}
 -- Se nenhuma faceta foi discriminada, todas as ofertas de serviço
 -- são retornadas.
@@ -337,6 +343,12 @@ end
 --@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:findByCriteria(facets, criteria)
+  local ftFacet = self.context.IFaultTolerantService
+  --atualiza estado em todas as réplicas
+
+  local params = { facets = facets, criteria = criteria}
+  ftFacet:updateStatus(params)
+  
   local selectedOffers = {}
 -- Se nenhuma faceta foi discriminada e nenhum critério foi
 -- definido, todas as ofertas de serviço são retornadas.
@@ -366,6 +378,70 @@ function RSFacet:findByCriteria(facets, criteria)
         " ofertas que implementam as facetas discriminadas.")
   end
   return selectedOffers
+end
+
+function RSFacet:localFind(facets, criteria)
+	Log:faulttolerance("[localFind] Buscando ofertas somente na replica local.")
+	local selectedOffersEntries = {}
+	
+	-- Se nenhuma faceta foi discriminada e nenhum critério foi
+	-- definido, todas as ofertas de serviço que não existem localmente
+	-- devem ser retornadas.
+	if (#facets == 0 and #criteria == 0) then
+    	for i, offerEntry in pairs(self.offersByIdentifier) do
+    		selectedOffersEntries[i] = {}
+			selectedOffersEntries[i].identifier = offerEntry.identifier
+			selectedOffersEntries[i].offer = offerEntry.offer
+			selectedOffersEntries[i].credential = offerEntry.credential
+    	end
+    	
+	elseif (#facets > 0 and #criteria == 0)  then
+	-- Para cada oferta de serviço disponível, selecionar-se
+  	-- a oferta que implementa todas as facetas discriminadas.
+  		for i, offerEntry in pairs(self.offersByIdentifier) do
+			local hasAllFacets = true
+			for _, facet in ipairs(facets) do
+				if not offerEntry.facets[facet] then
+				  hasAllFacets = false
+				  break
+				end
+			end
+			if hasAllFacets then
+				selectedOffersEntries[i] = {}
+				selectedOffersEntries[i].identifier = offerEntry.identifier
+				selectedOffersEntries[i].offer = offerEntry.offer
+				selectedOffersEntries[i].credential = offerEntry.credential
+			end
+		end
+		Log:registry("Encontrei "..#selectedOffersEntries..
+			 " entradas de ofertas que implementam as facetas discriminadas.")
+  
+	else  
+	-- Para cada oferta de serviço disponível, seleciona-se
+	-- a oferta que implementa todas as facetas discriminadas,
+	-- E, possui todos os critérios especificados.
+		for i, offerEntry in pairs(self.offersByIdentifier) do
+		  if self:meetsCriteria(criteria, offerEntry.properties) then
+			local hasAllFacets = true
+			for _, facet in ipairs(facets) do
+			  if not offerEntry.facets[facet] then
+				hasAllFacets = false
+				break
+			  end
+			end
+			if hasAllFacets then
+				selectedOffersEntries[i] = {}
+				selectedOffersEntries[i].identifier = offerEntry.identifier
+				selectedOffersEntries[i].offer = offerEntry.offer
+				selectedOffersEntries[i].credential = offerEntry.credential
+			end
+		  end
+		end
+		Log:registry("Com critério, encontrei "..#selectedOffersEntries..
+			" entradas de ofertas que implementam as facetas discriminadas.")
+	end
+
+	return selectedOffersEntries
 end
 
 ---
@@ -407,7 +483,12 @@ function RSFacet:credentialWasDeleted(credential)
     for identifier, offerEntry in pairs(credentialOffers) do
       self.offersByIdentifier[identifier] = nil
       Log:registry("Removida oferta "..identifier.." do índice por id")
-      self.offersDB:delete(offerEntry)
+      local succ, msg = self.offersDB:delete(offerEntry)
+      if succ then
+      	Log:registry("Removida oferta "..identifier.." do DB")
+      else
+      	Log:registry(msg)
+      end
     end
   else
     Log:registry("Não havia ofertas da credencial "..credential.identifier)
@@ -493,7 +574,84 @@ end
 function FaultToleranceFacet:updateStatus(params)
 	--Atualiza estado das ofertas
 	Log:faulttolerance("[updateStatus] Atualiza estado das ofertas.")
-	return false
+    if not self.ftconfig then
+		Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
+		Log:warn("[updateStatus] Não foi possível executar 'updatestatus'")
+		return false
+	end
+	
+	if # self.ftconfig.hosts.RS <= 1 then
+		Log:faulttolerance("[updateStatus] Nenhuma replica para atualizar ofertas.")
+		return false
+	end
+    --	O atributo _anyval so retorna em chamadas remotas, em chamadas locais (mesmo processo) 
+    --	deve-se acessar o parametro diretamente, além disso , 
+    --  passar uma tabela no any tbm so funciona porque eh local
+	-- se fosse uma chamada remota teria q ter uma struct pois senao da problema de marshall
+	local input
+	if not params._anyval then
+		input = params
+	else
+	--chamada remota
+		input = params._anyval
+	end
+	
+	local facets = {}
+	local criteria = {}
+
+	if input ~= "all" then
+		facets = input.facets
+		criteria = input.criteria
+	end
+
+	local rgs = self.context.IRegistryService
+
+	local notInHostAdd = rgs.config.registryServerHostName..":"
+				   ..tostring(rgs.config.registryServerHostPort) 
+
+	local selfRef = "corbaloc::" .. notInHostAdd .. Utils.REGISTRY_SERVICE_KEY
+
+	Log:faulttolerance("[updateStatus] Sincronizando base de ofertas com as replicas exceto em "..notInHostAdd)
+	local updated = false
+	local i = 1
+
+	repeat
+	if self.ftconfig.hosts.RS[i] ~= selfRef then
+	   local ret, stop, remoteRS = oil.pcall(Utils.fetchService, 
+										Openbus:getORB(), 
+										self.ftconfig.hosts.RS[i], 
+										Utils.REGISTRY_SERVICE_KEY)
+		
+		if remoteRS then
+			local selectedOffersEntries = remoteRS:localFind(facets, criteria)
+			
+			--SINCRONIZA
+			--para todas as ofertas encontradas nas replicas
+			for i, offerEntryFound in pairs(selectedOffersEntries) do
+				-- verifica se ja existem localmente
+				for j, offerEntry in pairs(rgs.offersByIdentifier) do
+					local insert = true
+						if offerEntryFound == offerEntry then
+						--se ja existir, nao insere
+						insert = false
+						break
+					end
+					
+				end
+				if insert then  
+				  -- se nao existir,
+				  --insere no banco local
+				  rgs.offersDB:insert(offerEntryFound) 
+				  --insere na lista local
+				  rgs.offersByIdentifier.insert(offerEntryFound)
+				  updated = true
+				end
+			end
+		end
+	end
+	i = i + 1 	
+	until i == # self.ftconfig.hosts.RS
+	return updated
 end
 
 --------------------------------------------------------------------------------
@@ -610,7 +768,7 @@ function startup(self)
   end
 
   -- Referência à faceta de gerenciamento do ACS
-  mgm.acsmgm = Openbus:getACSIComponent():getFacetByName("IManagement")
+  mgm.acsmgm = acsIComp:getFacetByName("IManagement")
   mgm.acsmgm = orb:narrow(mgm.acsmgm, "IDL:openbusidl/acs/IManagement:1.0")
   -- Administradores dos serviços
   mgm.admins = {}

@@ -257,7 +257,7 @@ end
 --
 --@return a credencial caso exista, ou nil caso contrário.
 ---
-function ACSFacet:getEntryCredential(self, credential)
+function ACSFacet:getEntryCredential(credential)
 
 
   local emptyEntry = {     
@@ -283,7 +283,7 @@ function ACSFacet:getEntryCredential(self, credential)
   return entry
 end
 
-function ACSFacet:getAllEntryCredential(self)
+function ACSFacet:getAllEntryCredential()
   return self.entries
 end
 
@@ -875,6 +875,30 @@ end
 function FaultToleranceFacet:updateStatus(params)
 	--Atualiza estado das credenciais
 	Log:faulttolerance("[updateStatus] Atualiza estado das credenciais.")
+	
+	if not self.ftconfig then
+		Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
+		Log:warn("[updateStatus] Não foi possível executar 'updatestatus'")
+		return false
+	end
+	
+	if # self.ftconfig.hosts.ACS <= 1 then
+	  	Log:faulttolerance("[updateStatus] Nenhuma replica para atualizar credenciais.")
+		return false
+	end
+	
+	--	O atributo _anyval so retorna em chamadas remotas, em chamadas locais (mesmo processo) 
+    --	deve-se acessar o parametro diretamente, além disso , 
+    --  passar uma tabela no any tbm so funciona porque eh local
+	-- se fosse uma chamada remota teria q ter uma struct pois senao da problema de marshall
+	local input
+	if not params._anyval then
+		input = params
+	else
+	--chamada remota
+		input = params._anyval
+	end
+	
 	local acs = self.context.IAccessControlService
 
 	local notInHostAdd = acs.config.hostName..":"
@@ -882,16 +906,13 @@ function FaultToleranceFacet:updateStatus(params)
 
 	local selfRef = "corbaloc::" .. notInHostAdd .. Utils.ACCESS_CONTROL_SERVICE_KEY
 
-    if params._anyval == "all" then
+    if input == "all" then
         --sincroniza todas as credenciais a mais das outras replicas 
         --com esta
 		Log:faulttolerance("[updateStatus] Sincronizando base de credenciais com as replicas exceto em "..notInHostAdd)
 		  local updated = false
 		  local i = 1
-		  if # self.ftconfig.hosts.ACS > 1 then
-		  --nenhuma replica para buscar
-			return false
-		  end
+		  
 		  repeat
 			if self.ftconfig.hosts.ACS[i] ~= selfRef then
 			   local ret, stop, acs = oil.pcall(Utils.fetchService, 
@@ -900,7 +921,7 @@ function FaultToleranceFacet:updateStatus(params)
 												Utils.ACCESS_CONTROL_SERVICE_KEY)
 				
 				if acs then
-					local repEntries = acs:getAllEntryCredential(credential)
+					local repEntries = acs:getAllEntryCredential()
 					local acsFacet = self.context.IAccessControlService
 					local localEntries = acsFacet.entries
 					--SINCRONIZA
@@ -924,17 +945,12 @@ function FaultToleranceFacet:updateStatus(params)
 		  return updated
     else
         --procura por uma credencial específica
-        --params._anyval contem a credencial
-        local credential = params._anyval
+        local credential = input
         Log:faulttolerance("[updateStatus] Buscando uma credencial nas replicas exceto em "..notInHostAdd)
   
 		local entryCredential = nil
 		local i = 1
 		  
-		if # self.ftconfig.hosts.ACS > 1 then
-		  --nenhuma replica para buscar
-			return nil
-		end
 		repeat
 			if self.ftconfig.hosts.ACS[i] ~= selfRef then
 			   local ret, stop, acs = oil.pcall(Utils.fetchService, 

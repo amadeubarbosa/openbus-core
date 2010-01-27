@@ -35,6 +35,16 @@ typedef sequence<ServiceOffer> ServiceOfferList;
 typedef Identifier RegistryIdentifier;
 
 /**
+ * \brief Representa uma entrada de oferta de serviço.
+ */
+struct ServiceOfferEntry {
+    ServiceOffer offer; /**< \brief Oferta de servico. */
+    openbusidl::Credential credential;/**< \brief Credential do servico que disponibiliza a oferta. */
+    RegistryIdentifier identifier;/** \brief O identificador do registro de um serviço. */
+};
+typedef sequence<ServiceOfferEntry> ServiceOfferEntryList;
+
+/**
  * \brief Representa uma faceta.
  */
 typedef string Facet;
@@ -89,8 +99,7 @@ interface IRegistryService {
     ServiceOfferList find (in FacetList facets);
 
     /**
-     * \brief Realiza uma busca por ofertas através de uma lista de facetas e 
-     *   critérios.
+     * \brief Realiza uma busca por ofertas através de uma lista de facetas e critérios.
      * 
      *   Serão selecionadas as ofertas de serviços que implementam todas as 
      *   facetas descritas em facets, e, que satisfaçam aos critérios 
@@ -102,6 +111,22 @@ interface IRegistryService {
      * \return As ofertas encontradas.
      */
     ServiceOfferList findByCriteria (in FacetList facets, in PropertyList criteria);
+    
+    
+    /**
+     * \brief Realiza uma busca por ofertas através de uma lista de facetas e 
+     *   critérios, se forem especificados.
+     * 
+     *   Serão selecionadas as ofertas de serviços que implementam todas as 
+     *   facetas descritas em facets, e, que satisfaçam aos critérios 
+     *   (propriedades) especificados.
+     *
+     * \param facets As facetas da busca.
+     * \param criteria Os critérios da busca.
+     *
+     * \return As entradas das ofertas encontradas.
+     */
+    ServiceOfferEntryList localFind (in FacetList facets, in PropertyList criteria);
 };
 
 /*----------------------------- Interface ------------------------------*/
