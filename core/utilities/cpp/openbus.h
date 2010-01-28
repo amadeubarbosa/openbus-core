@@ -147,9 +147,9 @@ namespace openbus {
       openbusidl::acs::ILeaseProvider_var iLeaseProvider;
 
     /**
-    * Ponteiro para a faceta IComponent. 
+    * Ponteiro para o IComponent do servico de acesso. 
     */
-      scs::core::IComponent_var iComponent;
+      scs::core::IComponent_var iComponentAccessControlService;
 
     /**
     * Inicializador do ORB. 

@@ -293,7 +293,7 @@ namespace openbus {
     iRegistryService = 0;
     iSessionService = 0;
     iLeaseProvider = ILeaseProvider::_nil();
-    iComponent = scs::core::IComponent::_nil();
+    iComponentAccessControlService = scs::core::IComponent::_nil();
   }
 
   void Openbus::initialize() {
@@ -337,7 +337,7 @@ namespace openbus {
     iAccessControlService = 
       openbusidl::acs::IAccessControlService::_narrow(objACS);
     iLeaseProvider = openbusidl::acs::ILeaseProvider::_narrow(objLP);
-    iComponent = scs::core::IComponent::_narrow(objIC);
+    iComponentAccessControlService = scs::core::IComponent::_narrow(objIC);
   #ifdef VERBOSE
     verbose->dedent("Openbus::createProxyToIAccessControlService() END");
   #endif
@@ -411,12 +411,21 @@ namespace openbus {
         PInterceptor::PI::S_server_req_int_.begin(),
         PInterceptor::PI::S_server_req_int_.end());
   */      
-      orb->dispatcher()->remove(&renewLeaseCallback, CORBA::Dispatcher::Timer);
+    #ifdef VERBOSE
+      verbose->print("Removendo callback de renovação de credencial...");
     #endif
+      orb->dispatcher()->remove(&renewLeaseCallback, CORBA::Dispatcher::Timer);
       if (ini->_info) {
         delete ini->_info;
       }
+    #endif
+    #ifdef VERBOSE
+      verbose->print("Executando orb->shutdown(1) ...");
+    #endif
       orb->shutdown(1);
+    #ifdef VERBOSE
+      verbose->print("Executando orb->destroy() ...");
+    #endif
       orb->destroy();
     #ifdef OPENBUS_MICO
       delete orb;
@@ -584,15 +593,27 @@ namespace openbus {
   }
 
   openbusidl::rs::IRegistryService* Openbus::getRegistryService() {
-    if (iRegistryService == NULL && ((scs::core::IComponent*)iComponent) != NULL) {
-      CORBA::Object_var objRecep = iComponent->getFacetByName("IReceptacles");
+  #ifdef VERBOSE
+    verbose->print("Openbus::getRegistryService() BEGIN");
+    verbose->indent();
+  #endif
+    scs::core::IComponent_var iComponentRegistryService;
+    if ((scs::core::IComponent*) iComponentAccessControlService) {
+      CORBA::Object_var objRecep = 
+        iComponentAccessControlService->getFacetByName("IReceptacles");
       scs::core::IReceptacles_var recep = 
         scs::core::IReceptacles::_narrow(objRecep);
       try {
         scs::core::ConnectionDescriptions_var conns =
           recep->getConnections("RegistryServiceReceptacle");
         if (conns->length() > 0) {
-          CORBA::Object* objref = conns[(CORBA::ULong) 0].objref;
+        #ifdef VERBOSE
+          cout << conns->length() << endl;
+          verbose->print("Adquirindo RegistryService...");
+        #endif
+          CORBA::Object_var objref = conns[(CORBA::ULong) 0].objref;
+          iComponentRegistryService = scs::core::IComponent::_narrow(objref);
+          objref = iComponentRegistryService->getFacetByName("IRegistryService");
           iRegistryService = openbusidl::rs::IRegistryService::_narrow(objref);
         }
       } catch (scs::core::InvalidName& e) {
@@ -603,6 +624,9 @@ namespace openbus {
         // TODO: necessário fazer um throw?
       }
     }
+  #ifdef VERBOSE
+    verbose->dedent("Openbus::getRegistryService() END");
+  #endif
     return iRegistryService;
   } 
 
