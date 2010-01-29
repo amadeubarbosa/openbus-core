@@ -544,13 +544,10 @@ function Openbus:disconnect()
       self.connectionState = 1
       log:error("OpenBus: Não foi possível realizar o logout. Erro " .. err)
       return false
-    end
-    if status then
-      self:_reset()
     else
-      self.connectionState = 1
+      self:_reset()
     end
-    return status
+    return true
   else
     return false
   end
