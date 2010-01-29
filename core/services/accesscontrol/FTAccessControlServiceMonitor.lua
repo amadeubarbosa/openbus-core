@@ -33,7 +33,7 @@ oil.verbose:level(2)
 orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
 
 ---
---Componente (membro) responsÃ¡vel pelo Monitor do ServiÃ§o de Controle de Acesso
+--Componente (membro) responsável pelo Monitor do Serviço de Controle de Acesso
 ---
 module("core.services.accesscontrol.FTAccessControlServiceMonitor")
 
@@ -59,7 +59,7 @@ function FTACSMonitorFacet:getService()
 end
 
 ---
---Monitora o serviÃ§o de controle de acesso e cria uma nova rÃ©plica se necessÃ¡rio.
+--Monitora o serviço de controle de acesso e cria uma nova réplica se necessário.
 ---
 function FTACSMonitorFacet:monitor()
 
@@ -78,7 +78,7 @@ function FTACSMonitorFacet:monitor()
 
 	--verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
         if ok then
-			--se objeto remoto estÃ¡ em estado de falha, precisa ser reinicializado
+			--se objeto remoto está em estado de falha, precisa ser reinicializado
 			if not res then
 			reinit = true
 				Log:faulttolerance("[Monitor SCA] Servico de Controle de Acesso em estado de falha. Matando o processo...")
@@ -116,7 +116,7 @@ function FTACSMonitorFacet:monitor()
 			
 				Log:faulttolerance("[Monitor SCA] disconnect executed successfully!")
 			
-				Log:faulttolerance("[Monitor SCA] Espera 3 minutos para que dÃª tempo do Oil liberar porta...")
+				Log:faulttolerance("[Monitor SCA] Espera 3 minutos para que dê tempo do Oil liberar porta...")
 
 				--os.execute("sleep 180")
 				
@@ -135,7 +135,7 @@ function FTACSMonitorFacet:monitor()
 				os.execute("start "..BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort)
 			end
 
-	        -- Espera 5 segundos para que dÃª tempo do SCA ter sido levantado
+	        -- Espera 5 segundos para que dê tempo do SCA ter sido levantado
 	        os.execute("sleep 5")
 
 			
@@ -155,7 +155,7 @@ function FTACSMonitorFacet:monitor()
 
 			timeToTry = timeToTry + 1
 
-		--TODO: colocar o timeToTry de acordo com o tempo do monitor da rÃ©plica?
+		--TODO: colocar o timeToTry de acordo com o tempo do monitor da réplica?
 		until self.recConnId ~= nil or timeToTry == 1000
 		    
 

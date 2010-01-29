@@ -6,11 +6,11 @@
 module openbusidl {
 
 	/**
-	 * \brief M√≥dulo do Monitor do Servi√ßo de Tolerante a Falhas.
+	 * \brief MÛdulo do Monitor do ServiÁo de Tolerante a Falhas.
 	 */
 	module ft {
 
-		/** \brief Representa o servi√ßo tolerante a falhas. */
+		/** \brief Representa o serviÁo tolerante a falhas. */
 		typedef IFaultTolerantService ftService;
 
 		/**
@@ -20,7 +20,7 @@ module openbusidl {
 
 
 		    /**
-		     * \brief Monitora o servi√ßo e cria uma nova r√©plica se necess√°rio.
+		     * \brief Monitora o serviÁo e cria uma nova rÈplica se necess·rio.
 		     *
 		     */
 		    void monitor();

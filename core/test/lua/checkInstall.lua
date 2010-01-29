@@ -1,5 +1,5 @@
 --
--- Teste para verificar se a instala√ß√£o do Openbus foi concluida com sucesso
+-- Teste para verificar se a instalaÁ„o do Openbus foi concluida com sucesso
 -- $Id: testServices.lua $
 --
 require "oil"
@@ -54,7 +54,7 @@ function run()
   orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
 
 
-  -- Testando se o usu√°rio de teste est√° habilitado
+  -- Testando se o usu·rio de teste est· habilitado
   success, credential = accessControlService:loginByPassword("tester", "tester")
   if success then
      print("[ERRO] O usuario de testes esta habilitado.")

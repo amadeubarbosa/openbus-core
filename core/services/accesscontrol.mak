@@ -50,7 +50,7 @@ NO_SCRIPTS=YES
 USE_NODEPEND=YES
 
 #############################
-# Usa bibliotecas din√¢micas #
+# Usa bibliotecas din‚micas #
 #############################
 
 LIBS += dl crypto ldap

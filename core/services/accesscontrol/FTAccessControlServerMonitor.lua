@@ -1,7 +1,7 @@
 -- $Id
 
 ---
---Inicializa√ß√£o do Monitor do Servi√ßo de Controle de Acesso com Tolerancia a Falhas
+--InicializaÁ„o do Monitor do ServiÁo de Controle de Acesso com Tolerancia a Falhas
 ---
 local ipairs = ipairs
 local tonumber = tonumber
@@ -26,11 +26,11 @@ if DATA_DIR == nil then
   os.exit(1)
 end
 
--- Obt√©m a configura√ß√£o do servi√ßo
+-- ObtÈm a configuraÁ„o do serviÁo
 assert(loadfile(DATA_DIR.."/conf/AccessControlServerConfiguration.lua"))()
 
 
--- Define os n√≠veis de verbose para o OpenBus e para o OiL.
+-- Define os nÌveis de verbose para o OpenBus e para o OiL.
 if AccessControlServerConfiguration.logLevel then
   Log:level(AccessControlServerConfiguration.logLevel)
 end
@@ -39,7 +39,7 @@ if AccessControlServerConfiguration.oilVerboseLevel then
 end
 local hostPort = arg[1]
 if hostPort == nil then
-   Log:error("√â necessario passar o numero da porta.\n")
+   Log:error("… necessario passar o numero da porta.\n")
     os.exit(1)
 end
 
@@ -48,7 +48,7 @@ AccessControlServerConfiguration.hostPort = tonumber(hostPort)
 local hostAdd = AccessControlServerConfiguration.hostName..":"..hostPort
 
 
--- Inicializa o ORB, fixando a localiza√ß√£o do servi√ßo em uma porta espec√≠fica
+-- Inicializa o ORB, fixando a localizaÁ„o do serviÁo em uma porta especÌfica
 local orb = oil.init {  flavor = "intercepted;corba;typed;cooperative;base",
                        tcpoptions = {reuseaddr = true}
                      }
@@ -107,7 +107,7 @@ componentId.patch_version = 0
 componentId.platform_spec = ""
 
 ---
---Fun√ß√£o que ser√° executada pelo OiL em modo protegido.
+--FunÁ„o que ser· executada pelo OiL em modo protegido.
 ---
 function main()
 
@@ -122,7 +122,7 @@ function main()
       os.exit(1)
   end
 
-  -- Cria o componente respons√°vel pelo Monitor do Servi√ßo de Controle de Acesso
+  -- Cria o componente respons·vel pelo Monitor do ServiÁo de Controle de Acesso
   local ftacsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
   
   
@@ -135,17 +135,17 @@ function main()
     os.exit(1)
   end
  
-  -- Configura√ß√µes
+  -- ConfiguraÁıes
   ftacsInst.IComponent.startup = FTAccessControlServiceMonitor.startup
     
   local ftacs = ftacsInst.IFTAccessControlServiceMonitor
   ftacs.config = AccessControlServerConfiguration
   ftacs.recConnId = connId
 
-  -- Inicializa√ß√£o
+  -- InicializaÁ„o
   success, res = oil.pcall(ftacsInst.IComponent.startup, ftacsInst.IComponent)
   if not success then
-    Log:error("Falha ao iniciar o monitor do servi√ßo de controle de acesso: "..
+    Log:error("Falha ao iniciar o monitor do serviÁo de controle de acesso: "..
         tostring(res).."\n")
     os.exit(1)
   end  
@@ -155,7 +155,7 @@ function main()
   local success, res = oil.pcall(oil.newthread, ftacs.monitor, ftacs)
 
   if not success then
-    Log:error("Falha na execuc√£o do Monitor do Servico de Controle de Acesso: "..tostring(res).."\n")
+    Log:error("Falha na execuÁ„o do Monitor do Servico de Controle de Acesso: "..tostring(res).."\n")
     os.exit(1)
   end
   Log:faulttolerance("Monitor do servico de controle monitorando com sucesso.")

@@ -1,7 +1,7 @@
 -- $Id
 
 ---
---InicializaÃ§Ã£o do Monitor do ServiÃ§o de registro com Tolerancia a Falhas
+--Inicialização do Monitor do Serviço de registro com Tolerancia a Falhas
 ---
 local ipairs = ipairs
 local tonumber = tonumber
@@ -26,11 +26,11 @@ if DATA_DIR == nil then
   os.exit(1)
 end
 
--- ObtÃ©m a configuraÃ§Ã£o do serviÃ§o
+-- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 
 
--- Seta os nÃ­veis de verbose para o openbus e para o oil
+-- Seta os níveis de verbose para o openbus e para o oil
 if RegistryServerConfiguration.logLevel then
   Log:level(RegistryServerConfiguration.logLevel)
 end
@@ -40,7 +40,7 @@ end
 
 local hostPort = arg[1]
 if hostPort == nil then
-   Log:error("Ã‰ necessario passar o numero da porta.\n")
+   Log:error("É necessario passar o número da porta.\n")
     os.exit(1)
 end
 RegistryServerConfiguration.registryServerHostPort = tonumber(hostPort)
@@ -107,7 +107,7 @@ componentId.platform_spec = ""
 
 
 ---
---FunÃ§Ã£o que serÃ¡ executada pelo OiL em modo protegido.
+--Função que será executada pelo OiL em modo protegido.
 ---
 function main()
 
@@ -122,7 +122,7 @@ function main()
       os.exit(1)
   end
 
-  -- Cria o componente responsÃ¡vel pelo Monitor do ServiÃ§o de Registro
+  -- Cria o componente responsável pelo Monitor do Serviço de Registro
   local ftrsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
   
   
@@ -137,17 +137,17 @@ function main()
     os.exit(1)
   end
 
-  -- ConfiguraÃ§Ãµes
+  -- Configurações
   ftrsInst.IComponent.startup = FTRegistryServiceMonitor.startup
   
   local ftrs = ftrsInst.IFTRegistryServiceMonitor
   ftrs.config = RegistryServerConfiguration
   ftrs.recConnId = recConnId
   
-  -- InicializaÃ§Ã£o
+  -- Inicialização
   success, res = oil.pcall(ftrsInst.IComponent.startup, ftrsInst.IComponent)
   if not success then
-    Log:error("Falha ao iniciar o monitor do serviÃ§o de registro: "..
+    Log:error("Falha ao iniciar o monitor do serviço de registro: "..
         tostring(res).."\n")
     os.exit(1)
   end
@@ -155,7 +155,7 @@ function main()
   Log:init("Monitor do servico de registro iniciado com sucesso")
   local success, res = oil.pcall(oil.newthread,	ftrs.monitor, ftrs)
   if not success then
-    Log:error("Falha na execucÃ£o do Monitor do Servico de registro: "..tostring(res).."\n")
+    Log:error("Falha na execução do Monitor do Servico de registro: "..tostring(res).."\n")
     os.exit(1)
   end
   Log:faulttolerance("Monitor do servico de registro monitorando com sucesso.")

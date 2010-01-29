@@ -39,7 +39,7 @@ oil.verbose:level(2)
 
 orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
 ---
---Componente responsÃ¡vel pelo Monitor do ServiÃ§o de Registro
+--Componente responsável pelo Monitor do Serviço de Registro
 ---
 module("core.services.registry.FTRegistryServiceMonitor")
 
@@ -51,9 +51,9 @@ FTRSMonitorFacet = oop.class{}
 
 
 ---
---ObtÃ©m o ServiÃ§o de registro.
+--Obtém o Serviço de registro.
 --
---@return O ServiÃ§o de registro, ou nil caso nÃ£o tenha sido definido.
+--@return O Serviço de registro, ou nil caso não tenha sido definido.
 ---
 function FTRSMonitorFacet:getService()
   return self.context.IFaultTolerantService
@@ -72,7 +72,7 @@ function FTRSMonitorFacet:isUnix()
 end
 
 ---
---Monitora o serviÃ§o de registro e cria uma nova rÃ©plica se necessÃ¡rio.
+--Monitora o serviço de registro e cria uma nova réplica se necessário.
 ---
 function FTRSMonitorFacet:monitor()
 
@@ -90,7 +90,7 @@ function FTRSMonitorFacet:monitor()
 
 	--verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
         if ok then
-	    --se objeto remoto estÃ¡ em estado de falha, precisa ser reinicializado
+	    --se objeto remoto está em estado de falha, precisa ser reinicializado
 	    if not res then
 		reinit = true
 	        Log:faulttolerance("[Monitor SR] Servico de registro em estado de falha. Matando o processo...")
@@ -129,7 +129,7 @@ function FTRSMonitorFacet:monitor()
 			
 				Log:faulttolerance("[Monitor SR] disconnect executed successfully!")
 			
-				Log:faulttolerance("[Monitor SR] Espera 3 minutos para que dÃª tempo do Oil liberar porta...")
+				Log:faulttolerance("[Monitor SR] Espera 3 minutos para que dê tempo do Oil liberar porta...")
 
 				os.execute("sleep 180")
 				
@@ -152,7 +152,7 @@ function FTRSMonitorFacet:monitor()
 		--					"> log_registry_server-"..tostring(t)..".txt")
 			end
 
-        	-- Espera 5 segundos para que dÃª tempo do SR ter sido levantado
+        	-- Espera 5 segundos para que dê tempo do SR ter sido levantado
         	os.execute("sleep 5")
 
 			local ftrsService = orb:newproxy("corbaloc::"..self.config.registryServerHostName..

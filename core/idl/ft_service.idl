@@ -5,12 +5,12 @@
 module openbusidl {
 
 /**
- * \brief M√≥dulo do Servi√ßo Tolerante a Falhas.
+ * \brief MÛdulo do ServiÁo Tolerante a Falhas.
  */
 module ft {
 
 /**
- * \brief Representa o servi√ßo tolerante a falhas.
+ * \brief Representa o serviÁo tolerante a falhas.
  */
 interface IFaultTolerantService {
     /**
@@ -18,7 +18,7 @@ interface IFaultTolerantService {
 	*/
     void init();
     /**
-     * \brief Verifica se o servi√ßo est√° vivo ou sem erros.
+     * \brief Verifica se o serviÁo est· vivo ou sem erros.
 
      *
      * \return \c true, caso esteja vivo, ou \c false, caso

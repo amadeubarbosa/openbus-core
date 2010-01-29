@@ -6,7 +6,7 @@ local Log = require "openbus.util.Log"
 local oop = require "loop.simple"
 
 ---
---Componente respons√°vel pelo Servi√ßo de Controle de Acesso
+--Componente respons·vel pelo ServiÁo de Controle de Acesso
 ---
 module("core.services.faulttolerance.FaultTolerantService")
 
@@ -20,7 +20,7 @@ FaultToleranceFacet = oop.class{}
 FaultToleranceFacet.faultDescription = {_isAlive = false, _errorMsg = "" }
 
 ---
---Retorna se o servi√ßo est√° em estado de falha ou n√£o.
+--Retorna se o serviÁo est· em estado de falha ou n„o.
 ---
 
 function FaultToleranceFacet:isAlive()
