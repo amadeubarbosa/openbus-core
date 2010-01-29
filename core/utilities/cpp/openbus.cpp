@@ -427,9 +427,6 @@ namespace openbus {
       verbose->print("Executando orb->destroy() ...");
     #endif
       orb->destroy();
-    #ifdef OPENBUS_MICO
-      delete orb;
-    #endif
     }
   #ifndef OPENBUS_MICO
     mutex.lock();
