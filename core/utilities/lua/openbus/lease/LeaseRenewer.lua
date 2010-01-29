@@ -95,14 +95,19 @@ function startRenew(self)
       local success, granted, newlease  =
         oil.pcall(provider.renewLease, provider, self.credential)
       if not success then
-        -- Quando ocorre falha no acesso ao provedor, tenta renovar com
-        -- uma freqüência maior.
-        log:warn("Falha na acessibilidade ao provedor do lease.")
---      log:warn("Falha na acessibilidade ao provedor do lease:"..
---        tostring(granted).."\n")
-        timer.rate = (self.retrying and timer.rate) or (timer.rate /2)
-        self.retrying = true
-        return
+        local exception = granted
+        if exception[1] == "IDL:omg.org/CORBA/NO_PERMISSION:1.0" then
+          log:lease("Sem permissão para renovar o lease.")
+          granted = false
+        else
+          -- Quando ocorre falha no acesso ao provedor, tenta renovar com
+          -- uma freqüência maior.
+          log:error("Falha na acessibilidade ao provedor do lease.\nMensagem: "
+              ..tostring(granted))
+          timer.rate = (self.retrying and timer.rate) or (timer.rate /2)
+          self.retrying = true
+          return
+        end
       end
       self.retrying = false
       if not granted then
