@@ -118,7 +118,7 @@ function Openbus:_reset()
   end
   self.orb = nil
   self.rootPOA = nil
-  self.isORBFinished = true
+  self.isORBFinished = false
   self.acs = nil
   self.host = nil
   self.port = -1
