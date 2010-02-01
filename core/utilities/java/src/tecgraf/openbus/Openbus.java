@@ -139,23 +139,33 @@ public final class Openbus {
    * Retorna ao seu estado inicial, ou seja, desfaz as definições de atributos
    * realizadas.
    */
-  private void reset() {
-    this.threadLocalCredential = new ThreadLocal<Credential>();
-    this.credential = new CredentialHolder();
-    this.requestCredentialSlot = -1;
+  private void destroy() {
+    reset();
     if (!this.isORBFinished && this.orb != null)
       this.finish(true);
     this.orb = null;
     this.rootPOA = null;
     this.isORBFinished = false;
-    this.acs = null;
     this.host = null;
     this.port = -1;
-    this.lp = null;
-    this.leaseRenewer = null;
+
     this.leaseExpiredCallback = null;
+  }
+
+  /**
+   * Retorna para o estado encontrado após a inicialização do Openbus.
+   */
+  private void reset() {
+    this.credential = new CredentialHolder();
+    this.threadLocalCredential = new ThreadLocal<Credential>();
+    this.requestCredentialSlot = -1;
+
+    this.acs = null;
     this.rgs = null;
     this.ss = null;
+    this.lp = null;
+    this.leaseRenewer = null;
+
     this.connectionState = ConnectionStates.DISCONNECTED;
   }
 
@@ -174,7 +184,7 @@ public final class Openbus {
    * Construtor do barramento.
    */
   private Openbus() {
-    this.reset();
+    this.destroy();
   }
 
   /**
@@ -211,7 +221,7 @@ public final class Openbus {
     if (port < 0)
       throw new IllegalArgumentException(
         "O campo 'port' não pode ser negativo.");
-    reset();
+    destroy();
     // init
     this.host = host;
     this.port = port;
@@ -399,7 +409,7 @@ public final class Openbus {
           new IntHolder())) {
           this.leaseRenewer =
             new LeaseRenewer(this.credential.value, this.lp,
-              this.leaseExpiredCallback);
+              new OpenbusExpiredCallback());
           this.leaseRenewer.start();
           connectionState = ConnectionStates.CONNECTED;
           this.rgs = this.acs.getRegistryService();
@@ -463,7 +473,7 @@ public final class Openbus {
           new IntHolder())) {
           this.leaseRenewer =
             new LeaseRenewer(this.credential.value, this.lp,
-              this.leaseExpiredCallback);
+              new OpenbusExpiredCallback());
           this.leaseRenewer.start();
           connectionState = ConnectionStates.CONNECTED;
           this.rgs = this.acs.getRegistryService();
@@ -534,7 +544,7 @@ public final class Openbus {
           throw e;
         }
         if (status) {
-          reset();
+          destroy();
         }
         else {
           this.connectionState = ConnectionStates.CONNECTED;
@@ -567,9 +577,6 @@ public final class Openbus {
    */
   public void addLeaseExpiredCallback(LeaseExpiredCallback lec) {
     this.leaseExpiredCallback = lec;
-    if (this.connectionState == ConnectionStates.CONNECTED) {
-      this.leaseRenewer.setLeaseExpiredCallback(lec);
-    }
   }
 
   /**
@@ -577,8 +584,29 @@ public final class Openbus {
    */
   public void removeLeaseExpiredCallback() {
     this.leaseExpiredCallback = null;
-    if (this.connectionState == ConnectionStates.CONNECTED) {
-      this.leaseRenewer.setLeaseExpiredCallback(null);
+  }
+
+  /**
+   * Informa aos observadores que o <i>lease</i> expirou.
+   */
+  private void leaseExpired() {
+    Log.LEASE.fine("Atualizando estado do Openbus");
+    reset();
+    if (this.leaseExpiredCallback != null) {
+      this.leaseExpiredCallback.expired();
     }
   }
+
+  /**
+   * Classe responsável por informar aos observadores que o <i>lease</i>
+   * expirou.
+   * 
+   * @author Tecgraf
+   */
+  class OpenbusExpiredCallback implements LeaseExpiredCallback {
+    public void expired() {
+      leaseExpired();
+    }
+  }
+
 }
