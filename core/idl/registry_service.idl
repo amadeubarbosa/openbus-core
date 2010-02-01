@@ -1,16 +1,22 @@
-#ifndef RS_IDL
-#define RS_IDL
+#ifndef __TECGRAF_OPENBUS_CORE_REGISTRY_SERVICE_IDL__
+#define __TECGRAF_OPENBUS_CORE_REGISTRY_SERVICE_IDL__
 
 #include "core.idl"
 #include "scs.idl"
 #include "access_control_service.idl"
 
-module openbusidl {
+module tecgraf {
+
+module openbus {
+
+module core {
+
+module v1_05 {
 
 /**
  * \brief Módulo do Serviço de Registro.
  */
-module rs {
+module registry_service {
 
 typedef sequence<string> PropertyValue;
 
@@ -18,8 +24,8 @@ typedef sequence<string> PropertyValue;
  * \brief Representa uma propriedade.
  */
 struct Property {
-    string name;
-    PropertyValue value;
+  string name;
+  PropertyValue value;
 };
 typedef sequence<Property> PropertyList;
 
@@ -27,8 +33,8 @@ typedef sequence<Property> PropertyList;
  * \brief Representa uma oferta de serviço.
  */
 struct ServiceOffer {
-    PropertyList properties; /**< \brief Propriedades. */
-    scs::core::IComponent member; /**< \brief O membro que está ofertando o serviço. */
+  PropertyList properties; /**< \brief Propriedades. */
+  scs::core::IComponent member; /**< \brief O membro que está ofertando o serviço. */
 };
 typedef sequence<ServiceOffer> ServiceOfferList;
 
@@ -39,9 +45,10 @@ typedef Identifier RegistryIdentifier;
  * \brief Representa uma entrada de oferta de serviço.
  */
 struct ServiceOfferEntry {
-    ServiceOffer offer; /**< \brief Oferta de servico. */
-    openbusidl::acs::Credential credential;/**< \brief Credential do servico que disponibiliza a oferta. */
-    RegistryIdentifier identifier;/** \brief O identificador do registro de um serviço. */
+  ServiceOffer offer; /**< \brief Oferta de servico. */
+  tecgraf::openbus::core::v1_05::access_control_service::Credential
+      credential;/**< \brief Credential do servico que disponibiliza a oferta. */
+  RegistryIdentifier identifier;/** \brief O identificador do registro de um serviço. */
 };
 typedef sequence<ServiceOfferEntry> ServiceOfferEntryList;
 
@@ -290,8 +297,14 @@ interface IManagement {
     in InterfaceIdentifierList ifaceIds);
 };
 
-};
+}; // registry_service
 
-};
+}; // v1_05
+
+}; // core
+
+}; // openbus
+
+}; // tecgraf
 
 #endif

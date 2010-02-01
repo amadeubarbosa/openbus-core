@@ -26,7 +26,7 @@
             <groupId>org.jacorb</groupId>
             <artifactId>jacorb-idl-compiler</artifactId>
             <version>${jacorb.version}</version>
-          </dependency>           
+          </dependency>
         </dependencies>
         
         <executions>
@@ -41,7 +41,7 @@
         <configuration>
           <compiler>jacorb</compiler>
 
-          <sourceDirectory>${env.OPENBUS_HOME}/idlpath</sourceDirectory>
+          <sourceDirectory>.</sourceDirectory>
 
           <sources>
             <source>

@@ -1,0 +1,65 @@
+#ifndef __TECGRAF_OPENBUS_FAULT_TOLERANCE_IDL__
+#define __TECGRAF_OPENBUS_FAULT_TOLERANCE_IDL__
+
+module tecgraf {
+
+module openbus {
+
+/**
+ * \brief Módulo do Serviço Tolerante a Falhas.
+ */
+module fault_tolerance {
+
+/**
+ * \brief Módulo de versionamento do Serviço Tolerante a Falhas.
+ */
+module v1_05 {
+
+/**
+ * \brief Representa o serviço tolerante a falhas.
+ */
+interface IFaultTolerantService {
+
+  /**
+   * \brief Permite a configuracao de parametros no sturtup do componente
+   */
+  void init();
+
+  /**
+   * \brief Verifica se o serviço está vivo ou sem erros.
+   *
+   * \return \c true, caso esteja vivo, ou \c false, caso
+   * esteja em estado de falha.
+   */
+  boolean isAlive ();
+
+  void setStatus(in boolean isAlive);
+
+  void kill();
+
+  boolean updateStatus(in any param);    
+};
+
+/** \brief Representa o serviço tolerante a falhas. */
+typedef IFaultTolerantService ftService;
+
+/**
+ * \brief Representa o monitor.
+ */
+interface IFTServiceMonitor {
+  /**
+   * \brief Monitora o serviço e cria uma nova réplica se necessário.
+   *
+   */
+   void monitor();
+};
+
+}; // v1_05
+
+}; // fault_tolerance
+
+}; // openbus
+
+}; // tecgraf
+
+#endif

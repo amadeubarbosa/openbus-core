@@ -1,21 +1,22 @@
-#ifndef SS_IDL
-#define SS_IDL
+#ifndef __TECGRAF_OPENBUS_SESSION_SERVICE_IDL__
+#define __TECGRAF_OPENBUS_SESSION_SERVICE_IDL__
 
 #include "core.idl"
 #include "scs.idl"
 
-module openbusidl {
+module tecgraf {
+
+module openbus {
 
 /**
  * \brief Módulo do Serviço de Sessão.
  */
-module ss {
+module session_service {
 
-/** \brief Representa o identificador de uma sessão. */
-typedef Identifier SessionIdentifier;
-
-/** \brief Representa o identificador do membro de uma sessão. */
-typedef Identifier MemberIdentifier;
+/**
+ * \brief Módulo de versionamento do Serviço de Sessão.
+ */
+module v1_05 {
 
 /** \brief Representa um evento trocado entre membros de uma sessão */
 struct SessionEvent {
@@ -39,6 +40,12 @@ interface SessionEventSink {
      */
   void disconnect();
 };
+
+/** \brief Representa o identificador de uma sessão. */
+typedef tecgraf::openbus::core::v1_05::Identifier SessionIdentifier;
+
+/** \brief Representa o identificador do membro de uma sessão. */
+typedef tecgraf::openbus::core::v1_05::Identifier MemberIdentifier;
 
 /**
  * \brief Representa uma sessão.
@@ -103,8 +110,12 @@ interface ISessionService {
     scs::core::IComponent getSession();
 };
 
-};
+}; // v1_05
 
-};
+}; // session_service
+
+}; // openbus
+
+}; // tecgraf
 
 #endif
