@@ -80,7 +80,7 @@ function main()
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
   local registryService = rsIComp:getFacetByName("IRegistryService")
   registryService = orb:narrow(registryService,
-    "IDL:openbusidl/rs/IRegistryService:1.0")
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
   print("Obteve referencia para o serviço de registro")
 
   local offers = registryService:find("SessionService",{})
@@ -89,14 +89,14 @@ function main()
   end
   local sessionServiceComponent = oil.narrow(offers[1].member,
                  "IDL:scs/core/IComponent:1.0")
-  local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
+  local sessionServiceInterface = "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"
   local sessionService =
     sessionServiceComponent:getFacet(sessionServiceInterface)
   sessionService = oil.narrow(sessionService, sessionServiceInterface)
   print("Obteve referencia para o serviço de sessão")
 
   -- cria sessão com membros receptores de eventos
-  local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
+  local eventSinkInterface = "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0"
   local member1 = IComponent("membro1", 1, 0, 0, "")
   member1 = oil.newservant(member1, "IDL:scs/core/IComponent:1.0")
   member1:addFacet("sink1", eventSinkInterface, createSink("sink1"))

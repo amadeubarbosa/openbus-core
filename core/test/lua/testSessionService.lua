@@ -35,7 +35,7 @@ Suite = {
       local user = "tester"
       local password = "tester"
 
-      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -54,12 +54,12 @@ Suite = {
       local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
       local registryService = rsIComp:getFacetByName("IRegistryService")
       registryService = orb:narrow(registryService,
-        "IDL:openbusidl/rs/IRegistryService:1.0")
+        "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
 
       local serviceOffers = registryService:find({"ISessionService"})
       Check.assertNotEquals(#serviceOffers, 0)
       local sessionServiceComponent = orb:narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
-      local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
+      local sessionServiceInterface = "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"
       self.sessionService = sessionServiceComponent:getFacet(sessionServiceInterface)
       self.sessionService = orb:narrow(self.sessionService, sessionServiceInterface)
     end,
@@ -79,13 +79,13 @@ Suite = {
       local success, session, id1 =
           self.sessionService:createSession(member1.IComponent)
       Check.assertTrue(success)
-      session = session:getFacet("IDL:openbusidl/ss/ISession:1.0")
-      session = orb:narrow(session, "IDL:openbusidl/ss/ISession:1.0")
+      session = session:getFacet("IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session, "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
       componentId.name = "membro2"
       local member2 = scs.newComponent(facetDescriptions, {}, componentId)
       local session2 = self.sessionService:getSession()
-      session2 = session2:getFacet("IDL:openbusidl/ss/ISession:1.0")
-      session2 = orb:narrow(session2, "IDL:openbusidl/ss/ISession:1.0")
+      session2 = session2:getFacet("IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session2 = orb:narrow(session2, "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
       Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
       local id2 = session:addMember(member2.IComponent)
       Check.assertNotEquals(id1, id2)

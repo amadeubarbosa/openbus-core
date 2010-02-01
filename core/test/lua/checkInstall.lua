@@ -44,7 +44,7 @@ function run()
 
   accessControlService = orb:newproxy("corbaloc::" .. 
       host .. ":" .. port .. 
-      "/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      "/ACS", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
   -- instala o interceptador de cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -80,7 +80,7 @@ function run()
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
   local registryService = rsIComp:getFacetByName("IRegistryService")
   registryService = orb:narrow(registryService,
-    "IDL:openbusidl/rs/IRegistryService:1.0")
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
   local serviceOffers = registryService:find({"ISessionService"})
   
   if #serviceOffers == 0 then
@@ -88,7 +88,7 @@ function run()
     os.exit(1)
   end
   local sessionServiceComponent = orb:narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
-  local sessionServiceInterface = "IDL:openbusidl/ss/ISessionService:1.0"
+  local sessionServiceInterface = "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"
   sessionService = sessionServiceComponent:getFacet(sessionServiceInterface)
   sessionService = orb:narrow(sessionService, sessionServiceInterface)
 end

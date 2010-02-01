@@ -43,13 +43,13 @@ function Test1:beforeTestCase()
   -- Obtem a face de governança
   local succ
   self.acs = orb:newproxy("corbaloc::localhost:2089/ACS", 
-    "IDL:openbusidl/acs/IAccessControlService:1.0")
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   succ, self.credential = self.acs:loginByPassword("tester", "tester")
   self.credentialManager:setValue(self.credential)
   local ic = self.acs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   self.acsMgt = ic:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(self.acsMgt, "IDL:openbusidl/acs/IManagement:1.0")
+  self.acsMgt = orb:narrow(self.acsMgt, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   -- Dados para os testes
   self.systems = {}
   for i = 1, 10 do
@@ -123,7 +123,7 @@ function Test1:testAddSystem_SystemAlreadyExists()
   --
   succ, err = self.acsMgt.__try:addSystem(system.id, system.description)
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], "IDL:openbusidl/acs/SystemAlreadyExists:1.0")
+  Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0")
   --
   succ, err = self.acsMgt.__try:removeSystem(system.id)
   Check.assertTrue(succ)
@@ -132,7 +132,7 @@ end
 function Test1:testRemoveSystem_SystemNonExistent()
   local succ, err = self.acsMgt.__try:removeSystem("AnInvalidIdToRemove")
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], "IDL:openbusidl/acs/SystemNonExistent:1.0")
+  Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0")
 end
 
 function Test1:testSetSystemDescription()
@@ -158,13 +158,13 @@ function Test1:testSetSystemDescription_SystemNonExistent()
   local succ, err = self.acsMgt.__try:setSystemDescription("InvalidId", 
     "New Description")
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/SystemNonExistent:1.0", err[1])
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0", err[1])
 end
 
 function Test1:testGetSystemById_SystemNonExistent()
   local succ, err = self.acsMgt.__try:getSystemById("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/SystemNonExistent:1.0", err[1])
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0", err[1])
 end
 
 --------------------------------------------------------------------------------
@@ -194,13 +194,13 @@ function Test2:beforeTestCase()
   -- Obtem a face de governança
   local succ
   self.acs = orb:newproxy("corbaloc::localhost:2089/ACS", 
-    "IDL:openbusidl/acs/IAccessControlService:1.0")
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   succ, self.credential = self.acs:loginByPassword("tester", "tester")
   self.credentialManager:setValue(self.credential)
   local ic = self.acs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   self.acsMgt = ic:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(self.acsMgt, "IDL:openbusidl/acs/IManagement:1.0")
+  self.acsMgt = orb:narrow(self.acsMgt, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   -- Dados para os testes
   self.certfiles = {"testManagement01.crt", "testManagement02.crt"}
   self.systems = {}
@@ -310,7 +310,7 @@ function Test2:testAddSystemDeployment_SystemDeploymentAlreadyExists()
   succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
     depl.description, cert)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/SystemDeploymentAlreadyExists:1.0",
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0",
     err[1])
   --
   succ, err = self.acsMgt.__try:removeSystemDeployment(depl.id)
@@ -328,7 +328,7 @@ function Test2:testAddSystemDeployment_SystemNonExistent()
     "SystemIdDoesNotExist",
     depl.description, cert)
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], "IDL:openbusidl/acs/SystemNonExistent:1.0")
+  Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0")
 end
 
 function Test2:testAddSystemDeployment_InvalidCertificate()
@@ -337,13 +337,13 @@ function Test2:testAddSystemDeployment_InvalidCertificate()
   succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
     depl.description, "InvalidCertificate")
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], "IDL:openbusidl/acs/InvalidCertificate:1.0")
+  Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0")
 end
 
 function Test2:testRemoveSystemDeployment_SystemDeploymentNonExistent()
   local succ, err = self.acsMgt.__try:removeSystemDeployment("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0",
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0",
     err[1])
 end
 
@@ -376,14 +376,14 @@ function Test2:testSetSystemDeploymentDescription_SystemDeploymentNonExistent()
   local succ, err = self.acsMgt.__try:setSystemDeploymentDescription("InvalidId",
     desc)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0",
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0",
     err[1])
 end
 
 function Test2:testGetSystemDeploymentCertificate_SystemDeploymentNonExistent()
   local succ, err = self.acsMgt.__try:getSystemDeploymentCertificate("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0",
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0",
     err[1])
 end
 
@@ -422,7 +422,7 @@ function Test2:testSetSystemDeploymentCertificate_SystemDeploymentNonExistent()
   local succ, err = self.acsMgt.__try:setSystemDeploymentCertificate("InvalidId", 
     cert)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0", 
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0", 
     err[1])
 end
 
@@ -440,13 +440,13 @@ function Test2:testSetSystemDeploymentCertificate_InvalidCertificate()
   local succ, err = self.acsMgt.__try:setSystemDeploymentCertificate(depl.id,
     "InvalidCertificate")
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/InvalidCertificate:1.0", err[1])
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0", err[1])
 end
 
 function Test2:testGetSystemDeployment_SystemDeploymentNonExistent()
   local succ, err = self.acsMgt.__try:getSystemDeployment("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0",
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0",
     err[1])
 end
 
@@ -509,7 +509,7 @@ function Test2:testRemoveSystem_SystemInUse()
   for _, system in ipairs(self.systems) do
     succ, err = self.acsMgt.__try:removeSystem(system.id)
     Check.assertFalse(succ)
-    Check.assertEquals("IDL:openbusidl/acs/SystemInUse:1.0", err[1])
+    Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0", err[1])
   end
   --
   for _, depl in ipairs(self.deployments) do
@@ -544,19 +544,19 @@ function Test3:beforeTestCase()
   -- Obtem a face de governança
   local succ
   self.acs = orb:newproxy("corbaloc::localhost:2089/ACS", 
-    "IDL:openbusidl/acs/IAccessControlService:1.0")
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   succ, self.credential = self.acs:loginByPassword("tester", "tester")
   self.credentialManager:setValue(self.credential)
   local acsIComp = self.acs:_component()
   acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
   self.acsMgt = acsIComp:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(self.acsMgt, "IDL:openbusidl/acs/IManagement:1.0")
+  self.acsMgt = orb:narrow(self.acsMgt, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   local acsIRecept = acsIComp:getFacetByName("IReceptacles")
   acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
   local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
   self.rsMgt = rsIComp:getFacetByName("IManagement")
-  self.rsMgt = orb:narrow(self.rsMgt, "IDL:openbusidl/rs/IManagement:1.0")
+  self.rsMgt = orb:narrow(self.rsMgt, "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
   -- Dados para os testes
   self.ifaces = {}
   self.systems = {}
@@ -623,7 +623,7 @@ function Test3:testAddInterfaceIdentifier_InterfaceIdentifierAlreadyExists()
   Check.assertTrue(succ)
   succ, err = self.rsMgt.__try:addInterfaceIdentifier(self.ifaces[1])
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/rs/InterfaceIdentifierAlreadyExists:1.0",
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0",
     err[1])
   succ, err = self.rsMgt.__try:removeInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
@@ -632,7 +632,7 @@ end
 function Test3:testAddInterfaceIdentifier_InterfaceIdentifierNonExistent()
   succ, err = self.rsMgt.__try:removeInterfaceIdentifier("InvalidInterface")
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0",
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0",
     err[1])
 end
 
@@ -662,19 +662,19 @@ function Test4:beforeTestCase()
   -- Obtem a face de governança
   local succ
   self.acs = orb:newproxy("corbaloc::localhost:2089/ACS", 
-    "IDL:openbusidl/acs/IAccessControlService:1.0")
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   succ, self.credential = self.acs:loginByPassword("tester", "tester")
   self.credentialManager:setValue(self.credential)
   local acsIComp = self.acs:_component()
   acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
   self.acsMgt = acsIComp:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(self.acsMgt, "IDL:openbusidl/acs/IManagement:1.0")
+  self.acsMgt = orb:narrow(self.acsMgt, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   local acsIRecept = acsIComp:getFacetByName("IReceptacles")
   acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
   local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
   self.rsMgt = rsIComp:getFacetByName("IManagement")
-  self.rsMgt = orb:narrow(self.rsMgt, "IDL:openbusidl/rs/IManagement:1.0")
+  self.rsMgt = orb:narrow(self.rsMgt, "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
   -- Dados para os testes
   self.ifaces = {}
   self.systems = {}
@@ -744,7 +744,7 @@ function Test4:testGrantGetRemoveAuthorization()
   --
   succ, err = self.rsMgt.__try:getAuthorization(depl.id)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/rs/AuthorizationNonExistent:1.0",
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0",
     err[1])
 end
 
@@ -752,7 +752,7 @@ function Test4:testGrant_SystemDeploymentNonExistent()
   local iface = self.ifaces[1]
   local succ, err = self.rsMgt.__try:grant("InvalidId", iface, true)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/rs/SystemDeploymentNonExistent:1.0", 
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/SystemDeploymentNonExistent:1.0", 
     err[1])
 end
 
@@ -760,7 +760,7 @@ function Test4:testGrant_InterfaceIdentifierNonExistent()
   local depl = self.deployments[1]
   local succ, err = self.rsMgt.__try:grant(depl.id, "InvalidId", true)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0", 
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0", 
     err[1])
 end
 
@@ -770,7 +770,7 @@ function Test4:testGrant_InvalidRegularExpression()
   local iface = "IDL:*invalid:1.0"
   succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/rs/InvalidRegularExpression:1.0", 
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0", 
     err[1])
 end
 
@@ -826,7 +826,7 @@ function Test4:testGrantRevokeGetAuthorization()
   --
   succ, err = self.rsMgt.__try:getAuthorization(depl.id)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:openbusidl/rs/AuthorizationNonExistent:1.0", err[1])
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0", err[1])
 end
 
 function Test4:testGetAuthorizations()
@@ -876,7 +876,7 @@ function Test4:testGetAuthorizations()
     Check.assertTrue(succ)
     succ, err = self.rsMgt.__try:getAuthorization(depl.id)
     Check.assertFalse(succ)
-    Check.assertEquals("IDL:openbusidl/rs/AuthorizationNonExistent:1.0", err[1])
+    Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0", err[1])
   end
 end
 

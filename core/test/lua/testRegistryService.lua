@@ -66,7 +66,7 @@ Suite = {
       orb:loadidlfile(idlfile)
 
       self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS",
-        "IDL:openbusidl/acs/IAccessControlService:1.0")
+        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -87,15 +87,15 @@ Suite = {
       acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
       self.acsManagement = acsIComp:getFacetByName("IManagement")
       self.acsManagement = orb:narrow(self.acsManagement, 
-        "IDL:openbusidl/acs/IManagement:1.0")
+        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
       local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
       local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
       self.registryService = rsIComp:getFacetByName("IRegistryService")
       self.registryService = orb:narrow(self.registryService,
-        "IDL:openbusidl/rs/IRegistryService:1.0")
+        "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
       self.rsManagement = rsIComp:getFacetByName("IManagement")
       self.rsManagement = orb:narrow(self.rsManagement,
-        "IDL:openbusidl/rs/IManagement:1.0")
+        "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
       -- Cadastra o sistema para teste e dá permissão de publicação no RS
       local f = assert(io.open(testCertFile), testCertFile.." não encontrado")
       local cert = f:read("*a")
@@ -267,12 +267,12 @@ Suite = {
       }
       facetDescriptions.ICredentialObserver = {
         name = "facet1",
-        interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0",
+        interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0",
         class = dummyObserver
       }
       facetDescriptions.ICredentialObserver2 = {
         name = "facet2",
-        interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0",
+        interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0",
         class = dummyObserver
       }
       local member = scs.newComponent(facetDescriptions,

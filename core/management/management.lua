@@ -442,7 +442,7 @@ handlers["add-system"] = function(cmd)
     local succ, err = acsmgm.__try:addSystem(id, cmd.params.description)
     if succ then
       printf("[INFO] Sistema '%s' cadastrado com sucesso", id)
-    elseif err[1] == "IDL:openbusidl/acs/SystemAlreadyExists:1.0" then
+    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0" then
       printf("[ERRO] Sistema '%s' já cadastrado", id)
     else
       printf("[ERRO] Falha ao adicionar sistema '%s': %s", id, err[1])
@@ -464,9 +464,9 @@ handlers["del-system"] = function(cmd)
   local succ, err = acsmgm.__try:removeSystem(id)
   if succ then
     printf("[INFO] Sistema '%s' removido com sucesso", id)
-  elseif err[1] == "IDL:openbusidl/acs/SystemInUse:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0" then
     printf("[ERRO] Sistema '%s' em uso", id)
-  elseif err[1] == "IDL:openbusidl/acs/SystemNonExistent:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0" then
     printf("[ERRO] Sistema '%s' não cadastrado", id)
   else
     printf("[ERRO] Falha ao remover sistema '%s': %s", id, err[1])
@@ -489,7 +489,7 @@ handlers["list-system"] = function(cmd)
     if succ then
       systems = {system}
     else
-      if system[1] == "IDL:openbusidl/acs/SystemNonExistent:1.0" then
+      if system[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0" then
         systems = {}
       else
         printf("[ERRO] Falha ao recuperar informações: %s", system[1])
@@ -537,7 +537,7 @@ handlers["set-system"] = function(cmd)
     cmd.params.description)
   if succ then
     print(string.format("[INFO] Sistema '%s' atualizado com sucesso", id))
-  elseif err[1] == "IDL:openbusidl/acs/SystemNonExistent:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0" then
     print(string.format("[ERRO] Sistema '%s' não cadastrado", id))
   else
     print(string.format("[ERRO] Falha ao atualizar sistema '%s': %s", id, 
@@ -569,11 +569,11 @@ handlers["add-deployment"] = function(cmd)
       cmd.params.description, cert)
     if succ then
       printf("[INFO] Implantação '%s' cadastrada com sucesso", id)
-    elseif err[1] == "IDL:openbusidl/acs/SystemDeploymentAlreadyExists:1.0" then
+    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0" then
       printf("[ERRO] Implantação '%s' já cadastrada", id)
-    elseif err[1] == "IDL:openbusidl/acs/SystemNonExistent:1.0" then
+    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0" then
       printf("[ERRO] Sistema '%s' não cadastrado", cmd.params.system)
-    elseif err[1] == "IDL:openbusidl/acs/InvalidCertificate:1.0" then
+    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0" then
       printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido",
         id)
     else
@@ -596,7 +596,7 @@ handlers["del-deployment"] = function(cmd)
   local succ, err = acsmgm.__try:removeSystemDeployment(id)
   if succ then
     printf("[INFO] Implantação '%s' removida com sucesso", id)
-  elseif err[1] ==  "IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0" then
+  elseif err[1] ==  "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
     printf("[ERRO] Implantação '%s' não cadastrada", id)
   else
     printf("[ERRO] Falha ao remover implantação '%s': %s", id, err[1])
@@ -627,9 +627,9 @@ handlers["set-deployment"] = function(cmd)
     if succ then
       printf("[INFO] Certificado da implantação '%s' atualizado com sucesso",
         id)
-    elseif err[1] ==  "IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0" then
+    elseif err[1] ==  "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
       printf("[ERRO] Implantação '%s' não cadastrada", id)
-    elseif err[1] == "IDL:openbusidl/acs/InvalidCertificate:1.0" then
+    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0" then
       printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido",
         id)
     else
@@ -642,7 +642,7 @@ handlers["set-deployment"] = function(cmd)
       cmd.params.description)
     if succ then
       printf("[INFO] Descrição da imlantação '%s' atualizada com sucesso", id)
-    elseif err[1] == "IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0" then
+    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
       printf("[ERRO] Implantação '%s' não cadastrada", id)
     else
       printf("[ERRO] Falha ao atualizar descrição da implantação '%s': %s",
@@ -666,7 +666,7 @@ handlers["list-deployment"] = function(cmd)
     local succ, depl = acsmgm.__try:getSystemDeployment(id)
     if succ then
       depls = { depl }
-    elseif depl[1] == "IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0" then
+    elseif depl[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
       depls = {}
     else
       printf("[ERRO] Falha ao recuperar informações: %s", depl[1])
@@ -721,7 +721,7 @@ handlers["add-interface"] = function(cmd)
   local succ, err = rsmgm.__try:addInterfaceIdentifier(iface)
   if succ then
     printf("[INFO] Interface '%s' cadastrada com sucesso", iface)
-  elseif err[1] == "IDL:openbusidl/rs/InterfaceIdentifierAlreadyExists:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0" then
     printf("[ERRO] Interface '%s' já cadastrada", iface)
   else
     printf("[ERRO] Falha ao cadastrar interface '%s': %s", iface, err[1])
@@ -739,9 +739,9 @@ handlers["del-interface"] = function(cmd)
   local succ, err = rsmgm.__try:removeInterfaceIdentifier(iface)
   if succ then
     printf("[INFO] Interface '%s' removida com sucesso", iface)
-  elseif err[1] == "IDL:openbusidl/rs/InterfaceIdentifierInUse:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierInUse:1.0" then
     printf("[ERRO] Interface '%s' em uso", iface)
-  elseif err[1] == "IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0" then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
   else
     printf("[ERRO] Falha ao remover interface: %s", err[1])
@@ -802,14 +802,14 @@ handlers["set-authorization"] = function(cmd)
   end
   if succ then
     print(msg)
-  elseif err[1] == "IDL:openbusidl/rs/SystemDeploymentNonExistent:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/SystemDeploymentNonExistent:1.0" then
     printf("[ERRO] Implantação '%s' não cadastrada", depl)
-  elseif err[1] == "IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0" then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
-  elseif err[1] == "IDL:openbusidl/rs/AuthorizationNonExistent:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0" then
     printf("[ERRO] Implantação '%s' não possui autorização para '%s'", 
       depl, iface)
-  elseif err[1] == "IDL:openbusidl/rs/InvalidRegularExpression:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0" then
     printf("[ERRO] Expressão regular inválida: %s", iface)
   else
     printf("[ERRO] Falha ao alterar autorização: %s", err[1])
@@ -828,7 +828,7 @@ handlers["del-authorization"] = function(cmd)
   if succ then
     printf("[INFO] Autorizações de '%s' removidas com sucesso", 
       cmd.params[cmd.name])
-  elseif err[1] == "IDL:openbusidl/rs/AuthorizationNonExistent:1.0" then
+  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0" then
     printf("[ERRO] Implantação '%s' não possui autorizações", depl)
   else
     printf("[ERRO] Falha ao remover autorizações: %s", err[1])
@@ -849,7 +849,7 @@ handlers["list-authorization"] = function(cmd)
     local succ, auth = rsmgm.__try:getAuthorization(depl)
     if succ then
       auths = { auth }
-    elseif auth[1] == "IDL:openbusidl/rs/AuthorizationNonExistent:1.0" then
+    elseif auth[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0" then
       printf("[ERRO] Implantação '%s' não possui autorização", depl)
       return
     else
@@ -1101,7 +1101,7 @@ function getacsmgm()
   local ic = acs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   acsmgm = ic:getFacetByName("IManagement")
-  acsmgm = orb:narrow(acsmgm, "IDL:openbusidl/acs/IManagement:1.0")
+  acsmgm = orb:narrow(acsmgm, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   return acsmgm
 end
 
@@ -1120,7 +1120,7 @@ function getrsmgm()
   ic = rs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   rsmgm = ic:getFacetByName("IManagement")
-  rsmgm = orb:narrow(rsmgm, "IDL:openbusidl/rs/IManagement:1.0")
+  rsmgm = orb:narrow(rsmgm, "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
   return rsmgm
 end
 

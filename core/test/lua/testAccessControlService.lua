@@ -29,7 +29,7 @@ Suite = {
       self.user = "tester"
       self.password = "tester"
 
-      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -88,7 +88,7 @@ Suite = {
       self.user = "tester"
       self.password = "tester"
 
-      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:openbusidl/acs/IAccessControlService:1.0")
+      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -138,7 +138,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential, credential)
       end
-      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:openbusidl/acs/ICredentialObserver:1.0")
+      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0")
       local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       Check.assertNotEquals("", observerIdentifier)
       Check.assertTrue(self.accessControlService:removeObserver(observerIdentifier))
@@ -150,7 +150,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential.identifier, credential.identifier)
       end
-      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:openbusidl/acs/ICredentialObserver:1.0")
+      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0")
       local observersId = {}
       for i=1,3 do
         observersId[i] = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
@@ -170,7 +170,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential.identifier, credential.identifier)
       end
-      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:openbusidl/acs/ICredentialObserver:1.0")
+      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0")
       local observerId = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()
