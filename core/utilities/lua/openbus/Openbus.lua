@@ -85,10 +85,6 @@ Openbus = oop.class {
   ---
   credentialManager = nil,
   ---
-  -- O slot da credencial da requisição.
-  ---
-  requestCredentialSlot = -1,
-  ---
   -- Indica o estado da conexão. 1 = conectado, 2 = desconectado
   ---
   connectionState = 2,
@@ -112,12 +108,10 @@ end
 ---
 function Openbus:_reset()
   self.credentialManager = nil
-  self.requestCredentialSlot = -1
   if not self.isORBFinished and self.orb then
     self:finish()
   end
   self.orb = nil
-  self.rootPOA = nil
   self.isORBFinished = false
   self.acs = nil
   self.host = nil
