@@ -3,5 +3,6 @@
 --
 return {
   contextID = 1234,
-  credential_type = "IDL:openbusidl/acs/Credential:1.0"
+  credential_type =
+      "IDL:tecgraf/openbus/core/v1_05/access_control_service/Credential:1.0"
 }

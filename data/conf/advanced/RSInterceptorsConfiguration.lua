@@ -8,7 +8,7 @@ local config =
 -- Acrescenta informação sobre as operacões a serem liberadas
 config.interfaces = {
  {
-    interface = "IDL:openbusidl/ft/IFaultTolerantService:1.0",
+    interface = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0",
     excluded_ops = {"isAlive"}
   },
 }
