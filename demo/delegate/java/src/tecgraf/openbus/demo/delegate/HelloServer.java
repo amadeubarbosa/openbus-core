@@ -9,10 +9,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import openbusidl.rs.IRegistryService;
-import openbusidl.rs.Property;
-import openbusidl.rs.ServiceOffer;
-
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.StringHolder;
 import org.omg.CORBA.UserException;
@@ -24,6 +20,9 @@ import scs.core.servant.ComponentBuilder;
 import scs.core.servant.ComponentContext;
 import scs.core.servant.ExtendedFacetDescription;
 import tecgraf.openbus.Openbus;
+import tecgraf.openbus.core.v1_05.registry_service.IRegistryService;
+import tecgraf.openbus.core.v1_05.registry_service.Property;
+import tecgraf.openbus.core.v1_05.registry_service.ServiceOffer;
 import tecgraf.openbus.exception.OpenBusException;
 import tecgraf.openbus.exception.RSUnavailableException;
 import tecgraf.openbus.util.CryptoUtils;
