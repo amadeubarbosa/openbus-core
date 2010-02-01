@@ -95,22 +95,22 @@ facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInter
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
 facetDescriptions.IAccessControlService.name            = "IAccessControlService"
-facetDescriptions.IAccessControlService.interface_name  = "IDL:openbusidl/acs/IAccessControlService:1.0"
+facetDescriptions.IAccessControlService.interface_name  = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0"
 facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
 facetDescriptions.IAccessControlService.key             = "ACS"
 
 facetDescriptions.ILeaseProvider.name                  = "ILeaseProvider"
-facetDescriptions.ILeaseProvider.interface_name        = "IDL:openbusidl/acs/ILeaseProvider:1.0"
+facetDescriptions.ILeaseProvider.interface_name        = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ILeaseProvider:1.0"
 facetDescriptions.ILeaseProvider.class                 = AccessControlService.LeaseProviderFacet
 facetDescriptions.ILeaseProvider.key                   = "LP"
 
 facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
-facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
+facetDescriptions.IFaultTolerantService.interface_name        = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
 facetDescriptions.IFaultTolerantService.class                 = AccessControlService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                   = "FTACS"
 
 facetDescriptions.IManagement.name           = "IManagement"
-facetDescriptions.IManagement.interface_name = "IDL:openbusidl/acs/IManagement:1.0"
+facetDescriptions.IManagement.interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0"
 facetDescriptions.IManagement.class          = AccessControlService.ManagementFacet
 facetDescriptions.IManagement.key            = "MGM"
 

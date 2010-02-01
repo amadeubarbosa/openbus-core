@@ -116,7 +116,7 @@ function RSFacet:addOffer(offerEntry)
                          	  self.context.IComponent, 
                          	  "AccessControlServiceReceptacle", 
                          	  "IAccessControlService", 
-                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+                         	  "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   if status then
 	    acsFacet:addCredentialToObserver(self.observerId,
                                    credential.identifier)
@@ -175,6 +175,7 @@ function RSFacet:createFacetIndex(owner, memberName, allFacets)
   local mgm = self.context.IManagement
   for _, facet in ipairs(allFacets) do
     if mgm:hasAuthorization(owner, facet.interface_name) then
+      print(facet.name, facet.interface_name)
       facets[facet.name] = true
       facets[facet.interface_name] = true
       count = count + 1
@@ -229,7 +230,7 @@ function RSFacet:unregister(identifier)
                          	    self.context.IComponent, 
                          	    "AccessControlServiceReceptacle", 
                          	    "IAccessControlService", 
-                         	    "IDL:openbusidl/acs/IAccessControlService:1.0")
+                         	    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
     if status then
 	    acsFacet:removeCredentialFromObserver(self.observerId,credential.identifier)
 	else
@@ -299,6 +300,7 @@ end
 --@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:find(facets)
+  print("find")
   local ftFacet = self.context.IFaultTolerantService
   --atualiza estado em todas as réplicas
 
@@ -316,6 +318,12 @@ function RSFacet:find(facets)
   -- Para cada oferta de serviço disponível, selecionar-se
   -- a oferta que implementa todas as facetas discriminadas.
     for _, offerEntry in pairs(self.offersByIdentifier) do
+      print("offerEntry")  
+      print(offerEntry.facets)  
+      for facetName, facet in pairs(offerEntry.facets) do
+        print("X")
+        print(facetName, facet)
+      end
       local hasAllFacets = true
       for _, facet in ipairs(facets) do
         if not offerEntry.facets[facet] then
@@ -506,7 +514,7 @@ function RSFacet:expired()
                          	  self.context.IComponent, 
                          	  "AccessControlServiceReceptacle", 
                          	  "IAccessControlService", 
-                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+                         	  "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   if not status then
 	    --erro ja joi logado
 	    return nil
@@ -748,7 +756,7 @@ function startup(self)
     end
   }
   rs.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
-    "IDL:openbusidl/acs/ICredentialObserver:1.0"
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0"
   )
   rs.observerId =
     accessControlService:addObserver(rs.observer, {})
@@ -769,7 +777,7 @@ function startup(self)
 
   -- Referência à faceta de gerenciamento do ACS
   mgm.acsmgm = acsIComp:getFacetByName("IManagement")
-  mgm.acsmgm = orb:narrow(mgm.acsmgm, "IDL:openbusidl/acs/IManagement:1.0")
+  mgm.acsmgm = orb:narrow(mgm.acsmgm, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   -- Administradores dos serviços
   mgm.admins = {}
   for _, name in ipairs(config.administrators) do
@@ -811,7 +819,7 @@ function shutdown(self)
                          	    self.context.IComponent, 
                          	    "AccessControlServiceReceptacle", 
                          	    "IAccessControlService", 
-                         	    "IDL:openbusidl/acs/IAccessControlService:1.0")
+                         	    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
     if not status then
 	    -- erro ja foi logado
 	    error{"IDL:SCS/ShutdownFailed:1.0"}
@@ -886,7 +894,7 @@ function ManagementFacet:loadData()
   for _, auth in ipairs(data) do
     local succ, depl = self.acsmgm.__try:getSystemDeployment(auth.deploymentId)
     if not succ then
-      if depl[1] == "IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0" then
+      if depl[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
         remove[auth] = true
         Log:warn(format("Removendo autorizações de '%s': " ..
           "removida do Serviço de Controle de Acesso.", auth.deploymentId))
@@ -915,7 +923,7 @@ function ManagementFacet:addInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if self.interfaces[ifaceId] then
     Log:error(format("Interface '%s' já cadastrada.", ifaceId))
-    error{"IDL:openbusidl/rs/InterfaceIdentifierAlreadyExists:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0"}
   end
   self.interfaces[ifaceId] = true
   local succ, msg = self.ifaceDB:save(ifaceId, ifaceId)
@@ -934,12 +942,12 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if not self.interfaces[ifaceId] then
     Log:error(format("Interface '%s' não está cadastrada.", ifaceId))
-    error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0"}
   end
   for _, auth in pairs(self.authorizations) do
     if auth.authorized[ifaceId] == "strict" then
       Log:error(format("Interface '%s' em uso.", ifaceId))
-      error{"IDL:openbusidl/rs/InterfaceIdentifierInUse:1.0"}
+      error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierInUse:1.0"}
     end
   end
   self.interfaces[ifaceId] = nil
@@ -981,11 +989,11 @@ function ManagementFacet:grant(deploymentId, ifaceId, strict)
     end
     if not expression then
       Log:error(format("Expressão regular inválida: '%s'", ifaceId))
-      error{"IDL:openbusidl/rs/InvalidRegularExpression:1.0"}
+      error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0"}
     end
   elseif strict and not self.interfaces[ifaceId] then
     Log:error(format("Interface '%s' não cadastrada.", ifaceId))
-    error{"IDL:openbusidl/rs/InterfaceIdentifierNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0"}
   end
   local auth = self.authorizations[deploymentId]
   if not auth then 
@@ -994,7 +1002,7 @@ function ManagementFacet:grant(deploymentId, ifaceId, strict)
     if not succ then
       Log:error(format("Implementação '%s' não cadastrada.",
         deploymentId))
-      error{"IDL:openbusidl/rs/SystemDeploymentNonExistent:1.0"}
+      error{"IDL:tecgraf/openbus/core/v1_05/registry_service/SystemDeploymentNonExistent:1.0"}
     end
     auth = {
       deploymentId = deploymentId,
@@ -1031,7 +1039,7 @@ function ManagementFacet:revoke(deploymentId, ifaceId)
   local auth = self.authorizations[deploymentId]
   if not (auth and auth.authorized[ifaceId]) then
     Log:error(format("Não há autorização para '%s'.", deploymentId))
-    error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"}
   end
   local succ, msg
   auth.authorized[ifaceId] = nil
@@ -1058,7 +1066,7 @@ function ManagementFacet:removeAuthorization(deploymentId)
   self:checkPermission()
   if not self.authorizations[deploymentId] then
     Log:error(format("Não há autorização para '%s'.", deploymentId))
-    error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"}
   end
   self.authorizations[deploymentId] = nil
   local succ, msg = self.authDB:remove(deploymentId)
@@ -1132,7 +1140,7 @@ function ManagementFacet:getAuthorization(deploymentId)
   local auth = self.authorizations[deploymentId]
   if not auth then
     Log:error(format("Não há autorização para '%s'.", deploymentId))
-    error{"IDL:openbusidl/rs/AuthorizationNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"}
   end
   return self:copyAuthorization(auth)
 end

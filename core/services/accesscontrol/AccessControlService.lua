@@ -566,7 +566,7 @@ function ManagementFacet:addSystem(id, description)
   self:checkPermission()
   if self.systems[id] then
     Log:error(format("Sistema '%s' já cadastrado.", id))
-    error{"IDL:openbusidl/acs/SystemAlreadyExists:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0"}
   end
   local succ, msg = self.systemDB:save(id, {
     id = id,
@@ -588,13 +588,13 @@ function ManagementFacet:removeSystem(id)
   self:checkPermission()
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{"IDL:openbusidl/acs/SystemNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"}
   end
   local depls = self.deploymentDB:getValues()
   for _, depl in ipairs(depls) do
     if depl.systemId == id then
       Log:error(format("Sistema '%s' em uso.", id))
-      error{"IDL:openbusidl/acs/SystemInUse:1.0"}
+      error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0"}
     end
   end
   self.systems[id] = nil
@@ -614,7 +614,7 @@ function ManagementFacet:setSystemDescription(id, description)
   self:checkPermission()
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{"IDL:openbusidl/acs/SystemNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"}
   end
   local system, msg = self.systemDB:get(id)
   if system then
@@ -652,7 +652,7 @@ end
 function ManagementFacet:getSystemById(id)
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{"IDL:openbusidl/acs/SystemNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"}
   end
   local system, msg = self.systemDB:get(id)
   if not system then
@@ -675,18 +675,18 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
   self:checkPermission()
   if self.deployments[id] then
     Log:error(format("Implantação '%s' já cadastrada.", id))
-    error{"IDL:openbusidl/acs/SystemDeploymentAlreadyExists:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0"}
   end
   if not self.systems[systemId] then
     Log:error(format("Falha ao criar implantação '%s': sistema %s "..
                      "não cadastrado.", id, systemId))
-    error{"IDL:openbusidl/acs/SystemNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"}
   end
   local succ, msg = lce.x509.readfromderstring(certificate)
   if not succ then
     Log:error(format("Falha ao criar implantação '%s': certificado inválido.",
       id))
-    error{"IDL:openbusidl/acs/InvalidCertificate:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0"}
   end
   self.deployments[id] = true
   succ, msg = self.deploymentDB:save(id, {
@@ -713,7 +713,7 @@ function ManagementFacet:removeSystemDeployment(id)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
   end
   self.deployments[id] = nil
   local succ, msg = self.deploymentDB:remove(id)
@@ -736,7 +736,7 @@ function ManagementFacet:removeSystemDeployment(id)
     local ic = rs:_component()
     ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
     rs = ic:getFacetByName("IManagement")
-    rs = orb:narrow(rs, "IDL:openbusidl/rs/IManagement:1.0")
+    rs = orb:narrow(rs, "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
     rs.__try:removeAuthorization(id)
   end
 end
@@ -751,7 +751,7 @@ function ManagementFacet:setSystemDeploymentDescription(id, description)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
@@ -777,7 +777,7 @@ end
 function ManagementFacet:getSystemDeploymentCertificate(id)
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
   end
   local cert, msg = self.certificateDB:get(id)
   if not cert then
@@ -796,12 +796,12 @@ function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
   end
   local tmp, msg = lce.x509.readfromderstring(certificate)
   if not tmp then
     Log:error(format("%s: certificado inválido.", id, msg))
-    error{"IDL:openbusidl/acs/InvalidCertificate:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0"}
   end
   local succ, msg = self.certificateDB:save(id, certificate)
   if not succ then
@@ -830,7 +830,7 @@ end
 function ManagementFacet:getSystemDeployment(id)
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:openbusidl/acs/SystemDeploymentNonExistent:1.0"}
+    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then

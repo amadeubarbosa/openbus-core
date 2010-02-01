@@ -54,11 +54,11 @@ facetDescriptions.IMetaInterface.interface_name   = "IDL:scs/core/IMetaInterface
 facetDescriptions.IMetaInterface.class            = scs.MetaInterface
 
 facetDescriptions.SessionEventSink.name           = "SessionEventSink"
-facetDescriptions.SessionEventSink.interface_name = "IDL:openbusidl/ss/SessionEventSink:1.0"
+facetDescriptions.SessionEventSink.interface_name = "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0"
 facetDescriptions.SessionEventSink.class          = Session.SessionEventSink
 
 facetDescriptions.ISession.name                   = "ISession"
-facetDescriptions.ISession.interface_name         = "IDL:openbusidl/ss/ISession:1.0"
+facetDescriptions.ISession.interface_name         = "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0"
 facetDescriptions.ISession.class                  = Session.Session
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
@@ -111,7 +111,7 @@ function SessionService:createSession(member)
                          	  self.context.IComponent, 
                          	  "AccessControlServiceReceptacle", 
                          	  "IAccessControlService", 
-                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+                         	  "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   if not status then
 	    -- erro ja foi logado, só retorna
 	    return nil
@@ -186,7 +186,7 @@ function SessionService:expired()
                          	  self.context.IComponent, 
                          	  "AccessControlServiceReceptacle", 
                          	  "IAccessControlService", 
-                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+                         	  "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
                          	  
   if not status then
 	  -- erro ja foi logado, só retorna

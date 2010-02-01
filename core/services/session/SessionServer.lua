@@ -65,11 +65,11 @@ facetDescriptions.IMetaInterface.interface_name      = "IDL:scs/core/IMetaInterf
 facetDescriptions.IMetaInterface.class               = scs.MetaInterface
 
 facetDescriptions.ISessionService.name               = "ISessionService"
-facetDescriptions.ISessionService.interface_name     = "IDL:openbusidl/ss/ISessionService:1.0"
+facetDescriptions.ISessionService.interface_name     = "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"
 facetDescriptions.ISessionService.class              = SessionService.SessionService
 
 facetDescriptions.ICredentialObserver.name           = "SessionServiceCredentialObserver"
-facetDescriptions.ICredentialObserver.interface_name = "IDL:openbusidl/acs/ICredentialObserver:1.0"
+facetDescriptions.ICredentialObserver.interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0"
 facetDescriptions.ICredentialObserver.class          = SessionService.Observer
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"

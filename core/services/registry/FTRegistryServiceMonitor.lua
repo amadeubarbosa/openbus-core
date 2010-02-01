@@ -157,7 +157,7 @@ function FTRSMonitorFacet:monitor()
 
 			local ftrsService = orb:newproxy("corbaloc::"..self.config.registryServerHostName..
 											":"..self.config.registryServerHostPort.."/FTRS",
-											"IDL:openbusidl/ft/IFaultTolerantService:1.0")
+											"IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
 
 			self.recConnId = nil
 			if OilUtilities:existent(ftrsService) then

@@ -167,7 +167,7 @@ function SessionServiceComponent:shutdown()
                          	  self.context.IComponent, 
                          	  "AccessControlServiceReceptacle", 
                          	  "IAccessControlService", 
-                         	  "IDL:openbusidl/acs/IAccessControlService:1.0")
+                         	  "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
     if not status then
 	    -- erro ja foi logado, só retorna
 	    return nil

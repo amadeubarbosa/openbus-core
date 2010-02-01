@@ -140,7 +140,7 @@ function FTACSMonitorFacet:monitor()
 
 			
 			local ftacsService = orb:newproxy("corbaloc::"..self.config.hostName..":"..self.config.hostPort.."/FTACS",
-					             "IDL:openbusidl/ft/IFaultTolerantService:1.0")
+					             "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
 
 			self.recConnId = nil
 			if OilUtilities:existent(ftacsService) then

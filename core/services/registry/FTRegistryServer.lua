@@ -78,16 +78,16 @@ facetDescriptions.IMetaInterface.interface_name    = "IDL:scs/core/IMetaInterfac
 facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 
 facetDescriptions.IRegistryService.name            = "IRegistryService"
-facetDescriptions.IRegistryService.interface_name  = "IDL:openbusidl/rs/IRegistryService:1.0"
+facetDescriptions.IRegistryService.interface_name  = "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0"
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
 
 facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
-facetDescriptions.IFaultTolerantService.interface_name        = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
+facetDescriptions.IFaultTolerantService.interface_name        = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
 facetDescriptions.IFaultTolerantService.class                 = FaultTolerantService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                   = "FTRS"
 
 facetDescriptions.IManagement.name           = "IManagement"
-facetDescriptions.IManagement.interface_name = "IDL:openbusidl/rs/IManagement:1.0"
+facetDescriptions.IManagement.interface_name = "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0"
 facetDescriptions.IManagement.class          = RegistryService.ManagementFacet
 facetDescriptions.IManagement.key            = "MGM"
 

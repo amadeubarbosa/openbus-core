@@ -58,7 +58,7 @@ oil.orb = orb
 local FTRegistryServiceMonitor = require "core.services.registry.FTRegistryServiceMonitor"
 local scs = require "scs.core.base"
 
-orb:loadidlfile(IDLPATH_DIR.."/ft_service_monitor.idl")
+orb:loadidlfile(IDLPATH_DIR.."/fault_tolerance.idl")
 
 -----------------------------------------------------------------------------
 -- FTRegistryServiceMonitor Descriptions
@@ -85,7 +85,7 @@ facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInter
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
 facetDescriptions.IFTRegistryServiceMonitor.name 			= "IFTServiceMonitor"
-facetDescriptions.IFTRegistryServiceMonitor.interface_name  = "IDL:openbusidl/ft/IFTServiceMonitor:1.0"
+facetDescriptions.IFTRegistryServiceMonitor.interface_name  = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
 facetDescriptions.IFTRegistryServiceMonitor.class           = FTRegistryServiceMonitor.FTRSMonitorFacet
 facetDescriptions.IFTRegistryServiceMonitor.key             = "FTRSMonitor"
 
@@ -93,7 +93,7 @@ facetDescriptions.IFTRegistryServiceMonitor.key             = "FTRSMonitor"
 local receptacleDescriptions = {}
 receptacleDescriptions.IFaultTolerantService = {}
 receptacleDescriptions.IFaultTolerantService.name 			= "IFaultTolerantService"
-receptacleDescriptions.IFaultTolerantService.interface_name = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
+receptacleDescriptions.IFaultTolerantService.interface_name = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
 receptacleDescriptions.IFaultTolerantService.is_multiplex 	= false
 receptacleDescriptions.IFaultTolerantService.type   		= "Receptacle"
 
@@ -111,7 +111,7 @@ componentId.platform_spec = ""
 ---
 function main()
 
-  local ftregistryService = orb:newproxy("corbaloc::"..hostAdd.."/FTRS","IDL:openbusidl/ft/IFaultTolerantService:1.0")
+  local ftregistryService = orb:newproxy("corbaloc::"..hostAdd.."/FTRS","IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
   if ftregistryService:_non_existent() then
       Log:error("Servico de registro nao encontrado.")
       os.exit(1)

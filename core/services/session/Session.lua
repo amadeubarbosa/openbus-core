@@ -47,7 +47,7 @@ function Session:addMember(member)
   self.sessionMembers[identifier] = member
 
   -- verifica se o membro recebe eventos
-  local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
+  local eventSinkInterface = "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0"
   local eventSink = member:getFacet(eventSinkInterface)
   if eventSink then
     Log:session("Membro "..memberName.." receberá eventos")

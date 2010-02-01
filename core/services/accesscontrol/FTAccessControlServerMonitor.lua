@@ -59,7 +59,7 @@ oil.verbose:level(2)
 local FTAccessControlServiceMonitor = require "core.services.accesscontrol.FTAccessControlServiceMonitor"
 local scs = require "scs.core.base"
 
-orb:loadidlfile(IDLPATH_DIR.."/ft_service_monitor.idl")
+orb:loadidlfile(IDLPATH_DIR.."/fault_tolerance.idl")
 
 -----------------------------------------------------------------------------
 -- FTAccessControlServiceMonitor Descriptions
@@ -86,7 +86,7 @@ facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInter
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
 facetDescriptions.IFTAccessControlServiceMonitor.name 			  = "IFTServiceMonitor"
-facetDescriptions.IFTAccessControlServiceMonitor.interface_name   = "IDL:openbusidl/ft/IFTServiceMonitor:1.0"
+facetDescriptions.IFTAccessControlServiceMonitor.interface_name   = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
 facetDescriptions.IFTAccessControlServiceMonitor.class            =  FTAccessControlServiceMonitor.FTACSMonitorFacet
 facetDescriptions.IFTAccessControlServiceMonitor.key              = "FTACSMonitor"
 
@@ -94,7 +94,7 @@ facetDescriptions.IFTAccessControlServiceMonitor.key              = "FTACSMonito
 local receptacleDescriptions = {}
 receptacleDescriptions.IFaultTolerantService = {}
 receptacleDescriptions.IFaultTolerantService.name 			= "IFaultTolerantService"
-receptacleDescriptions.IFaultTolerantService.interface_name = "IDL:openbusidl/ft/IFaultTolerantService:1.0"
+receptacleDescriptions.IFaultTolerantService.interface_name = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
 receptacleDescriptions.IFaultTolerantService.is_multiplex 	= false
 receptacleDescriptions.IFaultTolerantService.type   		= "Receptacle"
 
@@ -111,7 +111,7 @@ componentId.platform_spec = ""
 ---
 function main()
 
-  local ftacsService = orb:newproxy("corbaloc::"..hostAdd.."/FTACS","IDL:openbusidl/ft/IFaultTolerantService:1.0")
+  local ftacsService = orb:newproxy("corbaloc::"..hostAdd.."/FTACS","IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
   if ftacsService:_non_existent() then
       Log:error("Faceta FT do Servico de controle de acesso nao encontrado.")
       os.exit(1)
