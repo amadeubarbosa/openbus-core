@@ -35,17 +35,14 @@ public final class LeaseRenewer {
    * 
    * @param credential A credencial que deve ser renovada.
    * @param leaseProvider O provedor onde o <i>lease</i> deve ser renovado.
-   * @param openbusCallback <i>Callback</i> usada para atualizar o estado do
-   *        Openbus quando uma renovação de um <i>lease</i> falhou.
-   * @param userCallback <i>Callback</i> usada para informar que a renovação de
-   *        um <i>lease</i> falhou.
+   * @param expiredCallback <i>Callback</i> usada para informar que a renovação
+   *        de um <i>lease</i> falhou.
    */
   public LeaseRenewer(Credential credential, ILeaseProvider leaseProvider,
-    LeaseExpiredCallback openbusCallback, LeaseExpiredCallback userCallback) {
+    LeaseExpiredCallback expiredCallback) {
     this.leaseProvider = leaseProvider;
-    this.renewer =
-      new RenewerTask(credential, this.leaseProvider, openbusCallback,
-        userCallback);
+    this.renewer = new RenewerTask(credential, this.leaseProvider,
+      expiredCallback);
   }
 
   /**
@@ -64,7 +61,7 @@ public final class LeaseRenewer {
    * @param lec O observador do <i>lease</i>.
    */
   public void setLeaseExpiredCallback(LeaseExpiredCallback lec) {
-    this.renewer.userExpiredCallback = lec;
+    this.renewer.expiredCallback = lec;
   }
 
   /**
@@ -96,15 +93,10 @@ public final class LeaseRenewer {
      */
     private ILeaseProvider provider;
     /**
-     * <i>Callback</i> usada para atualizar o estado do Openbus quando uma
-     * renovação de um <i>lease</i> falhou.
-     */
-    private LeaseExpiredCallback openbusExpiredCallback;
-    /**
      * <i>Callback</i> usada para informar que a renovação de um <i>lease</i>
      * falhou.
      */
-    private LeaseExpiredCallback userExpiredCallback;
+    private LeaseExpiredCallback expiredCallback;
     /**
      * Indica se a <i>thread</i> deve continuar executando.
      */
@@ -115,7 +107,6 @@ public final class LeaseRenewer {
      * 
      * @param credential A credencial correspondente ao <i>lease</i>.
      * @param provider O provedor do <i>lease</i>.
-     * 
      */
     RenewerTask(Credential credential, ILeaseProvider provider) {
       this.credential = credential;
@@ -128,16 +119,13 @@ public final class LeaseRenewer {
      * 
      * @param credential A credencial correspondente ao <i>lease</i>.
      * @param provider O provedor do <i>lease</i>.
-     * @param openbusCallback <i>Callback</i> usada para atualizar o estado do
-     *        Openbus quando uma renovação de um <i>lease</i> falhou.
-     * @param userCallback <i>Callback</i> usada para informar que a renovação
-     *        de um <i>lease</i> falhou.
+     * @param expiredCallback <i>Callback</i> usada para informar que a
+     *        renovação de um <i>lease</i> falhou.
      */
     RenewerTask(Credential credential, ILeaseProvider provider,
-      LeaseExpiredCallback openbusCallback, LeaseExpiredCallback userCallback) {
+      LeaseExpiredCallback expiredCallback) {
       this(credential, provider);
-      this.userExpiredCallback = userCallback;
-      this.openbusExpiredCallback = openbusCallback;
+      this.expiredCallback = expiredCallback;
     }
 
     /**
@@ -161,9 +149,8 @@ public final class LeaseRenewer {
 
           if (expired) {
             Log.LEASE.warning("Falha na renovação da credencial.");
-            this.openbusExpiredCallback.expired();
-            if (this.userExpiredCallback != null) {
-              this.userExpiredCallback.expired();
+            if (this.expiredCallback != null) {
+              this.expiredCallback.expired();
             }
             this.mustContinue = false;
           }
@@ -209,3 +196,4 @@ public final class LeaseRenewer {
     }
   }
 }
+
