@@ -104,12 +104,9 @@ function startRenew(self)
           -- uma freqüência maior.
           log:error("Falha na acessibilidade ao provedor do lease.\nMensagem: "
               ..tostring(granted))
-          timer.rate = (self.retrying and timer.rate) or (timer.rate /2)
-          self.retrying = true
           return
         end
       end
-      self.retrying = false
       if not granted then
         log:lease("Lease não renovado.")
         timer:disable()
