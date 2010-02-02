@@ -106,7 +106,7 @@ end
 -- Retorna ao seu estado inicial, ou seja, desfaz as definições de atributos
 -- realizadas.
 ---
-function Openbus:_reset()
+function Openbus:_resetAll()
   self.credentialManager = nil
   if not self.isORBFinished and self.orb then
     self:finish()
@@ -126,6 +126,23 @@ function Openbus:_reset()
   self.clientInterceptor = nil
   self.clientInterceptorConfig = nil
   self.connectionState = 2
+end
+
+---
+-- Retorna ao seu estado inicial, ou seja, desfaz as definições de atributos
+-- realizadas.
+---
+function Openbus:_reset()
+  self.acs = nil
+  self.rgs = nil
+  self.lp = nil
+  self.ss = nil
+  self.leaseRenewer = nil
+  self.connectionState = 2
+  if self.credentialManager then
+    self.credentialManager.invalidate()
+    self.credentialManager.invalidateThreadValue()
+  end
 end
 
 ---
@@ -166,10 +183,12 @@ function Openbus:_fetchACS()
     return false
   end
   self.acs, self.lp = acs, lp
-  local status, err = oil.pcall(self._setInterceptors, self)
-  if not status then
-    log:error("Erro ao cadastrar interceptadores no ORB. Erro: " .. err)
-    return false
+  if not self.clientInterceptor or not self.serverInterceptor then
+    local status, err = oil.pcall(self._setInterceptors, self)
+    if not status then
+      log:error("Erro ao cadastrar interceptadores no ORB. Erro: " .. err)
+      return false
+    end
   end
   return true
 end
@@ -207,8 +226,7 @@ end
 ---
 function Openbus:_completeConnection(credential, lease)
   self.credentialManager:setValue(credential)
-  self.leaseRenewer = LeaseRenewer(
-    lease, credential, self.lp, self.leaseExpiredCallback)
+  self.leaseRenewer = LeaseRenewer(lease, credential, self.lp, self)
   self.leaseRenewer:startRenew()
   self.connectionState = 1
   return self:getRegistryService()
@@ -238,7 +256,7 @@ function Openbus:resetAndInitialize(host, port, props, serverInterceptorConfig,
     log:error("OpenBus: O campo 'port' não pode ser nil nem negativo.")
     return false
   end
-  self:_reset()
+  self:_resetAll()
   -- init
   self.host = host
   self.port = port
@@ -539,7 +557,7 @@ function Openbus:disconnect()
       log:error("OpenBus: Não foi possível realizar o logout. Erro " .. err)
       return false
     else
-      self:_reset()
+      self:_resetAll()
     end
     return true
   else
@@ -554,10 +572,7 @@ end
 --         contrário.
 ---
 function Openbus:isConnected()
-  if self.connectionState == 1 then
-    return true
-  end
-  return false
+  return (self.connectionState == 1)
 end
 
 ---
@@ -568,11 +583,6 @@ end
 ---
 function Openbus:addLeaseExpiredCallback(lec)
   self.leaseExpiredCallback = lec
-  if self.connectionState == 1 then
-    if self.leaseRenewer then
-      self.leaseRenewer:setLeaseExpiredCallback(lec)
-    end
-  end
 end
 
 ---
@@ -581,10 +591,18 @@ end
 ---
 function Openbus:removeLeaseExpiredCallback()
   self.leaseExpiredCallback = nil
-  if self.connectionState == 1 then
-    if self.leaseRenewer then
-      self.leaseRenewer:setLeaseExpiredCallback(nil)
-    end
+end
+
+---
+-- Método interno da API que recebe a notificação de que o lease expirou.
+-- Deve deixar a classe em um estado em que a callback do usuário
+-- possa se reconectar.
+---
+function Openbus:expired()
+  -- Deve dar reset antes de chamar o usuário
+  self:_reset()
+  if self.leaseExpiredCallback then
+    self.leaseExpiredCallback:expired()
   end
 end
 
