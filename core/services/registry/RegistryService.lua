@@ -175,9 +175,9 @@ function RSFacet:createFacetIndex(owner, memberName, allFacets)
   local mgm = self.context.IManagement
   for _, facet in ipairs(allFacets) do
     if mgm:hasAuthorization(owner, facet.interface_name) then
-      print(facet.name, facet.interface_name)
       facets[facet.name] = true
       facets[facet.interface_name] = true
+      facets[facet.facet_ref] = true
       count = count + 1
     end
   end
@@ -300,7 +300,7 @@ end
 --@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:find(facets)
-  print("find")
+
   local ftFacet = self.context.IFaultTolerantService
   --atualiza estado em todas as réplicas
 
@@ -318,12 +318,6 @@ function RSFacet:find(facets)
   -- Para cada oferta de serviço disponível, selecionar-se
   -- a oferta que implementa todas as facetas discriminadas.
     for _, offerEntry in pairs(self.offersByIdentifier) do
-      print("offerEntry")  
-      print(offerEntry.facets)  
-      for facetName, facet in pairs(offerEntry.facets) do
-        print("X")
-        print(facetName, facet)
-      end
       local hasAllFacets = true
       for _, facet in ipairs(facets) do
         if not offerEntry.facets[facet] then
@@ -391,7 +385,7 @@ end
 function RSFacet:localFind(facets, criteria)
 	Log:faulttolerance("[localFind] Buscando ofertas somente na replica local.")
 	local selectedOffersEntries = {}
-	
+
 	-- Se nenhuma faceta foi discriminada e nenhum critério foi
 	-- definido, todas as ofertas de serviço que não existem localmente
 	-- devem ser retornadas.
@@ -401,10 +395,13 @@ function RSFacet:localFind(facets, criteria)
 			selectedOffersEntries[i].identifier = offerEntry.identifier
 			selectedOffersEntries[i].offer = offerEntry.offer
 			selectedOffersEntries[i].credential = offerEntry.credential
+			selectedOffersEntries[i].properties = offerEntry.properties
+			selectedOffersEntries[i].facets = Utils.marshalHashFacets(offerEntry.facets)
+			selectedOffersEntries[i].allFacets = offerEntry.allFacets
     	end
     	
 	elseif (#facets > 0 and #criteria == 0)  then
-	-- Para cada oferta de serviço disponível, selecionar-se
+	-- Para cada oferta de serviço disponível, deve-se selecionar
   	-- a oferta que implementa todas as facetas discriminadas.
   		for i, offerEntry in pairs(self.offersByIdentifier) do
 			local hasAllFacets = true
@@ -419,6 +416,9 @@ function RSFacet:localFind(facets, criteria)
 				selectedOffersEntries[i].identifier = offerEntry.identifier
 				selectedOffersEntries[i].offer = offerEntry.offer
 				selectedOffersEntries[i].credential = offerEntry.credential
+				selectedOffersEntries[i].properties = offerEntry.properties
+				selectedOffersEntries[i].facets = Utils.marshalHashFacets(offerEntry.facets)
+				selectedOffersEntries[i].allFacets = offerEntry.allFacets
 			end
 		end
 		Log:registry("Encontrei "..#selectedOffersEntries..
@@ -442,6 +442,9 @@ function RSFacet:localFind(facets, criteria)
 				selectedOffersEntries[i].identifier = offerEntry.identifier
 				selectedOffersEntries[i].offer = offerEntry.offer
 				selectedOffersEntries[i].credential = offerEntry.credential
+				selectedOffersEntries[i].properties = offerEntry.properties
+				selectedOffersEntries[i].facets = Utils.marshalHashFacets(offerEntry.facets)
+				selectedOffersEntries[i].allFacets = offerEntry.allFacets
 			end
 		  end
 		end
@@ -574,9 +577,16 @@ end
 
 FaultToleranceFacet = FaultTolerantService.FaultToleranceFacet
 FaultToleranceFacet.ftconfig = {}
+FaultToleranceFacet.rsReference = ""
 
 function FaultToleranceFacet:init()
-  self.ftconfig = assert(loadfile(DATA_DIR .."/conf/RSFaultToleranceConfiguration.lua"))()
+	self.ftconfig = assert(loadfile(DATA_DIR .."/conf/RSFaultToleranceConfiguration.lua"))()
+  
+	local rgs = self.context.IRegistryService
+	local notInHostAdd = rgs.config.registryServerHostName..":"
+				   ..tostring(rgs.config.registryServerHostPort) 
+
+	self.rsReference = "corbaloc::" .. notInHostAdd .. Utils.REGISTRY_SERVICE_KEY
 end
 
 function FaultToleranceFacet:updateStatus(params)
@@ -584,7 +594,7 @@ function FaultToleranceFacet:updateStatus(params)
 	Log:faulttolerance("[updateStatus] Atualiza estado das ofertas.")
     if not self.ftconfig then
 		Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
-		Log:warn("[updateStatus] Não foi possível executar 'updatestatus'")
+		Log:faultolerance("[warn][updateStatus] Não foi possível executar 'updatestatus'")
 		return false
 	end
 	
@@ -612,34 +622,36 @@ function FaultToleranceFacet:updateStatus(params)
 		criteria = input.criteria
 	end
 
+	local updated = self:updateOffersStatus(facets, criteria)
+
+	
+	return updated
+end
+
+function FaultToleranceFacet:updateOffersStatus(facets, criteria)
+	Log:faulttolerance("[updateOffersStatus] Sincronizando base de ofertas com as replicas exceto com ".. self.rsReference)
 	local rgs = self.context.IRegistryService
-
-	local notInHostAdd = rgs.config.registryServerHostName..":"
-				   ..tostring(rgs.config.registryServerHostPort) 
-
-	local selfRef = "corbaloc::" .. notInHostAdd .. Utils.REGISTRY_SERVICE_KEY
-
-	Log:faulttolerance("[updateStatus] Sincronizando base de ofertas com as replicas exceto em "..notInHostAdd)
 	local updated = false
 	local i = 1
 
 	repeat
-	if self.ftconfig.hosts.RS[i] ~= selfRef then
+	if self.ftconfig.hosts.RS[i] ~= self.rsReference then
 	   local ret, stop, remoteRS = oil.pcall(Utils.fetchService, 
-										Openbus:getORB(), 
-										self.ftconfig.hosts.RS[i], 
-										Utils.REGISTRY_SERVICE_KEY)
+											Openbus:getORB(), 
+											self.ftconfig.hosts.RS[i], 
+											Utils.REGISTRY_SERVICE_KEY)
 		
 		if remoteRS then
 			local selectedOffersEntries = remoteRS:localFind(facets, criteria)
-			
+	
 			--SINCRONIZA
 			--para todas as ofertas encontradas nas replicas
 			for i, offerEntryFound in pairs(selectedOffersEntries) do
 				-- verifica se ja existem localmente
 				for j, offerEntry in pairs(rgs.offersByIdentifier) do
 					local insert = true
-						if offerEntryFound == offerEntry then
+					--se ja existir, nao adiciona
+					if Utils.equalsOfferEntries(offerEntryFound, offerEntry) then
 						--se ja existir, nao insere
 						insert = false
 						break
@@ -649,6 +661,8 @@ function FaultToleranceFacet:updateStatus(params)
 				if insert then  
 				  -- se nao existir,
 				  --insere no banco local
+				  offerEntryFound.facets = Utils.unmarshalHashFacets(offerEntryFound.facets)
+				  
 				  rgs.offersDB:insert(offerEntryFound) 
 				  --insere na lista local
 				  rgs.offersByIdentifier.insert(offerEntryFound)

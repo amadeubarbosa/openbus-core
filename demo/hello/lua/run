@@ -8,5 +8,5 @@ trap "kill $pid > /dev/null 2> /dev/null" 0
 
 sleep 6
 
-${OPENBUS_HOME}/core/bin/servicelauncher client.lua
+${OPENBUS_HOME}/core/bin/servicelauncher client.lua $1
 

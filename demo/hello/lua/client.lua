@@ -15,7 +15,13 @@ scsutils:readProperties(props, "Hello.properties")
 local host = props["host.name"].value
 local port = props["host.port"].value
 openbus:init(host, tonumber(port))
---openbus:enableFaultTolerance()
+
+
+if arg[1] == "ft" then
+  openbus:enableFaultTolerance() 
+end
+
+--
 local orb = openbus:getORB()
 
 -- Execução
@@ -38,8 +44,15 @@ function main ()
     "IDL:scs/core/IComponent:1.0")
   local helloFacet = helloComponent:getFacet("IDL:demoidl/hello/IHello:1.0")
   helloFacet = orb:narrow(helloFacet, "IDL:demoidl/hello/IHello:1.0")
-  helloFacet:sayHello()
-
+  
+  if openbus.isFaultToleranceEnable then
+  	while true do
+  		helloFacet:sayHello()
+  		oil.sleep(5)
+  	end
+  else
+  	helloFacet:sayHello()
+  end
   openbus:disconnect()
   openbus:destroy()
 end

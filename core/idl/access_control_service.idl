@@ -74,9 +74,9 @@ interface ILeaseProvider {
  * \brief Representa a entrada completa de uma credencial de um membro.
  */
 struct EntryCredential {
-  Credential credential;
+  Credential aCredential;
   boolean certified;
-  Lease lease;
+  Lease aLease;
   CredentialObserverIdentifierList observers;
   CredentialObserverIdentifier observedBy;
 };
