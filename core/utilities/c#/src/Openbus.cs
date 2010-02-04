@@ -1,14 +1,11 @@
 using System;
 using Ch.Elca.Iiop;
 using OpenbusAPI.Interceptors;
-using openbusidl.rs;
-using openbusidl.acs;
 using System.Runtime.Remoting;
 using OpenbusAPI.Lease;
 using scs.core;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
-using openbusidl.ss;
 using omg.org.CORBA;
 using OpenbusAPI.Exception;
 using System.Security.Cryptography.X509Certificates;
@@ -16,6 +13,9 @@ using OpenbusAPI.Security;
 using System.Runtime.Remoting.Channels;
 using OpenbusAPI.Logger;
 using System.Security.Cryptography;
+using tecgraf.openbus.core.v1_05.access_control_service;
+using tecgraf.openbus.core.v1_05.registry_service;
+using tecgraf.openbus.session_service.v1_05;
 
 
 namespace OpenbusAPI

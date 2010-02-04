@@ -1,7 +1,8 @@
-using openbusidl.acs;
+
 using omg.org.IOP;
 using OpenbusAPI.Logger;
 using omg.org.PortableInterceptor;
+using tecgraf.openbus.core.v1_05.access_control_service;
 
 
 namespace OpenbusAPI.Interceptors

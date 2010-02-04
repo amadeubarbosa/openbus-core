@@ -1,9 +1,9 @@
 using System;
 using System.Text;
-using openbusidl.acs;
 using System.Threading;
 using OpenbusAPI.Logger;
 using omg.org.CORBA;
+using tecgraf.openbus.core.v1_05.access_control_service;
 
 
 namespace OpenbusAPI.Lease
