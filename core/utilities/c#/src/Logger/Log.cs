@@ -44,6 +44,7 @@ namespace OpenbusAPI.Logger
       SERVICES.SetLevel(level);
       LEASE.SetLevel(level);
       INTERCEPTORS.SetLevel(level);
+      CRYPTO.SetLevel(level);
     }
 
     #endregion
