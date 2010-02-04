@@ -9,9 +9,9 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import openbusidl.rs.IRegistryService;
-import openbusidl.rs.Property;
-import openbusidl.rs.ServiceOffer;
+import tecgraf.openbus.core.v1_05.registry_service.IRegistryService;
+import tecgraf.openbus.core.v1_05.registry_service.Property;
+import tecgraf.openbus.core.v1_05.registry_service.ServiceOffer;
 
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.StringHolder;
