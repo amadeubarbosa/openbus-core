@@ -519,6 +519,21 @@ end
 -- Faceta IManagement
 --------------------------------------------------------------------------------
 
+--
+-- Aliases
+--
+local SystemInUseException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0"
+local SystemNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"
+local SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0"
+--
+local InvalidCertificateException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0"
+local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"
+local SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0"
+--
+local UserAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserAlreadyExists:1.0"
+local UserNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0"
+
+
 ManagementFacet = oop.class{}
 
 ---
@@ -544,6 +559,12 @@ function ManagementFacet:loadData()
   -- Cache de objetos
   self.systems = {}
   self.deployments = {}
+  self.users = {}
+  -- Carrega os usuário
+  local data = assert(self.userDB:getValues())
+  for _, info in ipairs(data) do
+    self.users[info.id] = true
+  end
   -- Carrega os sistemas
   local data = assert(self.systemDB:getValues())
   for _, info in ipairs(data) do
@@ -566,7 +587,7 @@ function ManagementFacet:addSystem(id, description)
   self:checkPermission()
   if self.systems[id] then
     Log:error(format("Sistema '%s' já cadastrado.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0"}
+    error{SystemAlreadyExistsException}
   end
   local succ, msg = self.systemDB:save(id, {
     id = id,
@@ -588,13 +609,13 @@ function ManagementFacet:removeSystem(id)
   self:checkPermission()
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"}
+    error{SystemNonExistentException}
   end
   local depls = self.deploymentDB:getValues()
   for _, depl in ipairs(depls) do
     if depl.systemId == id then
       Log:error(format("Sistema '%s' em uso.", id))
-      error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0"}
+      error{SystemInUseException}
     end
   end
   self.systems[id] = nil
@@ -614,7 +635,7 @@ function ManagementFacet:setSystemDescription(id, description)
   self:checkPermission()
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"}
+    error{SystemNonExistentException}
   end
   local system, msg = self.systemDB:get(id)
   if system then
@@ -649,10 +670,10 @@ end
 --
 -- @return Sistema referente ao identificador.
 --
-function ManagementFacet:getSystemById(id)
+function ManagementFacet:getSystem(id)
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"}
+    error{SystemNonExistentException}
   end
   local system, msg = self.systemDB:get(id)
   if not system then
@@ -675,18 +696,18 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
   self:checkPermission()
   if self.deployments[id] then
     Log:error(format("Implantação '%s' já cadastrada.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0"}
+    error{SystemDeploymentAlreadyExistsException}
   end
   if not self.systems[systemId] then
     Log:error(format("Falha ao criar implantação '%s': sistema %s "..
                      "não cadastrado.", id, systemId))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"}
+    error{SystemNonExistentException}
   end
   local succ, msg = lce.x509.readfromderstring(certificate)
   if not succ then
     Log:error(format("Falha ao criar implantação '%s': certificado inválido.",
       id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0"}
+    error{InvalidCertificateException}
   end
   self.deployments[id] = true
   succ, msg = self.deploymentDB:save(id, {
@@ -713,7 +734,7 @@ function ManagementFacet:removeSystemDeployment(id)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
+    error{SystemDeploymentNonExistentException}
   end
   self.deployments[id] = nil
   local succ, msg = self.deploymentDB:remove(id)
@@ -729,14 +750,14 @@ function ManagementFacet:removeSystemDeployment(id)
   -- Invalida a credencial do membro que está sendo removido
   local acs = self.context.IAccessControlService
   acs:removeEntryById(id)
-  -- Remove todas as autorizações da implantação
-  local rs = self.context.ComponentServiceReceptacle
-  if rs then
-    local orb = Openbus:getORB()
-    local ic = rs:_component()
-    ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
-    rs = ic:getFacetByName("IManagement")
-    rs = orb:narrow(rs, "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  -- Remove todas as autorizações do membro
+  local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+    Openbus:getORB(),
+    self.context.IComponent,
+    "RegistryServiceReceptacle", 
+    "IManagement",
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  if succ and rs then
     rs.__try:removeAuthorization(id)
   end
 end
@@ -751,7 +772,7 @@ function ManagementFacet:setSystemDeploymentDescription(id, description)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
+    error{SystemDeploymentNonExistentException}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
@@ -777,7 +798,7 @@ end
 function ManagementFacet:getSystemDeploymentCertificate(id)
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
+    error{SystemDeploymentNonExistentException}
   end
   local cert, msg = self.certificateDB:get(id)
   if not cert then
@@ -796,12 +817,12 @@ function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
+    error{SystemDeploymentNonExistentException}
   end
   local tmp, msg = lce.x509.readfromderstring(certificate)
   if not tmp then
     Log:error(format("%s: certificado inválido.", id, msg))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0"}
+    error{InvalidCertificateException}
   end
   local succ, msg = self.certificateDB:save(id, certificate)
   if not succ then
@@ -830,7 +851,7 @@ end
 function ManagementFacet:getSystemDeployment(id)
   if not self.deployments[id] then
     Log:error(format("Implantação '%s' não cadastrada.", id))
-    error{"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"}
+    error{SystemDeploymentNonExistentException}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
@@ -859,6 +880,116 @@ function ManagementFacet:getSystemDeploymentsBySystemId(systemId)
     end
   end
   return array
+end
+
+-------------------------------------------------------------------------------
+
+---
+-- Cadastra um novo usuário.
+--
+-- @param id Identificador único do usuário.
+-- @param name Nome do usuário.
+-- 
+function ManagementFacet:addUser(id, name)
+  self:checkPermission()
+  if self.users[id] then
+    Log:error(format("Usuário '%s' já cadastrado.", id))
+    error{UserAlreadyExistsException}
+  end
+  self.users[id] = true
+  succ, msg = self.userDB:save(id, {
+    id = id,
+    name = name
+  })
+  if not succ then
+    Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
+      id, msg))
+  end
+end
+
+---
+-- Remove um usuário do barramento.
+--
+-- @param id Identificador do usuário.
+--
+function ManagementFacet:removeUser(id)
+  self:checkPermission()
+  if not self.users[id] then
+    Log:error(format("Usuário '%s' não cadastrado.", id))
+    error{UserNonExistentException}
+  end
+  self.users[id] = nil
+  local succ, msg = self.userDB:remove(id)
+  if not succ then
+    Log:error(format("Falha ao remover usuário '%s' da base de dados: %s",
+      id, msg))
+  end
+  -- Remove todas as autorizações do membro
+  local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+    Openbus:getORB(),
+    self.context.IComponent,
+    "RegistryServiceReceptacle", 
+    "IManagement",
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  if succ and rs then
+    rs.__try:removeAuthorization(id)
+  end
+end
+
+---
+-- Altera o nome do usuário.
+--
+-- @param id Identificador do usuário.
+-- @param name Novo nome do usuário.
+--
+function ManagementFacet:setUserName(id, name)
+  self:checkPermission()
+  if not self.users[id] then
+    Log:error(format("Usuário '%s' não cadastrado.", id))
+    error{UserNonExistentException}
+  end
+  local user, msg = self.userDB:get(id)
+  if not user then
+    Log:error(format("Falha ao recuperar usuário '%s': %s", id, msg))
+  else
+    local succ
+    user.name = name
+    succ, msg = self.userDB:save(id, user)
+    if not succ then
+      Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
+        id, msg))
+    end
+  end
+end
+
+---
+-- Recupera a implantação dado o seu identificador.
+--
+-- @return Retorna a implantação referente ao identificador.
+--
+function ManagementFacet:getUser(id)
+  if not self.users[id] then
+    Log:error(format("Usuário '%s' não cadastrado.", id))
+    error{UserNonExistentException}
+  end
+  local user, msg = self.userDB:get(id)
+  if not user then
+    Log:error(format("Falha ao recuperar usuário '%s': %s", id, msg))
+  end
+  return user
+end
+
+---
+-- Recupera todos usuários cadastrados
+--
+-- @return Uma seqüência com os usuários.
+--
+function ManagementFacet:getUsers()
+  local users, msg = self.userDB:getValues()
+  if not users then
+    Log:error(format("Falha ao recuperar usuários: %s", msg))
+  end
+  return users
 end
 
 --------------------------------------------------------------------------------
@@ -1014,6 +1145,7 @@ function startup(self)
   acs.lease = config.lease
 
   -- Inicializa as base de dados de gerenciamento
+  mgm.userDB = TableDB(DATA_DIR .. "/acs_user.db")
   mgm.systemDB = TableDB(DATA_DIR .. "/acs_system.db")
   mgm.deploymentDB = TableDB(DATA_DIR .. "/acs_deployment.db")
   -- Carrega a cache
