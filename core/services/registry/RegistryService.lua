@@ -858,6 +858,16 @@ end
 -- Faceta IManagement
 --------------------------------------------------------------------------------
 
+-- Aliases
+local InvalidRegularExpressionException = "IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0"
+local InterfaceIdentifierInUseException = "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierInUse:1.0"
+local InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0"
+local InterfaceIdentifierAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0"
+local UserNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0"
+local MemberNonExistentException = "IDL:tecgraf/openbus/core/v1_05/registry_service/MemberNonExistent:1.0"
+local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"
+local AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"
+
 ManagementFacet = oop.class{}
 
 ManagementFacet.expressions = {
@@ -902,29 +912,32 @@ function ManagementFacet:loadData()
     self.interfaces[iface] = true
   end
   -- Carrega as autorizações.
-  -- Verificar junto ao ACS se as implantações ainda existem.
+  -- Verificar junto ao ACS o membro ainda existe.
   local remove = {}
   data = assert(self.authDB:getValues())
   for _, auth in ipairs(data) do
-    local succ, depl = self.acsmgm.__try:getSystemDeployment(auth.deploymentId)
-    if not succ then
-      if depl[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
+    local succ, err
+    if auth.type == "ATSystemDeployment" then
+      succ, err = self.acsmgm.__try:getSystemDeployment(auth.id)
+    else -- type == "ATUser"
+      succ, err = self.acsmgm.__try:getUser(auth.id)
+    end
+    if succ then
+      self.authorizations[auth.id] = auth
+    else
+      if err[1] == SystemDeploymentNonExistentException or
+         err[1] == UserNonExistentException
+      then
         remove[auth] = true
         Log:warn(format("Removendo autorizações de '%s': " ..
-          "removida do Serviço de Controle de Acesso.", auth.deploymentId))
+         "removido do Serviço de Controle de Acesso.", auth.id))
       else
-        error(depl)  -- Exceção desconhecida, repassando
+        error(err) -- Exceção desconhecida, repassando
       end
-    elseif depl.systemId ~= auth.systemId then
-      remove[auth] = true
-      Log:warn(format("Removendo autorizações de '%s': " ..
-        " identificador de sistema difere.", auth.deploymentId))
-    else
-      self.authorizations[auth.deploymentId] = auth
     end
   end
   for auth in pairs(remove) do
-    self.authDB:remove(auth.deploymentId)
+    self.authDB:remove(auth.id)
   end
 end
 
@@ -937,7 +950,7 @@ function ManagementFacet:addInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if self.interfaces[ifaceId] then
     Log:error(format("Interface '%s' já cadastrada.", ifaceId))
-    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0"}
+    error{InterfaceIdentifierAlreadyExistsException}
   end
   self.interfaces[ifaceId] = true
   local succ, msg = self.ifaceDB:save(ifaceId, ifaceId)
@@ -956,12 +969,12 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if not self.interfaces[ifaceId] then
     Log:error(format("Interface '%s' não está cadastrada.", ifaceId))
-    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0"}
+    error{InterfaceIdentifierNonExistentException}
   end
   for _, auth in pairs(self.authorizations) do
     if auth.authorized[ifaceId] == "strict" then
       Log:error(format("Interface '%s' em uso.", ifaceId))
-      error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierInUse:1.0"}
+      error{InterfaceIdentifierInUseException}
     end
   end
   self.interfaces[ifaceId] = nil
@@ -985,13 +998,13 @@ function ManagementFacet:getInterfaceIdentifiers()
 end
 
 ---
--- Autoriza a implantação a exportar a interface.  O Serviço de Acesso
--- é consultado para verificar se a implantação está cadastrada.
+-- Autoriza o membro a exportar a interface.  O Serviço de Acesso
+-- é consultado para verificar se o membro está cadastrado.
 --
--- @param deploymentId Identificador da implantação.
+-- @param id Identificador do membro.
 -- @param ifaceId Identificador da interface.
 --
-function ManagementFacet:grant(deploymentId, ifaceId, strict)
+function ManagementFacet:grant(id, ifaceId, strict)
   self:checkPermission()
   local expression
   if string.match(ifaceId, "%*") then
@@ -1003,27 +1016,37 @@ function ManagementFacet:grant(deploymentId, ifaceId, strict)
     end
     if not expression then
       Log:error(format("Expressão regular inválida: '%s'", ifaceId))
-      error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0"}
+      error{InvalidRegularExpressionException}
     end
   elseif strict and not self.interfaces[ifaceId] then
     Log:error(format("Interface '%s' não cadastrada.", ifaceId))
-    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0"}
+    error{InterfaceIdentifierNonExistentException}
   end
-  local auth = self.authorizations[deploymentId]
+  local auth = self.authorizations[id]
   if not auth then 
-    -- Cria uma nova autorização: verificar junto ao ACS se implantação existe.
-    local succ, depl = self.acsmgm.__try:getSystemDeployment(deploymentId)
+    -- Cria uma nova autorização: verificar junto ao ACS se o membro existe
+    local type = "ATSystemDeployment"
+    local succ, member = self.acsmgm.__try:getSystemDeployment(id)
     if not succ then
-      Log:error(format("Implementação '%s' não cadastrada.",
-        deploymentId))
-      error{"IDL:tecgraf/openbus/core/v1_05/registry_service/SystemDeploymentNonExistent:1.0"}
+      if member[1] ~= SystemDeploymentNonExistentException then
+        error(member)  -- Exceção desconhecida, repassando
+      end
+      type = "ATUser"
+      succ, member = self.acsmgm.__try:getUser(id)
+      if not succ then
+        if member[1] ~= UserNonExistentException then
+          error(member)  -- Exceção desconhecida, repassando
+        end
+        Log:error(format("Membro '%s' não cadastrado.", id))
+        error{MemberNonExistentException}
+      end
     end
     auth = {
-      deploymentId = deploymentId,
-      systemId = depl.systemId,
+      id = id,
+      type = type,
       authorized = {},
     }
-    self.authorizations[deploymentId] = auth
+    self.authorizations[id] = auth
   elseif auth and auth.authorized[ifaceId] then
     return
   end
@@ -1034,61 +1057,58 @@ function ManagementFacet:grant(deploymentId, ifaceId, strict)
   else
     auth.authorized[ifaceId] = "normal"
   end
-  local succ, msg = self.authDB:save(deploymentId, auth)
+  local succ, msg = self.authDB:save(id, auth)
   if not succ then
-    Log:error(format("Falha ao salvar autorização '%s': %s",
-      deploymentId, msg))
+    Log:error(format("Falha ao salvar autorização '%s': %s", id, msg))
   end
-  self.context.IRegistryService:updateFacets(deploymentId)
+  self.context.IRegistryService:updateFacets(id)
 end
 
 ---
 -- Revoga a autorização para exportar a interface.
 --
--- @param deploymentId Identificador da implantação.
+-- @param id Identificador do membro.
 -- @param ifaceId Identificador da interface.
 --
-function ManagementFacet:revoke(deploymentId, ifaceId)
+function ManagementFacet:revoke(id, ifaceId)
   self:checkPermission()
-  local auth = self.authorizations[deploymentId]
+  local auth = self.authorizations[id]
   if not (auth and auth.authorized[ifaceId]) then
-    Log:error(format("Não há autorização para '%s'.", deploymentId))
-    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"}
+    Log:error(format("Não há autorização para '%s'.", id))
+    error{AuthorizationNonExistentException}
   end
   local succ, msg
   auth.authorized[ifaceId] = nil
   -- Se não houver mais autorizações, remover a entrada
   if next(auth.authorized) then
-    succ, msg = self.authDB:save(deploymentId, auth)
+    succ, msg = self.authDB:save(id, auth)
   else
-    self.authorizations[deploymentId] = nil
-    succ, msg = self.authDB:remove(deploymentId)
+    self.authorizations[id] = nil
+    succ, msg = self.authDB:remove(id)
   end
   if not succ then
-    Log:error(format("Falha ao remover autorização '%s': %s",
-      deploymentId, msg))
+    Log:error(format("Falha ao remover autorização '%s': %s", id, msg))
   end
-  self.context.IRegistryService:updateFacets(deploymentId)
+  self.context.IRegistryService:updateFacets(id)
 end
 
 ---
--- Remove a autorização da implantação.
+-- Remove a autorização do membro.
 --
--- @param deploymentId Identificador da implantação.
+-- @param id Identificador do membro.
 --
-function ManagementFacet:removeAuthorization(deploymentId)
+function ManagementFacet:removeAuthorization(id)
   self:checkPermission()
-  if not self.authorizations[deploymentId] then
-    Log:error(format("Não há autorização para '%s'.", deploymentId))
-    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"}
+  if not self.authorizations[id] then
+    Log:error(format("Não há autorização para '%s'.", id))
+    error{AuthorizationNonExistentException}
   end
-  self.authorizations[deploymentId] = nil
-  local succ, msg = self.authDB:remove(deploymentId)
+  self.authorizations[id] = nil
+  local succ, msg = self.authDB:remove(id)
   if not succ then
-    Log:error(format("Falha ao remover autorização '%s': %s",
-      deploymentId, msg))
+    Log:error(format("Falha ao remover autorização '%s': %s", id, msg))
   end
-  self.context.IRegistryService:updateFacets(deploymentId)
+  self.context.IRegistryService:updateFacets(id)
 end
 
 ---
@@ -1114,16 +1134,15 @@ function ManagementFacet:copyAuthorization(auth)
 end
 
 ---
--- Verifica se a implantação é autorizada a exporta 
--- uma determinada interface.
+-- Verifica se o membro é autorizado a exporta uma determinada interface.
 --
--- @param deploymentId Identificador da implantação.
+-- @param id Identificador do membro.
 -- @param iface Interface a ser consultada (repID).
 --
 -- @return true se é autorizada, false caso contrário.
 --
-function ManagementFacet:hasAuthorization(deploymentId, iface)
-  local auth = self.authorizations[deploymentId]
+function ManagementFacet:hasAuthorization(id, iface)
+  local auth = self.authorizations[id]
   if auth and auth.authorized[iface] then
     return true
   elseif auth then
@@ -1144,17 +1163,17 @@ function ManagementFacet:hasAuthorization(deploymentId, iface)
 end
 
 ---
--- Recupera a autorização de uma implantação.
+-- Recupera a autorização de um membro.
 --
--- @param deploymentId Identificador da implantação.
+-- @param id Identificador do membro.
 --
--- @return Autorização da implantação.
+-- @return Autorização do membro.
 --
-function ManagementFacet:getAuthorization(deploymentId)
-  local auth = self.authorizations[deploymentId]
+function ManagementFacet:getAuthorization(id)
+  local auth = self.authorizations[id]
   if not auth then
-    Log:error(format("Não há autorização para '%s'.", deploymentId))
-    error{"IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"}
+    Log:error(format("Não há autorização para '%s'.", id))
+    error{AuthorizationNonExistentException}
   end
   return self:copyAuthorization(auth)
 end
@@ -1173,27 +1192,10 @@ function ManagementFacet:getAuthorizations()
 end
 
 ---
--- Recupera as autorizações das implantações de um dado sistema.
---
--- @param systemId Identificador do sistema.
---
--- @return Seqüência de autorizações.
---
-function ManagementFacet:getAuthorizationsBySystemId(systemId)
-  local array = {}
-  for _, auth in pairs(self.authorizations) do
-    if systemId == auth.systemId then
-      array[#array+1] = self:copyAuthorization(auth)
-    end
-  end
-  return array
-end
-
----
 -- Recupera as autorizações que contêm \e todas as interfaces
 -- fornecidas em seu conjunto de interfaces autorizadas.
 --
--- @param systemId Identificador do sistema.
+-- @param ifaceIds Seqüência de identifidores de interface.
 --
 -- @return Seqüência de autorizações.
 --
