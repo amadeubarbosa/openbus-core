@@ -424,6 +424,54 @@ namespace Test_API
       }
     }
 
+    /// <summary>
+    /// Testa a utilização de uma callback responsável por reconectar após a
+    /// expiração da credencial. O cadastro dessa lease acontece antes do
+    /// método connect.
+    /// </summary>
+    [Test]
+    [Timeout(2 * LEASE_TIME * 1000)]
+    public void AddLeaseExpiredCbBeforeConnect() {
+      Openbus openbus = Openbus.GetInstance();
+      LeaseExpiredCbReconnect callback = new LeaseExpiredCbReconnect(userLogin, userPassword);
+      openbus.AddLeaseExpiredCallback(callback);
+      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      Credential credential = openbus.Credential;
+      Assert.IsNotNullOrEmpty(credential.identifier);
+      Assert.NotNull(registryService);
+      IAccessControlService acs = openbus.GetAccessControlService();
+      Assert.True(acs.logout(openbus.Credential));
+      while (!callback.isReconnected()) {
+        ;
+      }
+      Credential newCredential = openbus.Credential;
+      Assert.False(credential.identifier.Equals(newCredential.identifier));
+    }
+
+    /// <summary>
+    /// Testa a utilização de uma callback responsável por reconectar após a
+    /// expiração da credencial. O cadastro dessa lease acontece depois do
+    /// método connect.
+    /// </summary>
+    [Test]
+    [Timeout(10 * LEASE_TIME * 1000)]
+    public void addLeaseExpiredCbAfterConnect() {
+      Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      Credential credential = openbus.Credential;
+      Assert.IsNotNullOrEmpty(credential.identifier);
+      LeaseExpiredCbReconnect callback = new LeaseExpiredCbReconnect(userLogin, userPassword);
+      openbus.AddLeaseExpiredCallback(callback);
+      Assert.NotNull(registryService);
+      IAccessControlService acs = openbus.GetAccessControlService();
+      Assert.True(acs.logout(openbus.Credential));
+      while (!callback.isReconnected()) {
+        ;
+      }
+      Credential newCredential = openbus.Credential;
+      Assert.False(credential.identifier.Equals(newCredential.identifier));
+    }
+
     #endregion
 
     #region Internal Members
@@ -446,6 +494,39 @@ namespace Test_API
 
       public bool isExpired() {
         return this.expired;
+      }
+    }
+
+    /// <summary>
+    /// Classe criada para testar o Lease Expired Callback. Utilizada nos
+    /// testes unitários <i>addLeaseExpiredCbAfterConnect</i> e 
+    /// <i>addLeaseExpiredCbBeforeConnect</i>
+    /// </summary>
+    private class LeaseExpiredCbReconnect : LeaseExpiredCallback
+    {
+      private bool reconnected;
+      private String userLogin;
+      private String userPassword;
+
+      public LeaseExpiredCbReconnect(String userLogin, String userPassword) {
+        this.reconnected = false;
+        this.userLogin = userLogin;
+        this.userPassword = userPassword;
+      }
+
+      public bool isReconnected() {
+        return this.reconnected;
+      }
+
+      void LeaseExpiredCallback.Expired() {
+        Openbus openbus = Openbus.GetInstance();
+        try {
+          openbus.Connect(userLogin, userPassword);
+          this.reconnected = true;
+        }
+        catch (OpenbusException) {
+          this.reconnected = false;
+        }
       }
     }
 

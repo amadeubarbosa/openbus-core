@@ -156,7 +156,6 @@ namespace OpenbusAPI
       this.acsComponent = null;
       this.leaseProvider = null;
 
-      this.leaseExpiredCb = null;
       this.leaseRenewer = null;
 
       this.credential = new Credential();
@@ -175,6 +174,7 @@ namespace OpenbusAPI
       this.channel = null;
       this.host = String.Empty;
       this.port = -1;
+      this.leaseExpiredCb = null;
       Reset();
     }
 
@@ -391,7 +391,7 @@ namespace OpenbusAPI
           "Não foi possível conectar ao barramento.");
 
       this.leaseRenewer = new LeaseRenewer(this.Credential, this.leaseProvider,
-        this.leaseExpiredCb);
+        new OpenbusExpiredCallback());
       this.leaseRenewer.Start();
 
       Log.COMMON.Debug("Thread de renovação de lease está ativa. Lease = "
@@ -438,7 +438,7 @@ namespace OpenbusAPI
 
 
       this.leaseRenewer = new LeaseRenewer(this.Credential, this.leaseProvider,
-        this.leaseExpiredCb);
+        new OpenbusExpiredCallback());
       this.leaseRenewer.Start();
 
       Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = "
@@ -522,8 +522,6 @@ namespace OpenbusAPI
     /// <param name="leaseExpiredCallback">O observador.</param>
     public void AddLeaseExpiredCallback(LeaseExpiredCallback leaseExpiredCallback) {
       this.leaseExpiredCb = leaseExpiredCallback;
-      if (this.leaseRenewer != null)
-        this.leaseRenewer.SetLeaseExpiredCallback(leaseExpiredCallback);
     }
 
     /// <summary>
@@ -531,10 +529,41 @@ namespace OpenbusAPI
     /// </summary>
     public void RemoveLeaseExpiredCallback() {
       this.leaseExpiredCb = null;
-      if (this.leaseRenewer != null)
-        this.leaseRenewer.SetLeaseExpiredCallback(null);
+    }
+
+    /// <summary>
+    /// Informa aos observadores que o <i>lease</i> expirou.
+    /// </summary>
+    internal void LeaseExpired() {
+      Log.LEASE.Debug("Atualizando estado do Openbus");
+      Reset();
+      if (this.leaseExpiredCb != null) {
+        this.leaseExpiredCb.Expired();
+      }
     }
 
     #endregion
   }
+
+  #region Internal Class
+
+  internal class OpenbusExpiredCallback : LeaseExpiredCallback
+  {
+
+    #region LeaseExpiredCallback Members
+
+    /// <summary>
+    /// Classe responsável por informar aos observadores que o <i>lease</i>
+    /// expirou.
+    /// </summary>
+    public void Expired() {
+      Openbus openbus = Openbus.GetInstance();
+      openbus.LeaseExpired();
+    }
+
+    #endregion
+  }
+
+  #endregion
+
 }
