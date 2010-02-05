@@ -166,21 +166,24 @@ exception InterfaceIdentifierAlreadyExists {};
 
 /*---------------------------- Autorização -----------------------------*/
 
+/** Tipo da autorização */
+enum AuthorizationType { ATUser, ATSystemDeployment };
+
 /** \brief Autorização para uma implantação de sistema. */
-struct SystemDeploymentAuthorization {
-  string deploymentId; /**< Identificador da implantação */
-  string systemId;     /**< Identificador do sistema */
+struct Authorization {
+  string id; /**< Identificador do membro */
+  AuthorizationType type; /**< Tipo de membro que tem autorização */
   InterfaceIdentifierList authorized; /**< Interfaces autorizadas */
 };
 
 /** \brief Seqüência de autorizações. */
-typedef sequence<SystemDeploymentAuthorization> SystemDeploymentAuthorizationList;
+typedef sequence<Authorization> AuthorizationList;
+
+/** \brief Membro não existe. */
+exception MemberNonExistent {};
 
 /** \brief Autorização não existe. */
 exception AuthorizationNonExistent {};
-
-/** \brief Implantação não existe. */
-exception SystemDeploymentNonExistent {};
 
 /** \brief Expressão regular inválida. */
 exception InvalidRegularExpression {};
@@ -225,54 +228,53 @@ interface IManagement {
   /*-------------------------- Autorização -----------------------------*/
 
   /**
-   * \brief Autoriza a implantação  a exportar a interface.  O Serviço
-   *   de  Acesso é consultado  para verificar  se a  implantação está
-   *   cadastrada.
+   * \brief Autoriza o membro a exportar a interface.
+   *   O Serviço de  Acesso é consultado  para verificar  se o usuário
+   *   ou a implantação estão cadastrados.
    *
-   * \param deploymentId Identificador da implantação.
+   * \param id Identificador do membro do barramento (usuário ou implantação).
    * \param ifaceId Identificador da interface ou expressão regular.
    * \param strict Força que a interface esteja previamente cadastrada.
    *   Esse parâmetro não possui efeito se ifaceId for uma expressão regular.
    *
-   * \exception SystemDeploymentNonExistent Implantação não cadastrada.
+   * \exception MemberNonExistent Membro não cadastrado.
    * \exception InterfaceIdentifierNonExistent Interface não cadastrada.
    * \exception InvalidRegularExpression Identificador da interface possui
    *   uma expressão regular inválida.
    */
-  void grant(in string deploymentId, in InterfaceIdentifier ifaceId,
-    in boolean strict)
-    raises (SystemDeploymentNonExistent, InterfaceIdentifierNonExistent,
+  void grant(in string id, in InterfaceIdentifier ifaceId, in boolean strict)
+    raises (MemberNonExistent, InterfaceIdentifierNonExistent,
     InvalidRegularExpression);
 
   /**
    * \brief Revoga a autorização para exportar a interface.
    *
-   * \param deploymentId Identificador da implantação.
+   * \param id Identificador do membro cadastrado.
    * \param ifaceId Identificador da interface.
    *
-   * \exception AuthorizationNonExistent Implantação não possui autorização.
+   * \exception AuthorizationNonExistent Membro não possui autorização.
    */
-  void revoke(in string deploymentId, in InterfaceIdentifier ifaceId)
+  void revoke(in string id, in InterfaceIdentifier ifaceId)
     raises (AuthorizationNonExistent);
 
   /**
-   * \brief Remove a autorização da implantação.
+   * \brief Remove a autorização do membro.
    *
-   * \param deploymentId Identificador da implantação.
-   * \exception AuthorizationNonExistent Implantação não possui autorização.
+   * \param id Identificador do membro.
+   * \exception AuthorizationNonExistent Membro não possui autorização.
    */
-  void removeAuthorization(in string deploymentId)
+  void removeAuthorization(in string id)
     raises (AuthorizationNonExistent);
 
   /**
-   * \brief Recupera a autorização de uma implantação.
+   * \brief Recupera a autorização de um membro.
    *
-   * \param deploymentId Identificador da implantação.
+   * \param id Identificador do membro.
    *
-   * \return Autorização da implantação.
-   * \exception AuthorizationNonExistent Implantação não possui autorização.
+   * \return Autorização do membro.
+   * \exception AuthorizationNonExistent Membro não possui autorização.
    */
-  SystemDeploymentAuthorization getAuthorization(in string deploymentId)
+  Authorization getAuthorization(in string id)
     raises (AuthorizationNonExistent);
 
   /**
@@ -280,27 +282,17 @@ interface IManagement {
    *
    * \return Seqüência de autorizações.
    */
-  SystemDeploymentAuthorizationList getAuthorizations();
-
-  /**
-   * \brief Recupera as autorizações das implantações de um dado sistema.
-   *
-   * \param systemId Identificador do sistema.
-   *
-   * \return Seqüência de autorizações.
-   */
-  SystemDeploymentAuthorizationList getAuthorizationsBySystemId(
-     in string systemId);
+  AuthorizationList getAuthorizations();
 
   /**
    * \brief Recupera as autorizações que contêm \e todas as interfaces
    *  fornecidas em seu conjunto de interfaces autorizadas.
    *
-   * \param systemId Identificador do sistema.
+   * \param ifaceIds Identificador das interfaces.
    *
    * \return Seqüência de autorizações.
    */
-  SystemDeploymentAuthorizationList getAuthorizationsByInterfaceId(
+  AuthorizationList getAuthorizationsByInterfaceId(
     in InterfaceIdentifierList ifaceIds);
 };
 

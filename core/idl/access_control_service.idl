@@ -255,15 +255,6 @@ exception SystemInUse {};
 /** \brief Sistema não existe. */
 exception SystemNonExistent {};
 
-/** \brief Certificado inválido */
-exception InvalidCertificate {};
-
-/** \brief Implantação já está cadastrada. */
-exception SystemDeploymentAlreadyExists {};
-
-/** \brief Implantação de sistema não é cadastrada. */
-exception SystemDeploymentNonExistent {};
-
 /*------------------------------ Implantação ------------------------------*/
 
 /**
@@ -283,6 +274,32 @@ typedef sequence<SystemDeployment> SystemDeploymentList;
 
 /** \brief Certificado que a implantação utiliza na autenticação. */
 typedef sequence<octet> SystemDeploymentCertificate;
+
+/** \brief Certificado inválido */
+exception InvalidCertificate {};
+
+/** \brief Implantação já está cadastrada. */
+exception SystemDeploymentAlreadyExists {};
+
+/** \brief Implantação de sistema não está cadastrada. */
+exception SystemDeploymentNonExistent {};
+
+/*--------------------------------- Usuário -------------------------------*/
+struct User {
+  string id;   /**< \brief Identificar único, no estilo login UNIX. */
+  string name; /**< \brief Nome do usuário. */
+};
+
+/** \brief Seqüência de usuários. */
+typedef sequence<User> UserList;
+
+/** \brief Usuário já está cadastrado. */
+exception UserAlreadyExists {};
+
+/** \brief Usuário não está cadastrado. */
+exception UserNonExistent {};
+
+/*------------------------------- IManagement -----------------------------*/
 
 /**
  * \brief Interface de gerenciamento de sistemas e implatações.
@@ -339,7 +356,7 @@ interface IManagement {
    * \return Sistema referente ao identificador.
    * \exception SystemNonExistent Sistema não cadastrado.
    */
-  System getSystemById(in string id) raises (SystemNonExistent);
+  System getSystem(in string id) raises (SystemNonExistent);
 
   /*---------------------------- Implantações -------------------------------*/
 
@@ -433,6 +450,53 @@ interface IManagement {
    * \exception SystemNonExistent Sistema informado não está cadastrado.
    */
   SystemDeploymentList getSystemDeploymentsBySystemId(in string systemId);
+
+  /**
+   * \brief Cadastra um novo usuário no barramento.
+   *
+   * \param id Identificador único do usuário (estilo login UNIX).
+   * \param name Nome do usuário.
+   *
+   * \exception UserAlreadyExists Existe outro usuário com
+   *   o identificador fornecido.
+   */
+  void addUser(in string id, in string name) raises (UserAlreadyExists);
+
+  /**
+   * \brief Remove um usuário do barramento.
+   *
+   * \param id Identificador do usuário.
+   *
+   * \exception UserNonExistent Usuário não cadastrado.
+   */
+  void removeUser(in string id) raises (UserNonExistent);
+
+  /**
+   * \brief Altera o nome do usuário.
+   *
+   * \param id Identificador do usuário.
+   * \param name Novo nome do usuário.
+   *
+   * \exception UserNonExistent Usuário não cadastrado.
+   */
+  void setUserName(in string id, in string name) raises (UserNonExistent);
+
+  /**
+   * \brief Recupera o usuário, dado o seu identificador.
+   *
+   * \return Retorna o usuário.
+   *
+   * \exception UserNonExistent Usuário não cadastrado.
+   */
+  User getUser(in string id) raises (UserNonExistent);
+
+  /**
+   * \brief Recupera todos os usuários cadastrados.
+   *
+   * \return Uma seqüência com os usuários.
+   */
+  UserList getUsers();
+
 };
 
 }; // access_control_service
