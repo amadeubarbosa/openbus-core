@@ -2,6 +2,9 @@ local lpw     = require "lpw"
 local oil     = require "oil"
 local Openbus = require "openbus.Openbus"
 
+-- Alias
+local lower = string.lower
+
 -- Verifica se as variável de ambiente está definida antes de continuar
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if not IDLPATH_DIR then
@@ -33,6 +36,18 @@ Uso: %s [opções] --login=<usuário> <comando>
     --acs-host=<endereço>
   * Informa a porta do Serviço de Acesso (padrão 2089):
     --acs-port=<porta>
+
+- Controle de Usuário
+  * Adicionar usuário:
+     --add-user=<id_usuario> --name=<nome>
+  * Remover usuário:
+     --del-user=<id_usuario>
+  * Alterar nome:
+     --set-user=<id_usuario> --name=<nome>
+  * Mostrar todos os usuário:
+     --list-user
+  * Mostrar informações sobre um usuário:
+     --list-user=<id_usuario>
 
 - Controle de Sistema
   * Adicionar sistema:
@@ -72,17 +87,15 @@ Uso: %s [opções] --login=<usuário> <comando>
 
 - Controle de Autorização
   * Conceder autorização:
-     --set-authorization=<id_implantação> --grant=<interface> [--no-strict]
+     --set-authorization=<id_membro> --grant=<interface> [--no-strict]
   * Revogar autorização:
-     --set-authorization=<id_implantação> --revoke=<interface>
+     --set-authorization=<id_membro> --revoke=<interface>
   * Remover autorização:
-     --del-authorization=<id_implantação>
+     --del-authorization=<id_membro>
   * Mostrar todas as autorizações
      --list-authorization
   * Mostrar uma autorização:
-     --list-authorization=<id_implantação>
-  * Mostrar autorizações de um sistema:
-     --list-authorization --system=<id_sistema>
+     --list-authorization=<id_membro>
   * Mostrar todas autorizações com as interfaces:
      --list-authorization --interface="<iface1> <iface2> ... <ifaceN>"
 
@@ -171,6 +184,19 @@ local commands = {
     {n = 0, params = {}},
     {n = 1, params = {}},
   };
+  ["add-user"] = {
+    {n = 1, params = {name = 1}}
+  };
+  ["del-user"] = {
+    {n = 1, params = {}}
+  };
+  ["set-user"] = {
+    {n = 1, params = {name = 1}}
+  };
+  ["list-user"] = {
+    {n = 0, params = {}},
+    {n = 1, params = {}},
+  };
   ["add-interface"] = {
     {n = 1, params = {}}
   };
@@ -190,7 +216,6 @@ local commands = {
   };
   ["list-authorization"] = {
     {n = 0, params = {}},
-    {n = 1, params = {system = 1}},
     {n = 1, params = {interface = 1}},
     {n = 1, params = {}},
   };
@@ -418,6 +443,28 @@ local function validId(id)
 end
 
 -------------------------------------------------------------------------------
+-- Aliases
+--
+local ACS_UserNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0"
+local ACS_UserAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserAlreadyExists:1.0"
+--
+local ACS_SystemInUseException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0"
+local ACS_SystemNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"
+local ACS_SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0"
+--
+local ACS_InvalidCertificateException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0"
+local ACS_SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"
+local ACS_SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0"
+--
+local RS_InterfaceIdentifierInUseException = "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierInUse:1.0"
+local RS_InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0"
+local RS_InterfaceIdentifierAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0"
+--
+local RS_MemberNonExistentException = "IDL:tecgraf/openbus/core/v1_05/registry_service/MemberNonExistent:1.0"
+local RS_InvalidRegularExpressionException = "IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0"
+local RS_AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"
+
+-------------------------------------------------------------------------------
 -- Define os tratadores de comandos passados como argumento para a ferramenta.
 --
 
@@ -442,7 +489,7 @@ handlers["add-system"] = function(cmd)
     local succ, err = acsmgm.__try:addSystem(id, cmd.params.description)
     if succ then
       printf("[INFO] Sistema '%s' cadastrado com sucesso", id)
-    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0" then
+    elseif err[1] == ACS_SystemAlreadyExistsException then
       printf("[ERRO] Sistema '%s' já cadastrado", id)
     else
       printf("[ERRO] Falha ao adicionar sistema '%s': %s", id, err[1])
@@ -464,9 +511,9 @@ handlers["del-system"] = function(cmd)
   local succ, err = acsmgm.__try:removeSystem(id)
   if succ then
     printf("[INFO] Sistema '%s' removido com sucesso", id)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0" then
+  elseif err[1] == ACS_SystemInUseException then
     printf("[ERRO] Sistema '%s' em uso", id)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0" then
+  elseif err[1] == ACS_SystemNonExistentException then
     printf("[ERRO] Sistema '%s' não cadastrado", id)
   else
     printf("[ERRO] Falha ao remover sistema '%s': %s", id, err[1])
@@ -485,11 +532,11 @@ handlers["list-system"] = function(cmd)
     systems = acsmgm:getSystems()
   else
     -- Busca um sistema específico
-    local succ, system = acsmgm.__try:getSystemById(cmd.params[cmd.name])
+    local succ, system = acsmgm.__try:getSystem(cmd.params[cmd.name])
     if succ then
       systems = {system}
     else
-      if system[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0" then
+      if system[1] == ACS_SystemNonExistentException then
         systems = {}
       else
         printf("[ERRO] Falha ao recuperar informações: %s", system[1])
@@ -516,7 +563,9 @@ handlers["list-system"] = function(cmd)
       end
     end
     -- Ordena e monta o formulário
-    table.sort(systems, function(a, b) return a.id < b.id end)
+    table.sort(systems, function(a, b)
+      return lower(a.id) < lower(b.id) 
+    end)
     header(titles, sizes)
     for k, system in ipairs(systems) do
       dataline(sizes, string.format("%.3d", k), system.id, system.description)
@@ -537,7 +586,7 @@ handlers["set-system"] = function(cmd)
     cmd.params.description)
   if succ then
     print(string.format("[INFO] Sistema '%s' atualizado com sucesso", id))
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0" then
+  elseif err[1] == ACS_SystemNonExistentException then
     print(string.format("[ERRO] Sistema '%s' não cadastrado", id))
   else
     print(string.format("[ERRO] Falha ao atualizar sistema '%s': %s", id, 
@@ -569,11 +618,11 @@ handlers["add-deployment"] = function(cmd)
       cmd.params.description, cert)
     if succ then
       printf("[INFO] Implantação '%s' cadastrada com sucesso", id)
-    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0" then
+    elseif err[1] == ACS_SystemDeploymentAlreadyExistsException then
       printf("[ERRO] Implantação '%s' já cadastrada", id)
-    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0" then
+    elseif err[1] == ACS_SystemNonExistentException then
       printf("[ERRO] Sistema '%s' não cadastrado", cmd.params.system)
-    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0" then
+    elseif err[1] == ACS_InvalidCertificateException then
       printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido",
         id)
     else
@@ -596,7 +645,7 @@ handlers["del-deployment"] = function(cmd)
   local succ, err = acsmgm.__try:removeSystemDeployment(id)
   if succ then
     printf("[INFO] Implantação '%s' removida com sucesso", id)
-  elseif err[1] ==  "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
+  elseif err[1] == ACS_SystemDeploymentNonExistentException then
     printf("[ERRO] Implantação '%s' não cadastrada", id)
   else
     printf("[ERRO] Falha ao remover implantação '%s': %s", id, err[1])
@@ -627,9 +676,9 @@ handlers["set-deployment"] = function(cmd)
     if succ then
       printf("[INFO] Certificado da implantação '%s' atualizado com sucesso",
         id)
-    elseif err[1] ==  "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
+    elseif err[1] == ACS_SystemDeploymentNonExistentException then
       printf("[ERRO] Implantação '%s' não cadastrada", id)
-    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0" then
+    elseif err[1] == ACS_InvalidCertificateException then
       printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido",
         id)
     else
@@ -642,7 +691,7 @@ handlers["set-deployment"] = function(cmd)
       cmd.params.description)
     if succ then
       printf("[INFO] Descrição da imlantação '%s' atualizada com sucesso", id)
-    elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
+    elseif err[1] == ACS_SystemDeploymentNonExistentException then
       printf("[ERRO] Implantação '%s' não cadastrada", id)
     else
       printf("[ERRO] Falha ao atualizar descrição da implantação '%s': %s",
@@ -666,7 +715,7 @@ handlers["list-deployment"] = function(cmd)
     local succ, depl = acsmgm.__try:getSystemDeployment(id)
     if succ then
       depls = { depl }
-    elseif depl[1] == "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0" then
+    elseif depl[1] == ACS_SystemDeploymentNonExistentException then
       depls = {}
     else
       printf("[ERRO] Falha ao recuperar informações: %s", depl[1])
@@ -700,11 +749,127 @@ handlers["list-deployment"] = function(cmd)
       end
     end
     -- Ordena e monta o formulário
-    table.sort(depls, function(a, b) return a.id < b.id end)
+    table.sort(depls, function(a, b)
+      return lower(a.id) < lower(b.id)
+    end)
     header(titles, sizes)
     for k, depl in ipairs(depls) do
       dataline(sizes, string.format("%.3d", k), depl.id, depl.systemId,
         depl.description)
+    end
+    hdiv(sizes)
+  end
+end
+
+---
+-- Adiciona um novo usuário no barramento.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["add-user"] = function(cmd)
+  local acsmgm = getacsmgm()
+  local id = cmd.params[cmd.name]
+  if validId(id) then
+    local succ, err = acsmgm.__try:addUser(id, cmd.params.name)
+    if succ then
+      printf("[INFO] Usuário '%s' cadastrado com sucesso", id)
+    elseif err[1] == ACS_UserAlreadyExistsException then
+      printf("[ERRO] Usuário '%s' já cadastrado", id)
+    else
+      printf("[ERRO] Falha ao adicionar usuário '%s': %s", id, err[1])
+    end
+  else
+    printf("[ERRO] Falha ao adicionar usuário '%s': " ..
+           "identificador inválido", id)
+  end
+end
+
+---
+-- Remove um usuário do barramento.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["del-user"] = function(cmd)
+  local acsmgm = getacsmgm()
+  local id = cmd.params[cmd.name]
+  local succ, err = acsmgm.__try:removeUser(id)
+  if succ then
+    printf("[INFO] Usuário '%s' removido com sucesso", id)
+  elseif err[1] == ACS_UserNonExistentException then
+    printf("[ERRO] Usuário '%s' não cadastrado", id)
+  else
+    printf("[ERRO] Falha ao remover usuário '%s': %s", id, err[1])
+  end
+end
+
+---
+-- Altera informações do usuário.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["set-user"] = function(cmd)
+  local acsmgm = getacsmgm()
+  local id = cmd.params[cmd.name]
+  local succ, err = acsmgm.__try:setUserName(id, cmd.params.name)
+  if succ then
+    print(string.format("[INFO] Usuário '%s' atualizado com sucesso", id))
+  elseif err[1] == ACS_UserNonExistentException then
+    print(string.format("[ERRO] Usuário '%s' não cadastrado", id))
+  else
+    print(string.format("[ERRO] Falha ao atualizar usuário '%s': %s", id, 
+      err[1]))
+  end
+end
+
+---
+-- Exibe informações sobre os usuários.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["list-user"] = function(cmd)
+  local users
+  local acsmgm = getacsmgm()
+  if cmd.params[cmd.name] == null then  -- Busca todos
+    users = acsmgm:getUsers()
+  else
+    -- Busca um específico
+    local succ, user = acsmgm.__try:getUser(cmd.params[cmd.name])
+    if succ then
+      users = {user}
+    else
+      if user[1] == ACS_UserNonExistentException then
+        users = {}
+      else
+        printf("[ERRO] Falha ao recuperar informações: %s", user[1])
+        return
+      end
+    end
+  end
+  -- Mostra os dados em um forumulário
+  local titles = {"", "ID USUÁRIO", "NOME"}
+  -- Largura inicial das colunas
+  local sizes = {3, #titles[2], #titles[3]}
+  if #users == 0 then
+    header(titles, sizes)
+    emptyline(sizes)
+    hdiv(sizes)
+  else
+    -- Ajusta as larguras das colunas de acordo com o conteúdo
+    for k, user in ipairs(users) do
+      if #user.id > sizes[2] then
+        sizes[2] = #user.id
+      end
+      if #user.name > sizes[3] then
+        sizes[3] = #user.name
+      end
+    end
+    -- Ordena e monta o formulário
+    table.sort(users, function(a, b)
+      return lower(a.name) < lower(b.name)
+    end)
+    header(titles, sizes)
+    for k, user in ipairs(users) do
+      dataline(sizes, string.format("%.3d", k), user.id, user.name)
     end
     hdiv(sizes)
   end
@@ -721,7 +886,7 @@ handlers["add-interface"] = function(cmd)
   local succ, err = rsmgm.__try:addInterfaceIdentifier(iface)
   if succ then
     printf("[INFO] Interface '%s' cadastrada com sucesso", iface)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0" then
+  elseif err[1] == RS_InterfaceIdentifierAlreadyExistsException then
     printf("[ERRO] Interface '%s' já cadastrada", iface)
   else
     printf("[ERRO] Falha ao cadastrar interface '%s': %s", iface, err[1])
@@ -739,9 +904,9 @@ handlers["del-interface"] = function(cmd)
   local succ, err = rsmgm.__try:removeInterfaceIdentifier(iface)
   if succ then
     printf("[INFO] Interface '%s' removida com sucesso", iface)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierInUse:1.0" then
+  elseif err[1] == RS_InterfaceIdentifierInUseException then
     printf("[ERRO] Interface '%s' em uso", iface)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0" then
+  elseif err[1] == RS_InterfaceIdentifierNonExistentException then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
   else
     printf("[ERRO] Falha ao remover interface: %s", err[1])
@@ -771,7 +936,9 @@ handlers["list-interface"] = function(cmd)
       end
     end
     -- Ordena e exibe e monta o formulário
-    table.sort(ifaces, function(a, b) return a < b end)
+    table.sort(ifaces, function(a, b)
+      return lower(a) < lower(b)
+    end)
     header(titles, sizes)
     for k, iface in ipairs(ifaces) do
       dataline(sizes, string.format("%.3d", k), iface)
@@ -788,28 +955,28 @@ end
 handlers["set-authorization"] = function(cmd)
   local succ, err, msg, iface
   local rsmgm = getrsmgm()
-  local depl = cmd.params[cmd.name]
+  local id = cmd.params[cmd.name]
   -- Concede uma autorização
   if cmd.params.grant then
     iface = cmd.params.grant
-    succ, err = rsmgm.__try:grant(depl, iface, not cmd.params["no-strict"])
-    msg = string.format("[INFO] Autorização concedida a '%s': %s", depl, iface)
+    succ, err = rsmgm.__try:grant(id, iface, not cmd.params["no-strict"])
+    msg = string.format("[INFO] Autorização concedida a '%s': %s", id, iface)
   else
     -- Revoga autorização
     iface = cmd.params.revoke
-    succ, err = rsmgm.__try:revoke(depl, iface)
-    msg = string.format("[INFO] Autorização revogada de '%s': %s", depl, iface)
+    succ, err = rsmgm.__try:revoke(id, iface)
+    msg = string.format("[INFO] Autorização revogada de '%s': %s", id, iface)
   end
   if succ then
     print(msg)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/SystemDeploymentNonExistent:1.0" then
-    printf("[ERRO] Implantação '%s' não cadastrada", depl)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0" then
+  elseif err[1] == RS_MemberNonExistentException then
+    printf("[ERRO] Membro '%s' não cadastrado", depl)
+  elseif err[1] == RS_InterfaceIdentifierNonExistentException then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0" then
+  elseif err[1] == RS_AuthorizationNonExistentException then
     printf("[ERRO] Implantação '%s' não possui autorização para '%s'", 
       depl, iface)
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0" then
+  elseif err[1] == RS_InvalidRegularExpressionException then
     printf("[ERRO] Expressão regular inválida: %s", iface)
   else
     printf("[ERRO] Falha ao alterar autorização: %s", err[1])
@@ -823,13 +990,13 @@ end
 --
 handlers["del-authorization"] = function(cmd)
   local rsmgm = getrsmgm()
-  local depl = cmd.params[cmd.name]
-  local succ, err = rsmgm.__try:removeAuthorization(depl)
+  local id = cmd.params[cmd.name]
+  local succ, err = rsmgm.__try:removeAuthorization(id)
   if succ then
     printf("[INFO] Autorizações de '%s' removidas com sucesso", 
       cmd.params[cmd.name])
-  elseif err[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0" then
-    printf("[ERRO] Implantação '%s' não possui autorizações", depl)
+  elseif err[1] == RS_AuthorizationNonExistentException then
+    printf("[ERRO] Implantação '%s' não possui autorizações", id)
   else
     printf("[ERRO] Falha ao remover autorizações: %s", err[1])
   end
@@ -843,22 +1010,19 @@ end
 handlers["list-authorization"] = function(cmd)
   local auths
   local rsmgm = getrsmgm()
-  local depl = cmd.params[cmd.name]
-  if depl and depl ~= null then
+  local id = cmd.params[cmd.name]
+  if id and id ~= null then
     -- Busca de uma única implantação
-    local succ, auth = rsmgm.__try:getAuthorization(depl)
+    local succ, auth = rsmgm.__try:getAuthorization(id)
     if succ then
       auths = { auth }
-    elseif auth[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0" then
-      printf("[ERRO] Implantação '%s' não possui autorização", depl)
+    elseif auth[1] == RS_AuthorizationNonExistentException then
+      printf("[ERRO] Membro '%s' não possui autorização", id)
       return
     else
       printf("[ERRO] Falha ao recuperar informações: %s", auth[1])
       return
     end
-  elseif cmd.params.system then
-    -- Filtra por sistema
-    auths = rsmgm:getAuthorizationsBySystemId(cmd.params.system)
   elseif cmd.params.interface then
     -- Filtra por interface
     local ifaces = {}
@@ -871,7 +1035,7 @@ handlers["list-authorization"] = function(cmd)
     auths = rsmgm:getAuthorizations()
   end
   -- Títulos e larguras das colunas do formulário de resposta
-  local titles = { "", "ID IMPLANTAÇÃO", "ID SISTEMA", "INTERFACES"}
+  local titles = { "", "ID MEMBRO", "TIPO", "INTERFACES"}
   local sizes = { 3, #titles[2], #titles[3], #titles[4] }
   if #auths == 0 then
     header(titles, sizes)
@@ -880,11 +1044,11 @@ handlers["list-authorization"] = function(cmd)
   else
     -- Ajusta as larguras das colunas de acordo com o conteúdo
     for k, auth in ipairs(auths) do
-      if sizes[2] < #auth.deploymentId then
-        sizes[2] = #auth.deploymentId
+      if sizes[2] < #auth.id then
+        sizes[2] = #auth.id
       end
-      if sizes[3] < #auth.systemId then
-        sizes[3] = #auth.systemId
+      if sizes[3] < #auth.type then
+        sizes[3] = #auth.type
       end
       for _, iface in ipairs(auth.authorized) do
         if sizes[4] < #iface then
@@ -894,18 +1058,20 @@ handlers["list-authorization"] = function(cmd)
     end
     -- Ordena e monta o formulário
     table.sort(auths, function(a, b)
-      return a.deploymentId < b.deploymentId 
+      return lower(a.id) < lower(b.id)
     end)
     header(titles, sizes)
     for k, auth in ipairs(auths) do
+      local type = ((auth.type == "ATUser") and "Usuário") or "Implantação"
       if #auth.authorized == 0 then
-        dataline(sizes, string.format("%.3d", k), auth.deploymentId, 
-          auth.systemId, "")
+        dataline(sizes, string.format("%.3d", k), auth.id, type, "")
       else
         -- Uma implantação pode ter várias interfaces
-        table.sort(auth.authorized, function(a, b) return a < b end)
-        dataline(sizes, string.format("%.3d", k), auth.deploymentId,
-          auth.systemId, auth.authorized[1])
+        table.sort(auth.authorized, function(a, b)
+          return lower(a) < lower(b)
+        end)
+        dataline(sizes, string.format("%.3d", k), auth.id, type, 
+          auth.authorized[1])
         local count = 2
         local total = #auth.authorized
         while count <= total do
@@ -957,6 +1123,25 @@ local function argerror()
   printf("[ERRO] Parâmetro inválido (linha %d)",
     debug.getinfo(3, 'l').currentline)
   error()
+end
+
+---
+-- Cadastra um usuário
+-- 
+-- @param system Tabela com os campos 'id' e 'name'
+--
+function User(user)
+  if not (type(user) == "table" and type(user.id) == "string" and
+     type(user.name) == "string")
+  then
+    argerror()
+  end
+  local cmd = {}
+  cmd.name = "add-user"
+  cmd.params = {}
+  cmd.params[cmd.name] = user.id
+  cmd.params.name = user.name
+  handlers[cmd.name](cmd)
 end
 
 ---
@@ -1019,7 +1204,7 @@ end
 ---
 -- Concede a autorização para um conjunto de interfaces.
 --
--- @param auth Tabela com o os campos 'id', identificador da implantação,
+-- @param auth Tabela com o os campos 'id', identificador do membro,
 -- e 'interfaces', array de repID de interfaces para autorizar.
 --
 function Grant(auth)
@@ -1045,7 +1230,7 @@ end
 ---
 -- Revoga autorização de um conjunto de interfaces.
 --
--- @param auth Tabela com os campos 'id', identificador da implantação,
+-- @param auth Tabela com os campos 'id', identificador do membro,
 -- e 'interfaces', array de repID de interfaces para revogar.
 --
 function Revoke(auth)
