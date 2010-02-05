@@ -44,7 +44,7 @@ namespace OpenbusAPI.Lease
 
     #region Constants
 
-    private const int DEFAULT_LEASE_TIME = 30;
+    private const int DEFAULT_LEASE_TIME = 60;
 
     #endregion
 
