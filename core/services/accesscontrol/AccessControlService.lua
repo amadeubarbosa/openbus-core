@@ -1099,8 +1099,18 @@ function FaultToleranceFacet:updateStatus(params)
 					   		   end
 
 					   		   if add then
-					   		     repEntry.credential = repEntry.aCredential
-						   		 acsFacet:addEntryCredential(repEntry)
+					   		     local addEntry = {}
+					   		     addEntry.credential = repEntry.aCredential
+					   		     addEntry.certified = repEntry.certified
+					   		     addEntry.observers = {}
+					   		     for _, observerId in pairs(repEntry.observers) do
+					   		       addEntry.observers[observerId] = true
+					   		     end
+					   		     addEntry.observedBy = {}
+					   		     for _, observerId in pairs(repEntry.observedBy) do
+					   		       addEntry.observedBy[observerId] = true
+					   		     end
+						   		 acsFacet:addEntryCredential(addEntry)
 						   		 updated = true
 					   		  end
 					   		end					   		
