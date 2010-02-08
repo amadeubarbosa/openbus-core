@@ -59,11 +59,11 @@ namespace openbus {
 
       CORBA::Any_var any = cdr_codec->decode_value(
         octets, 
-        openbusidl::acs::_tc_Credential);
+        access_control_service::_tc_Credential);
     #ifdef OPENBUS_MICO
-      openbusidl::acs::Credential c;
+      access_control_service::Credential c;
     #else
-      openbusidl::acs::Credential* c;
+      access_control_service::Credential* c;
     #endif
       any >>= c;
   #ifdef VERBOSE
@@ -115,7 +115,7 @@ namespace openbus {
 
     void ServerInterceptor::destroy() {}
 
-    openbusidl::acs::Credential_var ServerInterceptor::getCredential() {
+    access_control_service::Credential_var ServerInterceptor::getCredential() {
     #ifdef VERBOSE
       Openbus::verbose->print("ServerInterceptor::getCredential() BEGIN");
       Openbus::verbose->indent();
@@ -123,7 +123,7 @@ namespace openbus {
       CORBA::Any_var any = picurrent->get_slot(slotid);
 
     #ifdef OPENBUS_MICO
-      openbusidl::acs::Credential c;
+      access_control_service::Credential c;
       if (any >>=c) {
       #ifdef VERBOSE
         Openbus::verbose->print("credential->owner: " + (string) c.owner);
@@ -132,13 +132,13 @@ namespace openbus {
         Openbus::verbose->print("credential->delegate: " + 
           (string) c.delegate);
       #endif
-        openbusidl::acs::Credential_var ret = 
-          new openbusidl::acs::Credential();
+        access_control_service::Credential_var ret = 
+          new access_control_service::Credential();
         ret->owner = CORBA::string_dup(c.owner);
         ret->identifier = CORBA::string_dup(c.identifier);
         ret->delegate = CORBA::string_dup(c.delegate);
     #else
-      openbusidl::acs::Credential* c = 0;
+      access_control_service::Credential* c = 0;
       any >>= c;
       if (c) {
       #ifdef VERBOSE
@@ -148,8 +148,8 @@ namespace openbus {
         Openbus::verbose->print("credential->delegate: " + 
           (string) c->delegate);
       #endif
-        openbusidl::acs::Credential_var ret = 
-          new openbusidl::acs::Credential();
+        access_control_service::Credential_var ret = 
+          new access_control_service::Credential();
         ret->owner = CORBA::string_dup(c->owner);
         ret->identifier = CORBA::string_dup(c->identifier);
         ret->delegate = CORBA::string_dup(c->delegate);

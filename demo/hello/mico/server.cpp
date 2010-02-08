@@ -14,9 +14,10 @@
 #include "stubs/hello.h"
 
 using namespace std;
+using namespace tecgraf::openbus::core::v1_05;
 
 openbus::Openbus* bus;
-openbusidl::rs::IRegistryService* registryService;
+registry_service::IRegistryService* registryService;
 char* registryId;
 scs::core::ComponentContext* componentContext;
 
@@ -37,7 +38,7 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
     }
     void sayHello() throw(CORBA::SystemException) {
       cout << "Servant diz: HELLO!" << endl;
-      openbusidl::acs::Credential_var credential = 
+      access_control_service::Credential_var credential = 
         bus->getInterceptedCredential();
       cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in()
         << endl;
@@ -114,7 +115,7 @@ int main(int argc, char* argv[]) {
     new openbus::util::PropertyListHelper();
 
 /* Criacao de uma *oferta de servico*. */
-  openbusidl::rs::ServiceOffer serviceOffer;
+  registry_service::ServiceOffer serviceOffer;
   serviceOffer.properties = propertyListHelper->getPropertyList();
   serviceOffer.member = componentContext->getIComponent();
   delete propertyListHelper;

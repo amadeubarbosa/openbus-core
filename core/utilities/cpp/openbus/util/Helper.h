@@ -15,6 +15,8 @@
   #include "../../stubs/orbix/registry_service.hh"
 #endif
 
+using namespace tecgraf::openbus::core::v1_05;
+
 /**
 * \brief openbus
 */
@@ -25,24 +27,24 @@ namespace openbus {
 */
   namespace util {
 
-    typedef openbusidl::rs::FacetList FacetList;
-    typedef openbusidl::rs::PropertyList PropertyList;
-    typedef openbusidl::rs::ServiceOffer ServiceOffer;
-    typedef openbusidl::rs::ServiceOfferList ServiceOfferList;
-    typedef openbusidl::rs::ServiceOfferList_var ServiceOfferList_var;
+    typedef registry_service::FacetList FacetList;
+    typedef registry_service::PropertyList PropertyList;
+    typedef registry_service::ServiceOffer ServiceOffer;
+    typedef registry_service::ServiceOfferList ServiceOfferList;
+    typedef registry_service::ServiceOfferList_var ServiceOfferList_var;
 
   /**
   * \brief Auxilia na construção de uma lista de facetas.
   */
     class FacetListHelper {
       private:
-        openbusidl::rs::FacetList_var facetList;
+        registry_service::FacetList_var facetList;
         CORBA::ULong numElements;
       public:
         FacetListHelper();
         ~FacetListHelper();
         void add(const char* facet);
-        openbusidl::rs::FacetList_var getFacetList();
+        registry_service::FacetList_var getFacetList();
     };
 
   /**
@@ -50,7 +52,7 @@ namespace openbus {
   */
     class PropertyListHelper {
       private:
-        openbusidl::rs::PropertyList_var propertyList;
+        registry_service::PropertyList_var propertyList;
         CORBA::ULong numElements;
       public:
         PropertyListHelper();
@@ -58,7 +60,7 @@ namespace openbus {
         void add(
           const char* key,
           const char* value);
-        openbusidl::rs::PropertyList_var getPropertyList();
+        registry_service::PropertyList_var getPropertyList();
     };
   }
 }

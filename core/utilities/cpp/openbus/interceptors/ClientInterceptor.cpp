@@ -10,11 +10,11 @@
 
 #include "../../openbus.h"
 
-using namespace openbusidl::acs;
+using namespace tecgraf::openbus::core::v1_05;
 
 namespace openbus {
   namespace interceptors {
-    openbusidl::acs::Credential* ClientInterceptor::credential = 0;
+    access_control_service::Credential* ClientInterceptor::credential = 0;
 
     ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec)  
     {

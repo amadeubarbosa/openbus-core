@@ -13,14 +13,15 @@
 #include <openbus.h>
 
 using namespace openbus;
+using namespace tecgraf::openbus::core::v1_05;
 
 class RGSTestSuite: public CxxTest::TestSuite {
   private:
     Openbus* bus;
-    openbusidl::acs::IAccessControlService* iAccessControlService;
-    openbusidl::rs::IRegistryService* rgs;
-    Credential* credential;
-    Lease lease;
+    access_control_service::IAccessControlService* iAccessControlService;
+    registry_service::IRegistryService* rgs;
+    access_control_service::Credential* credential;
+    access_control_service::Lease lease;
     char* registryIdentifier;
     char* registryIdentifier2;
     openbus::util::PropertyListHelper* propertyListHelper;
@@ -78,7 +79,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
           NULL, 
           const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), 
           OPENBUS_SERVER_PORT);
-        credential = new Credential;
+        credential = new access_control_service::Credential;
         rgs = bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
         iAccessControlService = bus->getAccessControlService();
       }
@@ -132,7 +133,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         propertyListHelper = new openbus::util::PropertyListHelper();
         propertyListHelper->add("description", "blabla");
 
-        openbusidl::rs::ServiceOffer serviceOffer;
+        registry_service::ServiceOffer serviceOffer;
         serviceOffer.properties = propertyListHelper->getPropertyList();
         serviceOffer.member = component;
         TS_ASSERT(rgs->_cxx_register(serviceOffer, registryIdentifier));
@@ -151,7 +152,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         new openbus::util::FacetListHelper();
       facetListHelper->add("IComponent");
 
-      openbusidl::rs::ServiceOfferList* serviceOfferList = 
+      registry_service::ServiceOfferList* serviceOfferList = 
         rgs->find(facetListHelper->getFacetList());
       TS_ASSERT(serviceOfferList->length() == 2);
       delete serviceOfferList;
@@ -163,7 +164,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
         new openbus::util::FacetListHelper();
       facetListHelper->add("IComponent");
 
-      openbusidl::rs::ServiceOfferList* serviceOfferList = \
+      registry_service::ServiceOfferList* serviceOfferList = \
         rgs->findByCriteria(
           facetListHelper->getFacetList(),
           propertyListHelper->getPropertyList());

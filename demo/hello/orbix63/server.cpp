@@ -17,7 +17,7 @@
 using namespace std;
 
 openbus::Openbus* bus;
-openbusidl::rs::IRegistryService* registryService;
+registry_service::IRegistryService* registryService;
 char* registryId;
 scs::core::ComponentContext* componentContext;
 
@@ -39,7 +39,7 @@ class HelloImpl : virtual public POA_demoidl::hello::IHello {
     void sayHello() 
       throw(CORBA::SystemException) {
       cout << "Servant diz: HELLO!" << endl;
-      openbusidl::acs::Credential_var credential = 
+      access_control_service::Credential_var credential = 
         bus->getInterceptedCredential();
       cout << "Usuario OpenBus que fez a chamada: " << credential->owner.in()
         << endl;

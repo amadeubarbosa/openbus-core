@@ -14,6 +14,7 @@
   #include "../../stubs/orbix/access_control_service.hh"
 #endif
 
+using namespace tecgraf::openbus::core::v1_05;
 using namespace PortableInterceptor;
 
 namespace openbus {
@@ -40,7 +41,7 @@ namespace openbus {
         void send_other(ServerRequestInfo*);
         char* name();
         void destroy();
-        openbusidl::acs::Credential_var getCredential();
+        access_control_service::Credential_var getCredential();
     };
   }
 }

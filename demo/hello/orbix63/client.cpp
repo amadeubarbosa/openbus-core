@@ -13,7 +13,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
   openbus::Openbus* bus;
-  openbusidl::rs::IRegistryService* registryService;
+  registry_service::IRegistryService* registryService;
 
   bus = openbus::Openbus::getInstance();
 
@@ -48,12 +48,12 @@ int main(int argc, char* argv[]) {
 *  Uma lista de *ofertas de serviço* é retornada para o usuário.
 *  OBS.: Neste demo somente há uma oferta de serviço.
 */
-  openbusidl::rs::ServiceOfferList_var serviceOfferList =
+  registry_service::ServiceOfferList_var serviceOfferList =
     registryService->find(facetListHelper->getFacetList());
   delete facetListHelper;
 
   CORBA::ULong idx = 0;
-  openbusidl::rs::ServiceOffer serviceOffer = serviceOfferList[idx];
+  registry_service::ServiceOffer serviceOffer = serviceOfferList[idx];
 
   scs::core::IComponent_var component = serviceOffer.member;
   CORBA::Object_var obj = component->getFacet("IDL:demoidl/hello/IHello:1.0");

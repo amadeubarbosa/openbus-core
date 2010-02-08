@@ -12,7 +12,7 @@ namespace openbus {
   namespace util {
 
     FacetListHelper::FacetListHelper() {
-      facetList = new openbusidl::rs::FacetList();
+      facetList = new registry_service::FacetList();
       numElements = 0;
     }
 
@@ -25,12 +25,12 @@ namespace openbus {
       numElements++;
     }
 
-    openbusidl::rs::FacetList_var FacetListHelper::getFacetList() {
+    registry_service::FacetList_var FacetListHelper::getFacetList() {
       return facetList;
     }
 
     PropertyListHelper::PropertyListHelper() {
-      propertyList = new openbusidl::rs::PropertyList();
+      propertyList = new registry_service::PropertyList();
       numElements = 0;
     }
 
@@ -42,10 +42,10 @@ namespace openbus {
       const char* value)
     {
       propertyList->length(numElements + 1);
-      openbusidl::rs::Property_var property = new openbusidl::rs::Property;
+      registry_service::Property_var property = new registry_service::Property;
       property->name = key;
-      openbusidl::rs::PropertyValue_var propertyValue = \
-        new openbusidl::rs::PropertyValue(1);
+      registry_service::PropertyValue_var propertyValue = \
+        new registry_service::PropertyValue(1);
       propertyValue->length(1);
       propertyValue[(CORBA::ULong) 0] = value;
       property->value = propertyValue;
@@ -53,7 +53,7 @@ namespace openbus {
       numElements++;
     }
 
-    openbusidl::rs::PropertyList_var PropertyListHelper::getPropertyList() {
+    registry_service::PropertyList_var PropertyListHelper::getPropertyList() {
       return propertyList;
     }
   }

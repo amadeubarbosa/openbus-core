@@ -13,6 +13,7 @@
 #include <fstream>
 
 using namespace openbus;
+using namespace tecgraf::openbus::core::v1_05;
 
 Openbus* bus;
 bool leaseExpiredCallbackOk;
@@ -30,13 +31,13 @@ class MyCallback : public Openbus::LeaseExpiredCallback {
 
 class ACSTestSuite: public CxxTest::TestSuite {
   private:
-    openbusidl::acs::IAccessControlService* iAccessControlService;
-    openbusidl::rs::IRegistryService* rgs;
-    Credential* credential;
-    Credential* credential2;
-    openbusidl::acs::Credential_var trueCredential;
-    Lease lease;
-    Lease lease2;
+    access_control_service::IAccessControlService* iAccessControlService;
+    registry_service::IRegistryService* rgs;
+    access_control_service::Credential* credential;
+    access_control_service::Credential* credential2;
+    access_control_service::Credential_var trueCredential;
+    access_control_service::Lease lease;
+    access_control_service::Lease lease2;
     std::string OPENBUS_SERVER_HOST;
     unsigned short OPENBUS_SERVER_PORT;
     std::string OPENBUS_USERNAME;
@@ -79,7 +80,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
           NULL,
           const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), 
           OPENBUS_SERVER_PORT);
-        credential2 = new Credential;
+        credential2 = new access_control_service::Credential;
       }
       catch (const char* errmsg) {
         TS_FAIL(errmsg);
@@ -199,8 +200,8 @@ class ACSTestSuite: public CxxTest::TestSuite {
     }
 
     void testIAccessControlService() {
-      Credential_var c;
-      Lease l;
+      access_control_service::Credential_var c;
+      access_control_service::Lease l;
       iAccessControlService->loginByPassword(OPENBUS_USERNAME.c_str(), 
         OPENBUS_PASSWORD.c_str(),
         c, l);
@@ -244,7 +245,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
 
     void testSetThreadCredential() {
       trueCredential = bus->getCredential();
-      openbusidl::acs::Credential wrongCredential;
+      access_control_service::Credential wrongCredential;
       wrongCredential.identifier = "00000000";
       wrongCredential.owner = "none";
       wrongCredential.delegate = "";

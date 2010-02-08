@@ -17,6 +17,7 @@
 #endif
 
 using namespace PortableInterceptor;
+using namespace tecgraf::openbus::core::v1_05;
 
 namespace openbus {
   namespace interceptors {
@@ -28,7 +29,7 @@ namespace openbus {
       private:
         IOP::Codec_ptr cdr_codec;
       public:
-        static openbusidl::acs::Credential* credential;
+        static access_control_service::Credential* credential;
 
         ClientInterceptor(IOP::Codec_ptr pcdr_codec);
         ~ClientInterceptor();

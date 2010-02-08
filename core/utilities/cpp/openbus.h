@@ -29,24 +29,30 @@
 #include <map>
 #include <set>
 
-using namespace openbusidl::acs;
+using namespace tecgraf::openbus::core::v1_05;
+using namespace tecgraf::openbus::session_service::v1_05;
 using namespace std;
 
 /**
 * \brief Stubs dos serviços básicos.
 */
-namespace openbusidl {
+namespace tecgraf {
+  namespace openbus {
+    namespace core {
+      namespace v1_05 {
 
-/**
-* \brief Stub do serviço de acesso.
-*/
-  namespace acs {
+      /**
+      * \brief Stub do serviço de acesso.
+      */
+        namespace access_control_service {
 
-  /**
-  * \class Credential
-  * \brief Credencial de acesso ao barramento.
-  */
-
+        /**
+        * \class Credential
+        * \brief Credencial de acesso ao barramento.
+        */
+        }
+      }
+    }
   }
 }
 
@@ -129,22 +135,22 @@ namespace openbus {
     /**
     * Ponteiro para o stub do serviço de acesso.
     */
-      openbusidl::acs::IAccessControlService_var iAccessControlService;
+      access_control_service::IAccessControlService_var iAccessControlService;
 
     /**
     * Ponteiro para o stub do serviço de registro.
     */
-      openbusidl::rs::IRegistryService* iRegistryService;
+      registry_service::IRegistryService* iRegistryService;
 
     /**
     * Ponteiro para o stub do serviço de sessão.
     */
-      openbusidl::ss::ISessionService* iSessionService;
+      ISessionService* iSessionService;
 
     /**
     * Ponteiro para a faceta ILeaseProvider. 
     */
-      openbusidl::acs::ILeaseProvider_var iLeaseProvider;
+      access_control_service::ILeaseProvider_var iLeaseProvider;
 
     /**
     * Ponteiro para o IComponent do servico de acesso. 
@@ -183,12 +189,12 @@ namespace openbus {
     /**
     * Intervalo de tempo que determina quando a credencial expira. 
     */
-      Lease lease;
+      access_control_service::Lease lease;
 
     /**
     * Credencial de identificação do usuário frente ao barramento. 
     */
-      openbusidl::acs::Credential* credential;
+      access_control_service::Credential* credential;
 
     /**
     * Máquina em que está o barramento. 
@@ -425,32 +431,32 @@ namespace openbus {
     * Retorna a credencial interceptada pelo interceptador servidor. 
     * @return Credencial. \see openbusidl::acs::Credential
     */
-      Credential_var getInterceptedCredential();
+      access_control_service::Credential_var getInterceptedCredential();
 
     /**
     * Retorna o serviço de acesso. 
     * @return Serviço de acesso
     */
-      openbusidl::acs::IAccessControlService* getAccessControlService();
+      access_control_service::IAccessControlService* getAccessControlService();
 
     /**
     * Retorna o serviço de registro. 
     * @return Serviço de registro
     */
-      openbusidl::rs::IRegistryService* getRegistryService();
+      registry_service::IRegistryService* getRegistryService();
 
     /**
     * Retorna o serviço de sessão. 
     * @return Serviço de sessão.
     */
-      openbusidl::ss::ISessionService* getSessionService() 
+      ISessionService* getSessionService() 
         throw(NO_CONNECTED, NO_SESSION_SERVICE);
 
     /**
     * Retorna a credencial de identificação do usuário frente ao barramento. 
     * @return credencial
     */
-      Credential* getCredential();
+      access_control_service::Credential* getCredential();
 
     /**
     * Define uma credencial a ser utilizada no lugar da credencial corrente. 
@@ -459,7 +465,7 @@ namespace openbus {
     * @param[in] credential Credencial a ser utilizada nas requisições a serem
     *   realizadas.
     */
-      void setThreadCredential(Credential* credential);
+      void setThreadCredential(access_control_service::Credential* credential);
 
     /**
     * Representa uma callback para a notificação de que um lease expirou.
@@ -501,7 +507,7 @@ namespace openbus {
     *  @return  Se a tentativa de conexão for bem sucedida, uma instância que 
     *    representa o serviço é retornada.
     */
-      openbusidl::rs::IRegistryService* connect(
+      registry_service::IRegistryService* connect(
         const char* user,
         const char* password)
         throw (CORBA::SystemException, LOGIN_FAILURE);
@@ -529,7 +535,7 @@ namespace openbus {
     *  @return  Se a tentativa de conexão for bem sucedida, uma instância que 
     *    representa o serviço é retornada.
     */
-      openbusidl::rs::IRegistryService* connect(
+      registry_service::IRegistryService* connect(
         const char* entity,
         const char* privateKeyFilename,
         const char* ACSCertificateFilename)

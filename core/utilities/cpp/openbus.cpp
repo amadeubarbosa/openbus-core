@@ -289,10 +289,11 @@ namespace openbus {
     connectionState = DISCONNECTED;
     credential = 0;
     lease = 0;
-    iAccessControlService = IAccessControlService::_nil();
+    iAccessControlService = 
+      access_control_service::IAccessControlService::_nil();
     iRegistryService = 0;
     iSessionService = 0;
-    iLeaseProvider = ILeaseProvider::_nil();
+    iLeaseProvider = access_control_service::ILeaseProvider::_nil();
     iComponentAccessControlService = scs::core::IComponent::_nil();
   }
 
@@ -335,8 +336,8 @@ namespace openbus {
     CORBA::Object_var objIC = 
       orb->string_to_object(corbalocIC.str().c_str());
     iAccessControlService = 
-      openbusidl::acs::IAccessControlService::_narrow(objACS);
-    iLeaseProvider = openbusidl::acs::ILeaseProvider::_narrow(objLP);
+      access_control_service::IAccessControlService::_narrow(objACS);
+    iLeaseProvider = access_control_service::ILeaseProvider::_narrow(objLP);
     iComponentAccessControlService = scs::core::IComponent::_narrow(objIC);
   #ifdef VERBOSE
     verbose->dedent("Openbus::createProxyToIAccessControlService() END");
@@ -581,15 +582,15 @@ namespace openbus {
     return componentBuilder;
   }
 
-  Credential_var Openbus::getInterceptedCredential() {
+  access_control_service::Credential_var Openbus::getInterceptedCredential() {
     return ini->getServerInterceptor()->getCredential();
   }
 
-  openbusidl::acs::IAccessControlService* Openbus::getAccessControlService() {
+  access_control_service::IAccessControlService* Openbus::getAccessControlService() {
     return iAccessControlService;
   }
 
-  openbusidl::rs::IRegistryService* Openbus::getRegistryService() {
+  registry_service::IRegistryService* Openbus::getRegistryService() {
   #ifdef VERBOSE
     verbose->print("Openbus::getRegistryService() BEGIN");
     verbose->indent();
@@ -611,7 +612,7 @@ namespace openbus {
           CORBA::Object_var objref = conns[(CORBA::ULong) 0].objref;
           iComponentRegistryService = scs::core::IComponent::_narrow(objref);
           objref = iComponentRegistryService->getFacetByName("IRegistryService");
-          iRegistryService = openbusidl::rs::IRegistryService::_narrow(objref);
+          iRegistryService = registry_service::IRegistryService::_narrow(objref);
         }
       } catch (scs::core::InvalidName& e) {
       #ifdef VERBOSE
@@ -627,7 +628,7 @@ namespace openbus {
     return iRegistryService;
   } 
 
-  openbusidl::ss::ISessionService* Openbus::getSessionService() 
+  ISessionService* Openbus::getSessionService() 
     throw(NO_CONNECTED, NO_SESSION_SERVICE)
   {
     if (connectionState != CONNECTED) {
@@ -635,17 +636,17 @@ namespace openbus {
     } else {
       if (CORBA::is_nil(iSessionService)) {
         try {
-          openbusidl::rs::FacetList_var facetList = \
-            new openbusidl::rs::FacetList();
+          registry_service::FacetList_var facetList = \
+            new registry_service::FacetList();
           facetList->length(1);
           facetList[(CORBA::ULong) 0] = "ISessionService";
-          openbusidl::rs::ServiceOfferList_var serviceOfferList = \
+          registry_service::ServiceOfferList_var serviceOfferList = \
             iRegistryService->find(facetList);
-          openbusidl::rs::ServiceOffer serviceOffer = serviceOfferList[(CORBA::ULong) 0];
+          registry_service::ServiceOffer serviceOffer = serviceOfferList[(CORBA::ULong) 0];
           scs::core::IComponent* component = serviceOffer.member;
           CORBA::Object* obj = \
-            component->getFacet("IDL:openbusidl/ss/ISessionService:1.0");
-          iSessionService = openbusidl::ss::ISessionService::_narrow(obj);
+            component->getFacet("IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0");
+          iSessionService = ISessionService::_narrow(obj);
         } catch (CORBA::Exception& e) {
           throw NO_SESSION_SERVICE();
         }
@@ -654,11 +655,13 @@ namespace openbus {
     return iSessionService;
   }
 
-  Credential* Openbus::getCredential() {
+  access_control_service::Credential* Openbus::getCredential() {
     return credential;
   }
 
-  void Openbus::setThreadCredential(Credential* credential) {
+  void Openbus::setThreadCredential(
+    access_control_service::Credential* credential) 
+  {
     this->credential = credential;
     openbus::interceptors::ClientInterceptor::credential = credential;
   }
@@ -686,7 +689,7 @@ namespace openbus {
   #endif
   }
 
-  openbusidl::rs::IRegistryService* Openbus::connect(
+  registry_service::IRegistryService* Openbus::connect(
     const char* user,
     const char* password)
     throw (CORBA::SystemException, LOGIN_FAILURE)
@@ -786,7 +789,7 @@ namespace openbus {
     }
   }
 
-  openbusidl::rs::IRegistryService* Openbus::connect(
+  registry_service::IRegistryService* Openbus::connect(
     const char* entity,
     const char* privateKeyFilename,
     const char* ACSCertificateFilename)
@@ -821,7 +824,7 @@ namespace openbus {
       /* Requisição de um "desafio" que somente poderá ser decifrado através
       *  da chave privada da entidade reconhecida pelo barramento.
       */
-        openbusidl::OctetSeq_var octetSeq =
+        OctetSeq_var octetSeq =
           iAccessControlService->getChallenge(entity);
         if (octetSeq->length() == 0) {
         #ifdef VERBOSE
@@ -925,7 +928,7 @@ namespace openbus {
 
         free(challengePlainText);
 
-        openbusidl::OctetSeq_var answerOctetSeq = new openbusidl::OctetSeq(
+        OctetSeq_var answerOctetSeq = new OctetSeq(
           (CORBA::ULong) RSAModulusSize, (CORBA::ULong) RSAModulusSize,
           (CORBA::Octet*)answer, 0);
 
