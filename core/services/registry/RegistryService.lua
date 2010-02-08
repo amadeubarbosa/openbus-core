@@ -639,7 +639,7 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
 	   local ret, stop, remoteRS = oil.pcall(Utils.fetchService, 
 											Openbus:getORB(), 
 											self.ftconfig.hosts.RS[i], 
-											Utils.REGISTRY_SERVICE_KEY)
+											Utils.REGISTRY_SERVICE_INTERFACE)
 		
 		if remoteRS then
 			local selectedOffersEntries = remoteRS:localFind(facets, criteria)

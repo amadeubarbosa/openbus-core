@@ -4,6 +4,7 @@ local os     = os
 local string = string
 local table  = table
 local math   = math
+local type = type
 
 local loadfile = loadfile
 local assert = assert
@@ -144,7 +145,8 @@ end
 function ACSFacet:generateChallenge(name, certificate)
   local randomSequence = tostring(luuid.new("time"))
   self.challenges[name] = randomSequence
-  return lce.cipher.encrypt(certificate:getpublickey(), randomSequence)
+  local key = certificate:getpublickey()
+  return lce.cipher.encrypt(key, randomSequence)
 end
 
 ---
@@ -265,7 +267,7 @@ function ACSFacet:getEntryCredential(credential)
                                 owner = "",  
                                 delegate = "" },
 			    certified = false,
-			    lease = 0,
+			    lease = { lastUpdate = os.time(), duration = duration },
 			    observers = {},
 			    observedBy = ""
 			}
@@ -284,7 +286,32 @@ function ACSFacet:getEntryCredential(credential)
 end
 
 function ACSFacet:getAllEntryCredential()
-  return self.entries
+  local retEntries = {}
+  local i = 0
+  for _,entry in pairs(self.entries) do
+    i = i + 1
+    retEntries[i] = {}
+    retEntries[i].aCredential = entry.credential
+    retEntries[i].certified = entry.certified
+    local j = 1
+    retEntries[i].observers = {}
+    for observerId, flag in pairs(entry.observers) do
+        if flag then
+        	retEntries[i].observers[j] = observerId
+        	j = j + 1
+        end
+    end
+    j = 1
+    retEntries[i].observedBy = {}
+    for observerId, flag in pairs(entry.observedBy) do
+        if flag then
+        	retEntries[i].observedBy[j] = observerId
+        	j = j + 1
+        end
+    end
+  end
+  Log:access_control("[getAllEntryCredential]Recuperando todas as [" .. tostring(i) .."] entradas")
+  return retEntries
 end
 
 
@@ -408,7 +435,7 @@ end
 --
 --@return A credencial.
 ---
-function ACSFacet:addEntryCredential(self, entry)
+function ACSFacet:addEntryCredential(entry)
   local duration = self.lease
   entry.lease = { lastUpdate = os.time(), duration = duration }
   self.credentialDB:insert(entry)
@@ -1049,25 +1076,35 @@ function FaultToleranceFacet:updateStatus(params)
 			   local ret, stop, acs = oil.pcall(Utils.fetchService, 
 												Openbus:getORB(), 
 												self.ftconfig.hosts.ACS[i], 
-												Utils.ACCESS_CONTROL_SERVICE_KEY)
+												Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
 				
 				if acs then
 					local repEntries = acs:getAllEntryCredential()
-					local acsFacet = self.context.IAccessControlService
-					local localEntries = acsFacet.entries
-					--SINCRONIZA
-					for _,repEntry in pairs(repEntries) do
-					   local add = true
-					   for _,locEntry in pairs(locEntries) do
-							if locEntry.credential.identifier == repEntry.credential.identifier then
-								add = false
-								break
-							end
-					   end
-					   if add then
-						   acsFacet:addEntryCredential(repEntry)
-						   updated = true
-					   end
+					if # repEntries > 0 then
+						local acsFacet = self.context.IAccessControlService
+						local localEntries = acsFacet.entries
+						if localEntries == nil then
+						   localEntries = {}
+						end
+						--SINCRONIZA
+						for _,repEntry in pairs(repEntries) do
+					   		local add = true
+					   		if type(repEntry) ~= "number" then
+					   		   for _,locEntry in pairs(localEntries) do
+					   		      if locEntry.credential.identifier == 
+					   		          repEntry.aCredential.identifier then
+									add = false
+									break
+							      end
+					   		   end
+
+					   		   if add then
+					   		     repEntry.credential = repEntry.aCredential
+						   		 acsFacet:addEntryCredential(repEntry)
+						   		 updated = true
+					   		  end
+					   		end					   		
+						end
 					end
 				end
 			end
@@ -1087,7 +1124,7 @@ function FaultToleranceFacet:updateStatus(params)
 			   local ret, stop, acs = oil.pcall(Utils.fetchService, 
 												Openbus:getORB(), 
 												self.ftconfig.hosts.ACS[i], 
-												Utils.ACCESS_CONTROL_SERVICE_KEY)
+												Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
 				
 				if acs then
 					entryCredential = acs:getEntryCredential(credential)

@@ -76,9 +76,8 @@ interface ILeaseProvider {
 struct EntryCredential {
   Credential aCredential;
   boolean certified;
-  Lease aLease;
   CredentialObserverIdentifierList observers;
-  CredentialObserverIdentifier observedBy;
+  CredentialObserverIdentifierList observedBy;
 };
 
 /** \brief Representa uma sequência de entradas completas de credenciais. */
