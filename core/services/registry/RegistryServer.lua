@@ -27,25 +27,25 @@ local iConfig =
   
 -- Parsing arguments
 local usage_msg = [[
-	--help                   : show this help
-	--verbose                : turn ON the VERBOSE mode (show the system commands)
-	--port=<port number>     : defines the service port (padrão ]] 
-								.. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
+  --help                   : show this help
+  --verbose                : turn ON the VERBOSE mode (show the system commands)
+  --port=<port number>     : defines the service port (padrão ]] 
+                .. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
  NOTES:
- 	The prefix '--' is optional in all options.
-	So '--help' or '-help' or yet 'help' all are the same option.]]
+  The prefix '--' is optional in all options.
+  So '--help' or '-help' or yet 'help' all are the same option.]]
 local arguments = util.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" then
-	oil.verbose:level(5)
+  oil.verbose:level(5)
 else
-	if RegistryServerConfiguration.oilVerboseLevel then
-  		oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
-	end
+  if RegistryServerConfiguration.oilVerboseLevel then
+      oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
+  end
 end
 
 if arguments.port then
-	RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
+  RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
 end
   
 -- Define os níveis de verbose para o openbus e para o oil
@@ -80,7 +80,7 @@ facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
 facetDescriptions.IManagement      = {}
-facetDescriptions.IFaultTolerantService	= {}
+facetDescriptions.IFaultTolerantService = {}
 facetDescriptions.IReceptacles          = {}
 
 facetDescriptions.IComponent.name                  = "IComponent"

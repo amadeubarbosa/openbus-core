@@ -107,14 +107,14 @@ function SessionService:createSession(member)
 
   -- A credencial deve ser observada!
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-  					 		  orb, 
-                         	  self.context.IComponent, 
-                         	  "AccessControlServiceReceptacle", 
-                         	  "IAccessControlService", 
-                         	  "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+                  orb, 
+                            self.context.IComponent, 
+                            "AccessControlServiceReceptacle", 
+                            "IAccessControlService", 
+                            "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   if not status then
-	    -- erro ja foi logado, só retorna
-	    return nil
+      -- erro ja foi logado, só retorna
+      return nil
   end     
   
   if not self.observerId then
@@ -182,15 +182,15 @@ end
 ---
 function SessionService:expired()
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-  					 		  orb, 
-                         	  self.context.IComponent, 
-                         	  "AccessControlServiceReceptacle", 
-                         	  "IAccessControlService", 
-                         	  "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-                         	  
+                  orb, 
+                            self.context.IComponent, 
+                            "AccessControlServiceReceptacle", 
+                            "IAccessControlService", 
+                            "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+                            
   if not status then
-	  -- erro ja foi logado, só retorna
-	  return nil
+    -- erro ja foi logado, só retorna
+    return nil
   end     
   -- registra novamente o observador de credenciais
   self.observerId = acsFacet:addObserver(
