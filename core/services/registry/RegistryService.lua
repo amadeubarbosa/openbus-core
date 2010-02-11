@@ -329,7 +329,7 @@ function RSFacet:find(facets)
   --atualiza estado em todas as réplicas
 
   local params = { facets = facets, criteria = {} }
---  ftFacet:updateStatus(params)
+  ftFacet:updateStatus(params)
   
   local selectedOffers = {}
 -- Se nenhuma faceta foi discriminada, todas as ofertas de serviço
