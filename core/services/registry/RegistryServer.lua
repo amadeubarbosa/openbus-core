@@ -94,6 +94,7 @@ facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 facetDescriptions.IRegistryService.name            = "IRegistryService"
 facetDescriptions.IRegistryService.interface_name  = "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0"
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
+facetDescriptions.IRegistryService.key             = "RS"
 
 facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
 facetDescriptions.IFaultTolerantService.interface_name        = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"

@@ -289,25 +289,31 @@ function ACSFacet:getAllEntryCredential()
   local retEntries = {}
   local i = 0
   for _,entry in pairs(self.entries) do
-    i = i + 1
-    retEntries[i] = {}
-    retEntries[i].aCredential = entry.credential
-    retEntries[i].certified = entry.certified
-    local j = 1
-    retEntries[i].observers = {}
-    for observerId, flag in pairs(entry.observers) do
+    if entry.credential then
+      i = i + 1
+      retEntries[i] = {}
+      retEntries[i].aCredential = entry.credential
+      if entry.certified ~= nil then
+         retEntries[i].certified = entry.certified
+      else
+         retEntries[i].certified = false
+      end
+      local j = 1
+      retEntries[i].observers = {}
+      for observerId, flag in pairs(entry.observers) do
         if flag then
-        	retEntries[i].observers[j] = observerId
+        	retEntries[i].observers[j] = tostring(observerId)
         	j = j + 1
         end
-    end
-    j = 1
-    retEntries[i].observedBy = {}
-    for observerId, flag in pairs(entry.observedBy) do
+      end
+      j = 1
+      retEntries[i].observedBy = {}
+      for observerId, flag in pairs(entry.observedBy) do
         if flag then
-        	retEntries[i].observedBy[j] = observerId
+        	retEntries[i].observedBy[j] = tostring(observerId)
         	j = j + 1
         end
+      end
     end
   end
   Log:access_control("[getAllEntryCredential]Recuperando todas as [" .. tostring(i) .."] entradas")
@@ -1028,6 +1034,13 @@ FaultToleranceFacet.ftconfig = {}
 
 function FaultToleranceFacet:init()
   self.ftconfig = assert(loadfile(DATA_DIR .."/conf/ACSFaultToleranceConfiguration.lua"))()
+  
+  local acs = self.context.IAccessControlService
+
+  local notInHostAdd = acs.config.hostName..":"
+				   ..tostring(acs.config.hostPort) 
+
+  self.acsReference = "corbaloc::" .. notInHostAdd .. Utils.ACCESS_CONTROL_SERVICE_KEY
 end
 
 function FaultToleranceFacet:updateStatus(params)
@@ -1056,23 +1069,16 @@ function FaultToleranceFacet:updateStatus(params)
 	--chamada remota
 		input = params._anyval
 	end
-	
-	local acs = self.context.IAccessControlService
-
-	local notInHostAdd = acs.config.hostName..":"
-				   ..tostring(acs.config.hostPort) 
-
-	local selfRef = "corbaloc::" .. notInHostAdd .. Utils.ACCESS_CONTROL_SERVICE_KEY
 
     if input == "all" then
         --sincroniza todas as credenciais a mais das outras replicas 
         --com esta
-		Log:faulttolerance("[updateStatus] Sincronizando base de credenciais com as replicas exceto em "..notInHostAdd)
+		Log:faulttolerance("[updateStatus] Sincronizando base de credenciais com as replicas exceto em "..self.acsReference)
 		  local updated = false
 		  local i = 1
-		  
+		  local count = 0
 		  repeat
-			if self.ftconfig.hosts.ACS[i] ~= selfRef then
+			if self.ftconfig.hosts.ACS[i] ~= self.acsReference then
 			   local ret, stop, acs = oil.pcall(Utils.fetchService, 
 												Openbus:getORB(), 
 												self.ftconfig.hosts.ACS[i], 
@@ -1112,6 +1118,7 @@ function FaultToleranceFacet:updateStatus(params)
 					   		     end
 						   		 acsFacet:addEntryCredential(addEntry)
 						   		 updated = true
+						   		 count = count + 1
 					   		  end
 					   		end					   		
 						end
@@ -1119,18 +1126,21 @@ function FaultToleranceFacet:updateStatus(params)
 				end
 			end
 			i = i + 1 	
-		  until i == # self.ftconfig.hosts.ACS
+		  until i > # self.ftconfig.hosts.ACS
+		  if updated then
+		    Log:faulttolerance("[updateOffersStatus] Quantidade de credenciais inseridas:[".. tostring(count) .."].")
+	      end
 		  return updated
     else
         --procura por uma credencial específica
         local credential = input
-        Log:faulttolerance("[updateStatus] Buscando uma credencial nas replicas exceto em "..notInHostAdd)
+        Log:faulttolerance("[updateStatus] Buscando uma credencial nas replicas exceto em "..self.acsReference)
   
 		local entryCredential = nil
 		local i = 1
 		  
 		repeat
-			if self.ftconfig.hosts.ACS[i] ~= selfRef then
+			if self.ftconfig.hosts.ACS[i] ~= self.acsReference then
 			   local ret, stop, acs = oil.pcall(Utils.fetchService, 
 												Openbus:getORB(), 
 												self.ftconfig.hosts.ACS[i], 

@@ -13,6 +13,7 @@ local next = next
 local format = string.format
 local print = print
 local tostring = tostring
+local type = type
 
 local luuid = require "uuid"
 local oil = require "oil"
@@ -82,6 +83,15 @@ function RSFacet:register(serviceOffer)
     identifier = identifier
   }
 
+  for _, existentOfferEntry in pairs(self.offersByIdentifier) do
+  --se ja existir, nao adiciona
+	if Utils.equalsOfferEntries(existentOfferEntry, offerEntry) then
+	  Log:registry("Oferta ja existente com id "..existentOfferEntry.identifier)
+	  self:updateMemberInfoInExistentOffer(existentOfferEntry, offerEntry)
+      return true, existentOfferEntry.identifier
+	end
+  end
+
   Log:registry("Registrando oferta com id "..identifier)
 
   self:addOffer(offerEntry)
@@ -125,6 +135,21 @@ function RSFacet:addOffer(offerEntry)
       -- erro ja foi logado, so adiciona que nao pode adicionar
 	  Log:service("Nao foi possivel adicionar credencial ao observador")
   end                       		
+end
+
+function RSFacet:updateMemberInfoInExistentOffer(existentOfferEntry, newOfferEntry)
+  Log:registry("[updateMemberInfoInExistentOffer] Atualizando informacoes de membro em oferta existente...")
+  --Atencao, o identificador da credencial antiga é o que prevalece
+  --por causa dos observadores
+  existentOfferEntry.offer.member = newOfferEntry.offer.member
+  local properties = self:createPropertyIndex(existentOfferEntry.offer.properties,
+    existentOfferEntry.offer.member)
+  self.offersDB:update(offerEntry)  
+
+  self.offersByCredential[existentOfferEntry.credential.identifier][existentOfferEntry.identifier] =
+    offerEntry
+    
+  Log:registry("[updateMemberInfoInExistentOffer] Informacoes de membro atualizadas.")
 end
 
 ---
@@ -300,12 +325,11 @@ end
 --@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:find(facets)
-
   local ftFacet = self.context.IFaultTolerantService
   --atualiza estado em todas as réplicas
 
   local params = { facets = facets, criteria = {} }
-  ftFacet:updateStatus(params)
+--  ftFacet:updateStatus(params)
   
   local selectedOffers = {}
 -- Se nenhuma faceta foi discriminada, todas as ofertas de serviço
@@ -386,24 +410,28 @@ function RSFacet:localFind(facets, criteria)
 	Log:faulttolerance("[localFind] Buscando ofertas somente na replica local.")
 	local selectedOffersEntries = {}
 
+    local i = 1
 	-- Se nenhuma faceta foi discriminada e nenhum critério foi
 	-- definido, todas as ofertas de serviço que não existem localmente
 	-- devem ser retornadas.
 	if (#facets == 0 and #criteria == 0) then
-    	for i, offerEntry in pairs(self.offersByIdentifier) do
+    	for _, offerEntry in pairs(self.offersByIdentifier) do
     		selectedOffersEntries[i] = {}
 			selectedOffersEntries[i].identifier = offerEntry.identifier
-			selectedOffersEntries[i].offer = offerEntry.offer
-			selectedOffersEntries[i].credential = offerEntry.credential
+			selectedOffersEntries[i].aServiceOffer = offerEntry.offer
+			selectedOffersEntries[i].aCredential = offerEntry.credential
 			selectedOffersEntries[i].properties = offerEntry.properties
-			selectedOffersEntries[i].facets = Utils.marshalHashFacets(offerEntry.facets)
+			selectedOffersEntries[i].authorizedFacets = Utils.marshalHashFacets(offerEntry.facets)
 			selectedOffersEntries[i].allFacets = offerEntry.allFacets
+			i = i + 1
     	end
+    	Log:registry("Encontrei "..#selectedOffersEntries..
+			 " ENTRADAS de ofertas que implementam as facetas discriminadas.")
     	
 	elseif (#facets > 0 and #criteria == 0)  then
 	-- Para cada oferta de serviço disponível, deve-se selecionar
   	-- a oferta que implementa todas as facetas discriminadas.
-  		for i, offerEntry in pairs(self.offersByIdentifier) do
+  		for _, offerEntry in pairs(self.offersByIdentifier) do
 			local hasAllFacets = true
 			for _, facet in ipairs(facets) do
 				if not offerEntry.facets[facet] then
@@ -414,21 +442,22 @@ function RSFacet:localFind(facets, criteria)
 			if hasAllFacets then
 				selectedOffersEntries[i] = {}
 				selectedOffersEntries[i].identifier = offerEntry.identifier
-				selectedOffersEntries[i].offer = offerEntry.offer
-				selectedOffersEntries[i].credential = offerEntry.credential
+				selectedOffersEntries[i].aServiceOffer = offerEntry.offer
+				selectedOffersEntries[i].aCredential = offerEntry.credential
 				selectedOffersEntries[i].properties = offerEntry.properties
-				selectedOffersEntries[i].facets = Utils.marshalHashFacets(offerEntry.facets)
+				selectedOffersEntries[i].authorizedFacets = Utils.marshalHashFacets(offerEntry.facets)
 				selectedOffersEntries[i].allFacets = offerEntry.allFacets
+				i = i + 1
 			end
 		end
 		Log:registry("Encontrei "..#selectedOffersEntries..
-			 " entradas de ofertas que implementam as facetas discriminadas.")
+			 " ENTRADAS de ofertas que implementam as facetas discriminadas.")
   
 	else  
 	-- Para cada oferta de serviço disponível, seleciona-se
 	-- a oferta que implementa todas as facetas discriminadas,
 	-- E, possui todos os critérios especificados.
-		for i, offerEntry in pairs(self.offersByIdentifier) do
+		for _, offerEntry in pairs(self.offersByIdentifier) do
 		  if self:meetsCriteria(criteria, offerEntry.properties) then
 			local hasAllFacets = true
 			for _, facet in ipairs(facets) do
@@ -440,18 +469,18 @@ function RSFacet:localFind(facets, criteria)
 			if hasAllFacets then
 				selectedOffersEntries[i] = {}
 				selectedOffersEntries[i].identifier = offerEntry.identifier
-				selectedOffersEntries[i].offer = offerEntry.offer
-				selectedOffersEntries[i].credential = offerEntry.credential
+				selectedOffersEntries[i].aServiceOffer = offerEntry.offer
+				selectedOffersEntries[i].aCredential = offerEntry.credential
 				selectedOffersEntries[i].properties = offerEntry.properties
-				selectedOffersEntries[i].facets = Utils.marshalHashFacets(offerEntry.facets)
+				selectedOffersEntries[i].authorizedFacets = Utils.marshalHashFacets(offerEntry.facets)
 				selectedOffersEntries[i].allFacets = offerEntry.allFacets
+				i = i + 1
 			end
 		  end
 		end
 		Log:registry("Com critério, encontrei "..#selectedOffersEntries..
-			" entradas de ofertas que implementam as facetas discriminadas.")
+			" ENTRADAS de ofertas que implementam as facetas discriminadas.")
 	end
-
 	return selectedOffersEntries
 end
 
@@ -633,46 +662,60 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
 	local rgs = self.context.IRegistryService
 	local updated = false
 	local i = 1
-
+    local count = 0
 	repeat
-	if self.ftconfig.hosts.RS[i] ~= self.rsReference then
-	   local ret, stop, remoteRS = oil.pcall(Utils.fetchService, 
+	  if self.ftconfig.hosts.RS[i] ~= self.rsReference then
+	     local ret, stop, remoteRS = oil.pcall(Utils.fetchService, 
 											Openbus:getORB(), 
 											self.ftconfig.hosts.RS[i], 
 											Utils.REGISTRY_SERVICE_INTERFACE)
 		
-		if remoteRS then
+		 if remoteRS then
 			local selectedOffersEntries = remoteRS:localFind(facets, criteria)
-	
+			if not rgs.offersByIdentifier then
+			   rgs.offersByIdentifier = {}
+			end
 			--SINCRONIZA
 			--para todas as ofertas encontradas nas replicas
-			for i, offerEntryFound in pairs(selectedOffersEntries) do
-				-- verifica se ja existem localmente
-				for j, offerEntry in pairs(rgs.offersByIdentifier) do
-					local insert = true
+			for _, offerEntryFound in pairs(selectedOffersEntries) do
+			   if type(offerEntryFound) ~= "number" then
+			     local insert = true
+				 -- verifica se ja existem localmente
+				 for _, offerEntry in pairs(rgs.offersByIdentifier) do
 					--se ja existir, nao adiciona
 					if Utils.equalsOfferEntries(offerEntryFound, offerEntry) then
 						--se ja existir, nao insere
 						insert = false
 						break
 					end
-					
-				end
-				if insert then  
-				  -- se nao existir,
-				  --insere no banco local
-				  offerEntryFound.facets = Utils.unmarshalHashFacets(offerEntryFound.facets)
-				  
-				  rgs.offersDB:insert(offerEntryFound) 
-				  --insere na lista local
-				  rgs.offersByIdentifier.insert(offerEntryFound)
-				  updated = true
-				end
+				 end
+				 if insert then  
+				   -- se nao existir,
+				   --insere no banco local
+				   local addOfferEntry = {}
+				   addOfferEntry.identifier = offerEntryFound.identifier
+				   addOfferEntry.credential = offerEntryFound.aCredential
+				   addOfferEntry.offer = offerEntryFound.aServiceOffer
+                   addOfferEntry.facets = Utils.unmarshalHashFacets(offerEntryFound.authorizedFacets)
+                   addOfferEntry.allFacets = offerEntryFound.allFacets
+                   addOfferEntry.properties = offerEntryFound.properties
+                   
+                   --insere na lista local
+                   rgs:addOffer(addOfferEntry)
+				   rgs.offersDB:insert(addOfferEntry) 
+
+				   updated = true
+				   count = count + 1
+				 end
+			   end
 			end
-		end
+		 end
+	  end
+	  i = i + 1 	
+	until i > # self.ftconfig.hosts.RS
+	if updated then
+		Log:faulttolerance("[updateOffersStatus] Quantidade de ofertas inseridas:[".. tostring(count) .."].")
 	end
-	i = i + 1 	
-	until i == # self.ftconfig.hosts.RS
 	return updated
 end
 
