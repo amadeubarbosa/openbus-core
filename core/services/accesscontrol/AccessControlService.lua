@@ -1040,7 +1040,7 @@ function FaultToleranceFacet:init()
   local notInHostAdd = acs.config.hostName..":"
 				   ..tostring(acs.config.hostPort) 
 
-  self.acsReference = "corbaloc::" .. notInHostAdd .. Utils.ACCESS_CONTROL_SERVICE_KEY
+  self.acsReference = "corbaloc::" .. notInHostAdd .. "/" .. Utils.ACCESS_CONTROL_SERVICE_KEY
 end
 
 function FaultToleranceFacet:updateStatus(params)

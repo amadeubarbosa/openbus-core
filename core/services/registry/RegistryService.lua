@@ -615,7 +615,7 @@ function FaultToleranceFacet:init()
 	local notInHostAdd = rgs.config.registryServerHostName..":"
 				   ..tostring(rgs.config.registryServerHostPort) 
 
-	self.rsReference = "corbaloc::" .. notInHostAdd .. Utils.REGISTRY_SERVICE_KEY
+	self.rsReference = "corbaloc::" .. notInHostAdd .. "/" .. Utils.REGISTRY_SERVICE_KEY
 end
 
 function FaultToleranceFacet:updateStatus(params)
