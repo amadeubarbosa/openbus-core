@@ -40,7 +40,7 @@ local oop = require "loop.simple"
 
 
 ---
---Componente responsï¿½vel pelo Serviï¿½o de Controle de Acesso
+--Componente responsável pelo Serviço de Controle de Acesso
 ---
 module("core.services.accesscontrol.AccessControlService")
 
@@ -53,26 +53,26 @@ local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 ACSFacet = oop.class{}
 
 ---
---Credencial invï¿½lida.
+--Credencial inválida.
 --
 --@class table
 --@name invalidCredential
 --
---@field identifier O identificador da credencial que, neste caso, ï¿½ vazio.
---@field owner O nome da entidade dona da credencial que, neste caso, ï¿½ vazio.
---@field delegate O nome da entidade delegada que, neste caso, ï¿½ vazio.
+--@field identifier O identificador da credencial que, neste caso, é vazio.
+--@field owner O nome da entidade dona da credencial que, neste caso, é vazio.
+--@field delegate O nome da entidade delegada que, neste caso, é vazio.
 ---
 ACSFacet.invalidCredential = {identifier = "", owner = "", delegate = ""}
 ACSFacet.invalidLease = -1
 ACSFacet.faultDescription = {_isAlive = false, _errorMsg = "" }
 ---
---Realiza um login de uma entidade atravï¿½s de usuï¿½rio e senha.
+--Realiza um login de uma entidade através de usuário e senha.
 --
 --@param name O nome da entidade.
 --@param password A senha da entidade.
 --
 --@return true, a credencial da entidade e o lease caso o login seja realizado
---com sucesso, ou false e uma credencial e uma lease invï¿½lidos, caso contrï¿½rio.
+--com sucesso, ou false e uma credencial e uma lease inválidos, caso contrário.
 ---
 function ACSFacet:loginByPassword(name, password)
   for _, validator in ipairs(self.loginPasswordValidators) do
@@ -81,21 +81,21 @@ function ACSFacet:loginByPassword(name, password)
       local entry = self:addEntry(name)
       return true, entry.credential, entry.lease.duration
     else
-       Log:warn(format("Erro ao validar o usuï¿½rio %s: %s", name, err))
+       Log:warn(format("Erro ao validar o usuário %s: %s", name, err))
     end
   end
-  Log:error("Usuï¿½rio "..name.." nï¿½o pï¿½de ser validado no sistema.")
+  Log:error("usuário "..name.." não pôde ser validado no sistema.")
   return false, self.invalidCredential, self.invalidLease
 end
 
 ---
---Realiza um login de um membro atravï¿½s de assinatura digital.
+--Realiza um login de um membro através de assinatura digital.
 --
 --@param name OI nome do membro.
 --@param answer A resposta para um desafio previamente obtido.
 --
 --@return true, a credencial do membro e o lease caso o login seja realizado
---com sucesso, ou false e uma credencial e uma lease invï¿½lidos, caso contrï¿½rio.
+--com sucesso, ou false e uma credencial e uma lease inválidos, caso contrário.
 --
 --@see getChallenge
 ---
@@ -117,7 +117,7 @@ function ACSFacet:loginByCertificate(name, answer)
 end
 
 ---
---Obtï¿½m o desafio para um membro.
+--Obtém o desafio para um membro.
 --
 --@param name O nome do membro.
 --
@@ -154,7 +154,7 @@ end
 --
 --@param credential A credencial.
 --
---@return true caso a credencial estivesse logada, ou false caso contrï¿½rio.
+--@return true caso a credencial estivesse logada, ou false caso contrário.
 ---
 function ACSFacet:logout(credential)
   local entry = self.entries[credential.identifier]
@@ -168,11 +168,11 @@ function ACSFacet:logout(credential)
 end
 
 ---
---Verifica se uma credencial ï¿½ vï¿½lida.
+--Verifica se uma credencial é válida.
 --
 --@param credential A credencial.
 --
---@return true caso a credencial seja vï¿½lida, ou false caso contrï¿½rio.
+--@return true caso a credencial seja válida, ou false caso contrário.
 ---
 function ACSFacet:isValid(credential)
   Log:access_control("Validando a credencial {"..credential.identifier.." - "..
@@ -188,20 +188,20 @@ function ACSFacet:isValid(credential)
     end
     
     if not entry then
-    --realmente nï¿½o encontrou
+    --realmente não encontrou
 	   Log:access_control("A credencial {"..credential.identifier.." - "..
-        credential.owner.."/"..credential.delegate.."} nï¿½o ï¿½ vï¿½lida.")
+        credential.owner.."/"..credential.delegate.."} não é válida.")
 	   return false
 	end
   end
 
   if entry.credential.delegate ~= "" and not entry.certified then
     Log:access_control("A credencial {"..credential.identifier.." - "..
-        credential.owner.."/"..credential.delegate.."} nï¿½o ï¿½ vï¿½lida.")
+        credential.owner.."/"..credential.delegate.."} não é válida.")
     return false
   end
   Log:access_control("A credencial {"..credential.identifier.." - "..
-      credential.owner.."/"..credential.delegate.."} ï¿½ vï¿½lida.")
+      credential.owner.."/"..credential.delegate.."} é válida.")
   return true
 end
 
@@ -211,7 +211,7 @@ end
 --@param credentials O array de credenciais.
 --
 --@return Um array de booleanos indicando para cada credencial recebida se a
---mesma ï¿½ vï¿½lida ou nï¿½o.
+--mesma é válida ou não.
 ---
 function ACSFacet:areValid(credentials)
   local areValid = {}
@@ -253,11 +253,11 @@ end
 
 
 ---
---Verifica se uma credencial ï¿½ vï¿½lida e retorna sua entrada completa.
+--Verifica se uma credencial é válida e retorna sua entrada completa.
 --
 --@param credential A credencial.
 --
---@return a credencial caso exista, ou nil caso contrï¿½rio.
+--@return a credencial caso exista, ou nil caso contrário.
 ---
 function ACSFacet:getEntryCredential(credential)
 
@@ -322,12 +322,12 @@ end
 
 
 ---
---Adiciona uma credencial ï¿½ lista de credenciais de um observador.
+--Adiciona uma credencial à lista de credenciais de um observador.
 --
 --@param observerIdentifier O identificador do observador.
 --@param credentialIdentifier O identificador da credencial.
 --
---@return true caso a credencil tenha sido adicionada, ou false caso contrï¿½rio.
+--@return true caso a credencil tenha sido adicionada, ou false caso contrário.
 ---
 function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifier)
   local entry = self.entries[credentialIdentifier]
@@ -344,9 +344,9 @@ function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifi
     end
     
     if not entry then
-    --realmente nï¿½o encontrou
+    --realmente não encontrou
 	   Log:access_control("A credencial {"..credential.identifier.." - "..
-        credential.owner.."/"..credential.delegate.."} nï¿½o ï¿½ vï¿½lida.")
+        credential.owner.."/"..credential.delegate.."} não é válida.")
 	   return false
 	end
   end
@@ -368,7 +368,7 @@ end
 --@param observerIdentifier O identificador do observador.
 --@param credential A credencial.
 --
---@return true caso o observador tenha sido removido, ou false caso contrï¿½rio.
+--@return true caso o observador tenha sido removido, ou false caso contrário.
 ---
 function ACSFacet:removeObserver(observerIdentifier, credential)
   local observerEntry = self.observers[observerIdentifier]
@@ -390,7 +390,7 @@ end
 --@param observerIdentifier O identificador do observador.
 --@param credentialIdentifier O identificador da credencial.
 --
---@return true caso a credencial seja removida, ou false caso contrï¿½rio.
+--@return true caso a credencial seja removida, ou false caso contrário.
 ---
 function ACSFacet:removeCredentialFromObserver(observerIdentifier,
     credentialIdentifier)
@@ -410,7 +410,7 @@ end
 ---
 --Adiciona uma credencial ao banco de dados.
 --
---@param name O nome da entidade para a qual a credencial serï¿½ gerada.
+--@param name O nome da entidade para a qual a credencial será gerada.
 --
 --@return A credencial.
 ---
@@ -443,7 +443,7 @@ end
 ---
 --Adiciona uma credencial ao banco de dados.
 --
---@param name O nome da entidade para a qual a credencial serï¿½ gerada.
+--@param name O nome da entidade para a qual a credencial será gerada.
 --
 --@return A credencial.
 ---
@@ -511,7 +511,7 @@ function ACSFacet:removeEntryById(name)
 end
 
 ---
---Envia aos observadores a notificaï¿½ï¿½o de que um credencial nï¿½o existe mais.
+--Envia aos observadores a notificação de que um credencial não existe mais.
 --
 --@param credential A credencial.
 ---
@@ -543,7 +543,7 @@ function LeaseProviderFacet:renewLease(credential)
   self = self.context.IAccessControlService
   Log:lease(credential.owner.. " renovando lease.")
   if not self:isValid(credential) then
-    Log:warn(credential.owner.. " credencial invï¿½lida.")
+    Log:warn(credential.owner.. " credencial inválida.")
     return false, self.invalidLease
   end
   local now = os.time()
@@ -576,7 +576,7 @@ local UserNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_
 ManagementFacet = oop.class{}
 
 ---
--- Verifica se o usuï¿½rio tem permissï¿½o para executar o mï¿½todo.
+-- Verifica se o usuário tem permissão para executar o método.
 --
 function ManagementFacet:checkPermission()
   local credential = Openbus:getInterceptedCredential()
@@ -599,7 +599,7 @@ function ManagementFacet:loadData()
   self.systems = {}
   self.deployments = {}
   self.users = {}
-  -- Carrega os usuï¿½rio
+  -- Carrega os usuário
   local data = assert(self.userDB:getValues())
   for _, info in ipairs(data) do
     self.users[info.id] = true
@@ -609,7 +609,7 @@ function ManagementFacet:loadData()
   for _, info in ipairs(data) do
     self.systems[info.id] = true
   end
-  -- Carrega os dados e cria as implantaï¿½ï¿½es dos sistemas
+  -- Carrega os dados e cria as implantações dos sistemas
   data = assert(self.deploymentDB:getValues())
   for _, info in ipairs(data) do
     self.deployments[info.id] = true
@@ -619,13 +619,13 @@ end
 ---
 -- Cadastra um novo sistema.
 --
--- @param id Identificador ï¿½nico do sistema.
--- @param description Descriï¿½ï¿½o do sistema.
+-- @param id Identificador único do sistema.
+-- @param description Descrição do sistema.
 -- 
 function ManagementFacet:addSystem(id, description)
   self:checkPermission()
   if self.systems[id] then
-    Log:error(format("Sistema '%s' jï¿½ cadastrado.", id))
+    Log:error(format("Sistema '%s' já cadastrado.", id))
     error{SystemAlreadyExistsException}
   end
   local succ, msg = self.systemDB:save(id, {
@@ -639,15 +639,15 @@ function ManagementFacet:addSystem(id, description)
 end
 
 ---
--- Remove o sistema do barramento. Um sistema sï¿½ poderï¿½ ser removido
--- se nï¿½o possuir nenhuma implantaï¿½ï¿½o cadastrada que o referencia.
+-- Remove o sistema do barramento. Um sistema só poderá ser removido
+-- se não possuir nenhuma implantação cadastrada que o referencia.
 --
 -- @param id Identificador do sistema.
 --
 function ManagementFacet:removeSystem(id)
   self:checkPermission()
   if not self.systems[id] then
-    Log:error(format("Sistema '%s' nï¿½o cadastrado.", id))
+    Log:error(format("Sistema '%s' não cadastrado.", id))
     error{SystemNonExistentException}
   end
   local depls = self.deploymentDB:getValues()
@@ -665,15 +665,15 @@ function ManagementFacet:removeSystem(id)
 end
 
 ---
--- Atualiza a descriï¿½ï¿½o do sistema.
+-- Atualiza a descrição do sistema.
 -- 
 -- @param id Identificador do sistema.
--- @param description Nova descriï¿½ï¿½o para o sistema.
+-- @param description Nova descrição para o sistema.
 -- 
 function ManagementFacet:setSystemDescription(id, description)
   self:checkPermission()
   if not self.systems[id] then
-    Log:error(format("Sistema '%s' nï¿½o cadastrado.", id))
+    Log:error(format("Sistema '%s' não cadastrado.", id))
     error{SystemNonExistentException}
   end
   local system, msg = self.systemDB:get(id)
@@ -692,7 +692,7 @@ end
 ---
 -- Recupera todos os sistemas cadastrados.
 -- 
--- @return Uma seqï¿½ï¿½ncia de sistemas.
+-- @return Uma sequência de sistemas.
 -- 
 function ManagementFacet:getSystems()
   local systems, msg = self.systemDB:getValues()
@@ -711,7 +711,7 @@ end
 --
 function ManagementFacet:getSystem(id)
   if not self.systems[id] then
-    Log:error(format("Sistema '%s' nï¿½o cadastrado.", id))
+    Log:error(format("Sistema '%s' não cadastrado.", id))
     error{SystemNonExistentException}
   end
   local system, msg = self.systemDB:get(id)
@@ -724,27 +724,27 @@ end
 -------------------------------------------------------------------------------
 
 ---
--- Cadastra uma nova implantaï¿½ï¿½o para um sistema.
+-- Cadastra uma nova implantação para um sistema.
 --
--- @param id Identificador ï¿½nico da implantaï¿½ï¿½o (estilo login UNIX).
--- @param systeId Identificador do sistema a que esta implantaï¿½ï¿½o pertence.
--- @param description Descriï¿½ï¿½o da implantaï¿½ï¿½o.
+-- @param id Identificador único da implantação (estilo login UNIX).
+-- @param systeId Identificador do sistema a que esta implantação pertence.
+-- @param description Descrição da implantação.
 --
 function ManagementFacet:addSystemDeployment(id, systemId, description, 
                                              certificate)
   self:checkPermission()
   if self.deployments[id] then
-    Log:error(format("Implantaï¿½ï¿½o '%s' jï¿½ cadastrada.", id))
+    Log:error(format("implantação '%s' já cadastrada.", id))
     error{SystemDeploymentAlreadyExistsException}
   end
   if not self.systems[systemId] then
-    Log:error(format("Falha ao criar implantaï¿½ï¿½o '%s': sistema %s "..
-                     "nï¿½o cadastrado.", id, systemId))
+    Log:error(format("Falha ao criar implantação '%s': sistema %s "..
+                     "não cadastrado.", id, systemId))
     error{SystemNonExistentException}
   end
   local succ, msg = lce.x509.readfromderstring(certificate)
   if not succ then
-    Log:error(format("Falha ao criar implantaï¿½ï¿½o '%s': certificado invï¿½lido.",
+    Log:error(format("Falha ao criar implantação '%s': certificado inválido.",
       id))
     error{InvalidCertificateException}
   end
@@ -755,7 +755,7 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
     description = description,
   })
   if not succ then
-    Log:error(format("Falha ao salvar implantaï¿½ï¿½o %s na base de dados: %s",
+    Log:error(format("Falha ao salvar implantação %s na base de dados: %s",
       id, msg))
   end
   succ, msg = self.certificateDB:save(id, certificate)
@@ -765,31 +765,31 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
 end
 
 ---
--- Remove uma implantaï¿½ï¿½o de sistema.
+-- Remove uma implantação de sistema.
 --
--- @param id Identificador da implantaï¿½ï¿½o.
+-- @param id Identificador da implantação.
 --
 function ManagementFacet:removeSystemDeployment(id)
   self:checkPermission()
   if not self.deployments[id] then
-    Log:error(format("Implantaï¿½ï¿½o '%s' nï¿½o cadastrada.", id))
+    Log:error(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentNonExistentException}
   end
   self.deployments[id] = nil
   local succ, msg = self.deploymentDB:remove(id)
   if not succ then
-    Log:error(format("Falha ao remover implantaï¿½ï¿½o '%s' da base de dados: %s",
+    Log:error(format("Falha ao remover implantação '%s' da base de dados: %s",
       id, msg))
   end
   succ, msg = self.certificateDB:remove(id)
   if not succ and msg ~= "not found" then
-    Log:error(format("Falha ao remover certificado da implantaï¿½ï¿½o '%s': %s",
+    Log:error(format("Falha ao remover certificado da implantação '%s': %s",
       id, msg))
   end
-  -- Invalida a credencial do membro que estï¿½ sendo removido
+  -- Invalida a credencial do membro que está sendo removido
   local acs = self.context.IAccessControlService
   acs:removeEntryById(id)
-  -- Remove todas as autorizaï¿½ï¿½es do membro
+  -- Remove todas as autorizações do membro
   local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
     Openbus:getORB(),
     self.context.IComponent,
@@ -802,41 +802,41 @@ function ManagementFacet:removeSystemDeployment(id)
 end
 
 ---
--- Altera a descriï¿½ï¿½o da implantaï¿½ï¿½o.
+-- Altera a descrição da implantação.
 --
--- @param id Identificador da implantaï¿½ï¿½o.
--- @param description Nova descriï¿½ï¿½o da implantaï¿½ï¿½o.
+-- @param id Identificador da implantação.
+-- @param description Nova descrição da implantação.
 --
 function ManagementFacet:setSystemDeploymentDescription(id, description)
   self:checkPermission()
   if not self.deployments[id] then
-    Log:error(format("Implantaï¿½ï¿½o '%s' nï¿½o cadastrada.", id))
+    Log:error(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentNonExistentException}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
-    Log:error(format("Falha ao recuperar implantaï¿½ï¿½o '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar implantação '%s': %s", id, msg))
   else
     local succ
     depl.description = description
     succ, msg = self.deploymentDB:save(id, depl)
     if not succ then
-      Log:error(format("Falha ao salvar implantaï¿½ï¿½o '%s' na base de dados: %s",
+      Log:error(format("Falha ao salvar implantação '%s' na base de dados: %s",
         id, msg))
     end
   end
 end
 
 ---
--- Recupera o certificado da implantaï¿½ï¿½o.
+-- Recupera o certificado da implantação.
 -- 
--- @param id Identificador da implantaï¿½ï¿½o.
+-- @param id Identificador da implantação.
 -- 
--- @return Certificado da implantaï¿½ï¿½o.
+-- @return Certificado da implantação.
 --
 function ManagementFacet:getSystemDeploymentCertificate(id)
   if not self.deployments[id] then
-    Log:error(format("Implantaï¿½ï¿½o '%s' nï¿½o cadastrada.", id))
+    Log:error(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentNonExistentException}
   end
   local cert, msg = self.certificateDB:get(id)
@@ -847,20 +847,20 @@ function ManagementFacet:getSystemDeploymentCertificate(id)
 end
 
 ---
--- Altera o certificado da implantaï¿½ï¿½o.
+-- Altera o certificado da implantação.
 --
--- @param id Identificador da implantaï¿½ï¿½o.
--- @param certificate Novo certificado da implantaï¿½ï¿½o.
+-- @param id Identificador da implantação.
+-- @param certificate Novo certificado da implantação.
 --
 function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
   self:checkPermission()
   if not self.deployments[id] then
-    Log:error(format("Implantaï¿½ï¿½o '%s' nï¿½o cadastrada.", id))
+    Log:error(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentNonExistentException}
   end
   local tmp, msg = lce.x509.readfromderstring(certificate)
   if not tmp then
-    Log:error(format("%s: certificado invï¿½lido.", id, msg))
+    Log:error(format("%s: certificado inválido.", id, msg))
     error{InvalidCertificateException}
   end
   local succ, msg = self.certificateDB:save(id, certificate)
@@ -870,47 +870,47 @@ function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
 end
 
 ---
--- Recupera todas implantaï¿½ï¿½es cadastradas.
+-- Recupera todas implantações cadastradas.
 --
--- @return Uma seqï¿½ï¿½ncia com as implantaï¿½ï¿½es cadastradas. 
+-- @return Uma sequência com as implantações cadastradas. 
 --
 function ManagementFacet:getSystemDeployments()
   local depls, msg = self.deploymentDB:getValues()
   if not depls then
-    Log:error(format("Falha ao recuperar implantaï¿½ï¿½es: %s", msg))
+    Log:error(format("Falha ao recuperar implantações: %s", msg))
   end
   return depls
 end
 
 ---
--- Recupera a implantaï¿½ï¿½o dado o seu identificador.
+-- Recupera a implantação dado o seu identificador.
 --
--- @return Retorna a implantaï¿½ï¿½o referente ao identificador.
+-- @return Retorna a implantação referente ao identificador.
 --
 function ManagementFacet:getSystemDeployment(id)
   if not self.deployments[id] then
-    Log:error(format("Implantaï¿½ï¿½o '%s' nï¿½o cadastrada.", id))
+    Log:error(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentNonExistentException}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
-    Log:error(format("Falha ao recuperar implantaï¿½ï¿½o '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar implantação '%s': %s", id, msg))
   end
   return depl
 end
 
 ---
--- Recupera todas as implantaï¿½ï¿½es de um dado sistema.
+-- Recupera todas as implantações de um dado sistema.
 --
 -- @param systemId Identificador do sistema 
 --
--- @return Seqï¿½ï¿½ncia com as implantaï¿½ï¿½es referentes ao sistema informado.
+-- @return sequência com as implantações referentes ao sistema informado.
 --
 function ManagementFacet:getSystemDeploymentsBySystemId(systemId)
   local array = {}
   local depls, msg = self.deploymentDB:getValues()
   if not depls then
-    Log:error(format("Falha ao recuperar implantaï¿½ï¿½es: %s", msg))
+    Log:error(format("Falha ao recuperar implantações: %s", msg))
   else
     for _, depl in pairs(depls) do
       if depl.systemId == systemId then
@@ -924,15 +924,15 @@ end
 -------------------------------------------------------------------------------
 
 ---
--- Cadastra um novo usuï¿½rio.
+-- Cadastra um novo usuário.
 --
--- @param id Identificador ï¿½nico do usuï¿½rio.
--- @param name Nome do usuï¿½rio.
+-- @param id Identificador único do usuário.
+-- @param name Nome do usuário.
 -- 
 function ManagementFacet:addUser(id, name)
   self:checkPermission()
   if self.users[id] then
-    Log:error(format("Usuï¿½rio '%s' jï¿½ cadastrado.", id))
+    Log:error(format("usuário '%s' já cadastrado.", id))
     error{UserAlreadyExistsException}
   end
   self.users[id] = true
@@ -941,29 +941,29 @@ function ManagementFacet:addUser(id, name)
     name = name
   })
   if not succ then
-    Log:error(format("Falha ao salvar usuï¿½rio '%s' na base de dados: %s",
+    Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
       id, msg))
   end
 end
 
 ---
--- Remove um usuï¿½rio do barramento.
+-- Remove um usuário do barramento.
 --
--- @param id Identificador do usuï¿½rio.
+-- @param id Identificador do usuário.
 --
 function ManagementFacet:removeUser(id)
   self:checkPermission()
   if not self.users[id] then
-    Log:error(format("Usuï¿½rio '%s' nï¿½o cadastrado.", id))
+    Log:error(format("usuário '%s' não cadastrado.", id))
     error{UserNonExistentException}
   end
   self.users[id] = nil
   local succ, msg = self.userDB:remove(id)
   if not succ then
-    Log:error(format("Falha ao remover usuï¿½rio '%s' da base de dados: %s",
+    Log:error(format("Falha ao remover usuário '%s' da base de dados: %s",
       id, msg))
   end
-  -- Remove todas as autorizaï¿½ï¿½es do membro
+  -- Remove todas as autorizações do membro
   local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
     Openbus:getORB(),
     self.context.IComponent,
@@ -976,57 +976,57 @@ function ManagementFacet:removeUser(id)
 end
 
 ---
--- Altera o nome do usuï¿½rio.
+-- Altera o nome do usuário.
 --
--- @param id Identificador do usuï¿½rio.
--- @param name Novo nome do usuï¿½rio.
+-- @param id Identificador do usuário.
+-- @param name Novo nome do usuário.
 --
 function ManagementFacet:setUserName(id, name)
   self:checkPermission()
   if not self.users[id] then
-    Log:error(format("Usuï¿½rio '%s' nï¿½o cadastrado.", id))
+    Log:error(format("usuário '%s' não cadastrado.", id))
     error{UserNonExistentException}
   end
   local user, msg = self.userDB:get(id)
   if not user then
-    Log:error(format("Falha ao recuperar usuï¿½rio '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar usuário '%s': %s", id, msg))
   else
     local succ
     user.name = name
     succ, msg = self.userDB:save(id, user)
     if not succ then
-      Log:error(format("Falha ao salvar usuï¿½rio '%s' na base de dados: %s",
+      Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
         id, msg))
     end
   end
 end
 
 ---
--- Recupera a implantaï¿½ï¿½o dado o seu identificador.
+-- Recupera a implantação dado o seu identificador.
 --
--- @return Retorna a implantaï¿½ï¿½o referente ao identificador.
+-- @return Retorna a implantação referente ao identificador.
 --
 function ManagementFacet:getUser(id)
   if not self.users[id] then
-    Log:error(format("Usuï¿½rio '%s' nï¿½o cadastrado.", id))
+    Log:error(format("usuário '%s' não cadastrado.", id))
     error{UserNonExistentException}
   end
   local user, msg = self.userDB:get(id)
   if not user then
-    Log:error(format("Falha ao recuperar usuï¿½rio '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar usuário '%s': %s", id, msg))
   end
   return user
 end
 
 ---
--- Recupera todos usuï¿½rios cadastrados
+-- Recupera todos usuários cadastrados
 --
--- @return Uma seqï¿½ï¿½ncia com os usuï¿½rios.
+-- @return Uma sequência com os usuários.
 --
 function ManagementFacet:getUsers()
   local users, msg = self.userDB:getValues()
   if not users then
-    Log:error(format("Falha ao recuperar usuï¿½rios: %s", msg))
+    Log:error(format("Falha ao recuperar usuários: %s", msg))
   end
   return users
 end
@@ -1055,7 +1055,7 @@ function FaultToleranceFacet:updateStatus(params)
 	
 	if not self.ftconfig then
 		Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
-		Log:warn("[updateStatus] Nï¿½o foi possï¿½vel executar 'updatestatus'")
+		Log:warn("[updateStatus] não foi possível executar 'updatestatus'")
 		return false
 	end
 	
@@ -1065,7 +1065,7 @@ function FaultToleranceFacet:updateStatus(params)
 	end
 	
 	--	O atributo _anyval so retorna em chamadas remotas, em chamadas locais (mesmo processo) 
-    --	deve-se acessar o parametro diretamente, alï¿½m disso , 
+    --	deve-se acessar o parametro diretamente, além disso , 
     --  passar uma tabela no any tbm so funciona porque eh local
 	-- se fosse uma chamada remota teria q ter uma struct pois senao da problema de marshall
 	local input
@@ -1138,7 +1138,7 @@ function FaultToleranceFacet:updateStatus(params)
 	      end
 		  return updated
     else
-        --procura por uma credencial especï¿½fica
+        --procura por uma credencial específica
         local credential = input
         Log:faulttolerance("[updateStatus] Buscando uma credencial nas replicas exceto em "..self.acsReference)
   
@@ -1195,11 +1195,11 @@ function startup(self)
   local config = acs.config
 
   -- O ACS precisa configurar os interceptadores manualmente 
-  -- pois nï¿½o realiza conexï¿½o.
+  -- pois não realiza conexão.
   Openbus.acs = acs
   Openbus:_setInterceptors()
   
-  -- Administradores dos serviï¿½os
+  -- Administradores dos Serviços
   mgm.admins = {}
   for _, name in ipairs(config.administrators) do
      mgm.admins[name] = true
@@ -1214,7 +1214,7 @@ function startup(self)
   -- Carrega a cache
   mgm:loadData()
 
-  -- Inicializa a gerï¿½ncia de certificados
+  -- Inicializa a gerência de certificados
   if string.match(config.certificatesDirectory, "^/") then
     path = config.certificatesDirectory
   else
@@ -1241,21 +1241,21 @@ function startup(self)
   local entriesDB = acs.credentialDB:retrieveAll()
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
-    acs.entries[entry.credential.identifier] = entry -- Deveria fazer cï¿½pia?
+    acs.entries[entry.credential.identifier] = entry -- Deveria fazer cópia?
     if entry.credential.owner == "AccessControlService" then
       acsEntry = entry
     end
   end
 
-  -- Se a credencial do ACS nï¿½o existir (primeira execuï¿½ï¿½o), criar uma nova
+  -- Se a credencial do ACS não existir (primeira execução), criar uma nova
   acsEntry = acsEntry or acs:addEntry("AccessControlService", true)
-  -- Credencial nï¿½o expira
+  -- Credencial não expira
   acsEntry.lease.duration = math.huge
   Openbus:setCredential(acsEntry.credential)
 
   -- Controle de leasing
   acs.checkExpiredLeases = function()
-    -- Uma corotina sï¿½ percorre a tabela de tempos em tempos
+    -- Uma corotina só percorre a tabela de tempos em tempos
     -- ou precisamos acordar na hora "exata" que cada lease expira
     -- pra verificar?
     for id, entry in pairs(acs.entries) do
@@ -1282,12 +1282,12 @@ function startup(self)
 end
 
 ---
---Finaliza o serviï¿½o.
+--Finaliza o Serviço.
 --
 --@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
-  Log:access_control("Pedido de shutdown para serviï¿½o de controle de acesso")
+  Log:access_control("Pedido de shutdown para Serviço de controle de acesso")
   local acs = self.context.IAccessControlService
   acs.leaseProvider:stopCheck()
   local orb = Openbus:getORB()

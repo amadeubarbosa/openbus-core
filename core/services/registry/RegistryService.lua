@@ -31,7 +31,7 @@ local Utils = require "openbus.util.Utils"
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 
 ---
---Componente (membro) responsï¿½vel pelo Serviï¿½o de Registro.
+--Componente (membro) responsável pelo Serviço de Registro.
 ---
 module("core.services.registry.RegistryService")
 
@@ -42,16 +42,16 @@ module("core.services.registry.RegistryService")
 RSFacet = oop.class{}
 
 ---
---Registra uma nova oferta de serviï¿½o. A oferta de serviï¿½o ï¿½ representada por
+--Registra uma nova oferta de serviço. A oferta de serviço é representada por
 --uma tabela com os campos:
---   properties: lista de propriedades associadas ï¿½ oferta (opcional)
---               cada propriedade ï¿½ um par nome/valor (lista de strings)
---   member: refeï¿½rncia para o membro que faz a oferta
+--   properties: lista de propriedades associadas à oferta (opcional)
+--               cada propriedade a um par nome/valor (lista de strings)
+--   member: referência para o membro que faz a oferta
 --
---@param serviceOffer A oferta de serviï¿½o.
+--@param serviceOffer A oferta de serviço.
 --
 --@return true e o identificador do registro da oferta em caso de sucesso, ou
---false caso contrï¿½rio.
+--false caso contrário.
 ---
 function RSFacet:register(serviceOffer)
  local credential = Openbus:getInterceptedCredential()
@@ -87,7 +87,7 @@ function RSFacet:register(serviceOffer)
     allFacets = metaInterface:getFacets()
   else
     allFacets = {}
-    Log:registry(format("Membro '%s' (%s) nï¿½o disponibiliza a interface IMetaInterface.",
+    Log:registry(format("Membro '%s' (%s) não disponibiliza a interface IMetaInterface.",
         memberName, credential.owner))
   end
 
@@ -111,16 +111,16 @@ function RSFacet:register(serviceOffer)
 end
 
 ---
---Adiciona uma oferta ao repositï¿½rio.
+--Adiciona uma oferta ao repositório.
 --
 --@param offerEntry A oferta.
 ---
 function RSFacet:addOffer(offerEntry)
 
-  -- ï¿½ndice de ofertas por identificador
+  -- índice de ofertas por identificador
   self.offersByIdentifier[offerEntry.identifier] = offerEntry
 
-  -- ï¿½ndice de ofertas por credencial
+  -- índice de ofertas por credencial
   local credential = offerEntry.credential
   if not self.offersByCredential[credential.identifier] then
     Log:registry("Primeira oferta da credencial "..credential.identifier)
@@ -149,7 +149,7 @@ end
 
 function RSFacet:updateMemberInfoInExistentOffer(existentOfferEntry, member)
   Log:registry("[updateMemberInfoInExistentOffer] Atualizando informacoes de membro em oferta existente...")
-  --Atencao, o identificador da credencial antiga ï¿½ o que prevalece
+  --Atencao, o identificador da credencial antiga é o que prevalece
   --por causa dos observadores
   existentOfferEntry.offer.member = member
   existentOfferEntry.offer.properties = self:createPropertyIndex(existentOfferEntry.offer.properties,
@@ -163,13 +163,13 @@ function RSFacet:updateMemberInfoInExistentOffer(existentOfferEntry, member)
 end
 
 ---
---Constrï¿½i um conjunto com os valores das propriedades, para acelerar a busca.
---OBS: procedimento vï¿½lido enquanto propriedade for lista de strings !!!
+--Constrói um conjunto com os valores das propriedades, para acelerar a busca.
+--OBS: procedimento válido enquanto propriedade for lista de strings !!!
 --
---@param offerProperties As propriedades da oferta de serviï¿½o.
+--@param offerProperties As propriedades da oferta de serviço.
 --@param member O membro dono das propriedades.
 --
---@return As propriedades da oferta em uma tabela cuja chave ï¿½ o nome da
+--@return As propriedades da oferta em uma tabela cuja chave é o nome da
 --propriedade.
 ---
 function RSFacet:createPropertyIndex(offerProperties, member)
@@ -202,7 +202,7 @@ end
 -- @param memberName Membro do barramento.
 -- @param allFacets Array de facetas do membro.
 --
--- @result ï¿½ndice de facetas disponï¿½veis do membro.
+-- @result índice de facetas disponíveis do membro.
 --
 function RSFacet:createFacetIndex(owner, memberName, allFacets)
   local count = 0
@@ -222,44 +222,44 @@ function RSFacet:createFacetIndex(owner, memberName, allFacets)
 end
 
 ---
---Remove uma oferta de serviï¿½o.
+--Remove uma oferta de serviço.
 --
---@param identifier A identificaï¿½ï¿½o da oferta de serviï¿½o.
+--@param identifier A identificação da oferta de serviço.
 --
---@return true caso a oferta tenha sido removida, ou false caso contrï¿½rio.
+--@return true caso a oferta tenha sido removida, ou false caso contrário.
 ---
 function RSFacet:unregister(identifier)
   Log:registry("Removendo oferta "..identifier)
 
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
-    Log:warning("Oferta a remover com id "..identifier.." nï¿½o encontrada")
+    Log:warning("Oferta a remover com id "..identifier.." não encontrada")
     return false
   end
 
   local credential = Openbus:getInterceptedCredential()
   if credential.identifier ~= offerEntry.credential.identifier then
     Log:warning("Oferta a remover("..identifier..
-                ") nï¿½o registrada com a credencial do chamador")
-    return false -- esse tipo de erro merece uma exceï¿½ï¿½o!
+                ") não registrada com a credencial do chamador")
+    return false -- esse tipo de erro merece uma exceção!
   end
 
-  -- Remove oferta do ï¿½ndice por identificador
+  -- Remove oferta do índice por identificador
   self.offersByIdentifier[identifier] = nil
 
-  -- Remove oferta do ï¿½ndice por credencial
+  -- Remove oferta do índice por credencial
   local credentialOffers = self.offersByCredential[credential.identifier]
   if credentialOffers then
     credentialOffers[identifier] = nil
   else
-    Log:registry("Nï¿½o hï¿½ ofertas a remover com credencial "..
+    Log:registry("Não há ofertas a remover com credencial "..
         credential.identifier)
     return true
   end
   if not next (credentialOffers) then
-    -- Nï¿½o hï¿½ mais ofertas associadas ï¿½ credencial
+    -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
-    Log:registry("ï¿½ltima oferta da credencial: remove credencial do observador")
+    Log:registry("Última oferta da credencial: remove credencial do observador")
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
   	 				 		    orb, 
                          	    self.context.IComponent, 
@@ -279,31 +279,31 @@ function RSFacet:unregister(identifier)
 end
 
 ---
---Atualiza a oferta de serviï¿½o associada ao identificador especificado. Apenas
---as propriedades da oferta podem ser atualizadas (nessa versï¿½o, substituidas).
+--Atualiza a oferta de serviço associada ao identificador especificado. Apenas
+--as propriedades da oferta podem ser atualizadas (nessa versão, substituidas).
 --
 --@param identifier O identificador da oferta.
 --@param properties As novas propriedades da oferta.
 --
---@return true caso a oferta seja atualizada, ou false caso contrï¿½rio.
+--@return true caso a oferta seja atualizada, ou false caso contrário.
 ---
 function RSFacet:update(identifier, properties)
   Log:registry("Atualizando oferta "..identifier)
 
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
-    Log:warning("Oferta a atualizar com id "..identifier.." nï¿½o encontrada")
+    Log:warning("Oferta a atualizar com id "..identifier.." não encontrada")
     return false
   end
 
   local credential = Openbus:getInterceptedCredential()
   if credential.identifier ~= offerEntry.credential.identifier then
     Log:warning("Oferta a atualizar("..identifier..
-                ") nï¿½o registrada com a credencial do chamador")
-    return false -- esse tipo de erro merece uma exceï¿½ï¿½o!
+                ") não registrada com a credencial do chamador")
+    return false -- esse tipo de erro merece uma exceção!
   end
 
-  -- Atualiza as propriedades da oferta de serviï¿½o
+  -- Atualiza as propriedades da oferta de serviço
   offerEntry.offer.properties = properties
   offerEntry.properties = self:createPropertyIndex(properties,
                                                    offerEntry.offer.member)
@@ -314,7 +314,7 @@ end
 ---
 -- Atualiza as ofertas de facetas do membro.
 --
--- @param owner Identificaï¿½ï¿½o do membro.
+-- @param owner Identificação do membro.
 --
 function RSFacet:updateFacets(owner)
   for id, offerEntry in pairs(self.offersByIdentifier) do
@@ -327,29 +327,29 @@ function RSFacet:updateFacets(owner)
 end
 
 ---
---Busca por ofertas de serviï¿½o que implementam as facetas descritas.
---Se nenhuma faceta for fornecida, todas as facetas sï¿½o retornadas.
+--Busca por ofertas de serviço que implementam as facetas descritas.
+--Se nenhuma faceta for fornecida, todas as facetas são retornadas.
 --
 --@param facets As facetas da busca.
 --
---@return As ofertas de serviï¿½o que foram encontradas.
+--@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:find(facets)
   local ftFacet = self.context.IFaultTolerantService
-  --atualiza estado em todas as rï¿½plicas
+  --atualiza estado em todas as réplicas
 
   local params = { facets = facets, criteria = {} }
   ftFacet:updateStatus(params)
   
   local selectedOffers = {}
--- Se nenhuma faceta foi discriminada, todas as ofertas de serviï¿½o
--- sï¿½o retornadas.
+-- Se nenhuma faceta foi discriminada, todas as ofertas de serviço
+-- são retornadas.
   if (#facets == 0) then
     for _, offerEntry in pairs(self.offersByIdentifier) do
       table.insert(selectedOffers, offerEntry.offer)
     end
   else
-  -- Para cada oferta de serviï¿½o disponï¿½vel, selecionar-se
+  -- Para cada oferta de serviço disponível, selecionar-se
   -- a oferta que implementa todas as facetas discriminadas.
     for _, offerEntry in pairs(self.offersByIdentifier) do
       local hasAllFacets = true
@@ -370,32 +370,32 @@ function RSFacet:find(facets)
 end
 
 ---
---Busca por ofertas de serviï¿½o que implementam as facetas descritas, e,
---que atendam aos critï¿½rios (propriedades) especificados.
+--Busca por ofertas de serviço que implementam as facetas descritas, e,
+--que atendam aos critérios (propriedades) especificados.
 --
 --@param facets As facetas da busca.
---@param criteria Os critï¿½rios da busca.
+--@param criteria Os critérios da busca.
 --
---@return As ofertas de serviï¿½o que foram encontradas.
+--@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:findByCriteria(facets, criteria)
   local ftFacet = self.context.IFaultTolerantService
-  --atualiza estado em todas as rï¿½plicas
+  --atualiza estado em todas as réplicas
 
   local params = { facets = facets, criteria = criteria}
   ftFacet:updateStatus(params)
   
   local selectedOffers = {}
--- Se nenhuma faceta foi discriminada e nenhum critï¿½rio foi
--- definido, todas as ofertas de serviï¿½o sï¿½o retornadas.
+-- Se nenhuma faceta foi discriminada e nenhum critério foi
+-- definido, todas as ofertas de serviço são retornadas.
   if (#facets == 0 and #criteria == 0) then
     for _, offerEntry in pairs(self.offersByIdentifier) do
       table.insert(selectedOffers, offerEntry.offer)
     end
   else
--- Para cada oferta de serviï¿½o disponï¿½vel, seleciona-se
+-- Para cada oferta de serviço disponível, seleciona-se
 -- a oferta que implementa todas as facetas discriminadas,
--- e, possui todos os critï¿½rios especificados.
+-- e, possui todos os critérios especificados.
     for _, offerEntry in pairs(self.offersByIdentifier) do
       if self:meetsCriteria(criteria, offerEntry.properties) then
         local hasAllFacets = true
@@ -410,7 +410,7 @@ function RSFacet:findByCriteria(facets, criteria)
         end
       end
     end
-    Log:registry("Com critï¿½rio, encontrei "..#selectedOffers..
+    Log:registry("Com critério, encontrei "..#selectedOffers..
         " ofertas que implementam as facetas discriminadas.")
   end
   return selectedOffers
@@ -421,8 +421,8 @@ function RSFacet:localFind(facets, criteria)
 	local selectedOffersEntries = {}
 
     local i = 1
-	-- Se nenhuma faceta foi discriminada e nenhum critï¿½rio foi
-	-- definido, todas as ofertas de serviï¿½o que nï¿½o existem localmente
+	-- Se nenhuma faceta foi discriminada e nenhum critério foi
+	-- definido, todas as ofertas de serviço que não existem localmente
 	-- devem ser retornadas.
 	if (#facets == 0 and #criteria == 0) then
     	for _, offerEntry in pairs(self.offersByIdentifier) do
@@ -439,7 +439,7 @@ function RSFacet:localFind(facets, criteria)
 			 " ENTRADAS de ofertas que implementam as facetas discriminadas.")
     	
 	elseif (#facets > 0 and #criteria == 0)  then
-	-- Para cada oferta de serviï¿½o disponï¿½vel, deve-se selecionar
+	-- Para cada oferta de serviço disponível, deve-se selecionar
   	-- a oferta que implementa todas as facetas discriminadas.
   		for _, offerEntry in pairs(self.offersByIdentifier) do
 			local hasAllFacets = true
@@ -464,9 +464,9 @@ function RSFacet:localFind(facets, criteria)
 			 " ENTRADAS de ofertas que implementam as facetas discriminadas.")
   
 	else  
-	-- Para cada oferta de serviï¿½o disponï¿½vel, seleciona-se
+	-- Para cada oferta de serviço disponível, seleciona-se
 	-- a oferta que implementa todas as facetas discriminadas,
-	-- E, possui todos os critï¿½rios especificados.
+	-- E, possui todos os critérios especificados.
 		for _, offerEntry in pairs(self.offersByIdentifier) do
 		  if self:meetsCriteria(criteria, offerEntry.properties) then
 			local hasAllFacets = true
@@ -488,19 +488,19 @@ function RSFacet:localFind(facets, criteria)
 			end
 		  end
 		end
-		Log:registry("Com critï¿½rio, encontrei "..#selectedOffersEntries..
+		Log:registry("Com critério, encontrei "..#selectedOffersEntries..
 			" ENTRADAS de ofertas que implementam as facetas discriminadas.")
 	end
 	return selectedOffersEntries
 end
 
 ---
---Verifica se uma oferta atende aos critï¿½rios de busca
+--Verifica se uma oferta atende aos critérios de busca
 --
---@param criteria Os critï¿½rios da busca.
+--@param criteria Os critérios da busca.
 --@param offerProperties As propriedades da oferta.
 --
---@return true caso a oferta atenda aos critï¿½rios, ou false caso contrï¿½rio.
+--@return true caso a oferta atenda aos critérios, ou false caso contrério.
 ---
 function RSFacet:meetsCriteria(criteria, offerProperties)
   for _, criterion in ipairs(criteria) do
@@ -508,19 +508,19 @@ function RSFacet:meetsCriteria(criteria, offerProperties)
     if offerProperty then
       for _, val in ipairs(criterion.value) do
         if not offerProperty[val] then
-          return false -- oferta nï¿½o tem valor em seu conjunto
+          return false -- oferta Nãotem valor em seu conjunto
         end
       end
     else
-      return false -- oferta nï¿½o tem propriedade com esse nome
+      return false -- oferta Nãotem propriedade com esse nome
     end
   end
   return true
 end
 
 ---
---Notificaï¿½ï¿½o de deleï¿½ï¿½o de credencial. As ofertas de serviï¿½o relacionadas
---deverï¿½o ser removidas.
+--Notificação de deleção de credencial. As ofertas de serviço relacionadas
+--deverão ser removidas.
 --
 --@param credential A credencial removida.
 ---
@@ -532,7 +532,7 @@ function RSFacet:credentialWasDeleted(credential)
   if credentialOffers then
     for identifier, offerEntry in pairs(credentialOffers) do
       self.offersByIdentifier[identifier] = nil
-      Log:registry("Removida oferta "..identifier.." do ï¿½ndice por id")
+      Log:registry("Removida oferta "..identifier.." do índice por id")
       local succ, msg = self.offersDB:delete(offerEntry)
       if succ then
       	Log:registry("Removida oferta "..identifier.." do DB")
@@ -541,12 +541,12 @@ function RSFacet:credentialWasDeleted(credential)
       end
     end
   else
-    Log:registry("Nï¿½o havia ofertas da credencial "..credential.identifier)
+    Log:registry("Nãohavia ofertas da credencial "..credential.identifier)
   end
 end
 
 ---
---Procedimento apï¿½s reconexï¿½o do serviï¿½o.
+--Procedimento após reconexão do serviço.
 ---
 function RSFacet:expired()
   Openbus:connectByCertificate(self.context._componentId.name,
@@ -561,7 +561,7 @@ function RSFacet:expired()
 	    --erro ja joi logado
 	    return nil
   end     
-  -- atualiza a referï¿½ncia junto ao serviï¿½o de controle de acesso
+  -- atualiza a referência junto ao serviço de controle de acesso
   -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
   local acsIComp = acsFacet:_component()
   local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
@@ -569,7 +569,7 @@ function RSFacet:expired()
   local status, conns = oil.pcall(acsIRecep.connect, acsIRecep, 
     "RegistryServiceReceptacle", self.context.IComponent )
   if not status then
-    Log:error("Falha ao conectar o Serviï¿½o de Registro no receptï¿½culo: " ..
+    Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
       conns[1])
     return false
   end
@@ -578,7 +578,7 @@ function RSFacet:expired()
   self.observerId = acsFacet:addObserver(self.observer, {})
   Log:registry("Observador recadastrado")
 
-  -- Mantï¿½m no repositï¿½rio apenas ofertas com credenciais vï¿½lidas
+  -- Mantém no repositório apenas ofertas com credenciais válidas
   local offerEntries = self.offersByIdentifier
   local credentials = {}
   for _, offerEntry in pairs(offerEntries) do
@@ -588,23 +588,23 @@ function RSFacet:expired()
   for credentialId, credential in pairs(credentials) do
     if not acsFacet:addCredentialToObserver(self.observerId,
                                             credentialId) then
-      Log:registry("Ofertas de "..credentialId.." serï¿½o removidas")
+      Log:registry("Ofertas de "..credentialId.." serão removidas")
       table.insert(invalidCredentials, credential)
     else
-      Log:registry("Ofertas de "..credentialId.." serï¿½o mantidas")
+      Log:registry("Ofertas de "..credentialId.." serão mantidas")
     end
   end
   for _, credential in ipairs(invalidCredentials) do
     self:credentialWasDeleted(credential)
   end
 
-  Log:registry("Serviï¿½o de registro foi reconectado")
+  Log:registry("serviço de registro foi reconectado")
 end
 
 ---
---Gera uma identificaï¿½ï¿½o de oferta de serviï¿½o.
+--Gera uma identificação de oferta de serviço.
 --
---@return O identificador de oferta de serviï¿½o.
+--@return O identificador de oferta de serviço.
 ---
 function RSFacet:generateIdentifier()
     return luuid.new("time")
@@ -633,7 +633,7 @@ function FaultToleranceFacet:updateStatus(params)
 	Log:faulttolerance("[updateStatus] Atualiza estado das ofertas.")
     if not self.ftconfig then
 		Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
-		Log:faultolerance("[warn][updateStatus] Nï¿½o foi possï¿½vel executar 'updatestatus'")
+		Log:faultolerance("[warn][updateStatus] Nãofoi possível executar 'updatestatus'")
 		return false
 	end
 	
@@ -642,7 +642,7 @@ function FaultToleranceFacet:updateStatus(params)
 		return false
 	end
     --	O atributo _anyval so retorna em chamadas remotas, em chamadas locais (mesmo processo) 
-    --	deve-se acessar o parametro diretamente, alï¿½m disso , 
+    --	deve-se acessar o parametro diretamente, além disso , 
     --  passar uma tabela no any tbm so funciona porque eh local
 	-- se fosse uma chamada remota teria q ter uma struct pois senao da problema de marshall
 	local input
@@ -747,14 +747,14 @@ end
 --@see scs.core.IComponent#startup
 ---
 function startup(self)
-  Log:registry("Pedido de startup para serviï¿½o de registro")
+  Log:registry("Pedido de startup para serviço de registro")
   local mgm = self.context.IManagement
   local rs = self.context.IRegistryService
   local config = rs.config
 
-  -- Verifica se ï¿½ o primeiro startup
+  -- Verifica se é o primeiro startup
   if not rs.initialized then
-    Log:registry("Serviï¿½o de registro estï¿½ inicializando")
+    Log:registry("serviço de registro estáinicializando")
     if string.match(config.privateKeyFile, "^/") then
       rs.privateKeyFile = config.privateKeyFile
     else
@@ -778,15 +778,15 @@ function startup(self)
     rs.offersDB = OffersDB(databaseDirectory)
     rs.initialized = true
   else
-    Log:registry("Serviï¿½o de registro jï¿½ foi inicializado")
+    Log:registry("serviço de registro já foi inicializado")
   end
 
-  -- Inicializa o repositï¿½rio de ofertas
+  -- Inicializa o repositório de ofertas
   rs.offersByIdentifier = {}   -- id -> oferta
   rs.offersByCredential = {}  -- credencial -> id -> oferta
 
   Openbus.rgs = rs
-  -- autentica o serviï¿½o, conectando-o ao barramento
+  -- autentica o serviço, conectando-o ao barramento
   if not Openbus:isConnected() then
     Openbus:connectByCertificate(self.context._componentId.name,
       rs.privateKeyFile, rs.accessControlServiceCertificateFile)
@@ -795,7 +795,7 @@ function startup(self)
   -- Cadastra callback para LeaseExpired
   Openbus:addLeaseExpiredCallback( rs )
 
-  -- obtï¿½m a referï¿½ncia para o Serviï¿½o de Controle de Acesso
+  -- obtém a referência para o serviço de Controle de Acesso
   local accessControlService = Openbus:getAccessControlService()
 
   -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
@@ -805,7 +805,7 @@ function startup(self)
   local status, conns = oil.pcall(acsIRecep.connect, acsIRecep, 
     "RegistryServiceReceptacle", self.context.IComponent )
   if not status then
-    Log:error("Falha ao conectar o Serviï¿½o de Registro no receptï¿½culo: " ..
+    Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
       conns[1])
     return false
   end
@@ -815,7 +815,7 @@ function startup(self)
     oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
               "AccessControlServiceReceptacle", acsIComp)
   if not success then
-    Log:error("Erro durante conexï¿½o com serviï¿½o de Controle de Acesso.")
+    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
     Log:error(conId)
     error{"IDL:SCS/StartupFailed:1.0"}
  end
@@ -841,7 +841,7 @@ function startup(self)
   Log:registry("Recuperando ofertas persistidas")
   local offerEntriesDB = rs.offersDB:retrieveAll()
   for _, offerEntry in pairs(offerEntriesDB) do
-    -- somente recupera ofertas de credenciais vï¿½lidas
+    -- somente recupera ofertas de credenciais válidas
     if accessControlService:isValid(offerEntry.credential) then
       rs:addOffer(offerEntry)
     else
@@ -850,15 +850,15 @@ function startup(self)
     end
   end
 
-  -- Referï¿½ncia ï¿½ faceta de gerenciamento do ACS
+  -- Referência à faceta de gerenciamento do ACS
   mgm.acsmgm = acsIComp:getFacetByName("IManagement")
   mgm.acsmgm = orb:narrow(mgm.acsmgm, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
-  -- Administradores dos serviï¿½os
+  -- Administradores dos serviços
   mgm.admins = {}
   for _, name in ipairs(config.administrators) do
      mgm.admins[name] = true
   end
-  -- ACS ï¿½ sempre administrador
+  -- ACS é sempre administrador
   mgm.admins.AccessControlService = true
   -- Inicializa a base de gerenciamento
   mgm.authDB = TableDB(DATA_DIR.."/rs_auth.db")
@@ -870,16 +870,16 @@ function startup(self)
   self.context.IFaultTolerantService:init()
   self.context.IFaultTolerantService:setStatus(true)
   
-  Log:registry("Serviï¿½o de registro iniciado")
+  Log:registry("serviço de registro iniciado")
 end
 
 ---
---Finaliza o serviï¿½o.
+--Finaliza o serviço.
 --
 --@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
-  Log:registry("Pedido de shutdown para serviï¿½o de registro")
+  Log:registry("Pedido de shutdown para serviço de registro")
   local rs = self.context.IRegistryService
   if not rs.started then
     Log:error("Servico ja foi finalizado.")
@@ -907,7 +907,7 @@ function shutdown(self)
     Openbus:disconnect()
   end
 
-  Log:registry("Serviï¿½o de registro finalizado")
+  Log:registry("serviço de registro finalizado")
   
    orb:deactivate(rs)
    orb:deactivate(self.context.IManagement)
@@ -945,7 +945,7 @@ ManagementFacet.expressions = {
 }
 
 ---
--- Verifica se o usuï¿½rio tem permissï¿½o para executar o mï¿½todo.
+-- Verifica se o usuário tem permissão para executar o método.
 --
 function ManagementFacet:checkPermission()
   local credential = Openbus:getInterceptedCredential()
@@ -972,7 +972,7 @@ function ManagementFacet:loadData()
   for _, iface in ipairs(data) do
     self.interfaces[iface] = true
   end
-  -- Carrega as autorizaï¿½ï¿½es.
+  -- Carrega as autorizações.
   -- Verificar junto ao ACS o membro ainda existe.
   local remove = {}
   data = assert(self.authDB:getValues())
@@ -990,10 +990,10 @@ function ManagementFacet:loadData()
          err[1] == UserNonExistentException
       then
         remove[auth] = true
-        Log:warn(format("Removendo autorizaï¿½ï¿½es de '%s': " ..
-         "removido do Serviï¿½o de Controle de Acesso.", auth.id))
+        Log:warn(format("Removendo autorizações de '%s': " ..
+         "removido do serviço de Controle de Acesso.", auth.id))
       else
-        error(err) -- Exceï¿½ï¿½o desconhecida, repassando
+        error(err) -- Exceção desconhecida, repassando
       end
     end
   end
@@ -1003,14 +1003,14 @@ function ManagementFacet:loadData()
 end
 
 ---
--- Cadastra um identificador de interface aceito pelo Serviï¿½o de Registro.
+-- Cadastra um identificador de interface aceito pelo serviço de Registro.
 --
 -- @param ifaceId Identificador de interface.
 --
 function ManagementFacet:addInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' jï¿½ cadastrada.", ifaceId))
+    Log:error(format("Interface '%s' já cadastrada.", ifaceId))
     error{InterfaceIdentifierAlreadyExistsException}
   end
   self.interfaces[ifaceId] = true
@@ -1029,7 +1029,7 @@ end
 function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if not self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' nï¿½o estï¿½ cadastrada.", ifaceId))
+    Log:error(format("Interface '%s' Nãoestácadastrada.", ifaceId))
     error{InterfaceIdentifierNonExistentException}
   end
   for _, auth in pairs(self.authorizations) do
@@ -1048,7 +1048,7 @@ end
 ---
 -- Recupera todos os identificadores de interface cadastrados.
 --
--- @return Seqï¿½ï¿½ncia de identificadores de interface.
+-- @return Sequência de identificadores de interface.
 --
 function ManagementFacet:getInterfaceIdentifiers()
   local array = {}
@@ -1059,8 +1059,8 @@ function ManagementFacet:getInterfaceIdentifiers()
 end
 
 ---
--- Autoriza o membro a exportar a interface.  O Serviï¿½o de Acesso
--- ï¿½ consultado para verificar se o membro estï¿½ cadastrado.
+-- Autoriza o membro a exportar a interface.  O serviço de Acesso
+-- é consultado para verificar se o membro estácadastrado.
 --
 -- @param id Identificador do membro.
 -- @param ifaceId Identificador da interface.
@@ -1076,29 +1076,29 @@ function ManagementFacet:grant(id, ifaceId, strict)
       end
     end
     if not expression then
-      Log:error(format("Expressï¿½o regular invï¿½lida: '%s'", ifaceId))
+      Log:error(format("Expressão regular inválida: '%s'", ifaceId))
       error{InvalidRegularExpressionException}
     end
   elseif strict and not self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' nï¿½o cadastrada.", ifaceId))
+    Log:error(format("Interface '%s' Nãocadastrada.", ifaceId))
     error{InterfaceIdentifierNonExistentException}
   end
   local auth = self.authorizations[id]
   if not auth then 
-    -- Cria uma nova autorizaï¿½ï¿½o: verificar junto ao ACS se o membro existe
+    -- Cria uma nova autorização: verificar junto ao ACS se o membro existe
     local type = "ATSystemDeployment"
     local succ, member = self.acsmgm.__try:getSystemDeployment(id)
     if not succ then
       if member[1] ~= SystemDeploymentNonExistentException then
-        error(member)  -- Exceï¿½ï¿½o desconhecida, repassando
+        error(member)  -- Exceção desconhecida, repassando
       end
       type = "ATUser"
       succ, member = self.acsmgm.__try:getUser(id)
       if not succ then
         if member[1] ~= UserNonExistentException then
-          error(member)  -- Exceï¿½ï¿½o desconhecida, repassando
+          error(member)  -- Exceção desconhecida, repassando
         end
-        Log:error(format("Membro '%s' nï¿½o cadastrado.", id))
+        Log:error(format("Membro '%s' Nãocadastrado.", id))
         error{MemberNonExistentException}
       end
     end
@@ -1120,13 +1120,13 @@ function ManagementFacet:grant(id, ifaceId, strict)
   end
   local succ, msg = self.authDB:save(id, auth)
   if not succ then
-    Log:error(format("Falha ao salvar autorizaï¿½ï¿½o '%s': %s", id, msg))
+    Log:error(format("Falha ao salvar autorização '%s': %s", id, msg))
   end
   self.context.IRegistryService:updateFacets(id)
 end
 
 ---
--- Revoga a autorizaï¿½ï¿½o para exportar a interface.
+-- Revoga a autorização para exportar a interface.
 --
 -- @param id Identificador do membro.
 -- @param ifaceId Identificador da interface.
@@ -1135,12 +1135,12 @@ function ManagementFacet:revoke(id, ifaceId)
   self:checkPermission()
   local auth = self.authorizations[id]
   if not (auth and auth.authorized[ifaceId]) then
-    Log:error(format("Nï¿½o hï¿½ autorizaï¿½ï¿½o para '%s'.", id))
+    Log:error(format("Não há autorização para '%s'.", id))
     error{AuthorizationNonExistentException}
   end
   local succ, msg
   auth.authorized[ifaceId] = nil
-  -- Se nï¿½o houver mais autorizaï¿½ï¿½es, remover a entrada
+  -- Se Nãohouver mais autorizações, remover a entrada
   if next(auth.authorized) then
     succ, msg = self.authDB:save(id, auth)
   else
@@ -1148,37 +1148,37 @@ function ManagementFacet:revoke(id, ifaceId)
     succ, msg = self.authDB:remove(id)
   end
   if not succ then
-    Log:error(format("Falha ao remover autorizaï¿½ï¿½o '%s': %s", id, msg))
+    Log:error(format("Falha ao remover autorização  '%s': %s", id, msg))
   end
   self.context.IRegistryService:updateFacets(id)
 end
 
 ---
--- Remove a autorizaï¿½ï¿½o do membro.
+-- Remove a autorização do membro.
 --
 -- @param id Identificador do membro.
 --
 function ManagementFacet:removeAuthorization(id)
   self:checkPermission()
   if not self.authorizations[id] then
-    Log:error(format("Nï¿½o hï¿½ autorizaï¿½ï¿½o para '%s'.", id))
+    Log:error(format("Não há autorização  para '%s'.", id))
     error{AuthorizationNonExistentException}
   end
   self.authorizations[id] = nil
   local succ, msg = self.authDB:remove(id)
   if not succ then
-    Log:error(format("Falha ao remover autorizaï¿½ï¿½o '%s': %s", id, msg))
+    Log:error(format("Falha ao remover autorização '%s': %s", id, msg))
   end
   self.context.IRegistryService:updateFacets(id)
 end
 
 ---
--- Duplica a autorizaï¿½ï¿½o, mas a lista de interfaces ï¿½ retornada
--- como array e nï¿½o como hash. Essa funï¿½ï¿½o ï¿½ usada para exportar
--- a autorizaï¿½ï¿½o.
+-- Duplica a autorização , mas a lista de interfaces é retornada
+-- como array e Nãocomo hash. Essa função é usada para exportar
+-- a autorização'.
 --
--- @param auth Autorizaï¿½ï¿½o a ser duplicada.
--- @return Cï¿½pia da autorizaï¿½ï¿½o.
+-- @param auth Autorização a ser duplicada.
+-- @return Cópia da autorização.
 --
 function ManagementFacet:copyAuthorization(auth)
   local tmp = {}
@@ -1195,12 +1195,12 @@ function ManagementFacet:copyAuthorization(auth)
 end
 
 ---
--- Verifica se o membro ï¿½ autorizado a exporta uma determinada interface.
+-- Verifica se o membro é autorizado a exporta uma determinada interface.
 --
 -- @param id Identificador do membro.
 -- @param iface Interface a ser consultada (repID).
 --
--- @return true se ï¿½ autorizada, false caso contrï¿½rio.
+-- @return true se é autorizada, false caso contrário.
 --
 function ManagementFacet:hasAuthorization(id, iface)
   local auth = self.authorizations[id]
@@ -1210,9 +1210,9 @@ function ManagementFacet:hasAuthorization(id, iface)
     for exp, type in pairs(auth.authorized) do
       if type == "expression" then
         for pat, sub in pairs(self.expressions) do
-          -- Tenta criar o padrï¿½o para Lua a partir da autorizaï¿½ï¿½o
+          -- Tenta criar o padrão para Lua a partir da autorização 
           pat, sub = string.gsub(exp, pat, sub)
-          -- Se o padrï¿½o foi criado, verifica se a interface ï¿½ reconhecida
+          -- Se o padrão foi criado, verifica se a interface é reconhecida
           if sub == 1 and string.match(iface, pat) then
             return true
           end
@@ -1224,25 +1224,25 @@ function ManagementFacet:hasAuthorization(id, iface)
 end
 
 ---
--- Recupera a autorizaï¿½ï¿½o de um membro.
+-- Recupera a autorização de um membro.
 --
 -- @param id Identificador do membro.
 --
--- @return Autorizaï¿½ï¿½o do membro.
+-- @return Autorização do membro.
 --
 function ManagementFacet:getAuthorization(id)
   local auth = self.authorizations[id]
   if not auth then
-    Log:error(format("Nï¿½o hï¿½ autorizaï¿½ï¿½o para '%s'.", id))
+    Log:error(format("Não há autorização para '%s'.", id))
     error{AuthorizationNonExistentException}
   end
   return self:copyAuthorization(auth)
 end
 
 ---
--- Recupera todas as autorizaï¿½ï¿½es cadastradas.
+-- Recupera todas as autorizações cadastradas.
 --
--- @return Seqï¿½ï¿½ncia de autorizaï¿½ï¿½es.
+-- @return Sequência de autorizações
 --
 function ManagementFacet:getAuthorizations()
   local array = {}
@@ -1253,12 +1253,12 @@ function ManagementFacet:getAuthorizations()
 end
 
 ---
--- Recupera as autorizaï¿½ï¿½es que contï¿½m \e todas as interfaces
+-- Recupera as autorizações  que contém \e todas as interfaces
 -- fornecidas em seu conjunto de interfaces autorizadas.
 --
--- @param ifaceIds Seqï¿½ï¿½ncia de identifidores de interface.
+-- @param ifaceIds Sequência de identifidores de interface.
 --
--- @return Seqï¿½ï¿½ncia de autorizaï¿½ï¿½es.
+-- @return Sequência de autorizações.
 --
 function ManagementFacet:getAuthorizationsByInterfaceId(ifaceIds)
   local array = {}
