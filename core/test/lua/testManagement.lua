@@ -14,6 +14,8 @@ Suite.Test1 = {}
 Suite.Test2 = {}
 Suite.Test3 = {}
 Suite.Test4 = {}
+Suite.Test5 = {}
+Suite.Test6 = {}
 
 --------------------------------------------------------------------------------
 -- Testa o cadastro de sistemas da interface IManagement do ACS.
@@ -82,7 +84,7 @@ function Test1:testAddGetRemoveSystem()
   succ, err = self.acsMgt.__try:addSystem(system.id, system.description)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getSystemById(system.id)
+  succ, added = self.acsMgt.__try:getSystem(system.id)
   Check.assertTrue(succ)
   Check.assertEquals(system.id, added.id)
   Check.assertEquals(system.description, added.description)
@@ -145,7 +147,7 @@ function Test1:testSetSystemDescription()
   succ, err = self.acsMgt.__try:setSystemDescription(system.id, desc)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getSystemById(system.id)
+  succ, added = self.acsMgt.__try:getSystem(system.id)
   Check.assertTrue(succ)
   Check.assertEquals(system.id, added.id)
   Check.assertEquals(added.description, desc)
@@ -161,8 +163,8 @@ function Test1:testSetSystemDescription_SystemNonExistent()
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0", err[1])
 end
 
-function Test1:testGetSystemById_SystemNonExistent()
-  local succ, err = self.acsMgt.__try:getSystemById("InvalidId")
+function Test1:testGetSystem_SystemNonExistent()
+  local succ, err = self.acsMgt.__try:getSystem("InvalidId")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0", err[1])
 end
@@ -637,7 +639,7 @@ function Test3:testAddInterfaceIdentifier_InterfaceIdentifierNonExistent()
 end
 
 --------------------------------------------------------------------------------
--- Testa o cadastro das autorizações do RS.
+-- Testa o cadastro das autorizações para implantações no RS.
 --
 
 -- Alias
@@ -734,8 +736,8 @@ function Test4:testGrantGetRemoveAuthorization()
   --
   succ, auth = self.rsMgt.__try:getAuthorization(depl.id)
   Check.assertTrue(succ)
-  Check.assertEquals(auth.deploymentId, depl.id)
-  Check.assertEquals(auth.systemId, depl.systemId)
+  Check.assertEquals(auth.id, depl.id)
+  Check.assertEquals(auth.type, "ATSystemDeployment")
   Check.assertTrue(#auth.authorized == 1)
   Check.assertTrue(auth.authorized[1] == iface)
   --
@@ -748,12 +750,11 @@ function Test4:testGrantGetRemoveAuthorization()
     err[1])
 end
 
-function Test4:testGrant_SystemDeploymentNonExistent()
+function Test4:testGrant_MemberNonExistent()
   local iface = self.ifaces[1]
   local succ, err = self.rsMgt.__try:grant("InvalidId", iface, true)
   Check.assertFalse(succ)
-  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/SystemDeploymentNonExistent:1.0", 
-    err[1])
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/MemberNonExistent:1.0", err[1])
 end
 
 function Test4:testGrant_InterfaceIdentifierNonExistent()
@@ -794,8 +795,8 @@ function Test4:testGrantExpressions()
   --
   succ, auth = self.rsMgt.__try:getAuthorization(depl.id)
   Check.assertTrue(succ)
-  Check.assertEquals(auth.deploymentId, depl.id)
-  Check.assertEquals(auth.systemId, depl.systemId)
+  Check.assertEquals(auth.id, depl.id)
+  Check.assertEquals(auth.type, "ATSystemDeployment")
   for _, iface in ipairs(ifaces) do
     succ = false
     for _, added in ipairs(auth.authorized) do
@@ -854,7 +855,7 @@ function Test4:testGetAuthorizations()
   local found = false
   for id, ifaces in ipairs(tmp) do
     for _, auth in ipairs(auths) do
-      if id == auth.deploymentId then
+      if id == auth.id then
         found = true
         succ = false
         for _, iface in ipairs(ifaces) do
@@ -880,33 +881,6 @@ function Test4:testGetAuthorizations()
   end
 end
 
-function Test4:testGetAuthorizationsBySystemId()
-  local succ, err, auths
-  local tmp = {}
-  for i, depl in ipairs(self.deployments) do
-    local iface = self.ifaces[i]
-    succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
-    Check.assertTrue(succ)
-    tmp[depl.id] = iface
-  end
-  --
-  for _, depl in ipairs(self.deployments) do
-    succ, auths = self.rsMgt.__try:getAuthorizationsBySystemId(depl.systemId)
-    local auth = auths[1]
-    Check.assertTrue(succ)
-    Check.assertTrue(#auths == 1)
-    Check.assertEquals(auth.deploymentId, depl.id)
-    Check.assertEquals(auth.systemId, depl.systemId)
-    Check.assertTrue(#auth.authorized == 1)
-    Check.assertEquals(auth.authorized[1], tmp[depl.id])
-  end
-  --
-  for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt.__try:removeAuthorization(depl.id)
-    Check.assertTrue(succ)
-  end
-end
-
 function Test4:testGetAuthorizationsByInterfaceId()
   local succ, err, auths
   local tmp = {}
@@ -924,8 +898,8 @@ function Test4:testGetAuthorizationsByInterfaceId()
     local auth = auths[1]
     Check.assertTrue(succ)
     Check.assertTrue(#auths == 1)
-    Check.assertEquals(auth.deploymentId, depl.id)
-    Check.assertEquals(auth.systemId, depl.systemId)
+    Check.assertEquals(auth.id, depl.id)
+    Check.assertEquals(auth.type, "ATSystemDeployment")
     Check.assertTrue(#auth.authorized == 1)
     Check.assertEquals(auth.authorized[1], tmp[depl.id])
   end
@@ -980,8 +954,8 @@ function Test4:testGetAuthorizationsByInterfaceIdMulti()
     local auth = auths[1]
     Check.assertTrue(succ)
     Check.assertTrue(#auths == 1)
-    Check.assertEquals(auth.deploymentId, depl.id)
-    Check.assertEquals(auth.systemId, depl.systemId)
+    Check.assertEquals(auth.id, depl.id)
+    Check.assertEquals(auth.type, "ATSystemDeployment")
     Check.assertTrue(#auth.authorized == 2)
     Check.assertTrue(((auth.authorized[1] == tmp[depl.id]) and
                       (auth.authorized[2] == ibase))
@@ -993,6 +967,475 @@ function Test4:testGetAuthorizationsByInterfaceIdMulti()
   --
   for _, depl in ipairs(self.deployments) do
     succ, err = self.rsMgt.__try:removeAuthorization(depl.id)
+    Check.assertTrue(succ)
+  end
+end
+
+--------------------------------------------------------------------------------
+-- Testa o cadastro de usuários da interface IManagement do ACS.
+--
+
+-- Alias
+local Test5 = Suite.Test5
+
+--
+-- Pega referência para a interface de governança do ACS
+--
+function Test5:beforeTestCase()
+  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+  if IDLPATH_DIR == nil then
+    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+    os.exit(1)
+  end
+  oil.verbose:level(0)
+  orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
+  -- Instala o interceptador cliente
+  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+  local config = assert(loadfile(DATA_DIR ..
+    "/conf/advanced/InterceptorsConfiguration.lua"))()
+  self.credentialManager = CredentialManager()
+  orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
+  -- Obtem a face de governança
+  local succ
+  self.acs = orb:newproxy("corbaloc::localhost:2089/ACS", 
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+  succ, self.credential = self.acs:loginByPassword("tester", "tester")
+  self.credentialManager:setValue(self.credential)
+  local ic = self.acs:_component()
+  ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
+  self.acsMgt = ic:getFacetByName("IManagement")
+  self.acsMgt = orb:narrow(self.acsMgt, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+  -- Dados para os testes
+  self.users = {}
+  for i = 1, 10 do
+    table.insert(self.users, {
+      id = string.format("user%.2d", i),
+      name = string.format("User %.2d", i),
+    })
+  end
+end
+
+function Test5:afterTestCase()
+  if (self.credentialManager:hasValue()) then
+    self.acs:logout(self.credential)
+    self.credentialManager:invalidate()
+  end
+end
+
+--
+-- Limpa a base para eventuais resíduos
+--
+function Test5:afterEachTest()
+  for _, user in ipairs(self.users) do
+    self.acsMgt.__try:removeUser(user.id)
+  end
+end
+
+function Test5:testAddGetRemoveUser()
+  local succ, err, added
+  local user = self.users[1]
+  succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+  Check.assertTrue(succ)
+  --
+  succ, added = self.acsMgt.__try:getUser(user.id)
+  Check.assertTrue(succ)
+  Check.assertEquals(user.id, added.id)
+  Check.assertEquals(user.name, added.name)
+  --
+  succ, err = self.acsMgt.__try:removeUser(user.id)
+  Check.assertTrue(succ)
+end
+
+function Test5:testAddGetRemoveUsers()
+  local succ, err, list
+  for _, user in ipairs(self.users) do
+    succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+    Check.assertTrue(succ)
+  end
+  --
+  list = self.acsMgt:getUsers()
+  for _, user in ipairs(self.users) do
+    succ = false
+    for _, added in ipairs(list) do
+      if added.id == user.id and added.name == user.name then
+        succ = true
+        break
+      end
+    end
+    Check.assertTrue(succ)
+  end
+  --
+  for _, user in ipairs(self.users) do
+    succ, err = self.acsMgt.__try:removeUser(user.id)
+    Check.assertTrue(succ)
+  end
+end
+
+function Test5:testAddUser_UserAlreadyExists()
+  local user = self.users[1]
+  local succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+  Check.assertTrue(succ)
+  --
+  succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+  Check.assertFalse(succ)
+  Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserAlreadyExists:1.0")
+  --
+  succ, err = self.acsMgt.__try:removeUser(user.id)
+  Check.assertTrue(succ)
+end
+
+function Test5:testRemoveUser_UserNonExistent()
+  local succ, err = self.acsMgt.__try:removeUser("AnInvalidIdToRemove")
+  Check.assertFalse(succ)
+  Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0")
+end
+
+function Test5:testSetUserName()
+  local succ, err, added
+  local name = "New Name For An User"
+  local user = self.users[1]
+  succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+  Check.assertTrue(succ)
+  --
+  succ, err = self.acsMgt.__try:setUserName(user.id, name)
+  Check.assertTrue(succ)
+  --
+  succ, added = self.acsMgt.__try:getUser(user.id)
+  Check.assertTrue(succ)
+  Check.assertEquals(user.id, added.id)
+  Check.assertEquals(added.name, name)
+  --
+  succ, err = self.acsMgt.__try:removeUser(user.id)
+  Check.assertTrue(succ)
+end
+
+function Test5:testSetUserName_UserNonExistent()
+  local succ, err = self.acsMgt.__try:setUserName("InvalidId", "New Name For An User")
+  Check.assertFalse(succ)
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0", err[1])
+end
+
+function Test5:testGetUser_UserNonExistent()
+  local succ, err = self.acsMgt.__try:getUser("InvalidId")
+  Check.assertFalse(succ)
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0", err[1])
+end
+
+--------------------------------------------------------------------------------
+-- Testa o cadastro das autorizações para usuários no RS.
+--
+
+-- Alias
+local Test6 = Suite.Test6
+
+function Test6:beforeTestCase()
+  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+  if IDLPATH_DIR == nil then
+    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+    os.exit(1)
+  end
+  oil.verbose:level(0)
+  orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
+  -- Instala o interceptador cliente
+  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+  local config = assert(loadfile(DATA_DIR ..
+    "/conf/advanced/InterceptorsConfiguration.lua"))()
+  self.credentialManager = CredentialManager()
+  orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
+  -- Obtem a face de governança
+  local succ
+  self.acs = orb:newproxy("corbaloc::localhost:2089/ACS", 
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+  succ, self.credential = self.acs:loginByPassword("tester", "tester")
+  self.credentialManager:setValue(self.credential)
+  local acsIComp = self.acs:_component()
+  acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
+  self.acsMgt = acsIComp:getFacetByName("IManagement")
+  self.acsMgt = orb:narrow(self.acsMgt, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+  local acsIRecept = acsIComp:getFacetByName("IReceptacles")
+  acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
+  local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
+  local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
+  self.rsMgt = rsIComp:getFacetByName("IManagement")
+  self.rsMgt = orb:narrow(self.rsMgt, "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  -- Dados para os testes
+  self.ifaces = {}
+  self.users = {}
+  for i = 1, 10 do
+    local user = {
+      id = string.format("user%.2d", i),
+      name = string.format("User %.2d", i),
+    }
+    local iface = string.format("IDL:openbusidl/test%.2d:1.0", i)
+    table.insert(self.users, user)
+    table.insert(self.ifaces, iface)
+    self.acsMgt.__try:addUser(user.id, user.name)
+    self.rsMgt.__try:addInterfaceIdentifier(iface)
+  end
+end
+
+function Test6:afterTestCase()
+  for _, iface in ipairs(self.ifaces) do
+    self.rsMgt.__try:removeInterfaceIdentifier(iface)
+  end
+  for _, user in ipairs(self.user) do
+    self.acsMgt.__try:removeUser(user.id)
+  end
+  if (self.credentialManager:hasValue()) then
+    self.acs:logout(self.credential)
+    self.credentialManager:invalidate()
+  end
+end
+
+function Test6:afterEachTest()
+  for _, user in ipairs(self.users) do
+    self.rsMgt.__try:removeAuthorization(user.id)
+  end
+end
+
+function Test6:testGrantGetRemoveAuthorization()
+  local succ, err, auth
+  local user = self.users[1]
+  local iface = self.ifaces[1]
+  succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+  Check.assertTrue(succ)
+  --
+  succ, auth = self.rsMgt.__try:getAuthorization(user.id)
+  Check.assertTrue(succ)
+  Check.assertEquals(auth.id, user.id)
+  Check.assertEquals(auth.type, "ATUser")
+  Check.assertTrue(#auth.authorized == 1)
+  Check.assertTrue(auth.authorized[1] == iface)
+  --
+  succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+  Check.assertTrue(succ)
+  --
+  succ, err = self.rsMgt.__try:getAuthorization(user.id)
+  Check.assertFalse(succ)
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0",
+    err[1])
+end
+
+function Test6:testGrant_MemberNonExistent()
+  local iface = self.ifaces[1]
+  local succ, err = self.rsMgt.__try:grant("InvalidId", iface, true)
+  Check.assertFalse(succ)
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/MemberNonExistent:1.0", err[1])
+end
+
+function Test6:testGrant_InterfaceIdentifierNonExistent()
+  local user = self.users[1]
+  local succ, err = self.rsMgt.__try:grant(user.id, "InvalidId", true)
+  Check.assertFalse(succ)
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0", 
+    err[1])
+end
+
+function Test6:testGrant_InvalidRegularExpression()
+  local succ, err, auth
+  local user = self.users[1]
+  local iface = "IDL:*invalid:1.0"
+  succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+  Check.assertFalse(succ)
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0", 
+    err[1])
+end
+
+function Test6:testGrantExpressions()
+  local succ, err, auth
+  local user = self.users[1]
+  local ifaces = {
+    "IDL:*:*",
+    "IDL:*:1.*",
+    "IDL:*:1.0",
+    "IDL:openbusidl/test/demo/hello:*",
+    "IDL:openbusidl/test/demo/hello:1.0",
+    "IDL:openbusidl/test/demo/hello*:1.0",
+    "IDL:openbusidl/test/demo/hello*:*",
+    "IDL:openbusidl/test/demo/hello*:1.*",
+  }
+  for _, iface in ipairs(ifaces) do
+    succ, err = self.rsMgt.__try:grant(user.id, iface, false)
+    Check.assertTrue(succ)
+  end
+  --
+  succ, auth = self.rsMgt.__try:getAuthorization(user.id)
+  Check.assertTrue(succ)
+  Check.assertEquals(auth.id, user.id)
+  Check.assertEquals(auth.type, "ATUser")
+  for _, iface in ipairs(ifaces) do
+    succ = false
+    for _, added in ipairs(auth.authorized) do
+      if iface == added then
+        succ = true
+        break
+      end
+    end
+    Check.assertTrue(succ)
+  end
+  --
+  succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+  Check.assertTrue(succ)
+end
+
+function Test6:testGrantRevokeGetAuthorization()
+  local succ, err, auth
+  local user = self.users[1]
+  for _, iface in ipairs(self.ifaces) do
+    succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+    Check.assertTrue(succ)
+  end
+  --
+  for _, iface in ipairs(self.ifaces) do
+    succ, err = self.rsMgt.__try:revoke(user.id, iface)
+    Check.assertTrue(succ)
+  end
+  --
+  succ, err = self.rsMgt.__try:getAuthorization(user.id)
+  Check.assertFalse(succ)
+  Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0", err[1])
+end
+
+function Test6:testGetAuthorizations()
+  local succ, err, auths
+  local tmp = {}
+  for _, user in ipairs(self.users) do
+    for _, iface in ipairs(self.ifaces) do
+      succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+      Check.assertTrue(succ)
+      local t = tmp[user.id]
+      if not t then
+        t = {}
+        tmp[user.id] = t
+      end
+      t[#t+1] = iface
+    end
+  end
+  --
+  succ, auths = self.rsMgt.__try:getAuthorizations()
+  Check.assertTrue(succ)
+  --
+  -- Pode haver mais autorizações do que as cadastradas,
+  -- ter cuidado na ordem da iteração.
+  --
+  local found = false
+  for id, ifaces in ipairs(tmp) do
+    for _, auth in ipairs(auths) do
+      if id == auth.id then
+        found = true
+        succ = false
+        for _, iface in ipairs(ifaces) do
+          for _, added in ipairs(auth.authorized) do
+            if added == iface then
+              succ = true
+              break
+            end
+          end
+          Check.assertTrue(succ)
+        end
+      end
+    end
+    Check.assertTrue(found)
+  end
+  --
+  for _, user in ipairs(self.users) do
+    succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+    Check.assertTrue(succ)
+    succ, err = self.rsMgt.__try:getAuthorization(user.id)
+    Check.assertFalse(succ)
+    Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0", err[1])
+  end
+end
+
+function Test6:testGetAuthorizationsByInterfaceId()
+  local succ, err, auths
+  local tmp = {}
+  for i, user in ipairs(self.users) do
+    local iface = self.ifaces[i]
+    succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+    Check.assertTrue(succ)
+    tmp[user.id] = iface
+  end
+  --
+  for _, user in ipairs(self.users) do
+    succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({
+      tmp[user.id]
+    })
+    local auth = auths[1]
+    Check.assertTrue(succ)
+    Check.assertTrue(#auths == 1)
+    Check.assertEquals(auth.id, user.id)
+    Check.assertEquals(auth.type, "ATUser")
+    Check.assertTrue(#auth.authorized == 1)
+    Check.assertEquals(auth.authorized[1], tmp[user.id])
+  end
+  --
+  for _, user in ipairs(self.users) do
+    succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+    Check.assertTrue(succ)
+  end
+end
+
+function Test6:testGetAuthorizationsByInterfaceIdCommon()
+  local succ, err, auths
+  local ibase = "IDL:test/management/do/not/use/this/for/real:1.0"
+  local tmp = {}
+  for i, user in ipairs(self.users) do
+    local iface = self.ifaces[i]
+    succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+    Check.assertTrue(succ)
+    succ, err = self.rsMgt.__try:grant(user.id, ibase, false)
+    Check.assertTrue(succ)
+    tmp[user.id] = iface
+  end
+  --
+  succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({ibase})
+  Check.assertTrue(succ)
+  Check.assertTrue(#auths == #self.users)
+  --
+  for _, user in ipairs(self.users) do
+    succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+    Check.assertTrue(succ)
+  end
+end
+
+function Test6:testGetAuthorizationsByInterfaceIdMulti()
+  local succ, err, auths
+  local ibase = "IDL:test/management/do/not/use/this/for/real:1.0"
+  local tmp = {}
+  for i, user in ipairs(self.users) do
+    local iface = self.ifaces[i]
+    succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+    Check.assertTrue(succ)
+    succ, err = self.rsMgt.__try:grant(user.id, ibase, false)
+    Check.assertTrue(succ)
+    tmp[user.id] = iface
+  end
+  --
+  for _, user in ipairs(self.users) do
+    succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({
+      ibase,
+      tmp[user.id]
+    })
+    local auth = auths[1]
+    Check.assertTrue(succ)
+    Check.assertTrue(#auths == 1)
+    Check.assertEquals(auth.id, user.id)
+    Check.assertEquals(auth.type, "ATUser")
+    Check.assertTrue(#auth.authorized == 2)
+    Check.assertTrue(((auth.authorized[1] == tmp[user.id]) and
+                      (auth.authorized[2] == ibase))
+                     or
+                     ((auth.authorized[2] == tmp[user.id]) and
+                      (auth.authorized[1] == ibase))
+    )
+  end
+  --
+  for _, user in ipairs(self.users) do
+    succ, err = self.rsMgt.__try:removeAuthorization(user.id)
     Check.assertTrue(succ)
   end
 end
