@@ -508,11 +508,11 @@ function RSFacet:meetsCriteria(criteria, offerProperties)
     if offerProperty then
       for _, val in ipairs(criterion.value) do
         if not offerProperty[val] then
-          return false -- oferta Nãotem valor em seu conjunto
+          return false -- oferta não tem valor em seu conjunto
         end
       end
     else
-      return false -- oferta Nãotem propriedade com esse nome
+      return false -- oferta não tem propriedade com esse nome
     end
   end
   return true
@@ -541,7 +541,7 @@ function RSFacet:credentialWasDeleted(credential)
       end
     end
   else
-    Log:registry("Nãohavia ofertas da credencial "..credential.identifier)
+    Log:registry("Não havia ofertas da credencial "..credential.identifier)
   end
 end
 
@@ -633,7 +633,7 @@ function FaultToleranceFacet:updateStatus(params)
 	Log:faulttolerance("[updateStatus] Atualiza estado das ofertas.")
     if not self.ftconfig then
 		Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
-		Log:faultolerance("[warn][updateStatus] Nãofoi possível executar 'updatestatus'")
+		Log:faultolerance("[warn][updateStatus] Não foi possível executar 'updatestatus'")
 		return false
 	end
 	
@@ -858,8 +858,10 @@ function startup(self)
   for _, name in ipairs(config.administrators) do
      mgm.admins[name] = true
   end
-  -- ACS é sempre administrador
+  -- ACS e RGS são sempre administradores
   mgm.admins.AccessControlService = true
+  mgm.admins.RegistryService = true
+  
   -- Inicializa a base de gerenciamento
   mgm.authDB = TableDB(DATA_DIR.."/rs_auth.db")
   mgm.ifaceDB = TableDB(DATA_DIR.."/rs_iface.db")
@@ -999,6 +1001,7 @@ function ManagementFacet:loadData()
   end
   for auth in pairs(remove) do
     self.authDB:remove(auth.id)
+    self:updateManagementStatus("removeAuthorization", { id = auth.id})
   end
 end
 
@@ -1018,6 +1021,8 @@ function ManagementFacet:addInterfaceIdentifier(ifaceId)
   if not succ then
     Log:error(format("Falha ao salvar a interface '%s': %s",
       ifaceId, msg))
+  else
+    self:updateManagementStatus("addInterfaceIdentifier", { ifaceId = ifaceId})
   end
 end
 
@@ -1029,7 +1034,7 @@ end
 function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if not self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' Nãoestácadastrada.", ifaceId))
+    Log:error(format("Interface '%s' não está cadastrada.", ifaceId))
     error{InterfaceIdentifierNonExistentException}
   end
   for _, auth in pairs(self.authorizations) do
@@ -1042,6 +1047,8 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   local succ, msg = self.ifaceDB:remove(ifaceId)
   if not succ then
     Log:error(format("Falha ao remover interface '%s': %s", iface, msg))
+  else
+    self:updateManagementStatus("removeInterfaceIdentifier", { ifaceId = ifaceId})
   end
 end
 
@@ -1080,7 +1087,7 @@ function ManagementFacet:grant(id, ifaceId, strict)
       error{InvalidRegularExpressionException}
     end
   elseif strict and not self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' Nãocadastrada.", ifaceId))
+    Log:error(format("Interface '%s' não cadastrada.", ifaceId))
     error{InterfaceIdentifierNonExistentException}
   end
   local auth = self.authorizations[id]
@@ -1098,7 +1105,7 @@ function ManagementFacet:grant(id, ifaceId, strict)
         if member[1] ~= UserNonExistentException then
           error(member)  -- Exceção desconhecida, repassando
         end
-        Log:error(format("Membro '%s' Nãocadastrado.", id))
+        Log:error(format("Membro '%s' não cadastrado.", id))
         error{MemberNonExistentException}
       end
     end
@@ -1121,6 +1128,8 @@ function ManagementFacet:grant(id, ifaceId, strict)
   local succ, msg = self.authDB:save(id, auth)
   if not succ then
     Log:error(format("Falha ao salvar autorização '%s': %s", id, msg))
+  else 
+     self:updateManagementStatus("grant", { id = id, ifaceId = ifaceId, strict = strict})
   end
   self.context.IRegistryService:updateFacets(id)
 end
@@ -1140,7 +1149,7 @@ function ManagementFacet:revoke(id, ifaceId)
   end
   local succ, msg
   auth.authorized[ifaceId] = nil
-  -- Se Nãohouver mais autorizações, remover a entrada
+  -- Se não houver mais autorizações, remover a entrada
   if next(auth.authorized) then
     succ, msg = self.authDB:save(id, auth)
   else
@@ -1149,6 +1158,8 @@ function ManagementFacet:revoke(id, ifaceId)
   end
   if not succ then
     Log:error(format("Falha ao remover autorização  '%s': %s", id, msg))
+  else
+    self:updateManagementStatus("revoke", { id = id, ifaceId = ifaceId})
   end
   self.context.IRegistryService:updateFacets(id)
 end
@@ -1168,13 +1179,15 @@ function ManagementFacet:removeAuthorization(id)
   local succ, msg = self.authDB:remove(id)
   if not succ then
     Log:error(format("Falha ao remover autorização '%s': %s", id, msg))
+  else
+    self:updateManagementStatus("removeAuthorization", { id = id})
   end
   self.context.IRegistryService:updateFacets(id)
 end
 
 ---
 -- Duplica a autorização , mas a lista de interfaces é retornada
--- como array e Nãocomo hash. Essa função é usada para exportar
+-- como array e não como hash. Essa função é usada para exportar
 -- a autorização'.
 --
 -- @param auth Autorização a ser duplicada.
@@ -1275,4 +1288,80 @@ function ManagementFacet:getAuthorizationsByInterfaceId(ifaceIds)
     end
   end
   return array
+end
+
+function ManagementFacet:updateManagementStatus(command, data)
+    local credential = Openbus:getInterceptedCredential()
+    if credential.owner == "RegistryService" or 
+       credential.delegate == "RegistryService" then
+    --para nao entrar em loop
+       return
+    end
+    
+	Log:faulttolerance("[updateManagementStatus] Atualiza estado das interfaces e autorizacoes para o comando[".. command .."].")
+	local ftFacet = self.context.IFaultTolerantService
+	if not ftFacet.ftconfig then
+		Log:faulttolerance("[updateManagementStatus] Faceta precisa ser inicializada antes de ser chamada.")
+		Log:warn("[updateManagementStatus] não foi possível executar 'updateManagementStatus'")
+		return false
+	end
+	
+	if # ftFacet.ftconfig.hosts.RS <= 1 then
+	  	Log:faulttolerance("[updateManagementStatus] Nenhuma replica para atualizar estado das interfaces e autorizacoes.")
+		return false
+	end
+	
+	local i = 1
+    repeat
+		if ftFacet.ftconfig.hosts.RS[i] ~= ftFacet.rsReference then
+			local ret, succ, remoteRGS = oil.pcall(Utils.fetchService, 
+												Openbus:getORB(), 
+												ftFacet.ftconfig.hosts.RS[i], 
+												Utils.REGISTRY_SERVICE_INTERFACE)
+				
+			if succ then
+			--encontrou outra replica
+				Log:faulttolerance("[updateManagementStatus] Atualizando replica ".. ftFacet.ftconfig.hosts.RS[i] ..".")	
+				 -- Recupera faceta IManagement da replica remota
+				 local remoteRGSIC = remoteRGS:_component()
+				 remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
+				 local orb = Openbus:getORB()
+                 local ok, remoteMgmFacet = oil.pcall(remoteRGSIC.getFacetByName, 
+			                                          remoteRGSIC, "IManagement")
+
+                 if ok then
+                        remoteMgmFacet = orb:narrow(remoteMgmFacet, 
+                           "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+
+                        if command == "addInterfaceIdentifier" then
+                            oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.addInterfaceIdentifier, remoteMgmFacet,
+  			                                                          data.ifaceId)
+  				                          end)  
+                        elseif command == "removeInterfaceIdentifier" then
+                            oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.removeInterfaceIdentifier, remoteMgmFacet,
+  			                                                           data.ifaceId)
+  				                          end)  
+                        elseif command == "grant" then
+                            oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.grant, remoteMgmFacet,
+  			                                                         data.id, data.ifaceId, data.strict)
+  				                          end)  
+                        elseif command == "revoke" then
+                            oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.revoke,  remoteMgmFacet,
+  			                                                          data.id, data.ifaceId)
+  				                          end)  
+                        elseif command == "removeAuthorization" then
+                            oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.removeAuthorization, remoteMgmFacet, data.id)
+  				                          end)  
+                        end --fim command
+                 end -- fim ok facet IManagement
+			end -- fim succ, encontrou replica
+		end -- fim , nao eh a mesma replica
+		i = i + 1 	
+	until i > # ftFacet.ftconfig.hosts.RS
+	Log:faulttolerance("[updateManagementStatus] Replicas atualizadas quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
 end

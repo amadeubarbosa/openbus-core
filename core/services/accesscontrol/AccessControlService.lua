@@ -634,8 +634,11 @@ function ManagementFacet:addSystem(id, description)
   })
   if not succ then
     Log:error(format("Falha ao salvar sistema '%s': %s", id, msg))
+  else
+    self.systems[id] = true
+    self:updateManagementStatus("addSystem", 
+  			             { id = id, description = description})
   end
-  self.systems[id] = true
 end
 
 ---
@@ -661,6 +664,8 @@ function ManagementFacet:removeSystem(id)
   local succ, msg = self.systemDB:remove(id)
   if not succ then
     Log:error(format("Falha ao remover sistema '%s': %s", id, msg))
+  else
+    self:updateManagementStatus("removeSystem", { id = id})
   end
 end
 
@@ -683,6 +688,9 @@ function ManagementFacet:setSystemDescription(id, description)
     succ, msg = self.systemDB:save(id, system)
     if not succ then
       Log:error(format("Falha ao salvar sistema '%s': %s", id, msg))
+    else
+      self:updateManagementStatus("setSystemDescription", 
+  			             { id = id, description = description})
     end
   else
     Log:error(format("Falha ao recuperar sistema '%s': %s", id, msg))
@@ -757,11 +765,21 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
   if not succ then
     Log:error(format("Falha ao salvar implantação %s na base de dados: %s",
       id, msg))
+  else
+  
+    self:updateManagementStatus("addSystemDeployment", 
+    			                { id = id, 
+  			                      systemId = systemId, 
+  			                      description = description,
+  			                      certificate = certificate})
+  				 
+  	succ, msg = self.certificateDB:save(id, certificate)
+    if not succ then
+      Log:error(format("Falha ao salvar certificado de '%s': %s", id, msg))
+    end
+    
   end
-  succ, msg = self.certificateDB:save(id, certificate)
-  if not succ then
-    Log:error(format("Falha ao salvar certificado de '%s': %s", id, msg))
-  end
+
 end
 
 ---
@@ -780,24 +798,28 @@ function ManagementFacet:removeSystemDeployment(id)
   if not succ then
     Log:error(format("Falha ao remover implantação '%s' da base de dados: %s",
       id, msg))
-  end
-  succ, msg = self.certificateDB:remove(id)
-  if not succ and msg ~= "not found" then
-    Log:error(format("Falha ao remover certificado da implantação '%s': %s",
-      id, msg))
-  end
-  -- Invalida a credencial do membro que está sendo removido
-  local acs = self.context.IAccessControlService
-  acs:removeEntryById(id)
-  -- Remove todas as autorizações do membro
-  local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-    Openbus:getORB(),
-    self.context.IComponent,
-    "RegistryServiceReceptacle", 
-    "IManagement",
-    "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
-  if succ and rs then
-    rs.__try:removeAuthorization(id)
+  else
+    self:updateManagementStatus("removeSystemDeployment", { id = id})
+  				 
+  	succ, msg = self.certificateDB:remove(id)
+    if not succ and msg ~= "not found" then
+       Log:error(format("Falha ao remover certificado da implantação '%s': %s",
+            id, msg))
+    end
+    
+    -- Invalida a credencial do membro que está sendo removido
+    local acs = self.context.IAccessControlService
+    acs:removeEntryById(id)
+    -- Remove todas as autorizações do membro
+    local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+      Openbus:getORB(),
+      self.context.IComponent,
+      "RegistryServiceReceptacle", 
+      "IManagement",
+      "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+    if succ and rs then
+       rs.__try:removeAuthorization(id)
+    end
   end
 end
 
@@ -823,6 +845,9 @@ function ManagementFacet:setSystemDeploymentDescription(id, description)
     if not succ then
       Log:error(format("Falha ao salvar implantação '%s' na base de dados: %s",
         id, msg))
+    else
+        self:updateManagementStatus("setSystemDeploymentDescription", 
+  			             { id = id, description = description})
     end
   end
 end
@@ -866,6 +891,9 @@ function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
   local succ, msg = self.certificateDB:save(id, certificate)
   if not succ then
     Log:error(format("Falha ao salvar certificado de '%s': %s", id, msg))
+  else
+     self:updateManagementStatus("setSystemDeploymentCertificate", 
+  			             { id = id, certificate = certificate})
   end
 end
 
@@ -943,6 +971,8 @@ function ManagementFacet:addUser(id, name)
   if not succ then
     Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
       id, msg))
+  else
+    self:updateManagementStatus("addUser", { id = id, name = name})
   end
 end
 
@@ -962,17 +992,21 @@ function ManagementFacet:removeUser(id)
   if not succ then
     Log:error(format("Falha ao remover usuário '%s' da base de dados: %s",
       id, msg))
+  else
+     self:updateManagementStatus("removeUser", { id = id})
+  				 
+  	 -- Remove todas as autorizações do membro
+     local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
+                            Openbus:getORB(),
+                            self.context.IComponent,
+                            "RegistryServiceReceptacle", 
+                            "IManagement",
+                            "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+     if succ and rs then
+         rs.__try:removeAuthorization(id)
+     end
   end
-  -- Remove todas as autorizações do membro
-  local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-    Openbus:getORB(),
-    self.context.IComponent,
-    "RegistryServiceReceptacle", 
-    "IManagement",
-    "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
-  if succ and rs then
-    rs.__try:removeAuthorization(id)
-  end
+  
 end
 
 ---
@@ -997,6 +1031,8 @@ function ManagementFacet:setUserName(id, name)
     if not succ then
       Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
         id, msg))
+    else
+      self:updateManagementStatus("setUserName", { id = id, name = name})
     end
   end
 end
@@ -1029,6 +1065,110 @@ function ManagementFacet:getUsers()
     Log:error(format("Falha ao recuperar usuários: %s", msg))
   end
   return users
+end
+
+function ManagementFacet:updateManagementStatus(command, data)
+   local credential = Openbus:getInterceptedCredential()
+   if credential.owner == "AccessControlService" or 
+       credential.delegate == "AccessControlService" then
+    --para nao entrar em loop
+       return
+    end
+	Log:faulttolerance("[updateManagementStatus] Atualiza estado da gerencia para o comando[".. command .."].")
+	local ftFacet = self.context.IFaultTolerantService
+	if not ftFacet.ftconfig then
+		Log:faulttolerance("[updateManagementStatus] Faceta precisa ser inicializada antes de ser chamada.")
+		Log:warn("[updateManagementStatus] não foi possível executar 'updateManagementStatus'")
+		return false
+	end
+	
+	if # ftFacet.ftconfig.hosts.ACS <= 1 then
+	  	Log:faulttolerance("[updateManagementStatus] Nenhuma replica para atualizar estado da gerencia.")
+		return false
+	end
+	
+	local i = 1
+    repeat
+		if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
+			local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService, 
+												Openbus:getORB(), 
+												ftFacet.ftconfig.hosts.ACSIC[i], 
+												Utils.COMPONENT_INTERFACE)
+				
+			if succ then
+			--encontrou outra replica
+			    Log:faulttolerance("[updateManagementStatus] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")	
+				 -- Recupera faceta IManagement da replica remota
+			    local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement")
+                if ok then
+                     local orb = Openbus:getORB()		    
+                     remoteMgmFacet = orb:narrow(remoteMgmFacet, 
+                           "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+                     --*** System operations*** 
+                     if command == "addSystem" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.addSystem, remoteMgmFacet, data.id, data.description)
+  				                       end)  
+                     elseif command == "setSystemDescription" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.setSystemDescription,  remoteMgmFacet,
+  			                                                    data.id, data.description)
+  				                       end)                           
+                     elseif command == "removeSystem" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.removeSystem, remoteMgmFacet, data.id)
+  				                       end)                           
+  				                       
+                     --*** System Deployment operations*** 
+                     elseif command == "addSystemDeployment" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.addSystemDeployment,remoteMgmFacet,
+  			                                           data.id, 
+  			                                           data.systemId, 
+  			                                           data.description, 
+  			                                           data.certificate)
+  				                       end)                          
+                         
+                     elseif command == "setSystemDeploymentDescription" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.setSystemDeploymentDescription, remoteMgmFacet,
+  			                                                           data.id, 
+  			                                                           data.description)
+  				                       end)                           
+                     elseif command == "setSystemDeploymentCertificate" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.setSystemDeploymentCertificate, remoteMgmFacet,
+  			                                                          data.id, 
+  			                                                          data.certificate)
+  				                       end)                                                    
+                     elseif command == "removeSystemDeployment" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.removeSystemDeployment, remoteMgmFacet, data.id)
+  				                       end)
+
+                     --*** User operations*** 
+                     elseif command == "addUser" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.addUser,remoteMgmFacet,
+  			                                                          data.id, data.name)
+  				                       end)
+                     elseif command == "removeUser" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.removeUser,remoteMgmFacet,
+  			                                                          data.id)
+  				                       end)
+                     elseif command == "setUserName" then
+                         oil.newthread(function() 
+  			                              local succ, ret = oil.pcall(remoteMgmFacet.setUserName,remoteMgmFacet,
+  			                                                          data.id, data.name)
+  				                       end)                     
+                     end
+                end					
+			end
+		end
+		i = i + 1 	
+	until i > # ftFacet.ftconfig.hosts.ACSIC
+	Log:faulttolerance("[updateManagementStatus] Replicas atualizadas quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
 end
 
 --------------------------------------------------------------------------------
@@ -1078,7 +1218,7 @@ function FaultToleranceFacet:updateStatus(params)
 
     if input == "all" then
         --sincroniza todas as credenciais a mais das outras replicas 
-        --com esta
+        --com esta e os dados de gerencia
 		Log:faulttolerance("[updateStatus] Sincronizando base de credenciais com as replicas exceto em "..self.acsReference)
 		  local updated = false
 		  local i = 1
@@ -1091,9 +1231,11 @@ function FaultToleranceFacet:updateStatus(params)
 												Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
 				
 				if acs then
+				--encontrou outra replica
+				    local acsFacet = self.context.IAccessControlService
+                    --********* CREDENCIAL - inicio *****************
 					local repEntries = acs:getAllEntryCredential()
 					if # repEntries > 0 then
-						local acsFacet = self.context.IAccessControlService
 						local localEntries = acsFacet.entries
 						if localEntries == nil then
 						   localEntries = {}
@@ -1129,6 +1271,7 @@ function FaultToleranceFacet:updateStatus(params)
 					   		end					   		
 						end
 					end
+					--********* CREDENCIAL - fim *****************
 				end
 			end
 			i = i + 1 	
@@ -1204,7 +1347,9 @@ function startup(self)
   for _, name in ipairs(config.administrators) do
      mgm.admins[name] = true
   end
-
+  -- ACS é sempre administrador
+  mgm.admins.AccessControlService = true
+  
   acs.lease = config.lease
 
   -- Inicializa as base de dados de gerenciamento
