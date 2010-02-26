@@ -5,9 +5,6 @@ LIBNAME= ${PROJNAME}
 #DBG=YES
 #CPPFLAGS= -fno-inline
 
-#Descomente a linha abaixo caso deseje ativar o VERBOSE
-#DEFINES=VERBOSE
-
 ifeq "$(TEC_UNAME)" "SunOS58"
   USE_CC=Yes
 endif
@@ -42,7 +39,7 @@ SRC= openbus/interceptors/ClientInterceptor.cpp \
      stubs/orbix/scsC.cxx \
      openbus.cpp \
      openbus/util/Helper.cpp \
-     verbose.cpp
+     logger.cpp
 
 genstubs:
 	mkdir -p stubs/orbix

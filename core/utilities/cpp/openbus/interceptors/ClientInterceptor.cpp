@@ -19,12 +19,12 @@ namespace openbus {
     ClientInterceptor::ClientInterceptor(IOP::Codec_ptr pcdr_codec)  
     {
     #ifdef VERBOSE
-      Openbus::verbose->print("ClientInterceptor::ClientInterceptor() BEGIN");
-      Openbus::verbose->indent();
+      Openbus::logger->log(INFO, "ClientInterceptor::ClientInterceptor() BEGIN");
+      Openbus::logger->indent();
     #endif
       cdr_codec = pcdr_codec;
     #ifdef VERBOSE
-      Openbus::verbose->dedent("ClientInterceptor::ClientInterceptor() END");
+      Openbus::logger->dedent(INFO, "ClientInterceptor::ClientInterceptor() END");
     #endif
     }
 
@@ -36,19 +36,19 @@ namespace openbus {
         PortableInterceptor::ForwardRequest)
     {
     #ifdef VERBOSE
-      Openbus::verbose->print("ClientInterceptor::send_request() BEGIN");
-      Openbus::verbose->indent();
+      Openbus::logger->log(INFO, "ClientInterceptor::send_request() BEGIN");
+      Openbus::logger->indent();
       stringstream msg;
       char * operation = ri->operation();
       msg << "Method: " << operation;
-      Openbus::verbose->print(msg.str());
+      Openbus::logger->log(INFO, msg.str());
       free(operation);
     #endif
       if (credential) {
       #ifdef VERBOSE
         stringstream msg;
         msg << "Credential identifier: " << credential->identifier;
-        Openbus::verbose->print(msg.str());
+        Openbus::logger->log(INFO, msg.str());
       #endif
         IOP::ServiceContext sc;
         sc.context_id = 1234;
@@ -71,13 +71,13 @@ namespace openbus {
         for ( z = 0; z < sc.context_data.length(); z++ ) {
           contextData <<  (unsigned) sc.context_data[ z ] << " ";
         }
-        Openbus::verbose->print(contextData.str());
+        Openbus::logger->log(INFO, contextData.str());
       #endif
 
         ri->add_request_service_context(sc, true);
       }
     #ifdef VERBOSE
-      Openbus::verbose->dedent("ClientInterceptor::send_request() END");
+      Openbus::logger->dedent(INFO, "ClientInterceptor::send_request() END");
     #endif
     }
 

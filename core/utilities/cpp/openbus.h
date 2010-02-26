@@ -6,7 +6,7 @@
 #ifndef OPENBUS_H_
 #define OPENBUS_H_
 
-#include "verbose.h"
+#include "logger.h"
 #include "openbus/util/Helper.h"
 
 #include "openbus/interceptors/ORBInitializerImpl.h"
@@ -32,6 +32,7 @@
 using namespace tecgraf::openbus::core::v1_05;
 using namespace tecgraf::openbus::session_service::v1_05;
 using namespace std;
+using namespace logger;
 
 /**
 * \brief Stubs dos serviços básicos.
@@ -338,9 +339,7 @@ namespace openbus {
 
     public:
 
-    #ifdef VERBOSE
-      static Verbose* verbose;
-    #endif
+      static Logger* logger;
 
       ~Openbus();
 

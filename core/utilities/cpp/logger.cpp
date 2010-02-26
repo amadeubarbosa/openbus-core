@@ -1,26 +1,44 @@
 /**
-* \file verbose.cpp
+* \file logger.cpp
 */
 
-#include "verbose.h"
+#include "logger.h"
 
 #include <iostream>
 
-Verbose::Verbose() {
+using namespace std;
+using namespace logger;
+
+const char* Logger::levelStr[] = {
+  ENUM_TO_STR(ERROR),
+  ENUM_TO_STR(INFO),
+  ENUM_TO_STR(WARNING)
+};
+
+Logger* Logger::logger = 0;
+
+Logger::Logger() {
   numIndent = 0;
 }
 
-Verbose::~Verbose() {
+Logger::~Logger() {
 
 }
 
-void Verbose::print(string msg) {
+Logger* Logger::getInstance() {
+  if (!logger) {
+    logger = new Logger;
+  }
+  return logger;
+}
+
+void Logger::log(Level level, string msg) {
   stringstream msgStream;
   stringstream spaces;
   for (short x = 0; x < numIndent; x++) {
     spaces << "  ";
   }
-  msgStream << "[" << msg << "]";
+  msgStream << "[" << levelStr[level] << "] " << msg;
   msg = msgStream.str();
   size_t msgLength = msg.length();
   if (msgLength > 80) {
@@ -35,23 +53,23 @@ void Verbose::print(string msg) {
   }
 }
 
-void Verbose::indent() {
+void Logger::indent() {
   numIndent++;
 }
 
-void Verbose::indent(string msg) {
+void Logger::indent(Level level, string msg) {
   indent();
-  print(msg);
+  log(level, msg);
   cout << endl;
 }
 
-void Verbose::dedent() {
+void Logger::dedent() {
   numIndent--;
 }
 
-void Verbose::dedent(string msg) {
+void Logger::dedent(Level level, string msg) {
   dedent();
-  print(msg);
+  log(level, msg);
   if (!numIndent) {
     cout << endl;
   }

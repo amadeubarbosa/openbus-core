@@ -16,24 +16,18 @@ namespace openbus {
     bool ORBInitializerImpl::singleInstance = false;
     ORBInitializerImpl::ORBInitializerImpl()
     {
-    #ifdef VERBOSE
-      Openbus::verbose->print("ORBInitializerImpl::ORBInitializerImpl() BEGIN");
-      Openbus::verbose->indent();
-    #endif
+      Openbus::logger->log(INFO, "ORBInitializerImpl::ORBInitializerImpl() BEGIN");
+      Openbus::logger->indent();
 /*    clientInterceptor = 0;
       serverInterceptor = 0;
       */
       _info = 0;
-    #ifdef VERBOSE
-      Openbus::verbose->dedent("ORBInitializerImpl::ORBInitializerImpl() END");
-    #endif
+      Openbus::logger->dedent(INFO, "ORBInitializerImpl::ORBInitializerImpl() END");
     }
 
     ORBInitializerImpl::~ORBInitializerImpl() {
-    #ifdef VERBOSE
-      Openbus::verbose->print("ORBInitializerImpl::~ORBInitializerImpl() BEGIN");
-      Openbus::verbose->indent();
-    #endif
+      Openbus::logger->log(INFO, "ORBInitializerImpl::~ORBInitializerImpl() BEGIN");
+      Openbus::logger->indent();
     #ifdef OPENBUS_MICO
 /*
       if (clientInterceptor) {
@@ -48,17 +42,13 @@ namespace openbus {
       }
       */
     #endif
-    #ifdef VERBOSE
-      Openbus::verbose->dedent("ORBInitializerImpl::~ORBInitializerImpl() END");
-    #endif
+      Openbus::logger->dedent(INFO, "ORBInitializerImpl::~ORBInitializerImpl() END");
     }
 
     void ORBInitializerImpl::pre_init(ORBInitInfo_ptr info)
     {
-    #ifdef VERBOSE
-      Openbus::verbose->print("ORBInitializerImpl::pre_init() BEGIN");
-      Openbus::verbose->indent();
-    #endif
+      Openbus::logger->log(INFO, "ORBInitializerImpl::pre_init() BEGIN");
+      Openbus::logger->indent();
       _info = info;
     #ifdef OPENBUS_MICO
 /*      if (clientInterceptor) {
@@ -104,9 +94,7 @@ namespace openbus {
     #ifdef OPENBUS_MICO
       }
     #endif
-    #ifdef VERBOSE
-      Openbus::verbose->dedent("ORBInitializerImpl::pre_init() END");
-    #endif
+      Openbus::logger->dedent(INFO, "ORBInitializerImpl::pre_init() END");
     }
 
     void ORBInitializerImpl::post_init(ORBInitInfo_ptr info) { }
