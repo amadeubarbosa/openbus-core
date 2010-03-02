@@ -10,7 +10,7 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 EXTRA_CONFIG=config
 
-ifeq "$(TEC_UNAME)" "SunOS58"
+ifeq "$(TEC_SYSNAME)" "SunOS"
   USE_CC=Yes
   CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
 endif

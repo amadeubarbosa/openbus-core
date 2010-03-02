@@ -9,7 +9,7 @@ packages = {
 	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_01_2009_09_09/oil04",
 	},
 	{ name = "scs",
-	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/scs/tags/SCS_v1_00_01_2009_08_07",
+	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/scs/branches/SCS_v1_00_2009_07_30",
 	},
 	{ name = "licenses",
 	  install_files = {
@@ -310,9 +310,9 @@ packages = {
 	  	type = "tecmake",
 	  	src = PRODAPP .."/scs/src/cpp/orbix",
 	  	mf = { "config genstubs USE_NODEPEND=Yes", "config" },
-		-- special compile instructions for solaris8
-		SunOS58 = {
-			mf = { "config genstubs USE_NODEPEND=Yes", "config", "config sunos58" },
+		-- special compile instructions for solaris
+		SunOS = {
+			mf = { "config genstubs USE_NODEPEND=Yes", "config", "config sunos" },
 		},
 	  },
 	  install_files = {
@@ -330,9 +330,9 @@ packages = {
 	  	type = "tecmake",
 	  	src = SVNDIR .."/core/utilities/orbix",
 	  	mf = { "config genstubs USE_NODEPEND=Yes", "config" },
-		-- special compile instructions for solaris8
-		SunOS58 = {
-			mf = { "config genstubs USE_NODEPEND=Yes", "config", "config sunos58" },
+		-- special compile instructions for solaris
+		SunOS = {
+			mf = { "config genstubs USE_NODEPEND=Yes", "config", "config sunos" },
 		}
 	  },
 	  dev_files = {
