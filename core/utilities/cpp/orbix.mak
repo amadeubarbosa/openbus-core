@@ -5,8 +5,9 @@ LIBNAME= ${PROJNAME}
 #DBG=YES
 #CPPFLAGS= -fno-inline
 
-ifeq "$(TEC_UNAME)" "SunOS58"
+ifeq "$(TEC_SYSNAME)" "SunOS"
   USE_CC=Yes
+  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
 endif
 
 ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
@@ -36,7 +37,6 @@ SRC= openbus/interceptors/ClientInterceptor.cpp \
      stubs/orbix/registry_serviceC.cxx \
      stubs/orbix/session_serviceC.cxx \
      stubs/orbix/coreC.cxx \
-     stubs/orbix/scsC.cxx \
      openbus.cpp \
      openbus/util/Helper.cpp \
      logger.cpp
@@ -49,9 +49,9 @@ genstubs:
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/core.idl
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/scs.idl
 	
-sunos58: $(OBJS)
-	rm -f lib/SunOS58/libopenbusorbix.a
+sunos: $(OBJS)
+	rm -f lib/$(TEC_UNAME)/libopenbusorbix.a
 	CC -xar -instances=extern -o lib/SunOS58/libopenbusorbix.a $(OBJS)
-	rm -f lib/SunOS58/libopenbusorbix.so
-	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbusorbix.so $(OBJS)
+	rm -f lib/$(TEC_UNAME)/libopenbusorbix.so
+	CC -G -instances=extern -KPIC -o lib/SunOS58/libopenbusorbix.so $(OBJS)
 
