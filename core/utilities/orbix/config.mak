@@ -8,8 +8,9 @@ LIBNAME= ${PROJNAME}
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
 #DEFINES=VERBOSE
 
-ifeq "$(TEC_UNAME)" "SunOS58"
+ifeq "$(TEC_SYSNAME)" "SunOS"
   USE_CC=Yes
+  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
 endif
 
 ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
@@ -39,7 +40,6 @@ SRC= openbus/common/ClientInterceptor.cpp \
      stubs/registry_serviceC.cxx \
      stubs/session_serviceC.cxx \
      stubs/coreC.cxx \
-     stubs/scsC.cxx \
      openbus.cpp \
      services/RegistryService.cpp \
      verbose.cpp
@@ -52,9 +52,9 @@ genstubs:
 	cd stubs ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/core.idl
 	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/scs.idl
 	
-sunos58: $(OBJS)
+sunos: $(OBJS)
 	rm -f lib/SunOS58/libopenbus.a
 	CC -xar -instances=extern -o lib/SunOS58/libopenbus.a $(OBJS)
 	rm -f lib/SunOS58/libopenbus.so
-	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbus.so $(OBJS)
+	CC -G -instances=extern -KPIC -o lib/SunOS58/libopenbus.so $(OBJS)
 
