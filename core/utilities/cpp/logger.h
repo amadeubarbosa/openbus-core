@@ -15,21 +15,25 @@ using namespace std;
 
 namespace logger {
   enum Level {
+    ALL,
     ERROR,
     INFO,
-    WARNING
+    WARNING,
+    OFF
   };
 
   class Logger {
     private:
       static const char* levelStr[];
-      short numIndent;
       static Logger* logger;
+      map<Level, bool> levelFlag; 
+      short numIndent;
       Logger();
       ~Logger();
     public:
       static Logger* getInstance();
    
+      void setLevel(Level level);
       void log(Level level, string message);
       void indent(); 
       void indent(Level level, string msg);

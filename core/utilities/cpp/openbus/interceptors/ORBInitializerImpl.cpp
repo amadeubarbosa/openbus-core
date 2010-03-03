@@ -16,13 +16,10 @@ namespace openbus {
     bool ORBInitializerImpl::singleInstance = false;
     ORBInitializerImpl::ORBInitializerImpl()
     {
-      Openbus::logger->log(INFO, "ORBInitializerImpl::ORBInitializerImpl() BEGIN");
-      Openbus::logger->indent();
 /*    clientInterceptor = 0;
       serverInterceptor = 0;
       */
       _info = 0;
-      Openbus::logger->dedent(INFO, "ORBInitializerImpl::ORBInitializerImpl() END");
     }
 
     ORBInitializerImpl::~ORBInitializerImpl() {

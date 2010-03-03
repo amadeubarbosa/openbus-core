@@ -219,6 +219,18 @@ namespace openbus {
       } else if (!strcmp(argv[idx], "-TimeRenewing")) {
         timeRenewing = (unsigned int) atoi(argv[++idx]);
         timeRenewingFixe = true;
+      } else if (!strcmp(argv[idx], "-OpenbusDebug")) {
+        idx++;
+        char *debugLevelStr = argv[idx];
+        if (!strcmp(debugLevelStr, "ALL")) {
+          debugLevel = ALL;
+        } else if (!strcmp(debugLevelStr, "ERROR")) {
+          debugLevel = ERROR;
+        } else if (!strcmp(debugLevelStr, "INFO")) {
+          debugLevel = INFO;
+        } else if (!strcmp(debugLevelStr, "WARNING")) {
+          debugLevel = WARNING;
+        }
       }
     }
   }
@@ -231,13 +243,13 @@ namespace openbus {
 
   void Openbus::registerInterceptors() {
     if (!ini) {
-      logger->log(INFO, "Registrando interceptadores ...");
       ini = new interceptors::ORBInitializerImpl();
       PortableInterceptor::register_orb_initializer(ini);
     }
   }
 
   void Openbus::newState() {
+    debugLevel = OFF;
     connectionState = DISCONNECTED;
     credential = 0;
     lease = 0;
@@ -293,12 +305,9 @@ namespace openbus {
   }
 
   Openbus::Openbus() {
-    logger->log(INFO, "Openbus::Openbus() BEGIN");
-    logger->indent();
     newState();
     registerInterceptors();
     initialize();
-    logger->dedent(INFO, "Openbus::Openbus() END");
   }
 
   Openbus::~Openbus() {
@@ -377,10 +386,7 @@ namespace openbus {
 
   Openbus* Openbus::getInstance() {
     logger = Logger::getInstance();
-    logger->log(INFO, "Openbus::getInstance() BEGIN");
-    logger->indent();
     if (!bus) {
-      logger->log(INFO, "Criando novo objeto...");
     #ifndef OPENBUS_MICO
       mutex.lock();
     #endif
@@ -389,7 +395,6 @@ namespace openbus {
       mutex.unlock();
     #endif
     }
-    logger->dedent(INFO, "Openbus::getInstance() END");
     return bus;
   }
 
@@ -397,11 +402,12 @@ namespace openbus {
     int argc,
     char** argv)
   {
-    logger->log(INFO, "Openbus::init(int argc, char** argv) BEGIN");
-    logger->indent();
     _argc = argc;
     _argv = argv;
     commandLineParse(_argc, _argv);
+    logger->setLevel(debugLevel);
+    logger->log(INFO, "Openbus::init(int argc, char** argv) BEGIN");
+    logger->indent();
     createOrbPoa();
     if (!componentBuilder) {
       componentBuilder = new scs::core::ComponentBuilder(orb, poa);
