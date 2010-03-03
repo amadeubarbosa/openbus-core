@@ -9,6 +9,9 @@ local tostring = tostring
 local print = print
 
 local Log = require "openbus.util.Log"
+local Openbus = require "openbus.Openbus" 
+
+    
 local oil = require "oil"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
@@ -70,7 +73,7 @@ local facetDescriptions = {}
 facetDescriptions.IComponent        		  	 = {}
 facetDescriptions.IReceptacles					 = {}
 facetDescriptions.IMetaInterface     			 = {}
-facetDescriptions.IFTAccessControlServiceMonitor = {}
+facetDescriptions.IFTServiceMonitor              = {}
 
 facetDescriptions.IComponent.name                     = "IComponent"
 facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
@@ -85,10 +88,10 @@ facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IFTAccessControlServiceMonitor.name 			  = "IFTServiceMonitor"
-facetDescriptions.IFTAccessControlServiceMonitor.interface_name   = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
-facetDescriptions.IFTAccessControlServiceMonitor.class            =  FTAccessControlServiceMonitor.FTACSMonitorFacet
-facetDescriptions.IFTAccessControlServiceMonitor.key              = "FTACSMonitor"
+facetDescriptions.IFTServiceMonitor.name 			  = "IFTServiceMonitor"
+facetDescriptions.IFTServiceMonitor.interface_name    = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
+facetDescriptions.IFTServiceMonitor.class             =  FTAccessControlServiceMonitor.FTACSMonitorFacet
+facetDescriptions.IFTServiceMonitor.key               = "FTACSMonitor"
 
 -- Receptacle Descriptions
 local receptacleDescriptions = {}
@@ -111,36 +114,13 @@ componentId.platform_spec = ""
 ---
 function main()
 
-  local ftacsService = orb:newproxy("corbaloc::"..hostAdd.."/FTACS","IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
-  if ftacsService:_non_existent() then
-      Log:error("Faceta FT do Servico de controle de acesso nao encontrado.")
-      os.exit(1)
-  end
-  
-  if not ftacsService:isAlive() then
-	Log:error("Erro ao rodar isAlive.")
-      os.exit(1)
-  end
-
   -- Cria o componente responsável pelo Monitor do Serviço de Controle de Acesso
   local ftacsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
   
-  
-  local ftRec = ftacsInst.IComponent:getFacetByName("IReceptacles")
-  
-  ftRec = orb:narrow(ftRec)
-  local connId = ftRec:connect("IFaultTolerantService",ftacsService)
-  if not connId then
-	Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTACSMonitor")
-    os.exit(1)
-  end
- 
-  -- Configurações
   ftacsInst.IComponent.startup = FTAccessControlServiceMonitor.startup
     
-  local ftacs = ftacsInst.IFTAccessControlServiceMonitor
+  local ftacs = ftacsInst.IFTServiceMonitor
   ftacs.config = AccessControlServerConfiguration
-  ftacs.recConnId = connId
 
   -- Inicialização
   success, res = oil.pcall(ftacsInst.IComponent.startup, ftacsInst.IComponent)
@@ -149,9 +129,7 @@ function main()
         tostring(res).."\n")
     os.exit(1)
   end  
-  
-  Log:faulttolerance("Monitor do servico de controle de acesso iniciado com sucesso")
-
+               
   local success, res = oil.pcall(oil.newthread, ftacs.monitor, ftacs)
 
   if not success then

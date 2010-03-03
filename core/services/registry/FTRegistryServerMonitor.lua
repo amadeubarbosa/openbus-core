@@ -10,6 +10,7 @@ local print = print
 
 local Log = require "openbus.util.Log"
 local oil = require "oil"
+local Openbus = require "openbus.Openbus"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
@@ -69,7 +70,7 @@ local facetDescriptions = {}
 facetDescriptions.IComponent        		  	 = {}
 facetDescriptions.IReceptacles   				 = {}
 facetDescriptions.IMetaInterface     			 = {}
-facetDescriptions.IFTRegistryServiceMonitor 	 = {}
+facetDescriptions.IFTServiceMonitor         	 = {}
 
 facetDescriptions.IComponent.name                     = "IComponent"
 facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
@@ -84,10 +85,10 @@ facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IFTRegistryServiceMonitor.name 			= "IFTServiceMonitor"
-facetDescriptions.IFTRegistryServiceMonitor.interface_name  = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
-facetDescriptions.IFTRegistryServiceMonitor.class           = FTRegistryServiceMonitor.FTRSMonitorFacet
-facetDescriptions.IFTRegistryServiceMonitor.key             = "FTRSMonitor"
+facetDescriptions.IFTServiceMonitor.name 			= "IFTServiceMonitor"
+facetDescriptions.IFTServiceMonitor.interface_name  = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
+facetDescriptions.IFTServiceMonitor.class           = FTRegistryServiceMonitor.FTRSMonitorFacet
+facetDescriptions.IFTServiceMonitor.key             = "FTRSMonitor"
 
 -- Receptacle Descriptions
 local receptacleDescriptions = {}
@@ -111,38 +112,14 @@ componentId.platform_spec = ""
 ---
 function main()
 
-  local ftregistryService = orb:newproxy("corbaloc::"..hostAdd.."/FTRS","IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
-  if ftregistryService:_non_existent() then
-      Log:error("Servico de registro nao encontrado.")
-      os.exit(1)
-  end
-  
-  if not ftregistryService:isAlive() then
-	Log:error("Erro ao rodar isAlive.")
-      os.exit(1)
-  end
-
   -- Cria o componente responsável pelo Monitor do Serviço de Registro
   local ftrsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
   
-  
-  local ftRec = ftrsInst.IComponent:getFacetByName("IReceptacles")
-  
-  ftRec = orb:narrow(ftRec)
-  local recConnId = ftRec:connect("IFaultTolerantService",ftregistryService)
-  print("ConnectionId:")
-  print(recConnId)
-  if not recConnId then
-	Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTRSMonitor")
-    os.exit(1)
-  end
-
   -- Configurações
   ftrsInst.IComponent.startup = FTRegistryServiceMonitor.startup
   
-  local ftrs = ftrsInst.IFTRegistryServiceMonitor
+  local ftrs = ftrsInst.IFTServiceMonitor
   ftrs.config = RegistryServerConfiguration
-  ftrs.recConnId = recConnId
   
   -- Inicialização
   success, res = oil.pcall(ftrsInst.IComponent.startup, ftrsInst.IComponent)
@@ -151,8 +128,7 @@ function main()
         tostring(res).."\n")
     os.exit(1)
   end
-
-  Log:init("Monitor do servico de registro iniciado com sucesso")
+  
   local success, res = oil.pcall(oil.newthread,	ftrs.monitor, ftrs)
   if not success then
     Log:error("Falha na execução do Monitor do Servico de registro: "..tostring(res).."\n")

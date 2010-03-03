@@ -913,6 +913,8 @@ function shutdown(self)
   
    orb:deactivate(rs)
    orb:deactivate(self.context.IManagement)
+   orb:deactivate(self.context.IFaultTolerantService)
+   orb:deactivate(self.context.IComponent)
    orb:shutdown()
    Log:faulttolerance("Servico de Registro matou seu processo.")
 end

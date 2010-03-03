@@ -12,6 +12,7 @@ local pairs = pairs
 
 --local IComponent = require "scs.core.IComponent"
 local Log = require "openbus.util.Log"
+local Openbus = require "openbus.Openbus"
 local OilUtilities = require "openbus.util.OilUtilities"
 
 local oop = require "loop.simple"
@@ -39,7 +40,7 @@ oil.verbose:level(2)
 
 orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
 ---
---Componente responsável pelo Monitor do Serviço de Registro
+--Componente responsÃ¡vel pelo Monitor do ServiÃ§o de Registro
 ---
 module("core.services.registry.FTRegistryServiceMonitor")
 
@@ -51,12 +52,37 @@ FTRSMonitorFacet = oop.class{}
 
 
 ---
---Obtém o Serviço de registro.
+--ObtÃ©m a faceta FT do ServiÃ§o de registro.
 --
---@return O Serviço de registro, ou nil caso não tenha sido definido.
+--@return A faceta do ServiÃ§o de registro, ou nil caso nÃ£o tenha sido definido.
 ---
 function FTRSMonitorFacet:getService()
-  return self.context.IFaultTolerantService
+  local recep =  self.context.IReceptacles
+  recep = Openbus:getORB():narrow(recep, "IDL:scs/core/IReceptacles:1.0")
+  local status, conns = oil.pcall(recep.getConnections, recep,
+                                  "IFaultTolerantService")
+  if not status then
+      log:error("Nao foi possivel obter o ServiÃ§o: " .. conns[1])
+      return nil
+  elseif conns[1] then 
+      local service = conns[1].objref
+      service = Openbus:getORB():narrow(service, "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+      return service
+  end
+  log:error("Nao foi possivel obter o ServiÃ§o.")
+  return nil
+end
+
+function FTRSMonitorFacet:connect()
+     Openbus:init(self.config.accessControlServerHostName, 
+                  self.config.accessControlServerHostPort)
+     Openbus:_setInterceptors()
+     Openbus:enableFaultTolerance()
+     
+     -- autentica o monitor, conectando-o ao barramento
+     Openbus:connectByCertificate(self.context._componentId.name,
+        DATA_DIR.."/"..self.config.monitorPrivateKeyFile, 
+        DATA_DIR.."/"..self.config.accessControlServiceCertificateFile)
 end
 
 
@@ -72,7 +98,7 @@ function FTRSMonitorFacet:isUnix()
 end
 
 ---
---Monitora o serviço de registro e cria uma nova réplica se necessário.
+--Monitora o serviÃ§o de registro e cria uma nova rÃ©plica se necessÃ¡rio.
 ---
 function FTRSMonitorFacet:monitor()
 
@@ -89,13 +115,13 @@ function FTRSMonitorFacet:monitor()
 	Log:faulttolerance("[Monitor SR] isAlive? "..tostring(ok))  
 
 	--verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
-        if ok then
-	    --se objeto remoto está em estado de falha, precisa ser reinicializado
+    if ok then
+	    --se objeto remoto estÃ© em estado de falha, precisa ser reinicializado
 	    if not res then
-		reinit = true
+		    reinit = true
 	        Log:faulttolerance("[Monitor SR] Servico de registro em estado de falha. Matando o processo...")
-		--pede para o objeto se matar
-                self:getService():kill()
+		    --pede para o objeto se matar
+            self:getService():kill()
 	    end
 	else
         Log:faulttolerance("[Monitor SR] Servico de registro nao esta disponivel...")
@@ -103,8 +129,9 @@ function FTRSMonitorFacet:monitor()
  	    reinit = true
 	end
 
-        if reinit then
-
+    if reinit then
+        Openbus.credentialManager:invalidate()
+        Openbus.acs = nil
 		local timeToTry = 0
 
 		repeat
@@ -118,7 +145,7 @@ function FTRSMonitorFacet:monitor()
 					print("[IReceptacles::IComponent] Error: " .. ftRecD)
 					return
 				end
-				ftRecD = orb:narrow(ftRecD)
+				ftRecD = Openbus:getORB():narrow(ftRecD)
 			
 				local status, void = oil.pcall(ftRecD.disconnect, ftRecD, self.recConnId)
 				if not status then
@@ -129,9 +156,9 @@ function FTRSMonitorFacet:monitor()
 			
 				Log:faulttolerance("[Monitor SR] disconnect executed successfully!")
 			
-				Log:faulttolerance("[Monitor SR] Espera 3 minutos para que dê tempo do Oil liberar porta...")
+				Log:faulttolerance("[Monitor SR] Espera 3 minutos para que dÃª tempo do Oil liberar porta...")
 
-				os.execute("sleep 180")
+				--os.execute("sleep 180")
 				
 			end
 
@@ -152,26 +179,30 @@ function FTRSMonitorFacet:monitor()
 		--					"> log_registry_server-"..tostring(t)..".txt")
 			end
 
-        	-- Espera 5 segundos para que dê tempo do SR ter sido levantado
+        	-- Espera 5 segundos para que dÃª tempo do SR ter sido levantado
         	os.execute("sleep 5")
-
-			local ftrsService = orb:newproxy("corbaloc::"..self.config.registryServerHostName..
-											":"..self.config.registryServerHostPort.."/FTRS",
-											"IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
-
-			self.recConnId = nil
-			if OilUtilities:existent(ftrsService) then
-				local ftRec = self:getFacetByName("IReceptacles")
-				ftRec = orb:narrow(ftRec)
-				self.recConnId = ftRec:connect("IFaultTolerantService",ftrsService)
-				if not self.recConnId then
+        	
+            self.recConnId = nil
+			self:connect()
+			if Openbus:isConnected() then
+			   local rs = Openbus:getRegistryService()
+			   local rsIC = rs:_component()
+               rsIC = Openbus:getORB():narrow(rsIC, "IDL:scs/core/IComponent:1.0")
+               local ftrsService = rsIC:getFacetByName("IFaultTolerantService")
+			   ftrsService = Openbus:getORB():narrow(ftrsService, 
+			         "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+			
+			   if OilUtilities:existent(ftrsService) then
+				  local ftRec = self:getFacetByName("IReceptacles")
+				  ftRec = orb:narrow(ftRec)
+				  self.recConnId = ftRec:connect("IFaultTolerantService",ftrsService)
+				  if not self.recConnId then
 					Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTRSMonitor")
 					os.exit(1)
-				end
+				  end
+			   end
 			end
-
-
-			 timeToTry = timeToTry + 1
+			timeToTry = timeToTry + 1
 
 		until self.recConnId ~= nil or timeToTry == 1000
 		    
@@ -190,6 +221,45 @@ function FTRSMonitorFacet:monitor()
         t = t + 5
         Log:faulttolerance("[Monitor SR] Acordou")
     end
+end
+
+--------------------------------------------------------------------------------
+-- Faceta IComponent
+--------------------------------------------------------------------------------
+
+---
+--Inicia o componente.
+--
+--@see scs.core.IComponent#startup
+---
+function startup(self)
+  local monitor = self.context.IFTServiceMonitor
+  monitor:connect()
+      
+  if not Openbus:isConnected() then
+    Log:error("Erro ao se logar no ACS")
+    os.exit(1)
+  end
+
+  local ftRec = self.context.IReceptacles
+  ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
+  
+  local rs = Openbus:getRegistryService()
+  local rsIC = rs:_component()
+  rsIC = Openbus:getORB():narrow(rsIC, "IDL:scs/core/IComponent:1.0")
+  local ftrsService = rsIC:getFacetByName("IFaultTolerantService")
+  ftrsService = Openbus:getORB():narrow(ftrsService, 
+	    "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+  
+  local connId = ftRec:connect("IFaultTolerantService",ftrsService)
+  if not connId then
+	Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTRSMonitor")
+    os.exit(1)
+  end
+  
+  monitor.recConnId = connId
+  
+  Log:init("Monitor do servico de registro iniciado com sucesso")
 end
 
 

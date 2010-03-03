@@ -25,7 +25,7 @@ FaultToleranceFacet.faultDescription = {_isAlive = false, _errorMsg = "" }
 
 function FaultToleranceFacet:isAlive()
 	if not self.faultDescription._isAlive then
-       msg = "Servico ".. self.id .." nao esta disponivel.\n" 
+       local msg = "Servico ".. self.context._componentId.name .." nao esta disponivel.\n" 
        self.faultDescription._errorMsg = msg
        Log:error(msg)
        return false
@@ -38,6 +38,6 @@ function FaultToleranceFacet:setStatus(isAlive)
 end
 
 function FaultToleranceFacet:kill()
-    self:shutdown()
+    self.context.IComponent:shutdown()
 end
 

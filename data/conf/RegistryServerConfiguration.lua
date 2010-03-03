@@ -10,6 +10,7 @@ RegistryServerConfiguration = {
   registryServerHostPort = 2019,
   privateKeyFile = "certificates/RegistryService.key",
   accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
+  monitorPrivateKeyFile = "certificates/RGSMonitor.key",
   databaseDirectory = "offers",
   administrators = {},
   logLevel = 3,

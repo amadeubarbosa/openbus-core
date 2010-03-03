@@ -14,6 +14,8 @@ AccessControlServerConfiguration = {
   },
   certificatesDirectory = "certificates",
   privateKeyFile = "certificates/AccessControlService.key",
+  monitorPrivateKeyFile = "certificates/ACSMonitor.key",
+  accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
   databaseDirectory = "credentials",
   administrators = {},
   lease = 60,

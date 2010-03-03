@@ -86,6 +86,7 @@ facetDescriptions.IReceptacles          = {}
 facetDescriptions.IComponent.name                  = "IComponent"
 facetDescriptions.IComponent.interface_name        = "IDL:scs/core/IComponent:1.0"
 facetDescriptions.IComponent.class                 = scs.Component
+facetDescriptions.IComponent.key                   = "IC"
 
 facetDescriptions.IMetaInterface.name              = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name    = "IDL:scs/core/IMetaInterface:1.0"

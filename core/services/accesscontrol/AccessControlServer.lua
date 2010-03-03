@@ -149,6 +149,7 @@ function main()
 
   -- Configurações
   acsInst.IComponent.startup = AccessControlService.startup
+  acsInst.IComponent.shutdown = AccessControlService.shutdown
 
   local acs = acsInst.IAccessControlService
   acs.config = AccessControlServerConfiguration
