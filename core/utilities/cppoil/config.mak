@@ -31,4 +31,4 @@ SRC= ${PRECMP_DIR}/auxiliar.c \
      stubs/IDataService.cpp
 
 USE_LUA51=YES
-
+NO_LUALINK=YES

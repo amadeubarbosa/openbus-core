@@ -27,3 +27,7 @@ SRC= server.cpp hello.cpp
 
 USE_LUA51=YES
 USE_STATIC=YES
+
+ifeq "${TEC_SYSNAME}" "Linux"
+	LFLAGS = -Wl,-E
+endif
