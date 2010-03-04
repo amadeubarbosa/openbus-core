@@ -415,12 +415,6 @@ end
 --@return A credencial.
 ---
 function ACSFacet:addEntry(name, certified)
-  local entry
-  for _, entry in pairs(self.entries) do
-    if entry.credential.owner == name then
-      return entry
-    end
-  end
   local credential = {
     identifier = self:generateCredentialIdentifier(),
     owner = name,
