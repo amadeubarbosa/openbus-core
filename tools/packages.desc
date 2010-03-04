@@ -45,7 +45,7 @@ packages = {
 	  },
 	},
 	{ name = "tolua5.1",
-	  source = "http://www.tecgraf.puc-rio.br/~openbus/repository/tolua5.1.tar.gz",
+	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/branches/OB_LIBS_v1_00_2009_08_13/tolua5.1",
 	  build = {
 	  	type = "tecmake",
 	  	src = PRODAPP .."/tolua5.1/src",
@@ -59,7 +59,7 @@ packages = {
 	  },
 	},
 	{ name = "luafilesystem",
-	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_01_2009_09_09/luafilesystem-1.4.2",
+	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/branches/OB_LIBS_v1_00_2009_08_13/luafilesystem-1.4.2",
 	  build = {
 	  	type = "tecmake",
 	  	src = PRODAPP .."/luafilesystem/src",
@@ -76,7 +76,7 @@ packages = {
 	  },
 	},
 	{ name = "luasocket2",
-	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_01_2009_09_09/luasocket2",
+	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/branches/OB_LIBS_v1_00_2009_08_13/luasocket2",
 	  build = {
 	  	type = "tecmake",
 	  	src = PRODAPP .."/luasocket2/src",
@@ -109,7 +109,7 @@ packages = {
 	  },
 	},
 	{ name = "luuid",
-	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_01_2009_09_09/luuid",
+	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/branches/OB_LIBS_v1_00_2009_08_13/luuid",
 	  build = {
 	  	type = "tecmake",
 	  	src = PRODAPP .."/luuid/src",
@@ -126,7 +126,7 @@ packages = {
 	  },
 	},
 	{ name = "lualdap-1.0.1",
-	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_01_2009_09_09/lualdap-1.0.1",
+	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/branches/OB_LIBS_v1_00_2009_08_13/lualdap-1.0.1",
 	  build = {
 	  	type = "tecmake",
 	  	src = PRODAPP .."/lualdap-1.0.1/src",
