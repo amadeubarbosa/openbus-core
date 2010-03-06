@@ -37,7 +37,7 @@ SESSION_SERVICE_INTERFACE = "IDL:openbusidl/ss/ISessionService:1.0"
 ---
 --  O nome da faceta do Serviço de Sessão.
 ---
-SESSION_SERVICE_FACET_NAME = "sessionService"
+SESSION_SERVICE_FACET_NAME = "ISessionService"
 
 ---
 --  A interface IHDataService.
