@@ -54,26 +54,50 @@ RSFacet = oop.class{}
 --false caso contrário.
 ---
 function RSFacet:register(serviceOffer)
- local credential = Openbus:getInterceptedCredential()
+  local credential = Openbus:getInterceptedCredential()
   for _, existentOfferEntry in pairs(self.offersByIdentifier) do
-  --para cada oferta existente
-   local equalProp = true
-   for _, property in ipairs(serviceOffer.properties) do
-   --para cada propriedade da oferta a ser inserida
-     if not existentOfferEntry.properties[property.name][property.val] then
-      --se alguma nao existir, sao diferentes
-       equalProp = false
-       break   
-     end
-   end
-   if equalProp then 
-     if existentOfferEntry.credential.identifier == credential.identifier then
-	     Log:registry("Oferta ja existente com id "..existentOfferEntry.identifier)
-	     self:updateMemberInfoInExistentOffer(existentOfferEntry, serviceOffer.member)
-         return true, existentOfferEntry.identifier
+    -- Inicializar variável de controle antes de testar
+    local equalProp =
+      existentOfferEntry.credential.identifier == credential.identifier and
+      #existentOfferEntry.properties == #serviceOffer.properties
+    if equalProp then
+      for _, property in ipairs(serviceOffer.properties) do
+        local existentProp = existentOfferEntry.properties[property.name]
+        -- Inicializar variável de controle antes de testar
+        equalProp = existentProp and #existentProp.value == #property.value
+        if equalProp then
+          -- Pode estar fora de ordem: comparação de conjuntos
+          for _, value in ipairs(property.value) do
+            equalProp = false
+            for _, existent in ipairs(existentProps.value) do
+              if value == existent then
+                equalProp = true
+                break
+              end
+            end
+            -- 'value' não pertence ao conjunto dos existentes -> diferente
+            if not equalProp then
+              break
+            end
+          end
+        end
+        -- Uma propriedade já diferente, não tentar o restante
+        if not equalProp then
+          break
+        end
       end
-   end  
+      -- Continua sendo igual?
+      if equalProp then
+        Log:registry("Oferta já existente com id " ..
+          existentOfferEntry.identifier)
+        self:updateMemberInfoInExistentOffer(existentOfferEntry, 
+          serviceOffer.member)
+        return true, existentOfferEntry.identifier
+      end
+    end
   end
+
+  -- Efetuar novo registro 
   local identifier = self:generateIdentifier()
   local properties = self:createPropertyIndex(serviceOffer.properties,
     serviceOffer.member)
