@@ -22,10 +22,14 @@ module "core.services.session.Session"
 -- Faceta ISession
 --------------------------------------------------------------------------------
 
-Session = oop.class{sessionMembers = {}}
+Session = oop.class{}
+
+function Session:__init()
+  return oop.rawnew(self, {sessionMembers = {}})
+end
 
 ---
---Obtï¿½m o identificador da sessão.
+--Obtém o identificador da sessão.
 --
 --@return O identificador da sessão.
 ---
@@ -105,7 +109,11 @@ end
 -- Faceta SessionEventSink
 --------------------------------------------------------------------------------
 
-SessionEventSink = oop.class{eventSinks = {}}
+SessionEventSink = oop.class{}
+
+function SessionEventSink:__init()
+  return oop.rawnew(self, {eventSinks = {}})
+end
 
 ---
 --Repassa evento para membros da sessão.
@@ -134,5 +142,3 @@ function SessionEventSink:disconnect()
     end
   end
 end
-
-
