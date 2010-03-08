@@ -1,28 +1,30 @@
 -- $Id$
 
 local tostring = tostring
-local ipairs = ipairs
-local pairs = pairs
+local ipairs   = ipairs
+local pairs    = pairs
+local format   = string.format
 
-local oil = require "oil"
+local oil     = require "oil"
+local luuid   = require "uuid"
+local oop     = require "loop.base"
+local Openbus = require "openbus.Openbus"
+local Log     = require "openbus.util.Log"
+
 local orb = oil.orb
-
-local luuid = require "uuid"
-
-local Log = require "openbus.util.Log"
-
-local oop = require "loop.base"
 
 ---
 --Sessão compartilhada pelos membros associados a uma mesma credencial.
 ---
 module "core.services.session.Session"
 
+local eventSinkInterface = "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0"
+
 --------------------------------------------------------------------------------
 -- Faceta ISession
 --------------------------------------------------------------------------------
 
-Session = oop.class{}
+Session = oop.class{invalidMemberIdentifier = ""}
 
 function Session:__init()
   return oop.rawnew(self, {sessionMembers = {}})
@@ -45,23 +47,31 @@ end
 --@return O identificador do membro na sessão.
 ---
 function Session:addMember(member)
+  local credential = Openbus:getInterceptedCredential()
   local memberName = member:getComponentId().name
-  Log:session("Membro "..memberName.." adicionado a sessão")
-  local identifier = self:generateMemberIdentifier()
-  self.sessionMembers[identifier] = member
-
+  if self.sessionMembers[credential.identifier] then
+    Log:error(memberName.." já faz parte da sessão "..self.identifier)
+    return self.invalidMemberIdentifier
+  end
+  local info = {
+    member = member,
+    credentialId = credential.identifier,
+    memberId = self:generateMemberIdentifier(),
+  }
+  self.sessionMembers[info.memberId] = info
+  self.sessionMembers[info.credentialId] = info
+  self.sessionService:observe(info.credentialId, self)
+  Log:session("Membro "..memberName.." adicionado à sessão "..self.identifier)
   -- verifica se o membro recebe eventos
-  local eventSinkInterface = "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0"
   local eventSink = member:getFacet(eventSinkInterface)
   if eventSink then
     Log:session("Membro "..memberName.." receberá eventos")
-    local eventSinks = self.context.SessionEventSink.eventSinks
-    eventSinks[identifier] =  orb:narrow(eventSink,
-        eventSinkInterface)
+    self.context.SessionEventSink.eventSinks[info.memberId] =
+      orb:narrow(eventSink, eventSinkInterface)
   else
     Log:session("Membro "..memberName.." não receberá eventos")
   end
-  return identifier
+  return info.memberId
 end
 
 ---
@@ -73,14 +83,31 @@ end
 --contrário.
 ---
 function Session:removeMember(identifier)
-  member = self.sessionMembers[identifier]
-  if not member then
+  local info = self.sessionMembers[identifier]
+  if not info then
+    Log:error("Impossível remover membro "..identifier..
+      ": não faz parte da sessão "..self.identifier)
     return false
   end
-  Log:session("Membro "..member:getComponentId().name.." removido da sessão")
-  self.sessionMembers[identifier] = nil
-  self.context.SessionEventSink.eventSinks[identifier] = nil
+  Log:session("Membro "..info.member:getComponentId().name..
+    " removido da sessão "..self.identifier)
+  self.sessionMembers[info.memberId] = nil
+  self.sessionMembers[info.credentialId] = nil
+  self.context.SessionEventSink.eventSinks[info.memberId] = nil
+  self.sessionService:unObserve(info.credentialId, self)
   return true
+end
+
+---
+-- Membro saiu do barramento, limpar contexto
+--
+-- @param credential Credencial do membro
+--
+function Session:credentialWasDeletedById(credentialId)
+  local info = self.sessionMembers[credentialId]
+  self.sessionMembers[info.memberId] = nil
+  self.sessionMembers[info.credentialId] = nil
+  self.context.SessionEventSink.eventSinks[info.memberId] = nil
 end
 
 ---
@@ -90,8 +117,8 @@ end
 ---
 function Session:getMembers()
   local members = {}
-  for _, member in pairs(self.sessionMembers) do
-    table.insert(members, member)
+  for _, info in pairs(self.sessionMembers) do
+    members[#members+1] = info.member
   end
   return members
 end
@@ -122,7 +149,7 @@ end
 ---
 function SessionEventSink:push(event)
   Log:session("Repassando evento "..event.type.." para membros de sessão")
-  for _, sink in pairs(self.eventSinks) do
+  for memberId, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.push, sink, event)
     if not result then
       Log:session("Erro ao enviar evento para membro de sessão: "..errorMsg)
@@ -135,7 +162,7 @@ end
 ---
 function SessionEventSink:disconnect()
   Log:session("Desconectando os membros da sessão")
-  for _, sink in pairs(self.eventSinks) do
+  for memberId, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.disconnect, sink)
     if not result then
       Log:session("Erro ao tentar desconectar membro de sessão: "..errorMsg)

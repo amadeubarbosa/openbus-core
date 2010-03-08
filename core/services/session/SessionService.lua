@@ -27,11 +27,17 @@ local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
 ---
 module "core.services.session.SessionService"
 
+local acsIDL = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0"
+
 --------------------------------------------------------------------------------
 -- Faceta ISessionService
 --------------------------------------------------------------------------------
 
-SessionService = oop.class{sessions = {}, invalidMemberIdentifier = ""}
+SessionService = oop.class{
+  sessions = {},                -- Mapeia o dono da sessão no componente
+  observed = {},                -- Mapeia um membro nas sessões que ele faz parte
+  invalidMemberIdentifier = "",
+}
 
 -----------------------------------------------------------------------------
 -- Descricoes do Componente Sessao
@@ -97,57 +103,106 @@ function SessionService:createSession(member)
     Log:err("Tentativa de criar sessão já existente")
     return false, nil, self.invalidMemberIdentifier
   end
-  Log:session("Criando sessão")
-  local session = scs.newComponent(facetDescriptions, receptacleDescs, componentId)
-  session.ISession.identifier = self:generateIdentifier()
-  session.ISession.credential = credential
-  self.sessions[credential.identifier] = session
-  Log:session("Sessao criada com id "..
-      tostring(session.ISession.identifier).." !")
+  -- Cria nova sessão
+  local component = scs.newComponent(facetDescriptions, receptacleDescs,
+    componentId)
+  component.ISession.identifier = self:generateIdentifier()
+  component.ISession.credential = credential
+  component.ISession.sessionService = self
+  component.SessionEventSink.sessionService = self
+  self.sessions[credential.identifier] = component
+  Log:session("Sessão criada com id "..component.ISession.identifier)
 
   -- A credencial deve ser observada!
-  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-                  orb, 
-                            self.context.IComponent, 
-                            "AccessControlServiceReceptacle", 
-                            "IAccessControlService", 
-                            "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+  local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
+    orb, self.context.IComponent, "AccessControlServiceReceptacle", 
+    "IAccessControlService", acsIDL)
   if not status then
-      -- erro ja foi logado, só retorna
-      return nil
-  end     
+    orb:deactivate(component.ISession)
+    orb:deactivate(component.IMetaInterface)
+    orb:deactivate(component.SessionEventSink)
+    orb:deactivate(component.IComponent)
+    self.sessions[credentialId] = nil
+    return false, nil, self.invalidMemberIdentifier
+  end
   
   if not self.observerId then
-    self.observerId =
-      acsFacet:addObserver(self.context.ICredentialObserver,
-                           {credential.identifier})
-  else
-    acsFacet:addCredentialToObserver(self.observerId,credential.identifier)
+    self.observerId = acsFacet:addObserver(self.context.ICredentialObserver, {})
   end
 
   -- Adiciona o membro à sessão
-  local memberID = session.ISession:addMember(member)
-  return true, session.IComponent, memberID
+  local memberID = component.ISession:addMember(member)
+  return true, component.IComponent, memberID
 end
 
 ---
---Notificação de deleção de credencial (logout).
+--Notificação de deleção de credencial.
 --
 --@param credential A credencial removida.
 ---
-function SessionService:credentialWasDeleted(credential)
-
-  -- Remove a sessão
-  local session = self.sessions[credential.identifier]
-  if session then
+function SessionService:credentialWasDeletedById(credentialId)
+  -- Remove o membro das sessões que ele participa
+  local sessions = self.observed[credentialId]
+  if sessions then
+    for _, session in pairs(sessions) do
+      session:credentialWasDeletedById(credentialId)
+    end
+    self.observed[credentialId] = nil
+  end
+  -- Remove a sessão que o membro possui
+  local component = self.sessions[credentialId]
+  if component then
     Log:session("Removendo sessão de credencial deletada ("..
-        credential.identifier..")")
-    orb:deactivate(session.ISession)
-    orb:deactivate(session.IMetaInterface)
-    orb:deactivate(session.SessionEventSink)
-    orb:deactivate(session.IComponent)
+        credentialId..")")
+    orb:deactivate(component.ISession)
+    orb:deactivate(component.IMetaInterface)
+    orb:deactivate(component.SessionEventSink)
+    orb:deactivate(component.IComponent)
+    self.sessions[credentialId] = nil
+  end
+end
 
-    self.sessions[credential.identifier] = nil
+---
+-- Observa o membro para removê-lo das sessões.
+--
+-- @param credentialId Identificador da credencial do membro
+-- @param session Sessão que o membro não vai mais participar
+--
+function SessionService:observe(credentialId, session)
+  local sessions = self.observed[credentialId]
+  if not sessions then
+    sessions = {}
+    self.observed[credentialId] = sessions
+  end
+  sessions[session.identifier] = session
+  local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
+    orb, self.context.IComponent, "AccessControlServiceReceptacle", 
+    "IAccessControlService", acsIDL)
+  if status then
+    acsFacet:addCredentialToObserver(self.observerId, credentialId)
+  end
+end
+
+---
+-- Pára de observar o membro na repectiva sessão.
+--
+-- Se o membro não estiver mais relacionado com sessões,
+-- não observar mais sua credential junto ao ACS.
+--
+-- @param credentialId Identificador da credencial do membro.
+-- @param session Sessão que o membro não vai mais participar.
+--
+function SessionService:unObserve(credentialId, session)
+  local sessions = self.observed[credentialId]
+  sessions[session.identifier] = nil
+  if not next(sessions) then
+    self.observed[credentialId] = nil
+    local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
+      orb, self.context.IComponent, "AccessControlServiceReceptacle", 
+      "IAccessControlService", acsIDL)
+    if status then
+      acsFacet:removeCredentialFromObserver(self.observerId, credentialId)
+    end
   end
 end
 
@@ -171,7 +226,7 @@ function SessionService:getSession()
   local credential = Openbus:getInterceptedCredential()
   local session = self.sessions[credential.identifier]
   if not session then
-   Log:warn("Não há sessão para "..credential.identifier)
+    Log:warn("Não há sessão para "..credential.identifier)
     return nil
   end
   return session.IComponent
@@ -181,18 +236,15 @@ end
 --Procedimento após a reconexão do serviço.
 ---
 function SessionService:expired()
-  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-                  orb, 
-                            self.context.IComponent, 
-                            "AccessControlServiceReceptacle", 
-                            "IAccessControlService", 
-                            "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-                            
+  local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
+    orb, self.context.IComponent, "AccessControlServiceReceptacle", 
+    "IAccessControlService", acsIDL)
   if not status then
-    -- erro ja foi logado, só retorna
+    -- Erro ja foi logado, só retorna
     return nil
   end     
-  -- registra novamente o observador de credenciais
+
+  -- Registra novamente o observador de credenciais
   self.observerId = acsFacet:addObserver(
       self.context.ICredentialObserver, {}
   )
@@ -200,7 +252,7 @@ function SessionService:expired()
 
   -- Mantém apenas as sessões com credenciais válidas
   local invalidCredentials = {}
-  for credentialId, session in pairs(self.sessions) do
+  for credentialId, sessions in pairs(self.observed) do
     if not acsFacet:addCredentialToObserver(self.observerId,
         credentialId) then
       Log:session("Sessão para "..credentialId.." será removida")
@@ -210,7 +262,7 @@ function SessionService:expired()
     end
   end
   for _, credentialId in ipairs(invalidCredentials) do
-    self.sessions[credentialId] = nil
+    self:credentialWasDeletedById(credentialId)
   end
 end
 
@@ -239,8 +291,5 @@ end
 Observer = oop.class{}
 
 function Observer:credentialWasDeleted(credential)
-  self.context.ISessionService:credentialWasDeleted(credential)
+  self.context.ISessionService:credentialWasDeletedById(credential.identifier)
 end
-
-
-
