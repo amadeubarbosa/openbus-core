@@ -140,8 +140,8 @@ function Openbus:_reset()
   self.leaseRenewer = nil
   self.connectionState = 2
   if self.credentialManager then
-    self.credentialManager.invalidate()
-    self.credentialManager.invalidateThreadValue()
+    self.credentialManager:invalidate()
+    self.credentialManager:invalidateThreadValue()
   end
 end
 
