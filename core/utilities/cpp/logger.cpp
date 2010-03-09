@@ -26,10 +26,16 @@ Logger::Logger() {
   levelFlag[INFO]    = false;
   levelFlag[WARNING] = false;
   levelFlag[OFF]     = true;
+  this->filename     = 0;
+  output = &cout;
 }
 
 Logger::~Logger() {
-
+  if (filename) {
+    ofstream* stream = (ofstream*) output;
+    stream->flush();
+    stream->close();
+  }
 }
 
 Logger* Logger::getInstance() {
@@ -37,6 +43,15 @@ Logger* Logger::getInstance() {
     logger = new Logger;
   }
   return logger;
+}
+
+void Logger::setOutput(char* filename) {
+  this->filename = filename;
+  if (filename) {
+    output = new ofstream(filename);
+  } else {
+    output = &cout;
+  }
 }
 
 void Logger::setLevel(Level level) {
@@ -61,11 +76,12 @@ void Logger::log(Level level, string msg) {
         msgSize > 80; 
         msgSize = msgSize - 80, x = x + 80) 
       {
-        cout << spaces.str() << msgStream.str().substr(x, 80) << endl;
+        *output << spaces.str() << msgStream.str().substr(x, 80) << endl;
       }
     } else {
-      cout << spaces.str() << msgStream.str() << endl;
+      *output << spaces.str() << msgStream.str() << endl;
     }
+    output->flush();
   }
 }
 
@@ -76,7 +92,7 @@ void Logger::indent() {
 void Logger::indent(Level level, string msg) {
   indent();
   log(level, msg);
-  cout << endl;
+  *output << endl;
 }
 
 void Logger::dedent() {
@@ -87,7 +103,7 @@ void Logger::dedent(Level level, string msg) {
   dedent();
   log(level, msg);
   if (!numIndent) {
-    cout << endl;
+    *output << endl;
   }
 }
 

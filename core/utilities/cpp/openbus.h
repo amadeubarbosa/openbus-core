@@ -110,6 +110,7 @@ namespace openbus {
       class LeaseExpiredCallback;
 
     private:
+      static char* debugFile;
       Level debugLevel;
 
   #ifndef OPENBUS_MICO

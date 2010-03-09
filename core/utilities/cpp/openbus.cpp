@@ -24,7 +24,8 @@
 #define CHALLENGE_SIZE 36
 
 namespace openbus {
-  Logger* Openbus::logger = 0;
+  Logger* Openbus::logger  = 0;
+  char* Openbus::debugFile = 0;
   interceptors::ORBInitializerImpl* Openbus::ini = 0;
 #ifndef OPENBUS_MICO
   IT_Mutex Openbus::mutex;
@@ -231,6 +232,9 @@ namespace openbus {
         } else if (!strcmp(debugLevelStr, "WARNING")) {
           debugLevel = WARNING;
         }
+      } else if (!strcmp(argv[idx], "-OpenbusDebugFile")) {
+        idx++;
+        debugFile = argv[idx];
       }
     }
   }
@@ -405,6 +409,7 @@ namespace openbus {
     _argc = argc;
     _argv = argv;
     commandLineParse(_argc, _argv);
+    logger->setOutput(debugFile);
     logger->setLevel(debugLevel);
     logger->log(INFO, "Openbus::init(int argc, char** argv) BEGIN");
     logger->indent();
