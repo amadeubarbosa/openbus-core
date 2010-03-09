@@ -1,6 +1,8 @@
 -- $Id
 
 local os = os
+local loadfile = loadfile
+local assert = assert
 
 local oil = require "oil"
 
@@ -103,19 +105,17 @@ end
 function FTRSMonitorFacet:monitor()
 
     Log:faulttolerance("[Monitor SR] Inicio")
-
-    --variavel que conta ha quanto tempo o monitor esta monitorando
-    local t = 5
+    local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
 
     while true do
   
-	local reinit = false
+	  local reinit = false
 
-    local ok, res = self:getService().__try:isAlive()  
-	Log:faulttolerance("[Monitor SR] isAlive? "..tostring(ok))  
+      local ok, res = self:getService().__try:isAlive()  
+	  Log:faulttolerance("[Monitor SR] isAlive? "..tostring(ok))  
 
-	--verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
-    if ok then
+	  --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
+      if ok then
 	    --se objeto remoto esté em estado de falha, precisa ser reinicializado
 	    if not res then
 		    reinit = true
@@ -123,13 +123,13 @@ function FTRSMonitorFacet:monitor()
 		    --pede para o objeto se matar
             self:getService():kill()
 	    end
-	else
+	  else
         Log:faulttolerance("[Monitor SR] Servico de registro nao esta disponivel...")
-	-- ocorreu falha de comunicacao com o objeto remoto
+	    -- ocorreu falha de comunicacao com o objeto remoto
  	    reinit = true
-	end
+	  end
 
-    if reinit then
+      if reinit then
         Openbus.credentialManager:invalidate()
         Openbus.acs = nil
 		local timeToTry = 0
@@ -156,10 +156,6 @@ function FTRSMonitorFacet:monitor()
 			
 				Log:faulttolerance("[Monitor SR] disconnect executed successfully!")
 			
-				Log:faulttolerance("[Monitor SR] Espera 3 minutos para que dê tempo do Oil liberar porta...")
-
-				--os.execute("sleep 180")
-				
 			end
 
 			Log:faulttolerance("[Monitor SR] Levantando Servico de registro...")
@@ -179,8 +175,8 @@ function FTRSMonitorFacet:monitor()
 		--					"> log_registry_server-"..tostring(t)..".txt")
 			end
 
-        	-- Espera 5 segundos para que dê tempo do SR ter sido levantado
-        	os.execute("sleep 5")
+        	-- Espera alguns segundos para que dê tempo do SR ter sido levantado
+        	os.execute("sleep ".. tostring(timeOut.monitor.sleep))
         	
             self.recConnId = nil
 			self:connect()
@@ -201,26 +197,23 @@ function FTRSMonitorFacet:monitor()
 					os.exit(1)
 				  end
 			   end
+			else
+			   Log:faulttolerance("[Monitor SR] Não conseguiu levantar RS de primeira porque porta está bloqueada.")
+			   Log:faulttolerance("[Monitor SR] Espera " .. tostring(timeOut.monitor.sleep) .." segundos......")
+			   os.execute("sleep ".. tostring(timeOut.monitor.sleep))
 			end
 			timeToTry = timeToTry + 1
 
-		until self.recConnId ~= nil or timeToTry == 1000
+		until self.recConnId ~= nil or timeToTry == timeOut.monitor.MAX_TIMES
 		    
-
 		if self.recConnId == nil then
-		     log:faulttolerance("[Monitor SR] Servico de registro nao encontrado.")
-		     return nil
+		     Log:error("[Monitor SR] Servico de registro nao encontrado.")
+		     os.exit(1)
 		end
 
-	        Log:faulttolerance("[Monitor SR] Servico de registro criado.")
-
-        end
-        Log:faulttolerance("[Monitor SR] Dormindo:"..t)
-	-- Dorme por 5 segundos
-        oil.sleep(5)
-        t = t + 5
-        Log:faulttolerance("[Monitor SR] Acordou")
-    end
+	    Log:faulttolerance("[Monitor SR] Servico de registro criado.")
+      end --fim reinit
+    end --fim while
 end
 
 --------------------------------------------------------------------------------

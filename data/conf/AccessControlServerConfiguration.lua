@@ -18,7 +18,10 @@ AccessControlServerConfiguration = {
   accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
   databaseDirectory = "credentials",
   administrators = {},
-  lease = 60,
+  --o tempo mínimo do lease deve ser maior que 
+  --o tempo máximo para o tratamento de falhas
+  --vide /conf/FTTimeOutConfiguration.lua
+  lease = 180,
   logLevel = 3,
   oilVerboseLevel = 1,
   validators = {

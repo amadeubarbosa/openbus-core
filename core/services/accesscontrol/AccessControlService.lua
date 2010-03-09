@@ -261,7 +261,7 @@ end
 ---
 function ACSFacet:getEntryCredential(credential)
 
-
+  local duration = self.lease
   local emptyEntry = {     
                 credential = {  identifier = "",  
                                 owner = "",  
@@ -1345,6 +1345,15 @@ function startup(self)
   mgm.admins.AccessControlService = true
   
   acs.lease = config.lease
+  
+  local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
+  -- 22 * [ 5 s (tempo de tentativa entre cada réplica) 
+  --      + 3 s (tempo máximo do non_existent) ]  = 176 =~ 3 minutos (tempo máximo)  
+  local minLease = timeOut.fetch.MAX_TIMES * ( timeOut.fetch.sleep + 
+          (timeOut.non_existent.MAX_TIMES * timeOut.non_existent.sleep) )
+  if (acs.lease < minLease) then
+     Log:warn(">>>> Tempo do lease foi definido menor que o tempo total de falha.")
+  end
 
   -- Inicializa as base de dados de gerenciamento
   mgm.userDB = TableDB(DATA_DIR .. "/acs_user.db")

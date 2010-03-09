@@ -3,6 +3,8 @@
 local os = os
 local tostring = tostring
 local print = print
+local loadfile = loadfile
+local assert = assert
 
 local oil = require "oil"
 local orb = oil.orb
@@ -94,9 +96,7 @@ end
 function FTACSMonitorFacet:monitor()
 
     Log:faulttolerance("[Monitor SCA] Inicio")
-
-    --variavel que conta ha quanto tempo o monitor esta monitorando
-    local t = 5
+    local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
 
     while true do
   
@@ -148,11 +148,7 @@ function FTACSMonitorFacet:monitor()
 				   end
 			
 				   Log:faulttolerance("[Monitor SCA] disconnect executed successfully!")
-			
-				   Log:faulttolerance("[Monitor SCA] Espera 3 minutos para que de tempo do Oil liberar porta...")
-
-				   os.execute("sleep 180")
-				
+		
 			   end
 
 		       Log:faulttolerance("[Monitor SCA] Levantando Servico de Controle de Acesso...")
@@ -168,8 +164,8 @@ function FTACSMonitorFacet:monitor()
 				   os.execute("start "..BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort)
 			   end
 
-	           -- Espera 5 segundos para que dê tempo do SCA ter sido levantado
-	           os.execute("sleep 5")
+	           -- Espera alguns segundos para que dê tempo do SCA ter sido levantado
+	           os.execute("sleep ".. tostring(timeOut.monitor.sleep))
 
                self.recConnId = nil
 			   self:connect()
@@ -183,28 +179,24 @@ function FTACSMonitorFacet:monitor()
 					   Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTACSMonitor")
 					   os.exit(1)
 				   end
-				   
-			   end
+			   else
+			      Log:faulttolerance("[Monitor SCA] Não conseguiu levantar ACS de primeira porque porta está bloqueada.")
+			      Log:faulttolerance("[Monitor SCA] Espera " .. tostring(timeOut.monitor.sleep) .." segundos......")
+				  os.execute("sleep ".. tostring(timeOut.monitor.sleep))
+			   end			   
 
 			   timeToTry = timeToTry + 1
 
-		   --TODO: colocar o timeToTry de acordo com o tempo do monitor da réplica?
-		   until self.recConnId ~= nil or timeToTry == 1000
+		   until self.recConnId ~= nil or timeToTry == timeOut.monitor.MAX_TIMES
 		    
-
 		   if self.recConnId == nil then
-		     log:faulttolerance("[Monitor SCA] Servico de controle de acesso nao pode ser levantado.")
-		     return nil
+		     Log:error("[Monitor SCA] Servico de controle de acesso nao pode ser levantado.")
+		     os.exit(1)
 		   end
 
 	       Log:faulttolerance("[Monitor SCA] Servico de Controle de Acesso criado.")
 
         end
-        Log:faulttolerance("[Monitor SCA] Dormindo:"..t)
-	    -- Dorme por 5 segundos
-        oil.sleep(5)
-        t = t + 5
-        Log:faulttolerance("[Monitor SCA] Acordou")
     end
 end
 
