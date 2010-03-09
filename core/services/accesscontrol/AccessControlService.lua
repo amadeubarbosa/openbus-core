@@ -1347,8 +1347,6 @@ function startup(self)
   acs.lease = config.lease
   
   local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
-  -- 22 * [ 5 s (tempo de tentativa entre cada réplica) 
-  --      + 3 s (tempo máximo do non_existent) ]  = 176 =~ 3 minutos (tempo máximo)  
   local minLease = timeOut.fetch.MAX_TIMES * ( timeOut.fetch.sleep + 
           (timeOut.non_existent.MAX_TIMES * timeOut.non_existent.sleep) )
   if (acs.lease < minLease) then
