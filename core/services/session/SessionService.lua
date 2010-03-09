@@ -28,7 +28,11 @@ module "core.services.session.SessionService"
 -- Faceta ISessionService
 --------------------------------------------------------------------------------
 
-SessionService = oop.class{sessions = {}, invalidMemberIdentifier = ""}
+SessionService = oop.class{
+  sessions = {},                -- Mapeia o dono da sessão no componente
+  observed = {},                -- Mapeia um membro nas sessões que ele faz parte
+  invalidMemberIdentifier = "",
+}
 
 -----------------------------------------------------------------------------
 -- Descricoes do Componente Sessao
@@ -85,46 +89,87 @@ function SessionService:createSession(member)
     Log:err("Tentativa de criar sessão já existente")
     return false, nil, self.invalidMemberIdentifier
   end
-  Log:service("Criando sessão")
-  local session = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
-  session.ISession.identifier = self:generateIdentifier()
-  session.ISession.credential = credential
-  self.sessions[credential.identifier] = session
-  Log:service("Sessao criada com id "..tostring(session.ISession.identifier).." !")
+  -- Cria nova sessão
+  local component = scs.newComponent(facetDescriptions, receptacleDescriptions,
+    componentId)
+  component.ISession.identifier = self:generateIdentifier()
+  component.ISession.credential = credential
+  component.ISession.sessionService = self
+  component.SessionEventSink.sessionService = self
+  self.sessions[credential.identifier] = component
+  Log:service("Sessao criada com id "..component.ISession.identifier)
 
   -- A credencial deve ser observada!
   if not self.observerId then
     self.observerId =
-      self.accessControlService:addObserver(self.context.ICredentialObserver,
-                                            {credential.identifier})
-  else
-    self.accessControlService:addCredentialToObserver(self.observerId,
-                                                     credential.identifier)
+      self.accessControlService:addObserver(self.context.ICredentialObserver, {})
   end
 
   -- Adiciona o membro à sessão
-  local memberID = session.ISession:addMember(member)
-  return true, session.IComponent, memberID
+  local memberID = component.ISession:addMember(member)
+  return true, component.IComponent, memberID
 end
 
 ---
---Notificação de deleção de credencial (logout).
+--Notificação de deleção de credencial.
 --
---@param credential A credencial removida.
+--@param credentialId Identificador da credencial removida.
 ---
-function SessionService:credentialWasDeleted(credential)
-
-  -- Remove a sessão
-  local session = self.sessions[credential.identifier]
-  if session then
+function SessionService:credentialWasDeletedById(credentialId)
+  -- Remove o membro das sessões que ele participa
+  local sessions = self.observed[credentialId]
+  if sessions then
+    for _, session in pairs(sessions) do
+      session:credentialWasDeletedById(credentialId)
+    end
+    self.observed[credentialId] = nil
+  end
+  -- Remove a sessão que o membro possui
+  local component = self.sessions[credentialId]
+  if component then
     Log:service("Removendo sessão de credencial deletada ("..
-      credential.identifier..")")
-    orb:deactivate(session.ISession)
-    orb:deactivate(session.IMetaInterface)
-    orb:deactivate(session.SessionEventSink)
-    orb:deactivate(session.IComponent)
+      credentialId..")")
+    orb:deactivate(component.ISession)
+    orb:deactivate(component.IMetaInterface)
+    orb:deactivate(component.SessionEventSink)
+    orb:deactivate(component.IComponent)
+    self.sessions[credentialId] = nil
+  end
+end
 
-    self.sessions[credential.identifier] = nil
+---
+-- Observa o membro para removê-lo das sessões.
+--
+-- @param credentialId Identificador da credencial do membro
+-- @param session Sessão que o membro não vai mais participar
+--
+function SessionService:observe(credentialId, session)
+  local sessions = self.observed[credentialId]
+  if not sessions then
+    sessions = {}
+    self.observed[credentialId] = sessions
+  end
+  sessions[session.identifier] = session
+  self.accessControlService:addCredentialToObserver(self.observerId,
+    credentialId)
+end
+
+---
+-- Pára de observar o membro na repectiva sessão.
+--
+-- Se o membro não estiver mais relacionado com sessões,
+-- não observar mais sua credential junto ao ACS.
+--
+-- @param credentialId Identificador da credencial do membro.
+-- @param session Sessão que o membro não vai mais participar.
+--
+function SessionService:unObserve(credentialId, session)
+  local sessions = self.observed[credentialId]
+  sessions[session.identifier] = nil
+  if not next(sessions) then
+    self.observed[credentialId] = nil
+    self.accessControlService:removeCredentialFromObserver(self.observerId, 
+      credentialId)
   end
 end
 
@@ -166,7 +211,7 @@ function SessionService:expired()
 
   -- Mantém apenas as sessões com credenciais válidas
   local invalidCredentials = {}
-  for credentialId, session in pairs(self.sessions) do
+  for credentialId, session in pairs(self.observed) do
     if not self.accessService:addCredentialToObserver(self.observerId,
         credentialId) then
       Log:service("Sessão para "..credentialId.." será removida")
@@ -176,7 +221,7 @@ function SessionService:expired()
     end
   end
   for _, credentialId in ipairs(invalidCredentials) do
-    self.sessions[credentialId] = nil
+    self:credentialWasDeletedById(credentialId)
   end
 end
 
@@ -187,6 +232,6 @@ end
 Observer = oop.class{}
 
 function Observer:credentialWasDeleted(credential)
-  self.context.ISessionService:credentialWasDeleted(credential)
+  self.context.ISessionService:credentialWasDeletedById(credential.identifier)
 end
 

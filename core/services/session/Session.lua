@@ -1,28 +1,30 @@
 -- $Id$
 
 local tostring = tostring
-local ipairs = ipairs
-local pairs = pairs
+local ipairs   = ipairs
+local pairs    = pairs
+local format   = string.format
 
-local oil = require "oil"
+local oil     = require "oil"
+local luuid   = require "uuid"
+local oop     = require "loop.base"
+local Openbus = require "openbus.Openbus"
+local Log     = require "openbus.util.Log"
+
 local orb = oil.orb
-
-local luuid = require "uuid"
-
-local Log = require "openbus.util.Log"
-
-local oop = require "loop.base"
 
 ---
 --Sessão compartilhada pelos membros associados a uma mesma credencial.
 ---
 module "core.services.session.Session"
 
+local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
+
 --------------------------------------------------------------------------------
 -- Faceta ISession
 --------------------------------------------------------------------------------
 
-Session = oop.class{}
+Session = oop.class{invalidMemberIdentifier = ""}
 
 function Session:__init()
   return oop.rawnew(self, {sessionMembers = {}})
@@ -45,23 +47,31 @@ end
 --@return O identificador do membro na sessão.
 ---
 function Session:addMember(member)
+  local credential = Openbus:getInterceptedCredential()
   local memberName = member:getComponentId().name
-  Log:service("Membro "..memberName.." adicionado a sessão")
-  local identifier = self:generateMemberIdentifier()
-  self.sessionMembers[identifier] = member
-
+  if self.sessionMembers[credential.identifier] then
+    Log:service(memberName.." já faz parte da sessão "..self.identifier)
+    return self.invalidMemberIdentifier
+  end
+  local info = {
+    member = member,
+    credentialId = credential.identifier,
+    memberId = self:generateMemberIdentifier(),
+  }
+  self.sessionMembers[info.memberId] = info
+  self.sessionMembers[info.credentialId] = info
+  self.sessionService:observe(info.credentialId, self)
+  Log:service("Membro "..memberName.." adicionado à sessão "..self.identifier)
   -- verifica se o membro recebe eventos
-  local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
   local eventSink = member:getFacet(eventSinkInterface)
   if eventSink then
     Log:service("Membro "..memberName.." receberá eventos")
-    local eventSinks = self.context.SessionEventSink.eventSinks
-    eventSinks[identifier] =  orb:narrow(eventSink,
-        eventSinkInterface)
+    self.context.SessionEventSink.eventSinks[info.memberId] =
+      orb:narrow(eventSink, eventSinkInterface)
   else
     Log:service("Membro "..memberName.." não receberá eventos")
   end
-  return identifier
+  return info.memberId
 end
 
 ---
@@ -73,14 +83,31 @@ end
 --contrário.
 ---
 function Session:removeMember(identifier)
-  member = self.sessionMembers[identifier]
-  if not member then
+  local info = self.sessionMembers[identifier]
+  if not info then
+    Log:service("Impossível remover membro "..identifier..
+      ": não faz parte da sessão "..self.identifier)
     return false
   end
-  Log:service("Membro "..member:getComponentId().name.." removido da sessão")
-  self.sessionMembers[identifier] = nil
-  self.context.SessionEventSink.eventSinks[identifier] = nil
+  Log:service("Membro "..info.member:getComponentId().name..
+    " removido da sessão "..self.identifier)
+  self.sessionMembers[info.memberId] = nil
+  self.sessionMembers[info.credentialId] = nil
+  self.context.SessionEventSink.eventSinks[info.memberId] = nil
+  self.sessionService:unObserve(info.credentialId, self)
   return true
+end
+
+---
+-- Membro saiu do barramento, limpar contexto
+--
+-- @param credential Credencial do membro
+--
+function Session:credentialWasDeletedById(credentialId)
+  local info = self.sessionMembers[credentialId]
+  self.sessionMembers[info.memberId] = nil
+  self.sessionMembers[info.credentialId] = nil
+  self.context.SessionEventSink.eventSinks[info.memberId] = nil
 end
 
 ---
@@ -114,7 +141,6 @@ SessionEventSink = oop.class{}
 function SessionEventSink:__init()
   return oop.rawnew(self, {eventSinks = {}})
 end
-
 
 ---
 --Repassa evento para membros da sessão.
