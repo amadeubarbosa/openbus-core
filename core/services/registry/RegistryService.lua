@@ -56,52 +56,24 @@ RSFacet = oop.class{}
 ---
 function RSFacet:register(serviceOffer)
   local credential = Openbus:getInterceptedCredential()
+  local properties = self:createPropertyIndex(serviceOffer.properties,
+    serviceOffer.member)
   for _, existentOfferEntry in pairs(self.offersByIdentifier) do
-    -- Inicializar variável de controle antes de testar
-    local equalProp =
-      existentOfferEntry.credential.identifier == credential.identifier and
-      #existentOfferEntry.properties == #serviceOffer.properties
-    if equalProp then
-      for _, property in ipairs(serviceOffer.properties) do
-        local existentProp = existentOfferEntry.properties[property.name]
-        -- Inicializar variável de controle antes de testar
-        equalProp = existentProp and #existentProp.value == #property.value
-        if equalProp then
-          -- Pode estar fora de ordem: comparação de conjuntos
-          for _, value in ipairs(property.value) do
-            equalProp = false
-            for _, existent in ipairs(existentProps.value) do
-              if value == existent then
-                equalProp = true
-                break
-              end
-            end
-            -- 'value' não pertence ao conjunto dos existentes -> diferente
-            if not equalProp then
-              break
-            end
-          end
-        end
-        -- Uma propriedade já diferente, não tentar o restante
-        if not equalProp then
-          break
-        end
-      end
-      -- Continua sendo igual?
-      if equalProp then
-        Log:registry("Oferta já existente com id " ..
-          existentOfferEntry.identifier)
-        self:updateMemberInfoInExistentOffer(existentOfferEntry, 
-          serviceOffer.member)
-        return true, existentOfferEntry.identifier
-      end
+    -- (A contido em B) ^ (B contido A) -> (A == B)
+    if existentOfferEntry.credential.identifier == credential.identifier   and
+      Utils.containsProperties(existentOfferEntry.properties, properties)  and
+      Utils.containsProperties(properties, existentOfferEntry.properties)
+    then
+      Log:registry("Oferta já existente com id " ..
+        existentOfferEntry.identifier)
+      self:updateMemberInfoInExistentOffer(existentOfferEntry, 
+        serviceOffer.member)
+      return true, existentOfferEntry.identifier
     end
   end
 
   -- Efetuar novo registro 
   local identifier = self:generateIdentifier()
-  local properties = self:createPropertyIndex(serviceOffer.properties,
-    serviceOffer.member)
   local memberName = properties.component_id.name
 
   -- Recupera todas as facetas do membro
