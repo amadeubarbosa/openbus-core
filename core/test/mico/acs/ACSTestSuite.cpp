@@ -292,7 +292,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
       leaseExpiredCallbackOk = false;
       MyCallback myCallback;
       bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
-      bus->addLeaseExpiredCallback(&myCallback);
+      bus->setLeaseExpiredCallback(&myCallback);
       TS_TRACE("Tentativa de renovação de credencial em até 150 segundos...");
       bus->run();
       if (!leaseExpiredCallbackOk) {

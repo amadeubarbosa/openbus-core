@@ -19,9 +19,9 @@ Suite = {
       local function testCB() count = count + 1 end
       local function testCB2() count = count + 1; count2 = count2 + 1 end 
 
-      Check.assertTrue(lec:addLeaseExpiredCallback(testCB))
-      Check.assertTrue(lec:addLeaseExpiredCallback(testCB2))
-      Check.assertTrue(lec2:addLeaseExpiredCallback(testCB))
+      Check.assertTrue(lec:setLeaseExpiredCallback(testCB))
+      Check.assertTrue(lec:setLeaseExpiredCallback(testCB2))
+      Check.assertTrue(lec2:setLeaseExpiredCallback(testCB))
 
       lec:expired()
       Check.assertEquals(count, 2)

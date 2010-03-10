@@ -287,7 +287,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
       leaseExpiredCallbackOk = false;
       MyCallback myCallback;
       bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
-      bus->addLeaseExpiredCallback(&myCallback);
+      bus->setLeaseExpiredCallback(&myCallback);
       TS_TRACE("Dormindo por 100 segundos...");
       sleep(100);
       if (!leaseExpiredCallbackOk) {

@@ -72,7 +72,7 @@ function SessionServiceComponent:startup()
   end
 
   -- Cadastra callback para LeaseExpired
-  Openbus:addLeaseExpiredCallback( self )
+  Openbus:setLeaseExpiredCallback( self )
   
   -- conecta o controle de acesso:   [SS]--( 0--[ACS]
   local acsIComp = Openbus:getACSIComponent()

@@ -556,7 +556,7 @@ namespace openbus {
     openbus::interceptors::ClientInterceptor::credential = credential;
   }
 
-  void Openbus::addLeaseExpiredCallback(
+  void Openbus::setLeaseExpiredCallback(
     LeaseExpiredCallback* leaseExpiredCallback) 
   {
   #ifdef OPENBUS_MICO

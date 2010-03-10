@@ -484,7 +484,7 @@ namespace openbus {
     * @return True se a callback foi registrada com sucesso, ou false 
     * se a callback já estava registrada.
     */
-      void addLeaseExpiredCallback(
+      void setLeaseExpiredCallback(
         LeaseExpiredCallback* leaseExpiredCallback);
 
     /**

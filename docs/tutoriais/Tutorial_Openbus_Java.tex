@@ -119,7 +119,7 @@ Os outros métodos da API Openbus serão explicados em mais detalhes a seguir:
   \item \code{Credential getInterceptedCredential()}: Retorna a credencial interceptada pelo interceptador servidor. Esta operação somente deve ser chamada durante o tratamento de alguma requisição à aplicação do usuário.
   \item \code{void setInterceptedCredentialSlot(int)}: Define o slot da credencial da requisição atual.
   \item \code{void setThreadCredential(Credential credential)}: Define uma credencial a ser utilizada no lugar da credencial corrente. Útil para fornecer uma credencial com o campo delegate preenchido.
-  \item \code{boolean addLeaseExpiredCallback(LeaseExpiredCallback lec)}: Registra uma callback para a notificação de que o lease da credencial	de identificação do usuário expirou.
+  \item \code{void setLeaseExpiredCallback(LeaseExpiredCallback lec)}: Registra uma callback para a notificação de que o lease da credencial	de identificação do usuário expirou.
   \item \code{boolean removeLeaseExpiredCallback(LeaseExpiredCallback lec)}: Remove uma callback previamente registrada para a notificação de lease expirado.
   \item \code{boolean isConnected()}: Informa o estado de conexão com o barramento.
   \item \code{IRegistryService connect(String user, String password}: Realiza uma tentativa de conexão com o barramento. Se a tentativa for bem sucedida, um \emph{stub} do Serviço de Registro é retornado. Caso contrário, quatro exceções além das de CORBA podem ser lançadas:

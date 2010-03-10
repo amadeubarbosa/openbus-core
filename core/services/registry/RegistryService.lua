@@ -817,7 +817,7 @@ function startup(self)
   end
 
   -- Cadastra callback para LeaseExpired
-  Openbus:addLeaseExpiredCallback( rs )
+  Openbus:setLeaseExpiredCallback( rs )
 
   -- obtém a referência para o serviço de Controle de Acesso
   local accessControlService = Openbus:getAccessControlService()

@@ -102,7 +102,7 @@ Os outros métodos da API Openbus serão explicados em mais detalhes a seguir:
   \item \code{Credential getCredential()}: Retorna a credencial de identificação do usuário frente ao barramento.
   \item \code{Credential getInterceptedCredential()}: Retorna a credencial interceptada pelo interceptador servidor. Esta operação somente deve ser chamada durante o tratamento de alguma requisição à aplicação do usuário.
   \item \code{void setThreadCredential(Credential credential)}: Define uma credencial a ser utilizada no lugar da credencial corrente. Útil para fornecer uma credencial com o campo delegate preenchido.
-  \item \code{boolean addLeaseExpiredCallback(LeaseExpiredCallback lec)}: Registra uma callback para a notificação de que o lease da credencial	de identificação do usuário expirou. LeaseExpiredCallback deve ser um objeto que contenha um método de nome \emph{expired()}.
+  \item \code{void setLeaseExpiredCallback(LeaseExpiredCallback lec)}: Registra uma callback para a notificação de que o lease da credencial	de identificação do usuário expirou. LeaseExpiredCallback deve ser um objeto que contenha um método de nome \emph{expired()}.
   \item \code{boolean removeLeaseExpiredCallback(LeaseExpiredCallback lec)}: Remove uma callback previamente registrada para a notificação de lease expirado.
   \item \code{boolean isConnected()}: Informa o estado de conexão com o barramento.
   \item \code{IRegistryService connect(String user, String password}: Realiza uma tentativa de conexão com o barramento. Se a tentativa for bem sucedida, um \emph{stub} do Serviço de Registro é retornado. Caso contrário, o retorno é \emph{false}. Uma exceção além das de CORBA pode ser lançada:
