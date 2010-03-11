@@ -61,6 +61,10 @@ void Logger::setLevel(Level level) {
   }
 }
 
+bool Logger::getLevel(Level level) {
+  return levelFlag[level];
+}
+
 void Logger::log(Level level, string msg) {
   if (levelFlag[ALL] || (!levelFlag[OFF] && levelFlag[level])) {
     stringstream msgStream;
@@ -89,9 +93,9 @@ void Logger::indent() {
   numIndent++;
 }
 
-void Logger::indent(Level level, string msg) {
+void Logger::indent(Level level, string message) {
+  log(level, message);
   indent();
-  log(level, msg);
   *output << endl;
 }
 
@@ -99,9 +103,9 @@ void Logger::dedent() {
   numIndent--;
 }
 
-void Logger::dedent(Level level, string msg) {
+void Logger::dedent(Level level, string message) {
   dedent();
-  log(level, msg);
+  log(level, message);
   if (!numIndent) {
     *output << endl;
   }
