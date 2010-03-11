@@ -53,8 +53,8 @@ genstubs:
 	cd stubs ; ${ORBIX_HOME}/bin/idl -base -poa ${OPENBUS_HOME}/idlpath/scs.idl
 	
 sunos: $(OBJS)
-	rm -f lib/SunOS58/libopenbus.a
-	CC -xar -instances=extern -o lib/SunOS58/libopenbus.a $(OBJS)
-	rm -f lib/SunOS58/libopenbus.so
-	CC -G -instances=extern -KPIC -o lib/SunOS58/libopenbus.so $(OBJS)
+	rm -f lib/$(TEC_UNAME)/libopenbus.a
+	CC -xar -instances=extern -o lib/$(TEC_UNAME)/libopenbus.a $(OBJS)
+	rm -f lib/$(TEC_UNAME)/libopenbus.so
+	CC -G -instances=extern -KPIC -o lib/$(TEC_UNAME)/libopenbus.so $(OBJS)
 

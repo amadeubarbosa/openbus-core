@@ -24,15 +24,20 @@ NO_SCRIPTS = YES
 # Usa bibliotecas dinâmicas #
 #############################
 
+LIBS = oilall scsall luasocket lfs luuid lce lualdap
 LIBS += dl crypto ldap
 ifneq "$(TEC_SYSNAME)" "Darwin"
-	LIBS += uuid
+  LIBS += uuid
 endif
 ifeq "$(TEC_SYSNAME)" "Linux"
-	LFLAGS = -Wl,-E
+  LFLAGS = -Wl,-E
 endif
-
-LIBS = oilall scsall luasocket lfs luuid lce lualdap
+ifeq "$(TEC_SYSNAME)" "SunOS"
+  USE_CC=Yes
+  CFLAGS= -g -KPIC -xarch=v8  -mt -D_REENTRANT
+  LFLAGS= $(CPPFLAGS) -xildoff
+  LIBS += rt
+endif
 
 # SLIB += ${OPENBUSLIB}/liboilall.a
 # SLIB += ${OPENBUSLIB}/libscsall.a
