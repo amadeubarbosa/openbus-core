@@ -118,8 +118,10 @@ class ACSTestSuite: public CxxTest::TestSuite {
           "-OpenbusHost", 
           "localhost", 
           "-OpenbusPort", 
-          "2089"};
-        bus->init(5, (char**) argv);
+          "2089",
+          "-OpenbusDebug",
+          "ALL"};
+        bus->init(7, (char**) argv);
         bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
         bus->disconnect();
       } catch(CORBA::SystemException& e) {
@@ -216,8 +218,8 @@ class ACSTestSuite: public CxxTest::TestSuite {
       bus->disconnect();
       try {
         rgs = bus->connect(
-         "HelloService", 
-         "HelloService.key", 
+         "TesteBarramento", 
+         "TesteBarramento.key", 
          "AccessControlService.crt"); 
         TS_ASSERT(rgs);
       } catch (CORBA::SystemException& e) {
