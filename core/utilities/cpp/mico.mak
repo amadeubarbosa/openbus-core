@@ -8,8 +8,9 @@ DEFINES+=OPENBUS_MICO
 #DBG=YES
 #CPPFLAGS= -fno-inline
 
-ifeq "$(TEC_UNAME)" "SunOS58"
+ifeq "$(TEC_SYSNAME)" "SunOS"
   USE_CC=Yes
+  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
 endif
 
 MICO_BIN= ${MICODIR}/bin
@@ -52,9 +53,9 @@ genstubs:
 	cd stubs/mico ; ${MICO_BIN}/idl core.idl
 	cd stubs/mico ; ${MICO_BIN}/idl scs.idl
 	
-sunos58: $(OBJS)
-	rm -f lib/SunOS58/libopenbusmico.a
-	CC -xar -instances=extern -o lib/SunOS58/libopenbusmico.a $(OBJS)
-	rm -f lib/SunOS58/libopenbusmico.so
-	CC -G -instances=extern -Kpic -o lib/SunOS58/libopenbusmico.so $(OBJS)
+sunos: $(OBJS)
+	rm -f lib/$(TEC_UNAME)/libopenbusmico.a
+	CC -xar -instances=extern -o lib/$(TEC_UNAME)/libopenbusmico.a $(OBJS)
+	rm -f lib/$(TEC_UNAME)/libopenbusmico.so
+	CC -G -instances=extern -KPIC -o lib/$(TEC_UNAME)/libopenbusmico.so $(OBJS)
 

@@ -51,7 +51,7 @@ genstubs:
 	
 sunos: $(OBJS)
 	rm -f lib/$(TEC_UNAME)/libopenbusorbix.a
-	CC -xar -instances=extern -o lib/SunOS58/libopenbusorbix.a $(OBJS)
+	CC -xar -instances=extern -o lib/$(TEC_UNAME)/libopenbusorbix.a $(OBJS)
 	rm -f lib/$(TEC_UNAME)/libopenbusorbix.so
-	CC -G -instances=extern -KPIC -o lib/SunOS58/libopenbusorbix.so $(OBJS)
+	CC -G -instances=extern -KPIC -o lib/$(TEC_UNAME)/libopenbusorbix.so $(OBJS)
 
