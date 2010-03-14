@@ -4,10 +4,19 @@ LIBNAME= ${PROJNAME}
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-PRECMP_DIR= obj/${TEC_UNAME}
+ifeq "$(TEC_SYSNAME)" "SunOS"
+  USE_CC=Yes
+  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
+endif
 
-${PRECMP_DIR}/auxiliar.c ${PRECMP_DIR}/auxiliar.h:
-	lua5.1 precompiler.lua -f auxiliar -d ${PRECMP_DIR} -p auxiliar openbus.lua
+LUABIN=     lua5.1
+
+PRECMP_DIR=   obj/$(TEC_UNAME)
+PRECMP_LUA=   precompiler.lua
+PRECMP_FLAGS= -d $(PRECMP_DIR) -f auxiliar -p auxiliar
+
+$(PRECMP_DIR)/auxiliar.c $(PRECMP_DIR)/auxiliar.h: openbus.lua
+	$(LUABIN) $(PRECMP_LUA) $(PRECMP_FLAGS) $< 
 
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
 DEFINES=VERBOSE
