@@ -19,6 +19,7 @@ local tostring = tostring
 local table    = table
 local pairs    = pairs
 local ipairs   = ipairs
+local next     = next
 
 local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
 
@@ -173,14 +174,15 @@ function SessionService:observe(credentialId, session)
   if not sessions then
     sessions = {}
     self.observed[credentialId] = sessions
+    -- Primeira sessão da credencial, começar a observar
+    local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
+      orb, self.context.IComponent, "AccessControlServiceReceptacle", 
+      "IAccessControlService", acsIDL)
+    if status then
+      acsFacet:addCredentialToObserver(self.observerId, credentialId)
+    end
   end
   sessions[session.identifier] = session
-  local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
-    orb, self.context.IComponent, "AccessControlServiceReceptacle", 
-    "IAccessControlService", acsIDL)
-  if status then
-    acsFacet:addCredentialToObserver(self.observerId, credentialId)
-  end
 end
 
 ---

@@ -3,6 +3,7 @@
 local tostring = tostring
 local ipairs   = ipairs
 local pairs    = pairs
+local next     = next
 local format   = string.format
 
 local oil     = require "oil"
@@ -24,10 +25,10 @@ local eventSinkInterface = "IDL:tecgraf/openbus/session_service/v1_05/SessionEve
 -- Faceta ISession
 --------------------------------------------------------------------------------
 
-Session = oop.class{invalidMemberIdentifier = ""}
+Session = oop.class{}
 
 function Session:__init()
-  return oop.rawnew(self, {sessionMembers = {}})
+  return oop.rawnew(self, {sessionMembers = {}, membersByCredential = {}})
 end
 
 ---
@@ -48,21 +49,22 @@ end
 ---
 function Session:addMember(member)
   local credential = Openbus:getInterceptedCredential()
-  local memberName = member:getComponentId().name
-  if self.sessionMembers[credential.identifier] then
-    Log:error(memberName.." já faz parte da sessão "..self.identifier)
-    return self.invalidMemberIdentifier
-  end
   local info = {
     member = member,
     credentialId = credential.identifier,
     memberId = self:generateMemberIdentifier(),
   }
   self.sessionMembers[info.memberId] = info
-  self.sessionMembers[info.credentialId] = info
-  self.sessionService:observe(info.credentialId, self)
+  local members = self.membersByCredential[info.credentialId]
+  if not members then
+    members = {}
+    self.membersByCredential[info.credentialId] = members
+    self.sessionService:observe(info.credentialId, self)
+  end
+  members[info.memberId] = info
+  local memberName = member:getComponentId().name
   Log:session("Membro "..memberName.." adicionado à sessão "..self.identifier)
-  -- verifica se o membro recebe eventos
+  -- Verifica se o membro recebe eventos
   local eventSink = member:getFacet(eventSinkInterface)
   if eventSink then
     Log:session("Membro "..memberName.." receberá eventos")
@@ -92,9 +94,12 @@ function Session:removeMember(identifier)
   Log:session("Membro "..info.member:getComponentId().name..
     " removido da sessão "..self.identifier)
   self.sessionMembers[info.memberId] = nil
-  self.sessionMembers[info.credentialId] = nil
+  self.membersByCredential[info.credentialId][info.memberId] = nil
   self.context.SessionEventSink.eventSinks[info.memberId] = nil
-  self.sessionService:unObserve(info.credentialId, self)
+  if not (next(self.membersByCredential[info.credentialId])) then
+    self.membersByCredential[info.credentialId] = nil
+    self.sessionService:unObserve(info.credentialId, self)
+  end
   return true
 end
 
@@ -104,10 +109,12 @@ end
 -- @param credential Credencial do membro
 --
 function Session:credentialWasDeletedById(credentialId)
-  local info = self.sessionMembers[credentialId]
-  self.sessionMembers[info.memberId] = nil
-  self.sessionMembers[info.credentialId] = nil
-  self.context.SessionEventSink.eventSinks[info.memberId] = nil
+  local members = self.membersByCredential[credentialId]
+  for memberId in pairs(members) do
+    self.sessionMembers[memberId] = nil
+    self.context.SessionEventSink.eventSinks[memberId] = nil
+  end
+  self.membersByCredential[credentialId] = nil
 end
 
 ---
