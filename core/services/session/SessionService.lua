@@ -18,6 +18,7 @@ local tostring = tostring
 local table    = table
 local pairs    = pairs
 local ipairs   = ipairs
+local next     = next
 
 ---
 --Faceta que disponibiliza a funcionalidade básica do serviço de sessão.
@@ -148,10 +149,11 @@ function SessionService:observe(credentialId, session)
   if not sessions then
     sessions = {}
     self.observed[credentialId] = sessions
+    -- Primeira sessão da credencial, começar a observar
+    self.accessControlService:addCredentialToObserver(self.observerId,
+      credentialId)
   end
   sessions[session.identifier] = session
-  self.accessControlService:addCredentialToObserver(self.observerId,
-    credentialId)
 end
 
 ---
