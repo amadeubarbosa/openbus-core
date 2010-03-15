@@ -8,19 +8,22 @@ LIBNAME= ${PROJNAME}
 #Descomente a linha abaixo caso deseje ativar o VERBOSE
 #DEFINES=VERBOSE
 
-ifeq "$(TEC_SYSNAME)" "SunOS"
-  USE_CC=Yes
-  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
-endif
-
-ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
-ORBIXINC= ${ORBIX_HOME}/include
-
 ifeq ($(TEC_WORDSIZE), TEC_64)
   ORBIXLDIR=${ORBIX_HOME}/lib/lib64
 else
   ORBIXLDIR=${ORBIX_HOME}/lib
 endif
+
+ifeq "$(TEC_SYSNAME)" "SunOS"
+  USE_CC=Yes
+  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
+  ifeq ($(TEC_WORDSIZE), TEC_64)
+    ORBIXLDIR=${ORBIX_HOME}/lib/sparcv9
+  endif
+endif
+
+ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
+ORBIXINC= ${ORBIX_HOME}/include
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
