@@ -59,7 +59,7 @@ basesoft = {
 			         " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
 			SunOS =  "./config shared --prefix=".. TMPDIR ..
 			         " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
-                        SunOS510_64 = "./Configure solaris64-sparcv9-cc no-asm shared --prefix=".. TMPDIR ..
+                        SunOS510_64 = "./Configure solaris64-sparcv9-cc shared --prefix=".. TMPDIR ..
                                  " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
 			SunOS510x86 = "./config no-asm shared --prefix=".. TMPDIR ..
 			         " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
