@@ -70,7 +70,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
-local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
 -----------------------------------------------------------------------------

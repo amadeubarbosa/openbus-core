@@ -68,7 +68,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local RegistryService = require "core.services.registry.RegistryService"
-local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -----------------------------------------------------------------------------
 ---- RegistryService Descriptions
