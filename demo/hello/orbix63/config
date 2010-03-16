@@ -1,12 +1,27 @@
 
 ORBIX_HOME=${IT_PRODUCT_DIR}/asp/6.3
 
+ORBIXSHLIBDIR=${IT_PRODUCT_DIR}/shlib/sparcv9
+
 ORBIXBIN=${ORBIX_HOME}/bin
 ORBIXINC=${ORBIX_HOME}/include
 ORBIXLDIR=${ORBIX_HOME}/lib
 
+# general config
 ifeq ($(TEC_WORDSIZE), TEC_64)
   ORBIXLDIR=${ORBIX_HOME}/lib/lib64
 else
   ORBIXLDIR=${ORBIX_HOME}/lib
 endif
+
+# solaris specific
+ifeq "$(TEC_SYSNAME)" "SunOS"
+  USE_CC=Yes
+  CPPFLAGS= -g +p -KPIC -mt -D_REENTRANT
+  ifeq ($(TEC_WORDSIZE), TEC_64)
+    CPPFLAGS+= -m64
+    ORBIXLDIR=${ORBIX_HOME}/lib/sparcv9
+  endif
+  LFLAGS= $(CPPFLAGS) -xildoff
+endif
+

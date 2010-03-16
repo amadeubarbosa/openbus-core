@@ -10,12 +10,6 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
 EXTRA_CONFIG=../config
 
-ifeq "$(TEC_SYSNAME)" "SunOS"
-  USE_CC=Yes
-  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
-  LFLAGS= $(CPPFLAGS) -xildoff
-endif
-
 INCLUDES= . \
   ${ORBIXINC} \
   ${OPENBUS_HOME}/core/utilities/orbix \
@@ -26,7 +20,7 @@ INCLUDES= . \
 LDIR= ${ORBIXLDIR} \
   ${OPENBUSLIB}
 
-LIBS= crypto it_poa it_art it_ifc it_portable_interceptor
+LIBS+= crypto it_poa it_art it_ifc it_portable_interceptor
 
 SLIB= ${OPENBUS_HOME}/core/utilities/orbix/lib/${TEC_UNAME}/libopenbus.a \
   ${OPENBUSLIB}/libscsorbix.a

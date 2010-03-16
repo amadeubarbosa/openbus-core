@@ -34,8 +34,11 @@ ifeq "$(TEC_SYSNAME)" "Linux"
 endif
 ifeq "$(TEC_SYSNAME)" "SunOS"
   USE_CC=Yes
-  CFLAGS= -g -KPIC -xarch=v8  -mt -D_REENTRANT
-  LFLAGS= $(CPPFLAGS) -xildoff
+  CFLAGS= -g -KPIC -mt -D_REENTRANT
+  ifeq ($(TEC_WORDSIZE), TEC_64)
+    CFLAGS+= -m64
+  endif
+  LFLAGS= $(CFLAGS) -xildoff
   LIBS += rt
 endif
 

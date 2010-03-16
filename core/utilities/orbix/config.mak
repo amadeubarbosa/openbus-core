@@ -16,8 +16,9 @@ endif
 
 ifeq "$(TEC_SYSNAME)" "SunOS"
   USE_CC=Yes
-  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
+  CPPFLAGS= -g +p -KPIC -mt -D_REENTRANT
   ifeq ($(TEC_WORDSIZE), TEC_64)
+    CPPFLAGS+= -m64
     ORBIXLDIR=${ORBIX_HOME}/lib/sparcv9
   endif
 endif
@@ -57,7 +58,7 @@ genstubs:
 	
 sunos: $(OBJS)
 	rm -f lib/$(TEC_UNAME)/libopenbus.a
-	CC -xar -instances=extern -o lib/$(TEC_UNAME)/libopenbus.a $(OBJS)
+	CC $(CPPFLAGS) -xar -instances=extern -o lib/$(TEC_UNAME)/libopenbus.a $(OBJS)
 	rm -f lib/$(TEC_UNAME)/libopenbus.so
-	CC -G -instances=extern -KPIC -o lib/$(TEC_UNAME)/libopenbus.so $(OBJS)
+	CC $(CPPFLAGS) -G -instances=extern -KPIC -o lib/$(TEC_UNAME)/libopenbus.so $(OBJS)
 
