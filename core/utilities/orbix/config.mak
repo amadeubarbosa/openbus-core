@@ -16,7 +16,7 @@ endif
 
 ifeq "$(TEC_SYSNAME)" "SunOS"
   USE_CC=Yes
-  CPPFLAGS= -g +p -KPIC -mt -D_REENTRANT
+  CPPFLAGS= -g +p -KPIC -mt -D_REENTRANT -library=stlport4
   ifeq ($(TEC_WORDSIZE), TEC_64)
     CPPFLAGS+= -m64
     ORBIXLDIR=${ORBIX_HOME}/lib/sparcv9
