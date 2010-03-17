@@ -53,6 +53,15 @@ static void myTerminationHandler(long signal) {
   } catch(CORBA::Exception& e) {
     cout << "Não foi possível remover a oferta de serviço." << endl;
   }
+
+  scs::core::ComponentBuilder* componentBuilder = bus->getComponentBuilder();
+  map<string, string>* errors = componentBuilder->deactivateComponent(componentContext);
+  map<string, string>::iterator it;
+  for ( it = errors->begin() ; it != errors->end(); it++ ) {
+    string error = (string) (*it).second;
+    cout << "Erro ao desativar a faceta " << error << "." << endl;
+  }
+  delete errors;
   delete componentContext;
   openbus::Openbus::terminationHandlerCallback(signal);
 }
