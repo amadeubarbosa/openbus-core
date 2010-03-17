@@ -40,7 +40,7 @@ local scs = require "scs.core.base"
 local SessionServiceComponent =
   require "core.services.session.SessionServiceComponent"
 local SessionService = require "core.services.session.SessionService"
-local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 Openbus:enableFaultTolerance()
 

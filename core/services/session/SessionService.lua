@@ -21,7 +21,7 @@ local pairs    = pairs
 local ipairs   = ipairs
 local next     = next
 
-local AdaptiveReceptacle = require "openbus.faulttolerance.AdaptiveReceptacle"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 ---
 --Faceta que disponibiliza a funcionalidade básica do serviço de sessão.
