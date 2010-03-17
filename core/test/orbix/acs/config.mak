@@ -8,7 +8,7 @@ APPNAME= acs
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-EXTRA_CONFIG=../config
+include ../config
 
 INCLUDES= . \
   ${ORBIXINC} \
