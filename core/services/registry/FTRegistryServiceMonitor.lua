@@ -237,13 +237,16 @@ function startup(self)
   local ftRec = self.context.IReceptacles
   ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
   
-  local rs = Openbus:getRegistryService()
-  local rsIC = rs:_component()
-  rsIC = Openbus:getORB():narrow(rsIC, "IDL:scs/core/IComponent:1.0")
-  local ftrsService = rsIC:getFacetByName("IFaultTolerantService")
-  ftrsService = Openbus:getORB():narrow(ftrsService, 
-	    "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
-  
+  local hostAdd = monitor.config.registryServerHostName..
+                 ":".. tostring(monitor.config.registryServerHostPort)
+
+  local ftrsService = Openbus:getORB():newproxy(
+      "corbaloc::"..hostAdd.."/FTRS","IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+  if ftrsService:_non_existent() then
+      Log:error("Servico de registro nao encontrado.")
+      os.exit(1)
+  end
+
   local connId = ftRec:connect("IFaultTolerantService",ftrsService)
   if not connId then
 	Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTRSMonitor")
