@@ -1,6 +1,7 @@
 -- $Id$
 
 local ipairs = ipairs
+local string = string
 
 local lualdap = require "lualdap"
 local oop = require "loop.simple"
@@ -33,6 +34,11 @@ end
 --@see core.services.accesscontrol.LoginPasswordValidator#validate
 ---
 function validate(self, name, password)
+  if not password or string.match(password, "^%s*$") then
+    return false,
+        "O usuário "..name.." não foi validado porque sua senha está vazia."
+  end
+
   for _, ldapHost in ipairs(self.ldapHosts) do
     for _, ldapSuffix in ipairs(self.ldapSuffixes) do
       local connection, err = lualdap.open_simple(
