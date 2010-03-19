@@ -199,11 +199,12 @@ packages = {
 	  	type = "tecmake",
 	  	src = PRODAPP .."/scs/src/cpp/cppoil",
 	  	mf = { "config LUA51="..PRODAPP.."/lua5.1", },
-      Darwin = { mf = { 
-        "config LUA51="..PRODAPP.."/lua5.1", 
-        "config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes"}, },
-	  },
+        Darwin = { mf = { 
+          "config LUA51="..PRODAPP.."/lua5.1", 
+          "config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes"}, 
+        },
 	  	SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
+	  },
 	  install_files = {
 			["../lib/${TEC_UNAME}/libscsoil.so"] = "libpath/${TEC_UNAME}",
 			["../lib/${TEC_UNAME}/libscsoil.dylib"] = "libpath/${TEC_UNAME}",
@@ -228,8 +229,8 @@ packages = {
         "without_oil LUA51="..PRODAPP.."/lua5.1",
         "without_oil LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes", 
         }, 
-	  	SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, "without_oil LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS } },
       },
+	  	SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, "without_oil LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS } },
 	  },
 	  install_files = {
 	  	["../lib/${TEC_UNAME}/libftc*.so"] = "libpath/${TEC_UNAME}",
