@@ -8,13 +8,7 @@ APPNAME=${PROJNAME}
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-EXTRA_CONFIG=config
-
-ifeq "$(TEC_SYSNAME)" "SunOS"
-  USE_CC=Yes
-  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
-  LFLAGS= $(CPPFLAGS) -xildoff
-endif
+include config
 
 TARGETROOT=bin
 OBJROOT=obj
@@ -22,7 +16,7 @@ OBJROOT=obj
 INCLUDES= . ${ORBIXINC} ${OPENBUS_HOME}/core/utilities/cpp ${OPENBUSINC}/scs
 LDIR= ${ORBIXLDIR} ${OPENBUSLIB}
 
-LIBS= it_poa it_art it_ifc it_portable_interceptor crypto
+LIBS+= it_poa it_art it_ifc it_portable_interceptor crypto
 
 SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbusorbix.a \
       ${OPENBUSLIB}/libscsorbix.a

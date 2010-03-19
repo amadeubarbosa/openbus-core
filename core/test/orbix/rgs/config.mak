@@ -8,13 +8,7 @@ APPNAME= rgs
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 
-EXTRA_CONFIG=../config
-
-ifeq "$(TEC_SYSNAME)" "SunOS"
-  USE_CC=Yes
-  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
-  LFLAGS= $(CPPFLAGS) -xildoff
-endif
+include ../config
 
 INCLUDES= . \
   ${ORBIXINC} \
@@ -26,7 +20,7 @@ INCLUDES= . \
 LDIR= ${ORBIXLDIR} \
   ${OPENBUSLIB}
 
-LIBS= crypto it_poa it_art it_ifc it_portable_interceptor
+LIBS+= crypto it_poa it_art it_ifc it_portable_interceptor
 
 SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbusorbix.a \
   ${OPENBUSLIB}/libscsorbix.a

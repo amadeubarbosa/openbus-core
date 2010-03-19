@@ -5,19 +5,23 @@ LIBNAME= ${PROJNAME}
 #DBG=YES
 #CPPFLAGS= -fno-inline
 
-ifeq "$(TEC_SYSNAME)" "SunOS"
-  USE_CC=Yes
-  CPPFLAGS= -g +p -KPIC -xarch=v8  -mt -D_REENTRANT
-endif
-
-ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
-ORBIXINC= ${ORBIX_HOME}/include
-
 ifeq ($(TEC_WORDSIZE), TEC_64)
   ORBIXLDIR=${ORBIX_HOME}/lib/lib64
 else
   ORBIXLDIR=${ORBIX_HOME}/lib
 endif
+
+ifeq "$(TEC_SYSNAME)" "SunOS"
+  USE_CC=Yes
+  CPPFLAGS= -g +p -KPIC -mt -D_REENTRANT -library=stlport4
+  ifeq ($(TEC_WORDSIZE), TEC_64)
+    CPPFLAGS+= -m64
+    ORBIXLDIR=${ORBIX_HOME}/lib/sparcv9
+  endif
+endif
+
+ORBIX_HOME= ${IT_PRODUCT_DIR}/asp/6.3
+ORBIXINC= ${ORBIX_HOME}/include
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
@@ -51,7 +55,7 @@ genstubs:
 	
 sunos: $(OBJS)
 	rm -f lib/$(TEC_UNAME)/libopenbusorbix.a
-	CC -xar -instances=extern -o lib/$(TEC_UNAME)/libopenbusorbix.a $(OBJS)
+	CC $(CPPFLAGS) -xar -instances=extern -o lib/$(TEC_UNAME)/libopenbusorbix.a $(OBJS)
 	rm -f lib/$(TEC_UNAME)/libopenbusorbix.so
-	CC -G -instances=extern -KPIC -o lib/$(TEC_UNAME)/libopenbusorbix.so $(OBJS)
+	CC $(CPPFLAGS) -G -instances=extern -o lib/$(TEC_UNAME)/libopenbusorbix.so $(OBJS)
 
