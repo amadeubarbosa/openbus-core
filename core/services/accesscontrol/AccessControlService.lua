@@ -108,6 +108,7 @@ function ACSFacet:loginByCertificate(name, answer)
   local errorMessage
   answer, errorMessage = lce.cipher.decrypt(self.privateKey, answer)
   if answer ~= challenge then
+    errorMessage = errorMessage or "desafio inválido"
     Log:error(format("Erro ao obter a resposta de %s: %s", name, errorMessage))
     return false, self.invalidCredential, self.invalidLease
   end
