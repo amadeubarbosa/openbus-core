@@ -287,6 +287,15 @@ function ACSFacet:getEntryCredential(credential)
 end
 
 function ACSFacet:getAllEntryCredential()
+  local credential = Openbus:getInterceptedCredential()
+  if credential.owner ~= "AccessControlService" then
+     error(Openbus:getORB():newexcept {
+       "IDL:omg.org/CORBA/NO_PERMISSION:1.0",
+       minor_code_value = 0,
+       completion_status = 1,
+    })
+  end
+  
   local retEntries = {}
   local i = 0
   for _,entry in pairs(self.entries) do
