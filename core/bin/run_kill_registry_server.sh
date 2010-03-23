@@ -1,3 +1,3 @@
 #!/bin/ksh
 
-./servicelauncher ${OPENBUS_HOME}/core/services/registry/KillRegistryService.lua $1
+${OPENBUS_HOME}/core/bin/servicelauncher ${OPENBUS_HOME}/core/services/registry/KillRegistryService.lua $1
