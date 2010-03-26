@@ -970,12 +970,12 @@ handlers["set-authorization"] = function(cmd)
   if succ then
     print(msg)
   elseif err[1] == RS_MemberNonExistentException then
-    printf("[ERRO] Membro '%s' não cadastrado", depl)
+    printf("[ERRO] Membro '%s' não cadastrado", id)
   elseif err[1] == RS_InterfaceIdentifierNonExistentException then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
   elseif err[1] == RS_AuthorizationNonExistentException then
     printf("[ERRO] Implantação '%s' não possui autorização para '%s'", 
-      depl, iface)
+      id, iface)
   elseif err[1] == RS_InvalidRegularExpressionException then
     printf("[ERRO] Expressão regular inválida: %s", iface)
   else
