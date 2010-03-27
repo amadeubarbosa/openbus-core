@@ -56,6 +56,10 @@ LIBS += dl
 ifeq "$(TEC_SYSNAME)" "Linux"
 	LFLAGS = -Wl,-E
 endif
+ifeq "$(TEC_SYSNAME)" "SunOS"
+  USE_CC= Yes
+endif
+
 
 .PHONY: clean-custom
 clean-custom-obj:
