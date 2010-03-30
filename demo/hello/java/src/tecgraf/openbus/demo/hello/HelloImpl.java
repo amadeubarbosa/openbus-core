@@ -13,11 +13,6 @@ public final class HelloImpl extends IHelloPOA {
   }
 
   @Override
-  public Object _get_component() {
-    return this.context.getIComponent();
-  }
-
-  @Override
   public void sayHello() {
     System.out.println("Hello !!!");
   }

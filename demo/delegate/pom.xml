@@ -4,9 +4,9 @@
 
   <parent>
     <groupId>tecgraf.openbus</groupId>
-    <artifactId>openbus-demo</artifactId>
+    <artifactId>openbus</artifactId>
     <version>1.5-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <artifactId>openbus-demo-delegate</artifactId>
