@@ -43,7 +43,7 @@ local login = {}
 login.user = "tester"
 login.password = "tester"
 
-local systemId     = "testRegistryService"
+local systemId     = "TesteBarramento"
 local deploymentId = systemId
 local testCertFile = systemId .. ".crt"
 local testKeyFile  = systemId .. ".key"
@@ -65,8 +65,10 @@ Suite = {
       idlfile = IDLPATH_DIR.."/access_control_service.idl"
       orb:loadidlfile(idlfile)
 
-      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS",
-        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
+          "IDL:scs/core/IComponent:1.0")
+      local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")

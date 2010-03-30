@@ -10,6 +10,16 @@ local CredentialManager = require "openbus.util.CredentialManager"
 
 local Check = require "latt.Check"
 
+-- Login do administrador
+local login = {}
+login.user = "tester"
+login.password = "tester"
+
+local systemId     = "TesteBarramento"
+local deploymentId = systemId
+local testKeyFile  = systemId .. ".key"
+local acsCertFile  = "AccessControlService.crt"
+
 Suite = {
   --
   -- este teste não precisa inserir credencial no contexto das requisições
@@ -26,10 +36,10 @@ Suite = {
       oil.verbose:level(0)
       orb:loadidlfile(idlfile)
 
-      self.user = "tester"
-      self.password = "tester"
-
-      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
+          "IDL:scs/core/IComponent:1.0")
+      local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -39,10 +49,10 @@ Suite = {
     end,
 
     testLoginByPassword = function(self)
-      local success, credential = self.accessControlService:loginByPassword(self.user, self.password)
+      local success, credential = self.accessControlService:loginByPassword(login.user, login.password)
       Check.assertTrue(success)
 
-      local success, credential2 = self.accessControlService:loginByPassword(self.user, self.password)
+      local success, credential2 = self.accessControlService:loginByPassword(login.user, login.password)
       Check.assertTrue(success)
       Check.assertNotEquals(credential.identifier, credential2.identifier)
 
@@ -60,7 +70,8 @@ Suite = {
     end,
 
     testLogout = function(self)
-      local _, credential = self.accessControlService:loginByPassword(self.user, self.password)
+      local _, credential =
+          self.accessControlService:loginByPassword(login.user, login.password)
       self.credentialManager:setValue(credential)
       Check.assertFalse(self.accessControlService:logout({identifier = "", owner = "abcd", delegate = "", }))
       Check.assertTrue(self.accessControlService:logout(credential))
@@ -81,10 +92,10 @@ Suite = {
       oil.verbose:level(0)
       orb:loadidlfile(idlfile)
 
-      self.user = "tester"
-      self.password = "tester"
-
-      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
+          "IDL:scs/core/IComponent:1.0")
+      local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -94,7 +105,8 @@ Suite = {
     end,
 
     beforeEachTest = function(self)
-      _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
+      _, self.credential =
+          self.accessControlService:loginByPassword(login.user, login.password)
       self.credentialManager:setValue(self.credential)
     end,
 
@@ -107,7 +119,7 @@ Suite = {
 
     testIsValid = function(self)
       Check.assertTrue(self.accessControlService:isValid(self.credential))
-      Check.assertFalse(self.accessControlService:isValid({identifier = "123", owner = self.user, delegate = "",}))
+      Check.assertFalse(self.accessControlService:isValid({identifier = "123", owner = login.user, delegate = "",}))
       self.accessControlService:logout(self.credential)
 
       -- neste caso o proprio interceptador do serviço rejeita o request
@@ -116,11 +128,11 @@ Suite = {
     end,
 
     testAreValid = function(self)
-      local credentials = {self.credential, {identifier = "INVALID_IDENTIFIER", owner = self.user, delegate = "",},}
+      local credentials = {self.credential, {identifier = "INVALID_IDENTIFIER", owner = login.user, delegate = "",},}
       local results = self.accessControlService:areValid(credentials)
       Check.assertTrue(results[1])
       Check.assertFalse(results[2])
-      credentials = {{identifier = "INVALID_IDENTIFIER", owner = self.user, delegate = "",}, self.credential}
+      credentials = {{identifier = "INVALID_IDENTIFIER", owner = login.user, delegate = "",}, self.credential}
       results = self.accessControlService:areValid(credentials)
       Check.assertFalse(results[1])
       Check.assertTrue(results[2])
@@ -154,10 +166,11 @@ Suite = {
       local oldCredential = self.credential
       self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()
-      _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
+      _, self.credential =
+          self.accessControlService:loginByPassword(login.user, login.password)
       self.credentialManager:setValue(self.credential)
       for i=1,3 do
-        Check.assertFalse(self.accessControlService:removeCredentialFromObserver(observersId[i], oldCredential.identifier))
+ Check.assertFalse(self.accessControlService:removeCredentialFromObserver(observersId[i], oldCredential.identifier))
       end
     end,
 
@@ -170,7 +183,7 @@ Suite = {
       local observerId = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()
-      _, self.credential = self.accessControlService:loginByPassword(self.user, self.password)
+      _, self.credential = self.accessControlService:loginByPassword(login.user, login.password)
       self.credentialManager:setValue(self.credential)
       Check.assertFalse(self.accessControlService:removeObserver(observerId))
     end,
@@ -185,14 +198,13 @@ Suite = {
       end
       local idlfile = IDLPATH_DIR.."/access_control_service.idl"
 
-      self.privateKeyFile = "testAccessControlService.key"
-      self.acsCertificateFile = "AccessControlService.crt"
-
       oil.verbose:level(0)
       orb:loadidlfile(idlfile)
 
-      self.accessControlService = orb:newproxy("corbaloc::localhost:2089/ACS", 
-        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
+          "IDL:scs/core/IComponent:1.0")
+      local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -209,68 +221,76 @@ Suite = {
     end,
 
     --
-    -- Este teste requer que a implantação 'TestAccessControlService' esteja cadastrada
+    -- Este teste requer que a implantação 'TesteBarramento' esteja cadastrada
     --
     testLoginByCertificate = function(self)
-      local challenge = self.accessControlService:getChallenge("TestAccessControlService")
+      local challenge =
+          self.accessControlService:getChallenge(deploymentId)
       Check.assertTrue(challenge and #challenge > 0)
-      local privateKey = lce.key.readprivatefrompemfile(self.privateKeyFile)
+      local privateKey = lce.key.readprivatefrompemfile(testKeyFile)
       Check.assertNotNil(privateKey)
       challenge = lce.cipher.decrypt(privateKey, challenge)
       Check.assertNotNil(challenge)
-      local certificate = lce.x509.readfromderfile(self.acsCertificateFile)
+      local certificate = lce.x509.readfromderfile(acsCertFile)
       Check.assertNotNil(certificate)
       local answer = lce.cipher.encrypt(certificate:getpublickey(), challenge)
       Check.assertNotNil(answer)
-      local succ, credential, lease = self.accessControlService:loginByCertificate("TestAccessControlService", answer)
+      local succ, credential, lease = self.accessControlService:loginByCertificate(deploymentId, answer)
       Check.assertTrue(succ)
       self.credentialManager:setValue(credential)
       Check.assertTrue(self.accessControlService:logout(credential))
     end,
 
     --
-    -- Este teste requer que a implantação 'TestAccessControlService' esteja cadastrada
+    -- Este teste requer que a implantação 'TesteBarramento' esteja cadastrada
     --
     testLoginByCertificate_WrongAnswer = function(self)
-      local challenge = self.accessControlService:getChallenge("TestAccessControlService")
+      local challenge =
+          self.accessControlService:getChallenge(deploymentId)
       Check.assertTrue(challenge and #challenge > 0)
-      local privateKey = lce.key.readprivatefrompemfile(self.privateKeyFile)
+      local privateKey = lce.key.readprivatefrompemfile(testKeyFile)
       Check.assertNotNil(privateKey)
       challenge = lce.cipher.decrypt(privateKey, challenge)
       Check.assertNotNil(challenge)
-      local certificate = lce.x509.readfromderfile(self.acsCertificateFile)
+      local certificate = lce.x509.readfromderfile(acsCertFile)
       Check.assertNotNil(certificate)
       local answer = lce.cipher.encrypt(certificate:getpublickey(), challenge.."->Wrong")
       Check.assertNotNil(answer)
-      local succ = self.accessControlService:loginByCertificate("TestAccessControlService", answer)
+      local succ =
+          self.accessControlService:loginByCertificate(deploymentId,
+          answer)
       Check.assertFalse(succ)
     end,
 
     --
-    -- Este teste requer que a implantação 'TestAccessControlService' esteja cadastrada
+    -- Este teste requer que a implantação 'TesteBarramento' esteja cadastrada
     --
     testLoginByCertificate_NoEncryption = function(self)
-      local challenge = self.accessControlService:getChallenge("TestAccessControlService")
+      local challenge = self.accessControlService:getChallenge(deploymentId)
       Check.assertTrue(challenge and #challenge > 0)
-      local succ = self.accessControlService:loginByCertificate("TestAccessControlService", "InvalidAnswer")
+      local succ =
+          self.accessControlService:loginByCertificate(deploymentId,
+          "InvalidAnswer")
       Check.assertFalse(succ)
     end,
 
     --
-    -- Este teste requer que a implantação 'TestAccessControlService' esteja cadastrada
+    -- Este teste requer que a implantação 'TesteBarramento' esteja cadastrada
     --
     testLogout = function(self)
-      local challenge = self.accessControlService:getChallenge("TestAccessControlService")
+      local challenge = self.accessControlService:getChallenge(deploymentId)
       Check.assertTrue(challenge and #challenge > 0)
-      local privateKey = lce.key.readprivatefrompemfile(self.privateKeyFile)
+      local privateKey = lce.key.readprivatefrompemfile(testKeyFile)
       Check.assertNotNil(privateKey)
       challenge = lce.cipher.decrypt(privateKey, challenge)
       Check.assertNotNil(challenge)
-      local certificate = lce.x509.readfromderfile(self.acsCertificateFile)
+      local certificate = lce.x509.readfromderfile(acsCertFile)
       Check.assertNotNil(certificate)
       local answer = lce.cipher.encrypt(certificate:getpublickey(), challenge)
       Check.assertNotNil(answer)
-      local succ, credential, lease = self.accessControlService:loginByCertificate("TestAccessControlService", answer)
+      local succ, credential, lease =
+          self.accessControlService:loginByCertificate(deploymentId,
+          answer)
       Check.assertTrue(succ)
       self.credentialManager:setValue(credential)
       Check.assertFalse(self.accessControlService:logout({
