@@ -7,7 +7,7 @@ local string = string
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
-local util = require "openbus.util.Utils"
+local Utils = require "openbus.util.Utils"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
@@ -38,7 +38,7 @@ local usage_msg = [[
  NOTES:
  	The prefix '--' is optional in all options.
 	So '--help' or '-help' or yet 'help' all are the same option.]]
-local arguments = util.parse_args(arg,usage_msg,true)
+local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" then
 	oil.verbose:level(5)
@@ -85,10 +85,10 @@ facetDescriptions.IFaultTolerantService	= {}
 facetDescriptions.IManagement           = {}
 facetDescriptions.IReceptacles          = {}
 
-facetDescriptions.IComponent.name                     = "IComponent"
-facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
-facetDescriptions.IComponent.class                    = scs.Component
-facetDescriptions.IComponent.key                      = "IC"
+facetDescriptions.IComponent.name           = "IComponent"
+facetDescriptions.IComponent.interface_name = "IDL:scs/core/IComponent:1.0"
+facetDescriptions.IComponent.class          = scs.Component
+facetDescriptions.IComponent.key            = Utils.OPENBUS_KEY
 
 facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
@@ -97,17 +97,17 @@ facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 facetDescriptions.IAccessControlService.name            = "IAccessControlService"
 facetDescriptions.IAccessControlService.interface_name  = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0"
 facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
-facetDescriptions.IAccessControlService.key             = "ACS"
+facetDescriptions.IAccessControlService.key             = Utils.ACCESS_CONTROL_SERVICE_KEY
 
 facetDescriptions.ILeaseProvider.name                  = "ILeaseProvider"
 facetDescriptions.ILeaseProvider.interface_name        = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ILeaseProvider:1.0"
 facetDescriptions.ILeaseProvider.class                 = AccessControlService.LeaseProviderFacet
-facetDescriptions.ILeaseProvider.key                   = "LP"
+facetDescriptions.ILeaseProvider.key                   = Utils.LEASE_PROVIDER_KEY
 
 facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
 facetDescriptions.IFaultTolerantService.interface_name        = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
 facetDescriptions.IFaultTolerantService.class                 = AccessControlService.FaultToleranceFacet
-facetDescriptions.IFaultTolerantService.key                   = "FTACS"
+facetDescriptions.IFaultTolerantService.key                   = Utils.FAULT_TOLERANT_ACS_KEY
 
 facetDescriptions.IManagement.name           = "IManagement"
 facetDescriptions.IManagement.interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0"

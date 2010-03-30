@@ -9,7 +9,7 @@ local tonumber = tonumber
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
-local util = require "openbus.util.Utils"
+local Utils = require "openbus.util.Utils"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
@@ -34,7 +34,7 @@ local usage_msg = [[
  NOTES:
   The prefix '--' is optional in all options.
   So '--help' or '-help' or yet 'help' all are the same option.]]
-local arguments = util.parse_args(arg,usage_msg,true)
+local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" then
   oil.verbose:level(5)
@@ -95,12 +95,12 @@ facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 facetDescriptions.IRegistryService.name            = "IRegistryService"
 facetDescriptions.IRegistryService.interface_name  = "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0"
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
-facetDescriptions.IRegistryService.key             = "RS"
+facetDescriptions.IRegistryService.key             = Utils.REGISTRY_SERVICE_KEY
 
 facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
 facetDescriptions.IFaultTolerantService.interface_name        = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
 facetDescriptions.IFaultTolerantService.class                 = RegistryService.FaultToleranceFacet
-facetDescriptions.IFaultTolerantService.key                   = "FTRS"
+facetDescriptions.IFaultTolerantService.key                   = Utils.FAULT_TOLERANT_RS_KEY
 
 facetDescriptions.IManagement.name           = "IManagement"
 facetDescriptions.IManagement.interface_name = "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0"

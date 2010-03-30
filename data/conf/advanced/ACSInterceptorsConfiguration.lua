@@ -8,6 +8,10 @@ local config =
 -- Acrescenta informação sobre as operacões a serem liberadas
 config.interfaces = {
   {
+    interface = "IDL:scs/core/IComponent:1.0",
+    excluded_ops = {"getFacet"}
+  },
+  {
     interface = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0",
     excluded_ops = {"loginByPassword", "loginByCertificate", "getChallenge"}
   },
