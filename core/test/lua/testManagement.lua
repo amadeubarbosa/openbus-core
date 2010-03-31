@@ -1181,7 +1181,7 @@ function Test6:afterTestCase()
   for _, iface in ipairs(self.ifaces) do
     self.rsMgt.__try:removeInterfaceIdentifier(iface)
   end
-  for _, user in ipairs(self.user) do
+  for _, user in ipairs(self.users) do
     self.acsMgt.__try:removeUser(user.id)
   end
   if (self.credentialManager:hasValue()) then
