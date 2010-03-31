@@ -9,3 +9,8 @@ SystemDeployment {
   description = "Teste do Barramento",
   certificate = "TesteBarramento.crt",
 }
+
+Grant {
+  id = "TesteBarramento",
+  interfaces = { "IDL:*:*" },
+}

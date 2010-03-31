@@ -14,316 +14,831 @@ local scs = require "scs.core.base"
 
 local Check = require "latt.Check"
 
----- Facet Descriptions
-local facetDescriptions = {}
-facetDescriptions.IComponent = {
-  name = "IComponent",
-  interface_name = "IDL:scs/core/IComponent:1.0",
-  class = scs.Component
-}
-facetDescriptions.IMetaInterface = {
-  name = "IMetaInterface",
-  interface_name = "IDL:scs/core/IMetaInterface:1.0",
-  class = scs.MetaInterface
+-------------------------------------------------------------------------------
+-- Informações sobre os componentes usados nos testes
+--
+
+-- Interfaces
+
+local IDL = {
+  "interface IHello_v1 { };",
+  "interface IHello_v2 { };",
 }
 
--- Receptacle Descriptions
-local receptacleDescriptions = {}
+-- Descrições
 
--- component id
-local componentId = {}
-componentId.name = "Membro Mock"
-componentId.major_version = 1
-componentId.minor_version = 0
-componentId.patch_version = 0
-componentId.platform_spec = ""
+local Hello_v1  = {
+  -- Descrição dos receptáculos
+  receptacles = {},
+  -- Descrição das facetas
+  facets = {
+    IComponent = {
+      name = "IComponent",
+      interface_name = "IDL:scs/core/IComponent:1.0",
+      class = scs.Component
+    },
+    IMetaInterface = {
+      name = "IMetaInterface",
+      interface_name = "IDL:scs/core/IMetaInterface:1.0",
+      class = scs.MetaInterface
+    },
+    IHello_v1 = {
+      name = "IHello_v1",
+      interface_name = "IDL:IHello_v1:1.0",
+      class = oop.class({}),
+    },
+  },
+  -- ComponentId
+  componentId = {
+    name = "Hello_v1",
+    major_version = 1,
+    minor_version = 0,
+    patch_version = 0,
+    platform_spec = "",
+  },
+  -- Propriedades para o registro.
+  -- Alguns testes levam em consideração que as propriedades dos dois
+  -- componentes são diferentes.
+  properties = {
+    {name = "type",        value = {"IHello"}},
+    {name = "description", value = {"IHello versão 1.0"}},
+    {name = "version",     value = {"1.0"}},
+    -- Teste de propriedade vazia
+    {name = "bugs",        value = {}},
+  },
+}
 
--- Login do administrador
-local login = {}
-login.user = "tester"
-login.password = "tester"
+local Hello_v2  = {
+  -- Descrição dos receptáculos
+  receptacles = {},
+  -- Descrição das facetas
+  facets = {
+    IComponent = {
+      name = "IComponent",
+      interface_name = "IDL:scs/core/IComponent:1.0",
+      class = scs.Component
+    },
+    IMetaInterface = {
+      name = "IMetaInterface",
+      interface_name = "IDL:scs/core/IMetaInterface:1.0",
+      class = scs.MetaInterface
+    },
+    IHello_v1 = {
+      name = "IHello_v1",
+      interface_name = "IDL:IHello_v1:1.0",
+      class = oop.class({}),
+    },
+    IHello_v2 = {
+      name = "IHello_v2",
+      interface_name = "IDL:IHello_v2:1.0",
+      class = oop.class({}),
+    },
+  },
+  -- ComponentId
+  componentId = {
+    name = "Hello_v2",
+    major_version = 1,
+    minor_version = 0,
+    patch_version = 0,
+    platform_spec = "",
+  },
+  -- Propriedades para o registro.
+  -- Alguns testes levam em consideração que as propriedades dos dois
+  -- componentes são diferentes.
+  properties = {
+    {name = "type",        value = {"IHello"}},
+    {name = "description", value = {"IHello versões 1.0 e 2.0"}},
+    -- Teste de múltiplos valores
+    {name = "version",     value = {"1.0", "2.0"}},
+    -- Teste de propriedade vazia
+    {name = "bugs",        value = {}},
+  },
+}
 
-local systemId     = "TesteBarramento"
-local deploymentId = systemId
-local testCertFile = systemId .. ".crt"
-local testKeyFile  = systemId .. ".key"
+-------------------------------------------------------------------------------
+local deploymentId = "TesteBarramento"
+local testCertFile = deploymentId .. ".crt"
+local testKeyFile  = deploymentId .. ".key"
 local acsCertFile  = "AccessControlService.crt"
+
+-------------------------------------------------------------------------------
+-- Funções auxiliares
+
+-- Muda de array para hash
+local function props2hash(props)
+  local hash = {}
+  for _, prop in ipairs(props) do
+    local values = {}
+    for _, v in ipairs(prop.value) do
+      values[v] = true
+    end
+    hash[prop.name] = values
+  end
+  return hash
+end
+
+-- Verifica se propsA contém propsB
+local function contains(propsA, propsB)
+  for nameB, valuesB in pairs(propsB) do
+    -- Verifica se a propriedade existe
+    local valuesA = propsA[nameB]
+    if not valuesA then
+      return false
+    end
+    -- Verifica se os valores da propriedade são iguais
+    for vB in pairs(valuesB) do
+      if not valuesA[vB] then
+        return false
+      end
+    end
+  end
+  return true
+end
+
+-- Verifica se duas propriedades são iguais
+local function equalsProps(propsA, propsB)
+  local propsA = props2hash(propsA)
+  local propsB = props2hash(propsB)
+  -- Só é verdade de as duas forem iguais
+  return (contains(propsA, propsB) and contains(propsB, propsA))
+end
+
+-- Inicializa as referências para o OpenBus em cada teste
+function init(self)
+  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+  if IDLPATH_DIR == nil then
+    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+    os.exit(1)
+  end
+
+  oil.verbose:level(0)
+
+  orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
+  orb:loadidl(IDL[1])
+  orb:loadidl(IDL[2])
+
+  -- Recupera o Serviço de Acesso
+  local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
+      "IDL:scs/core/IComponent:1.0")
+  local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+  self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+  -- instala o interceptador de cliente
+  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+  local config = assert(loadfile(
+    DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
+  self.credentialManager = CredentialManager()
+  orb:setclientinterceptor(ClientInterceptor(config,
+    self.credentialManager))
+  -- Login do serviço para a realização do teste
+  local challenge = self.accessControlService:getChallenge(deploymentId)
+  local privateKey = lce.key.readprivatefrompemfile(testKeyFile)
+  challenge = lce.cipher.decrypt(privateKey, challenge)
+  cert = lce.x509.readfromderfile(acsCertFile)
+  challenge = lce.cipher.encrypt(cert:getpublickey(), challenge)
+  local succ
+  succ, self.credential, self.lease = 
+    self.accessControlService:loginByCertificate(deploymentId, challenge)
+  self.credentialManager:setValue(self.credential)
+  -- Recupera o Serviço de Registro
+  local acsIComp = self.accessControlService:_component()
+  acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
+  local acsIRecept = acsIComp:getFacetByName("IReceptacles")
+  acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
+  local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
+  local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
+  self.registryService = rsIComp:getFacetByName("IRegistryService")
+  self.registryService = orb:narrow(self.registryService,
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+end
+
+-------------------------------------------------------------------------------
 
 Suite = {
   Test1 = {
     beforeTestCase = function(self)
-      local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-      if IDLPATH_DIR == nil then
-        io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-        os.exit(1)
-      end
+      init(self)
+      --
+      self.fakeProps = {
+        {name = "component_id",  value = {"DoNotExists:8.8.8"}},
+        {name = "registered_by", value = {"DoNotExists"}},
+      }
+      self.trueProps = {
+        {name = "component_id", 
+         value = {string.format(
+                    "%s:%d.%d.%d", 
+                    Hello_v1.componentId.name, 
+                    Hello_v1.componentId.major_version, 
+                    Hello_v1.componentId.minor_version, 
+                    Hello_v1.componentId.patch_version)
+                 }
+        },
+        {name = "registered_by", value = {deploymentId}},
+      }
+    end,
 
-      oil.verbose:level(0)
-
-      local idlfile = IDLPATH_DIR.."/registry_service.idl"
-      orb:loadidlfile(idlfile)
-      idlfile = IDLPATH_DIR.."/access_control_service.idl"
-      orb:loadidlfile(idlfile)
-
-      local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
-          "IDL:scs/core/IComponent:1.0")
-      local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-      self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-
-      -- instala o interceptador de cliente
-      local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-      local config = assert(loadfile(
-        DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
-      self.credentialManager = CredentialManager()
-      orb:setclientinterceptor(ClientInterceptor(config,
-        self.credentialManager))
-      -- Login do administrador para recuperar as referências aos objetos e
-      -- cadastrar as permissões
-      local succ, credential = self.accessControlService:loginByPassword(
-        login.user, login.password)
-      self.credentialManager:setValue(credential)
-      -- Recupera as referências
-      local acsIComp = self.accessControlService:_component()
-      acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
-      local acsIRecept = acsIComp:getFacetByName("IReceptacles")
-      acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
-      self.acsManagement = acsIComp:getFacetByName("IManagement")
-      self.acsManagement = orb:narrow(self.acsManagement, 
-        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
-      local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
-      local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-      self.registryService = rsIComp:getFacetByName("IRegistryService")
-      self.registryService = orb:narrow(self.registryService,
-        "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
-      self.rsManagement = rsIComp:getFacetByName("IManagement")
-      self.rsManagement = orb:narrow(self.rsManagement,
-        "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
-      -- Cadastra o sistema para teste e dá permissão de publicação no RS
-      local f = assert(io.open(testCertFile), testCertFile.." não encontrado")
-      local cert = f:read("*a")
-      f:close()
-      self.acsManagement.__try:addSystem(systemId, "")
-      self.acsManagement.__try:addSystemDeployment(deploymentId, systemId, 
-        "", cert)
-      self.rsManagement.__try:grant(deploymentId, "IDL:*:*", false)
-      -- Logout do administrador
-      self.accessControlService:logout(credential)
+    afterTestCase = function(self)
+      self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()
-      -- Login do serviço para a realização do teste
-      local challenge = self.accessControlService:getChallenge(deploymentId)
-      local privateKey = lce.key.readprivatefrompemfile(testKeyFile)
-      challenge = lce.cipher.decrypt(privateKey, challenge)
-      cert = lce.x509.readfromderfile(acsCertFile)
-      challenge = lce.cipher.encrypt(cert:getpublickey(), challenge)
-      succ, self.credential, self.lease = 
-        self.accessControlService:loginByCertificate(deploymentId, challenge)
-      self.credentialManager:setValue(self.credential)
+    end,
+
+    beforeEachTest = function(self)
+      self.registryIdentifier = nil
+    end,
+
+    afterEachTest = function(self)
+      if self.registryIdentifier then
+        self.registryService:unregister(self.registryIdentifier)
+      end
     end,
 
     testRegister = function(self)
-      local member = scs.newComponent(facetDescriptions,
-        receptacleDescriptions,
-        componentId)
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      -- Identificar local propositalmente
       local success, registryIdentifier = self.registryService:register({
-        properties = {
-          {name = "type", value = {"type1"}},
-          {name = "description", value = {"bla bla bla"}},
-        },
+        properties = Hello_v1.properties,
         member = member.IComponent,
       })
       Check.assertTrue(success)
       Check.assertNotEquals("", registryIdentifier)
+      --
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
+      --
+      Check.assertFalse(self.registryService:unregister("INVALID-IDENTIFIER"))
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
+      --
+      offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(0, #offers)
     end,
 
-    testFind_byName = function(self)
-      local member = scs.newComponent(facetDescriptions,
-        receptacleDescriptions,
-        componentId)
-      local success, registryIdentifier = self.registryService:register({
-        properties = {
-          {name = "type", value = {"X"}},
-          {name = "description", value = {"bla"}},
-        },
+    testUpdate = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService:register({
+        properties = Hello_v1.properties,
         member = member.IComponent,
       })
       Check.assertTrue(success)
-      Check.assertNotEquals("", registryIdentifier)
-      local offers = self.registryService:find({"IComponent"})
-      Check.assertNotEquals(0, #offers)
-      for name, values in pairs (offers[1].properties) do
-        if name == "description" then
-          Check.assertEquals("bla", value[1])
-        end
-      end
-      offers = self.registryService:find({"IDataService"})
-      Check.assertEquals(0, #offers)
-      Check.assertTrue(self.registryService:unregister(registryIdentifier))
-    end,
-    
-    testFind_byInterfaceName = function(self)
-      local member = scs.newComponent(facetDescriptions,
-        receptacleDescriptions,
-        componentId)
-      local success, registryIdentifier = self.registryService:register({
-        properties = {},
-        member = member.IComponent,
-      })
-      Check.assertTrue(success)
-      Check.assertNotEquals("", registryIdentifier)
-      local offers = self.registryService:find({"IDL:scs/core/IComponent:1.0"})
-      Check.assertNotEquals(0, #offers)
-      
-      offers = self.registryService:find({"IDL:scs/core/IComponent:2.0"})
-      Check.assertEquals(0, #offers)
-      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+      Check.assertNotEquals("", self.registryIdentifier)
+      --
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
+      --
+      Check.assertTrue(self.registryService:update(self.registryIdentifier,
+	Hello_v2.properties))
+      offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
     end,
 
-    testFindByCriteria_ComponentId = function(self)
-       local member = scs.newComponent(facetDescriptions,
-        receptacleDescriptions,
-        componentId)
-      local success, registryIdentifier = self.registryService:register({
-        properties = {},
-        member = member.IComponent, 
+    testUpdate_Same = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService:register({
+        properties = Hello_v1.properties,
+        member = member.IComponent,
       })
-      Check.assertTrue(success)
-      Check.assertNotEquals("", registryIdentifier)
+      --
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
+      --
+      Check.assertTrue(self.registryService:update(self.registryIdentifier,
+	Hello_v1.properties))
+      --
+      offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
+    end,
+
+    testRegister_InternalProperties = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      -- Tenta sobrescrita de propriedade definidas internamente no RS
+      success, self.registryIdentifier = self.registryService:register({
+        properties = self.fakeProps,
+        member = member.IComponent,
+      })
+      --
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v1"}, self.trueProps)
+      Check.assertEquals(1, #offers)
+    end,
+
+    testUpdate_InternalProperties = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService:register({
+        properties = self.trueProps,
+        member = member.IComponent,
+      })
+      -- Tenta sobrescrita de propriedade definidas internamente no RS
+      Check.assertTrue(self.registryService:update(self.registryIdentifier, self.fakeProps))
+      --
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v1"}, self.trueProps)
+      Check.assertEquals(1, #offers)
+    end,
+
+    testUpdate_Invalid = function(self)
+      -- Coloca conteúdo no registro
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService:register({
+        properties = Hello_v1.properties,
+        member = member.IComponent,
+      })
+      Check.assertFalse(self.registryService:update("INVALID-IDENTIFIER",
+        Hello_v1.properties))
+    end,
+  },
+
+  Test2 = {
+    beforeTestCase = function(self)
+      init(self)
+      -- Registra ofertas para o teste
+      local success
+      self.member_v1 = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
+        Hello_v1.componentId)
+      success, self.id_v1 = self.registryService:register({
+        properties = Hello_v1.properties,
+        member = self.member_v1.IComponent,
+      })
+      --
+      self.member_v2 = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
+        Hello_v2.componentId)
+      success, self.id_v2 = self.registryService:register({
+        properties = Hello_v2.properties,
+        member = self.member_v2.IComponent,
+      })
+    end,
+
+    afterTestCase = function(self)
+      Check.assertTrue(self.registryService:unregister(self.id_v1))
+      Check.assertTrue(self.registryService:unregister(self.id_v2))
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+    end,
+
+    testFindByName_NotFound = function(self)
+      local offers = self.registryService:find({"IServiceNotRegistered"})
+      Check.assertEquals(0, #offers)
+    end,
+
+    testFindByName = function(self)
+      local offers = self.registryService:find({"IHello_v2"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByName_MoreResults = function(self)
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(2, #offers)
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, Hello_v1.properties) or
+        equalsProps(offers[2].properties, Hello_v1.properties)) 
+       and
+       (equalsProps(offers[1].properties, Hello_v2.properties) or
+        equalsProps(offers[2].properties, Hello_v2.properties))
+      )
+    end,
+
+    testFindByName_List = function(self)
+      local offers = self.registryService:find({"IHello_v1","IHello_v2"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindbyInterfaceName_NotFound = function(self)
+      local offers = self.registryService:find({"IDL:service/not/registered/:1.0"})
+      Check.assertEquals(0, #offers)
+    end,
+
+    testFindbyInterfaceName = function(self)
+      offers = self.registryService:find({"IDL:IHello_v2:1.0"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindbyInterfaceName_MoreResults = function(self)
+      local offers = self.registryService:find({"IDL:IHello_v1:1.0"})
+      Check.assertEquals(2, #offers)
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, Hello_v1.properties) or
+        equalsProps(offers[2].properties, Hello_v1.properties)) 
+       and
+       (equalsProps(offers[1].properties, Hello_v2.properties) or
+        equalsProps(offers[2].properties, Hello_v2.properties))
+      )
+    end,
+
+    testFindbyInterfaceName_List = function(self)
+      local offers = self.registryService:find({"IDL:IHello_v1:1.0","IDL:IHello_v2:1.0"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByCriteria_Facet_Equals = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v1"}, Hello_v1.properties)
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
+      --
+      offers = self.registryService:findByCriteria(
+        {"IHello_v1", "IHello_v2"}, Hello_v2.properties)
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByCriteria_Facet_One = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v1"},
+        {
+          {name = "version", value = {"1.0", "2.0"}}
+        }
+      )
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByCriteria_Facet_Empty = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v1"},
+        {
+          {name = "bugs", value = {}}
+        }
+      )
+      Check.assertEquals(2, #offers)
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, Hello_v1.properties) or
+        equalsProps(offers[2].properties, Hello_v1.properties)) 
+       and
+       (equalsProps(offers[1].properties, Hello_v2.properties) or
+        equalsProps(offers[2].properties, Hello_v2.properties))
+      )
+    end,
+
+    testFindByCriteria_Facet_Any = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v1"},
+        {
+          {name = "version", value = {"1.0"}}
+        }
+      )
+      Check.assertEquals(2, #offers)
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, Hello_v1.properties) or
+        equalsProps(offers[2].properties, Hello_v1.properties)) 
+       and
+       (equalsProps(offers[1].properties, Hello_v2.properties) or
+        equalsProps(offers[2].properties, Hello_v2.properties))
+      )
+    end,
+
+    testFindByCriteria_Facet_ComponentId = function(self)
+      local componentId = Hello_v1.componentId
       local compId = componentId.name..":"..componentId.major_version.. "."
         .. componentId.minor_version.."."..componentId.patch_version
       local offers = self.registryService:findByCriteria(
-        {"IComponent"},
+        {"IHello_v1"},
         {
           {name = "component_id", value = {compId}},
         }
       )
-      Check.assertNotEquals(0, #offers)
-      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
     end,
 
-    testFindByCriteria_Owner = function(self)
-       local member = scs.newComponent(facetDescriptions,
-        receptacleDescriptions,
-        componentId)
-      local success, registryIdentifier = self.registryService:register({
-        properties = {},
-        member = member.IComponent, 
-      })
-      Check.assertTrue(success)
-      Check.assertNotEquals("", registryIdentifier)
-      local onwer = login.user
+    testFindByCriteria_Facet_ComponentId_MoreComponents = function(self)
+      local componentId = Hello_v2.componentId
+      local compId = componentId.name..":"..componentId.major_version.. "."
+        .. componentId.minor_version.."."..componentId.patch_version
       local offers = self.registryService:findByCriteria(
-        {"IComponent"},
+        {"IHello_v1"},
         {
-          {name = "registered_by", value = {owner}},
+          {name = "component_id", value = {compId}},
         }
       )
-      Check.assertNotEquals(0, #offers)
-      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
     end,
 
-
-    testUpdate = function(self)
-      local member = scs.newComponent(facetDescriptions,
-        receptacleDescriptions, componentId)
-      local serviceOffer = {
-        properties = {
-          {name = "type", value = {"X"}},
-          {name = "description", value = {"bla"}},
-        }, member = member.IComponent, }
-      Check.assertFalse(self.registryService:update("", {}))
-      local success, registryIdentifier =
-        self.registryService:register(serviceOffer)
-      Check.assertTrue(success)
+    testFindByCriteria_Interface_Equals = function(self)
       local offers = self.registryService:findByCriteria(
-        {"IComponent"},
-        {
-          {name = "type", value = {"X"}},
-          {name = "p1", value = {"b"}
-        }
-      })
-      Check.assertEquals(0, #offers)
-      local newProps = {
-        {name = "type", value = {"X"}},
-        {name = "description", value = {"bla"}},
-        {name = "p1", value = {"c", "a", "b"}}
-      }
-      Check.assertTrue(self.registryService:update(registryIdentifier,
-        newProps))
+        {"IDL:IHello_v1:1.0"}, Hello_v1.properties)
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
+      --
       offers = self.registryService:findByCriteria(
-        {"IComponent"},
+        {"IDL:IHello_v1:1.0", "IDL:IHello_v2:1.0"}, Hello_v2.properties)
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByCriteria_Interface_One = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IDL:IHello_v1:1.0"},
         {
-          {name = "type", value = {"X"}},
-          {name = "p1", value = {"b"}
+          {name = "version", value = {"1.0", "2.0"}}
         }
-      })
+      )
       Check.assertEquals(1, #offers)
-      Check.assertEquals(offers[1].member:getComponentId().name,
-        member._componentId.name)
-      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
     end,
 
-    testFacets = function(self)
-      local dummyObserver = oop.class{
-        credentialWasDeleted = function(self, credential) end
-      }
-      facetDescriptions.ICredentialObserver = {
-        name = "facet1",
-        interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0",
-        class = dummyObserver
-      }
-      facetDescriptions.ICredentialObserver2 = {
-        name = "facet2",
-        interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0",
-        class = dummyObserver
-      }
-      local member = scs.newComponent(facetDescriptions,
-        receptacleDescriptions, componentId)
-      local serviceOffer = {
-        properties = {
-          {name = "type", value = {"WithFacets"}},
-          {name = "description", value = {"bla"}},
-          {name = "p1", value = {"b"}}
-        },
-        member = member.IComponent
-      }
-      local success, registryIdentifier =
-        self.registryService:register(serviceOffer)
-      Check.assertTrue(success)
-      local offers = self.registryService:find({"facet1", "facet2"})
-      Check.assertEquals(1, #offers)
-      offers = self.registryService:find({"facet2"})
-      Check.assertEquals(1, #offers)
-      offers = self.registryService:find({"facet3"})
-      Check.assertEquals(0, #offers)
-      local newProps = {
-        {name = "type", value = {"WithFacets"}},
-        {name = "description", value = {"bla"}},
-        {name = "p1", value = {"b"}},
-        {name = "facets", value = {"facet1"}}
-      }
-      Check.assertTrue(self.registryService:update(registryIdentifier,
-        newProps))
-      offers = self.registryService:find({"facet1", "facet4"})
-      Check.assertEquals(0, #offers)
-      offers = self.registryService:find({"facet1"})
-      Check.assertEquals(1, #offers)
-      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    testFindByCriteria_Interface_Empty = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IDL:IHello_v1:1.0"},
+        {
+          {name = "bugs", value = {}}
+        }
+      )
+      Check.assertEquals(2, #offers)
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, Hello_v1.properties) or
+        equalsProps(offers[2].properties, Hello_v1.properties)) 
+       and
+       (equalsProps(offers[1].properties, Hello_v2.properties) or
+        equalsProps(offers[2].properties, Hello_v2.properties))
+      )
     end,
 
-    testNoCredential = function(self)
-      self.credentialManager:invalidate()
-      Check.assertError(self.registryService.find, self.registryService,
-        {"IComponent"}, {name = "type", value = {"Y"}})
-      self.credentialManager:setValue(self.credential)
+    testFindByCriteria_Interface_Any = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IDL:IHello_v1:1.0"},
+        {
+          {name = "version", value = {"1.0"}}
+        }
+      )
+      Check.assertEquals(2, #offers)
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, Hello_v1.properties) or
+        equalsProps(offers[2].properties, Hello_v1.properties)) 
+       and
+       (equalsProps(offers[1].properties, Hello_v2.properties) or
+        equalsProps(offers[2].properties, Hello_v2.properties))
+      )
     end,
+
+    testFindByCriteria_Interface_ComponentId = function(self)
+      local componentId = Hello_v2.componentId
+      local compId = componentId.name..":"..componentId.major_version.. "."
+        .. componentId.minor_version.."."..componentId.patch_version
+      local offers = self.registryService:findByCriteria(
+        {"IDL:IHello_v1:1.0"},
+        {
+          {name = "component_id", value = {compId}},
+        }
+      )
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByCriteria_Interface_ComponentId_MoreComponents = function(self)
+      local componentId = Hello_v2.componentId
+      local compId = componentId.name..":"..componentId.major_version.. "."
+        .. componentId.minor_version.."."..componentId.patch_version
+      local offers = self.registryService:findByCriteria(
+        {"IDL:IHello_v1:1.0"},
+        {
+          {name = "component_id", value = {compId}},
+        }
+      )
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByCriteria_Facet_Owner = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v2"},
+        {
+          {name = "registered_by", value = {deploymentId}},
+        }
+      )
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByCriteria_Facet_Owner_MoreResults = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v1"},
+        {
+          {name = "registered_by", value = {deploymentId}},
+        }
+      )
+      Check.assertEquals(2, #offers)
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, Hello_v1.properties) or
+        equalsProps(offers[2].properties, Hello_v1.properties)) 
+       and
+       (equalsProps(offers[1].properties, Hello_v2.properties) or
+        equalsProps(offers[2].properties, Hello_v2.properties))
+      )
+    end,
+
+    testFindByCriteria_Facet_Owner_NotFound = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"InvalidFacet"},
+        {
+          {name = "registered_by", value = {deploymentId}},
+        }
+      )
+      Check.assertEquals(0, #offers)
+    end,
+
+    testFindByCriteria_Interface_Owner = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IDL:IHello_v2:1.0"},
+        {
+          {name = "registered_by", value = {deploymentId}},
+        }
+      )
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+    end,
+
+    testFindByCriteria_Interface_Owner_MoreResults = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IDL:IHello_v1:1.0"},
+        {
+          {name = "registered_by", value = {deploymentId}},
+        }
+      )
+      Check.assertEquals(2, #offers)
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, Hello_v1.properties) or
+        equalsProps(offers[2].properties, Hello_v1.properties)) 
+       and
+       (equalsProps(offers[1].properties, Hello_v2.properties) or
+        equalsProps(offers[2].properties, Hello_v2.properties))
+      )
+    end,
+
+    testFindByCriteria_Interface_Owner_NotFound = function(self)
+      local offers = self.registryService:findByCriteria(
+        {"IDL:InvalidFacet:1.0"},
+        {
+          {name = "registered_by", value = {deploymentId}},
+        }
+      )
+      Check.assertEquals(0, #offers)
+    end,
+  },
+
+  Test3 = {
+    beforeTestCase = init,
 
     afterTestCase = function(self)
-      self.rsManagement.__try:removeAuthorization(deploymentId)
-      self.acsManagement.__try:removeSystemDeployment(deploymentId)
-      self.acsManagement.__try:removeSystem(systemId)
       self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()
     end,
-  }
+
+    beforeEachTest = function(self)
+      self.credentialManager:setValue(self.credential)
+      self.registryIdentifier = nil
+    end,
+
+    afterEachTest = function(self)
+      self.credentialManager:setValue(self.credential)
+      if self.registryIdentifier then
+        self.registryService:unregister(self.registryIdentifier)
+      end
+    end,
+
+    testRegister_NoCredential = function(self)
+      self.credentialManager:invalidate()
+      --
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      local success, err = self.registryService.__try:register({
+        properties = Hello_v1.properties,
+        member = member.IComponent,
+      })
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+    end,
+
+    testFind_NoCredential = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService:register({
+        properties = Hello_v1.properties,
+        member = member.IComponent,
+      })
+      --
+      self.credentialManager:invalidate()
+      --
+      local err
+      success, err = self.registryService.__try:find({"IHello_v1"})
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+    end,
+
+    testUpdate_NoCredential = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService:register({
+        properties = Hello_v1.properties,
+        member = member.IComponent,
+      })
+      --
+      self.credentialManager:invalidate()
+      --
+      local err
+      success, err = self.registryService.__try:update(self.registryIdentifier,
+        Hello_v1.properties)
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+    end,
+
+    testFindByCriteria_NoCredential = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService:register({
+        properties = Hello_v1.properties,
+        member = member.IComponent,
+      })
+      --
+      self.credentialManager:invalidate()
+      --
+      local err
+      success, err = self.registryService.__try:findByCriteria(
+	{"IHello_v1"}, Hello_v1.properties)
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+    end,
+
+    testUnregister_NoCredential = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService:register({
+        properties = Hello_v1.properties,
+        member = member.IComponent,
+      })
+      --
+      self.credentialManager:invalidate()
+      --
+      local err
+      success, err = self.registryService.__try:unregister(
+        self.registryIdentifier)
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+    end,
+  },
+
+  Test4 = {
+    beforeTestCase = init,
+
+    afterTestCase = function(self)
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+    end,
+
+    testLogout = function(self)
+      local success, member_v1, member_v2, id_v1, id_v2
+      member_v1 = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
+        Hello_v1.componentId)
+      success, id_v1 = self.registryService:register({
+        properties = Hello_v1.properties,
+        member = member_v1.IComponent,
+      })
+      --
+      member_v2 = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
+        Hello_v2.componentId)
+      success, id_v2 = self.registryService:register({
+        properties = Hello_v2.properties,
+        member = member_v2.IComponent,
+      })
+      -- Registro deve ser limpo
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+      socket.sleep(3)
+      -- Faz login novamente
+      init(self)
+      --
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(0, #offers)
+    end,
+  },
 }
