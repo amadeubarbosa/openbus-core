@@ -23,7 +23,9 @@
 #include "luuid.h"
 #include "lfs.h"
 #include "lce.h"
+#include "lpw.h"
 #include "lualdap.h"
+#include "openbuspreloaded.h"
 
 #include "acs.h"
 #include "acspreloaded.h"
@@ -367,6 +369,7 @@ static int pmain (lua_State *L) {
   luaopen_lfs(L);
   luaopen_lualdap(L);
   luaopen_lce(L);
+  luaopen_lpw(L);
 
   lua_gc(L, LUA_GCRESTART, 0);
   luaopen_core_services_accesscontrol_AccessControlServer(L);
