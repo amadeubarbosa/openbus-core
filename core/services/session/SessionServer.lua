@@ -9,6 +9,7 @@ local tonumber = tonumber
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
+local Utils = require "openbus.util.Utils"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)

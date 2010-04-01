@@ -6,6 +6,8 @@
 SessionServerConfiguration = {
   accessControlServerHostName = "localhost",
   accessControlServerHostPort = 2089,
+  sessionServerHostName = "localhost",
+  sessionServerHostPort = 2029,
   privateKeyFile = "certificates/SessionService.key",
   accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
   logLevel = 3,
