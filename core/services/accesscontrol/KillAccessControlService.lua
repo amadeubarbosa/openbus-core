@@ -4,7 +4,7 @@ local ipairs = ipairs
 local tonumber = tonumber
 
 local Log = require "openbus.util.Log"
-local Openbus = require "openbus.Openbus" 
+local Openbus = require "openbus.Openbus"
 local oil = require "oil"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
@@ -18,7 +18,7 @@ end
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
   Log:error("A variavel OPENBUS_DATADIR nao foi definida.\n")
-  os.exit(1)
+  os.exit(0)
 end
 
 -- Obtém a configuração do serviço
@@ -68,9 +68,9 @@ function main()
   Openbus:_setInterceptors()
   -- autentica o monitor, conectando-o ao barramento
   Openbus:connectByCertificate("FTAccessControlServiceMonitor",
-      DATA_DIR.."/"..config.monitorPrivateKeyFile, 
+      DATA_DIR.."/"..config.monitorPrivateKeyFile,
       DATA_DIR.."/"..config.accessControlServiceCertificateFile)
-      
+
   Openbus.ft:setStatus(false)
 
   Log:faulttolerance("Injetou falha no ACS -- fim.")

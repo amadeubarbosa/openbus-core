@@ -4,7 +4,7 @@ local ipairs = ipairs
 local tonumber = tonumber
 
 local Log = require "openbus.util.Log"
-local Openbus = require "openbus.Openbus" 
+local Openbus = require "openbus.Openbus"
 local oil = require "oil"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
@@ -52,30 +52,30 @@ function main()
 
   Log:faulttolerance("corbaloc::"..hostAdd.."/FTRS")
 
-  
-  
-  Openbus:init(RegistryServerConfiguration.accessControlServerHostName, 
+
+
+  Openbus:init(RegistryServerConfiguration.accessControlServerHostName,
                RegistryServerConfiguration.accessControlServerHostPort)
   Openbus:_setInterceptors()
   Openbus:enableFaultTolerance()
-  
+
   local ftregistryService = Openbus:getORB():newproxy("corbaloc::"..hostAdd.."/FTRS",
                "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
   if ftregistryService:_non_existent() then
       Log:error("Servico de registro nao encontrado.")
       os.exit(1)
   end
-  
+
   -- autentica o monitor, conectando-o ao barramento
   Openbus:connectByCertificate("FTRegistryServiceMonitor",
-      DATA_DIR.."/"..RegistryServerConfiguration.monitorPrivateKeyFile, 
+      DATA_DIR.."/"..RegistryServerConfiguration.monitorPrivateKeyFile,
       DATA_DIR.."/"..RegistryServerConfiguration.accessControlServiceCertificateFile)
 
   ftregistryService:setStatus(false)
 
   Log:faulttolerance("Injetou falha no Servico de Registro -- fim.")
 
-  os.exit(1)
+  os.exit(0)
 
 end
 
