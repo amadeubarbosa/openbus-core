@@ -29,7 +29,7 @@ local iConfig =
 local usage_msg = [[
   --help                   : show this help
   --verbose                : turn ON the VERBOSE mode (show the system commands)
-  --port=<port number>     : defines the service port (padrão ]] 
+  --port=<port number>     : defines the service port (default=]] 
                 .. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
  NOTES:
   The prefix '--' is optional in all options.
@@ -52,7 +52,6 @@ end
 if RegistryServerConfiguration.logLevel then
   Log:level(RegistryServerConfiguration.logLevel)
 end
-
 
 props = {  host = RegistryServerConfiguration.registryServerHostName,
            port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}

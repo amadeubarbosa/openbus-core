@@ -2,25 +2,32 @@ PROJNAME= OpenBus
 APPNAME= rgs
 
 LUABIN= ${LUA51}/bin/${TEC_UNAME}/lua5.1
-LUA_FLAGS += -e 'package.path="./?.lua;../../?.lua;"..package.path'
+LUAPATH = '${OPENBUS_HOME}/libpath/lua/5.1/?.lua;../../?.lua;'
 
 OPENBUSLIB= ${OPENBUS_HOME}/libpath/${TEC_UNAME} 
 OPENBUSINC= ${OPENBUS_HOME}/incpath
 
 PRECMP_DIR= ../obj/rgs/${TEC_UNAME}
 PRECMP_LUA= ${OPENBUS_HOME}/libpath/lua/5.1/precompiler.lua
-PRECMP_FLAGS= -p REGISTRY_SERVICE -o rgs -d ${PRECMP_DIR} -n
+PRECMP_FLAGS= -p REGISTRY_SERVER -o rgs -l ${LUAPATH} -d ${PRECMP_DIR} -n
 
 PRELOAD_LUA= ${OPENBUS_HOME}/libpath/lua/5.1/preloader.lua
-PRELOAD_FLAGS= -p REGISTRY_SERVICE -o rgspreloaded -d ${PRECMP_DIR}
+PRELOAD_FLAGS= -p REGISTRY_SERVER -o rgspreloaded -d ${PRECMP_DIR}
 
-RGS_LUA= $(addprefix core.services.registry.,\
+RGS_MODULES=$(addprefix core.services.registry.,\
         OffersDB \
         RegistryService \
         RegistryServer )
 
+RGS_MODULES+= core.services.faulttolerance.FaultTolerantService
+
+RGS_LUA= \
+$(addprefix ../../, \
+  $(addsuffix .lua, \
+    $(subst .,/, $(RGS_MODULES))))
+
 ${PRECMP_DIR}/rgs.c: ${RGS_LUA}
-	$(LUABIN) $(LUA_FLAGS) $(PRECMP_LUA)   $(PRECMP_FLAGS) $(RGS_LUA) 
+	$(LUABIN) $(LUA_FLAGS) $(PRECMP_LUA)   $(PRECMP_FLAGS) $(RGS_MODULES)
 
 ${PRECMP_DIR}/rgspreloaded.c: ${PRECMP_DIR}/rgs.c
 	$(LUABIN) $(LUA_FLAGS) $(PRELOAD_LUA)  $(PRELOAD_FLAGS) -i ${PRECMP_DIR} rgs.h
@@ -36,11 +43,10 @@ INCLUDES= . \
         ${OPENBUSINC}/luasocket2 \
         ${OPENBUSINC}/luafilesystem \
         ${OPENBUSINC}/luuid \
-        ${OPENBUSINC}/lce \
-        ${OPENBUSINC}/lualdap-1.0.1 \
-        ${OPENBUSINC}/scs
+        ${OPENBUSINC}/scs \
+        ${OPENBUS_HOME}/core/utilities/lua
 
-LDIR += ${OPENBUSLIB}
+LDIR += ${OPENBUSLIB} ${OPENBUS_HOME}/core/utilities/lua/lib/${TEC_UNAME}
 
 USE_LUA51=YES
 NO_SCRIPTS=YES
@@ -50,23 +56,23 @@ USE_NODEPEND=YES
 # Usa bibliotecas dinâmicas #
 #############################
 
-LIBS += dl crypto ldap
+LIBS = oilall scsall luasocket lfs luuid openbuslua
+LIBS += dl
 ifneq "$(TEC_SYSNAME)" "Darwin"
 	LIBS += uuid
 endif
 ifeq "$(TEC_SYSNAME)" "Linux"
-        LFLAGS = -Wl,-E
+	LFLAGS = -Wl,-E
 endif
-
-LIBS = oilall scsall luasocket lfs luuid lce lualdap
-
-# SLIB += ${OPENBUSLIB}/liboilall.a
-# SLIB += ${OPENBUSLIB}/libscsall.a
-# SLIB += ${OPENBUSLIB}/libluasocket.a
-# SLIB += ${OPENBUSLIB}/liblfs.a
-# SLIB += ${OPENBUSLIB}/libluuid.a
-# SLIB += ${OPENBUSLIB}/liblce.a
-# SLIB += ${OPENBUSLIB}/liblualdap.a
+ifeq "$(TEC_SYSNAME)" "SunOS"
+  USE_CC=Yes
+  CFLAGS= -g -KPIC -mt -D_REENTRANT
+  ifeq ($(TEC_WORDSIZE), TEC_64)
+    CFLAGS+= -m64
+  endif
+  LFLAGS= $(CFLAGS) -xildoff
+  LIBS += rt
+endif
 
 .PHONY: clean-custom
 clean-custom-obj:

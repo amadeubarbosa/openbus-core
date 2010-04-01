@@ -2,7 +2,7 @@ PROJNAME= OpenBus
 APPNAME= acs
 
 LUABIN= ${LUA51}/bin/${TEC_UNAME}/lua5.1
-LUAPATH = '${OPENBUS_HOME}/libpath/lua/5.1/?.lua;./?.lua;../../?.lua;'
+LUAPATH = '${OPENBUS_HOME}/libpath/lua/5.1/?.lua;../../?.lua;'
 
 OPENBUSLIB= ${OPENBUS_HOME}/libpath/${TEC_UNAME} 
 OPENBUSINC= ${OPENBUS_HOME}/incpath
@@ -15,16 +15,18 @@ PRELOAD_LUA= ${OPENBUS_HOME}/libpath/lua/5.1/preloader.lua
 PRELOAD_FLAGS= -p ACCESSCONTROL_SERVER -o acspreloaded -d ${PRECMP_DIR}
 
 ACS_MODULES=$(addprefix core.services.accesscontrol.,\
-	AccessControlServer \
-	AccessControlService \
 	CertificateDB \
 	CredentialDB \
-	LDAPLoginPasswordValidator \
 	LoginPasswordValidator \
-	TestLoginPasswordValidator )
+	TestLoginPasswordValidator \
+	LDAPLoginPasswordValidator \
+	AccessControlService \
+	AccessControlServer )
+
+ACS_MODULES+= core.services.faulttolerance.FaultTolerantService
 
 ACS_LUA= \
-$(addprefix accesscontrol/, \
+$(addprefix ../../, \
   $(addsuffix .lua, \
     $(subst .,/, $(ACS_MODULES))))
 
@@ -46,7 +48,6 @@ INCLUDES= . \
         ${OPENBUSINC}/luafilesystem \
         ${OPENBUSINC}/luuid \
         ${OPENBUSINC}/lce \
-        ${OPENBUSINC}/lpw \
         ${OPENBUSINC}/lualdap-1.0.1 \
         ${OPENBUSINC}/scs \
         ${OPENBUS_HOME}/core/utilities/lua
@@ -61,7 +62,7 @@ USE_NODEPEND=YES
 # Usa bibliotecas dinâmicas #
 #############################
 
-LIBS = oilall scsall luasocket lfs luuid lce lpw lualdap openbuslua
+LIBS = oilall scsall luasocket lfs luuid lce lualdap openbuslua
 LIBS += dl crypto ldap
 ifneq "$(TEC_SYSNAME)" "Darwin"
 	LIBS += uuid

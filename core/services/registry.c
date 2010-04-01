@@ -22,8 +22,7 @@
 #include "scsall.h"
 #include "luuid.h"
 #include "lfs.h"
-#include "lce.h"
-#include "lualdap.h"
+#include "openbuspreloaded.h"
 
 #include "rgs.h"
 #include "rgspreloaded.h"
@@ -260,6 +259,11 @@ static int handle_script (lua_State *L, char **argv, int n) {
   return report(L, status);
 }
 
+static int run_server (lua_State *L, char **argv, int n) {
+  getargs(L, argv, n);  /* collect arguments */
+  lua_setglobal(L, "arg");
+  return luaopen_core_services_registry_RegistryServer(L);
+}
 
 /* check that argument has no extra characters at the end */
 #define notail(x)	{if ((x)[2] != '\0') return -1;}
@@ -362,16 +366,17 @@ static int pmain (lua_State *L) {
   // preload all OiL libraries
   luapreload_oilall(L);
   luapreload_scsall(L);
-  luapreload_rgspreloaded(L);
   luaopen_uuid(L);
   luaopen_lfs(L);
-  luaopen_lualdap(L);
-  luaopen_lce(L);
+  luapreload_rgspreloaded(L);
 
   lua_gc(L, LUA_GCRESTART, 0);
-  luaopen_core_services_registry_RegistryServer(L);
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;
+  // Invocação do RegistryServer preenchendo a tabela args
+  run_server(L,argv,0);
+  // Permitimos executar um script depois do RegistryServer
+  // acabar de executar
   script = collectargs(argv, &has_i, &has_v, &has_e);
   if (script < 0) {  /* invalid args? */
     print_usage();

@@ -33,7 +33,7 @@ local iconfig = assert(loadfile(DATA_DIR ..
 local usage_msg = [[
 	--help                   : show this help
 	--verbose                : turn ON the VERBOSE mode (show the system commands)
-	--port=<port number>     : defines the service port (padrão ]] 
+	--port=<port number>     : defines the service port (default=]] 
 								.. tostring(AccessControlServerConfiguration.hostPort) .. [[)
  NOTES:
  	The prefix '--' is optional in all options.
