@@ -27,6 +27,8 @@
 #include "rgs.h"
 #include "rgspreloaded.h"
 
+#include "version.h"
+
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
@@ -115,7 +117,7 @@ static int docall (lua_State *L, int narg, int clear) {
 
 
 static void print_version (void) {
-  l_message(NULL, LUA_RELEASE "  " LUA_COPYRIGHT);
+  l_message(NULL, OPENBUS_PROJECT "\n" TECGRAF_COPYRIGHT);
 }
 
 
@@ -373,17 +375,20 @@ static int pmain (lua_State *L) {
   lua_gc(L, LUA_GCRESTART, 0);
   s->status = handle_luainit(L);
   if (s->status != 0) return 0;
+  script = collectargs(argv, &has_i, &has_v, &has_e);
+  if (has_v) {
+    print_version();
+    return 0;
+  }
   // Invocação do RegistryServer preenchendo a tabela args
   run_server(L,argv,0);
   // Permitimos executar um script depois do RegistryServer
   // acabar de executar
-  script = collectargs(argv, &has_i, &has_v, &has_e);
   if (script < 0) {  /* invalid args? */
     print_usage();
     s->status = 1;
     return 0;
   }
-  if (has_v) print_version();
   s->status = runargs(L, argv, (script > 0) ? script : s->argc);
   if (s->status != 0) return 0;
   if (script)

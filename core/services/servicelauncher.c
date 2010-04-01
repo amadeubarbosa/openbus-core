@@ -26,7 +26,7 @@
 #include "lpw.h"
 #include "lualdap.h"
 
-
+#include "version.h"
 
 static lua_State *globalL = NULL;
 
@@ -116,7 +116,7 @@ static int docall (lua_State *L, int narg, int clear) {
 
 
 static void print_version (void) {
-  l_message(NULL, LUA_RELEASE "  " LUA_COPYRIGHT);
+  l_message(NULL, OPENBUS_PROJECT "\n" TECGRAF_COPYRIGHT);
 }
 
 
