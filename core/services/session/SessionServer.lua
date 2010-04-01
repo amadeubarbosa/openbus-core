@@ -4,6 +4,8 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
+local tonumber = tonumber
+
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
@@ -22,18 +24,44 @@ assert(loadfile(DATA_DIR.."/conf/SessionServerConfiguration.lua"))()
 local iConfig =
   assert(loadfile(DATA_DIR.."/conf/advanced/SSInterceptorsConfiguration.lua"))()
 
+-- Parsing arguments
+local usage_msg = [[
+  --help                   : show this help
+  --verbose                : turn ON the VERBOSE mode (show the system commands)
+  --port=<port number>     : defines the service port (default=]] 
+                .. tostring(SessionServerConfiguration.sessionServerHostPort) .. [[)
+ NOTES:
+  The prefix '--' is optional in all options.
+  So '--help' or '-help' or yet 'help' all are the same option.]]
+local arguments = Utils.parse_args(arg,usage_msg,true)
+
+if arguments.verbose == "" then
+  oil.verbose:level(5)
+else
+  if SessionServerConfiguration.oilVerboseLevel then
+      oil.verbose:level(SessionServerConfiguration.oilVerboseLevel)
+  end
+end
+
+if arguments.port then
+  SessionServerConfiguration.sessionServerHostPort = tonumber(arguments.port)
+end
+
 -- Seta os níveis de verbose para o openbus e para o oil
 if SessionServerConfiguration.logLevel then
   Log:level(SessionServerConfiguration.logLevel)
 end
-if SessionServerConfiguration.oilVerboseLevel then
-  oil.verbose:level(SessionServerConfiguration.oilVerboseLevel)
-end
+
+props = {  host = SessionServerConfiguration.sessionServerHostName,
+           port =  tonumber(SessionServerConfiguration.sessionServerHostPort)}
 
 -- Inicializa o barramento
 Openbus:init(SessionServerConfiguration.accessControlServerHostName,
   SessionServerConfiguration.accessControlServerHostPort,
-  nil, iConfig, iConfig)
+  props, iConfig, iConfig)
+
+Openbus:enableFaultTolerance()
+
 local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
@@ -41,8 +69,6 @@ local SessionServiceComponent =
   require "core.services.session.SessionServiceComponent"
 local SessionService = require "core.services.session.SessionService"
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
-
-Openbus:enableFaultTolerance()
 
 -----------------------------------------------------------------------------
 -- Descricoes do Componente Servico de Sessao
