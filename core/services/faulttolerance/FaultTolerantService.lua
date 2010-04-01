@@ -17,27 +17,28 @@ local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 --------------------------------------------------------------------------------
 
 FaultToleranceFacet = oop.class{}
-FaultToleranceFacet.faultDescription = {_isAlive = false, _errorMsg = "" }
+FaultToleranceFacet.faultDescription = {_isAlive = true, _errorMsg = "" }
 
 ---
 --Retorna se o serviço está em estado de falha ou não.
 ---
 
 function FaultToleranceFacet:isAlive()
-	if not self.faultDescription._isAlive then
-       local msg = "Servico ".. self.context._componentId.name .." nao esta disponivel.\n" 
+    if not self.faultDescription._isAlive then
+       local msg = "Servico ".. self.context._componentId.name .." nao esta disponivel.\n"
        self.faultDescription._errorMsg = msg
        Log:error(msg)
        return false
-	end
-	return true
+    end
+    return true
 end
 
 function FaultToleranceFacet:setStatus(isAlive)
-	self.faultDescription._isAlive = isAlive
+    self.context.IManagement:checkPermission()
+    self.faultDescription._isAlive = isAlive
 end
 
 function FaultToleranceFacet:kill()
+    self.context.IManagement:checkPermission()
     self.context.IComponent:shutdown()
 end
-

@@ -66,13 +66,13 @@ function RSFacet:register(serviceOffer)
     then
       Log:registry("Oferta já existente com id " ..
         existentOfferEntry.identifier)
-      self:updateMemberInfoInExistentOffer(existentOfferEntry, 
+      self:updateMemberInfoInExistentOffer(existentOfferEntry,
         serviceOffer.member)
       return true, existentOfferEntry.identifier
     end
   end
 
-  -- Efetuar novo registro 
+  -- Efetuar novo registro
   local identifier = self:generateIdentifier()
   local memberName = properties.component_id.name
 
@@ -128,9 +128,9 @@ function RSFacet:addOffer(offerEntry)
 
   -- A credencial deve ser observada, porque se for deletada as
   -- ofertas a ela relacionadas devem ser removidas
-  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-    orb, self.context.IComponent, "AccessControlServiceReceptacle", 
-    "IAccessControlService", 
+  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
+    orb, self.context.IComponent, "AccessControlServiceReceptacle",
+    "IAccessControlService",
     "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   if status then
     acsFacet:addCredentialToObserver(self.observerId, credential.identifier)
@@ -138,7 +138,7 @@ function RSFacet:addOffer(offerEntry)
   else
     -- erro ja foi logado, so adiciona que nao pode adicionar
     Log:service("Nao foi possivel adicionar credencial ao observador")
-  end                                       
+  end
 end
 
 function RSFacet:updateMemberInfoInExistentOffer(existentOfferEntry, member)
@@ -151,7 +151,7 @@ function RSFacet:updateMemberInfoInExistentOffer(existentOfferEntry, member)
   self.offersDB:update(existentOfferEntry)
 
   self.offersByCredential[existentOfferEntry.credential.identifier][existentOfferEntry.identifier] = existentOfferEntry
-    
+
   Log:registry("[updateMemberInfoInExistentOffer] Informações de membro atualizadas.")
 end
 
@@ -188,7 +188,7 @@ function RSFacet:createPropertyIndex(offerProperties, member)
 end
 
 ---
--- Busca as interfaces por meio da metainterface do membro e as 
+-- Busca as interfaces por meio da metainterface do membro e as
 -- disponibiza para consulta.
 --
 -- @param owner Dono da credencial.
@@ -253,8 +253,8 @@ function RSFacet:unregister(identifier)
     -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
     Log:registry("Última oferta da credencial: remove credencial do observador")
-    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-      orb, self.context.IComponent, "AccessControlServiceReceptacle", 
+    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
+      orb, self.context.IComponent, "AccessControlServiceReceptacle",
       "IAccessControlService", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
     if status then
       acsFacet:removeCredentialFromObserver(self.observerId,
@@ -262,7 +262,7 @@ function RSFacet:unregister(identifier)
     else
       -- erro ja foi logado, so adiciona que nao pode remover
       Log:error("Nao foi possivel remover credencial")
-    end     
+    end
     acsFacet:removeCredentialFromObserver(self.observerId,credential.identifier)
   end
   self.offersDB:delete(offerEntry)
@@ -310,7 +310,7 @@ end
 function RSFacet:updateFacets(owner)
   for id, offerEntry in pairs(self.offersByIdentifier) do
     if offerEntry.credential.owner == owner then
-      offerEntry.facets = self:createFacetIndex(owner, 
+      offerEntry.facets = self:createFacetIndex(owner,
         offerEntry.properties.component_id.name, offerEntry.allFacets)
       self.offersDB:update(offerEntry)
     end
@@ -330,7 +330,7 @@ function RSFacet:find(facets)
 
   local params = { facets = facets, criteria = {} }
   ftFacet:updateStatus(params)
-  
+
   local selectedOffers = {}
   -- Se nenhuma faceta foi discriminada, todas as ofertas de serviço
   -- são retornadas.
@@ -373,7 +373,7 @@ function RSFacet:findByCriteria(facets, criteria)
 
   local params = { facets = facets, criteria = criteria}
   ftFacet:updateStatus(params)
-  
+
   local selectedOffers = {}
   -- Se nenhuma faceta foi discriminada e nenhum critério foi
   -- definido, todas as ofertas de serviço são retornadas.
@@ -408,7 +408,7 @@ end
 function RSFacet:localFind(facets, criteria)
   Log:faulttolerance("[localFind] Buscando ofertas somente na replica local.")
   local selectedOffersEntries = {}
-  
+
   local i = 1
   -- Se nenhuma faceta foi discriminada e nenhum critério foi
   -- definido, todas as ofertas de serviço que não existem localmente
@@ -541,19 +541,19 @@ end
 function RSFacet:expired()
   Openbus:connectByCertificate(self.context._componentId.name,
     self.privateKeyFile, self.accessControlServiceCertificateFile)
-  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-    orb, self.context.IComponent, "AccessControlServiceReceptacle", 
+  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
+    orb, self.context.IComponent, "AccessControlServiceReceptacle",
     "IAccessControlService", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   if not status then
     --erro já joi logado
     return nil
-  end     
+  end
   -- atualiza a referência junto ao serviço de controle de acesso
   -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
   local acsIComp = acsFacet:_component()
   local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
   acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
-  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep, 
+  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
     "RegistryServiceReceptacle", self.context.IComponent )
   if not status then
     Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
@@ -607,12 +607,12 @@ FaultToleranceFacet.rsReference = ""
 function FaultToleranceFacet:init()
   self.ftconfig = assert(loadfile(DATA_DIR ..
     "/conf/RSFaultToleranceConfiguration.lua"))()
-  
+
   local rgs = self.context.IRegistryService
   local notInHostAdd = rgs.config.registryServerHostName .. ":"
-    .. tostring(rgs.config.registryServerHostPort) 
+    .. tostring(rgs.config.registryServerHostPort)
 
-  self.rsReference = "corbaloc::" .. notInHostAdd .. "/" 
+  self.rsReference = "corbaloc::" .. notInHostAdd .. "/"
     .. Utils.REGISTRY_SERVICE_KEY
 end
 
@@ -624,7 +624,7 @@ function FaultToleranceFacet:updateStatus(params)
     Log:faultolerance("[warn][updateStatus] Não foi possível executar 'updatestatus'")
     return false
   end
-        
+
   if #self.ftconfig.hosts.RS <= 1 then
     Log:faulttolerance("[updateStatus] Nenhuma replica para atualizar ofertas.")
     return false
@@ -641,7 +641,7 @@ function FaultToleranceFacet:updateStatus(params)
     --chamada remota
     input = params._anyval
   end
-        
+
   local facets = {}
   local criteria = {}
 
@@ -661,13 +661,13 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
   local count = 0
   repeat
     if self.ftconfig.hosts.RS[i] ~= self.rsReference then
-      local ret, stop, remoteRS = oil.pcall(Utils.fetchService, 
-        Openbus:getORB(), self.ftconfig.hosts.RS[i], 
+      local ret, stop, remoteRS = oil.pcall(Utils.fetchService,
+        Openbus:getORB(), self.ftconfig.hosts.RS[i],
         Utils.REGISTRY_SERVICE_INTERFACE)
-                
+
       if remoteRS then
         local selectedOffersEntries = remoteRS:localFind(facets, criteria)
-                        
+
         if not rgs.offersByIdentifier then
           rgs.offersByIdentifier = {}
         end
@@ -692,21 +692,21 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
               if Utils.equalsOfferEntries(addOfferEntry, offerEntry) then
                 --se ja existir, nao insere
                 insert = false
-                Log:faulttolerance("[updateOffersStatus] ... SIM, a oferta [".. 
+                Log:faulttolerance("[updateOffersStatus] ... SIM, a oferta ["..
                   addOfferEntry.identifier .. "] ja existe localmente.")
                 break
               end
             end
-            if insert then  
+            if insert then
               Log:faulttolerance("[updateOffersStatus] ... NAO, a oferta ["
-                .. addOfferEntry.identifier 
+                .. addOfferEntry.identifier
                 .. "] nao existe localmente e sera inserida.")
               -- se nao existir,
               --insere na lista local
               rgs:addOffer(addOfferEntry)
               --insere no banco local
-              rgs.offersDB:insert(addOfferEntry) 
-              
+              rgs.offersDB:insert(addOfferEntry)
+
               updated = true
               count = count + 1
             end
@@ -714,7 +714,7 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
         end
       end
     end
-    i = i + 1         
+    i = i + 1
   until i > #self.ftconfig.hosts.RS
   if updated then
     Log:faulttolerance("[updateOffersStatus] Quantidade de ofertas inseridas:["
@@ -790,14 +790,14 @@ function startup(self)
   local acsIComp = Openbus:getACSIComponent()
   local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
   acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
-  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep, 
+  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
     "RegistryServiceReceptacle", self.context.IComponent )
   if not status then
     Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
       conns[1])
     return false
   end
-  
+
   -- conecta o controle de acesso:   [RS]--( 0--[ACS]
   local success, conId =
     oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
@@ -843,20 +843,20 @@ function startup(self)
  for _, name in ipairs(config.administrators) do
    mgm.admins[name] = true
  end
- -- ACS e RGS são sempre administradores
+ -- ACS, RGS e monitor são sempre administradores
  mgm.admins.AccessControlService = true
  mgm.admins.RegistryService = true
-  
+ mgm.admins.FTRegistryServiceMonitor = true
+
  -- Inicializa a base de gerenciamento
  mgm.authDB = TableDB(DATA_DIR.."/rs_auth.db")
  mgm.ifaceDB = TableDB(DATA_DIR.."/rs_iface.db")
  mgm:loadData()
 
  rs.started = true
-  
+
  self.context.IFaultTolerantService:init()
- self.context.IFaultTolerantService:setStatus(true)
-  
+
  Log:registry("serviço de registro iniciado")
 end
 
@@ -873,16 +873,16 @@ function shutdown(self)
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   rs.started = false
-  
+
   -- Remove o observador
   if rs.observerId then
-    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-      orb, self.context.IComponent, "AccessControlServiceReceptacle", 
+    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
+      orb, self.context.IComponent, "AccessControlServiceReceptacle",
       "IAccessControlService", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
     if not status then
       -- erro ja foi logado
       error{"IDL:SCS/ShutdownFailed:1.0"}
-    end  
+    end
     acsFacet:removeObserver(rs.observerId)
     rs.observer:_deactivate()
   end
@@ -890,9 +890,9 @@ function shutdown(self)
   if Openbus:isConnected() then
     Openbus:disconnect()
   end
-  
+
   Log:registry("serviço de registro finalizado")
-  
+
   orb:deactivate(rs)
   orb:deactivate(self.context.IManagement)
   orb:deactivate(self.context.IFaultTolerantService)
@@ -1012,9 +1012,9 @@ end
 
 ---
 -- Remove o identificador.
--- 
+--
 -- @param ifaceId Identificador de interface.
--- 
+--
 function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if not self.interfaces[ifaceId] then
@@ -1032,7 +1032,7 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   if not succ then
     Log:error(format("Falha ao remover interface '%s': %s", iface, msg))
   else
-    self:updateManagementStatus("removeInterfaceIdentifier", 
+    self:updateManagementStatus("removeInterfaceIdentifier",
       { ifaceId = ifaceId })
   end
 end
@@ -1076,7 +1076,7 @@ function ManagementFacet:grant(id, ifaceId, strict)
     error{InterfaceIdentifierNonExistentException}
   end
   local auth = self.authorizations[id]
-  if not auth then 
+  if not auth then
     -- Cria uma nova autorização: verificar junto ao ACS se o membro existe
     local type = "ATSystemDeployment"
     local succ, member = self.acsmgm.__try:getSystemDeployment(id)
@@ -1113,7 +1113,7 @@ function ManagementFacet:grant(id, ifaceId, strict)
   local succ, msg = self.authDB:save(id, auth)
   if not succ then
     Log:error(format("Falha ao salvar autorização '%s': %s", id, msg))
-  else 
+  else
      self:updateManagementStatus("grant", { id = id, ifaceId = ifaceId, strict = strict})
   end
   self.context.IRegistryService:updateFacets(id)
@@ -1208,7 +1208,7 @@ function ManagementFacet:hasAuthorization(id, iface)
     for exp, type in pairs(auth.authorized) do
       if type == "expression" then
         for pat, sub in pairs(self.expressions) do
-          -- Tenta criar o padrão para Lua a partir da autorização 
+          -- Tenta criar o padrão para Lua a partir da autorização
           pat, sub = string.gsub(exp, pat, sub)
           -- Se o padrão foi criado, verifica se a interface é reconhecida
           if sub == 1 and string.match(iface, pat) then
@@ -1277,12 +1277,12 @@ end
 
 function ManagementFacet:updateManagementStatus(command, data)
   local credential = Openbus:getInterceptedCredential()
-  if credential.owner == "RegistryService" or 
-     credential.delegate == "RegistryService" 
+  if credential.owner == "RegistryService" or
+     credential.delegate == "RegistryService"
   then
     return
   end
-    
+
   Log:faulttolerance("[updateManagementStatus] Atualiza estado das interfaces e autorizacoes para o comando[".. command .."].")
   local ftFacet = self.context.IFaultTolerantService
   if not ftFacet.ftconfig then
@@ -1290,64 +1290,64 @@ function ManagementFacet:updateManagementStatus(command, data)
     Log:warn("[updateManagementStatus] não foi possível executar 'updateManagementStatus'")
     return false
   end
-  
+
   if #ftFacet.ftconfig.hosts.RS <= 1 then
     Log:faulttolerance("[updateManagementStatus] Nenhuma replica para atualizar estado das interfaces e autorizacoes.")
     return false
   end
-        
+
   local i = 1
   repeat
     if ftFacet.ftconfig.hosts.RS[i] ~= ftFacet.rsReference then
       local ret, succ, remoteRGS = oil.pcall(Utils.fetchService,
-        Openbus:getORB(), ftFacet.ftconfig.hosts.RS[i], 
+        Openbus:getORB(), ftFacet.ftconfig.hosts.RS[i],
         Utils.REGISTRY_SERVICE_INTERFACE)
       if succ then
         --encontrou outra replica
         Log:faulttolerance("[updateManagementStatus] Atualizando replica "
-          .. ftFacet.ftconfig.hosts.RS[i] ..".")        
+          .. ftFacet.ftconfig.hosts.RS[i] ..".")
         -- Recupera faceta IManagement da replica remota
         local remoteRGSIC = remoteRGS:_component()
         remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
         local orb = Openbus:getORB()
-        local ok, remoteMgmFacet = oil.pcall(remoteRGSIC.getFacetByName, 
+        local ok, remoteMgmFacet = oil.pcall(remoteRGSIC.getFacetByName,
           remoteRGSIC, "IManagement")
 
         if ok then
-          remoteMgmFacet = orb:narrow(remoteMgmFacet, 
+          remoteMgmFacet = orb:narrow(remoteMgmFacet,
             "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
           if command == "addInterfaceIdentifier" then
-            oil.newthread(function() 
+            oil.newthread(function()
               local succ, ret = oil.pcall(
-                remoteMgmFacet.addInterfaceIdentifier, remoteMgmFacet, 
+                remoteMgmFacet.addInterfaceIdentifier, remoteMgmFacet,
                 data.ifaceId)
-            end)  
+            end)
           elseif command == "removeInterfaceIdentifier" then
-            oil.newthread(function() 
+            oil.newthread(function()
               local succ, ret = oil.pcall(
                 remoteMgmFacet.removeInterfaceIdentifier,
                 remoteMgmFacet, data.ifaceId)
-            end)  
+            end)
           elseif command == "grant" then
-            oil.newthread(function() 
+            oil.newthread(function()
               local succ, ret = oil.pcall(remoteMgmFacet.grant, remoteMgmFacet,
                 data.id, data.ifaceId, data.strict)
-            end)  
+            end)
           elseif command == "revoke" then
-            oil.newthread(function() 
+            oil.newthread(function()
               local succ, ret = oil.pcall(remoteMgmFacet.revoke,
                 remoteMgmFacet, data.id, data.ifaceId)
-            end)  
+            end)
           elseif command == "removeAuthorization" then
-            oil.newthread(function() 
-              local succ, ret = oil.pcall(remoteMgmFacet.removeAuthorization, 
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.removeAuthorization,
                 remoteMgmFacet, data.id)
-            end)  
+            end)
           end --fim command
         end -- fim ok facet IManagement
       end -- fim succ, encontrou replica
     end -- fim , nao eh a mesma replica
-    i = i + 1         
+    i = i + 1
   until i > #ftFacet.ftconfig.hosts.RS
   Log:faulttolerance("[updateManagementStatus] Replicas atualizadas quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
 end
