@@ -103,7 +103,7 @@ receptacleDescriptions.IFaultTolerantService.type   		= "Receptacle"
 
 -- component id
 local componentId = {}
-componentId.name = "FTAccessControlServiceMonitor"
+componentId.name = "ACSMonitor"
 componentId.major_version = 1
 componentId.minor_version = 0
 componentId.patch_version = 0

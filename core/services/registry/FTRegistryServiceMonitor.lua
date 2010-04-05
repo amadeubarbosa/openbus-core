@@ -16,6 +16,7 @@ local pairs = pairs
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local OilUtilities = require "openbus.util.OilUtilities"
+local utils = require "openbus.util.Utils"
 
 local oop = require "loop.simple"
 
@@ -232,8 +233,8 @@ function startup(self)
   local hostAdd = monitor.config.registryServerHostName..
       ":".. tostring(monitor.config.registryServerHostPort)
 
-  local ftrsService = Openbus:getORB():newproxy("corbaloc::"..hostAdd..
-      "/FTRS","IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+  local ftrsService = Openbus:getORB():newproxy("corbaloc::"..hostAdd.. "/" ..
+      utils.FAULT_TOLERANT_RS_KEY,utils.FAULT_TOLERANT_SERVICE_INTERFACE)
   if ftrsService:_non_existent() then
     Log:error("Servico de registro nao encontrado.")
     os.exit(1)
