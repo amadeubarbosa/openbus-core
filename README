@@ -1,5 +1,5 @@
 --
-Copyright (C) 2006-2009 Tecgraf/PUC-Rio. All rights reserved.
+Copyright (C) 2006-2010 Tecgraf/PUC-Rio. All rights reserved.
 --
 The Openbus software is a middleware to integrate applications written under
 different languages and compatible with many operating systems
@@ -17,4 +17,4 @@ All these contents are licensed under the terms described in the LICENSE file
 present in this distribution.
 
 See the Openbus official site for additional informations:
-http://jira.tecgraf.puc-rio.br/confluence/display/ESDPUB/Openbus
+http://www.tecgraf.puc-rio.br/openbus

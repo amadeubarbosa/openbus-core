@@ -12,7 +12,7 @@ at no cost without having to ask us. The only requirement is that if you do use
 Openbus, then you should give us credit by including the appropriate copyright
 notice somewhere in your product or its documentation.
 
-Copyright (c) 2006-2009 Tecgraf/PUC-Rio. All rights reserved.
+Copyright (c) 2006-2010 Tecgraf/PUC-Rio. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -42,7 +42,7 @@ copyright notes are provided individually as following:
  - The Lua language implementation (http://www.lua.org) is copyright 1994-2008
    Lua.org/PUC-Rio and it's licensed under the MIT license.
 
- - The LCE library (http://luaforge.net/projects/lce) is copyright 2008-2009
+ - The LCE library (http://luaforge.net/projects/lce) is copyright 2008-2010
    by the Tecgraf/PUC-Rio and includes software developed by the OpenSSL
    Project for use in the OpenSSL Toolkit (http://www.openssl.org/). The LCE
    library is licensed under the MIT license similar to the Openbus license.
@@ -53,8 +53,8 @@ copyright notes are provided individually as following:
    LuaLDAP is licensed under the MIT license. The OpenLDAP license is attached
    below.
 
- - The SCS framework (http://www.tecgraf.puc-rio.br/~scorrea/scs) is copyright
-   2007-2009 by the Tecgraf/PUC-Rio and it's licensed under the MIT license.
+ - The SCS framework (http://www.tecgraf.puc-rio.br/scs) is copyright
+   2007-2010 by the Tecgraf/PUC-Rio and it's licensed under the MIT license.
 
  - The LUUID library (http://www.tecgraf.puc-rio.br/~lhf/ftp/lua) was written
    by Luiz Henrique de Figueiredo and it's a public domain software. The LUUID
@@ -62,7 +62,7 @@ copyright notes are provided individually as following:
    1999, 2000, 2003, 2004 by Theodore Ts'o (tytso@mit.edu). The UUID library
    license is  attached below.
 
- - The LATT tool (http://luaforge.net/projects/latt) is copyright 2007-2009 by
+ - The LATT tool (http://luaforge.net/projects/latt) is copyright 2007-2010 by
    Rodrigo Henrique and it's licensed under the MIT license.
 
  - The OiL Project (http://oil.luaforge.net) is copyright 2004-2008 by the
@@ -75,7 +75,7 @@ copyright notes are provided individually as following:
    2004-2007 by the Diego Nehab and it's licensed under the MIT license.
 
  - The LuaFileSystem library (http://www.keplerproject.org/luafilesystem) is
-   copyright 2003-2009 by the Kepler Project (http://www.keplerproject.org).
+   copyright 2003-2010 by the Kepler Project (http://www.keplerproject.org).
    The LuaFileSystem is licensed under the MIT license.
 
  - The ToLua tool (http://www.tecgraf.puc-rio.br/~celes/tolua) was written by
@@ -86,7 +86,7 @@ copyright notes are provided individually as following:
    license.
  
  - The FTC library (http://subversion.tecgraf.puc-rio.br/engdist/ftc)
-   is copyright 2008-2009 by the Tecgraf/PUC-Rio and it's licensed under the
+   is copyright 2008-2010 by the Tecgraf/PUC-Rio and it's licensed under the
    MIT license.
 
  - The Openbus and SCS utility libraries for Java was developed using the
@@ -100,7 +100,7 @@ copyright notes are provided individually as following:
      CORBA is a registered trademark of the Object Management Group, Inc.
 
  - Some Openbus and SCS utility libraries for C++ was developed using the Orbix
-   6.3 ORB for the CORBA (R) middleware. The Orbix is copyright 1993-2009 by
+   6.3 ORB for the CORBA (R) middleware. The Orbix is copyright 1993-2010 by
    the PROGRESS Software Corporation (http://www.progress.com). Our libraries
    are publicly available under the Openbus license (a MIT compatible license). 
      You must obtain a commercial license from the PROGRESS Software
