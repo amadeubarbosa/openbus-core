@@ -32,11 +32,6 @@ class ServerInterceptor extends InterceptorImpl implements
   private ORB orb;
 
   /**
-   * Instância do barramento associado a este ORB e interceptador.
-   */
-  private Openbus bus;
-
-  /**
    * Wrapper para o serviço de controle de acesso associado ao barramento.
    */
   private IAccessControlService acs;
@@ -89,12 +84,8 @@ class ServerInterceptor extends InterceptorImpl implements
       return;
 
     /* Verifica se já obteve o barramento */
-    if (bus == null) {
-      bus = Openbus.getInstance();
-      orb = bus.getORB();
-      acs = bus.getAccessControlService();
-      bus.setInterceptedCredentialSlot(credentialSlot);
-    }
+    Openbus openbus = Openbus.getInstance();
+    openbus.setInterceptedCredentialSlot(credentialSlot);
 
     ServiceContext serviceContext;
     try {
@@ -109,6 +100,7 @@ class ServerInterceptor extends InterceptorImpl implements
         + credential.owner);
 
       /* Verifica se a credencial é válida */
+      acs = openbus.getAccessControlService();
       if (acs.isValid(credential)) {
         Log.INTERCEPTORS.fine("CREDENCIAL VALIDADA!");
 
@@ -116,6 +108,7 @@ class ServerInterceptor extends InterceptorImpl implements
          * Insere o valor da credencial no slot alocado para seu transporte ao
          * tratador da requisição de serviço
          */
+        orb = openbus.getORB();
         Any credentialValue = orb.create_any();
         CredentialHelper.insert(credentialValue, credential);
         ri.set_slot(this.credentialSlot, credentialValue);
