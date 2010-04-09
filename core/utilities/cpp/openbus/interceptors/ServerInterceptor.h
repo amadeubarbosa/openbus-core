@@ -16,6 +16,7 @@
 
 using namespace tecgraf::openbus::core::v1_05;
 using namespace PortableInterceptor;
+using namespace std;
 
 namespace openbus {
   namespace interceptors {
@@ -29,6 +30,42 @@ namespace openbus {
         Current* picurrent;
         SlotId slotid;
         IOP::Codec_ptr cdr_codec;
+
+    #ifdef OPENBUS_MICO
+      /*
+      * Intervalo em milisegundos de validação das credenciais do cache.
+      */
+        static unsigned long validationTime;
+
+        class CredentialsValidationCallback : 
+          public CORBA::DispatcherCallback 
+        {
+          public:
+            CredentialsValidationCallback();
+            void callback(CORBA::Dispatcher* dispatcher, Event event);
+        };
+        friend class ServerInterceptor::CredentialsValidationCallback;
+
+      /*
+      * Callback de validação do cache de credenciais.
+      */
+        CredentialsValidationCallback credentialsValidationCallback;
+
+        struct setCredentialCompare {
+          bool operator() (
+            const access_control_service::Credential& c1,
+            const access_control_service::Credential& c2)
+          {
+            cout << c1.identifier << " " << c2.identifier << endl;
+            return (strcmp(c1.identifier, c2.identifier) < 0);
+          }
+        };
+
+        static set<access_control_service::Credential, setCredentialCompare> 
+          credentialsCache;
+        static set<access_control_service::Credential>::iterator 
+          itCredentialsCache;
+    #endif
       public:
         ServerInterceptor(Current* ppicurrent, 
           SlotId pslotid, 
@@ -42,6 +79,11 @@ namespace openbus {
         char* name();
         void destroy();
         access_control_service::Credential_var getCredential();
+      #ifdef OPENBUS_MICO
+        void registerValidationDispatcher();
+        void setValidationTime(unsigned long pValidationTime);
+        unsigned long getValidationTime();
+      #endif
     };
   }
 }

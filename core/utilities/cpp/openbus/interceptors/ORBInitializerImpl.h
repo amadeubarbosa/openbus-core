@@ -16,6 +16,30 @@ using namespace PortableInterceptor;
 
 namespace openbus {
   namespace interceptors {
+
+  /**
+  * Define as políticas para a validação de credenciais interceptadas.
+  */ 
+    enum CredentialValidationPolicy {
+
+     /**
+     * Indica que as credenciais interceptadas serão sempre validadas.
+     */
+      ALWAYS,
+
+     /**
+     * Indica que as credenciais interceptadas serão validadas e 
+     * armazenadas em um cache.
+     */
+      CACHED,
+
+     /**
+     * Indica que as credenciais interceptadas não serão validadas.
+     */
+      NONE
+    };
+
+        
     class ORBInitializerImpl : public ORBInitializer
     #ifndef OPENBUS_MICO
                               ,public IT_CORBA::RefCountedLocalObject 

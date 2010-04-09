@@ -7,6 +7,53 @@
 
 namespace openbus {
   namespace interceptors {
+  #ifdef OPENBUS_MICO
+    unsigned long ServerInterceptor::validationTime = 30000;
+    set<access_control_service::Credential>::iterator 
+      ServerInterceptor::itCredentialsCache;
+    set<access_control_service::Credential, 
+      ServerInterceptor::setCredentialCompare> 
+      ServerInterceptor::credentialsCache;
+
+    ServerInterceptor::CredentialsValidationCallback::
+      CredentialsValidationCallback() {
+    };
+
+    void ServerInterceptor::CredentialsValidationCallback::callback(
+      CORBA::Dispatcher* dispatcher, 
+      Event event)
+    {
+      Openbus::logger->log(INFO, 
+        "ServerInterceptor::CredentialsValidationCallback() BEGIN");
+      Openbus::logger->indent();
+      openbus::Openbus* bus = openbus::Openbus::getInstance();
+      access_control_service::IAccessControlService* iAccessControlService = 
+        bus->getAccessControlService();
+      for (itCredentialsCache = credentialsCache.begin();
+           itCredentialsCache != credentialsCache.end(); 
+           itCredentialsCache++)
+      {
+        stringstream out;
+        out << "Validando a credencial: " << 
+          (const char*) ((*itCredentialsCache).identifier) << " ...";
+        Openbus::logger->log(INFO, out.str());
+        try {
+          if (iAccessControlService->isValid(*itCredentialsCache)) {
+            Openbus::logger->log(INFO, "Credencial ainda é válida.");
+          } else {
+            Openbus::logger->log(WARNING, "Credencial NÃO é mais válida!");
+            credentialsCache.erase(itCredentialsCache);
+          }
+        } catch (CORBA::SystemException& e) {
+          Openbus::logger->log(ERROR, 
+            "Erro ao verificar validade da credencial");
+        }
+      }
+      dispatcher->tm_event(this, validationTime);
+      Openbus::logger->dedent(INFO, 
+        "ServerInterceptor::CredentialsValidationCallback() END");
+    }
+  #endif
     ServerInterceptor::ServerInterceptor(
       Current* ppicurrent,
       SlotId pslotid,
@@ -20,7 +67,13 @@ namespace openbus {
       Openbus::logger->dedent(INFO, "ServerInterceptor::ServerInterceptor() END");
     }
 
-    ServerInterceptor::~ServerInterceptor() {}
+    ServerInterceptor::~ServerInterceptor() {
+    #ifdef OPENBUS_MICO
+      openbus::Openbus* bus = openbus::Openbus::getInstance();
+      bus->getORB()->dispatcher()->remove(&credentialsValidationCallback, 
+        CORBA::Dispatcher::Timer);
+    #endif
+    }
 
     void ServerInterceptor::receive_request(ServerRequestInfo_ptr ri) {
       ::IOP::ServiceContext_var sc = ri->get_request_service_context(1234);
@@ -43,6 +96,7 @@ namespace openbus {
 
       CORBA::OctetSeq octets(context_data.length(),
                    context_data.length(),
+                   
                    context_data.get_buffer(),
                    0);
 
@@ -69,23 +123,96 @@ namespace openbus {
         (string) c->delegate);
     #endif
       openbus::Openbus* bus = openbus::Openbus::getInstance();
+      CredentialValidationPolicy policy = 
+        bus->getCredentialValidationPolicy(); 
+      picurrent->set_slot(slotid, any);
+      if (policy == ALWAYS) {
+        Openbus::logger->log(INFO, "Política de renovação de credenciais: " + 
+          (string) + "ALWAYS");
+        Openbus::logger->log(INFO, "Validando credencial REMOTAMENTE...");
+        try {
+        #ifdef OPENBUS_MICO
+          if (bus->getAccessControlService()->isValid(c)) {
+        #else
+          if (bus->getAccessControlService()->isValid(*c)) {
+        #endif
+            Openbus::logger->log(INFO, "Credencial renovada.");
+            Openbus::logger->dedent(INFO,
+              "ServerInterceptor::receive_request() END");
+          } else {
+            Openbus::logger->log(INFO, "Falha na renovação da credencial.");
+            Openbus::logger->log(ERROR, "Throwing CORBA::NO_PERMISSION...");
+            Openbus::logger->dedent(INFO,
+              "ServerInterceptor::receive_request() END");
+            throw CORBA::NO_PERMISSION();
+          }
+        } catch (CORBA::SystemException& e) {
+          Openbus::logger->log(INFO, "Falha na renovação da credencial.");
+          Openbus::logger->log(ERROR, "Throwing CORBA::SystemException");
+          Openbus::logger->dedent(INFO,
+            "ServerInterceptor::receive_request() END");
+          throw;
+        }
     #ifdef OPENBUS_MICO
-      if (bus->getAccessControlService()->isValid(c)) {
-    #else
-      if (bus->getAccessControlService()->isValid(*c)) {
+      } else if (policy == CACHED) {
+        Openbus::logger->log(INFO, "Política de renovação de credenciais: " + 
+          (string) "CACHED");
+        stringstream out;
+        out << "Número de credenciais no cache: " << credentialsCache.size();
+        Openbus::logger->log(INFO, out.str());
+        if (credentialsCache.find(c) != credentialsCache.end()
+            &&
+            !credentialsCache.empty()) 
+        {  
+          Openbus::logger->log(INFO, "Credencial está no cache.");
+          Openbus::logger->dedent(INFO, 
+            "ServerInterceptor::receive_request() END");
+        } else {
+          Openbus::logger->log(INFO, "Credencial NÃO está no cache.");
+          Openbus::logger->log(INFO, "Validando credencial no ACS...");
+          try {
+          #ifdef OPENBUS_MICO
+            if (bus->getAccessControlService()->isValid(c)) {
+          #else
+            if (bus->getAccessControlService()->isValid(*c)) {
+          #endif
+              Openbus::logger->log(INFO, "Credencial validada.");
+            } else {
+              Openbus::logger->log(INFO, "Falha na validação da credencial.");
+              Openbus::logger->log(ERROR, "Throwing CORBA::NO_PERMISSION...");
+              Openbus::logger->dedent(INFO,
+                "ServerInterceptor::receive_request() END");
+              throw CORBA::NO_PERMISSION();
+            }
+            Openbus::logger->log(INFO, "Inserindo credencial no cache...");
+            credentialsCache.insert(c);
+            Openbus::logger->dedent(INFO, 
+              "ServerInterceptor::receive_request() END");
+          } catch (CORBA::SystemException& e) {
+            Openbus::logger->log(INFO, "Falha na validação da credencial.");
+            Openbus::logger->log(ERROR, "Throwing CORBA::SystemException");
+            Openbus::logger->dedent(INFO,
+              "ServerInterceptor::receive_request() END");
+            throw;
+          }
+        }
     #endif
-        picurrent->set_slot(slotid, any);
       } else {
-        Openbus::logger->log(ERROR, "Throwing CORBA::NO_PERMISSION...");
-        Openbus::logger->dedent(INFO, "ServerInterceptor::receive_request() END");
-        throw CORBA::NO_PERMISSION();
+        Openbus::logger->log(INFO, "Política de renovação de credenciais: " + 
+          (string) "NONE");
+        Openbus::logger->dedent(INFO, 
+          "ServerInterceptor::receive_request() END");
       }
-      Openbus::logger->dedent(INFO, "ServerInterceptor::receive_request() END");
+    }          
+      
+    void ServerInterceptor::receive_request_service_contexts(
+      ServerRequestInfo*) {
     }
-    void ServerInterceptor::receive_request_service_contexts(ServerRequestInfo*)
-      {}
+
     void ServerInterceptor::send_reply(ServerRequestInfo*) {}
+
     void ServerInterceptor::send_exception(ServerRequestInfo*) {}
+
     void ServerInterceptor::send_other(ServerRequestInfo*) {}
 
     char* ServerInterceptor::name() {
@@ -138,5 +265,22 @@ namespace openbus {
         return 0;
       }
     }
+
+  #ifdef OPENBUS_MICO
+    void ServerInterceptor::registerValidationDispatcher() {
+      openbus::Openbus* bus = openbus::Openbus::getInstance();
+      bus->getORB()->dispatcher()->tm_event(&credentialsValidationCallback, 
+        validationTime);
+    }
+
+    void ServerInterceptor::setValidationTime(unsigned long pValidationTime) {
+      validationTime = pValidationTime;
+    }
+
+
+    unsigned long ServerInterceptor::getValidationTime() {
+      return validationTime;
+    }
+  #endif
   }
 }

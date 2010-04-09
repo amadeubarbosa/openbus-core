@@ -200,6 +200,11 @@ namespace openbus {
       access_control_service::Credential* credential;
 
     /**
+    * Política de validação de credenciais.
+    */
+      interceptors::CredentialValidationPolicy credentialValidationPolicy;
+
+    /**
     * Máquina em que está o barramento. 
     */
       string hostBus;
@@ -231,6 +236,11 @@ namespace openbus {
     * Especifica se o tempo de renovação de credencial é fixo.
     */
       bool timeRenewingFixe;
+
+    /*
+    * Intervalo de validação das credenciais do cache.
+    */
+      unsigned long credentialsValidationTime;
 
      /**
      * Cria o objeto registryService.
@@ -385,12 +395,15 @@ namespace openbus {
     * @param[in] argv
     * @param[in] host Máquina em que se encontra o barramento.
     * @param[in] port A porta da máquina em que se encontra o barramento.
+    * @param[in] policy Política de renovação de credenciais. Este parâmetro
+    *   é opcional. O padrão é adotar a política ALWAYS.
     */
       void init(
         int argc,
         char** argv,
         char* host,
-        unsigned short port);
+        unsigned short port,
+        interceptors::CredentialValidationPolicy policy = interceptors::ALWAYS);
 
     /**
     * Informa o estado de conexão com o barramento.
@@ -458,6 +471,12 @@ namespace openbus {
     * @return credencial
     */
       access_control_service::Credential* getCredential();
+
+    /**
+    * Retorna a política de validação de credenciais.
+    * @return Política de validação de credenciais.
+    */
+      interceptors::CredentialValidationPolicy getCredentialValidationPolicy();
 
     /**
     * Define uma credencial a ser utilizada no lugar da credencial corrente. 

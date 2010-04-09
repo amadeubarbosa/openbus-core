@@ -235,7 +235,20 @@ namespace openbus {
       } else if (!strcmp(argv[idx], "-OpenbusDebugFile")) {
         idx++;
         debugFile = argv[idx];
-      }
+      } else if (!strcmp(argv[idx], "-OpenbusValidationPolicy")) {
+        idx++;
+        char* credentialValidationPolicyStr = argv[idx];
+        if (!strcmp(credentialValidationPolicyStr, "NONE")) {
+          credentialValidationPolicy = interceptors::NONE;
+        } else if (!strcmp(credentialValidationPolicyStr, "ALWAYS")) { 
+          credentialValidationPolicy = interceptors::ALWAYS;
+        } else if (!strcmp(credentialValidationPolicyStr, "CACHED")) { 
+          credentialValidationPolicy = interceptors::CACHED;
+        }
+      } else if (!strcmp(argv[idx], "-OpenbusValidationTime")) {
+          ini->getServerInterceptor()->setValidationTime(
+            (unsigned long) atoi(argv[++idx]));
+      } 
     }
   }
 
@@ -310,6 +323,7 @@ namespace openbus {
 
   Openbus::Openbus() {
     newState();
+    credentialValidationPolicy = openbus::interceptors::ALWAYS;
     registerInterceptors();
     initialize();
   }
@@ -417,6 +431,11 @@ namespace openbus {
     if (!componentBuilder) {
       componentBuilder = new scs::core::ComponentBuilder(orb, poa);
     }
+  #ifdef OPENBUS_MICO
+    if (credentialValidationPolicy == interceptors::CACHED) {
+      ini->getServerInterceptor()->registerValidationDispatcher();
+    }
+  #endif
     logger->dedent(INFO, "Openbus::init() END");
   }
 
@@ -424,7 +443,8 @@ namespace openbus {
     int argc,
     char** argv,
     char* host,
-    unsigned short port)
+    unsigned short port,
+    interceptors::CredentialValidationPolicy policy)
   {
     logger->log(INFO, "Openbus::init(int argc, char** argv, char* host, \
       unsigned short port) BEGIN");
@@ -432,6 +452,7 @@ namespace openbus {
     init(argc, argv);
     hostBus = host;
     portBus = port;
+    credentialValidationPolicy = policy;
     logger->dedent(INFO, "Openbus::init(int argc, char** argv, char* host, \
       unsigned short port) END");
   }
@@ -547,6 +568,12 @@ namespace openbus {
 
   access_control_service::Credential* Openbus::getCredential() {
     return credential;
+  }
+
+  interceptors::CredentialValidationPolicy \
+    Openbus::getCredentialValidationPolicy() 
+  {
+    return credentialValidationPolicy;
   }
 
   void Openbus::setThreadCredential(
