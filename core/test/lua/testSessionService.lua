@@ -15,6 +15,38 @@ local scs = require "scs.core.base"
 
 local Check = require "latt.Check"
 
+-- Dados para login no barramento
+local user     = "tester"
+local password = "tester"
+
+local facetDescriptions = {
+  IComponent = {
+    name = "IComponent",
+    interface_name = "IDL:scs/core/IComponent:1.0",
+    class = scs.Component
+  },
+  SessionEventSink = {
+    name = "SessionEventSink",
+    interface_name =
+      "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0",
+    class = oop.class{
+      push = function(self, event)
+        print("Evento "..event.type.." valor "..event.value._anyval)
+      end,
+      disconnect = function(self)
+        print("Aviso de desconexão")
+      end,
+    }
+  },
+}
+
+local componentId = {
+  name = "Member",
+  major_version = 1,
+  minor_version = 0,
+  patch_version = 0,
+  platform_spec = ""
+}
 
 Suite = {
   Test1 = {
@@ -27,20 +59,16 @@ Suite = {
 
       oil.verbose:level(0)
 
-      local idlfile = IDLPATH_DIR.."/session_service.idl"
-      orb:loadidlfile(idlfile)
-      idlfile = IDLPATH_DIR.."/registry_service.idl"
-      orb:loadidlfile(idlfile)
-      idlfile = IDLPATH_DIR.."/access_control_service.idl"
-      orb:loadidlfile(idlfile)
-
-      local user = "tester"
-      local password = "tester"
+      orb:loadidlfile(IDLPATH_DIR.."/session_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
 
       local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
-          "IDL:scs/core/IComponent:1.0")
-      local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-      self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+        "IDL:scs/core/IComponent:1.0")
+      local facet = acsComp:getFacet(
+        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      self.accessControlService = orb:narrow(facet, 
+        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -49,9 +77,13 @@ Suite = {
       self.credentialManager = CredentialManager()
       orb:setclientinterceptor(ClientInterceptor(config,
           self.credentialManager))
+    end,
 
+    -- Faz login antes de cada teste para obter uma nova credencial e não ter
+    -- nenhuma sessão associada.
+    beforeEachTest = function(self)
       _, self.credential = self.accessControlService:loginByPassword(user,
-          password)
+        password)
       self.credentialManager:setValue(self.credential)
 
       local acsIComp = self.accessControlService:_component()
@@ -61,138 +93,213 @@ Suite = {
       local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
       local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
       local registryService = rsIComp:getFacetByName("IRegistryService")
-      registryService = orb:narrow(registryService,
-        "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+      registryService = orb:narrow(registryService, 
+         "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
 
       local serviceOffers = registryService:find({"ISessionService"})
       Check.assertNotEquals(#serviceOffers, 0)
       local sessionServiceComponent = orb:narrow(serviceOffers[1].member,
           "IDL:scs/core/IComponent:1.0")
-      local sessionServiceInterface =
-          "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"
-      self.sessionService =
-          sessionServiceComponent:getFacet(sessionServiceInterface)
-      self.sessionService = orb:narrow(self.sessionService,
-          sessionServiceInterface)
+      self.sessionService = sessionServiceComponent:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0")
+      self.sessionService = orb:narrow(self.sessionService, 
+        "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0")
+    end,
+
+    afterEachTest = function(self)
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
     end,
 
     testCreateSession = function(self)
-      local facetDescriptions = {}
-      facetDescriptions.IComponent = {
-          name = "IComponent", interface_name = "IDL:scs/core/IComponent:1.0",
-          class = scs.Component
-      }
-      local componentId = {
-          major_version = 1, minor_version = 0, patch_version = 0,
-          platform_spec = ""
-      }
-      componentId.name = "membro1"
+      local member = scs.newComponent(facetDescriptions, {}, componentId)
+      local success, session, id =
+        self.sessionService:createSession(member.IComponent)
+      Check.assertTrue(success)
+      Check.assertNotNil(session)
+      Check.assertNotNil(id)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      Check.assertTrue(session:removeMember(id))
+    end,
+
+    testCreateSession_AlreadyExists = function(self)
       local member1 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
+
+      local success, session1, session2, id1, id2
+      success, session1, id1 =
+        self.sessionService:createSession(member1.IComponent)
+      Check.assertTrue(success)
+      Check.assertNotNil(session1)
+      Check.assertNotNil(id1)
+      session1 = session1:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session1 = orb:narrow(session1,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+
+      success, session2, id2 =
+        self.sessionService:createSession(member2.IComponent)
+      Check.assertFalse(success)
+
+      Check.assertTrue(session1:removeMember(id1))
+    end,
+
+    testGetSession = function(self)
+      local member = scs.newComponent(facetDescriptions, {}, componentId)
+      local success, session1, id =
+        self.sessionService:createSession(member.IComponent)
+      Check.assertTrue(success)
+      Check.assertNotNil(session1)
+      Check.assertNotNil(id)
+      session1 = session1:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session1 = orb:narrow(session1,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+
+      local session2 = self.sessionService:getSession()
+      Check.assertNotNil(session2)
+      session2 = session2:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session2 = orb:narrow(session2,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      Check.assertEquals(session1:getIdentifier(), session2:getIdentifier())
+
+      Check.assertTrue(session2:removeMember(id))
+    end,
+
+    testGetSession_NonExistent = function(self)
+      Check.assertNil(self.sessionService:getSession())
+    end,
+
+    testAddRemoveMember = function(self)
+      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
+
+      local success, session, id1, id2
+      success, session, id1 =
+        self.sessionService:createSession(member1.IComponent)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      id2 = session:addMember(member2.IComponent)
+      Check.assertTrue(id2 and id2 ~= "")
+
+      local list = session:getMembers()
+      Check.assertEquals(#list, 2)
+
+      Check.assertTrue(session:removeMember(id2))
+      Check.assertTrue(session:removeMember(id1))
+
+      list = session:getMembers()
+      Check.assertEquals(#list, 0)
+    end,
+
+    testRemove_InvalidIdentifier = function(self)
+      local member = scs.newComponent(facetDescriptions, {}, componentId)
+      local success, session, id =
+        self.sessionService:createSession(member.IComponent)
+      Check.assertTrue(success)
+      Check.assertNotNil(session)
+      Check.assertNotNil(id)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      Check.assertFalse(session:removeMember("INVALID_ID_FOR_SESSION"))
+      Check.assertTrue(session:removeMember(id))
+    end,
+
+    testRemoveMember_Logout = function(self)
+      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
 
       local success, session, id1 =
-          self.sessionService:createSession(member1.IComponent)
-      if success then
-        Check.assertNotNil(session)
-      else
-        session = self.sessionService:getSession()
-        Check.assertNotNil(session)
-        id1 = session:addMember(member1.IComponent)
-      end
-
+        self.sessionService:createSession(member1.IComponent)
       session = session:getFacet(
-          "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
       session = orb:narrow(session,
-          "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
 
-      componentId.name = "membro2"
-      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
-      local session2 = self.sessionService:getSession()
-      session2 = session2:getFacet(
-          "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
-      session2 = orb:narrow(session2,
-          "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
-      Check.assertEquals(session:getIdentifier(), session2:getIdentifier())
+      local _, credential = self.accessControlService:loginByPassword(user,
+        password)
+      self.credentialManager:setValue(credential)
       local id2 = session:addMember(member2.IComponent)
-      Check.assertNotEquals(id1, id2)
-      session:removeMember(id1)
-      session:removeMember(id2)
+      Check.assertTrue(id2 and id2 ~= "")
+      local list = session:getMembers()
+      Check.assertEquals(#list, 2)
+
+      self.accessControlService:logout(credential)
+      socket.sleep(5)  -- espera o ACS avisar ao SS
+
+      self.credentialManager:setValue(self.credential)
+      list = session:getMembers()
+      Check.assertEquals(#list, 1)
+      Check.assertTrue(session:removeMember(id1))
+    end,
+
+    testDestroy_Logout = function(self)
+      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
+
+      local _, credential = self.accessControlService:loginByPassword(user,
+        password)
+      self.credentialManager:setValue(credential)
+
+      local success, session, id1 =
+        self.sessionService:createSession(member1.IComponent)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+
+      self.credentialManager:setValue(self.credential)
+      local id2 = session:addMember(member2.IComponent)
+
+      self.credentialManager:setValue(credential)
+      self.accessControlService:logout(credential)
+      socket.sleep(5)  -- espera o ACS avisar ao SS
+
+      self.credentialManager:setValue(self.credential)
+      Check.assertTrue(session:_non_existent())
     end,
 
     testEvents = function(self)
-      local facetDescriptions = {}
-      facetDescriptions.SessionEventSink = {
-        name = "SessionEventSink",
-        interface_name =
-            "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0",
-        class = oop.class{
-          push = function(self, event)
-            local val = event.value. _anyval
-            print("Evento "..event.type.." valor "..val)
-          end,
-
-          disconnect = function(self)
-            print("Aviso de desconexão")
-          end,
-        }
-      }
-      local componentId = {
-        major_version = 1, minor_version = 0, patch_version = 0,
-        platform_spec = ""
-      }
-    
-      componentId.name = "membro1"
       local member1 = scs.newComponent(facetDescriptions, {}, componentId)
-      local success, sessionComponent, id1 =
-          self.sessionService:createSession(member1.IComponent)
-      local session
-      if success then
-        Check.assertNotNil(sessionComponent)
-        session = sessionComponent:getFacet(
-            "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
-        session = orb:narrow(session,
-            "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
-      else
-        sessionComponent = self.sessionService:getSession()
-        Check.assertNotNil(sessionComponent)
-        session = sessionComponent:getFacet(
-            "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
-        session = orb:narrow(session,
-            "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
-        id1 = session:addMember(member1.IComponent)
-      end
-
-      componentId.name = "membro2"
       local member2 = scs.newComponent(facetDescriptions, {}, componentId)
-      local id2 = session:addMember(member2.IComponent)
-
-      componentId.name = "membro3"
       local member3 = scs.newComponent(facetDescriptions, {}, componentId)
+
+      local success, sessionComponent, id1 =
+        self.sessionService:createSession(member1.IComponent)
+
+      local session = sessionComponent:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      local sink = sessionComponent:getFacet(
+          "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0")
+      sink = orb:narrow(sink,
+          "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0")
+
+      local id2 = session:addMember(member2.IComponent)
       local id3 = session:addMember(member3.IComponent)
 
-      -- envio de eventos
+      -- Envio de eventos
       local my_any_value1 = { _anyval = "valor1",
           _anytype = oil.corba.idl.string }
       local my_any_value2 = { _anyval = "valor2",
           _anytype = oil.corba.idl.string }
 
-      local sessionEventSink = sessionComponent:getFacet(
-          "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0")
-      sessionEventSink = orb:narrow(sessionEventSink,
-          "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0")
+      sink:push({type = "tipo1", value = my_any_value1})
+      sink:push({type = "tipo2", value = my_any_value2})
+      sink:disconnect()
 
-      sessionEventSink:push({type = "tipo1", value = my_any_value1})
-      sessionEventSink:push({type = "tipo2", value = my_any_value2})
-
-      sessionEventSink:disconnect()
-
-      -- remove o segundo e o terceiro membros do barramento
+      -- Remove o segundo e o terceiro membros do barramento
       session:removeMember(id2)
       session:removeMember(id3)
-    end,
-
-    afterTestCase = function(self)
-      self.accessControlService:logout(self.credential)
-      self.credentialManager:invalidate()
     end,
   }
 }
