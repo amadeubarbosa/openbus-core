@@ -10,7 +10,7 @@ basesoft = {
 	  },
 	},
 	{ name = "e2fsprogs-1.40.8",
-		source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/branches/OB_LIBS_v1_00_2009_08_13/e2fsprogs-1.40.8",
+		source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_02_2010_04_12/e2fsprogs-1.40.8",
 		build = {
 			type = "autotools",
 			test_libs = {"libuuid.*"},
@@ -124,7 +124,7 @@ basesoft = {
 		},
 	},
 	{ name = "cyrus-sasl-2.1.23",
-		source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/branches/OB_LIBS_v1_00_2009_08_13/cyrus-sasl-2.1.23",
+		source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_02_2010_04_12/cyrus-sasl-2.1.23",
 		build = {
 			type = "autotools",
 			test_libs = {"libsasl2*.*"},
@@ -160,7 +160,7 @@ basesoft = {
 		},
 	},
 	{ name = "openldap-2.4.11",
-		source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/branches/OB_LIBS_v1_00_2009_08_13/openldap-2.4.11",
+		source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/tags/OB_LIBS_v1_00_02_2010_04_12/openldap-2.4.11",
 		build = {
 			type = "autotools",
 			test_libs = {"libldap*.*"},
