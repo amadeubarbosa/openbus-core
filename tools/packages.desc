@@ -218,7 +218,7 @@ packages = {
 	  },
 	},
 	{ name = "ftc",
-	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/ftc/tags/FTC_v1_00_00_2009_08_25/",
+	  source = "svn+https://subversion.tecgraf.puc-rio.br/engdist/ftc/tags/FTC_v1_00_01_2010_04_12/",
 	  build = {
 	  	type = "tecmake",
 	  	src = PRODAPP .."/ftc/cpp/src",
