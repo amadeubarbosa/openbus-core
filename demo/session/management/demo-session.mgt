@@ -4,7 +4,7 @@ System {
 }
 
 SystemDeployment {
-  id = "HelloSesssion",
+  id = "HelloSession",
   system = "HelloSession",
   description = "Demo do Serviço de Sessão",
   certificate = "HelloSession.crt",
