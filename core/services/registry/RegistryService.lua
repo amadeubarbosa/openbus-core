@@ -303,21 +303,6 @@ function RSFacet:update(identifier, properties)
 end
 
 ---
--- Atualiza as ofertas de facetas do membro.
---
--- @param owner Identificação do membro.
---
-function RSFacet:updateFacets(owner)
-  for id, offerEntry in pairs(self.offersByIdentifier) do
-    if offerEntry.credential.owner == owner then
-      offerEntry.facets = self:createFacetIndex(owner,
-        offerEntry.properties.component_id.name, offerEntry.allFacets)
-      self.offersDB:update(offerEntry)
-    end
-  end
-end
-
----
 --Busca por ofertas de serviço que implementam as facetas descritas.
 --Se nenhuma faceta for fornecida, todas as facetas são retornadas.
 --
@@ -1116,7 +1101,6 @@ function ManagementFacet:grant(id, ifaceId, strict)
   else
      self:updateManagementStatus("grant", { id = id, ifaceId = ifaceId, strict = strict})
   end
-  self.context.IRegistryService:updateFacets(id)
 end
 
 ---
@@ -1146,7 +1130,6 @@ function ManagementFacet:revoke(id, ifaceId)
   else
     self:updateManagementStatus("revoke", { id = id, ifaceId = ifaceId})
   end
-  self.context.IRegistryService:updateFacets(id)
 end
 
 ---
@@ -1167,7 +1150,6 @@ function ManagementFacet:removeAuthorization(id)
   else
     self:updateManagementStatus("removeAuthorization", { id = id})
   end
-  self.context.IRegistryService:updateFacets(id)
 end
 
 ---
