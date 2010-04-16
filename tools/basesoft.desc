@@ -91,74 +91,6 @@ basesoft = {
       [TMPDIR .."/openssl/*"] = "openssl",
     },
   },
-  { name = "db-4.6.21",
-    url = "http://www.tecgraf.puc-rio.br/~openbus/repository/db-4.6.21.tar.gz",
-    build = {
-      type = "autotools",
-      test_libs = {"libdb.*"},
-      Darwin = "cd build_unix; make clean; ../dist/configure --prefix=".. TMPDIR ..
-               " && make && make install",
-      Linux =  "cd build_unix; gmake clean; ../dist/configure --prefix=".. TMPDIR ..
-               " && gmake && gmake install",
-      SunOS =  "cd build_unix; gmake clean; ../dist/configure --prefix=".. TMPDIR ..
-               " && gmake && gmake install",
-      SunOS510 = "cd build_unix; make clean; ../dist/configure --prefix=".. TMPDIR ..
-               " && make && make install",
-      SunOS510_64 = "cd build_unix; make clean; ../dist/configure CFLAGS=-m64 CXXFLAGS=-m64 LFLAGS=-m64 LDFLAGS=-m64 --prefix=".. TMPDIR ..
-               " && make && make install",
-      SunOS510x86 = "cd build_unix; gmake clean; ../dist/configure --prefix=".. TMPDIR ..
-               " && gmake && gmake install",
-      IRIX =   "cd build_unix; gmake clean; ../dist/configure --prefix=".. TMPDIR ..
-               " && gmake && gmake install",
-    },
-    install_files = {
-      [TMPDIR .."/lib/libdb*.so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/libdb*.dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
-    },
-    dev_files = {
-      [TMPDIR .."/lib/libdb*.a*"] = "libpath/${TEC_UNAME}",    --static linux,aix,sunos
-      [TMPDIR .."/lib/libdb*.so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/libdb*.dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
-      [TMPDIR .."/include/db.h"] = "incpath/db-4.6.21",
-      [TMPDIR .."/include/db_cxx.h"] = "incpath/db-4.6.21",
-    },
-  },
-  { name = "cyrus-sasl-2.1.23",
-    url = SVNREPURL .. "/openbus/libs/trunk/cyrus-sasl-2.1.23",
-    build = {
-      type = "autotools",
-      test_libs = {"libsasl2*.*"},
-      external_dependencies = {
-        includes = "db.h", 
-        libs = "libdb.so",
-      },
-      Darwin = "./configure --prefix=".. TMPDIR .." --disable-macos-framework --disable-ldap --enable-static=yes"..
-               " && cd include/ && make && make install "..
-               " && cd ../lib/ && make sasldb.o && make && make install ",
-      Linux =  "./configure --prefix=".. TMPDIR .." --disable-ldap --enable-static=yes"..
-               " && cd include/ && make && make install "..
-               " && cd ../lib/ && make sasldb.o && make && make install ",
-      SunOS =  "./configure --with-gnu-ld=no --prefix=".. TMPDIR .." --disable-ldap --enable-static=yes"..
-               " && cd include/ && make && make install "..
-               " && cd ../lib/ && make sasldb.o && make && make install ",
-      SunOS510_64 =  "./configure --target=sparc64-sun-solaris2.10 --with-gnu-ld=no --prefix=".. TMPDIR .." --disable-ldap --enable-static=yes"..
-               " && cd include/ && make && make install "..
-               " && cd ../lib/ && make sasldb.o && make && make install ",
-      IRIX =   "./configure --prefix=".. TMPDIR .." --disable-ldap --enable-static=yes"..
-               " && cd include/ && make && make install "..
-               " && cd ../lib/ && make && make install ",
-    },
-    install_files = {
-      [TMPDIR .."/lib/libsasl2*.*so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/libsasl2*.*dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
-    },
-    dev_files = {
-      [TMPDIR .."/lib/libsasl2*.a*"] = "libpath/${TEC_UNAME}",    --static linux,aix,sunos
-      [TMPDIR .."/lib/libsasl2*.*so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/libsasl2*.*dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
-      [TMPDIR .."/include/sasl"] = "incpath/cyrus-sasl-2.1.23",
-    },
-  },
   { name = "openldap-2.4.11",
     url = SVNREPURL .. "/openbus/libs/trunk/openldap-2.4.11",
     build = {
@@ -168,20 +100,20 @@ basesoft = {
         includes = "db.h", 
         libs = "libdb.so",
       },
-      Darwin = "./configure --prefix=".. TMPDIR .." --disable-slapd"..
+      Darwin = "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
-      Linux =  "./configure --prefix=".. TMPDIR .." --disable-slapd"..
+      Linux =  "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
-      SunOS =  "./configure --prefix=".. TMPDIR .." --with-tls=openssl --disable-slapd"..
+      SunOS =  "./configure --prefix=".. TMPDIR .." --with-tls=openssl --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
       -- problem on sunos510 openldap compile: http://www.openldap.org/its/index.cgi/Build?id=4607
-      SunOS510 = "./configure --prefix=".. TMPDIR .." --with-tls=openssl --disable-slapd"..
+      SunOS510 = "./configure --prefix=".. TMPDIR .." --with-tls=openssl --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
-      SunOS510_64 = "./configure --target=sparc64-sun-solaris2.10 --prefix=".. TMPDIR .." --with-tls=openssl --disable-slapd"..
+      SunOS510_64 = "./configure --target=sparc64-sun-solaris2.10 --prefix=".. TMPDIR .." --with-tls=openssl --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
-      SunOS510x86 =  "./configure --prefix=".. TMPDIR .." --with-tls=openssl --disable-slapd"..
+      SunOS510x86 =  "./configure --prefix=".. TMPDIR .." --with-tls=openssl --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
-      IRIX =   "./configure --prefix=".. TMPDIR .." --disable-slapd"..
+      IRIX =   "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
     },
     install_files = {
