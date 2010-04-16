@@ -40,6 +40,13 @@ module("core.services.registry.RegistryService")
 -- Faceta IRegistryService
 ------------------------------------------------------------------------------
 
+-- Estas facetas são ignoradas durante o registro
+local IgnoredFacets = {
+  ["IDL:scs/core/IComponent:1.0"]     = true,
+  ["IDL:scs/core/IReceptacles:1.0"]   = true,
+  ["IDL:scs/core/IMetaInterface:1.0"] = true,
+}
+
 RSFacet = oop.class{}
 
 ---
@@ -51,13 +58,15 @@ RSFacet = oop.class{}
 --
 --@param serviceOffer A oferta de serviço.
 --
---@return true e o identificador do registro da oferta em caso de sucesso, ou
---false caso contrário.
+--@return Identificador do registro da oferta.
+--@exception UnauthorizedFacets Exceção contendo a lista de facetas
+--que o membro não tem autorização.
 ---
 function RSFacet:register(serviceOffer)
   local credential = Openbus:getInterceptedCredential()
   local properties = self:createPropertyIndex(serviceOffer.properties,
     serviceOffer.member)
+
   for _, existentOfferEntry in pairs(self.offersByIdentifier) do
     -- (A contido em B) ^ (B contido A) -> (A == B)
     if existentOfferEntry.credential.identifier == credential.identifier   and
@@ -68,25 +77,37 @@ function RSFacet:register(serviceOffer)
         existentOfferEntry.identifier)
       self:updateMemberInfoInExistentOffer(existentOfferEntry,
         serviceOffer.member)
-      return true, existentOfferEntry.identifier
+      return existentOfferEntry.identifier
     end
   end
 
-  -- Efetuar novo registro
-  local identifier = self:generateIdentifier()
-  local memberName = properties.component_id.name
-
-  -- Recupera todas as facetas do membro
-  local allFacets
+  -- Cria a lista de facetas exportadas pelo membro
+  local succ, facets, count
   local metaInterface = serviceOffer.member:getFacetByName("IMetaInterface")
   if metaInterface then
     metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
-    allFacets = metaInterface:getFacets()
+    succ, facets, count = self:createFacetIndex(credential.owner,
+      metaInterface:getFacets(), properties.facets)
+    if succ then
+      Log:registry(format("Membro '%s' (%s) possui %d faceta(s) autorizada(s).",
+        properties.component_id.name, credential.owner, count))
+    else
+      Log:error(format("Membro '%s' (%s) possui %d faceta(s) não autorizada(s).",
+        properties.component_id.name, credential.owner, count))
+      local tmp = {}
+      for facet in pairs(facets) do
+        tmp[#tmp+1] = facet
+      end
+      error(Openbus:getORB():newexcept {
+        "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0",
+        facets = tmp,
+      })
+    end
   else
-    allFacets = {}
+    facets = {}
     Log:registry(format(
-      "Membro '%s' (%s) não disponibiliza a interface IMetaInterface.",
-      memberName, credential.owner))
+      "Membro '%s' (%s) não disponibiliza IMetaInterface para autorização das facetas.",
+      properties.component_id.name, credential.owner))
   end
 
   local offerEntry = {
@@ -94,18 +115,17 @@ function RSFacet:register(serviceOffer)
     -- Mapeia as propriedades.
     properties = properties,
     -- Mapeia as facetas do componente.
-    facets = self:createFacetIndex(credential.owner, memberName, allFacets),
-    allFacets = allFacets,
+    facets = facets,
     credential = credential,
-    identifier = identifier
+    identifier = self:generateIdentifier(),
   }
 
-  Log:registry("Registrando oferta com id "..identifier)
+  Log:registry("Registrando oferta com id "..offerEntry.identifier)
 
   self:addOffer(offerEntry)
   self.offersDB:insert(offerEntry)
 
-  return true, identifier
+  return offerEntry.identifier
 end
 
 ---
@@ -192,26 +212,54 @@ end
 -- disponibiza para consulta.
 --
 -- @param owner Dono da credencial.
--- @param memberName Membro do barramento.
 -- @param allFacets Array de facetas do membro.
+-- @param filter Tabela contendo facetas (repId) permitidas ou
+--  nil para indicar sem filtro.
 --
--- @result índice de facetas disponíveis do membro.
+-- @return Em caso de sucesso, retorna true, o índice de facetas
+-- disponíveis do membro e o número de facetas no índice.
+-- No caso de falta de autorização, retorna false, um índice de
+-- facetas não autorizadas e o número de facetas no índice
 --
-function RSFacet:createFacetIndex(owner, memberName, allFacets)
+function RSFacet:createFacetIndex(owner, allFacets, filter)
+  local tmp = {}
   local count = 0
   local facets = {}
+  local invalidCount = 0
+  local invalidFacets = {}
   local mgm = self.context.IManagement
+  -- Inverte o índice para facilitar a busca
   for _, facet in ipairs(allFacets) do
-    if mgm:hasAuthorization(owner, facet.interface_name) then
-      facets[facet.name] = true
-      facets[facet.interface_name] = true
-      facets[facet.facet_ref] = true
-      count = count + 1
+    tmp[facet.interface_name] = facet
+  end
+  -- Verifica se não requisitou uma faceta que não implementa
+  if filter then
+    for name in pairs(filter) do
+      if not tmp[name] then
+        invalidFacets[name] = true
+        invalidCount = invalidCount + 1
+      end
     end
   end
-  Log:registry(format("Membro '%s' (%s) possui %d faceta(s) autorizada(s).",
-      memberName, owner, count))
-  return facets
+  -- Verifica as autorizações
+  for name, facet in pairs(tmp) do
+    if not IgnoredFacets[name] and ((not filter) or filter[name])
+    then
+      if not mgm:hasAuthorization(owner, name) then
+        invalidFacets[name] = true
+        invalidCount = invalidCount + 1
+      elseif invalidCount == 0 then
+        facets[facet.name] = true
+        facets[facet.interface_name] = true
+        facets[facet.facet_ref] = true
+        count = count + 1
+      end
+     end
+  end
+  if invalidCount == 0 then
+    return true, facets, count
+  end
+  return false, invalidFacets, invalidCount
 end
 
 ---
@@ -407,7 +455,6 @@ function RSFacet:localFind(facets, criteria)
       selectedOffersEntries[i].properties = offerEntry.properties
       selectedOffersEntries[i].authorizedFacets =
         Utils.marshalHashFacets(offerEntry.facets)
-      selectedOffersEntries[i].allFacets = offerEntry.allFacets
       i = i + 1
     end
     Log:registry("Encontrei "..#selectedOffersEntries..
@@ -431,7 +478,6 @@ function RSFacet:localFind(facets, criteria)
         selectedOffersEntries[i].properties = offerEntry.properties
         selectedOffersEntries[i].authorizedFacets =
           Utils.marshalHashFacets(offerEntry.facets)
-        selectedOffersEntries[i].allFacets = offerEntry.allFacets
         i = i + 1
       end
     end
@@ -458,7 +504,6 @@ function RSFacet:localFind(facets, criteria)
           selectedOffersEntries[i].properties = offerEntry.properties
           selectedOffersEntries[i].authorizedFacets =
             Utils.marshalHashFacets(offerEntry.facets)
-          selectedOffersEntries[i].allFacets = offerEntry.allFacets
           i = i + 1
         end
       end
@@ -667,7 +712,6 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
             addOfferEntry.offer = offerEntryFound.aServiceOffer
             addOfferEntry.facets =
               Utils.unmarshalHashFacets(offerEntryFound.authorizedFacets)
-            addOfferEntry.allFacets = offerEntryFound.allFacets
             addOfferEntry.properties = offerEntryFound.properties
             -- verifica se ja existem localmente
             Log:faulttolerance("[updateOffersStatus] Verificando se a oferta ["
