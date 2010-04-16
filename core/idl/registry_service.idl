@@ -65,6 +65,11 @@ struct ServiceOfferEntry {
  */
 typedef sequence<ServiceOfferEntry> ServiceOfferEntryList;
 
+/** \brief Indica que o serviço tentou registrar alguma faceta não autorizada */
+exception UnathorizedFacets {
+  FacetList facets; /**< \brief Lista de facetas não autorizadas */
+};
+
 /**
  * \brief Representa o serviço de registro.
  */
@@ -73,12 +78,14 @@ interface IRegistryService {
      * \brief Registra uma oferta de serviço.
      *
      * \param aServiceOffer A oferta de serviço.
-     * \param[out] identifier Um identificador para o registro.
      *
-     * \return \c true, caso a oferta de serviço tenha sido registrada, ou
-     * \c false, caso contrário.
+     * \return Um identificador para o registro.
+     *
+     * \exception UnathorizedFacets Serviço sem autorização para publicar uma
+     *  uma ou mais facetas.
      */
-    boolean register(in ServiceOffer aServiceOffer, out RegistryIdentifier identifier);
+    RegistryIdentifier register(in ServiceOffer aServiceOffer)
+      raises (UnathorizedFacets);
 
     /**
      * \brief Remove uma oferta de serviço.
