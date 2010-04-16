@@ -17,21 +17,18 @@ cp ${WORKSPACE}/hudson/toolsconf.lua .
 
 if [ "${TEC_SYSNAME}" == "Linux" ] ;then
   EXCLUDE="\
-    cyrus-sasl2-2.1.22.dfsg1 \
-    db-4.6.21 \
     openbus-mico \
     openbus-demo-hello-orbix  \
     scsmico \
     scsorbix \
     openbus-orbix \
+    openbus-orbix-doc \
     openbus-orbix-test \
     openbus-demo-hello-mico"
 fi
 
 if [ "${TEC_SYSNAME}" == "SunOS" ] ;then
   EXCLUDE="\
-    cyrus-sasl2-2.1.22.dfsg1 \
-    db-4.6.21 \
     jacorb-2.3.0 \
     luatrace \
     ftc-java \
@@ -40,6 +37,7 @@ if [ "${TEC_SYSNAME}" == "SunOS" ] ;then
     scsmico \
     scsorbix \
     openbus-orbix \
+    openbus-orbix-doc \
     openbus-orbix-test \
     openbus-demo-hello-mico \
     scs-java-ant \
@@ -47,6 +45,7 @@ if [ "${TEC_SYSNAME}" == "SunOS" ] ;then
     openbus-java \
     openbusidl-java \
     openbusapi-java \
+    openbusapi-java-doc \
     openbus-demo-hello-java \
     openbus-demo-delegate-java"
 fi
