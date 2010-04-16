@@ -1,12 +1,14 @@
 -- $Id$
 
 local os = os
-
-local loadfile = loadfile
-local assert = assert
-local error = error
 local string = string
-local print = print
+
+local error    = error
+local print    = print
+local pairs    = pairs
+local ipairs   = ipairs
+local assert   = assert
+local loadfile = loadfile
 
 local oil = require "oil"
 local orb = oil.orb
@@ -91,15 +93,25 @@ function SessionServiceComponent:startup()
   -- registra sua oferta de serviço junto ao Serviço de Registro
   self.serviceOffer = {
     member = self.context.IComponent,
-    properties = {},
+    properties = {
+      { 
+        name  = "facets",
+        value = {"IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"}, 
+      },
+    },
   }
 
-  local success, identifier = registryService:register(self.serviceOffer)
-  --local success, suc, identifier =
-  --        oil.pcall(registryService.register,registryService, self.serviceOffer)
+  local success, identifier = registryService.__try:register(self.serviceOffer)
   if not success then
-    Log:error("Erro ao registrar oferta do servico de sessao.\n")
-    Log:error(suc)
+    if identifier[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+      Log:error("Erro ao registrar oferta do serviço de sessão")
+      for _, facet in ipairs(identifier.facets) do
+        Log:error(string.format("Faceta '%s' não autorizada", facet))
+      end
+    else
+      Log:error(string.format("Erro ao registrar oferta do servico de sessao: %s\n", 
+        identifier[1]))
+    end
     Openbus:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
@@ -130,9 +142,17 @@ function SessionServiceComponent:expired()
     return
   end
 
-  success, self.registryIdentifier = registryService:register(self.serviceOffer)
+  success, self.registryIdentifier = registryService.__try:register(self.serviceOffer)
   if not success then
-    Log:error("Erro ao registrar oferta do servico de sessao.\n")
+    if self.registryIdentifier[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+      Log:error("Erro ao registrar oferta do serviço de sessão")
+      for _, facet in ipairs(self.registryIdentifier.facets) do
+        Log:error(string.format("Facet '%s' não autorizada", facet))
+      end
+    else
+      Log:error(string.format("Erro ao registrar oferta do servico de sessao: %s\n", 
+        self.registryIdentifier[1]))
+    end
     self.registryIdentifier = nil
     return
   end

@@ -10,7 +10,6 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import org.omg.CORBA.ORB;
-import org.omg.CORBA.StringHolder;
 import org.omg.CORBA.UserException;
 
 import scs.core.ComponentId;
@@ -23,6 +22,7 @@ import tecgraf.openbus.Openbus;
 import tecgraf.openbus.core.v1_05.registry_service.IRegistryService;
 import tecgraf.openbus.core.v1_05.registry_service.Property;
 import tecgraf.openbus.core.v1_05.registry_service.ServiceOffer;
+import tecgraf.openbus.core.v1_05.registry_service.UnathorizedFacets;
 import tecgraf.openbus.exception.OpenBusException;
 import tecgraf.openbus.exception.RSUnavailableException;
 import tecgraf.openbus.util.CryptoUtils;
@@ -94,15 +94,17 @@ public class HelloServer {
     org.omg.CORBA.Object obj = context.getIComponent();
     IComponent component = IComponentHelper.narrow(obj);
     ServiceOffer serviceOffer = new ServiceOffer(new Property[0], component);
-    StringHolder registrationId = new StringHolder();
-    boolean ok = registryService.register(serviceOffer, registrationId);
+    try {
+    	String registrationId = registryService.register(serviceOffer);
+        System.out.println("Hello Server registrado.");
+    } catch (UnathorizedFacets uf) {
+        System.out.println("Não foi possível registrar Hello Server.");
+        for (String facet : uf.facets) {
+            System.out.println("Faceta '" + facet + "' não autorizada");
+        }
+        System.exit(1);
+    }
 
-    if (ok) {
-      System.out.println("Hello Server registrado.");
-    }
-    else {
-      System.out.println("Não foi possível registrar Hello Server.");
-    }
     Runtime.getRuntime().addShutdownHook(new ShutdownThread());
 
     orb.run();

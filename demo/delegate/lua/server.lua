@@ -62,10 +62,17 @@ function main ()
     io.stderr:write("HelloServer: Erro ao conectar ao barramento.\n")
     os.exit(1)
   end
-  local suc = registryService:register({ properties = {}, member = component.IComponent})
+  local suc, id = registryService.__try:register({ properties = {}, member = component.IComponent})
   if not suc then
-      io.stderr:write("HelloServer: Erro ao registrar ofertas.\n")
-      os.exit(1)
+    io.stderr:write("HelloServer: Erro ao registrar ofertas.\n")
+    if id[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+      for _, facet in ipairs(id.facets) do
+        io.stderr:write(string.format("Registro da faceta '%s' não autorizado\n", facet))
+      end
+    else
+      io.stderr:write(string.format("Erro: %s.\n", id[1]))
+    end
+    os.exit(1)
   end
   print("*********************************************\n")
   print("PUBLISHER\nServiço Hello registrado no barramento do OpenBus.\n")
