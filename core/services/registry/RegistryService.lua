@@ -59,6 +59,7 @@ RSFacet = oop.class{}
 --@param serviceOffer A oferta de serviço.
 --
 --@return Identificador do registro da oferta.
+--
 --@exception UnauthorizedFacets Exceção contendo a lista de facetas
 --que o membro não tem autorização.
 ---
@@ -81,34 +82,8 @@ function RSFacet:register(serviceOffer)
     end
   end
 
-  -- Cria a lista de facetas exportadas pelo membro
-  local succ, facets, count
-  local metaInterface = serviceOffer.member:getFacetByName("IMetaInterface")
-  if metaInterface then
-    metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
-    succ, facets, count = self:createFacetIndex(credential.owner,
-      metaInterface:getFacets(), properties.facets)
-    if succ then
-      Log:registry(format("Membro '%s' (%s) possui %d faceta(s) autorizada(s).",
-        properties.component_id.name, credential.owner, count))
-    else
-      Log:error(format("Membro '%s' (%s) possui %d faceta(s) não autorizada(s).",
-        properties.component_id.name, credential.owner, count))
-      local tmp = {}
-      for facet in pairs(facets) do
-        tmp[#tmp+1] = facet
-      end
-      error(Openbus:getORB():newexcept {
-        "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0",
-        facets = tmp,
-      })
-    end
-  else
-    facets = {}
-    Log:registry(format(
-      "Membro '%s' (%s) não disponibiliza IMetaInterface para autorização das facetas.",
-      properties.component_id.name, credential.owner))
-  end
+  local facets = self:getAuthorizedFacets(serviceOffer.member, credential, 
+    properties)
 
   local offerEntry = {
     offer = serviceOffer,
@@ -205,6 +180,49 @@ function RSFacet:createPropertyIndex(offerProperties, member)
   properties["registered_by"][credential.owner] = true
 
   return properties
+end
+
+---
+-- Cria um índice com as facetas autorizadas do membro.
+--
+-- @param credential Credencial do membro.
+-- @param offer Oferta enviada pelo membro.
+-- @param properties Propriedades indexadas da oferta.
+--
+-- @return Índice de facetas autorizadas.
+--
+-- @exception UnathorizedFacets Contém a lista com uma ou
+--   mais facetas que o membro não tem autorização.
+--
+function RSFacet:getAuthorizedFacets(member, credential, properties)
+  local succ, facets, count
+  local metaInterface = member:getFacetByName("IMetaInterface")
+  if metaInterface then
+    metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
+    succ, facets, count = self:createFacetIndex(credential.owner,
+      metaInterface:getFacets(), properties.facets)
+    if succ then
+      Log:registry(format("Membro '%s' (%s) possui %d faceta(s) autorizada(s).",
+        properties.component_id.name, credential.owner, count))
+    else
+      Log:error(format("Membro '%s' (%s) possui %d faceta(s) não autorizada(s).",
+        properties.component_id.name, credential.owner, count))
+      local tmp = {}
+      for facet in pairs(facets) do
+        tmp[#tmp+1] = facet
+      end
+      error(Openbus:getORB():newexcept {
+        "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0",
+        facets = tmp,
+      })
+    end
+  else
+    facets = {}
+    Log:registry(format(
+      "Membro '%s' (%s) não disponibiliza IMetaInterface para autorização das facetas.",
+      properties.component_id.name, credential.owner))
+  end
+  return facets
 end
 
 ---
@@ -324,7 +342,11 @@ end
 --@param identifier O identificador da oferta.
 --@param properties As novas propriedades da oferta.
 --
---@return true caso a oferta seja atualizada, ou false caso contrário.
+--@exception UnauthorizedFacets Exceção contendo a lista de facetas
+--que o membro não tem autorização.
+--
+--@exception ServiceOfferNonExistent O membro não possui nenhuma oferta
+--relacionada com o identificador informado.
 ---
 function RSFacet:update(identifier, properties)
   Log:registry("Atualizando oferta "..identifier)
@@ -332,22 +354,29 @@ function RSFacet:update(identifier, properties)
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
     Log:warning("Oferta a atualizar com id "..identifier.." não encontrada")
-    return false
+    error(Openbus:getORB():newexcept {
+      "IDL:tecgraf/openbus/core/v1_05/registry_service/ServiceOfferNonExistent:1.0",
+    })
   end
 
   local credential = Openbus:getInterceptedCredential()
   if credential.identifier ~= offerEntry.credential.identifier then
     Log:warning("Oferta a atualizar("..identifier..
                 ") não registrada com a credencial do chamador")
-    return false -- esse tipo de erro merece uma exceção!
+    error(Openbus:getORB():newexcept {
+      "IDL:tecgraf/openbus/core/v1_05/registry_service/ServiceOfferNonExistent:1.0",
+    })
   end
 
-  -- Atualiza as propriedades da oferta de serviço
-  offerEntry.offer.properties = properties
-  offerEntry.properties = self:createPropertyIndex(properties,
+  local indexedProperties = self:createPropertyIndex(properties,
     offerEntry.offer.member)
+
+  -- Atualiza as propriedades da oferta de serviço
+  offerEntry.facets = self:getAuthorizedFacets(
+    offerEntry.offer.member, credential, indexedProperties)
+  offerEntry.offer.properties = properties
+  offerEntry.properties = indexedProperties
   self.offersDB:update(offerEntry)
-  return true
 end
 
 ---

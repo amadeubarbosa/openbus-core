@@ -417,8 +417,8 @@ Suite = {
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
-      Check.assertTrue(self.registryService:update(self.registryIdentifier,
-	Hello_v2.properties))
+      Check.assertTrue(self.registryService.__try:update(self.registryIdentifier,
+        Hello_v2.properties))
       offers = self.registryService:find({"IHello_v1"})
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
@@ -437,7 +437,7 @@ Suite = {
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
-      Check.assertTrue(self.registryService:update(self.registryIdentifier,
+      Check.assertTrue(self.registryService.__try:update(self.registryIdentifier,
 	Hello_v1.properties))
       --
       offers = self.registryService:find({"IHello_v1"})
@@ -468,8 +468,9 @@ Suite = {
         properties = self.trueProps,
         member = member.IComponent,
       })
+      Check.assertTrue(success)
       -- Tenta sobrescrita de propriedade definidas internamente no RS
-      Check.assertTrue(self.registryService:update(self.registryIdentifier, self.fakeProps))
+      Check.assertTrue(self.registryService.__try:update(self.registryIdentifier, self.fakeProps))
       --
       local offers = self.registryService:findByCriteria(
         {"IHello_v1"}, self.trueProps)
@@ -478,15 +479,83 @@ Suite = {
 
     testUpdate_Invalid = function(self)
       -- Coloca conteúdo no registro
-      local success
+      local success, err
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
-      Check.assertFalse(self.registryService:update("INVALID-IDENTIFIER",
-        Hello_v1.properties))
+      success, err = self.registryService.__try:update("INVALID-IDENTIFIER",
+        Hello_v1.properties)
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/ServiceOfferNonExistent:1.0")
+    end,
+
+    testUpdate_Property = function(self)
+      local success
+      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles, 
+        Hello_v2.componentId)
+      success, self.registryIdentifier = self.registryService.__try:register({
+        properties = Hello_v2.properties,
+        member = member.IComponent,
+      })
+      --
+      success = self.registryService.__try:update(self.registryIdentifier, {
+        {
+          name = "facets",
+          value = {
+            "IDL:IHello_v1:1.0",
+          }
+        },
+      })
+      Check.assertTrue(success)
+      --
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(1, #offers)
+      --
+      offers = self.registryService:find({"IHello_v2"})
+      Check.assertEquals(0, #offers)
+      --
+      success = self.registryService.__try:update(self.registryIdentifier, {
+        {
+          name = "facets",
+          value = {
+            "IDL:IHello_v1:1.0",
+            "IDL:IHello_v2:1.0",
+          }
+        },
+      })
+      Check.assertTrue(success)
+      --
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(1, #offers)
+      --
+      offers = self.registryService:find({"IHello_v2"})
+      Check.assertEquals(1, #offers)
+    end,
+
+    testUpdate_NotImplemented = function(self)
+      local success, err
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+        Hello_v1.componentId)
+      success, self.registryIdentifier = self.registryService.__try:register({
+        properties = Hello_v1.properties,
+        member = member.IComponent,
+      })
+      --
+      success, err = self.registryService.__try:update(self.registryIdentifier, {
+        {
+          name = "facets",
+          value = {
+            "IDL:IHello_v1:1.0",
+            "IDL:IHello_v2:1.0",  -- IHello_v1 não implementa
+          }
+        },
+      })
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0")
+      Check.assertEquals(#err.facets, 1)
     end,
   },
 

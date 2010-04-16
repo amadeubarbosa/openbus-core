@@ -70,6 +70,9 @@ exception UnathorizedFacets {
   FacetList facets; /**< \brief Lista de facetas não autorizadas */
 };
 
+/** \brief Indica que Serviço de Registro não possui a oferta de serviço indicada */
+exception ServiceOfferNonExistent { };
+
 /**
  * \brief Representa o serviço de registro.
  */
@@ -82,7 +85,7 @@ interface IRegistryService {
      * \return Um identificador para o registro.
      *
      * \exception UnathorizedFacets Serviço sem autorização para publicar uma
-     *  uma ou mais facetas.
+     *  ou mais facetas.
      */
     RegistryIdentifier register(in ServiceOffer aServiceOffer)
       raises (UnathorizedFacets);
@@ -105,8 +108,14 @@ interface IRegistryService {
      *
      * \return \c true, caso a oferta de serviço seja atualizada, ou \c false,
      * caso contrário.
+     *
+     * \exception UnathorizedFacets Serviço sem autorização para publicar uma
+     *   ou mais facetas.
+     * \exception ServiceOfferNonExistent O membro não possui nenhuma oferta
+     *   relacionada com o identificador informado.
      */
-    boolean update(in RegistryIdentifier identifier, in PropertyList newProperties);
+    void update(in RegistryIdentifier identifier, in PropertyList newProperties)
+      raises (UnathorizedFacets, ServiceOfferNonExistent);
 
     /**
      * \brief Realiza uma busca por ofertas através de uma lista de facetas.
