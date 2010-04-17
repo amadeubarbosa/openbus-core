@@ -35,16 +35,16 @@ echo "==========================================================================
 
 cd ${OPENBUS_HOME}/data/conf
 
-echo -en "\nAccessControlServerConfiguration.administrators = {'tester'}\n" >> \
+echo "AccessControlServerConfiguration.administrators = {'tester'}" >> \
   AccessControlServerConfiguration.lua
-echo -en "AccessControlServerConfiguration.lease = 300\n" >> \
+echo "AccessControlServerConfiguration.lease = 300" >> \
   AccessControlServerConfiguration.lua
-echo -en "AccessControlServerConfiguration.oilVerboseLevel = 5\n" >> \
+echo "AccessControlServerConfiguration.oilVerboseLevel = 5" >> \
   AccessControlServerConfiguration.lua
 
-echo -en "\nRegistryServerConfiguration.administrators = {'tester'}\n" >> \
+echo "RegistryServerConfiguration.administrators = {'tester'}" >> \
   RegistryServerConfiguration.lua
-echo -en "RegistryServerConfiguration.oilVerboseLevel = 5\n" >> \
+echo "RegistryServerConfiguration.oilVerboseLevel = 5" >> \
   RegistryServerConfiguration.lua
 
 ###############################################################################
