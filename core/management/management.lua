@@ -109,10 +109,7 @@ Uso: %s [opções] --login=<usuário> <comando>
 -- Define o parser da linha de comando.
 --
 
--- Este valor é usado no parser (e só no parser) da linha de comando:
---  * 'null' quer dizer que o parâmetro foi informado, mas sem valor. 
---  * 'nil' quer dizer ausência do parâmetro.
--- Após o parser, o valor 'null' é convertido em 'nil'.
+-- Este valor é usado como uma constante para valor de comando ou parâmetro.
 local null = {}
 
 --
@@ -145,10 +142,14 @@ local options = {
 --   --parameter=value
 --   --parameter
 --
--- Nota: se for necessário diferenciar entre as formas dentro de um mesmo
--- comando, pode-se adicionar um campo, por exemplo 'key', que identifica
--- unicamente a forma desejada. (diferenciando até globalmente)
+-- Após o parser, os parâmetros e comandos que foram informados no
+-- formato '--command' terão valor igual a 'null', inidicando que eles
+-- estão presentes, mas sem valor.
 --
+-- Parâmetros não informados terão valor 'nil'. (comandos sempre devem
+-- ser informados e nunca são nil)
+--
+
 local commands = {
   help = {
     --help
