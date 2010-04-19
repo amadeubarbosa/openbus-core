@@ -3,39 +3,31 @@
 --
 require "oil"
 local orb = oil.orb
+local oop = require "loop.base"
 
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 
+local scs = require "scs.core.base"
+
 local Check = require "latt.Check"
 
-Suite = {}
-Suite.Test1 = {}
-Suite.Test2 = {}
-Suite.Test3 = {}
-Suite.Test4 = {}
-Suite.Test5 = {}
-Suite.Test6 = {}
-
---------------------------------------------------------------------------------
--- Testa o cadastro de sistemas da interface IManagement do ACS.
+-------------------------------------------------------------------------------
+-- Faz login com o barramento e recupera as facetas de governança.
 --
+local login = "tester"
+local password = "tester"
 
--- Alias
-local Test1 = Suite.Test1
-
---
--- Pega referência para a interface de governança do ACS
---
-function Test1:beforeTestCase()
+local function init(self)
   local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
   if IDLPATH_DIR == nil then
-    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+    io.stderr:write("A variável IDLPATH_DIR não foi definida.\n")
     os.exit(1)
   end
   oil.verbose:level(0)
   orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
   orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
   -- Instala o interceptador cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
   local config = assert(loadfile(DATA_DIR ..
@@ -50,11 +42,58 @@ function Test1:beforeTestCase()
     "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   self.acs = orb:narrow(facet,
     "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  succ, self.credential = self.acs:loginByPassword("tester", "tester")
+  succ, self.credential = self.acs:loginByPassword(login, password)
   self.credentialManager:setValue(self.credential)
-  facet = ic:getFacetByName("IManagement")
+  --
+  facet = ic:getFacet(
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   self.acsMgt = orb:narrow(facet,
     "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+  --
+  facet = ic:getFacetByName("IReceptacles")
+  facet = orb:narrow(facet, "IDL:scs/core/IReceptacles:1.0")
+  local conns = facet:getConnections("RegistryServiceReceptacle")
+  ic = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
+  facet = ic:getFacet(
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+  self.rs = orb:narrow(facet,
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+  --
+  facet = ic:getFacetByName("IManagement")
+  self.rsMgt = orb:narrow(facet,
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+end
+
+-------------------------------------------------------------------------------
+-- Casos de teste.
+--
+Suite = {}
+Suite.Test1 = {}
+Suite.Test2 = {}
+Suite.Test3 = {}
+Suite.Test4 = {}
+Suite.Test5 = {}
+Suite.Test6 = {}
+Suite.Test7 = {}
+
+-- Aliases
+local Test1 = Suite.Test1
+local Test2 = Suite.Test2
+local Test3 = Suite.Test3
+local Test4 = Suite.Test4
+local Test5 = Suite.Test5
+local Test6 = Suite.Test6
+local Test7 = Suite.Test7
+
+--------------------------------------------------------------------------------
+-- Testa o cadastro de sistemas da interface IManagement do ACS.
+--
+
+--
+-- Pega referência para a interface de governança do ACS
+--
+function Test1:beforeTestCase()
+  init(self)
   -- Dados para os testes
   self.systems = {}
   for i = 1, 10 do
@@ -178,37 +217,8 @@ end
 -- do cadastro de implantações.
 --
 
--- Alias
-local Test2 = Suite.Test2
-
 function Test2:beforeTestCase()
-  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-  if IDLPATH_DIR == nil then
-    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-    os.exit(1)
-  end
-  oil.verbose:level(0)
-  orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
-  -- Instala o interceptador cliente
-  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-  local config = assert(loadfile(DATA_DIR ..
-    "/conf/advanced/InterceptorsConfiguration.lua"))()
-  self.credentialManager = CredentialManager()
-  orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
-  -- Obtem a face de governança
-  local succ
-  local ic = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05", 
-    "IDL:scs/core/IComponent:1.0")
-  local facet = ic:getFacet(
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  self.acs = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  succ, self.credential = self.acs:loginByPassword("tester", "tester")
-  self.credentialManager:setValue(self.credential)
-  facet = ic:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+  init(self)
   -- Dados para os testes
   self.certfiles = {"testManagement01.crt", "testManagement02.crt"}
   self.systems = {}
@@ -530,47 +540,8 @@ end
 -- Testa o cadastro de interfaces da interface IManagement do RS.
 --
 
--- Alias
-local Test3 = Suite.Test3
-
 function Test3:beforeTestCase()
-  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-  if IDLPATH_DIR == nil then
-    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-    os.exit(1)
-  end
-  oil.verbose:level(0)
-  orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
-  -- Instala o interceptador cliente
-  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-  local config = assert(loadfile(DATA_DIR ..
-    "/conf/advanced/InterceptorsConfiguration.lua"))()
-  self.credentialManager = CredentialManager()
-  orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
-  -- Obtem a face de governança
-  local succ
-  local ic = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05", 
-    "IDL:scs/core/IComponent:1.0")
-  local facet = ic:getFacet(
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  self.acs = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  succ, self.credential = self.acs:loginByPassword("tester", "tester")
-  self.credentialManager:setValue(self.credential)
-  --
-  facet = ic:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
-  --
-  facet = ic:getFacetByName("IReceptacles")
-  facet = orb:narrow(facet, "IDL:scs/core/IReceptacles:1.0")
-  local conns = facet:getConnections("RegistryServiceReceptacle")
-  ic = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-  facet = ic:getFacetByName("IManagement")
-  self.rsMgt = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  init(self)
   -- Dados para os testes
   self.ifaces = {}
   self.systems = {}
@@ -654,47 +625,8 @@ end
 -- Testa o cadastro das autorizações para implantações no RS.
 --
 
--- Alias
-local Test4 = Suite.Test4
-
 function Test4:beforeTestCase()
-  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-  if IDLPATH_DIR == nil then
-    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-    os.exit(1)
-  end
-  oil.verbose:level(0)
-  orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
-  -- Instala o interceptador cliente
-  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-  local config = assert(loadfile(DATA_DIR ..
-    "/conf/advanced/InterceptorsConfiguration.lua"))()
-  self.credentialManager = CredentialManager()
-  orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
-  -- Obtem a face de governança
-  local succ
-  local ic = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05", 
-    "IDL:scs/core/IComponent:1.0")
-  local facet = ic:getFacet(
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  self.acs = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  succ, self.credential = self.acs:loginByPassword("tester", "tester")
-  self.credentialManager:setValue(self.credential)
-  --
-  facet = ic:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
-  --
-  facet = ic:getFacetByName("IReceptacles")
-  facet = orb:narrow(facet, "IDL:scs/core/IReceptacles:1.0")
-  local conns = facet:getConnections("RegistryServiceReceptacle")
-  ic = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-  facet = ic:getFacetByName("IManagement")
-  self.rsMgt = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  init(self)
   -- Dados para os testes
   self.ifaces = {}
   self.systems = {}
@@ -993,40 +925,8 @@ end
 -- Testa o cadastro de usuários da interface IManagement do ACS.
 --
 
--- Alias
-local Test5 = Suite.Test5
-
---
--- Pega referência para a interface de governança do ACS
---
 function Test5:beforeTestCase()
-  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-  if IDLPATH_DIR == nil then
-    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-    os.exit(1)
-  end
-  oil.verbose:level(0)
-  orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
-  -- Instala o interceptador cliente
-  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-  local config = assert(loadfile(DATA_DIR ..
-    "/conf/advanced/InterceptorsConfiguration.lua"))()
-  self.credentialManager = CredentialManager()
-  orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
-  -- Obtem a face de governança
-  local succ
-  local ic = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05", 
-    "IDL:scs/core/IComponent:1.0")
-  local facet = ic:getFacet(
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  self.acs = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  succ, self.credential = self.acs:loginByPassword("tester", "tester")
-  self.credentialManager:setValue(self.credential)
-  facet = ic:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+  init(self)
   -- Dados para os testes
   self.users = {}
   for i = 1, 10 do
@@ -1147,47 +1047,8 @@ end
 -- Testa o cadastro das autorizações para usuários no RS.
 --
 
--- Alias
-local Test6 = Suite.Test6
-
 function Test6:beforeTestCase()
-  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-  if IDLPATH_DIR == nil then
-    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-    os.exit(1)
-  end
-  oil.verbose:level(0)
-  orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
-  -- Instala o interceptador cliente
-  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-  local config = assert(loadfile(DATA_DIR ..
-    "/conf/advanced/InterceptorsConfiguration.lua"))()
-  self.credentialManager = CredentialManager()
-  orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
-  -- Obtem a face de governança
-  local succ
-  local ic = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05", 
-    "IDL:scs/core/IComponent:1.0")
-  local facet = ic:getFacet(
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  self.acs = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-  succ, self.credential = self.acs:loginByPassword("tester", "tester")
-  self.credentialManager:setValue(self.credential)
-  --
-  facet = ic:getFacetByName("IManagement")
-  self.acsMgt = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
-  --
-  facet = ic:getFacetByName("IReceptacles")
-  facet = orb:narrow(facet, "IDL:scs/core/IReceptacles:1.0")
-  local conns = facet:getConnections("RegistryServiceReceptacle")
-  ic = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-  facet = ic:getFacetByName("IManagement")
-  self.rsMgt = orb:narrow(facet,
-    "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  init(self)
   -- Dados para os testes
   self.ifaces = {}
   self.users = {}
@@ -1465,4 +1326,505 @@ function Test6:testGetAuthorizationsByInterfaceIdMulti()
     succ, err = self.rsMgt.__try:removeAuthorization(user.id)
     Check.assertTrue(succ)
   end
+end
+
+--------------------------------------------------------------------------------
+-- Testa o controle de ofertas no RS.
+--
+
+function Test7:beforeTestCase()
+  init(self)
+  --
+  orb:loadidl([[
+    interface IHello_v1 { };
+    interface IHello_v2 { };
+    interface IHello_v3 { };
+  ]])
+  -- Dados para os testes
+  local Hello  = {
+    -- Descrição dos receptáculos
+    receptacles = {},
+    -- Descrição das facetas
+    facets = {
+      IComponent = {
+        name = "IComponent",
+        interface_name = "IDL:scs/core/IComponent:1.0",
+        class = scs.Component
+      },
+      IMetaInterface = {
+        name = "IMetaInterface",
+        interface_name = "IDL:scs/core/IMetaInterface:1.0",
+        class = scs.MetaInterface
+      },
+      IHello_v1 = {
+        name = "IHello_v1",
+        interface_name = "IDL:IHello_v1:1.0",
+        class = oop.class({}),
+      },
+      IHello_v2 = {
+        name = "IHello_v2",
+        interface_name = "IDL:IHello_v2:1.0",
+        class = oop.class({}),
+      },
+      IHello_v3 = {
+        name = "IHello_v3",
+        interface_name = "IDL:IHello_v3:1.0",
+        class = oop.class({}),
+      },
+    },
+    -- ComponentId
+    componentId = {
+      name = "Hello",
+      major_version = 1,
+      minor_version = 0,
+      patch_version = 0,
+      platform_spec = "",
+    },
+  }
+  --
+  self.user = login
+  self.acsMgt.__try:addUser(self.user, self.user)
+  --
+  self.member = scs.newComponent(Hello.facets, Hello.receptacles,
+    Hello.componentId)
+end
+
+function Test7:afterTestCase()
+  self.acsMgt:removeUser(self.user)
+  if (self.credentialManager:hasValue()) then
+    self.acs:logout(self.credential)
+    self.credentialManager:invalidate()
+  end
+end
+
+function Test7:afterEachTest()
+  self.rsId01 = nil
+  self.rsId02 = nil
+  self.rsId03 = nil
+end
+
+function Test7:afterEachTest()
+  if type(self.rsId01) == "string" then
+    self.rs.__try:unregister(self.rsId01)
+  end
+  if type(self.rsId02) == "string" then
+    self.rs.__try:unregister(self.rsId02)
+  end
+  if type(self.rsId03) == "string" then
+    self.rs.__try:unregister(self.rsId03)
+  end
+  self.rsMgt.__try:removeAuthorization(self.user)
+end
+
+function Test7:testGetOfferedInterfaces()
+  local ifaces = {
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0",
+    "IDL:IHello_v3:1.0",
+  }
+
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  succ, self.rsId01 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {},
+  })
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getOfferedInterfaces()
+  Check.assertEquals(#offers, 1)
+  Check.assertEquals(#offers[1].interfaces, 3)
+  Check.assertEquals(offers[1].member, self.user)
+  -- Cada oferta deve corresponder a uma única interface
+  for _, offered in ipairs(offers[1].interfaces) do
+    local pos = nil
+    for n, iface in ipairs(ifaces) do
+      if offered == iface then
+        Check.assertNil(pos)  -- Repetiu?
+        pos = n
+      end
+    end
+    Check.assertNotNil(pos)   -- Existe?
+    -- Remover para não repetir interface
+    table.remove(ifaces, pos)
+  end
+end
+
+function Test7:testGetOfferedInterfaces_MoreRegisters()
+  local ifaces = {
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0",
+    "IDL:IHello_v3:1.0",
+  }
+
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  succ, self.rsId01 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[1]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+  succ, self.rsId02 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[2]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+  succ, self.rsId03 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[3]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getOfferedInterfaces()
+  Check.assertEquals(#offers, 3)
+  -- Cada oferta deve corresponder a uma única interface
+  for _, offer in ipairs(offers) do
+    Check.assertEquals(offer.member, self.user)
+    Check.assertEquals(#offer.interfaces, 1)
+    local pos = nil
+    for n, iface in ipairs(ifaces) do
+      if offer.interfaces[1] == iface then
+        Check.assertNil(pos)  -- Repetiu?
+        pos = n
+      end
+    end
+    Check.assertNotNil(pos)   -- Existe?
+    -- Remover para não repetir interface
+    table.remove(ifaces, pos)
+  end
+end
+
+function Test7:testGetOfferedInterfacesByMember()
+  local ifaces = {
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0",
+    "IDL:IHello_v3:1.0",
+  }
+
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  succ, self.rsId01 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {},
+  })
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertEquals(#offers, 1)
+  Check.assertEquals(#offers[1].interfaces, 3)
+  Check.assertEquals(offers[1].member, self.user)
+  -- Cada oferta deve corresponder a uma única interface
+  for _, offered in ipairs(offers[1].interfaces) do
+    local pos = nil
+    for n, iface in ipairs(ifaces) do
+      if offered == iface then
+        Check.assertNil(pos)  -- Repetiu?
+        pos = n
+      end
+    end
+    Check.assertNotNil(pos)   -- Existe?
+    -- Remover para não repetir interface
+    table.remove(ifaces, pos)
+  end
+end
+
+function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
+  local ifaces = {
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0",
+    "IDL:IHello_v3:1.0",
+  }
+
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  succ, self.rsId01 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[1]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+  succ, self.rsId02 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[2]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+  succ, self.rsId03 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[3]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertEquals(#offers, 3)
+  -- Cada oferta deve corresponder a uma única interface
+  for _, offer in ipairs(offers) do
+    Check.assertEquals(offer.member, self.user)
+    Check.assertEquals(#offer.interfaces, 1)
+    local pos = nil
+    for n, iface in ipairs(ifaces) do
+      if offer.interfaces[1] == iface then
+        Check.assertNil(pos)  -- Repetiu?
+        pos = n
+      end
+    end
+    Check.assertNotNil(pos)   -- Existe?
+    -- Remover para não repetir interface
+    table.remove(ifaces, pos)
+  end
+end
+
+function Test7:testGetUnauthorizedInterfaces()
+  local ifaces = {
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0",
+    "IDL:IHello_v3:1.0",
+  }
+
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  succ, self.rsId01 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {},
+  })
+  Check.assertTrue(succ)
+
+  local succ = self.rsMgt.__try:revoke(self.user, "IDL:*:*")
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getUnauthorizedInterfaces()
+  Check.assertEquals(#offers, 1)
+  Check.assertEquals(#offers[1].interfaces, 3)
+  Check.assertEquals(offers[1].member, self.user)
+  -- Cada oferta deve corresponder a uma única interface
+  for _, offered in ipairs(offers[1].interfaces) do
+    local pos = nil
+    for n, iface in ipairs(ifaces) do
+      if offered == iface then
+        Check.assertNil(pos)  -- Repetiu?
+        pos = n
+      end
+    end
+    Check.assertNotNil(pos)   -- Existe?
+    -- Remover para não repetir interface
+    table.remove(ifaces, pos)
+  end
+end
+
+function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
+  local ifaces = {
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0",
+    "IDL:IHello_v3:1.0",
+  }
+
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  succ, self.rsId01 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[1]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+  succ, self.rsId02 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[2]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+  succ, self.rsId03 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[3]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+
+  local succ = self.rsMgt.__try:revoke(self.user, "IDL:*:*")
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getUnauthorizedInterfaces()
+  Check.assertEquals(#offers, 3)
+  -- Cada oferta deve corresponder a uma única interface
+  for _, offer in ipairs(offers) do
+    Check.assertEquals(offer.member, self.user)
+    Check.assertEquals(#offer.interfaces, 1)
+    local pos = nil
+    for n, iface in ipairs(ifaces) do
+      if offer.interfaces[1] == iface then
+        Check.assertNil(pos)  -- Repetiu?
+        pos = n
+      end
+    end
+    Check.assertNotNil(pos)   -- Existe?
+    -- Remover para não repetir interface
+    table.remove(ifaces, pos)
+  end
+end
+
+function Test7:testGetUnauthorizedInterfacesByMember()
+  local ifaces = {
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0",
+    "IDL:IHello_v3:1.0",
+  }
+
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  succ, self.rsId01 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {},
+  })
+  Check.assertTrue(succ)
+
+  local succ = self.rsMgt.__try:revoke(self.user, "IDL:*:*")
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
+  Check.assertEquals(#offers, 1)
+  Check.assertEquals(#offers[1].interfaces, 3)
+  Check.assertEquals(offers[1].member, self.user)
+  -- Cada oferta deve corresponder a uma única interface
+  for _, offered in ipairs(offers[1].interfaces) do
+    local pos = nil
+    for n, iface in ipairs(ifaces) do
+      if offered == iface then
+        Check.assertNil(pos)  -- Repetiu?
+        pos = n
+      end
+    end
+    Check.assertNotNil(pos)   -- Existe?
+    -- Remover para não repetir interface
+    table.remove(ifaces, pos)
+  end
+end
+
+function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
+  local ifaces = {
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0",
+    "IDL:IHello_v3:1.0",
+  }
+
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  succ, self.rsId01 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[1]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+  succ, self.rsId02 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[2]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+  succ, self.rsId03 = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {ifaces[3]},
+      },
+    }
+  })
+  Check.assertTrue(succ)
+
+  local succ = self.rsMgt.__try:revoke(self.user, "IDL:*:*")
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
+  Check.assertEquals(#offers, 3)
+  -- Cada oferta deve corresponder a uma única interface
+  for _, offer in ipairs(offers) do
+    Check.assertEquals(offer.member, self.user)
+    Check.assertEquals(#offer.interfaces, 1)
+    local pos = nil
+    for n, iface in ipairs(ifaces) do
+      if offer.interfaces[1] == iface then
+        Check.assertNil(pos)  -- Repetiu?
+        pos = n
+      end
+    end
+    Check.assertNotNil(pos)   -- Existe?
+    -- Remover para não repetir interface
+    table.remove(ifaces, pos)
+  end
+end
+
+function Test7:testUnregister()
+  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  Check.assertTrue(succ)
+
+  local succ, id = self.rs.__try:register({
+    member = self.member.IComponent,
+    properties = {},
+  })
+  Check.assertTrue(succ)
+
+  local offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertEquals(#offers, 1)
+  Check.assertEquals(#offers[1].interfaces, 3)
+  Check.assertEquals(offers[1].member, self.user)
+  Check.assertEquals(offers[1].id, id)
+
+  Check.assertTrue(self.rsMgt:unregister(offers[1].id))
+  offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertEquals(#offers, 0)
 end

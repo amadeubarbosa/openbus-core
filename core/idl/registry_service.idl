@@ -194,6 +194,17 @@ struct Authorization {
 /** \brief Seqüência de autorizações. */
 typedef sequence<Authorization> AuthorizationList;
 
+/**
+ * \brief Representa as facetas em uma entrada no Serviço de Registro
+ */
+struct ServiceOfferInterface {
+  RegistryIdentifier id;              /**< Identificar da oferta */
+  string member;                      /**< Identificador do membro que efetuou o registro */
+  InterfaceIdentifierList interfaces; /**< Interfaces não autorizadas */
+};
+
+typedef sequence<ServiceOfferInterface> ServiceOfferInterfaceList;
+
 /** \brief Membro não existe. */
 exception MemberNonExistent {};
 
@@ -309,6 +320,54 @@ interface IManagement {
    */
   AuthorizationList getAuthorizationsByInterfaceId(
     in InterfaceIdentifierList ifaceIds);
+
+  /**
+   * \brief Recupera todas as interfaces oferecidas no registro.
+   *
+   * \return Seqüência de interfaces registradas.
+   */
+  ServiceOfferInterfaceList getOfferedInterfaces();
+
+  /**
+   * \brief Recupera todas as interfaces oferecidas no registro por 
+   * um dado membro.
+   *
+   * \param member Identificador do membro do barramento.
+   *
+   * \return Seqüência de interfaces registradas pelo membro.
+   */
+  ServiceOfferInterfaceList getOfferedInterfacesByMember(in string member);
+
+  /**
+   * \brief Recupera as interfaces oferecidas no registro, mas que os membros
+   * não possuem autorização para ofertá-las.
+   *
+   * \return Seqüência de interfaces não autorizadas aos membros.
+   */
+  ServiceOfferInterfaceList getUnauthorizedInterfaces();
+
+  /**
+   * \brief Recupera as interfaces oferecidas no registro, mas que o dado membro
+   * não possui autorização para ofertá-las.
+   *
+   * \param member Identificador do membro do barramento.
+   *
+   * \return Seqüência de interfaces não autorizadas ao membro.
+   */
+  ServiceOfferInterfaceList getUnauthorizedInterfacesByMember(in string member);
+
+  /**
+   * \brief Remove a oferta indicado do registro.
+   *
+   * Esta operação tem a mesma funcionalidade da oferecida pela interface IRegistryService,
+   * mas esta é permitida apenas aos administradores, enquanto a aquela é destinada ao
+   * membro que efetuou o registro.
+   * 
+   * \param id Identificador da oferta no registro.
+   *
+   * \return \c true se a oferta foi removida com sucesso, \c false caso contrário.
+   */
+  boolean unregister(in RegistryIdentifier id);
 };
 
 }; // registry_service

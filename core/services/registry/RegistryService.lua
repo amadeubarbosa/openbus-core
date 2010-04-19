@@ -267,9 +267,9 @@ function RSFacet:createFacetIndex(owner, allFacets, filter)
         invalidFacets[name] = true
         invalidCount = invalidCount + 1
       elseif invalidCount == 0 then
-        facets[facet.name] = true
-        facets[facet.interface_name] = true
-        facets[facet.facet_ref] = true
+        facets[facet.name] = "name"
+        facets[facet.interface_name] = "interface_name"
+        facets[facet.facet_ref] = "facet_ref"
         count = count + 1
       end
      end
@@ -288,6 +288,19 @@ end
 --@return true caso a oferta tenha sido removida, ou false caso contrário.
 ---
 function RSFacet:unregister(identifier)
+  return self:rawUnregister(identifier, Openbus:getInterceptedCredential())
+end
+
+---
+--Método interno responsável por efetivamente remove uma oferta de serviço.
+--
+--@param identifier A identificação da oferta de serviço.
+--@param credential Credencial do membro que efetuou o registro ou
+--  nil se for uma remoção forçada pelo administrador do barramento.
+--
+--@return true caso a oferta tenha sido removida, ou false caso contrário.
+---
+function RSFacet:rawUnregister(identifier, credential)
   Log:registry("Removendo oferta "..identifier)
 
   local offerEntry = self.offersByIdentifier[identifier]
@@ -296,11 +309,14 @@ function RSFacet:unregister(identifier)
     return false
   end
 
-  local credential = Openbus:getInterceptedCredential()
-  if credential.identifier ~= offerEntry.credential.identifier then
-    Log:warning("Oferta a remover("..identifier..
-                ") não registrada com a credencial do chamador")
-    return false -- esse tipo de erro merece uma exceção!
+  if credential then
+    if credential.identifier ~= offerEntry.credential.identifier then
+      Log:warning("Oferta a remover("..identifier..
+        ") não registrada com a credencial do chamador")
+      return false
+    end
+  else
+    credential = offerEntry.credential
   end
 
   -- Remove oferta do índice por identificador
@@ -327,7 +343,7 @@ function RSFacet:unregister(identifier)
         credential.identifier)
     else
       -- erro ja foi logado, so adiciona que nao pode remover
-      Log:error("Nao foi possivel remover credencial")
+      Log:error("Não foi possível remover credencial")
     end
     acsFacet:removeCredentialFromObserver(self.observerId,credential.identifier)
   end
@@ -1330,6 +1346,143 @@ function ManagementFacet:getAuthorizationsByInterfaceId(ifaceIds)
   return array
 end
 
+---
+-- Recupera do registro a lista de todas interfaces oferecidas.
+--
+-- @return Array com as ofertas.
+--
+function ManagementFacet:getOfferedInterfaces()
+  self:checkPermission()
+  local array = {}
+  local ifaces = {}
+  local offers = self.context.IRegistryService.offersByIdentifier
+  for id, offer in pairs(offers) do
+    for facet, type in pairs(offer.facets) do
+      if type == "interface_name" then
+        ifaces[#ifaces+1] = facet
+      end
+    end
+    if #ifaces > 0 then
+      array[#array+1] = {
+        id = id,
+        member = offer.credential.owner,
+        interfaces = ifaces,
+      }
+      ifaces = {}
+    end
+  end
+  return array
+end
+
+---
+-- Recupera do registro a lista de interfaces oferecidas por um dado membro.
+--
+-- @param member Identificador do membro do barramento.
+--
+-- @return Array contendo as intefaces oferecidas
+--
+function ManagementFacet:getOfferedInterfacesByMember(member)
+  self:checkPermission()
+  local array = {}
+  local ifaces = {}
+  local offers = self.context.IRegistryService.offersByIdentifier
+  for id, offer in pairs(offers) do
+    if offer.credential.owner == member then
+      for facet, type in pairs(offer.facets) do
+        if type == "interface_name" then
+          ifaces[#ifaces+1] = facet
+        end
+      end
+      if #ifaces > 0 then
+        array[#array+1] = {
+          id = id,
+          member = offer.credential.owner,
+          interfaces = ifaces,
+        }
+        ifaces = {}
+      end
+    end
+  end
+  return array
+end
+
+---
+-- Recupera do  registro as  ofertas que contém  que interfaces  que o
+-- membro não está autorizado a ofertar.
+--
+-- @return Array contendo as ofertas.
+--
+function ManagementFacet:getUnauthorizedInterfaces()
+  self:checkPermission()
+  local array = {}
+  local ifaces = {}
+  local offers = self.context.IRegistryService.offersByIdentifier
+  for id, offer in pairs(offers) do
+    local owner = offer.credential.owner
+    for facet, type in pairs(offer.facets) do
+      if type == "interface_name" and not self:hasAuthorization(owner, facet) then
+        ifaces[#ifaces+1] = facet
+      end
+    end
+    if #ifaces > 0 then
+      array[#array+1] = {
+        id = id,
+        member = offer.credential.owner,
+        interfaces = ifaces,
+      }
+      ifaces = {}
+    end
+  end
+  return array
+end
+
+---
+-- Recupera do registro as ofertas de um membro que contém que
+-- interfaces sem autorização para serem ofertadas.
+--
+-- @param member Identificador do membro do barramento.
+--
+-- @return Array contendo as ofertas.
+--
+function ManagementFacet:getUnauthorizedInterfacesByMember(member)
+  self:checkPermission()
+  local array = {}
+  local ifaces = {}
+  local offers = self.context.IRegistryService.offersByIdentifier
+  for id, offer in pairs(offers) do
+    local owner = offer.credential.owner
+    if owner == member then
+      for facet, type in pairs(offer.facets) do
+        if type == "interface_name" and not self:hasAuthorization(owner, facet) then
+          ifaces[#ifaces+1] = facet
+        end
+      end
+      if #ifaces > 0 then
+        array[#array+1] = {
+          id = id,
+          member = offer.credential.owner,
+          interfaces = ifaces,
+        }
+        ifaces = {}
+      end
+    end
+  end
+  return array
+end
+
+---
+-- Remove do registro a oferta identificada.
+--
+-- @param id Identificador da oferta no registro.
+--
+function ManagementFacet:unregister(id)
+  self:checkPermission()
+  return self.context.IRegistryService:rawUnregister(id)
+end
+
+---
+--
+--
 function ManagementFacet:updateManagementStatus(command, data)
   local credential = Openbus:getInterceptedCredential()
   if credential.owner == "RegistryService" or

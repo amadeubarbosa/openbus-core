@@ -92,12 +92,24 @@ Uso: %s [opções] --login=<usuário> <comando>
      --set-authorization=<id_membro> --revoke=<interface>
   * Remover autorização:
      --del-authorization=<id_membro>
-  * Mostrar todas as autorizações
+  * Mostrar todas as autorizações:
      --list-authorization
-  * Mostrar uma autorização:
+  * Mostrar autorizações do membro:
      --list-authorization=<id_membro>
-  * Mostrar todas autorizações com as interfaces:
+  * Mostrar todas autorizações contendo as interfaces:
      --list-authorization --interface="<iface1> <iface2> ... <ifaceN>"
+
+- Controle de Ofertas no Serviço de Registro
+  * Remover oferta:
+     --del-offer=<id_oferta>
+  * Mostrar todas interfaces ofertadas:
+     --list-offer
+  * Mostrar todas interfaces ofertadas por um membro:
+     --list-offer=<id_membro>
+  * Mostrar todas interfaces ofertadas com problemas de autorização:
+     --list-offer --broken
+  * Mostrar interfaces ofertadas pelo membro, com problemas de autorização:
+     --list-offer=<id_membro> --broken
 
 - Script
   * Executa script Lua com um lote de comandos:
@@ -220,9 +232,18 @@ local commands = {
     {n = 1, params = {interface = 1}},
     {n = 1, params = {}},
   };
+  ["list-offer"] = {
+    {n = 0, params = {broken = 0}},
+    {n = 1, params = {broken = 0}},
+    {n = 0, params = {}},
+    {n = 1, params = {}},
+  };
+  ["del-offer"] = {
+    {n = 1, params = {}},
+  };
   ["script"] = {
     {n = 1, params = {}},
-  }
+  };
 }
 
 ---
@@ -1085,6 +1106,87 @@ handlers["list-authorization"] = function(cmd)
   end
 end
 
+--
+-- Lista as interfaces oferecidas no registro.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["list-offer"] = function(cmd)
+  local offers
+  local rsmgm = getrsmgm()
+  if cmd.params[cmd.name] == null then
+    if cmd.params.broken then
+      offers = rsmgm:getUnauthorizedInterfaces()
+    else
+      offers = rsmgm:getOfferedInterfaces()
+    end
+  else
+    if cmd.params.broken then
+      offers = rsmgm:getUnauthorizedInterfacesByMember(cmd.params[cmd.name])
+    else
+      offers = rsmgm:getOfferedInterfacesByMember(cmd.params[cmd.name])
+    end
+  end
+  -- Títulos e larguras das colunas do formulário de resposta
+  local titles = { "", "ID OFERTA", "ID MEMBRO", "INTERFACES"}
+  local sizes = { 3, #titles[2], #titles[3], #titles[4] }
+  if #offers == 0 then
+    header(titles, sizes)
+    emptyline(sizes)
+    hdiv(sizes)
+  else
+    -- Ajusta as larguras das colunas de acordo com o conteúdo
+    for k, offer in ipairs(offers) do
+      if sizes[2] < #offer.id then
+        sizes[2] = #offer.id
+      end
+      if sizes[3] < #offer.member then
+        sizes[3] = #offer.member
+      end
+      for _, iface in ipairs(offer.interfaces) do
+        if sizes[4] < #iface then
+          sizes[4] = #iface
+        end
+      end
+    end
+    -- Ordena e monta o formulário
+    table.sort(offers, function(a, b)
+      return lower(a.member) < lower(b.member)
+    end)
+    header(titles, sizes)
+    for k, offer in ipairs(offers) do
+      -- Ordena as interfaces
+      table.sort(offer.interfaces, function(a, b)
+        return lower(a) < lower(b)
+      end)
+      dataline(sizes, string.format("%.3d", k), offer.id, offer.member,
+        offer.interfaces[1])
+      local count = 2
+      local total = #offer.interfaces
+      while count <= total do
+        dataline(sizes, "", "", "", offer.interfaces[count])
+        count = count + 1
+      end
+    end
+    hdiv(sizes)
+  end  
+end
+
+--
+-- Lista as interfaces oferecidas no registro.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["del-offer"] = function(cmd)
+  local rsmgm = getrsmgm()
+  local id = cmd.params[cmd.name]
+  if rsmgm:unregister(id) then
+    print("[INFO] Oferta removida com sucesso")
+  else
+    printf("[ERRO] Falha ao remover oferta '%s'", id)
+  end
+end
+
 ---
 -- Carrega e executa um script Lua para lote de comandos
 --
@@ -1113,7 +1215,6 @@ handlers["script"] = function(cmd)
     printf("[ERRO] Falha ao executar o script: %s", tostring(err))
   end
 end
-
 -------------------------------------------------------------------------------
 -- Funções exportadas para o script Lua carregado pelo comando 'script'
 
