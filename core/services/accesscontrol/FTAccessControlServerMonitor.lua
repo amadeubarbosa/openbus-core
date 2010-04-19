@@ -9,9 +9,8 @@ local tostring = tostring
 local print = print
 
 local Log = require "openbus.util.Log"
-local Openbus = require "openbus.Openbus" 
+local Openbus = require "openbus.Openbus"
 
-    
 local oil = require "oil"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
@@ -31,7 +30,6 @@ end
 
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/AccessControlServerConfiguration.lua"))()
-
 
 -- Define os níveis de verbose para o OpenBus e para o OiL.
 if AccessControlServerConfiguration.logLevel then
@@ -53,9 +51,9 @@ local hostAdd = AccessControlServerConfiguration.hostName..":"..hostPort
 
 -- Inicializa o ORB, fixando a localização do serviço em uma porta específica
 local orb = oil.init {  flavor = "intercepted;corba;typed;cooperative;base",
-                       tcpoptions = {reuseaddr = true}
+                        tcpoptions = {reuseaddr = true}
                      }
-					 
+
 oil.orb = orb
 oil.verbose:level(2)
 
@@ -70,9 +68,9 @@ orb:loadidlfile(IDLPATH_DIR.."/fault_tolerance.idl")
 
 -- Facet Descriptions
 local facetDescriptions = {}
-facetDescriptions.IComponent        		  	 = {}
-facetDescriptions.IReceptacles					 = {}
-facetDescriptions.IMetaInterface     			 = {}
+facetDescriptions.IComponent                     = {}
+facetDescriptions.IReceptacles                   = {}
+facetDescriptions.IMetaInterface                 = {}
 facetDescriptions.IFTServiceMonitor              = {}
 
 facetDescriptions.IComponent.name                     = "IComponent"
@@ -80,15 +78,15 @@ facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent
 facetDescriptions.IComponent.class                    = scs.Component
 facetDescriptions.IComponent.key                      = "IC"
 
-facetDescriptions.IReceptacles.name      			  = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name   	  = "IDL:scs/core/IReceptacles:1.0"
-facetDescriptions.IReceptacles.class           		  = scs.Receptacles
+facetDescriptions.IReceptacles.name                   = "IReceptacles"
+facetDescriptions.IReceptacles.interface_name         = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.class                  = scs.Receptacles
 
 facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IFTServiceMonitor.name 			  = "IFTServiceMonitor"
+facetDescriptions.IFTServiceMonitor.name              = "IFTServiceMonitor"
 facetDescriptions.IFTServiceMonitor.interface_name    = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
 facetDescriptions.IFTServiceMonitor.class             =  FTAccessControlServiceMonitor.FTACSMonitorFacet
 facetDescriptions.IFTServiceMonitor.key               = "FTACSMonitor"
@@ -96,10 +94,10 @@ facetDescriptions.IFTServiceMonitor.key               = "FTACSMonitor"
 -- Receptacle Descriptions
 local receptacleDescriptions = {}
 receptacleDescriptions.IFaultTolerantService = {}
-receptacleDescriptions.IFaultTolerantService.name 			= "IFaultTolerantService"
+receptacleDescriptions.IFaultTolerantService.name           = "IFaultTolerantService"
 receptacleDescriptions.IFaultTolerantService.interface_name = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
-receptacleDescriptions.IFaultTolerantService.is_multiplex 	= false
-receptacleDescriptions.IFaultTolerantService.type   		= "Receptacle"
+receptacleDescriptions.IFaultTolerantService.is_multiplex   = false
+receptacleDescriptions.IFaultTolerantService.type           = "Receptacle"
 
 -- component id
 local componentId = {}
@@ -116,9 +114,9 @@ function main()
 
   -- Cria o componente responsável pelo Monitor do Serviço de Controle de Acesso
   local ftacsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
-  
+
   ftacsInst.IComponent.startup = FTAccessControlServiceMonitor.startup
-    
+
   local ftacs = ftacsInst.IFTServiceMonitor
   ftacs.config = AccessControlServerConfiguration
 
@@ -128,8 +126,8 @@ function main()
     Log:error("Falha ao iniciar o monitor do serviço de controle de acesso: "..
         tostring(res).."\n")
     os.exit(1)
-  end  
-               
+  end
+
   local success, res = oil.pcall(oil.newthread, ftacs.monitor, ftacs)
 
   if not success then
@@ -137,7 +135,6 @@ function main()
     os.exit(1)
   end
   Log:faulttolerance("Monitor do servico de controle monitorando com sucesso.")
-
 
 end
 
