@@ -19,7 +19,7 @@
   <properties>
     <java.version>1.6</java.version>
     <junit.version>4.6</junit.version>
-    <scs.version>1.0.1</scs.version>
+    <scs.version>1.1.0</scs.version>
     <jacorb.version>2.3.0</jacorb.version>
 
     <source.encoding>ISO-8859-1</source.encoding>
@@ -80,8 +80,6 @@
         <artifactId>jacorb-idl-compiler</artifactId>
         <version>${jacorb.version}</version>
       </dependency>
-
     </dependencies>
   </dependencyManagement>
 </project>
-
