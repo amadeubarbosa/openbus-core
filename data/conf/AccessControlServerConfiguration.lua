@@ -28,4 +28,5 @@ AccessControlServerConfiguration = {
     "core.services.accesscontrol.LDAPLoginPasswordValidator",
     "core.services.accesscontrol.TestLoginPasswordValidator",
   },
+  adminMail = "root@localhost",
 }

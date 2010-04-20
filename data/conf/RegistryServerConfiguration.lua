@@ -15,4 +15,5 @@ RegistryServerConfiguration = {
   administrators = {},
   logLevel = 3,
   oilVerboseLevel = 1,
+  adminMail = "root@localhost",
 }

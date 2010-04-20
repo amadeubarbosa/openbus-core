@@ -88,10 +88,20 @@ function FTRSMonitorFacet:connect()
       DATA_DIR.."/"..self.config.accessControlServiceCertificateFile)
 end
 
+function FTRSMonitorFacet:sendMail()
+  path = os.getenv("OPENBUS_HOME")
+  user = os.getenv("USER")
+  host = self.config.registryServerHostName
+  port = self.config.registryServerHostPort
+  os.execute('echo "Erro no barramento (RGS) em: path = ' ..
+      path .. ' usuário = ' .. user ..'. host = ' .. host ..
+      '. port = ' .. port ..
+      '" | mail -s "Falha no barramento" ' .. self.config.adminMail)
+end
 
 function FTRSMonitorFacet:isUnix()
 --TODO - Confirmar se vai manter assim
-  if os.execute("uname") == 0 then
+  if os.execute("uname > /dev/null") == 0 then
     --unix
     return true
   else
@@ -130,6 +140,8 @@ function FTRSMonitorFacet:monitor()
     if not reinit then
       oil.sleep(timeOut.monitor.sleep)
     else
+      Log:faulttolerance("Enviando email para o administrador do barramento.")
+      self:sendMail()
       Openbus.credentialManager:invalidate()
       Openbus.acs = nil
       local timeToTry = 0

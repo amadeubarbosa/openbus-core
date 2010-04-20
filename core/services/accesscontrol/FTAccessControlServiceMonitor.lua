@@ -48,7 +48,7 @@ FTACSMonitorFacet = oop.class{}
 
 function FTACSMonitorFacet:isUnix()
   --TODO - Confirmar se vai manter assim
-  if os.execute("uname") == 0 then
+  if os.execute("uname > /dev/null") == 0 then
     --unix
     return true
   else
@@ -77,6 +77,17 @@ function FTACSMonitorFacet:getService()
   end
   log:error("Nao foi possivel obter o Serviço.")
   return nil
+end
+
+function FTACSMonitorFacet:sendMail()
+  path = os.getenv("OPENBUS_HOME")
+  user = os.getenv("USER")
+  host = self.config.hostName
+  port = self.config.hostPort
+  os.execute('echo "Erro no barramento (ACS) em: path = ' ..
+      path .. ' usuário = ' .. user ..'. host = ' .. host ..
+      '. port = ' .. port ..
+      '" | mail -s "Falha no barramento" ' .. self.config.adminMail)
 end
 
 function FTACSMonitorFacet:connect()
@@ -120,6 +131,8 @@ function FTACSMonitorFacet:monitor()
     if not reinit then
       oil.sleep(timeOut.monitor.sleep)
     else
+      Log:faulttolerance("Enviando email para o administrador do barramento.")
+      self:sendMail()
       Openbus.credentialManager:invalidate()
       Openbus.acs = nil
       local timeToTry = 0
