@@ -127,7 +127,9 @@ function FTRSMonitorFacet:monitor()
       reinit = true
     end
 
-    if reinit then
+    if not reinit then
+      oil.sleep(timeOut.monitor.sleep)
+    else
       Openbus.credentialManager:invalidate()
       Openbus.acs = nil
       local timeToTry = 0
@@ -170,7 +172,7 @@ function FTRSMonitorFacet:monitor()
         end
 
         -- Espera alguns segundos para que dê tempo do SR ter sido levantado
-        os.execute("sleep ".. tostring(timeOut.monitor.sleep))
+        oil.sleep(timeOut.monitor.sleep)
 
         self.recConnId = nil
         self:connect()
@@ -194,10 +196,10 @@ function FTRSMonitorFacet:monitor()
         else
           Log:faulttolerance("[Monitor SR] Não conseguiu levantar RS de primeira porque porta está bloqueada.")
           Log:faulttolerance("[Monitor SR] Espera " .. tostring(timeOut.monitor.sleep) .." segundos......")
-          os.execute("sleep ".. tostring(timeOut.monitor.sleep))
+          oil.sleep(timeOut.monitor.sleep)
         end
-        timeToTry = timeToTry + 1
 
+        timeToTry = timeToTry + 1
       until self.recConnId ~= nil or timeToTry == timeOut.monitor.MAX_TIMES
       if self.recConnId == nil then
          Log:error("[Monitor SR] Servico de registro nao encontrado.")
