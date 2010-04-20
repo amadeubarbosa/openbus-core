@@ -27,6 +27,8 @@ namespace openbus {
   Logger* Openbus::logger  = 0;
   char* Openbus::debugFile = 0;
   interceptors::ORBInitializerImpl* Openbus::ini = 0;
+  lua_State* Openbus::luaState = 0;
+  char* Openbus::FTConfigFilename = 0;
 #ifndef OPENBUS_MICO
   IT_Mutex Openbus::mutex;
 #endif
@@ -245,9 +247,15 @@ namespace openbus {
         } else if (!strcmp(credentialValidationPolicyStr, "CACHED")) { 
           credentialValidationPolicy = interceptors::CACHED;
         }
+      } else if (!strcmp(argv[idx], "-OpenbusFTConfigFilename")) {
+        faultToleranceEnable = true;
+        idx++;
+        FTConfigFilename = argv[idx];
+    #ifdef OPENBUS_MICO
       } else if (!strcmp(argv[idx], "-OpenbusValidationTime")) {
           ini->getServerInterceptor()->setValidationTime(
             (unsigned long) atoi(argv[++idx]));
+    #endif
       } 
     }
   }
@@ -266,6 +274,7 @@ namespace openbus {
   }
 
   void Openbus::newState() {
+    faultToleranceEnable = false;
     debugLevel = OFF;
     connectionState = DISCONNECTED;
     credential = 0;
@@ -296,11 +305,11 @@ namespace openbus {
     std::stringstream corbalocACS;
     std::stringstream corbalocLP;
     std::stringstream corbalocIC;
-    corbalocACS << "corbaloc::" << hostBus << ":" << portBus << "/ACS";
+    corbalocACS << "corbaloc::" << hostBus << ":" << portBus << "/ACS_v1_05";
     logger->log(INFO, "corbaloc ACS: " + corbalocACS.str());
-    corbalocLP << "corbaloc::" << hostBus << ":" << portBus << "/LP";
+    corbalocLP << "corbaloc::" << hostBus << ":" << portBus << "/LP_v1_05";
     logger->log(INFO, "corbaloc LeaseProvider: " + corbalocLP.str());
-    corbalocIC << "corbaloc::" << hostBus << ":" << portBus << "/IC";
+    corbalocIC << "corbaloc::" << hostBus << ":" << portBus << "/openbus_v1_05";
     logger->log(INFO, "corbaloc IComponent: " + corbalocIC.str());
     CORBA::Object_var objACS = 
       orb->string_to_object(corbalocACS.str().c_str());
@@ -312,6 +321,15 @@ namespace openbus {
       access_control_service::IAccessControlService::_narrow(objACS);
     iLeaseProvider = access_control_service::ILeaseProvider::_narrow(objLP);
     iComponentAccessControlService = scs::core::IComponent::_narrow(objIC);
+
+    std::stringstream corbalocFT;
+    corbalocFT << "corbaloc::" << hostBus << ":" << portBus << "/FTACS_v1_05";
+    logger->log(INFO, "corbaloc IFaultTolerant: " + corbalocFT.str());
+    CORBA::Object_var objFT = 
+      orb->string_to_object(corbalocFT.str().c_str());
+    iFaultTolerantService = 
+      IFaultTolerantService::_narrow(objFT);
+
     logger->dedent(INFO, "Openbus::createProxyToIAccessControlService() END");
   }
 
@@ -322,6 +340,8 @@ namespace openbus {
   }
 
   Openbus::Openbus() {
+    luaState = lua_open();
+    luaL_openlibs(luaState);
     newState();
     credentialValidationPolicy = openbus::interceptors::ALWAYS;
     registerInterceptors();
@@ -331,6 +351,7 @@ namespace openbus {
   Openbus::~Openbus() {
     logger->log(INFO, "Openbus::~Openbus() BEGIN");
     logger->indent();
+    lua_close(luaState);
     logger->log(INFO, "Deletando lista de métodos interceptáveis...");
     IfaceMap::iterator iter = ifaceMap.begin();
     while (iter != ifaceMap.end()) {
@@ -966,5 +987,8 @@ namespace openbus {
     return true;
   }
 
+  bool Openbus::isFaultToleranceEnable() {
+    return faultToleranceEnable;
+  }
 }
 

@@ -28,7 +28,7 @@ class RGSTestSuite: public CxxTest::TestSuite {
     openbus::util::PropertyListHelper* propertyListHelper2;
     scs::core::IComponent_var component;
     std::string OPENBUS_SERVER_HOST;
-    unsigned short OPENBUS_SERVER_PORT;
+    std::string OPENBUS_SERVER_PORT;
     std::string OPENBUS_USERNAME;
     std::string OPENBUS_PASSWORD;
     scs::core::ComponentBuilder* componentBuilder;
@@ -74,11 +74,15 @@ class RGSTestSuite: public CxxTest::TestSuite {
         }
         inFile.close();
         bus = Openbus::getInstance();
-        bus->init(
-          0, 
-          NULL, 
+        const char* argv[] = {
+          "exec", 
+          "-OpenbusHost", 
           const_cast<char*>(OPENBUS_SERVER_HOST.c_str()), 
-          OPENBUS_SERVER_PORT);
+          "-OpenbusPort", 
+          OPENBUS_SERVER_PORT.c_str(),
+          "-OpenbusDebug",
+          "ALL"}; 
+        bus->init(7, (char**) argv);
         credential = new access_control_service::Credential;
         rgs = bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
         iAccessControlService = bus->getAccessControlService();

@@ -117,7 +117,7 @@ class ACSTestSuite: public CxxTest::TestSuite {
           "2089",
           "-OpenbusDebug",
           "ALL"}; 
-        bus->init(5, (char**) argv);
+        bus->init(7, (char**) argv);
         bus->connect(OPENBUS_USERNAME.c_str(), OPENBUS_PASSWORD.c_str());
         bus->disconnect();
       } catch(CORBA::SystemException& e) {

@@ -16,21 +16,25 @@
   #include <CORBA.h>
   #include "stubs/mico/access_control_service.h"
   #include "stubs/mico/session_service.h"
+  #include "stubs/mico/fault_tolerance.h"
 #else
   #include <omg/orb.hh>
   #include <it_ts/thread.h>
   #include <it_ts/mutex.h>
   #include "stubs/orbix/access_control_service.hh"
   #include "stubs/orbix/session_service.hh"
+  #include "stubs/orbix/fault_tolerance.hh"
 #endif
 
 #include <stdexcept>
 #include <string.h>
 #include <map>
 #include <set>
+#include <lua.hpp>
 
 using namespace tecgraf::openbus::core::v1_05;
 using namespace tecgraf::openbus::session_service::v1_05;
+using namespace tecgraf::openbus::fault_tolerance::v1_05;
 using namespace std;
 using namespace logger;
 
@@ -126,6 +130,16 @@ namespace openbus {
       static Openbus* bus;
 
     /**
+    * Máquina virtual de Lua.
+    */
+      static lua_State* luaState;
+
+    /**
+    * Nome do arquivo de configuracao das replicas.
+    */
+      static char* FTConfigFilename;
+
+    /**
     * Parâmetro argc da linha de comando. 
     */
       int _argc;
@@ -159,6 +173,11 @@ namespace openbus {
     * Ponteiro para o IComponent do servico de acesso. 
     */
       scs::core::IComponent_var iComponentAccessControlService;
+
+    /**
+    * Ponteiro para o stub do serviço de tolerancia a falhas.
+    */
+      IFaultTolerantService_var iFaultTolerantService;
 
     /**
     * Inicializador do ORB. 
@@ -278,6 +297,7 @@ namespace openbus {
     * Cria o proxy para o serviço de acesso.
     */
       void createProxyToIAccessControlService();
+      friend class openbus::interceptors::ClientInterceptor;
 
     /**
     * Desconexão local.
@@ -347,8 +367,14 @@ namespace openbus {
     #endif
   #endif
 
-      Openbus();
+    /**
+    * Flag que informa se o mecanismo de tolerancia a falhas está 
+    * ativado.
+    */
+      bool faultToleranceEnable;
 
+      Openbus();
+      friend class FaultToleranceManager;
     public:
 
       static Logger* logger;
@@ -600,6 +626,14 @@ namespace openbus {
     * @return true se o método é interceptado ou false caso contrário.
     */
       bool isInterceptable(string iface, string method);
+
+   /**
+   * Consulta se o mecanismo de tolerancia a falhas está ativado.
+   *
+   * @return true se o mecanismo de tolerancia a falhas está ativado ou false 
+   * caso contrario.
+   */
+      bool isFaultToleranceEnable();
   };
 }
 

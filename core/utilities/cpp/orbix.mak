@@ -34,19 +34,24 @@ LDIR= ${ORBIXLDIR} ${OPENBUSLIB} ${ORBIXLDIR}
 
 LIBS= it_poa it_art it_ifc it_portable_interceptor scsorbix crypto
 
+USE_LUA51=YES
+
 SRC= openbus/interceptors/ClientInterceptor.cpp \
      openbus/interceptors/ServerInterceptor.cpp \
      openbus/interceptors/ORBInitializerImpl.cpp \
      stubs/orbix/access_control_serviceC.cxx \
      stubs/orbix/registry_serviceC.cxx \
      stubs/orbix/session_serviceC.cxx \
+     stubs/orbix/fault_toleranceC.cxx \
      stubs/orbix/coreC.cxx \
      openbus.cpp \
      openbus/util/Helper.cpp \
+     FaultToleranceManager.cpp \
      logger.cpp
 
 genstubs:
 	mkdir -p stubs/orbix
+	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/fault_tolerance.idl 
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/access_control_service.idl 
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/registry_service.idl
 	cd stubs/orbix ; ${ORBIX_HOME}/bin/idl -base  ${OPENBUS_HOME}/idlpath/session_service.idl

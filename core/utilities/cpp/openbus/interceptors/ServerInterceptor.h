@@ -56,7 +56,6 @@ namespace openbus {
             const access_control_service::Credential& c1,
             const access_control_service::Credential& c2)
           {
-            cout << c1.identifier << " " << c2.identifier << endl;
             return (strcmp(c1.identifier, c2.identifier) < 0);
           }
         };

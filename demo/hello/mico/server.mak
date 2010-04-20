@@ -5,8 +5,8 @@ DEFINES=SCS_MICO
 DEFINES+=OPENBUS_MICO
 
 #Descomente as duas linhas abaixo para o uso em Valgrind.
-#DBG=YES
-#CPPFLAGS= -fno-inline
+DBG=YES
+CPPFLAGS= -fno-inline
 
 OPENBUSINC = ${OPENBUS_HOME}/incpath
 OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
@@ -33,6 +33,8 @@ LIBS= mico2.3.11 dl crypto pthread
 
 SLIB= ${OPENBUS_HOME}/core/utilities/cpp/lib/${TEC_UNAME}/libopenbusmico.a \
       ${OPENBUSLIB}/libscsmico.a
+
+USE_LUA51= YES
 
 SRC= server.cpp \
      stubs/hello.cc 
