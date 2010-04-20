@@ -41,7 +41,7 @@ orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
 module("core.services.accesscontrol.FTAccessControlServiceMonitor")
 
 ------------------------------------------------------------------------------
--- Faceta FTACSMonitorFacet -- IFTServiceMonitor 
+-- Faceta FTACSMonitorFacet -- IFTServiceMonitor
 ------------------------------------------------------------------------------
 
 FTACSMonitorFacet = oop.class{}
@@ -70,7 +70,7 @@ function FTACSMonitorFacet:getService()
   if not status then
     log:error("Nao foi possivel obter o Serviço: " .. conns[1])
     return nil
-  elseif conns[1] then 
+  elseif conns[1] then
     local service = conns[1].objref
     service = Openbus:getORB():narrow(service, "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
     return service
@@ -85,7 +85,7 @@ function FTACSMonitorFacet:connect()
   Openbus:_setInterceptors()
   -- autentica o monitor, conectando-o ao barramento
   Openbus:connectByCertificate(self.context._componentId.name,
-      DATA_DIR.."/"..self.config.monitorPrivateKeyFile, 
+      DATA_DIR.."/"..self.config.monitorPrivateKeyFile,
       DATA_DIR.."/"..self.config.accessControlServiceCertificateFile)
 end
 
@@ -100,7 +100,7 @@ function FTACSMonitorFacet:monitor()
   while true do
     local reinit = false
     local ok, res = self:getService().__try:isAlive()
-    Log:faulttolerance("[Monitor SCA] isAlive? "..tostring(ok)) 
+    Log:faulttolerance("[Monitor SCA] isAlive? "..tostring(ok))
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
     if ok then
@@ -124,7 +124,7 @@ function FTACSMonitorFacet:monitor()
 
       repeat
         if self.recConnId ~= nil then
-          local status, ftRecD = oil.pcall(self.context.IComponent.getFacet, 
+          local status, ftRecD = oil.pcall(self.context.IComponent.getFacet,
               self.context.IComponent, "IDL:scs/core/IReceptacles:1.0")
 
           if not status then
@@ -216,7 +216,7 @@ function startup(self)
     Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTACSMonitor")
     os.exit(1)
   end
-  
+
   monitor.recConnId = connId
   Log:init("Monitor do servico de controle de acesso iniciado com sucesso")
 end

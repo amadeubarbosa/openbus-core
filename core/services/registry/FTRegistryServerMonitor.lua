@@ -49,7 +49,7 @@ local hostAdd = RegistryServerConfiguration.registryServerHostName..":"..hostPor
 
 
 -- Inicializa o ORB
-local orb = oil.init { 
+local orb = oil.init {
                        flavor = "intercepted;corba;typed;cooperative;base",
                        tcpoptions = {reuseaddr = true}
                      }
@@ -116,7 +116,7 @@ function main()
 
   -- Configurações
   ftrsInst.IComponent.startup = FTRegistryServiceMonitor.startup
-  
+
   local ftrs = ftrsInst.IFTServiceMonitor
   ftrs.config = RegistryServerConfiguration
 
