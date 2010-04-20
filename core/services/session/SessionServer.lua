@@ -69,6 +69,7 @@ local scs = require "scs.core.base"
 local SessionServiceComponent =
   require "core.services.session.SessionServiceComponent"
 local SessionService = require "core.services.session.SessionService"
+local SessionService_v1_04 = require "core.services.session.SessionService_v1_04"
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -----------------------------------------------------------------------------
@@ -77,11 +78,12 @@ local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -- Facet Descriptions
 local facetDescriptions = {}
-facetDescriptions.IComponent          = {}
-facetDescriptions.IMetaInterface      = {}
-facetDescriptions.ISessionService     = {}
-facetDescriptions.ICredentialObserver = {}
-facetDescriptions.IReceptacles        = {}
+facetDescriptions.IComponent            = {}
+facetDescriptions.IMetaInterface        = {}
+facetDescriptions.ISessionService       = {}
+facetDescriptions.ISessionService_v1_04 = {}
+facetDescriptions.ICredentialObserver   = {}
+facetDescriptions.IReceptacles          = {}
 
 facetDescriptions.IComponent.name                    = "IComponent"
 facetDescriptions.IComponent.interface_name          = "IDL:scs/core/IComponent:1.0"
@@ -91,12 +93,18 @@ facetDescriptions.IMetaInterface.name                = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name      = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class               = scs.MetaInterface
 
-facetDescriptions.ISessionService.name               = "ISessionService"
-facetDescriptions.ISessionService.interface_name     = "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"
+facetDescriptions.ISessionService.name               = "ISessionService_v1_05"
+facetDescriptions.ISessionService.interface_name     = Utils.SESSION_SERVICE_INTERFACE
 facetDescriptions.ISessionService.class              = SessionService.SessionService
 
+facetDescriptions.ISessionService_v1_04.name           = "ISessionService"
+facetDescriptions.ISessionService_v1_04.interface_name = Utils.SESSION_SERVICE_INTERFACE_V1_04
+facetDescriptions.ISessionService_v1_04.class          = SessionService_v1_04.SessionService
+
+-- Nao precisa ter 2 versoes de credential observer pois e' uma comunicacao intra-barramento.
+-- O barramento como um todo sempre estara na mesma versao (mais nova).
 facetDescriptions.ICredentialObserver.name           = "SessionServiceCredentialObserver"
-facetDescriptions.ICredentialObserver.interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0"
+facetDescriptions.ICredentialObserver.interface_name = Utils.CREDENTIAL_OBSERVER_INTERFACE
 facetDescriptions.ICredentialObserver.class          = SessionService.Observer
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"

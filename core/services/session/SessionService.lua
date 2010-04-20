@@ -7,6 +7,7 @@ local orb = oil.orb
 local luuid = require "uuid"
 
 local Session = require "core.services.session.Session"
+local Session_v1_04 = require "core.services.session.Session_v1_04"
 
 local Log = require "openbus.util.Log"
 local Utils = require "openbus.util.Utils"
@@ -46,11 +47,13 @@ SessionService = oop.class{
 
 -- Facet Descriptions
 local facetDescriptions = {}
-facetDescriptions.IComponent       = {}
-facetDescriptions.IMetaInterface   = {}
-facetDescriptions.SessionEventSink = {}
-facetDescriptions.ISession         = {}
-facetDescriptions.IReceptacles     = {}
+facetDescriptions.IComponent             = {}
+facetDescriptions.IMetaInterface         = {}
+facetDescriptions.SessionEventSink       = {}
+facetDescriptions.SessionEventSink_v1_04 = {}
+facetDescriptions.ISession               = {}
+facetDescriptions.ISession_v1_04         = {}
+facetDescriptions.IReceptacles           = {}
 
 facetDescriptions.IComponent.name                 = "IComponent"
 facetDescriptions.IComponent.interface_name       = "IDL:scs/core/IComponent:1.0"
@@ -60,13 +63,21 @@ facetDescriptions.IMetaInterface.name             = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name   = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class            = scs.MetaInterface
 
-facetDescriptions.SessionEventSink.name           = "SessionEventSink"
-facetDescriptions.SessionEventSink.interface_name = "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0"
+facetDescriptions.SessionEventSink.name           = "SessionEventSink_v1_05"
+facetDescriptions.SessionEventSink.interface_name = Utils.SESSION_ES_INTERFACE
 facetDescriptions.SessionEventSink.class          = Session.SessionEventSink
 
-facetDescriptions.ISession.name                   = "ISession"
-facetDescriptions.ISession.interface_name         = "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0"
+facetDescriptions.SessionEventSink_v1_04.name           = "SessionEventSink"
+facetDescriptions.SessionEventSink_v1_04.interface_name = Utils.SESSION_ES_INTERFACE_V1_04
+facetDescriptions.SessionEventSink_v1_04.class          = Session_v1_04.SessionEventSink
+
+facetDescriptions.ISession.name                   = "ISession_v1_05"
+facetDescriptions.ISession.interface_name         = Utils.SESSION_INTERFACE
 facetDescriptions.ISession.class                  = Session.Session
+
+facetDescriptions.ISession_v1_04.name             = "ISession"
+facetDescriptions.ISession_v1_04.interface_name   = Utils.SESSION_INTERFACE_V1_04
+facetDescriptions.ISession_v1_04.class            = Session_v1_04.Session
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"

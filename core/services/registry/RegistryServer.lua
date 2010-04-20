@@ -67,6 +67,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local RegistryService = require "core.services.registry.RegistryService"
+local RegistryService_v1_04 = require "core.services.registry.RegistryService_v1_04"
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -----------------------------------------------------------------------------
@@ -78,33 +79,39 @@ local facetDescriptions = {}
 facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
-facetDescriptions.IManagement      = {}
-facetDescriptions.IFaultTolerantService = {}
-facetDescriptions.IReceptacles          = {}
+facetDescriptions.IRegistryService_v1_04      = {}
+facetDescriptions.IManagement                 = {}
+facetDescriptions.IFaultTolerantService       = {}
+facetDescriptions.IReceptacles                = {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
 facetDescriptions.IComponent.interface_name        = "IDL:scs/core/IComponent:1.0"
 facetDescriptions.IComponent.class                 = scs.Component
-facetDescriptions.IComponent.key                   = "IC"
+facetDescriptions.IComponent.key                   = Utils.OPENBUS_KEY
 
 facetDescriptions.IMetaInterface.name              = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name    = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 
-facetDescriptions.IRegistryService.name            = "IRegistryService"
-facetDescriptions.IRegistryService.interface_name  = "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0"
+facetDescriptions.IRegistryService.name            = "IRegistryService_v1_05"
+facetDescriptions.IRegistryService.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
 facetDescriptions.IRegistryService.key             = Utils.REGISTRY_SERVICE_KEY
 
-facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
-facetDescriptions.IFaultTolerantService.interface_name        = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
-facetDescriptions.IFaultTolerantService.class                 = RegistryService.FaultToleranceFacet
-facetDescriptions.IFaultTolerantService.key                   = Utils.FAULT_TOLERANT_RS_KEY
+facetDescriptions.IRegistryService_v1_04.name           = "IRegistryService"
+facetDescriptions.IRegistryService_v1_04.interface_name = Utils.REGISTRY_SERVICE_INTERFACE_V1_04
+facetDescriptions.IRegistryService_v1_04.class          = RegistryService_v1_04.RSFacet
+facetDescriptions.IRegistryService_v1_04.key            = Utils.REGISTRY_SERVICE_KEY_V1_04
 
-facetDescriptions.IManagement.name           = "IManagement"
-facetDescriptions.IManagement.interface_name = "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0"
-facetDescriptions.IManagement.class          = RegistryService.ManagementFacet
-facetDescriptions.IManagement.key            = "MGM"
+facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService"
+facetDescriptions.IFaultTolerantService.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
+facetDescriptions.IFaultTolerantService.class           = RegistryService.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_RS_KEY
+
+facetDescriptions.IManagement.name            = "IManagement"
+facetDescriptions.IManagement.interface_name  = "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0"
+facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
+facetDescriptions.IManagement.key             = "MGM"
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"

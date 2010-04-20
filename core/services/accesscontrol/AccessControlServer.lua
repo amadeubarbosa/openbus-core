@@ -5,6 +5,7 @@
 ---
 local string = string
 local oil = require "oil"
+oil.verbose:level(3)
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local Utils = require "openbus.util.Utils"
@@ -70,6 +71,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
+local AccessControlService_v1_04 = require "core.services.accesscontrol.AccessControlService_v1_04"
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
@@ -77,13 +79,15 @@ local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -- Facet Descriptions
 local facetDescriptions = {}
-facetDescriptions.IComponent          	= {}
-facetDescriptions.IMetaInterface      	= {}
-facetDescriptions.IAccessControlService = {}
-facetDescriptions.ILeaseProvider       	= {}
-facetDescriptions.IFaultTolerantService	= {}
-facetDescriptions.IManagement           = {}
-facetDescriptions.IReceptacles          = {}
+facetDescriptions.IComponent          	      = {}
+facetDescriptions.IMetaInterface      	      = {}
+facetDescriptions.IAccessControlService       = {}
+facetDescriptions.IAccessControlService_v1_04 = {}
+facetDescriptions.ILeaseProvider       	      = {}
+facetDescriptions.ILeaseProvider_v1_04        = {}
+facetDescriptions.IFaultTolerantService       = {}
+facetDescriptions.IManagement                 = {}
+facetDescriptions.IReceptacles                = {}
 
 facetDescriptions.IComponent.name           = "IComponent"
 facetDescriptions.IComponent.interface_name = "IDL:scs/core/IComponent:1.0"
@@ -94,25 +98,34 @@ facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IAccessControlService.name            = "IAccessControlService"
-facetDescriptions.IAccessControlService.interface_name  = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0"
+facetDescriptions.IAccessControlService.name            = "IAccessControlService_v1_05"
+facetDescriptions.IAccessControlService.interface_name  = Utils.ACCESS_CONTROL_SERVICE_INTERFACE
 facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
 facetDescriptions.IAccessControlService.key             = Utils.ACCESS_CONTROL_SERVICE_KEY
 
-facetDescriptions.ILeaseProvider.name                  = "ILeaseProvider"
-facetDescriptions.ILeaseProvider.interface_name        = "IDL:tecgraf/openbus/core/v1_05/access_control_service/ILeaseProvider:1.0"
-facetDescriptions.ILeaseProvider.class                 = AccessControlService.LeaseProviderFacet
-facetDescriptions.ILeaseProvider.key                   = Utils.LEASE_PROVIDER_KEY
+facetDescriptions.IAccessControlService_v1_04.name           = "IAccessControlService"
+facetDescriptions.IAccessControlService_v1_04.interface_name = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04
+facetDescriptions.IAccessControlService_v1_04.class          = AccessControlService_v1_04.ACSFacet
+facetDescriptions.IAccessControlService_v1_04.key            = Utils.ACCESS_CONTROL_SERVICE_KEY_V1_04
 
-facetDescriptions.IFaultTolerantService.name                  = "IFaultTolerantService"
-facetDescriptions.IFaultTolerantService.interface_name        = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
-facetDescriptions.IFaultTolerantService.class                 = AccessControlService.FaultToleranceFacet
-facetDescriptions.IFaultTolerantService.key                   = Utils.FAULT_TOLERANT_ACS_KEY
+facetDescriptions.ILeaseProvider.name                        = "ILeaseProvider_v1_05"
+facetDescriptions.ILeaseProvider.interface_name              = Utils.LEASE_PROVIDER_INTERFACE
+facetDescriptions.ILeaseProvider.class                       = AccessControlService.LeaseProviderFacet
+facetDescriptions.ILeaseProvider.key                         = Utils.LEASE_PROVIDER_KEY
 
-facetDescriptions.IManagement.name           = "IManagement"
-facetDescriptions.IManagement.interface_name = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0"
-facetDescriptions.IManagement.class          = AccessControlService.ManagementFacet
-facetDescriptions.IManagement.key            = "MGM"
+facetDescriptions.ILeaseProvider_v1_04.name                  = "ILeaseProvider"
+facetDescriptions.ILeaseProvider_v1_04.interface_name        = Utils.LEASE_PROVIDER_INTERFACE_V1_04
+facetDescriptions.ILeaseProvider_v1_04.class                 = AccessControlService_v1_04.LeaseProviderFacet
+facetDescriptions.ILeaseProvider_v1_04.key                   = Utils.LEASE_PROVIDER_KEY_V1_04
+
+facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService"
+facetDescriptions.IFaultTolerantService.interface_name       = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
+facetDescriptions.IFaultTolerantService.class                = AccessControlService.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLERANT_ACS_KEY
+
+facetDescriptions.IManagement.name            = "IManagement"
+facetDescriptions.IManagement.interface_name  = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0"
+facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"

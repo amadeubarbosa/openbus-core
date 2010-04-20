@@ -19,7 +19,7 @@ local orb = oil.orb
 ---
 module "core.services.session.Session"
 
-local eventSinkInterface = "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0"
+local eventSinkInterface = "IDL:tecgraf/openbus/v1_05/session_service/SessionEventSink:1.0"
 
 --------------------------------------------------------------------------------
 -- Faceta ISession
