@@ -67,7 +67,7 @@ function main()
   Openbus.isFaultToleranceEnable = false
   Openbus:_setInterceptors()
   -- autentica o monitor, conectando-o ao barramento
-  Openbus:connectByCertificate("FTAccessControlServiceMonitor",
+  Openbus:connectByCertificate("ACSMonitor",
       DATA_DIR.."/"..config.monitorPrivateKeyFile,
       DATA_DIR.."/"..config.accessControlServiceCertificateFile)
 

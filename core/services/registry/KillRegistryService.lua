@@ -67,7 +67,7 @@ function main()
   end
 
   -- autentica o monitor, conectando-o ao barramento
-  Openbus:connectByCertificate("FTRegistryServiceMonitor",
+  Openbus:connectByCertificate("RGSMonitor",
       DATA_DIR.."/"..RegistryServerConfiguration.monitorPrivateKeyFile,
       DATA_DIR.."/"..RegistryServerConfiguration.accessControlServiceCertificateFile)
 

@@ -920,7 +920,7 @@ function startup(self)
  -- ACS, RGS e monitor são sempre administradores
  mgm.admins.AccessControlService = true
  mgm.admins.RegistryService = true
- mgm.admins.FTRegistryServiceMonitor = true
+ mgm.admins.RGSMonitor = true
 
  -- Inicializa a base de gerenciamento
  mgm.authDB = TableDB(DATA_DIR.."/rs_auth.db")

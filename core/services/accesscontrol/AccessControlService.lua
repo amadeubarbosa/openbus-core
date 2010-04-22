@@ -1353,7 +1353,7 @@ function startup(self)
   end
   -- ACS e monitor são sempre administrador
   mgm.admins.AccessControlService = true
-  mgm.admins.FTAccessControlServiceMonitor = true
+  mgm.admins.ACSMonitor = true
 
   acs.lease = config.lease
 
