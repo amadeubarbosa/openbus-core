@@ -108,7 +108,12 @@ messages = {
     type = "list",
     check = Types.vector,
     value = { },
-  }
+  },
+  { name = "adminMail",
+    msg = "Email do administrador do barramento.",
+    type = "string",
+    value = "root@localhost",
+  },
 }
 
 configure_action = function(answers, path, util)
@@ -122,8 +127,9 @@ configure_action = function(answers, path, util)
   AccessControlServerConfiguration.administrators = answers.administrators
   AccessControlServerConfiguration.oilVerboseLevel = answers.oilVerboseLevel
   AccessControlServerConfiguration.logLevel = answers.logLevel
+  AccessControlServerConfiguration.adminMail = answers.adminMail
 
-  AccessControlServerConfiguration.lease = 60
+  AccessControlServerConfiguration.lease = 180
   AccessControlServerConfiguration.validators = {
       "core.services.accesscontrol.LDAPLoginPasswordValidator",
       "core.services.accesscontrol.TestLoginPasswordValidator",
@@ -132,7 +138,10 @@ configure_action = function(answers, path, util)
   AccessControlServerConfiguration.privateKeyFile =
       "certificates/AccessControlService.key"
   AccessControlServerConfiguration.databaseDirectory = "credentials"
-
+  AccessControlServerConfiguration.monitorPrivateKeyFile =
+      "certificates/ACSMonitor.key"
+  AccessControlServerConfiguration.accessControlServiceCertificateFile =
+      "certificates/AccessControlService.crt"
 
   local rgsConfFile = path.."/data/conf/RegistryServerConfiguration.lua"
   assert(loadfile(rgsConfFile))()
@@ -150,7 +159,7 @@ configure_action = function(answers, path, util)
   RegistryServerConfiguration.administrators = answers.administrators
   RegistryServerConfiguration.oilVerboseLevel = answers.oilVerboseLevel
   RegistryServerConfiguration.logLevel = answers.logLevel
-
+  RegistryServerConfiguration.adminMail = answers.adminMail
 
   local sesConfFile = path.."/data/conf/SessionServerConfiguration.lua"
   assert(loadfile(sesConfFile))()

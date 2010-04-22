@@ -11,7 +11,9 @@ configure_action = function(answers, path, util)
       "cd " .. installPath .. "/tools/management;" .. 
       openSSLGenerate .. "AccessControlService;" ..
       openSSLGenerate .. "RegistryService;" ..
-      openSSLGenerate .. "SessionService;"
+      openSSLGenerate .. "SessionService;" ..
+      openSSLGenerate .. "ACSMonitor;" ..
+      openSSLGenerate .. "RGSMonitor;"
       )
   
   -- Movendo as chaves privadas para o diretório correto.

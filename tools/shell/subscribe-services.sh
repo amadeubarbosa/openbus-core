@@ -69,6 +69,9 @@ fi
 cd ${OPENBUS_HOME}/tools/management
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=session_service.mgt
 
+#Cadastrar os Monitores
+cd ${OPENBUS_HOME}/tools/management
+${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=monitors.mgt
 
 #Finaliza os serviços
 kill -9 ${RGSPID}
