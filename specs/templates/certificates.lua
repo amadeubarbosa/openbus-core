@@ -5,10 +5,10 @@ messages = {
 
 configure_action = function(answers, path, util)
   local installPath =  path
-  local openSSLGenerate = path .. "/tools/shell/openssl-generate.ksh "
+  local openSSLGenerate = path .. "/specs/shell/openssl-generate.ksh "
   -- Criando chaves dos serviços básicos.
   os.execute(
-      "cd " .. installPath .. "/tools/management;" .. 
+      "cd " .. installPath .. "/specs/management;" .. 
       openSSLGenerate .. "AccessControlService;" ..
       openSSLGenerate .. "RegistryService;" ..
       openSSLGenerate .. "SessionService;" ..
@@ -18,7 +18,7 @@ configure_action = function(answers, path, util)
   
   -- Movendo as chaves privadas para o diretório correto.
   os.execute(
-      "cd " .. installPath .. "/tools/management;" ..
+      "cd " .. installPath .. "/specs/management;" ..
       "mkdir " .. installPath .. "/data/certificates;" ..
       "mv *.key " .. installPath .. "/data/certificates;"
       )

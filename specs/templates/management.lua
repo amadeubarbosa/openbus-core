@@ -15,7 +15,7 @@ configure_action = function(answers, tempdir, util)
   end
 
   os.execute(
-      tempdir .. "/tools/shell/subscribe-services.sh " .. answers.admLogin 
+      tempdir .. "/specs/shell/subscribe-services.sh " .. answers.admLogin 
       .. " " .. tempdir
       )
   return true

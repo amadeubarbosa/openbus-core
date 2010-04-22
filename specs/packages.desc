@@ -26,7 +26,7 @@ packages = {
   },
   { name = "auxiliar-files",
     install_files = {
-      [SVNDIR.."/tools/shell/openssl-generate.ksh"] = "./bin",
+      [SVNDIR.."/specs/shell/openssl-generate.ksh"] = "./bin",
     },
   },
   { name = "lua5.1",
@@ -335,16 +335,16 @@ packages = {
       ["../utilities/lua/openbus"] = "core/utilities/lua",
       ["../test/lua/run_check_install.sh"] = "core/test",
       ["../test/lua/checkInstall.lua"] = "core/test",
-      ["../../tools/management"] = "tools",
-      ["../../tools/shell"] = "tools",
-      ["../../tools/templates"] = "tools",
+      ["../../specs/management"] = "specs",
+      ["../../specs/shell"] = "specs",
+      ["../../specs/templates"] = "specs",
     },
     conf_files = {
       ["../../data/conf"] = "data",
     },
     -- TODO: include here all templates/openbus.lua messages table!!
     conf_template = {
-      SVNDIR .."/tools/templates/openbus.lua",
+      SVNDIR .."/specs/templates/openbus.lua",
     },
     dev_files = {
       ["../test/lua"] = "core/test",
@@ -527,8 +527,8 @@ packages = {
       ["run*"] = "demo/hello/orbix63",
       ["client"] = "demo/hello/orbix63",
       ["server"] = "demo/hello/orbix63",
-      ["../../../tools/shell/*rc"] = "tools/shell/", -- shell variables
-      ["../../../tools/shell/sample-domain_env.*"] = "tools/shell/",
+      ["../../../specs/shell/*rc"] = "specs/shell/", -- shell variables
+      ["../../../specs/shell/sample-domain_env.*"] = "specs/shell/",
     },
   },
   -- CPPOiL related packages, it needs of loop to work (precompiler.lua dependency)
@@ -632,28 +632,11 @@ packages = {
       ["run*"] = "demo/hello/mico",
       ["client"] = "demo/hello/mico",
       ["server"] = "demo/hello/mico",
-      ["../../../tools/shell/*rc"] = "tools/shell/", -- shell variables
-      ["../../../tools/shell/sample-domain_env.*"] = "tools/shell/",
+      ["../../../specs/shell/*rc"] = "specs/shell/", -- shell variables
+      ["../../../specs/shell/sample-domain_env.*"] = "specs/shell/",
     },
   },
 --]]
-  -- self-packaging the tools as an important bootstrap strategy to deployment!
-  { name = "tools",
-    build = {
-    type = "tecmake",
-    src = SVNDIR .."/tools/src",
-      mf = { "config LUA51="..PRODAPP.."/lua5.1", },
-      SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
-    },
-    install_files = {
-      ["../bin/${TEC_UNAME}/*"] = "tools/bin/${TEC_UNAME}",
-      ["../*.desc"] = "tools",
-      ["../profiles"] = "tools",
-      ["../shell"] = "tools",
-      ["../templates"] = "tools",
-      ["../management"] = "tools",
-    },
-  },
   -- Java related packages  
   { name = "scs-java-ant",
     build = {
@@ -677,9 +660,9 @@ packages = {
       ["idl/scs.idl"]  = "idlpath",
     },
   },
---  { name = "ldap-Linux26g4",
---    src = "/",
---    mf = { },
+-- Example about file copying from native system 
+--  { name = "ldap-native",
+--    directory = "/",
 --    install_files = {
 --      ["/usr/lib/libldap.so.2"] = "libpath/${TEC_UNAME}/",
 --    },

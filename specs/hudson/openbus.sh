@@ -43,5 +43,5 @@ fi
 # common path
 export OPENBUS_HOME="${WORKSPACE}/install"
 
-. ${WORKSPACE}/trunk/tools/shell/kshrc
+. ${WORKSPACE}/trunk/specs/shell/kshrc
 ###############################################################################

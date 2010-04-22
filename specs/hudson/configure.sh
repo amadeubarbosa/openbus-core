@@ -65,7 +65,7 @@ for i in AccessControlService RegistryService SessionService ; do
   echo
 done
 
-cp ${OPENBUS_HOME}/data/certificates/*.crt ${OPENBUS_HOME}/tools/management
+cp ${OPENBUS_HOME}/data/certificates/*.crt ${OPENBUS_HOME}/specs/management
 
 ###############################################################################
 
@@ -90,7 +90,7 @@ fi
 
 ###############################################################################
 
-cd ${OPENBUS_HOME}/tools/management
+cd ${OPENBUS_HOME}/specs/management
 
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=access_control_service.mgt
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=registry_service.mgt
@@ -122,7 +122,7 @@ fi
 ###############################################################################
 # Serviço de Registro já deve estar rodando
 
-cd ${OPENBUS_HOME}/tools/management
+cd ${OPENBUS_HOME}/specs/management
 
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=session_service.mgt
 

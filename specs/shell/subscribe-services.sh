@@ -43,7 +43,7 @@ if ! ( kill -0 ${ACSPID} 2>/dev/null 2>&1 ) ;then
 fi
 
 # Cadastra o ACS e o RS
-cd ${OPENBUS_HOME}/tools/management
+cd ${OPENBUS_HOME}/specs/management
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=access_control_service.mgt
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=registry_service.mgt
 
@@ -66,11 +66,11 @@ if ! ( kill -0 ${RGSPID} 2>/dev/null 2>&1 ) ;then
 fi
 
 #Cadastra o SS
-cd ${OPENBUS_HOME}/tools/management
+cd ${OPENBUS_HOME}/specs/management
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=session_service.mgt
 
 #Cadastrar os Monitores
-cd ${OPENBUS_HOME}/tools/management
+cd ${OPENBUS_HOME}/specs/management
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=monitors.mgt
 
 #Finaliza os serviços

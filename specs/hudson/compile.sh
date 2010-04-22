@@ -12,7 +12,7 @@ rm -rf ${WORKSPACE}/packs
 rm -rf ${WORKSPACE}/lib
 rm -rf ${WORKSPACE}/install
 
-cd ${WORKSPACE}/trunk/tools/lua/tools
+cd ${WORKSPACE}/puts/lua/tools
 cp ${WORKSPACE}/hudson/toolsconf.lua .
 
 if [ "${TEC_SYSNAME}" == "Linux" ] ;then
