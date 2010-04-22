@@ -323,7 +323,7 @@ packages = {
       --env LFLAGS="-undefined dynamic_lookup"
     },
     install_files = {
-      ["../bin/${TEC_UNAME}/*"] = "core/bin/${TEC_UNAME}",
+      ["../bin/${TEC_UNAME}/servicelauncher"] = "core/bin/${TEC_UNAME}",
       ["../bin/*.sh"] = "core/bin",
       ["../bin/servicelauncher"] = "core/bin",
       ["../idl/*.idl"] = "idlpath",
