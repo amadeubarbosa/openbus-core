@@ -350,24 +350,6 @@ packages = {
       ["../test/lua"] = "core/test",
     },
   },
-  { name = "openbus-lua",
-    build = {
-      type = "tecmake",
-      src = SVNDIR .."/core/utilities/lua",
-      mf = { "config LUA51="..PRODAPP.."/lua5.1" },
-      Darwin = { mf = { "config LUA51="..PRODAPP.."/lua5.1","config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=YES" }, },
-    },
-    install_files = {
-      ["lib/${TEC_UNAME}/libopenbuslua.so"] = "core/utilities/lua/lib/${TEC_UNAME}",
-      ["lib/${TEC_UNAME}/libopenbuslua.dylib"] = "core/utilities/lua/lib/${TEC_UNAME}",
-      ["../../idl/*.idl"] = "idlpath",
-    },
-    dev_files = {
-      ["lib/${TEC_UNAME}/libopenbuslua.*"] = "core/utilities/lua/lib/${TEC_UNAME}",
-      ["obj/${TEC_UNAME}/openbuspreloaded.h"] = "core/utilities/lua/",
-      ["../../idl/*.idl"] = "idlpath/",
-    },
-  },
   { name = "openbus-bin-acs",
     build = {
       type = "tecmake",
@@ -399,34 +381,6 @@ packages = {
     install_files = {
       ["../bin/${TEC_UNAME}/ss"] = "core/bin/${TEC_UNAME}",
       ["../bin/run_binary_ss.sh"] = "core/bin",
-    },
-  },
-  { name = "openbus-demo-hello-lua",
-    build = {
-      type = "tecmake",
-      src = SVNDIR .."/demo/hello/lua",
-      mf = { },
-    },
-    dev_files = {
-      ["client.lua"] = "demo/hello/lua",
-      ["server.lua"] = "demo/hello/lua",
-      ["run"] = "demo/hello/lua",
-      ["Hello.properties"] = "demo/hello/lua",
-      ["../idl"] = "demo/hello",
-    },
-  },
-  { name = "openbus-demo-delegate-lua",
-    build = {
-      type = "tecmake",
-      src = SVNDIR .."/demo/delegate/lua",
-      mf = { },
-    },
-    dev_files = {
-      ["client.lua"] = "demo/delegate/lua",
-      ["server.lua"] = "demo/delegate/lua",
-      ["run"] = "demo/delegate/lua",
-      ["Delegate.properties"] = "demo/delegate/lua",
-      ["../idl"] = "demo/delegate",
     },
   },
    -- Orbix related packages
