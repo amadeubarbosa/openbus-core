@@ -491,22 +491,6 @@ packages = {
 	  },
 	},
 --]]
-	-- self-packaging the tools as an important bootstrap strategy to deployment!
-	{ name = "tools",
-	  build = {
-		type = "tecmake",
-		src = SVNDIR .."/tools/src",
-	  	mf = { "config LUA51="..PRODAPP.."/lua5.1", },
-	  	SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
-	  },
-	  install_files = {
-			["../bin/${TEC_UNAME}/*"] = "tools/bin/${TEC_UNAME}",
-			["../*.desc"] = "tools",
-			["../profiles"] = "tools",
-			["../shell"] = "tools",
-			["../templates"] = "tools",
-	  },
-	},
 	-- Java related packages	
 	{ name = "scs-java-ant",
 	  build = {
