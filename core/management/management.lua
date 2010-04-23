@@ -1364,8 +1364,8 @@ local function connect()
     end
     Openbus:init(acshost, acsport)
     local orb = Openbus:getORB()
-    orb:loadidlfile(IDLPATH_DIR .. "/registry_service.idl")
-    orb:loadidlfile(IDLPATH_DIR .. "/access_control_service.idl")
+    orb:loadidlfile(IDLPATH_DIR .. "/v1_05/registry_service.idl")
+    orb:loadidlfile(IDLPATH_DIR .. "/v1_05/access_control_service.idl")
     if Openbus:connectByLoginPassword(login, password) == false then
       print("[ERRO] Falha no login")
       os.exit(1)

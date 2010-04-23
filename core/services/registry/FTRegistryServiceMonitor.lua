@@ -41,7 +41,7 @@ Log:level(4)
 oil.verbose:level(2)
 
 
-orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
 ---
 --Componente responsável pelo Monitor do Serviço de Registro
 ---

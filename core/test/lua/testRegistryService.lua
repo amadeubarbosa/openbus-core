@@ -225,8 +225,8 @@ function init(self)
 
   oil.verbose:level(0)
 
-  orb:loadidlfile(IDLPATH_DIR.."/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
   for _, idl in ipairs(IDL) do
     orb:loadidl(idl)
   end

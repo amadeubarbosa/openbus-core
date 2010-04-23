@@ -58,7 +58,7 @@ oil.orb = orb
 local FTRegistryServiceMonitor = require "core.services.registry.FTRegistryServiceMonitor"
 local scs = require "scs.core.base"
 
-orb:loadidlfile(IDLPATH_DIR.."/fault_tolerance.idl")
+orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl")
 
 -----------------------------------------------------------------------------
 -- FTRegistryServiceMonitor Descriptions

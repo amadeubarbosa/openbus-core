@@ -31,7 +31,7 @@ Suite = {
         io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
         os.exit(1)
       end
-      local idlfile = IDLPATH_DIR.."/access_control_service.idl"
+      local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
 
       oil.verbose:level(0)
       orb:loadidlfile(idlfile)
@@ -87,7 +87,7 @@ Suite = {
         io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
         os.exit(1)
       end
-      local idlfile = IDLPATH_DIR.."/access_control_service.idl"
+      local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
 
       oil.verbose:level(0)
       orb:loadidlfile(idlfile)
@@ -196,7 +196,7 @@ Suite = {
         io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
         os.exit(1)
       end
-      local idlfile = IDLPATH_DIR.."/access_control_service.idl"
+      local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
 
       oil.verbose:level(0)
       orb:loadidlfile(idlfile)

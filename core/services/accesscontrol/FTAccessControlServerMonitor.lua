@@ -60,7 +60,7 @@ oil.verbose:level(2)
 local FTAccessControlServiceMonitor = require "core.services.accesscontrol.FTAccessControlServiceMonitor"
 local scs = require "scs.core.base"
 
-orb:loadidlfile(IDLPATH_DIR.."/fault_tolerance.idl")
+orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl")
 
 -----------------------------------------------------------------------------
 -- FTAccessControlServiceMonitor Descriptions

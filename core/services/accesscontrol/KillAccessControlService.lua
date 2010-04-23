@@ -52,7 +52,7 @@ local orb = oil.init {
 
 oil.orb = orb
 
-orb:loadidlfile(IDLPATH_DIR.."/fault_tolerance.idl")
+orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl")
 
 ---
 --Função que será executada pelo OiL em modo protegido.
