@@ -1,6 +1,0 @@
-#!/bin/ksh
-
-. ./democonfig
-
-./server -OpenbusHost $HOSTBUS -OpenbusPort $PORTBUS
-

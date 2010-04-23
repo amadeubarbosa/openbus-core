@@ -1,4 +1,0 @@
-MICO_BIN=${MICODIR}/bin
-MICO_INC=${MICODIR}/include
-MICO_LIB=${MICODIR}/lib
-
