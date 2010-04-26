@@ -25,7 +25,7 @@ NO_SCRIPTS = YES
 # Usa bibliotecas dinâmicas #
 #############################
 
-LIBS = oilall scsall luasocket lfs luuid lce lpw lualdap
+LIBS = oilall scsall luasocket lfs luuid lce lpw lualdap luaopenbus
 LIBS += dl crypto ldap
 ifneq "$(TEC_SYSNAME)" "Darwin"
 	LIBS += uuid

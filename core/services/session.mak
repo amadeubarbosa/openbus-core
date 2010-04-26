@@ -42,9 +42,9 @@ INCLUDES= . \
         ${OPENBUSINC}/luasocket2 \
         ${OPENBUSINC}/luuid \
         ${OPENBUSINC}/scs \
-        ${OPENBUS_HOME}/core/utilities/lua
+        ${OPENBUSINC}/openbus/lua
 
-LDIR += ${OPENBUSLIB} ${OPENBUS_HOME}/core/utilities/lua/lib/${TEC_UNAME}
+LDIR += ${OPENBUSLIB}
 
 USE_LUA51=YES
 NO_SCRIPTS=YES
@@ -54,7 +54,7 @@ USE_NODEPEND=YES
 # Usa bibliotecas dinâmicas #
 #############################
 
-LIBS = oilall scsall luasocket luuid openbuslua
+LIBS = oilall scsall luasocket luuid luaopenbus
 LIBS += dl
 ifneq "$(TEC_SYSNAME)" "Darwin"
 	LIBS += uuid

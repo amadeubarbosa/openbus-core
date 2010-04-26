@@ -50,9 +50,9 @@ INCLUDES= . \
         ${OPENBUSINC}/lce \
         ${OPENBUSINC}/lualdap-1.0.1 \
         ${OPENBUSINC}/scs \
-        ${OPENBUS_HOME}/core/utilities/lua
+        ${OPENBUSINC}/openbus/lua
 
-LDIR += ${OPENBUSLIB} ${OPENBUS_HOME}/core/utilities/lua/lib/${TEC_UNAME}
+LDIR += ${OPENBUSLIB}
 
 USE_LUA51=YES
 NO_SCRIPTS=YES
@@ -62,7 +62,7 @@ USE_NODEPEND=YES
 # Usa bibliotecas dinâmicas #
 #############################
 
-LIBS = oilall scsall luasocket lfs luuid lce lualdap openbuslua
+LIBS = oilall scsall luasocket lfs luuid lce lualdap luaopenbus
 LIBS += dl crypto ldap
 ifneq "$(TEC_SYSNAME)" "Darwin"
 	LIBS += uuid
