@@ -82,9 +82,9 @@ local facetDescriptions = {}
 facetDescriptions.IComponent          	      = {}
 facetDescriptions.IMetaInterface      	      = {}
 facetDescriptions.IAccessControlService       = {}
-facetDescriptions.IAccessControlService_v1_04 = {}
+facetDescriptions.IAccessControlService_Prev  = {}
 facetDescriptions.ILeaseProvider       	      = {}
-facetDescriptions.ILeaseProvider_v1_04        = {}
+facetDescriptions.ILeaseProvider_Prev         = {}
 facetDescriptions.IFaultTolerantService       = {}
 facetDescriptions.IManagement                 = {}
 facetDescriptions.IReceptacles                = {}
@@ -98,25 +98,25 @@ facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IAccessControlService.name            = "IAccessControlService_v1_05"
+facetDescriptions.IAccessControlService.name            = "IAccessControlService_v" .. Utils.OB_VERSION
 facetDescriptions.IAccessControlService.interface_name  = Utils.ACCESS_CONTROL_SERVICE_INTERFACE
 facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
 facetDescriptions.IAccessControlService.key             = Utils.ACCESS_CONTROL_SERVICE_KEY
 
-facetDescriptions.IAccessControlService_v1_04.name           = "IAccessControlService"
-facetDescriptions.IAccessControlService_v1_04.interface_name = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04
-facetDescriptions.IAccessControlService_v1_04.class          = AccessControlService_v1_04.ACSFacet
-facetDescriptions.IAccessControlService_v1_04.key            = Utils.ACCESS_CONTROL_SERVICE_KEY_V1_04
+facetDescriptions.IAccessControlService_Prev.name           = "IAccessControlService"
+facetDescriptions.IAccessControlService_Prev.interface_name = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04
+facetDescriptions.IAccessControlService_Prev.class          = AccessControlService_v1_04.ACSFacet
+facetDescriptions.IAccessControlService_Prev.key            = Utils.ACCESS_CONTROL_SERVICE_KEY_V1_04
 
-facetDescriptions.ILeaseProvider.name                        = "ILeaseProvider_v1_05"
+facetDescriptions.ILeaseProvider.name                        = "ILeaseProvider_v" .. Utils.OB_VERSION
 facetDescriptions.ILeaseProvider.interface_name              = Utils.LEASE_PROVIDER_INTERFACE
 facetDescriptions.ILeaseProvider.class                       = AccessControlService.LeaseProviderFacet
 facetDescriptions.ILeaseProvider.key                         = Utils.LEASE_PROVIDER_KEY
 
-facetDescriptions.ILeaseProvider_v1_04.name                  = "ILeaseProvider"
-facetDescriptions.ILeaseProvider_v1_04.interface_name        = Utils.LEASE_PROVIDER_INTERFACE_V1_04
-facetDescriptions.ILeaseProvider_v1_04.class                 = AccessControlService_v1_04.LeaseProviderFacet
-facetDescriptions.ILeaseProvider_v1_04.key                   = Utils.LEASE_PROVIDER_KEY_V1_04
+facetDescriptions.ILeaseProvider_Prev.name                  = "ILeaseProvider"
+facetDescriptions.ILeaseProvider_Prev.interface_name        = Utils.LEASE_PROVIDER_INTERFACE_V1_04
+facetDescriptions.ILeaseProvider_Prev.class                 = AccessControlService_v1_04.LeaseProviderFacet
+facetDescriptions.ILeaseProvider_Prev.key                   = Utils.LEASE_PROVIDER_KEY_V1_04
 
 facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService"
 facetDescriptions.IFaultTolerantService.interface_name       = Utils.FAULT_TOLERANT_SERVICE_INTERFACE

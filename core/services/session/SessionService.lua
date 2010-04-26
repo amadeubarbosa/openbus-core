@@ -50,9 +50,9 @@ local facetDescriptions = {}
 facetDescriptions.IComponent             = {}
 facetDescriptions.IMetaInterface         = {}
 facetDescriptions.SessionEventSink       = {}
-facetDescriptions.SessionEventSink_v1_04 = {}
+facetDescriptions.SessionEventSink_Prev  = {}
 facetDescriptions.ISession               = {}
-facetDescriptions.ISession_v1_04         = {}
+facetDescriptions.ISession_Prev          = {}
 facetDescriptions.IReceptacles           = {}
 
 facetDescriptions.IComponent.name                 = "IComponent"
@@ -63,21 +63,21 @@ facetDescriptions.IMetaInterface.name             = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name   = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class            = scs.MetaInterface
 
-facetDescriptions.SessionEventSink.name           = "SessionEventSink_v1_05"
+facetDescriptions.SessionEventSink.name           = "SessionEventSink_v" .. Utils.OB_VERSION
 facetDescriptions.SessionEventSink.interface_name = Utils.SESSION_ES_INTERFACE
 facetDescriptions.SessionEventSink.class          = Session.SessionEventSink
 
-facetDescriptions.SessionEventSink_v1_04.name           = "SessionEventSink"
-facetDescriptions.SessionEventSink_v1_04.interface_name = Utils.SESSION_ES_INTERFACE_V1_04
-facetDescriptions.SessionEventSink_v1_04.class          = Session_v1_04.SessionEventSink
+facetDescriptions.SessionEventSink_Prev.name           = "SessionEventSink"
+facetDescriptions.SessionEventSink_Prev.interface_name = Utils.SESSION_ES_INTERFACE_V1_04
+facetDescriptions.SessionEventSink_Prev.class          = Session_v1_04.SessionEventSink
 
-facetDescriptions.ISession.name                   = "ISession_v1_05"
+facetDescriptions.ISession.name                   = "ISession_v" .. Utils.OB_VERSION
 facetDescriptions.ISession.interface_name         = Utils.SESSION_INTERFACE
 facetDescriptions.ISession.class                  = Session.Session
 
-facetDescriptions.ISession_v1_04.name             = "ISession"
-facetDescriptions.ISession_v1_04.interface_name   = Utils.SESSION_INTERFACE_V1_04
-facetDescriptions.ISession_v1_04.class            = Session_v1_04.Session
+facetDescriptions.ISession_Prev.name             = "ISession"
+facetDescriptions.ISession_Prev.interface_name   = Utils.SESSION_INTERFACE_V1_04
+facetDescriptions.ISession_Prev.class            = Session_v1_04.Session
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"

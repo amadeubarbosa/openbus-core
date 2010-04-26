@@ -79,7 +79,7 @@ local facetDescriptions = {}
 facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
-facetDescriptions.IRegistryService_v1_04      = {}
+facetDescriptions.IRegistryService_Prev       = {}
 facetDescriptions.IManagement                 = {}
 facetDescriptions.IFaultTolerantService       = {}
 facetDescriptions.IReceptacles                = {}
@@ -93,15 +93,15 @@ facetDescriptions.IMetaInterface.name              = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name    = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 
-facetDescriptions.IRegistryService.name            = "IRegistryService_v1_05"
+facetDescriptions.IRegistryService.name            = "IRegistryService_v" .. Utils.OB_VERSION
 facetDescriptions.IRegistryService.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
 facetDescriptions.IRegistryService.key             = Utils.REGISTRY_SERVICE_KEY
 
-facetDescriptions.IRegistryService_v1_04.name           = "IRegistryService"
-facetDescriptions.IRegistryService_v1_04.interface_name = Utils.REGISTRY_SERVICE_INTERFACE_V1_04
-facetDescriptions.IRegistryService_v1_04.class          = RegistryService_v1_04.RSFacet
-facetDescriptions.IRegistryService_v1_04.key            = Utils.REGISTRY_SERVICE_KEY_V1_04
+facetDescriptions.IRegistryService_Prev.name           = "IRegistryService"
+facetDescriptions.IRegistryService_Prev.interface_name = Utils.REGISTRY_SERVICE_INTERFACE_V1_04
+facetDescriptions.IRegistryService_Prev.class          = RegistryService_v1_04.RSFacet
+facetDescriptions.IRegistryService_Prev.key            = Utils.REGISTRY_SERVICE_KEY_V1_04
 
 facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService"
 facetDescriptions.IFaultTolerantService.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE

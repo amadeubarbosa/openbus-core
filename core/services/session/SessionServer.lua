@@ -81,7 +81,7 @@ local facetDescriptions = {}
 facetDescriptions.IComponent            = {}
 facetDescriptions.IMetaInterface        = {}
 facetDescriptions.ISessionService       = {}
-facetDescriptions.ISessionService_v1_04 = {}
+facetDescriptions.ISessionService_Prev  = {}
 facetDescriptions.ICredentialObserver   = {}
 facetDescriptions.IReceptacles          = {}
 
@@ -93,13 +93,13 @@ facetDescriptions.IMetaInterface.name                = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name      = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class               = scs.MetaInterface
 
-facetDescriptions.ISessionService.name               = "ISessionService_v1_05"
+facetDescriptions.ISessionService.name               = "ISessionService_v" .. Utils.OB_VERSION
 facetDescriptions.ISessionService.interface_name     = Utils.SESSION_SERVICE_INTERFACE
 facetDescriptions.ISessionService.class              = SessionService.SessionService
 
-facetDescriptions.ISessionService_v1_04.name           = "ISessionService"
-facetDescriptions.ISessionService_v1_04.interface_name = Utils.SESSION_SERVICE_INTERFACE_V1_04
-facetDescriptions.ISessionService_v1_04.class          = SessionService_v1_04.SessionService
+facetDescriptions.ISessionService_Prev.name           = "ISessionService"
+facetDescriptions.ISessionService_Prev.interface_name = Utils.SESSION_SERVICE_INTERFACE_V1_04
+facetDescriptions.ISessionService_Prev.class          = SessionService_v1_04.SessionService
 
 -- Nao precisa ter 2 versoes de credential observer pois e' uma comunicacao intra-barramento.
 -- O barramento como um todo sempre estara na mesma versao (mais nova).
