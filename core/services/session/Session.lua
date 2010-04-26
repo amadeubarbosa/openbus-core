@@ -11,6 +11,7 @@ local luuid   = require "uuid"
 local oop     = require "loop.base"
 local Openbus = require "openbus.Openbus"
 local Log     = require "openbus.util.Log"
+local Utils   = require "openbus.util.Utils"
 
 local orb = oil.orb
 
@@ -19,7 +20,7 @@ local orb = oil.orb
 ---
 module "core.services.session.Session"
 
-local eventSinkInterface = "IDL:tecgraf/openbus/v1_05/session_service/SessionEventSink:1.0"
+local eventSinkInterface = Utils.SESSION_ES_INTERFACE
 
 --------------------------------------------------------------------------------
 -- Faceta ISession

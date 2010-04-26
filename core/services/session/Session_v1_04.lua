@@ -7,8 +7,6 @@ local oop = require "loop.base"
 ---
 module "core.services.session.Session_v1_04"
 
-local eventSinkInterface = "IDL:openbusidl/ss/SessionEventSink:1.0"
-
 --------------------------------------------------------------------------------
 -- Faceta ISession
 --------------------------------------------------------------------------------

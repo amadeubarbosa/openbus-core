@@ -7,8 +7,6 @@ local oop = require "loop.base"
 ---
 module "core.services.session.SessionService_v1_04"
 
-local acsIDL = "IDL:openbusidl/acs/IAccessControlService:1.0"
-
 --------------------------------------------------------------------------------
 -- Faceta ISessionService
 --------------------------------------------------------------------------------

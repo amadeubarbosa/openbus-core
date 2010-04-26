@@ -124,7 +124,7 @@ facetDescriptions.IFaultTolerantService.class                = AccessControlServ
 facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLERANT_ACS_KEY
 
 facetDescriptions.IManagement.name            = "IManagement"
-facetDescriptions.IManagement.interface_name  = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0"
+facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE 
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"

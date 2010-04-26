@@ -126,7 +126,7 @@ function RSFacet:addOffer(offerEntry)
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
     "IAccessControlService",
-    "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+    Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
   if status then
     acsFacet:addCredentialToObserver(self.observerId, credential.identifier)
     Log:service("Adicionada credencial no observador")
@@ -337,7 +337,7 @@ function RSFacet:rawUnregister(identifier, credential)
     Log:registry("Última oferta da credencial: remove credencial do observador")
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      "IAccessControlService", Utils.ACCESS_CONTROL_SERVICE_INTERFACE) 
     if status then
       acsFacet:removeCredentialFromObserver(self.observerId,
         credential.identifier)
@@ -618,7 +618,7 @@ function RSFacet:expired()
     self.privateKeyFile, self.accessControlServiceCertificateFile)
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+    "IAccessControlService", Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
   if not status then
     --erro já joi logado
     return nil
@@ -892,7 +892,7 @@ function startup(self)
    end
  }
  rs.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
-   "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0")
+   Utils.CREDENTIAL_OBSERVER_INTERFACE)
  rs.observerId = accessControlService:addObserver(rs.observer, {})
  Log:registry("Cadastrado observador para a credencial")
 
@@ -911,7 +911,7 @@ function startup(self)
 
  -- Referência à faceta de gerenciamento do ACS
  mgm.acsmgm = acsIComp:getFacetByName("IManagement")
- mgm.acsmgm = orb:narrow(mgm.acsmgm, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+ mgm.acsmgm = orb:narrow(mgm.acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
  -- Administradores dos serviços
  mgm.admins = {}
  for _, name in ipairs(config.administrators) do
@@ -952,7 +952,7 @@ function shutdown(self)
   if rs.observerId then
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      "IAccessControlService", Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if not status then
       -- erro ja foi logado
       error{"IDL:SCS/ShutdownFailed:1.0"}
@@ -1523,7 +1523,7 @@ function ManagementFacet:updateManagementStatus(command, data)
 
         if ok then
           remoteMgmFacet = orb:narrow(remoteMgmFacet,
-            "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+            Utils.MANAGEMENT_RS_INTERFACE)
           if command == "addInterfaceIdentifier" then
             oil.newthread(function()
               local succ, ret = oil.pcall(

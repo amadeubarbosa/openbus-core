@@ -109,7 +109,7 @@ facetDescriptions.IFaultTolerantService.class           = RegistryService.FaultT
 facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_RS_KEY
 
 facetDescriptions.IManagement.name            = "IManagement"
-facetDescriptions.IManagement.interface_name  = "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0"
+facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
 facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
 facetDescriptions.IManagement.key             = "MGM"
 

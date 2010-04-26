@@ -29,7 +29,7 @@ local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 ---
 module "core.services.session.SessionService"
 
-local acsIDL = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0"
+local acsIDL = Utils.ACCESS_CONTROL_SERVICE_INTERFACE
 
 --------------------------------------------------------------------------------
 -- Faceta ISessionService

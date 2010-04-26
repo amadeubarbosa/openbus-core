@@ -96,7 +96,7 @@ function SessionServiceComponent:startup()
     properties = {
       { 
         name  = "facets",
-        value = {"IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"}, 
+        value = {Utils.SESSION_SERVICE_INTERFACE}, 
       },
     },
   }
@@ -187,7 +187,7 @@ function SessionServiceComponent:shutdown()
                          	  self.context.IComponent, 
                          	  "AccessControlServiceReceptacle", 
                          	  "IAccessControlService", 
-                         	  "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+                         	  Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if not status then
 	    -- erro ja foi logado, só retorna
 	    return nil

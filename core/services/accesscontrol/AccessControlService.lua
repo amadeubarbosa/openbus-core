@@ -820,7 +820,7 @@ function ManagementFacet:removeSystemDeployment(id)
       self.context.IComponent,
       "RegistryServiceReceptacle",
       "IManagement",
-      "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+      Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
        rs.__try:removeAuthorization(id)
     end
@@ -1005,7 +1005,7 @@ function ManagementFacet:removeUser(id)
                             self.context.IComponent,
                             "RegistryServiceReceptacle",
                             "IManagement",
-                            "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+                            Utils.MANAGEMENT_RS_INTERFACE)
      if succ and rs then
          rs.__try:removeAuthorization(id)
      end
@@ -1107,7 +1107,7 @@ function ManagementFacet:updateManagementStatus(command, data)
                 if ok then
                      local orb = Openbus:getORB()
                      remoteMgmFacet = orb:narrow(remoteMgmFacet,
-                           "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+                           Utils.MANAGEMENT_ACS_INTERFACE)
                      --*** System operations***
                      if command == "addSystem" then
                          oil.newthread(function()
