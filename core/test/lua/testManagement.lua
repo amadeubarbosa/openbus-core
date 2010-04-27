@@ -25,7 +25,7 @@ local function init(self)
     os.exit(1)
   end
   oil.verbose:level(0)
-  orb:loadidlfile(IDLPATH_DIR.."/scs.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/scs.idl")
   orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
   orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
   -- Instala o interceptador cliente

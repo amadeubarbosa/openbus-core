@@ -218,11 +218,13 @@ packages = {
     install_files = {
       ["../lib/${TEC_UNAME}/libscsall.so"] = "libpath/${TEC_UNAME}",
       ["../lib/${TEC_UNAME}/libscsall.dylib"] = "libpath/${TEC_UNAME}",
-      ["../../../idl/scs.idl"] = "idlpath/",
+      ["../../../idl/scs.idl"] = "idlpath/v1_04",
+      ["../../../idl/scs.idl"] = "idlpath/v1_05",
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsall.*"] = "libpath/${TEC_UNAME}",
-      ["../../../idl/scs.idl"] = "idlpath/",
+      ["../../../idl/scs.idl"] = "idlpath/v1_04",
+      ["../../../idl/scs.idl"] = "idlpath/v1_05",
       ["../obj/${TEC_UNAME}/scsall.h"] = "incpath/scs",
     },
   },
@@ -239,11 +241,13 @@ packages = {
     install_files = {
       ["../lib/${TEC_UNAME}/libscsoil.so"] = "libpath/${TEC_UNAME}",
       ["../lib/${TEC_UNAME}/libscsoil.dylib"] = "libpath/${TEC_UNAME}",
-      ["../../../idl/scs.idl"] = "idlpath/",
+      ["../../../idl/scs.idl"] = "idlpath/v1_04",
+      ["../../../idl/scs.idl"] = "idlpath/v1_05",
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsoil.*"] = "libpath/${TEC_UNAME}",
-      ["../../../idl/scs.idl"] = "idlpath/",
+      ["../../../idl/scs.idl"] = "idlpath/v1_04",
+      ["../../../idl/scs.idl"] = "idlpath/v1_05",
       ["*.h"] = "incpath/scs/cppoil/",
       ["luaidl/*.h"] = "incpath/scs/cppoil/luaidl/",
     },
@@ -457,11 +461,13 @@ packages = {
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
-      ["../../idl/scs.idl"] = "idlpath/",
+      ["../../idl/scs.idl"] = "idlpath/v1_04",
+      ["../../idl/scs.idl"] = "idlpath/v1_05",
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.*"] = "libpath/${TEC_UNAME}",
-      ["../../idl/scs.idl"] = "idlpath/",
+      ["../../idl/scs.idl"] = "idlpath/v1_04",
+      ["../../idl/scs.idl"] = "idlpath/v1_05",
       ["*.h"] = "incpath/scs/",
     },
   },
@@ -469,13 +475,13 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix" },
+      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1" },
     -- special compile instructions for solaris
     SunOS = {
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix", "orbix sunos" },
+      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1", "orbix sunos" },
     },
     SunOS510_64 = {
-      mf = { "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, "orbix "..SUNOS64_TECMAKE_FLAGS, "orbix sunos "..SUNOS64_TECMAKE_FLAGS },
+      mf = { "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, "orbix LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, "orbix sunos "..SUNOS64_TECMAKE_FLAGS },
     },
     },
     dev_files = {
@@ -496,12 +502,12 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/orbix",
-      mf = { "config cxxtest -C acs", "config -C acs", "config cxxtest -C rgs", "config -C rgs" },
+      mf = { "config cxxtest -C acs", "config -C acs LUA51="..PRODAPP.."/lua5.1", "config cxxtest -C rgs", "config -C rgs LUA51="..PRODAPP.."/lua5.1" },
       SunOS510_64 = { 
 	    mf = { "config cxxtest -C acs",
-               "config -C acs ".. SUNOS64_TECMAKE_FLAGS,
+               "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
                "config cxxtest -C rgs",
-               "config -C rgs ".. SUNOS64_TECMAKE_FLAGS, },
+               "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, },
       },
     },
     install_files = {
@@ -525,8 +531,14 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/hello/orbix63",
-      mf = { "server genstubs USE_NODEPEND=Yes", "client", "server" },
-      SunOS510_64 = { mf = { "server genstubs ".. SUNOS64_TECMAKE_FLAGS, "client "..SUNOS64_TECMAKE_FLAGS, "server "..SUNOS64_TECMAKE_FLAGS } },
+      mf = { "server genstubs USE_NODEPEND=Yes", 
+             "client LUA51="..PRODAPP.."/lua5.1", 
+             "server LUA51="..PRODAPP.."/lua5.1" },
+      SunOS510_64 = { 
+        mf = { "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+               "client LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, 
+               "server LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS } 
+      },
     },
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/hello/orbix63/bin/${TEC_UNAME}",
@@ -584,16 +596,21 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/scs/src/cpp",
-      mf = { "mico genstubs USE_NODEPEND=Yes", "mico" },
-      SunOS510_64 = { mf = { "mico genstubs ".. SUNOS64_TECMAKE_FLAGS, "mico ".. SUNOS64_TECMAKE_FLAGS }, }
+      mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1" },
+      SunOS510_64 = { mf = { 
+        "mico genstubs ".. SUNOS64_TECMAKE_FLAGS,
+        "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS },
+      }
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsmico.so"] = "libpath/${TEC_UNAME}",
-      ["../../idl/scs.idl"] = "idlpath/",
+      ["../../idl/scs.idl"] = "idlpath/v1_04",
+      ["../../idl/scs.idl"] = "idlpath/v1_05",
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsmico.*"] = "libpath/${TEC_UNAME}",
-      ["../../idl/*.idl"] = "idlpath",
+      ["../../idl/*.idl"] = "idlpath/v1_04",
+      ["../../idl/*.idl"] = "idlpath/v1_05",
       ["*.h"] = "incpath/scs",
     },
   },
@@ -602,14 +619,14 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
-      mf = { "mico genstubs USE_NODEPEND=Yes", "mico" },
+      mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1" },
     -- special compile instructions for solaris
     SunOS = {
-      mf = { "mico genstubs USE_NODEPEND=Yes", "mico", "mico sunos" },
+      mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1", "mico sunos" },
     },
       SunOS510_64 = { 
         mf = { "mico genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-               "mico ".. SUNOS64_TECMAKE_FLAGS,
+               "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
                "mico sunos".. SUNOS64_TECMAKE_FLAGS },
       }
     },
@@ -627,12 +644,18 @@ packages = {
       ["test/mico/runtests"] = "test/mico/",
     },
   },
-    { name = "openbus-demo-hello-mico",
+  { name = "openbus-demo-hello-mico",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/hello/mico",
-      mf = { "server genstubs USE_NODEPEND=Yes", "client", "server" },
-      SunOS510_64 = { mf = { "server genstubs ".. SUNOS64_TECMAKE_FLAGS, "client ".. SUNOS64_TECMAKE_FLAGS, "server ".. SUNOS64_TECMAKE_FLAGS }, }
+      mf = { "server genstubs USE_NODEPEND=Yes", 
+             "client LUA51="..PRODAPP.."/lua5.1",
+             "server LUA51="..PRODAPP.."/lua5.1" },
+      SunOS510_64 = { 
+        mf = { "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+               "client LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
+               "server LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS }, 
+      }
     },
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
@@ -669,7 +692,8 @@ packages = {
        version="1.1.0" },
     },
     install_files = {
-      ["idl/scs.idl"]  = "idlpath",
+      ["idl/scs.idl"]  = "idlpath/v1_04",
+      ["idl/scs.idl"]  = "idlpath/v1_05",
     },
   },
   { name = "openbusidl-java",
