@@ -5,10 +5,17 @@
 # 
 # $Id$
 
+which openssl > /dev/null 2>&1 || {
+  print "comando 'openssl' nao foi encontrado"
+  exit 1
+}
+
+scriptName=$(basename $0)
+
 function usage {
     cat << EOF
 
-Uso: $(basename $0) [opcoes]
+Uso: $scriptName [opcoes]
 
   onde [opcoes] sao:
 
@@ -18,11 +25,6 @@ Uso: $(basename $0) [opcoes]
 
 OBS.: se o nome nao for fornecido via '-n' sera obtido interativamente
 EOF
-}
-
-which openssl > /dev/null 2>&1 || {
-  print "comando 'openssl' nao foi encontrado"
-  exit 1
 }
 
 while getopts "hc:n:" params; do
