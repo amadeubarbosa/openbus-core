@@ -433,6 +433,7 @@ packages = {
       ["run"] = "demo/hello/lua",
       ["Hello.properties"] = "demo/hello/lua",
       ["idl"] = "demo/hello",
+      ["management"] = "demo/hello",
     },
   },
   { name = "openbus-demo-delegate-lua",
@@ -443,6 +444,7 @@ packages = {
       ["run"] = "demo/delegate/lua",
       ["Delegate.properties"] = "demo/delegate/lua",
       ["idl"] = "demo/delegate",
+      ["management"] = "demo/delegate",
     },
   },
    -- Orbix related packages
@@ -543,6 +545,7 @@ packages = {
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/hello/orbix63/bin/${TEC_UNAME}",
       ["../idl/hello.idl"] = "demo/hello/idl/",
+      ["../management"] = "demo/hello",
       ["client.cpp"] = "demo/hello/orbix63",
       ["server.cpp"] = "demo/hello/orbix63",
       ["run*"] = "demo/hello/orbix63",
@@ -660,6 +663,7 @@ packages = {
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
       ["../idl/hello.idl"] = "demo/hello/idl/",
+      ["../management"] = "demo/hello",
       ["client.cpp"] = "demo/hello/mico",
       ["server.cpp"] = "demo/hello/mico",
       ["run*"] = "demo/hello/mico",
@@ -747,6 +751,8 @@ packages = {
     dev_files = {
       ["resources"] = "demo/hello",
       ["src"] = "demo/hello",
+      ["idl"] = "demo/hello",
+      ["management"] = "demo/hello",
     },
   },
   { name = "openbus-demo-delegate-java",
@@ -761,6 +767,8 @@ packages = {
     dev_files = {
       ["resources"] = "demo/delegate",
       ["src"] = "demo/delegate",
+      ["idl"] = "demo/delegate",
+      ["management"] = "demo/delegate",
     },
   },
 --  { name = "ldap-Linux26g4",
