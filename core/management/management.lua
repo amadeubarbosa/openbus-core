@@ -1,6 +1,7 @@
 local lpw     = require "lpw"
 local oil     = require "oil"
 local Openbus = require "openbus.Openbus"
+local Utils   = require "openbus.util.Utils"
 
 -- Alias
 local lower = string.lower
@@ -1387,7 +1388,7 @@ function getacsmgm()
   local acs = Openbus:getAccessControlService()
   local ic = acs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
-  acsmgm = ic:getFacetByName("IManagement")
+  acsmgm = ic:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
   acsmgm = orb:narrow(acsmgm, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   return acsmgm
 end
@@ -1406,7 +1407,7 @@ function getrsmgm()
   local rs = Openbus:getRegistryService()
   ic = rs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
-  rsmgm = ic:getFacetByName("IManagement")
+  rsmgm = ic:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
   rsmgm = orb:narrow(rsmgm, "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
   return rsmgm
 end

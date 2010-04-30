@@ -819,7 +819,7 @@ function ManagementFacet:removeSystemDeployment(id)
       Openbus:getORB(),
       self.context.IComponent,
       "RegistryServiceReceptacle",
-      "IManagement",
+      "IManagement_v" .. Utils.OB_VERSION,
       Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
        rs.__try:removeAuthorization(id)
@@ -1004,7 +1004,7 @@ function ManagementFacet:removeUser(id)
                             Openbus:getORB(),
                             self.context.IComponent,
                             "RegistryServiceReceptacle",
-                            "IManagement",
+                            "IManagement_v" .. Utils.OB_VERSION,
                             Utils.MANAGEMENT_RS_INTERFACE)
      if succ and rs then
          rs.__try:removeAuthorization(id)
@@ -1103,7 +1103,7 @@ function ManagementFacet:updateManagementStatus(command, data)
             --encontrou outra replica
                 Log:faulttolerance("[updateManagementStatus] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
                  -- Recupera faceta IManagement da replica remota
-                local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement")
+                local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement_v"..Utils.OB_VERSION)
                 if ok then
                      local orb = Openbus:getORB()
                      remoteMgmFacet = orb:narrow(remoteMgmFacet,

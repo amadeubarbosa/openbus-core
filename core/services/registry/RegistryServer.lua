@@ -103,15 +103,15 @@ facetDescriptions.IRegistryService_Prev.interface_name = Utils.REGISTRY_SERVICE_
 facetDescriptions.IRegistryService_Prev.class          = RegistryService_v1_04.RSFacet
 facetDescriptions.IRegistryService_Prev.key            = Utils.REGISTRY_SERVICE_KEY_V1_04
 
-facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService"
+facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService_v" .. Utils.OB_VERSION
 facetDescriptions.IFaultTolerantService.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
 facetDescriptions.IFaultTolerantService.class           = RegistryService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_RS_KEY
 
-facetDescriptions.IManagement.name            = "IManagement"
+facetDescriptions.IManagement.name            = "IManagement_v" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
 facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
-facetDescriptions.IManagement.key             = "MGM"
+facetDescriptions.IManagement.key             = Utils.MANAGEMENT_KEY
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"

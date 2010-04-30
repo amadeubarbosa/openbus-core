@@ -10,6 +10,7 @@ local oop = require "loop.base"
 
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
+local Utils = require "openbus.util.Utils"
 
 local scs = require "scs.core.base"
 
@@ -92,11 +93,11 @@ Suite = {
       acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
       local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
       local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-      local registryService = rsIComp:getFacetByName("IRegistryService")
+      local registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
       registryService = orb:narrow(registryService, 
          "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
 
-      local serviceOffers = registryService:find({"ISessionService"})
+      local serviceOffers = registryService:find({"ISessionService_v" .. Utils.OB_VERSION})
       Check.assertNotEquals(#serviceOffers, 0)
       local sessionServiceComponent = orb:narrow(serviceOffers[1].member,
           "IDL:scs/core/IComponent:1.0")

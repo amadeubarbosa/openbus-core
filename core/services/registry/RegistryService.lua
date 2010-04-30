@@ -125,7 +125,7 @@ function RSFacet:addOffer(offerEntry)
   -- ofertas a ela relacionadas devem ser removidas
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService",
+    "IAccessControlService_v" .. Utils.OB_VERSION,
     Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
   if status then
     acsFacet:addCredentialToObserver(self.observerId, credential.identifier)
@@ -337,7 +337,7 @@ function RSFacet:rawUnregister(identifier, credential)
     Log:registry("Última oferta da credencial: remove credencial do observador")
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService", Utils.ACCESS_CONTROL_SERVICE_INTERFACE) 
+      "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE) 
     if status then
       acsFacet:removeCredentialFromObserver(self.observerId,
         credential.identifier)
@@ -618,7 +618,7 @@ function RSFacet:expired()
     self.privateKeyFile, self.accessControlServiceCertificateFile)
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService", Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+    "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
   if not status then
     --erro já joi logado
     return nil
@@ -910,7 +910,7 @@ function startup(self)
  end
 
  -- Referência à faceta de gerenciamento do ACS
- mgm.acsmgm = acsIComp:getFacetByName("IManagement")
+ mgm.acsmgm = acsIComp:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
  mgm.acsmgm = orb:narrow(mgm.acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
  -- Administradores dos serviços
  mgm.admins = {}
@@ -952,7 +952,7 @@ function shutdown(self)
   if rs.observerId then
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService", Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if not status then
       -- erro ja foi logado
       error{"IDL:SCS/ShutdownFailed:1.0"}
@@ -1519,7 +1519,7 @@ function ManagementFacet:updateManagementStatus(command, data)
         remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
         local orb = Openbus:getORB()
         local ok, remoteMgmFacet = oil.pcall(remoteRGSIC.getFacetByName,
-          remoteRGSIC, "IManagement")
+          remoteRGSIC, "IManagement_v" .. Utils.OB_VERSION)
 
         if ok then
           remoteMgmFacet = orb:narrow(remoteMgmFacet,

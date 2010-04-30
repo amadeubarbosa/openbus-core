@@ -128,7 +128,7 @@ function SessionService:createSession(member)
   -- A credencial deve ser observada!
   local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
     orb, self.context.IComponent, "AccessControlServiceReceptacle", 
-    "IAccessControlService", acsIDL)
+    "IAccessControlService_v" .. Utils.OB_VERSION, acsIDL)
   if not status then
     orb:deactivate(component.ISession)
     orb:deactivate(component.IMetaInterface)
@@ -188,7 +188,7 @@ function SessionService:observe(credentialId, session)
     -- Primeira sessão da credencial, começar a observar
     local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
       orb, self.context.IComponent, "AccessControlServiceReceptacle", 
-      "IAccessControlService", acsIDL)
+      "IAccessControlService_v" .. Utils.OB_VERSION, acsIDL)
     if status then
       acsFacet:addCredentialToObserver(self.observerId, credentialId)
     end
@@ -212,7 +212,7 @@ function SessionService:unObserve(credentialId, session)
     self.observed[credentialId] = nil
     local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
       orb, self.context.IComponent, "AccessControlServiceReceptacle", 
-      "IAccessControlService", acsIDL)
+      "IAccessControlService_v" .. Utils.OB_VERSION, acsIDL)
     if status then
       acsFacet:removeCredentialFromObserver(self.observerId, credentialId)
     end
@@ -251,7 +251,7 @@ end
 function SessionService:expired()
   local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle, 
     orb, self.context.IComponent, "AccessControlServiceReceptacle", 
-    "IAccessControlService", acsIDL)
+    "IAccessControlService_v" .. Utils.OB_VERSION, acsIDL)
   if not status then
     -- Erro ja foi logado, só retorna
     return nil

@@ -10,6 +10,7 @@ oil.verbose:level(0)
 
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
+local Utils = require "openbus.util.Utils"
 
 if #arg < 1 then
    print("[ERRO] Parametros insuficientes, e necessario um arquivo de configuracao.")
@@ -78,10 +79,10 @@ function run()
      os.exit(1)
   end 
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-  local registryService = rsIComp:getFacetByName("IRegistryService")
+  local registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
   registryService = orb:narrow(registryService,
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
-  local serviceOffers = registryService:find({"ISessionService"})
+  local serviceOffers = registryService:find({"ISessionService_v" .. Utils.OB_VERSION})
   
   if #serviceOffers == 0 then
     print("[ERRO] O servico de sessao nao esta conectado ao barramento.")

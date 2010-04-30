@@ -9,6 +9,7 @@ local oop = require "loop.base"
 
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
+local Utils = require "openbus.util.Utils"
 
 local scs = require "scs.core.base"
 
@@ -260,7 +261,7 @@ function init(self)
   acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
   local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-  self.registryService = rsIComp:getFacetByName("IRegistryService")
+  self.registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
   self.registryService = orb:narrow(self.registryService,
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
 end

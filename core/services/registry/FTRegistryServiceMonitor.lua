@@ -192,7 +192,7 @@ function FTRSMonitorFacet:monitor()
           local rs = Openbus:getRegistryService()
           local rsIC = rs:_component()
           rsIC = Openbus:getORB():narrow(rsIC, "IDL:scs/core/IComponent:1.0")
-          local ftrsService = rsIC:getFacetByName("IFaultTolerantService")
+          local ftrsService = rsIC:getFacetByName("IFaultTolerantService_v" .. utils.OB_VERSION)
           ftrsService = Openbus:getORB():narrow(ftrsService,
               "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
 

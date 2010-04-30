@@ -59,7 +59,7 @@ local function init(self)
   self.rs = orb:narrow(facet,
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
   --
-  facet = ic:getFacetByName("IManagement")
+  facet = ic:getFacet("IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
   self.rsMgt = orb:narrow(facet,
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
 end

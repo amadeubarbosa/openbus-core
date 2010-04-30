@@ -118,12 +118,12 @@ facetDescriptions.ILeaseProvider_Prev.interface_name        = Utils.LEASE_PROVID
 facetDescriptions.ILeaseProvider_Prev.class                 = AccessControlService_v1_04.LeaseProviderFacet
 facetDescriptions.ILeaseProvider_Prev.key                   = Utils.LEASE_PROVIDER_KEY_V1_04
 
-facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService"
+facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService_v" .. Utils.OB_VERSION
 facetDescriptions.IFaultTolerantService.interface_name       = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
 facetDescriptions.IFaultTolerantService.class                = AccessControlService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLERANT_ACS_KEY
 
-facetDescriptions.IManagement.name            = "IManagement"
+facetDescriptions.IManagement.name            = "IManagement_v" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE 
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 

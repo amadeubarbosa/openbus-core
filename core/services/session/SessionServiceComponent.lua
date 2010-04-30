@@ -186,7 +186,7 @@ function SessionServiceComponent:shutdown()
   					 		  orb, 
                          	  self.context.IComponent, 
                          	  "AccessControlServiceReceptacle", 
-                         	  "IAccessControlService", 
+                         	  "IAccessControlService_v" .. Utils.OB_VERSION, 
                          	  Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if not status then
 	    -- erro ja foi logado, só retorna
