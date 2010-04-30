@@ -36,12 +36,13 @@ if IDLPATH_DIR == nil then
 end
 
 function run()
-  local idlfile = IDLPATH_DIR.."/v1_05/session_service.idl"
-  orb:loadidlfile(idlfile)
-  idlfile = IDLPATH_DIR.."/v1_05/registry_service.idl"
-  orb:loadidlfile(idlfile)
-  idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
-  orb:loadidlfile(idlfile)
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/session_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/session_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
+
 
   accessControlService = orb:newproxy("corbaloc::" .. 
       host .. ":" .. port .. 

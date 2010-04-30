@@ -72,7 +72,7 @@ function FTACSMonitorFacet:getService()
     return nil
   elseif conns[1] then
     local service = conns[1].objref
-    service = Openbus:getORB():narrow(service, "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+    service = Openbus:getORB():narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
     return service
   end
   log:error("Nao foi possivel obter o Serviço.")

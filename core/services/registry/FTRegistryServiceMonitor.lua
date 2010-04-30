@@ -41,7 +41,7 @@ Log:level(4)
 oil.verbose:level(2)
 
 
-orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/registry_service.idl")
 ---
 --Componente responsável pelo Monitor do Serviço de Registro
 ---
@@ -69,7 +69,7 @@ function FTRSMonitorFacet:getService()
     return nil
   elseif conns[1] then
     local service = conns[1].objref
-    service = Openbus:getORB():narrow(service, "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+    service = Openbus:getORB():narrow(service, utils.FAULT_TOLERANT_SERVICE_INTERFACE)
     return service
   end
   log:error("Nao foi possivel obter o Serviço.")
@@ -194,7 +194,7 @@ function FTRSMonitorFacet:monitor()
           rsIC = Openbus:getORB():narrow(rsIC, "IDL:scs/core/IComponent:1.0")
           local ftrsService = rsIC:getFacetByName("IFaultTolerantService_v" .. utils.OB_VERSION)
           ftrsService = Openbus:getORB():narrow(ftrsService,
-              "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+              utils.FAULT_TOLERANT_SERVICE_INTERFACE)
 
           if OilUtilities:existent(ftrsService) then
             local ftRec = self:getFacetByName("IReceptacles")

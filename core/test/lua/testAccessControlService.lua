@@ -20,22 +20,26 @@ local deploymentId = systemId
 local testKeyFile  = systemId .. ".key"
 local acsCertFile  = "AccessControlService.crt"
 
+function loadidls()
+  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+  if IDLPATH_DIR == nil then
+    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+    os.exit(1)
+  end
+  oil.verbose:level(0)
+  local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
+  orb:loadidlfile(idlfile)
+  idlfile = IDLPATH_DIR.."/v1_04/access_control_service.idl"
+  orb:loadidlfile(idlfile)
+end
+
 Suite = {
   --
   -- este teste não precisa inserir credencial no contexto das requisições
   --
   Test1 = {
     beforeTestCase = function(self)
-      local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-      if IDLPATH_DIR == nil then
-        io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-        os.exit(1)
-      end
-      local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
-
-      oil.verbose:level(0)
-      orb:loadidlfile(idlfile)
-
+      loadidls()
       local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
           "IDL:scs/core/IComponent:1.0")
       local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
@@ -82,16 +86,7 @@ Suite = {
 
   Test2 = {
     beforeTestCase = function(self)
-      local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-      if IDLPATH_DIR == nil then
-        io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-        os.exit(1)
-      end
-      local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
-
-      oil.verbose:level(0)
-      orb:loadidlfile(idlfile)
-
+      loadidls()
       local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
           "IDL:scs/core/IComponent:1.0")
       local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
@@ -191,16 +186,7 @@ Suite = {
 
   Test3 = {
     beforeTestCase = function(self)
-      local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-      if IDLPATH_DIR == nil then
-        io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-        os.exit(1)
-      end
-      local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
-
-      oil.verbose:level(0)
-      orb:loadidlfile(idlfile)
-
+      loadidls()
       local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
           "IDL:scs/core/IComponent:1.0")
       local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")

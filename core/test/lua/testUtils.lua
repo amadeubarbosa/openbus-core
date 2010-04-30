@@ -18,8 +18,8 @@ Suite = {
         io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
         os.exit(1)
       end
-      local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
-      orb:loadidlfile(idlfile)
+      orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
      end,
     testFetchACS = function(self)
       local acs, lp, ic = Utils.fetchAccessControlService(orb, "localhost", 2089)

@@ -28,6 +28,8 @@ local function init(self)
   orb:loadidlfile(IDLPATH_DIR.."/v1_05/scs.idl")
   orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
   orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
   -- Instala o interceptador cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
   local config = assert(loadfile(DATA_DIR ..

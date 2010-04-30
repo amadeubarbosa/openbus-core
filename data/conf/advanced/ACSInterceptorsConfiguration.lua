@@ -1,6 +1,7 @@
 --
 -- Configuração para o interceptador de requisições ao serviço de acesso
 --
+local Utils = require "openbus.util.Utils"
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 local config = 
   assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
@@ -8,19 +9,19 @@ local config =
 -- Acrescenta informação sobre as operacões a serem liberadas
 config.interfaces = {
   {
-    interface = "IDL:scs/core/IComponent:1.0",
+    interface = Utils.COMPONENT_INTERFACE,
     excluded_ops = {"getFacet"}
   },
   {
-    interface = "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0",
+    interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE,
     excluded_ops = {"loginByPassword", "loginByCertificate", "getChallenge"}
   },
   {
-    interface = "IDL:openbusidl/acs/IAccessControlService:1.0",
+    interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04,
     excluded_ops = {"loginByPassword", "loginByCertificate", "getChallenge"}
   },
   {
-    interface = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0",
+    interface = Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
     excluded_ops = {"isAlive"}
   },
 }

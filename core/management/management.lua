@@ -1389,7 +1389,7 @@ function getacsmgm()
   local ic = acs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   acsmgm = ic:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
-  acsmgm = orb:narrow(acsmgm, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+  acsmgm = orb:narrow(acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
   return acsmgm
 end
 
@@ -1408,7 +1408,7 @@ function getrsmgm()
   ic = rs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   rsmgm = ic:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
-  rsmgm = orb:narrow(rsmgm, "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  rsmgm = orb:narrow(rsmgm, Utils.MANAGEMENT_RS_INTERFACE)
   return rsmgm
 end
 

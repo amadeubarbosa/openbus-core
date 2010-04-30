@@ -58,7 +58,7 @@ oil.orb = orb
 local FTRegistryServiceMonitor = require "core.services.registry.FTRegistryServiceMonitor"
 local scs = require "scs.core.base"
 
-orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl")
+orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/fault_tolerance.idl")
 
 -----------------------------------------------------------------------------
 -- FTRegistryServiceMonitor Descriptions
@@ -84,16 +84,16 @@ facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IFTServiceMonitor.name              = "IFTServiceMonitor"
-facetDescriptions.IFTServiceMonitor.interface_name    = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
+facetDescriptions.IFTServiceMonitor.name              = "IFTServiceMonitor_v" .. Utils.OB_VERSION
+facetDescriptions.IFTServiceMonitor.interface_name    = Utils.FT_SERVICE_MONITOR_INTERFACE
 facetDescriptions.IFTServiceMonitor.class             = FTRegistryServiceMonitor.FTRSMonitorFacet
-facetDescriptions.IFTServiceMonitor.key               = "FTRSMonitor"
+facetDescriptions.IFTServiceMonitor.key               = FT_RS_MONITOR_KEY
 
 -- Receptacle Descriptions
 local receptacleDescriptions = {}
 receptacleDescriptions.IFaultTolerantService = {}
 receptacleDescriptions.IFaultTolerantService.name           = "IFaultTolerantService"
-receptacleDescriptions.IFaultTolerantService.interface_name = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
+receptacleDescriptions.IFaultTolerantService.interface_name = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
 receptacleDescriptions.IFaultTolerantService.is_multiplex   = false
 receptacleDescriptions.IFaultTolerantService.type           = "Receptacle"
 

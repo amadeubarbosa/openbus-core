@@ -63,6 +63,10 @@ Suite = {
       orb:loadidlfile(IDLPATH_DIR.."/v1_05/session_service.idl")
       orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
       orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_04/session_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
+
 
       local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
         "IDL:scs/core/IComponent:1.0")

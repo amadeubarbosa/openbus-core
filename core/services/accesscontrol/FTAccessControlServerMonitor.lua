@@ -87,15 +87,15 @@ facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInter
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
 facetDescriptions.IFTServiceMonitor.name              = "IFTServiceMonitor"
-facetDescriptions.IFTServiceMonitor.interface_name    = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFTServiceMonitor:1.0"
-facetDescriptions.IFTServiceMonitor.class             =  FTAccessControlServiceMonitor.FTACSMonitorFacet
+facetDescriptions.IFTServiceMonitor.interface_name    = Utils.FT_SERVICE_MONITOR_INTERFACE
+facetDescriptions.IFTServiceMonitor.class             = FTAccessControlServiceMonitor.FTACSMonitorFacet
 facetDescriptions.IFTServiceMonitor.key               = "FTACSMonitor"
 
 -- Receptacle Descriptions
 local receptacleDescriptions = {}
 receptacleDescriptions.IFaultTolerantService = {}
 receptacleDescriptions.IFaultTolerantService.name           = "IFaultTolerantService"
-receptacleDescriptions.IFaultTolerantService.interface_name = "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0"
+receptacleDescriptions.IFaultTolerantService.interface_name = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
 receptacleDescriptions.IFaultTolerantService.is_multiplex   = false
 receptacleDescriptions.IFaultTolerantService.type           = "Receptacle"
 

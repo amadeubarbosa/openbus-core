@@ -36,7 +36,6 @@ end
 SessionEventSink = oop.class{}
 
 function SessionEventSink:push(event)
---TODO: aqui pode dar problema pois o event contem um Any. Verificar.
   self.context.SessionEventSink:push(event)
 end
 

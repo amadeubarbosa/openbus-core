@@ -6,6 +6,7 @@ local tonumber = tonumber
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local oil = require "oil"
+local Utils = require "openbus.util.Utils"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
@@ -42,7 +43,7 @@ local orb = oil.init {
 
 oil.orb = orb
 
-orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl")
+orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/fault_tolerance.idl")
 
 ---
 --Função que será executada pelo OiL em modo protegido.
@@ -50,7 +51,7 @@ orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl")
 function main()
   Log:faulttolerance("Injetando falha no Serviço de Registro inicio...")
 
-  Log:faulttolerance("corbaloc::"..hostAdd.."/FTRS")
+  Log:faulttolerance("corbaloc::"..hostAdd.."/"..Utils.FAULT_TOLERANT_RS_KEY)
 
 
 
@@ -59,8 +60,8 @@ function main()
   Openbus:_setInterceptors()
   Openbus:enableFaultTolerance()
 
-  local ftregistryService = Openbus:getORB():newproxy("corbaloc::"..hostAdd.."/FTRS",
-               "IDL:tecgraf/openbus/fault_tolerance/v1_05/IFaultTolerantService:1.0")
+  local ftregistryService = Openbus:getORB():newproxy("corbaloc::"..hostAdd.."/"..Utils.FAULT_TOLERANT_RS_KEY,
+               Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
   if ftregistryService:_non_existent() then
       Log:error("Servico de registro nao encontrado.")
       os.exit(1)
