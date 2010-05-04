@@ -9,6 +9,21 @@ basesoft = {
       ["include/cxxtest"] = "incpath/cxxtest/",
     },
   },
+  { name = "logger",
+    url = SVNREPURL .. "/cpputils/logger/trunk",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .. "/logger",
+      mf = { "config" },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/liblogger.so"] = "libpath/${TEC_UNAME}",
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/liblogger.*"] = "libpath/${TEC_UNAME}",
+      ["*.h"] = "incpath/logger",
+    },
+  },
   { name = "e2fsprogs-1.40.8",
     url = SVNREPURL .. "/openbus/libs/trunk/e2fsprogs-1.40.8",
     build = {
