@@ -36,10 +36,10 @@ end
 SessionEventSink = oop.class{}
 
 function SessionEventSink:push(event)
-  self.context.SessionEventSink:push(event)
+  self.context.SessionEventSink:push("v1_04", event)
 end
 
 function SessionEventSink:disconnect()
-  self.context.SessionEventSink:disconnect()
+  self.context.SessionEventSink:disconnect("v1_04")
 end
 

@@ -155,10 +155,10 @@ end
 --
 --@param event O evento.
 ---
-function SessionEventSink:push(event)
-  Log:session("Repassando evento "..event.type.." para membros de sessão")
+function SessionEventSink:push(sender, event)
+  Log:session("O membro "..sender.." enviou o evento "..event.type)
   for memberId, sink in pairs(self.eventSinks) do
-    local result, errorMsg = oil.pcall(sink.push, sink, event)
+    local result, errorMsg = oil.pcall(sink.push, sink, sender, event)
     if not result then
       Log:session("Erro ao enviar evento para membro de sessão: "..errorMsg)
     end
@@ -168,10 +168,10 @@ end
 ---
 --Solicita a desconexão de todos os membros da sessão.
 ---
-function SessionEventSink:disconnect()
-  Log:session("Desconectando os membros da sessão")
+function SessionEventSink:disconnect(sender)
+  Log:session("O membro "..sender.." enviou um pedido de fim de conexão")
   for memberId, sink in pairs(self.eventSinks) do
-    local result, errorMsg = oil.pcall(sink.disconnect, sink)
+    local result, errorMsg = oil.pcall(sink.disconnect, sink, sender)
     if not result then
       Log:session("Erro ao tentar desconectar membro de sessão: "..errorMsg)
     end

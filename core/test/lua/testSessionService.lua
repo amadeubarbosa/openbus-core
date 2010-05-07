@@ -31,11 +31,11 @@ local facetDescriptions = {
     interface_name =
       "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0",
     class = oop.class{
-      push = function(self, event)
-        print("Evento "..event.type.." valor "..event.value._anyval)
+      push = function(self, sender, event)
+        print("Membro "..sender.."enviou evento "..event.type.." com o valor "..event.value._anyval)
       end,
-      disconnect = function(self)
-        print("Aviso de desconexão")
+      disconnect = function(self, sender)
+        print("Aviso de desconexão enviado pelo membro "..sender)
       end,
     }
   },
@@ -298,9 +298,9 @@ Suite = {
       local my_any_value2 = { _anyval = "valor2",
           _anytype = oil.corba.idl.string }
 
-      sink:push({type = "tipo1", value = my_any_value1})
-      sink:push({type = "tipo2", value = my_any_value2})
-      sink:disconnect()
+      sink:push(id1, {type = "tipo1", value = my_any_value1})
+      sink:push(id2, {type = "tipo2", value = my_any_value2})
+      sink:disconnect(id3)
 
       -- Remove o segundo e o terceiro membros do barramento
       session:removeMember(id2)
