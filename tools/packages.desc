@@ -112,7 +112,7 @@ packages = {
 	  },
 	  dev_files = {
 	  	["../lib/${TEC_UNAME}/liboilall.*"] = "libpath/${TEC_UNAME}",
-	  	["../include/*"] = "incpath/oil04",
+		["oilall.h"] = "incpath/oil04",
 	  },
 	},
 	{ name = "luuid",
