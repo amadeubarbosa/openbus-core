@@ -32,7 +32,7 @@ local facetDescriptions = {
       "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0",
     class = oop.class{
       push = function(self, sender, event)
-        print("Membro "..sender.."enviou evento "..event.type.." com o valor "..event.value._anyval)
+        print("Membro "..sender.." enviou evento "..event.type.." com o valor "..event.value._anyval)
       end,
       disconnect = function(self, sender)
         print("Aviso de desconexão enviado pelo membro "..sender)
