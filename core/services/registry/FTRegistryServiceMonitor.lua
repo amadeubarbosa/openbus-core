@@ -206,7 +206,7 @@ function FTRSMonitorFacet:monitor()
             end
           end
         else
-          Log:faulttolerance("[Monitor SR] Não conseguiu levantar RS de primeira porque porta está bloqueada.")
+          Log:faulttolerance("[Monitor SR] Nao conseguiu levantar RS de primeira porque porta esta bloqueada.")
           Log:faulttolerance("[Monitor SR] Espera " .. tostring(timeOut.monitor.sleep) .." segundos......")
           oil.sleep(timeOut.monitor.sleep)
         end
