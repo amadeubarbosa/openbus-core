@@ -2,7 +2,7 @@
 -- Configuração dos tempos do mecanismo de tolerância a falhas
 --
 return {
-  reply        = {  MAX_TIMES = 30,
+  reply        = {  MAX_TIMES = 600,
                     sleep = 0.1,
                  },
   non_existent = {  MAX_TIMES = 30,
