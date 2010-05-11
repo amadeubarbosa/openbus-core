@@ -25,6 +25,7 @@ local SmartComponent = require "openbus.faulttolerance.SmartComponent"
 local OilUtilities = require "openbus.util.OilUtilities"
 local FaultTolerantService =
   require "core.services.faulttolerance.FaultTolerantService"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 local LeaseProvider = require "openbus.lease.LeaseProvider"
 
@@ -114,6 +115,7 @@ function ACSFacet:loginByCertificate(name, answer)
   end
   self.challenges[name] = nil
   local entry = self:addEntry(name, true)
+  Log:access_control("Usuario [" .. name .. "] logado com credencial [".. entry.credential.identifier .."].")
   return true, entry.credential, entry.lease.duration
 end
 
@@ -130,8 +132,10 @@ function ACSFacet:getChallenge(name)
   local mgm = self.context.IManagement
   local succ, cert = oil.pcall(mgm.getSystemDeploymentCertificate, mgm, name)
   if succ then
+    Log:access_control("Desafio obtido do Management para usuario [" .. name .. "] com certificado.")
     return self:generateChallenge(name, lce.x509.readfromderstring(cert))
   end
+  Log:error("Erro ao obter a desafio de : " .. name)
   return ""
 end
 
@@ -144,10 +148,21 @@ end
 --@return O desafio.
 ---
 function ACSFacet:generateChallenge(name, certificate)
+  Log:access_control("Gerando desafio para ("..name..")")
   local randomSequence = tostring(luuid.new("time"))
   self.challenges[name] = randomSequence
   local key = certificate:getpublickey()
-  return lce.cipher.encrypt(key, randomSequence)
+  if key then
+     Log:access_control("Chave privada obtida.")
+  else
+     Log:error("Não foi possível obter a chave privada.")
+     return ""
+  end
+  local ret, erroMsg = lce.cipher.encrypt(key, randomSequence)
+  if not ret then
+     Log:error(erroMsg)
+  end
+  return ret, erroMsg
 end
 
 ---
@@ -1176,6 +1191,90 @@ function ManagementFacet:updateManagementStatus(command, data)
 end
 
 --------------------------------------------------------------------------------
+-- Faceta IReceptacle
+--------------------------------------------------------------------------------
+
+ACSReceptacleFacet = oop.class({}, AdaptiveReceptacle.AdaptiveReceptacleFacet)
+
+function ACSReceptacleFacet:connect(receptacle, object)
+ local connId = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(self,
+                          receptacle,
+                          object) -- calling inherited method
+  if connId then
+  --SINCRONIZA COM AS REPLICAS SOMENTE SE CONECTOU COM SUCESSO
+    self:updateConnectionState("connect", { receptacle = receptacle, object = object })
+  end
+  return connId
+end
+
+function ACSReceptacleFacet:disconnect(connId)
+  -- calling inherited method
+  local status, void = oil.pcall(AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect,
+                                AdaptiveReceptacle.AdaptiveReceptacleFacet, connId)
+  if not status then
+    Log:error("[IReceptacles::IReceptacles] Error while calling disconnect")
+    Log:error("[IReceptacles::IReceptacles] Error: " .. void)
+  else
+      --SINCRONIZA COM AS REPLICAS SOMENTE SE DESCONECTOU COM SUCESSO
+      self:updateConnectionState("disconnect", { connId = connId })
+  end
+end
+
+function ACSReceptacleFacet:updateConnectionState(command, data)
+    local credential = Openbus:getInterceptedCredential()
+    if credential.owner == "AccessControlService" or
+       credential.delegate == "AccessControlService" then
+       --para nao entrar em loop
+         return
+    end
+    Log:faulttolerance("[updateConnectionState] Atualiza estado do ACS quanto ao [".. command .."].")
+    local ftFacet = self.context.IFaultTolerantService
+    if not ftFacet.ftconfig then
+        Log:faulttolerance("[updateConnectionState] Faceta precisa ser inicializada antes de ser chamada.")
+        Log:warn("[updateConnectionState] não foi possível atualizar estado quanto ao [".. command .."]")
+        return
+    end
+
+    if # ftFacet.ftconfig.hosts.ACS <= 1 then
+        Log:faulttolerance("[updateConnectionState] Nenhuma replica para atualizar estado quanto ao [".. command .."].")
+        return
+    end
+
+    local i = 1
+    repeat
+        if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
+            local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
+                                                Openbus:getORB(),
+                                                ftFacet.ftconfig.hosts.ACSIC[i],
+                                                Utils.COMPONENT_INTERFACE)
+
+            if succ then
+            --encontrou outra replica
+                Log:faulttolerance("[updateConnectionState] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
+                 -- Recupera faceta IReceptacles da replica remota
+                local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
+                if ok then
+                     local orb = Openbus:getORB()
+                     remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
+                           "IDL:scs/core/IReceptacles:1.0")
+                     if command == "connect" then
+                         oil.newthread(function()
+                                    local succ, ret = oil.pcall(remoteACSRecepFacet.connect, remoteACSRecepFacet, data.receptacle, data.object)
+                                    end)
+                     elseif command == "disconnect" then
+                         oil.newthread(function()
+                                    local succ, ret = oil.pcall(remoteACSRecepFacet.disconnect, remoteACSRecepFacet, data.connId)
+                                    end)
+                     end
+                end
+            end
+        end
+        i = i + 1
+    until i > # ftFacet.ftconfig.hosts.ACSIC
+    Log:faulttolerance("[updateConnectionState] Replicas atualizadas quanto ao [".. command .."].")
+end
+
+--------------------------------------------------------------------------------
 -- Faceta IFaultTolerantService
 --------------------------------------------------------------------------------
 
@@ -1434,7 +1533,52 @@ function startup(self)
   end
   acs.leaseProvider = LeaseProvider(acs.checkExpiredLeases, acs.lease)
 
-  self.context.IFaultTolerantService:init()
+  local ftFacet = self.context.IFaultTolerantService
+  ftFacet:init()
+
+  if # ftFacet.ftconfig.hosts.ACS <= 1 then
+     Log:warn("Nenhuma replica para buscar conexoes com Servico de Registro.")
+     return
+  end
+  local acsRecepFacet = self.context.IReceptacles
+  local i = 1
+  repeat
+      if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
+         local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
+                                                Openbus:getORB(),
+                                                ftFacet.ftconfig.hosts.ACSIC[i],
+                                                Utils.COMPONENT_INTERFACE)
+
+          if succ then
+          --encontrou outra replica
+                Log:faulttolerance("Buscando conexoes na replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
+                -- Recupera faceta IReceptacles da replica remota
+                local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
+                if ok then
+                     local orb = Openbus:getORB()
+                     remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
+                           "IDL:scs/core/IReceptacles:1.0")
+                     --Recupera conexoes do Servico de Registro
+                     local status, conns = oil.pcall(remoteACSRecepFacet.getConnections,
+                                                     remoteACSRecepFacet,
+                                                     "RegistryServiceReceptacle")
+                     if not status then
+                       Log:warn("Nao foi possivel obter o Serviço [IRegistryService_v" .. Utils.OB_VERSION .. "]: " .. conns[1])
+                       return
+                     elseif conns[1] then
+                        local recepIC = conns[1].objref
+                        recepIC = orb:narrow(recepIC, "IDL:scs/core/IComponent:1.0")
+                        --Connecta localmente direto na AdaptiveReceptacle
+                        --para nao ativar atualizacao nas replicas
+                        local cid = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
+                        Log:faulttolerance("Conexao do Servico de Registro recuperado e conectado com id: " .. cid)
+                     end
+                end
+          end
+      end
+      i = i + 1
+  until i > # ftFacet.ftconfig.hosts.ACSIC
+
 end
 
 ---

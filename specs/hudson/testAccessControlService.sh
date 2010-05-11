@@ -61,7 +61,7 @@ ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
   --add-deployment=TesteBarramento --description=Teste \
   --certificate=TesteBarramento.crt --system=TesteBarramento
 
-./run_unit_test.sh testAccessControlService.lua
+./run_unit_test.sh accesscontrol/testAccessControlService.lua
 CODE=$?
 
 kill -9 ${PID}

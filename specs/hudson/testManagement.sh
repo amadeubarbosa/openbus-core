@@ -77,7 +77,7 @@ echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh testManagement01
 echo
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh testManagement02
 echo
-./run_unit_test.sh testManagement.lua
+./run_unit_test.sh management/testManagement.lua
 CODE=$?
 
 kill -9 ${RGSPID}

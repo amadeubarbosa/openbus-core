@@ -82,7 +82,7 @@ function RSFacet:register(serviceOffer)
     end
   end
 
-  local facets = self:getAuthorizedFacets(serviceOffer.member, credential, 
+  local facets = self:getAuthorizedFacets(serviceOffer.member, credential,
     properties)
 
   local offerEntry = {
@@ -286,13 +286,71 @@ end
 --@param identifier A identificação da oferta de serviço.
 --
 --@return true caso a oferta tenha sido removida, ou false caso contrário.
+--        e true caso a operacao tenha sido executada remotamente, ou false caso contrário
+--        em algumas das replicas.
 ---
 function RSFacet:unregister(identifier)
-  return self:rawUnregister(identifier, Openbus:getInterceptedCredential())
+  local ret = self:rawUnregister(identifier, Openbus:getInterceptedCredential())
+  if ret then
+    local credential = Openbus:getInterceptedCredential()
+    if credential.owner == "RegistryService" or
+       credential.delegate == "RegistryService"
+    then
+      return ret, false
+    end
+
+    local ftFacet = self.context.IFaultTolerantService
+    if not ftFacet.ftconfig then
+      Log:faulttolerance("[unregister] Faceta precisa ser inicializada antes de ser chamada.")
+      Log:warn("[unregister] não foi possível executar 'unregister' nas replicas")
+      return ret, false
+    end
+
+    if #ftFacet.ftconfig.hosts.RS <= 1 then
+      Log:faulttolerance("[unregister] Nenhuma replica para atualizar estado do cadastros de ofertas.")
+      return ret, false
+    end
+
+    local i = 1
+    local retRemote = true
+    repeat
+    if ftFacet.ftconfig.hosts.RS[i] ~= ftFacet.rsReference then
+      local ret, succ, remoteRGS = oil.pcall(Utils.fetchService,
+        Openbus:getORB(), ftFacet.ftconfig.hosts.RS[i],
+        Utils.REGISTRY_SERVICE_INTERFACE)
+      if succ then
+        --encontrou outra replica
+        Log:faulttolerance("[unregister] Atualizando replica "
+          .. ftFacet.ftconfig.hosts.RS[i] ..".")
+        -- Recupera faceta IRegistryService da replica remota
+        local remoteRGSIC = remoteRGS:_component()
+        remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
+        local ok, remoteRGSFacet = oil.pcall(remoteRGSIC.getFacetByName,
+          remoteRGSIC, "IRegistryService_v" .. Utils.OB_VERSION)
+        if ok and remoteRGSFacet then
+          remoteRGSFacet = orb:narrow(remoteRGSFacet,
+            Utils.REGISTRY_SERVICE_INTERFACE)
+            oil.newthread(function()
+                local succ, ret = oil.pcall(
+                  remoteRGSFacet.unregister, remoteRGSFacet,
+                  identifier)
+                end)
+        else
+           Log:faulttolerance("[unregister] Faceta da replica nao encontrada.")
+           retRemote = false
+        end -- fim ok facet IRegistryService
+      end -- fim succ, encontrou replica
+    end -- fim , nao eh a mesma replica
+    i = i + 1
+    until i > #ftFacet.ftconfig.hosts.RS
+    Log:faulttolerance("[unregister] Replicas atualizadas quanto ao estado para a operacao [unregister]")
+  end -- fim ret da execucao local
+
+  return ret, retRemote
 end
 
 ---
---Método interno responsável por efetivamente remove uma oferta de serviço.
+--Método interno responsável por efetivamente remover uma oferta de serviço.
 --
 --@param identifier A identificação da oferta de serviço.
 --@param credential Credencial do membro que efetuou o registro ou
@@ -301,17 +359,16 @@ end
 --@return true caso a oferta tenha sido removida, ou false caso contrário.
 ---
 function RSFacet:rawUnregister(identifier, credential)
-  Log:registry("Removendo oferta "..identifier)
 
+  Log:registry("Removendo oferta "..identifier)
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
-    Log:warning("Oferta a remover com id "..identifier.." não encontrada")
+    Log:warn("Oferta a remover com id "..identifier.." não encontrada")
     return false
   end
-
   if credential then
     if credential.identifier ~= offerEntry.credential.identifier then
-      Log:warning("Oferta a remover("..identifier..
+      Log:warn("Oferta a remover("..identifier..
         ") não registrada com a credencial do chamador")
       return false
     end
@@ -331,13 +388,14 @@ function RSFacet:rawUnregister(identifier, credential)
         credential.identifier)
     return true
   end
+
   if not next (credentialOffers) then
     -- Não há mais ofertas associadas à credencial
     self.offersByCredential[credential.identifier] = nil
     Log:registry("Última oferta da credencial: remove credencial do observador")
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE) 
+      "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if status then
       acsFacet:removeCredentialFromObserver(self.observerId,
         credential.identifier)
@@ -347,7 +405,10 @@ function RSFacet:rawUnregister(identifier, credential)
     end
     acsFacet:removeCredentialFromObserver(self.observerId,credential.identifier)
   end
+
   self.offersDB:delete(offerEntry)
+  Log:registry("Oferta "..identifier.." com credencial "..
+        credential.identifier .. " removida.")
   return true
 end
 
@@ -369,7 +430,7 @@ function RSFacet:update(identifier, properties)
 
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
-    Log:warning("Oferta a atualizar com id "..identifier.." não encontrada")
+    Log:warn("Oferta a atualizar com id "..identifier.." não encontrada")
     error(Openbus:getORB():newexcept {
       "IDL:tecgraf/openbus/core/v1_05/registry_service/ServiceOfferNonExistent:1.0",
     })
@@ -377,7 +438,7 @@ function RSFacet:update(identifier, properties)
 
   local credential = Openbus:getInterceptedCredential()
   if credential.identifier ~= offerEntry.credential.identifier then
-    Log:warning("Oferta a atualizar("..identifier..
+    Log:warn("Oferta a atualizar("..identifier..
                 ") não registrada com a credencial do chamador")
     error(Openbus:getORB():newexcept {
       "IDL:tecgraf/openbus/core/v1_05/registry_service/ServiceOfferNonExistent:1.0",

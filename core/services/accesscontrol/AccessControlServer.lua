@@ -9,7 +9,7 @@ oil.verbose:level(3)
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local Utils = require "openbus.util.Utils"
-
+local Viewer = require "loop.debug.Viewer"
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
 
@@ -32,39 +32,59 @@ local iconfig = assert(loadfile(DATA_DIR ..
 
 -- Parsing arguments
 local usage_msg = [[
-	--help                   : show this help
-	--verbose                : turn ON the VERBOSE mode (show the system commands)
-	--port=<port number>     : defines the service port (default=]] 
-								.. tostring(AccessControlServerConfiguration.hostPort) .. [[)
+    --help                   : show this help
+    --verbose                : turn ON the VERBOSE mode (show the system commands)
+    --port=<port number>     : defines the service port (default=]]
+                                .. tostring(AccessControlServerConfiguration.hostPort) .. [[)
  NOTES:
- 	The prefix '--' is optional in all options.
-	So '--help' or '-help' or yet 'help' all are the same option.]]
+    The prefix '--' is optional in all options.
+    So '--help' or '-help' or yet 'help' all are the same option.]]
 local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" then
-	oil.verbose:level(5)
+    oil.verbose:level(5)
+    Log:level(3)
 else
-	if AccessControlServerConfiguration.oilVerboseLevel then
-  		oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
-	end
+    if AccessControlServerConfiguration.oilVerboseLevel then
+        oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
+    end
+    -- Define os níveis de verbose para o OpenBus e para o OiL.
+    if AccessControlServerConfiguration.logLevel then
+        Log:level(AccessControlServerConfiguration.logLevel)
+    end
 end
 
 if arguments.port then
-	AccessControlServerConfiguration.hostPort = tonumber(arguments.port)
-end
-
--- Define os níveis de verbose para o OpenBus e para o OiL.
-if AccessControlServerConfiguration.logLevel then
-  Log:level(AccessControlServerConfiguration.logLevel)
+    AccessControlServerConfiguration.hostPort = tonumber(arguments.port)
 end
 
 local props = { host = AccessControlServerConfiguration.hostName,
   port = AccessControlServerConfiguration.hostPort}
 
+local TestLog = require "openbus.util.TestLog"
+local tests = {}
+tests[Utils.OPENBUS_KEY] = TestLog()
+tests[Utils.ACCESS_CONTROL_SERVICE_KEY] = TestLog()
+tests[Utils.ACCESS_CONTROL_SERVICE_KEY_V1_04] = TestLog()
+tests[Utils.LEASE_PROVIDER_KEY] = TestLog()
+tests[Utils.LEASE_PROVIDER_KEY_V1_04] = TestLog()
+tests[Utils.FAULT_TOLERANT_ACS_KEY] = TestLog()
+
+for key, v in pairs(tests) do
+  v:level(1)
+  local logfile = assert(io.open(DATA_DIR.."/test/ACSLog-".. key ..".txt", "w"))
+  if not logfile then
+    Log:error("O arquivo do log de teste [".. DATA_DIR.."/test/ACSLog-".. key ..".txt] nao existe.\n")
+  else
+    v.viewer.output = logfile
+  end
+end
+iconfig.tests = tests
+
 -- Inicializa o barramento
 Openbus:init(AccessControlServerConfiguration.hostName,
   AccessControlServerConfiguration.hostPort, props, iconfig)
-  
+
 Openbus:enableFaultTolerance()
 
 local orb = Openbus:getORB()
@@ -72,18 +92,18 @@ local orb = Openbus:getORB()
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
 local AccessControlService_v1_04 = require "core.services.accesscontrol.AccessControlService_v1_04"
-local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
+
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
 -----------------------------------------------------------------------------
 
 -- Facet Descriptions
 local facetDescriptions = {}
-facetDescriptions.IComponent          	      = {}
-facetDescriptions.IMetaInterface      	      = {}
+facetDescriptions.IComponent                  = {}
+facetDescriptions.IMetaInterface              = {}
 facetDescriptions.IAccessControlService       = {}
 facetDescriptions.IAccessControlService_Prev  = {}
-facetDescriptions.ILeaseProvider       	      = {}
+facetDescriptions.ILeaseProvider              = {}
 facetDescriptions.ILeaseProvider_Prev         = {}
 facetDescriptions.IFaultTolerantService       = {}
 facetDescriptions.IManagement                 = {}
@@ -124,12 +144,12 @@ facetDescriptions.IFaultTolerantService.class                = AccessControlServ
 facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLERANT_ACS_KEY
 
 facetDescriptions.IManagement.name            = "IManagement_v" .. Utils.OB_VERSION
-facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE 
+facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
-facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
+facetDescriptions.IReceptacles.class          = AccessControlService.ACSReceptacleFacet
 
 
 --Log:faulttolerance(facetDescriptions)

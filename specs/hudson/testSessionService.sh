@@ -96,7 +96,7 @@ fi
 ###############################################################################
 
 cd ${OPENBUS_HOME}/core/test/lua
-./run_unit_test.sh testSessionService.lua
+./run_unit_test.sh session/testSessionService.lua
 CODE=$?
 
 kill -9 ${SSSPID}

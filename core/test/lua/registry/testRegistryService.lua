@@ -1,11 +1,12 @@
 --
 -- Testes unitários do Serviço de Registro
 --
--- $Id$
+-- $Id: testRegistryService.lua 104952 2010-04-30 21:43:16Z augusto $
 --
 local oil = require "oil"
 local orb = oil.orb
 local oop = require "loop.base"
+local print = print
 
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
@@ -253,7 +254,7 @@ function init(self)
   cert = lce.x509.readfromderfile(acsCertFile)
   challenge = lce.cipher.encrypt(cert:getpublickey(), challenge)
   local succ
-  succ, self.credential, self.lease = 
+  succ, self.credential, self.lease =
     self.accessControlService:loginByCertificate(deploymentId, challenge)
   self.credentialManager:setValue(self.credential)
   -- Recupera o Serviço de Registro
@@ -280,12 +281,12 @@ Suite = {
         {name = "registered_by", value = {"DoNotExists"}},
       }
       self.trueProps = {
-        {name = "component_id", 
+        {name = "component_id",
          value = {string.format(
-                    "%s:%d.%d.%d", 
-                    Hello_v1.componentId.name, 
-                    Hello_v1.componentId.major_version, 
-                    Hello_v1.componentId.minor_version, 
+                    "%s:%d.%d.%d",
+                    Hello_v1.componentId.name,
+                    Hello_v1.componentId.major_version,
+                    Hello_v1.componentId.minor_version,
                     Hello_v1.componentId.patch_version)
                  }
         },
@@ -309,7 +310,7 @@ Suite = {
     end,
 
     testRegister = function(self)
-      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles, 
+      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
       -- Identificar local propositalmente
       local success, registryIdentifier = self.registryService.__try:register({
@@ -338,7 +339,7 @@ Suite = {
 
     testRegister_Property = function(self)
       local success
-      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles, 
+      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         member = member.IComponent,
@@ -355,6 +356,7 @@ Suite = {
       Check.assertNotNil(self.registryIdentifier)
       --
       local offers = self.registryService:find({"IHello_v1"})
+oil.verbose:print(offers)
       Check.assertEquals(1, #offers)
       --
       offers = self.registryService:find({"IHello_v2"})
@@ -362,7 +364,7 @@ Suite = {
     end,
 
     testRegister_NotImplemented = function(self)
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       local success, err = self.registryService.__try:register({
         member = member.IComponent,
@@ -382,7 +384,7 @@ Suite = {
     end,
 
     testRegister_Unauthorized = function(self)
-      local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles, 
+      local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles,
         Hello_v3.componentId)
       local success, err = self.registryService.__try:register({
         member = member.IComponent,
@@ -394,7 +396,7 @@ Suite = {
     end,
 
     testRegister_UnauthorizedProperty = function(self)
-      local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles, 
+      local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles,
         Hello_v3.componentId)
       local success, err = self.registryService.__try:register({
         member = member.IComponent,
@@ -407,7 +409,7 @@ Suite = {
 
     testUpdate = function(self)
       local success
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,
@@ -417,6 +419,7 @@ Suite = {
       Check.assertNotNil(self.registryIdentifier)
       --
       local offers = self.registryService:find({"IHello_v1"})
+oil.verbose:print(offers)
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
@@ -429,7 +432,7 @@ Suite = {
 
     testUpdate_Same = function(self)
       local success
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,
@@ -441,7 +444,7 @@ Suite = {
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
       Check.assertTrue(self.registryService.__try:update(self.registryIdentifier,
-	Hello_v1.properties))
+  Hello_v1.properties))
       --
       offers = self.registryService:find({"IHello_v1"})
       Check.assertEquals(1, #offers)
@@ -450,7 +453,7 @@ Suite = {
 
     testRegister_InternalProperties = function(self)
       local success
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       -- Tenta sobrescrita de propriedade definidas internamente no RS
       success, self.registryIdentifier = self.registryService.__try:register({
@@ -465,7 +468,7 @@ Suite = {
 
     testUpdate_InternalProperties = function(self)
       local success
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = self.trueProps,
@@ -483,7 +486,7 @@ Suite = {
     testUpdate_Invalid = function(self)
       -- Coloca conteúdo no registro
       local success, err
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,
@@ -497,7 +500,7 @@ Suite = {
 
     testUpdate_Property = function(self)
       local success
-      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles, 
+      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v2.properties,
@@ -518,6 +521,7 @@ Suite = {
       Check.assertEquals(1, #offers)
       --
       offers = self.registryService:find({"IHello_v2"})
+oil.verbose:print(offers)
       Check.assertEquals(0, #offers)
       --
       success = self.registryService.__try:update(self.registryIdentifier, {
@@ -540,7 +544,7 @@ Suite = {
 
     testUpdate_NotImplemented = function(self)
       local success, err
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,
@@ -573,6 +577,7 @@ Suite = {
         properties = Hello_v1.properties,
         member = self.member_v1.IComponent,
       })
+
       --
       self.member_v2 = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
@@ -580,6 +585,8 @@ Suite = {
         properties = Hello_v2.properties,
         member = self.member_v2.IComponent,
       })
+
+      Check.assertNotEquals(self.id_v1, self.id_v2)
     end,
 
     afterTestCase = function(self)
@@ -606,7 +613,7 @@ Suite = {
       -- Expressão válida pois v1.properties ~= v2.properties
       Check.assertTrue(
        (equalsProps(offers[1].properties, Hello_v1.properties) or
-        equalsProps(offers[2].properties, Hello_v1.properties)) 
+        equalsProps(offers[2].properties, Hello_v1.properties))
        and
        (equalsProps(offers[1].properties, Hello_v2.properties) or
         equalsProps(offers[2].properties, Hello_v2.properties))
@@ -636,7 +643,7 @@ Suite = {
       -- Expressão válida pois v1.properties ~= v2.properties
       Check.assertTrue(
        (equalsProps(offers[1].properties, Hello_v1.properties) or
-        equalsProps(offers[2].properties, Hello_v1.properties)) 
+        equalsProps(offers[2].properties, Hello_v1.properties))
        and
        (equalsProps(offers[1].properties, Hello_v2.properties) or
         equalsProps(offers[2].properties, Hello_v2.properties))
@@ -683,7 +690,7 @@ Suite = {
       -- Expressão válida pois v1.properties ~= v2.properties
       Check.assertTrue(
        (equalsProps(offers[1].properties, Hello_v1.properties) or
-        equalsProps(offers[2].properties, Hello_v1.properties)) 
+        equalsProps(offers[2].properties, Hello_v1.properties))
        and
        (equalsProps(offers[1].properties, Hello_v2.properties) or
         equalsProps(offers[2].properties, Hello_v2.properties))
@@ -701,7 +708,7 @@ Suite = {
       -- Expressão válida pois v1.properties ~= v2.properties
       Check.assertTrue(
        (equalsProps(offers[1].properties, Hello_v1.properties) or
-        equalsProps(offers[2].properties, Hello_v1.properties)) 
+        equalsProps(offers[2].properties, Hello_v1.properties))
        and
        (equalsProps(offers[1].properties, Hello_v2.properties) or
         equalsProps(offers[2].properties, Hello_v2.properties))
@@ -770,7 +777,7 @@ Suite = {
       -- Expressão válida pois v1.properties ~= v2.properties
       Check.assertTrue(
        (equalsProps(offers[1].properties, Hello_v1.properties) or
-        equalsProps(offers[2].properties, Hello_v1.properties)) 
+        equalsProps(offers[2].properties, Hello_v1.properties))
        and
        (equalsProps(offers[1].properties, Hello_v2.properties) or
         equalsProps(offers[2].properties, Hello_v2.properties))
@@ -788,7 +795,7 @@ Suite = {
       -- Expressão válida pois v1.properties ~= v2.properties
       Check.assertTrue(
        (equalsProps(offers[1].properties, Hello_v1.properties) or
-        equalsProps(offers[2].properties, Hello_v1.properties)) 
+        equalsProps(offers[2].properties, Hello_v1.properties))
        and
        (equalsProps(offers[1].properties, Hello_v2.properties) or
         equalsProps(offers[2].properties, Hello_v2.properties))
@@ -845,7 +852,7 @@ Suite = {
       -- Expressão válida pois v1.properties ~= v2.properties
       Check.assertTrue(
        (equalsProps(offers[1].properties, Hello_v1.properties) or
-        equalsProps(offers[2].properties, Hello_v1.properties)) 
+        equalsProps(offers[2].properties, Hello_v1.properties))
        and
        (equalsProps(offers[1].properties, Hello_v2.properties) or
         equalsProps(offers[2].properties, Hello_v2.properties))
@@ -884,7 +891,7 @@ Suite = {
       -- Expressão válida pois v1.properties ~= v2.properties
       Check.assertTrue(
        (equalsProps(offers[1].properties, Hello_v1.properties) or
-        equalsProps(offers[2].properties, Hello_v1.properties)) 
+        equalsProps(offers[2].properties, Hello_v1.properties))
        and
        (equalsProps(offers[1].properties, Hello_v2.properties) or
         equalsProps(offers[2].properties, Hello_v2.properties))
@@ -925,7 +932,7 @@ Suite = {
     testRegister_NoCredential = function(self)
       self.credentialManager:invalidate()
       --
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       local success, err = self.registryService.__try:register({
         properties = Hello_v1.properties,
@@ -937,7 +944,7 @@ Suite = {
 
     testFind_NoCredential = function(self)
       local success
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,
@@ -954,7 +961,7 @@ Suite = {
 
     testUpdate_NoCredential = function(self)
       local success
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,
@@ -972,7 +979,7 @@ Suite = {
 
     testFindByCriteria_NoCredential = function(self)
       local success
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,
@@ -983,14 +990,14 @@ Suite = {
       --
       local err
       success, err = self.registryService.__try:findByCriteria(
-	{"IHello_v1"}, Hello_v1.properties)
+  {"IHello_v1"}, Hello_v1.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
     end,
 
     testUnregister_NoCredential = function(self)
       local success
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles, 
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       success, self.registryIdentifier = self.registryService.__try:register({
         properties = Hello_v1.properties,

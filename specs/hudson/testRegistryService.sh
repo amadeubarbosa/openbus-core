@@ -86,7 +86,7 @@ ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
   --set-authorization=TesteBarramento --grant="IDL:IHello_v2:1.0" --no-strict
 
-./run_unit_test.sh testRegistryService.lua
+./run_unit_test.sh registry/testRegistryService.lua
 CODE=$?
 
 kill -9 ${RGSPID}

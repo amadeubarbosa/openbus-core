@@ -10,6 +10,7 @@ local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local Utils = require "openbus.util.Utils"
+local Viewer = require "loop.debug.Viewer"
 
 -- Inicialização do nível de verbose do openbus.
 Log:level(1)
@@ -24,12 +25,12 @@ end
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 local iConfig =
   assert(loadfile(DATA_DIR.."/conf/advanced/RSInterceptorsConfiguration.lua"))()
-  
+
 -- Parsing arguments
 local usage_msg = [[
   --help                   : show this help
   --verbose                : turn ON the VERBOSE mode (show the system commands)
-  --port=<port number>     : defines the service port (default=]] 
+  --port=<port number>     : defines the service port (default=]]
                 .. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
  NOTES:
   The prefix '--' is optional in all options.
@@ -38,29 +39,46 @@ local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" then
   oil.verbose:level(5)
+  Log:level(5)
 else
   if RegistryServerConfiguration.oilVerboseLevel then
       oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
+  end
+  -- Define os níveis de verbose para o openbus e para o oil
+  if RegistryServerConfiguration.logLevel then
+    Log:level(RegistryServerConfiguration.logLevel)
   end
 end
 
 if arguments.port then
   RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
 end
-  
--- Define os níveis de verbose para o openbus e para o oil
-if RegistryServerConfiguration.logLevel then
-  Log:level(RegistryServerConfiguration.logLevel)
-end
 
 props = {  host = RegistryServerConfiguration.registryServerHostName,
            port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}
-           
+
+local TestLog = require "openbus.util.TestLog"
+local tests = {}
+tests[Utils.REGISTRY_SERVICE_KEY] = TestLog()
+tests[Utils.REGISTRY_SERVICE_KEY_V1_04] = TestLog()
+tests[Utils.FAULT_TOLERANT_RS_KEY] = TestLog()
+local logfile
+for key, v in pairs(tests) do
+  v:level(1)
+  logfile = assert(io.open(DATA_DIR.."/test/RGSLog-".. key ..".txt", "w"))
+  if not logfile then
+    Log:error("O arquivo do log de teste [".. DATA_DIR.."/test/RGSLog-".. key ..".txt] nao existe.\n")
+  else
+    v.viewer.output = logfile
+  end
+end
+iConfig.tests = tests
+
 -- Inicializa o barramento
 Openbus:init(RegistryServerConfiguration.accessControlServerHostName,
   RegistryServerConfiguration.accessControlServerHostPort,
   props, iConfig, iConfig, "CACHED")
-  
+
 Openbus:enableFaultTolerance()
 
 local orb = Openbus:getORB()
@@ -79,15 +97,15 @@ local facetDescriptions = {}
 facetDescriptions.IComponent       = {}
 facetDescriptions.IMetaInterface   = {}
 facetDescriptions.IRegistryService = {}
-facetDescriptions.IRegistryService_Prev       = {}
-facetDescriptions.IManagement                 = {}
-facetDescriptions.IFaultTolerantService       = {}
-facetDescriptions.IReceptacles                = {}
+facetDescriptions.IRegistryService_Prev = {}
+facetDescriptions.IManagement      = {}
+facetDescriptions.IFaultTolerantService = {}
+facetDescriptions.IReceptacles          = {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
 facetDescriptions.IComponent.interface_name        = "IDL:scs/core/IComponent:1.0"
 facetDescriptions.IComponent.class                 = scs.Component
-facetDescriptions.IComponent.key                   = Utils.OPENBUS_KEY
+facetDescriptions.IComponent.key                   = "IC"
 
 facetDescriptions.IMetaInterface.name              = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name    = "IDL:scs/core/IMetaInterface:1.0"
@@ -98,10 +116,10 @@ facetDescriptions.IRegistryService.interface_name  = Utils.REGISTRY_SERVICE_INTE
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
 facetDescriptions.IRegistryService.key             = Utils.REGISTRY_SERVICE_KEY
 
-facetDescriptions.IRegistryService_Prev.name           = "IRegistryService"
-facetDescriptions.IRegistryService_Prev.interface_name = Utils.REGISTRY_SERVICE_INTERFACE_V1_04
-facetDescriptions.IRegistryService_Prev.class          = RegistryService_v1_04.RSFacet
-facetDescriptions.IRegistryService_Prev.key            = Utils.REGISTRY_SERVICE_KEY_V1_04
+facetDescriptions.IRegistryService_Prev.name            = "IRegistryService"
+facetDescriptions.IRegistryService_Prev.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE_V1_04
+facetDescriptions.IRegistryService_Prev.class           = RegistryService_v1_04.RSFacet
+facetDescriptions.IRegistryService_Prev.key             = Utils.REGISTRY_SERVICE_KEY_V1_04
 
 facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService_v" .. Utils.OB_VERSION
 facetDescriptions.IFaultTolerantService.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
@@ -149,9 +167,10 @@ function main()
 
   success, res = oil.pcall (rsInst.IComponent.startup, rsInst.IComponent)
   if not success then
-    Log:error("Falha ao iniciar o serviço de registro: "..tostring(res).."\n")
+    Log:error("Falha ao iniciar o serviço de registro: "..tostring(res[1]).."\n")
     os.exit(1)
   end
+
   Log:init("Serviço de registro iniciado com sucesso")
 end
 

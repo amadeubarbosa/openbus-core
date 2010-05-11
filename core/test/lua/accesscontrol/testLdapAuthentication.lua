@@ -1,7 +1,7 @@
 --
 -- Testa o funcionamento do lualdap.
 -- 
--- $Id$
+-- $Id: testLdapAuthentication.lua 103269 2010-03-19 15:10:42Z rodrigoh $
 --
 require "lualdap"
 

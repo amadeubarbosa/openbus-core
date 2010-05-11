@@ -1,7 +1,7 @@
 --
 -- Testes unitários do Serviço de Sessão
 --
--- $Id$
+-- $Id: testSessionService.lua 104952 2010-04-30 21:43:16Z augusto $
 --
 local oil = require "oil"
 local orb = oil.orb
@@ -72,7 +72,7 @@ Suite = {
         "IDL:scs/core/IComponent:1.0")
       local facet = acsComp:getFacet(
         "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
-      self.accessControlService = orb:narrow(facet, 
+      self.accessControlService = orb:narrow(facet,
         "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
@@ -98,7 +98,7 @@ Suite = {
       local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
       local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
       local registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
-      registryService = orb:narrow(registryService, 
+      registryService = orb:narrow(registryService,
          "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
 
       local serviceOffers = registryService:find({"ISessionService_v" .. Utils.OB_VERSION})
@@ -107,7 +107,7 @@ Suite = {
           "IDL:scs/core/IComponent:1.0")
       self.sessionService = sessionServiceComponent:getFacet(
         "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0")
-      self.sessionService = orb:narrow(self.sessionService, 
+      self.sessionService = orb:narrow(self.sessionService,
         "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0")
     end,
 
