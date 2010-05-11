@@ -59,7 +59,7 @@ props = {  host = SessionServerConfiguration.sessionServerHostName,
 -- Inicializa o barramento
 Openbus:init(SessionServerConfiguration.accessControlServerHostName,
   SessionServerConfiguration.accessControlServerHostPort,
-  props, iConfig, iConfig)
+  props, iConfig, iConfig, "CACHED")
 
 Openbus:enableFaultTolerance()
 

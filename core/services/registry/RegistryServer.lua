@@ -59,7 +59,7 @@ props = {  host = RegistryServerConfiguration.registryServerHostName,
 -- Inicializa o barramento
 Openbus:init(RegistryServerConfiguration.accessControlServerHostName,
   RegistryServerConfiguration.accessControlServerHostPort,
-  props, iConfig, iConfig)
+  props, iConfig, iConfig, "CACHED")
   
 Openbus:enableFaultTolerance()
 
