@@ -65,9 +65,9 @@ tests[Utils.FAULT_TOLERANT_RS_KEY] = TestLog()
 local logfile
 for key, v in pairs(tests) do
   v:level(1)
-  logfile = assert(io.open(DATA_DIR.."/test/RGSLog-".. key ..".txt", "w"))
+  logfile = assert(io.open(DATA_DIR.."/rgs-performance-".. key ..".log", "w"))
   if not logfile then
-    Log:error("O arquivo do log de teste [".. DATA_DIR.."/test/RGSLog-".. key ..".txt] nao existe.\n")
+    Log:error("O arquivo do log de desempenho ["..DATA_DIR.."/rgs-performance-".. key ..".log] nao existe.\n")
   else
     v.viewer.output = logfile
   end

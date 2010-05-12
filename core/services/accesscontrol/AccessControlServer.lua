@@ -72,9 +72,9 @@ tests[Utils.FAULT_TOLERANT_ACS_KEY] = TestLog()
 
 for key, v in pairs(tests) do
   v:level(1)
-  local logfile = assert(io.open(DATA_DIR.."/test/ACSLog-".. key ..".txt", "w"))
+  local logfile = assert(io.open(DATA_DIR.."/acs-performance-".. key ..".log", "w"))
   if not logfile then
-    Log:error("O arquivo do log de teste [".. DATA_DIR.."/test/ACSLog-".. key ..".txt] nao existe.\n")
+    Log:error("O arquivo do log de desempenho ["..DATA_DIR.."/acs-performance-".. key ..".log] nao existe.\n")
   else
     v.viewer.output = logfile
   end
