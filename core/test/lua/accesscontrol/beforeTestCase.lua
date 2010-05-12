@@ -60,7 +60,7 @@ return function (self)
                                                                         " 2>> management-err.txt >>management.txt ")
 
 
-      local acsComp = orb:newproxy("corbaloc::amores.tecgraf.puc-rio.br:2089/openbus_v1_05",
+      local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
           "IDL:scs/core/IComponent:1.0")
       local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
       self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
