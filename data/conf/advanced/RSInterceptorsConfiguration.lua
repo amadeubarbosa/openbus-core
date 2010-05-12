@@ -3,7 +3,7 @@
 --
 local Utils = require "openbus.util.Utils"
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-local config = 
+local config =
   assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
 
 -- Acrescenta informação sobre as operacões a serem liberadas
@@ -11,6 +11,18 @@ config.interfaces = {
  {
     interface = Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
     excluded_ops = {"isAlive"}
+  },
+}
+
+-- Acrescenta informação sobre as operacões que ativam atualizacao de estado
+config.ft_update_policy = {
+  {
+    interface = Utils.REGISTRY_SERVICE_INTERFACE,
+    update_ops = {"register", "update" }
+  },
+  {
+    interface = Utils.REGISTRY_SERVICE_INTERFACE_V1_04,
+    update_ops = {"register", "update" }
   },
 }
 

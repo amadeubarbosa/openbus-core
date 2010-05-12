@@ -3,7 +3,7 @@
 --
 local Utils = require "openbus.util.Utils"
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-local config = 
+local config =
   assert(loadfile(DATA_DIR.."/conf/advanced/InterceptorsConfiguration.lua"))()
 
 -- Acrescenta informação sobre as operacões a serem liberadas
@@ -25,5 +25,19 @@ config.interfaces = {
     excluded_ops = {"isAlive"}
   },
 }
+
+-- Acrescenta informação sobre as operacões que ativam atualizacao de estado
+config.ft_update_policy = {
+  {
+    interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE,
+    update_ops = {"loginByPassword", "loginByCertificate"}
+  },
+  {
+    interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04,
+    update_ops = {"loginByPassword", "loginByCertificate"}
+  },
+}
+
+
 
 return config
