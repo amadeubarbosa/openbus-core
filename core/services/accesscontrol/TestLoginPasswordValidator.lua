@@ -1,5 +1,7 @@
 -- $Id$
 
+local string = string
+
 local LoginPasswordValidator =
     require "core.services.accesscontrol.LoginPasswordValidator"
 
@@ -29,7 +31,7 @@ end
 --@see core.services.accesscontrol.LoginPasswordValidator#validate
 ---
 function validate(self, name, password)
-  if name == "tester" and password == "tester" then
+  if string.find(name,"tester%d?") and name == password then
     return true
   end
   if name == "test" and password == "test" then
