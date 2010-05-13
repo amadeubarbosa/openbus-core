@@ -7,7 +7,6 @@ local orb = oil.orb
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 
-
 --
 -- Esta funcao cadastra 'TesteBarramento<id_unico>' e requer que a suite de teste
 -- principal use a funcao afterTestCase
@@ -30,6 +29,8 @@ return function (self)
       self.deploymentId = self.systemId
       self.testKeyFile  = self.systemId .. ".key"
       self.acsCertFile  = "AccessControlService.crt"
+      local testACSCertFile = assert(io.open(self.acsCertFile,"r"))
+      testACSCertFile:close()
 
       os.execute(OPENBUS_HOME.."/specs/shell/openssl-generate.ksh -n " .. self.systemId .. " -c "..OPENBUS_HOME.."/openssl/openssl.cnf <TesteBarramentoCertificado_input.txt  2> genkey-err.txt >genkeyT.txt ")
 

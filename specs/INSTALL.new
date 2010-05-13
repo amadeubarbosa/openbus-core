@@ -1,6 +1,6 @@
 Projeto: OpenBUS
-Empacotamento: Amadeu A. B. Jr <amadeu@tecgraf.puc-rio.br>
-TecGRAF / PUC-Rio
+Site: http://www.tecgraf.puc-rio.br/openbus
+Desenvolvedor: Tecgraf / PUC-Rio
 
 ======== [ Instalar o OpenBUS a partir do pacote final ] =========
 
@@ -11,23 +11,23 @@ TecGRAF / PUC-Rio
        Por exemplo, em BASH:
        export OPENBUS_HOME=/usr/local
        
-       Já em CSH:
+       Ou em CSH:
        setenv OPENBUS_HOME /usr/local
 
-2. Também adicione as seguintes linhas ao seu profile:
+2. Extraia o pacote diretamente no mesmo caminho apontado por OPENBUS_HOME
+
+3. Adicione as seguintes linhas ao seu profile:
 
          Se o seu SHELL padrão for BASH:
        -----------8<-------------------------------------
-       . ${OPENBUS_HOME}/tools/shell/kshrc
+       . ${OPENBUS_HOME}/specs/shell/kshrc
        -------------------------------------->8----------
        
          Se o seu SHELL padrão for CSH:
        -----------8<-------------------------------------
-       . ${OPENBUS_HOME}/tools/shell/cshrc
+       . ${OPENBUS_HOME}/specs/shell/cshrc
        -------------------------------------->8----------
   
-3. Extraia o pacote diretamente no mesmo caminho apontado por OPENBUS_HOME
-
 4. Pronto! Agora basta usar o OpenBUS:
 
 cd ${OPENBUS_HOME}/core/bin

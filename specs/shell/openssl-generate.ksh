@@ -5,12 +5,9 @@
 # 
 # $Id$
 
-
-which openssl > /dev/null 2>&1 || {
-  print "comando 'openssl' nao foi encontrado"
-  exit 1
-}
+# Padrão é usar do host
 OPENSSL_CMD=openssl
+sslConfig=
 
 scriptName=$(basename $0)
 
@@ -27,6 +24,21 @@ Uso: $scriptName [opcoes]
 
 OBS.: se o nome nao for fornecido via '-n' sera obtido interativamente
 EOF
+}
+
+function die {
+        echo $@
+        exit 1
+}
+
+function checkOpenSSL {
+  which openssl > /dev/null 2>&1
+  if [ $? == "1" ]; then
+    echo "============================================================="
+    echo "[ERRO] O aplicativo 'openssl' não foi encontrado."
+    echo "============================================================="
+    return 1
+  fi
 }
 
 while getopts "hc:n:" params; do
@@ -52,30 +64,43 @@ done
 shift $((OPTIND - 1))
 
 if [ -z "$entityName" ]; then
-  echo -n "Nome da chave: "
+  echo -n "Digite o nome da chave: "
   read entityName
 fi
 
-# se o usuário não especificou um arquivo de configuração para o
-# OpenSSL e a variável OPENBUS_HOME está definida, usamos o arquivo de
-# configuração do OpenSSL distribuído com o OpenBus
-if [ -z "$sslConfig" ]; then
-    if [ -n "${OPENBUS_HOME}" ]; then
-        OPENSSL_CMD="${OPENBUS_HOME}/bin/${TEC_UNAME}/openssl"
-        sslConfig="-config ${OPENBUS_HOME}/openssl/openssl.cnf"
-    fi
+# OpenBus configurado, usar nossa instalação. Senão, usar do host.
+if [ -n "${OPENBUS_HOME}" ]; then
+  OPENSSL_CMD="${OPENBUS_HOME}/bin/${TEC_UNAME}/openssl"
+  # Verifica se o OpenBus instalou o OpenSSL, caso contrário, mantém o padrão.
+  if [ -x "${OPENSSL_CMD}" ]; then
+    export OPENSSL_HOME="${OPENBUS_HOME}/openssl"
+  else
+    checkOpenSSL
+    OPENSSL_CMD=openssl
+  fi
+  # Se usuário não informar arquivo de configuração usaremos aquele distribuído no OpenBus.
+  if [ -z "$sslConfig" ]; then
+    sslConfig="-config ${OPENBUS_HOME}/openssl/openssl.cnf"
+  fi
+else
+  checkOpenSSL
 fi
 
-print "### Criando certificados para o Openubs ###\n"
+echo "============================================================="
+echo "Criando certificados para o Openbus ..."
+echo "Comando 'openssl' utilizado : ${OPENSSL_CMD}"
+echo "============================================================="
 
-${OPENSSL_CMD} genrsa -out ${entityName}_openssl.key 2048
+${OPENSSL_CMD} genrsa -out ${entityName}_openssl.key 2048 || exit 1
 ${OPENSSL_CMD} pkcs8 -topk8 -in ${entityName}_openssl.key \
-    -nocrypt > ${entityName}.key
+    -nocrypt > ${entityName}.key || exit 1
 
-${OPENSSL_CMD} req $sslConfig -new -x509 -key ${entityName}.key \
-    -out ${entityName}.crt -outform DER
+${OPENSSL_CMD} req ${sslConfig} -new -x509 -key ${entityName}.key \
+    -out ${entityName}.crt -outform DER || exit 1
 
 rm -f ${entityName}_openssl.key
 
-print "\nChave privada : ${entityName}.key"
-print "Certificado   : ${entityName}.crt"
+echo "============================================================="
+echo "Chave privada : ${entityName}.key"
+echo "Certificado   : ${entityName}.crt"
+echo "============================================================="
