@@ -17,10 +17,8 @@ openbus-core
 openbus-core-conf
 openbus-core-dev
 openbus-demo-hello-lua-dev
-openbus-demo-delegate-lua
+openbus-demo-delegate-lua-dev
 openbus-lua-dev
-openbus-cppoil-dev
-openbus-demo-hello-cppoil-dev
 openbus-orbix-dev
 openbus-demo-hello-orbix-dev
 openbus-java

@@ -374,7 +374,6 @@ packages = {
       ["../services/faulttolerance"] = "core/services",
       ["../services/session"] = "core/services",
       ["../management/*"] = "core/management",
-      [PRODAPP.."/sdk-lua/openbus"] = "libpath/lua/5.1",
       ["../test/lua/run_check_install.sh"] = "core/test",
       ["../test/lua/checkInstall.lua"] = "core/test",
       ["../../specs/management"] = "specs",
@@ -559,42 +558,6 @@ packages = {
       [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
     },
   },
-  -- CPPOiL related packages, it needs of loop to work (precompiler.lua dependency)
---[[
-  { name = "openbus-cppoil",
-    build = {
-      type = "tecmake",
-      src = SVNDIR .."/core/utilities/cppoil",
-      mf = { "config LUA51="..PRODAPP.."/lua5.1", },
-    },
-    dev_files = {
-      ["lib/${TEC_UNAME}/libopenbus*.*"] = "core/utilities/cppoil/lib/${TEC_UNAME}",
-      ["openbus.h"] = "core/utilities/cppoil", --include
-      ["common"] = "core/utilities/cppoil",    --include
-      ["luaidl"] = "core/utilities/cppoil",    --include
-      ["stubs"] = "core/utilities/cppoil",     --include
-      ["openbus.lua"] = "core/utilities/cppoil",
-      ["../../test/cppoil"] = "core/test",
-    },
-  },
-  { name = "openbus-demo-hello-cppoil",
-    build = {
-      type = "tecmake",
-      src = SVNDIR .."/demo/hello/cppoil",
-      mf = { "client LUA51="..PRODAPP.."/lua5.1", "server LUA51="..PRODAPP.."/lua5.1"},
-    },
-    dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/cppoil/bin/${TEC_UNAME}",
-      ["hello.cpp"] = "demo/hello/cppoil",
-      ["hello.hpp"] = "demo/hello/cppoil",
-      ["helloStub.h"] = "demo/hello/cppoil",
-      ["helloStub.cpp"] = "demo/hello/cppoil",
-      ["client.cpp"] = "demo/hello/cppoil",
-      ["server.cpp"] = "demo/hello/cppoil",
-      ["*.mak"] = "demo/hello/cppoil",
-      ["../idl"] = "demo/hello",
-    },
-  },
   -- MICO related packages
   { name = "scsmico",
     build = {
@@ -618,7 +581,6 @@ packages = {
       ["*.h"] = "incpath/scs",
     },
   },
---]]
   { name = "openbus-mico",
     build = {
       type = "tecmake",
