@@ -1,8 +1,0 @@
-$#include "hello.hpp"
-
-class IHello {
-  public:
-    IHello();
-    ~IHello();
-    void sayHello();
-};
