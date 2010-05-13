@@ -21,7 +21,7 @@
 #include "oilall.h"
 #include "scsall.h"
 #include "luuid.h"
-#include "openbuspreloaded.h"
+#include "openbus.h"
 
 #include "ss.h"
 #include "sspreloaded.h"

@@ -24,7 +24,7 @@
 #include "lfs.h"
 #include "lce.h"
 #include "lualdap.h"
-#include "openbuspreloaded.h"
+#include "openbus.h"
 
 #include "acs.h"
 #include "acspreloaded.h"

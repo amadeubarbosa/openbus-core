@@ -22,7 +22,7 @@
 #include "scsall.h"
 #include "luuid.h"
 #include "lfs.h"
-#include "openbuspreloaded.h"
+#include "openbus.h"
 
 #include "rgs.h"
 #include "rgspreloaded.h"

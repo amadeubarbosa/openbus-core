@@ -352,7 +352,7 @@ packages = {
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libluaopenbus.*"] = "libpath/${TEC_UNAME}",
-      ["obj/${TEC_UNAME}/openbuspreloaded.h"] = "incpath/openbus/lua/",
+      ["obj/${TEC_UNAME}/openbus.h"] = "incpath/openbus/lua/",
     },
   },
   { name = "openbus-core",
