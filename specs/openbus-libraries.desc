@@ -504,11 +504,12 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/orbix",
-      mf = { "config cxxtest -C acs", "config -C acs LUA51="..PRODAPP.."/lua5.1", "config cxxtest -C rgs", "config -C rgs LUA51="..PRODAPP.."/lua5.1" },
+      mf = { "config cxxtest -C acs", "config -C acs LUA51="..PRODAPP.."/lua5.1", "config cxxtest -C rgs",  "config genstubs -C rgs", "config -C rgs LUA51="..PRODAPP.."/lua5.1" },
       SunOS510_64 = { 
 	    mf = { "config cxxtest -C acs",
                "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
                "config cxxtest -C rgs",
+               "config genstubs -C rgs",
                "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, },
       },
     },
@@ -674,6 +675,25 @@ packages = {
       ["server"] = "demo/hello/mico",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
       [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
+    },
+  },
+  { name = "openbus-mico-test",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/test/mico",
+      mf = { "config cxxtest -C acs", "config -C acs LUA51="..PRODAPP.."/lua5.1", "config cxxtest -C rgs", "config genstubs -C rgs", "config -C rgs LUA51="..PRODAPP.."/lua5.1" },
+      SunOS510_64 = { 
+	    mf = { "config cxxtest -C acs",
+               "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
+               "config cxxtest -C rgs",
+               "config genstubs -C rgs",
+               "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, },
+      },
+    },
+    install_files = {
+      ["bin/${TEC_UNAME}/*"] = "test/mico/bin/${TEC_UNAME}",
+      ["config*"] = "test/mico/",
+      ["runtests"] = "test/mico/",
     },
   },
   -- Java related packages  
