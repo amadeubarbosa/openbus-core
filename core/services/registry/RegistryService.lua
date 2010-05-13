@@ -14,6 +14,7 @@ local format = string.format
 local print = print
 local tostring = tostring
 local type = type
+local setfenv = setfenv
 
 local luuid = require "uuid"
 local oil = require "oil"
@@ -741,8 +742,14 @@ FaultToleranceFacet.ftconfig = {}
 FaultToleranceFacet.rsReference = ""
 
 function FaultToleranceFacet:init()
-  self.ftconfig = assert(loadfile(DATA_DIR ..
-    "/conf/RSFaultToleranceConfiguration.lua"))()
+  local loadConfig, err = loadfile(DATA_DIR .."/conf/RSFaultToleranceConfiguration.lua")
+  if not loadConfig then
+    Log:error("O arquivo 'RSFaultToleranceConfiguration' não pode ser " ..
+        "carregado ou não existe.",err)
+    os.exit(1)
+  end
+  setfenv(loadConfig,self);
+  loadConfig()
 
   local rgs = self.context.IRegistryService
   local notInHostAdd = rgs.config.registryServerHostName .. ":"

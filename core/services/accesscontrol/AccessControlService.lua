@@ -15,6 +15,7 @@ local tostring = tostring
 local print = print
 local error = error
 local format = string.format
+local setfenv = setfenv
 
 local luuid = require "uuid"
 local lce = require "lce"
@@ -1282,7 +1283,14 @@ FaultToleranceFacet = FaultTolerantService.FaultToleranceFacet
 FaultToleranceFacet.ftconfig = {}
 
 function FaultToleranceFacet:init()
-  self.ftconfig = assert(loadfile(DATA_DIR .."/conf/ACSFaultToleranceConfiguration.lua"))()
+  local loadConfig, err = loadfile(DATA_DIR .."/conf/ACSFaultToleranceConfiguration.lua")
+  if not loadConfig then
+    Log:error("O arquivo 'ACSFaultToleranceConfiguration' não pode ser " ..
+        "carregado ou não existe.",err)
+    os.exit(1)
+  end
+  setfenv(loadConfig,self)
+  loadConfig()
 
   local acs = self.context.IAccessControlService
 

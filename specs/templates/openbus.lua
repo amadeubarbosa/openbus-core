@@ -21,7 +21,7 @@ __call = function(self,t,save)
     if tonumber(var) then var = tonumber(var) end
     if not save[t.name] then save[t.name] = {} end
     table.insert(save[t.name],var)
-    
+
     print(CONFIG,"Deseja informar outro elemento para o vetor '" .. t.name ..
         "'? sim ou nao?")
     io.write("[nao]> ")
@@ -61,7 +61,7 @@ __call =  function(self,t,save)
     -- Saving the table with the element of the list (ldapHosts)
     table.insert(save[t.name],tmp)
     -- Do you wish continue or not?
-    print(CONFIG,"Deseja informar outro elemento para a lista '" .. t.name .. 
+    print(CONFIG,"Deseja informar outro elemento para a lista '" .. t.name ..
         "'? sim ou nao?")
     io.write("[nao]> ")
     if not string.upper(io.read("*l")):find("SIM") then break end
@@ -71,7 +71,7 @@ end
 })
 
 messages = {
-  { name = "hostName", 
+  { name = "hostName",
     msg = "FQDN da máquina onde o Serviço de Acesso executará",
     type = "string",
     value = "localhost",
@@ -148,9 +148,10 @@ configure_action = function(answers, path, util)
   RegistryServerConfiguration.accessControlServerHostName = answers.hostName
   RegistryServerConfiguration.accessControlServerHostPort = answers.hostPort
 
+  local rsHostPort = answers.hostPort - 30
   RegistryServerConfiguration.registryServerHostName = answers.hostName
-  RegistryServerConfiguration.registryServerHostPort = answers.hostPort - 30
-  
+  RegistryServerConfiguration.registryServerHostPort = rsHostPort
+
   RegistryServerConfiguration.privateKeyFile =
       "certificates/RegistryService.key"
   RegistryServerConfiguration.accessControlServiceCertificateFile =
@@ -167,8 +168,9 @@ configure_action = function(answers, path, util)
   SessionServerConfiguration.accessControlServerHostName = answers.hostName
   SessionServerConfiguration.accessControlServerHostPort = answers.hostPort
 
+  local ssHostPort = answers.hostPort - 60
   SessionServerConfiguration.sessionServerHostName = answers.hostName
-  SessionServerConfiguration.sessionServerHostPort = answers.hostPort - 60
+  SessionServerConfiguration.sessionServerHostPort = ssHostPort
 
   SessionServerConfiguration.privateKeyFile = "certificates/SessionService.key"
   SessionServerConfiguration.accessControlServiceCertificateFile =
@@ -176,6 +178,39 @@ configure_action = function(answers, path, util)
   SessionServerConfiguration.logLevel = answers.logLevel
   SessionServerConfiguration.oilVerboseLevel = answers.oilVerboseLevel
 
+  local ftACSConfFile = path .."/data/conf/ACSFaultToleranceConfiguration.lua"
+  local loadConfig, err = loadfile(ftACSConfFile)
+  if not loadConfig then
+    error(err)
+    os.exit(1)
+  end
+  ftACS = {}
+  setfenv(loadConfig,ftACS)
+  loadConfig()
+
+  ftACS.ftconfig.hosts.ACS =
+      generateCorbalocString(answers.hostName,answers.hostPort,"ACS_v1_05")
+  ftACS.ftconfig.hosts.ACSIC =
+      generateCorbalocString(answers.hostName,answers.hostPort,"openbus_v1_05")
+  ftACS.ftconfig.hosts.LP =
+      generateCorbalocString(answers.hostName,answers.hostPort,"LP_v1_05")
+  ftACS.ftconfig.hosts.FTACS =
+      generateCorbalocString(answers.hostName,answers.hostPort,"FTACS_v1_05")
+
+  local ftRSConfFile = path .."/data/conf/RSFaultToleranceConfiguration.lua"
+  loadConfig, err = loadfile(ftRSConfFile)
+  if not loadConfig then
+    error(err)
+    os.exit(1)
+  end
+  ftRS = {}
+  setfenv(loadConfig,ftRS)
+  loadConfig()
+
+  ftRS.ftconfig.hosts.RS =
+    generateCorbalocString(answers.hostName,rsHostPort,"RS_v1_05")
+  ftRS.ftconfig.hosts.FTRS =
+    generateCorbalocString(answers.hostName,rsHostPort,"FTRS_v1_05")
 
   -- Persisting the configurations to temporary tree where the tarball was extracted
   util.serialize_table(acsConfFile,AccessControlServerConfiguration,
@@ -184,5 +219,13 @@ configure_action = function(answers, path, util)
       "RegistryServerConfiguration")
   util.serialize_table(sesConfFile,SessionServerConfiguration,
       "SessionServerConfiguration")
+  util.serialize_table(ftACSConfFile,ftACS.ftconfig,
+      "ftconfig")
+  util.serialize_table(ftRSConfFile,ftRS.ftconfig,
+      "ftconfig")
   return true
+end
+
+function generateCorbalocString(host,port,objKey)
+  return { "corbaloc::"..host..":"..port.."/"..objKey, }
 end
