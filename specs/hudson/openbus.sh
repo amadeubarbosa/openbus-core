@@ -28,7 +28,7 @@ export PATH="${M2}:${HUDSON_HOME}/sbin:${DAEMONIZE_HOME}/sbin/${TEC_UNAME}:${PAT
 
 if [ "${TEC_SYSNAME}" == "Linux" ] ;then
   # Disparar o 'uuidd' para evitar prender a porta no ACS
-  [ -n "$(which uuidd)"] && uuidd -q
+  [ -n "$(which uuidd 2>/dev/null)"] && uuidd -q
   # Localização do ANT
   export ANT_HOME="/home/msv/openbus/programas/ant-1.7.1"
   export PATH="${ANT_HOME}/bin:${PATH}"
