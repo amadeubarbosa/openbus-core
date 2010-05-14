@@ -6,7 +6,7 @@
 # Configuração para máquina delaunay
 #export WORKSPACE=/local/openbus/hudson/workspace/SPARC
 
-[ -n "$(which lua5.1)" ] || \
+[ -n "$(which lua5.1 2>/dev/null)" ] || \
   (echo "ERRO: Não encontrei o binário do lua5.1!" && exit 1)
 
 . ${WORKSPACE}/hudson/openbus.sh
