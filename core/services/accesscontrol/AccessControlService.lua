@@ -274,32 +274,40 @@ end
 --
 --@param credential A credencial.
 --
---@return a credencial caso exista, ou nil caso contrário.
+--@return a credencial caso exista, ou uma entrada vazia caso contrário.
 ---
 function ACSFacet:getEntryCredential(credential)
 
   local duration = self.lease
   local emptyEntry = {
-                credential = {  identifier = "",
+                aCredential = {  identifier = "",
                                 owner = "",
                                 delegate = "" },
                 certified = false,
-                lease = { lastUpdate = os.time(), duration = duration },
                 observers = {},
                 observedBy = ""
             }
   local entry = self.entries[credential.identifier]
 
   if not entry then
+    Log:access_control("Nao encontrou credencial, retorna entrada de credencial vazia")
     return emptyEntry
   end
   if entry.credential.identifier ~= credential.identifier then
+    Log:access_control("Encontrou credencial porem nao coincide com o identificador da credencial local, retorna entrada de credencial vazia")
     return emptyEntry
   end
   if entry.credential.delegate ~= "" and not entry.certified then
+    Log:access_control("Encontrou credencial porem possui delegate e não é certificada, retorna entrada de credencial vazia")
     return emptyEntry
   end
-  return entry
+  Log:access_control("Encontrou credencial e retorna sua entrada completa.")
+  local retEntry = {  aCredential = entry.credential,
+                      certified = entry.certified or false,
+                      observers = entry.observers or {},
+                      observedBy = entry.observedBy or {}
+                   }
+  return retEntry
 end
 
 function ACSFacet:getAllEntryCredential()
@@ -1202,7 +1210,32 @@ function ACSReceptacleFacet:connect(receptacle, object)
                           receptacle,
                           object) -- calling inherited method
   if connId then
-  --SINCRONIZA COM AS REPLICAS SOMENTE SE CONECTOU COM SUCESSO
+    --Se for o RGS, faz a conexão de volta: [RS]--( 0--[ACS]
+    if receptacle == "RegistryServiceReceptacle" then
+      object = Openbus.orb:narrow(object, "IDL:scs/core/IComponent:1.0")
+      local rsIRecep =  object:getFacetByName("IReceptacles")
+      rsIRecep = Openbus.orb:narrow(rsIRecep, "IDL:scs/core/IReceptacles:1.0")
+      --Verifica se ja nao esta conectado
+      local acsFacet =  Utils.getReplicaFacetByReceptacle(Openbus.orb,
+                                                          object,
+                                               "AccessControlServiceReceptacle",
+                                               "IAccessControlService_v" .. Utils.OB_VERSION,
+                                               Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      if not acsFacet then
+         --Nao esta, vai conectar
+         local status, conns = oil.pcall(rsIRecep.connect, rsIRecep,
+                "AccessControlServiceReceptacle", self.context.IComponent )
+         if not status then
+            Log:error("Falha ao conectar o ACS no receptáculo do RGS: " ..
+                         conns[1])
+            AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect(self, connId)
+            Log:error("Não foi possível conectar RGS ao ACS.")
+            return nil
+         end
+      end
+    end
+
+    --SINCRONIZA COM AS REPLICAS SOMENTE SE CONECTOU COM SUCESSO
     self:updateConnectionState("connect", { receptacle = receptacle, object = object })
   end
   return connId
@@ -1210,14 +1243,11 @@ end
 
 function ACSReceptacleFacet:disconnect(connId)
   -- calling inherited method
-  local status, void = oil.pcall(AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect,
-                                AdaptiveReceptacle.AdaptiveReceptacleFacet, connId)
-  if not status then
-    Log:error("[IReceptacles::IReceptacles] Error while calling disconnect")
-    Log:error("[IReceptacles::IReceptacles] Error: " .. void)
-  else
-      --SINCRONIZA COM AS REPLICAS SOMENTE SE DESCONECTOU COM SUCESSO
+  local status = oil.pcall(AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect, self, connId)
+  if status then
       self:updateConnectionState("disconnect", { connId = connId })
+  else
+      Log:error("[disconnect] Não foi possível desconectar receptaculo.")
   end
 end
 
@@ -1563,24 +1593,30 @@ function startup(self)
                 -- Recupera faceta IReceptacles da replica remota
                 local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
                 if ok then
-                     local orb = Openbus:getORB()
-                     remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
-                           "IDL:scs/core/IReceptacles:1.0")
-                     --Recupera conexoes do Servico de Registro
-                     local status, conns = oil.pcall(remoteACSRecepFacet.getConnections,
+                   local orb = Openbus:getORB()
+                   remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
+                         "IDL:scs/core/IReceptacles:1.0")
+                   --Recupera conexoes do Servico de Registro
+                   local status, conns = oil.pcall(remoteACSRecepFacet.getConnections,
                                                      remoteACSRecepFacet,
                                                      "RegistryServiceReceptacle")
-                     if not status then
-                       Log:warn("Nao foi possivel obter o Serviço [IRegistryService_v" .. Utils.OB_VERSION .. "]: " .. conns[1])
-                       return
-                     elseif conns[1] then
-                        local recepIC = conns[1].objref
-                        recepIC = orb:narrow(recepIC, "IDL:scs/core/IComponent:1.0")
-                        --Connecta localmente direto na AdaptiveReceptacle
-                        --para nao ativar atualizacao nas replicas
-                        local cid = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
-                        Log:faulttolerance("Conexao do Servico de Registro recuperado e conectado com id: " .. cid)
-                     end
+                   if not status then
+                     Log:warn("Nao foi possivel obter o Serviço [IRegistryService_v" .. Utils.OB_VERSION .. "]: " .. conns[1])
+                     return
+                   elseif conns[1] then
+                      for connId,conn in pairs(conns) do
+                         if type (conn) == "table" then
+                            local recepIC = conn.objref
+                            recepIC = orb:narrow(recepIC, "IDL:scs/core/IComponent:1.0")
+                            if recepIC then
+                            --Connecta localmente direto na AdaptiveReceptacle
+                            --para nao ativar atualizacao nas replicas
+                               local cid = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
+                               Log:faulttolerance("Conexao do Servico de Registro recuperado e conectado com id: " .. cid)
+                            end
+                          end
+                      end
+                   end
                 end
           end
       end

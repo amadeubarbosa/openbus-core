@@ -128,7 +128,7 @@ function RSFacet:addOffer(offerEntry)
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
     "IAccessControlService_v" .. Utils.OB_VERSION,
     Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-  if status then
+  if status and acsFacet then
     acsFacet:addCredentialToObserver(self.observerId, credential.identifier)
     Log:service("Adicionada credencial no observador")
   else
@@ -397,7 +397,7 @@ function RSFacet:rawUnregister(identifier, credential)
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
       "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-    if status then
+    if status and acsFacet then
       acsFacet:removeCredentialFromObserver(self.observerId,
         credential.identifier)
     else
@@ -939,16 +939,6 @@ function startup(self)
       conns[1])
     return false
   end
-
-  -- conecta o controle de acesso:   [RS]--( 0--[ACS]
-  local success, conId =
-    oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
-              "AccessControlServiceReceptacle", acsIComp)
-  if not success then
-    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
-    Log:error(conId)
-    error{"IDL:SCS/StartupFailed:1.0"}
- end
 
  -- registra um observador de credenciais
  local observer = {
