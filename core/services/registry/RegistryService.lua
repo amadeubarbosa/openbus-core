@@ -404,7 +404,6 @@ function RSFacet:rawUnregister(identifier, credential)
       -- erro ja foi logado, so adiciona que nao pode remover
       Log:error("Não foi possível remover credencial")
     end
-    acsFacet:removeCredentialFromObserver(self.observerId,credential.identifier)
   end
 
   self.offersDB:delete(offerEntry)
@@ -681,7 +680,7 @@ function RSFacet:expired()
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
     "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-  if not status then
+  if not status or not acsFacet then
     --erro já joi logado
     return nil
   end
@@ -1011,7 +1010,7 @@ function shutdown(self)
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
       "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-    if not status then
+    if not status or acsFacet then
       -- erro ja foi logado
       error{"IDL:SCS/ShutdownFailed:1.0"}
     end
