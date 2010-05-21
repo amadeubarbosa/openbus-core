@@ -75,7 +75,7 @@ function SessionServiceComponent:startup()
 
   -- Cadastra callback para LeaseExpired
   Openbus:setLeaseExpiredCallback( self )
-  
+
   -- conecta o controle de acesso:   [SS]--( 0--[ACS]
   local acsIComp = Openbus:getACSIComponent()
   local success, conId =
@@ -94,9 +94,9 @@ function SessionServiceComponent:startup()
   self.serviceOffer = {
     member = self.context.IComponent,
     properties = {
-      { 
+      {
         name  = "facets",
-        value = {Utils.SESSION_SERVICE_INTERFACE}, 
+        value = {Utils.SESSION_SERVICE_INTERFACE},
       },
     },
   }
@@ -109,7 +109,7 @@ function SessionServiceComponent:startup()
         Log:error(string.format("Faceta '%s' não autorizada", facet))
       end
     else
-      Log:error(string.format("Erro ao registrar oferta do servico de sessao: %s\n", 
+      Log:error(string.format("Erro ao registrar oferta do servico de sessao: %s\n",
         identifier[1]))
     end
     Openbus:disconnect()
@@ -150,7 +150,7 @@ function SessionServiceComponent:expired()
         Log:error(string.format("Facet '%s' não autorizada", facet))
       end
     else
-      Log:error(string.format("Erro ao registrar oferta do servico de sessao: %s\n", 
+      Log:error(string.format("Erro ao registrar oferta do servico de sessao: %s\n",
         self.registryIdentifier[1]))
     end
     self.registryIdentifier = nil
@@ -182,16 +182,16 @@ function SessionServiceComponent:shutdown()
   end
 
   if self.sessionService.observerId then
-    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle, 
-  					 		  orb, 
-                         	  self.context.IComponent, 
-                         	  "AccessControlServiceReceptacle", 
-                         	  "IAccessControlService_v" .. Utils.OB_VERSION, 
-                         	  Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-    if not status then
-	    -- erro ja foi logado, só retorna
-	    return nil
-    end     
+    local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
+                  orb,
+                            self.context.IComponent,
+                            "AccessControlServiceReceptacle",
+                            "IAccessControlService_v" .. Utils.OB_VERSION,
+                            Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+    if not status or not acsFacet then
+      -- erro ja foi logado, só retorna
+      return nil
+    end
     acsFacet:removeObserver(self.sessionService.observerId)
     self.sessionService.observerId = nil
   end
