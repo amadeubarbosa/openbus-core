@@ -10,7 +10,7 @@ local print = print
 
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
-
+local Utils = require "openbus.util.Utils"
 local oil = require "oil"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")

@@ -8,6 +8,7 @@ local tonumber = tonumber
 local tostring = tostring
 local print = print
 
+local Utils = require "openbus.util.Utils"
 local Log = require "openbus.util.Log"
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
