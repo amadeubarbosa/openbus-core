@@ -143,7 +143,7 @@ local options = {
 -- mínimos que o comando espera. Se forem passados mais parâmetros que
 -- o necessário, a ferramenta ignora.
 --
--- O casamento é feito na seqüência que ele é descrito. A ferramenta retorna 
+-- O casamento é feito na seqüência que ele é descrito. A ferramenta retorna
 -- ao encontrar a primeira forma válida.
 --
 -- Se a variável 'n' for 1, isso indica que o próprio comando precisa
@@ -151,7 +151,7 @@ local options = {
 -- comando é da forma '--command'.
 --
 -- O campo 'params' indica o nome dos parâmetros esperados e se eles têm valor
--- ou não, isto é, se eles seguem a forma do comando descrito acima: 
+-- ou não, isto é, se eles seguem a forma do comando descrito acima:
 --   --parameter=value
 --   --parameter
 --
@@ -329,7 +329,7 @@ end
 --
 -- @return Tabela com os campos 'command' contendo o nome do comando
 -- e 'params' os parâmetros vindos da linha de comando.
--- 
+--
 local function parse(argv)
   local params, msg, succ, cmdname
   params, msg = parseline(argv)
@@ -419,7 +419,7 @@ end
 -- @param sizes Array com o tamanho das colunas. Ele também indica quantas
 -- colunas devem ser impressas.
 -- @param ... Dados a serem impressos em cada coluna.
--- 
+--
 local function dataline(sizes, ...)
   local l = {}
   for k, size in ipairs(sizes) do
@@ -587,7 +587,7 @@ handlers["list-system"] = function(cmd)
     end
     -- Ordena e monta o formulário
     table.sort(systems, function(a, b)
-      return lower(a.id) < lower(b.id) 
+      return lower(a.id) < lower(b.id)
     end)
     header(titles, sizes)
     for k, system in ipairs(systems) do
@@ -605,14 +605,14 @@ end
 handlers["set-system"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = acsmgm.__try:setSystemDescription(id, 
+  local succ, err = acsmgm.__try:setSystemDescription(id,
     cmd.params.description)
   if succ then
     print(string.format("[INFO] Sistema '%s' atualizado com sucesso", id))
   elseif err[1] == ACS_SystemNonExistentException then
     print(string.format("[ERRO] Sistema '%s' não cadastrado", id))
   else
-    print(string.format("[ERRO] Falha ao atualizar sistema '%s': %s", id, 
+    print(string.format("[ERRO] Falha ao atualizar sistema '%s': %s", id,
       err[1]))
   end
 end
@@ -710,7 +710,7 @@ handlers["set-deployment"] = function(cmd)
     end
   end
   if cmd.params.description then
-    local succ, err = acsmgm.__try:setSystemDeploymentDescription(id, 
+    local succ, err = acsmgm.__try:setSystemDeploymentDescription(id,
       cmd.params.description)
     if succ then
       printf("[INFO] Descrição da imlantação '%s' atualizada com sucesso", id)
@@ -839,7 +839,7 @@ handlers["set-user"] = function(cmd)
   elseif err[1] == ACS_UserNonExistentException then
     print(string.format("[ERRO] Usuário '%s' não cadastrado", id))
   else
-    print(string.format("[ERRO] Falha ao atualizar usuário '%s': %s", id, 
+    print(string.format("[ERRO] Falha ao atualizar usuário '%s': %s", id,
       err[1]))
   end
 end
@@ -997,7 +997,7 @@ handlers["set-authorization"] = function(cmd)
   elseif err[1] == RS_InterfaceIdentifierNonExistentException then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
   elseif err[1] == RS_AuthorizationNonExistentException then
-    printf("[ERRO] Implantação '%s' não possui autorização para '%s'", 
+    printf("[ERRO] Implantação '%s' não possui autorização para '%s'",
       id, iface)
   elseif err[1] == RS_InvalidRegularExpressionException then
     printf("[ERRO] Expressão regular inválida: %s", iface)
@@ -1016,7 +1016,7 @@ handlers["del-authorization"] = function(cmd)
   local id = cmd.params[cmd.name]
   local succ, err = rsmgm.__try:removeAuthorization(id)
   if succ then
-    printf("[INFO] Autorizações de '%s' removidas com sucesso", 
+    printf("[INFO] Autorizações de '%s' removidas com sucesso",
       cmd.params[cmd.name])
   elseif err[1] == RS_AuthorizationNonExistentException then
     printf("[ERRO] Implantação '%s' não possui autorizações", id)
@@ -1093,7 +1093,7 @@ handlers["list-authorization"] = function(cmd)
         table.sort(auth.authorized, function(a, b)
           return lower(a) < lower(b)
         end)
-        dataline(sizes, string.format("%.3d", k), auth.id, type, 
+        dataline(sizes, string.format("%.3d", k), auth.id, type,
           auth.authorized[1])
         local count = 2
         local total = #auth.authorized
@@ -1170,7 +1170,7 @@ handlers["list-offer"] = function(cmd)
       end
     end
     hdiv(sizes)
-  end  
+  end
 end
 
 --
@@ -1230,7 +1230,7 @@ end
 
 ---
 -- Cadastra um usuário
--- 
+--
 -- @param system Tabela com os campos 'id' e 'name'
 --
 function User(user)
@@ -1249,7 +1249,7 @@ end
 
 ---
 -- Cadastra um sistema
--- 
+--
 -- @param system Tabela com os campos 'id' e 'description'
 --
 function System(system)
@@ -1311,7 +1311,7 @@ end
 -- e 'interfaces', array de repID de interfaces para autorizar.
 --
 function Grant(auth)
-  if not (type(auth) == "table" and type(auth.id) == "string" and 
+  if not (type(auth) == "table" and type(auth.id) == "string" and
     type(auth.interfaces) == "table" and (type(auth.strict) == "nil" or
     type(auth.strict) == "boolean"))
   then
@@ -1337,7 +1337,7 @@ end
 -- e 'interfaces', array de repID de interfaces para revogar.
 --
 function Revoke(auth)
-  if not (type(auth) == "table" and type(auth.id) == "string" and 
+  if not (type(auth) == "table" and type(auth.id) == "string" and
      type(auth.interfaces) == "table")
   then
     argerror()
