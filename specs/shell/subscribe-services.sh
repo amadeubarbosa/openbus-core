@@ -11,13 +11,17 @@ showLog()
   echo "=============================================================================="
 }
 
-LOGIN=$1
-OPENBUS_PATH=$2
+run_management()
+{
+  SCRIPT_PARAM="--script="$1
+  ${OPENBUS_HOME}/core/bin/run_management.sh ${LOGIN_PARAM} ${ACS_HOST_PARAM} \
+    ${ACS_PORT_PARAM} ${SCRIPT_PARAM} --verbose=0
+}
 
-if [ -z "${LOGIN}" ]; then
-  echo "[ERRO] Login do administrador não foi definido"
-  exit 1
-fi
+LOGIN=$1
+ACS_HOST=$2
+ACS_PORT=$3
+OPENBUS_PATH=$4
 
 if [ -n "${OPENBUS_PATH}" ]; then
   OPENBUS_HOME=${OPENBUS_PATH}
@@ -26,7 +30,22 @@ fi
 if [ -z "$OPENBUS_HOME" ]; then
   echo "[ERRO] Variavel OPENBUS_HOME não foi definida"
   exit 1
-fi  
+fi
+
+if [ -z "${LOGIN}" ]; then
+  echo "[ERRO] Login do administrador não foi definido"
+  exit 1
+fi
+
+LOGIN_PARAM="--login="${LOGIN}
+
+if [ -n "${ACS_HOST}" ]; then
+  ACS_HOST_PARAM="--acs-host="${ACS_HOST}
+fi
+
+if [ -n "${ACS_PORT}" ]; then
+  ACS_PORT_PARAM="--acs-port="${ACS_PORT}
+fi
 
 echo "Iniciando Serviço de Acesso"
 ACSOUTFILE=acs.out
@@ -44,8 +63,8 @@ fi
 
 # Cadastra o ACS e o RS
 cd ${OPENBUS_HOME}/specs/management
-${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=access_control_service.mgt
-${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=registry_service.mgt
+run_management access_control_service.mgt
+run_management registry_service.mgt
 
 
 
@@ -67,11 +86,11 @@ fi
 
 #Cadastra o SS
 cd ${OPENBUS_HOME}/specs/management
-${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=session_service.mgt
+run_management session_service.mgt
 
 #Cadastrar os Monitores
 cd ${OPENBUS_HOME}/specs/management
-${OPENBUS_HOME}/core/bin/run_management.sh --login=${LOGIN} --script=monitors.mgt
+run_management monitors.mgt
 
 #Finaliza os serviços
 kill -9 ${RGSPID}
