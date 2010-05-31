@@ -8,7 +8,7 @@ local assert = assert
 
 local oil = require "oil"
 local orb = oil.orb
-
+local Utils = require "openbus.util.Utils"
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local OilUtilities = require "openbus.util.OilUtilities"
@@ -188,7 +188,7 @@ function FTACSMonitorFacet:monitor()
             os.exit(1)
           end
         else
-          Log:faulttolerance("[Monitor SCA] N√£o conseguiu levantar ACS de primeira porque porta est√° bloqueada.")
+          Log:faulttolerance("[Monitor SCA] N„o conseguiu levantar ACS de primeira possivelmente porque porta est· bloqueada.")
           Log:faulttolerance("[Monitor SCA] Espera " .. tostring(timeOut.monitor.sleep) .." segundos......")
           oil.sleep(timeOut.monitor.sleep)
         end

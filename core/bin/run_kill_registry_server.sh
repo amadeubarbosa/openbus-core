@@ -1,3 +1,8 @@
 #!/bin/ksh
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${OPENBUS_HOME}/core/services/registry/KillRegistryService.lua $1
+if [ -z "${OPENBUS_HOME}" ] ; then
+  echo "[ERRO] Variável de ambiente OPENBUS_HOME não definida"
+  exit 1
+fi
+
+${OPENBUS_HOME}/core/bin/servicelauncher ${OPENBUS_HOME}/core/services/registry/KillRegistryService.lua "$@"
