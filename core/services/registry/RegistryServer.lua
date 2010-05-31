@@ -133,7 +133,7 @@ facetDescriptions.IManagement.key             = Utils.MANAGEMENT_KEY
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
-facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
+facetDescriptions.IReceptacles.class          = RegistryService.RGSReceptacleFacet
 
 -- Receptacle Descriptions
 local receptacleDescs = {}
