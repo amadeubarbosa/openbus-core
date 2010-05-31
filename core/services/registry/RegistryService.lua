@@ -25,6 +25,7 @@ local OffersDB = require "core.services.registry.OffersDB"
 local Openbus  = require "openbus.Openbus"
 local FaultTolerantService =
   require "core.services.faulttolerance.FaultTolerantService"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 local Log = require "openbus.util.Log"
 local oop = require "loop.simple"
@@ -733,6 +734,90 @@ function RSFacet:generateIdentifier()
 end
 
 --------------------------------------------------------------------------------
+-- Faceta IReceptacle
+--------------------------------------------------------------------------------
+
+RGSReceptacleFacet = oop.class({}, AdaptiveReceptacle.AdaptiveReceptacleFacet)
+
+function RGSReceptacleFacet:connect(receptacle, object)
+ self.context.IManagement:checkPermission()
+ local connId = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(self,
+                          receptacle,
+                          object) -- calling inherited method
+  if connId then
+    --SINCRONIZA COM AS REPLICAS SOMENTE SE CONECTOU COM SUCESSO
+    self:updateConnectionState("connect", { receptacle = receptacle, object = object })
+  end
+  return connId
+end
+
+function RGSReceptacleFacet:disconnect(connId)
+  self.context.IManagement:checkPermission()
+  -- calling inherited method
+  local status = oil.pcall(AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect, self, connId)
+  if status then
+      self:updateConnectionState("disconnect", { connId = connId })
+  else
+      Log:error("[disconnect] Não foi possível desconectar receptaculo.")
+  end
+end
+
+function RGSReceptacleFacet:updateConnectionState(command, data)
+    local credential = Openbus:getInterceptedCredential()
+    if credential.owner == "RegistryService" or
+       credential.delegate == "RegistryService" then
+       --para nao entrar em loop
+         return
+    end
+    Log:faulttolerance("[updateConnectionState] Atualiza estado do RGS quanto ao [".. command .."].")
+    local ftFacet = self.context.IFaultTolerantService
+    if not ftFacet.ftconfig then
+        Log:faulttolerance("[updateConnectionState] Faceta precisa ser inicializada antes de ser chamada.")
+        Log:warn("[updateConnectionState] não foi possível atualizar estado quanto ao [".. command .."]")
+        return
+    end
+
+    if # ftFacet.ftconfig.hosts.RS <= 1 then
+        Log:faulttolerance("[updateConnectionState] Nenhuma replica para atualizar estado quanto ao [".. command .."].")
+        return
+    end
+
+    local i = 1
+    local orb = Openbus:getORB()
+    repeat
+        if ftFacet.ftconfig.hosts.RS[i] ~= ftFacet.rsReference then
+            local ret, succ, remoteRS = oil.pcall(Utils.fetchService,
+                                                orb,
+                                                ftFacet.ftconfig.hosts.RS[i],
+                                                Utils.REGISTRY_SERVICE_INTERFACE)
+
+            if succ then
+            --encontrou outra replica
+                Log:faulttolerance("[updateConnectionState] Atualizando replica ".. ftFacet.ftconfig.hosts.RS[i] ..".")
+                local remoteRSIC = remoteRS:_component()
+                remoteRSIC = orb:narrow(remoteRSIC,"IDL:scs/core/IComponent:1.0")
+                 -- Recupera faceta IReceptacles da replica remota
+                local ok, remoteRSRecepFacet =  oil.pcall(remoteRSIC.getFacetByName, remoteRSIC, "IReceptacles")
+                if ok then
+                     remoteRSRecepFacet = orb:narrow(remoteRSRecepFacet,
+                           "IDL:scs/core/IReceptacles:1.0")
+                     if command == "connect" then
+                         oil.newthread(function()
+                                    local succ, ret = oil.pcall(remoteRSRecepFacet.connect, remoteRSRecepFacet, data.receptacle, data.object)
+                                    end)
+                     elseif command == "disconnect" then
+                         oil.newthread(function()
+                                    local succ, ret = oil.pcall(remoteRSRecepFacet.disconnect, remoteRSRecepFacet, data.connId)
+                                    end)
+                     end
+                end
+            end
+        end
+        i = i + 1
+    until i > # ftFacet.ftconfig.hosts.RS
+    Log:faulttolerance("[updateConnectionState] Replicas atualizadas quanto ao [".. command .."].")
+end
+--------------------------------------------------------------------------------
 -- Faceta IFaultTolerantService
 --------------------------------------------------------------------------------
 
@@ -929,17 +1014,7 @@ function startup(self)
   -- obtém a referência para o serviço de Controle de Acesso
   local accessControlService = Openbus:getAccessControlService()
 
-  -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
   local acsIComp = Openbus:getACSIComponent()
-  local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
-  acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
-  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
-    "RegistryServiceReceptacle", self.context.IComponent )
-  if not status then
-    Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
-      conns[1])
-    return false
-  end
 
  -- registra um observador de credenciais
  local observer = {
@@ -989,6 +1064,18 @@ function startup(self)
  rs.started = true
 
  self.context.IFaultTolerantService:init()
+
+ -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
+ local acsIComp = Openbus:getACSIComponent()
+ local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
+ acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
+ local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
+   "RegistryServiceReceptacle", self.context.IComponent )
+ if not status then
+   Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
+     conns[1])
+   return false
+ end
 
  Log:registry("serviço de registro iniciado")
 end

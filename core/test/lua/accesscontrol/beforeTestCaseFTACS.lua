@@ -17,8 +17,8 @@ return function (self)
 
       -- Login do administrador
       self.login = {}
-      self.login.user = "tester-" .. ltime
-      self.login.password = "tester-" .. ltime
+      self.login.user = "tester" -- .. ltime
+      self.login.password = "tester" -- .. ltime
 
       self.acsCertFile  = "AccessControlService.crt"
 

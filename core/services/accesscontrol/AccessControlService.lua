@@ -1313,6 +1313,7 @@ end
 ACSReceptacleFacet = oop.class({}, AdaptiveReceptacle.AdaptiveReceptacleFacet)
 
 function ACSReceptacleFacet:connect(receptacle, object)
+ self.context.IManagement:checkPermission()
  local connId = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(self,
                           receptacle,
                           object) -- calling inherited method
@@ -1348,7 +1349,10 @@ function ACSReceptacleFacet:connect(receptacle, object)
   return connId
 end
 
+-- Disconnect nao faz a desconexao de volta: [RS]--( 0--[ACS] porque nao tem a
+-- referencia para o serviço que está se desconectando
 function ACSReceptacleFacet:disconnect(connId)
+  self.context.IManagement:checkPermission()
   -- calling inherited method
   local status = oil.pcall(AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect, self, connId)
   if status then
@@ -1616,9 +1620,11 @@ function startup(self)
   for _, name in ipairs(config.administrators) do
      mgm.admins[name] = true
   end
-  -- ACS e monitor são sempre administrador
+  -- ACS, seu monitor, RGS e SS são sempre administradores
   mgm.admins.AccessControlService = true
   mgm.admins.ACSMonitor = true
+  mgm.admins.RegistryService = true
+  mgm.admins.SessionService = true
 
   acs.lease = config.lease
 
