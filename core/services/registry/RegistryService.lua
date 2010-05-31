@@ -759,6 +759,8 @@ function FaultToleranceFacet:init()
 end
 
 function FaultToleranceFacet:updateStatus(params)
+  self.context.IManagement:checkPermission()
+
   --Atualiza estado das ofertas
   Log:faulttolerance("[updateStatus] Atualiza estado das ofertas.")
   if not self.ftconfig then

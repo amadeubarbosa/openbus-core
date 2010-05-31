@@ -7,6 +7,7 @@ local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local oil = require "oil"
 local Utils = require "openbus.util.Utils"
+local Utils = require "openbus.util.Utils"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
@@ -26,14 +27,40 @@ end
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 
-local hostPort = arg[1]
-if hostPort == nil then
-   Log:error("É necessario passar o numero da porta.\n")
-    os.exit(1)
-end
-RegistryServerConfiguration.registryServerHostPort = tonumber(hostPort)
+-- Parsing arguments
+local usage_msg = [[
+  --help                   : show this help
+  --verbose (v)          : turn ON the VERBOSE mode (show the system commands)
+  --port=<port number>     : defines the port of the service to to inject fault (default=]]
+                .. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
+ NOTES:
+  The prefix '--' is optional in all options.
+  So '--help' or '-help' or yet 'help' all are the same option.]]
+local arguments = Utils.parse_args(arg,usage_msg,true)
 
-local hostAdd = RegistryServerConfiguration.registryServerHostName..":"..hostPort
+if arguments.verbose == "" or arguments.v == "" then
+  oil.verbose:level(5)
+  Log:level(5)
+else
+  if RegistryServerConfiguration.oilVerboseLevel then
+      oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
+  end
+  -- Define os níveis de verbose para o openbus e para o oil
+  if RegistryServerConfiguration.logLevel then
+    Log:level(RegistryServerConfiguration.logLevel)
+  else
+    Log:level(3)
+  end
+end
+
+if arguments.port then
+  RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
+else
+  Log:warn("Será usada porta padrão do Serviço de Registro")
+end
+
+local hostAdd = RegistryServerConfiguration.registryServerHostName..":"
+                ..RegistryServerConfiguration.registryServerHostPort
 
 -- Inicializa o ORB
 local orb = oil.init {
@@ -72,9 +99,12 @@ function main()
       DATA_DIR.."/"..RegistryServerConfiguration.monitorPrivateKeyFile,
       DATA_DIR.."/"..RegistryServerConfiguration.accessControlServiceCertificateFile)
 
-  ftregistryService:setStatus(false)
-
-  Log:faulttolerance("Injetou falha no Servico de Registro -- fim.")
+  if Openbus:isConnected() then
+     ftregistryService:setStatus(false)
+     Log:faulttolerance("Injetou falha no Servico de Registro -- fim.")
+  else
+     Log:faulttolerance("Erro ao se logar no barramento.")
+  end
 
   os.exit(0)
 

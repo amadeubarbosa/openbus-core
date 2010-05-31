@@ -31,22 +31,40 @@ end
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
 
--- Seta os níveis de verbose para o openbus e para o oil
-if RegistryServerConfiguration.logLevel then
-  Log:level(RegistryServerConfiguration.logLevel)
-end
-if RegistryServerConfiguration.oilVerboseLevel then
-  oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
+-- Parsing arguments
+local usage_msg = [[
+  --help                   : show this help
+    --verbose (v)          : turn ON the VERBOSE mode (show the system commands)
+  --port=<port number>     : defines the port of the service to be monitored (default=]]
+                .. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
+ NOTES:
+  The prefix '--' is optional in all options.
+  So '--help' or '-help' or yet 'help' all are the same option.]]
+local arguments = Utils.parse_args(arg,usage_msg,true)
+
+if arguments.verbose == "" or arguments.v == "" then
+  oil.verbose:level(5)
+  Log:level(5)
+else
+  if RegistryServerConfiguration.oilVerboseLevel then
+      oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
+  end
+  -- Define os níveis de verbose para o openbus e para o oil
+  if RegistryServerConfiguration.logLevel then
+    Log:level(RegistryServerConfiguration.logLevel)
+  else
+    Log:level(3)
+  end
 end
 
-local hostPort = arg[1]
-if hostPort == nil then
-   Log:error("É necessario passar o número da porta.\n")
-    os.exit(1)
+if arguments.port then
+  RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
+else
+  Log:warn("Será usada porta padrão do Serviço de Registro")
 end
-RegistryServerConfiguration.registryServerHostPort = tonumber(hostPort)
 
-local hostAdd = RegistryServerConfiguration.registryServerHostName..":"..hostPort
+local hostAdd = RegistryServerConfiguration.registryServerHostName..":"
+                ..RegistryServerConfiguration.registryServerHostPort
 
 
 -- Inicializa o ORB

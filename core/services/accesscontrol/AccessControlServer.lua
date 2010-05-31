@@ -5,13 +5,12 @@
 ---
 local string = string
 local oil = require "oil"
-oil.verbose:level(3)
+
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local Utils = require "openbus.util.Utils"
 local Viewer = require "loop.debug.Viewer"
--- Inicialização do nível de verbose do openbus.
-Log:level(1)
+
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
@@ -33,7 +32,7 @@ local iconfig = assert(loadfile(DATA_DIR ..
 -- Parsing arguments
 local usage_msg = [[
     --help                   : show this help
-    --verbose                : turn ON the VERBOSE mode (show the system commands)
+    --verbose (v)            : turn ON the VERBOSE mode (show the system commands)
     --port=<port number>     : defines the service port (default=]]
                                 .. tostring(AccessControlServerConfiguration.hostPort) .. [[)
  NOTES:
@@ -41,7 +40,7 @@ local usage_msg = [[
     So '--help' or '-help' or yet 'help' all are the same option.]]
 local arguments = Utils.parse_args(arg,usage_msg,true)
 
-if arguments.verbose == "" then
+if arguments.verbose == "" or arguments.v == "" then
     oil.verbose:level(5)
     Log:level(3)
 else
@@ -51,6 +50,8 @@ else
     -- Define os níveis de verbose para o OpenBus e para o OiL.
     if AccessControlServerConfiguration.logLevel then
         Log:level(AccessControlServerConfiguration.logLevel)
+    else
+        Log:level(1)
     end
 end
 

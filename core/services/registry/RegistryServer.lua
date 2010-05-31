@@ -29,7 +29,7 @@ local iConfig =
 -- Parsing arguments
 local usage_msg = [[
   --help                   : show this help
-  --verbose                : turn ON the VERBOSE mode (show the system commands)
+  --verbose  (v)           : turn ON the VERBOSE mode (show the system commands)
   --port=<port number>     : defines the service port (default=]]
                 .. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
  NOTES:
@@ -37,7 +37,7 @@ local usage_msg = [[
   So '--help' or '-help' or yet 'help' all are the same option.]]
 local arguments = Utils.parse_args(arg,usage_msg,true)
 
-if arguments.verbose == "" then
+if arguments.verbose == "" or arguments.v == "" then
   oil.verbose:level(5)
   Log:level(5)
 else
