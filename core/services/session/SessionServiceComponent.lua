@@ -115,7 +115,35 @@ function SessionServiceComponent:startup()
     Openbus:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
+
+  self.serviceOfferPrev = {
+    member = self.context.IComponent,
+    properties = {
+      {
+        name  = "facets",
+        value = {Utils.SESSION_SERVICE_INTERFACE_V1_04},
+      },
+    },
+  }
+
+
+  local success, identifierPrev = registryService.__try:register(self.serviceOfferPrev)
+  if not success then
+    if identifierPrev[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+      Log:error("Erro ao registrar oferta do serviço de sessão da versão anterior")
+      for _, facet in ipairs(identifierPrev.facets) do
+        Log:error(string.format("Faceta '%s' não autorizada", facet))
+      end
+    else
+      Log:error(string.format("Erro ao registrar oferta do servico de sessao da versão anterior: %s\n",
+        identifierPrev[1]))
+    end
+    Openbus:disconnect()
+    error{"IDL:SCS/StartupFailed:1.0"}
+  end
+
   self.registryIdentifier = identifier
+  self.registryIdentifierPrev = identifierPrev
 
   self.started = true
   Log:session("Serviço de sessão iniciado")
@@ -138,6 +166,7 @@ function SessionServiceComponent:expired()
   local registryService = Openbus:getRegistryService()
   if not registryService then
     self.registryIdentifier = nil
+    self.registryIdentifierPrev = nil
     Log:error("Servico de registro nao encontrado.\n")
     return
   end
@@ -154,6 +183,21 @@ function SessionServiceComponent:expired()
         self.registryIdentifier[1]))
     end
     self.registryIdentifier = nil
+    return
+  end
+
+  success, self.registryIdentifierPrev = registryService.__try:register(self.serviceOfferPrev)
+  if not success then
+    if self.registryIdentifierPrev[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+      Log:error("Erro ao registrar oferta do serviço de sessão da versão anterior")
+      for _, facet in ipairs(self.registryIdentifierPrev.facets) do
+        Log:error(string.format("Facet '%s' não autorizada", facet))
+      end
+    else
+      Log:error(string.format("Erro ao registrar oferta do servico de sessao da versão anterior: %s\n",
+        self.registryIdentifierPrev[1]))
+    end
+    self.registryIdentifierPrev = nil
     return
   end
 end
@@ -179,6 +223,16 @@ function SessionServiceComponent:shutdown()
       registryService:unregister(self.registryIdentifier)
     end
     self.registryIdentifier = nil
+  end
+
+  if self.registryIdentifierPrev then
+    local registryService = Openbus:getRegistryService()
+    if not registryService then
+      Log:error("Serviço de registro não encontrado")
+    else
+      registryService:unregister(self.registryIdentifierPrev)
+    end
+    self.registryIdentifierPrev = nil
   end
 
   if self.sessionService.observerId then
