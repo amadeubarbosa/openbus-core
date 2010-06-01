@@ -435,6 +435,17 @@ packages = {
       ["management"] = "demo/hello",
     },
   },
+  { name = "openbus-demo-eventsink-lua",
+    directory = PRODAPP .."/sdk-lua/demo/eventSink",
+    dev_files = {
+      ["client.lua"] = "demo/eventSink/lua",
+      ["client.sh"] = "demo/eventSink/lua",
+      ["server.lua"] = "demo/eventSink/lua",
+      ["server.sh"] = "demo/eventSink/lua",
+      ["EventSink.properties"] = "demo/eventSink/lua",
+      ["management"] = "demo/eventSink",
+    },
+  },
   { name = "openbus-demo-delegate-lua",
     directory = PRODAPP .."/sdk-lua/demo/delegate",
     dev_files = {
@@ -559,6 +570,7 @@ packages = {
     },
   },
   -- MICO related packages
+--[[
   { name = "scsmico",
     build = {
       type = "tecmake",
@@ -658,6 +670,7 @@ packages = {
       ["runtests"] = "test/mico/",
     },
   },
+--]]
   -- Java related packages  
   { name = "scs-java-ant",
     build = {
@@ -737,6 +750,22 @@ packages = {
       ["management"] = "demo/hello",
     },
   },
+  { name = "openbus-demo-eventsink-java",
+    build = {
+      type = "maven",
+      src = PRODAPP .."/sdk-java/demo/eventSink",
+    },
+    install_files = {
+      ["target/openbus-demo-eventsink-*.jar"] = "demo/eventSink",
+      ["target/dependency/*.jar"] = "libpath/java",
+    },
+    dev_files = {
+      ["resources"] = "demo/eventSink",
+      ["src"] = "demo/eventSink",
+      ["idl"] = "demo/eventSink",
+      ["management"] = "demo/eventSink",
+    },
+  },  
   { name = "openbus-demo-delegate-java",
     build = {
       type = "maven",
