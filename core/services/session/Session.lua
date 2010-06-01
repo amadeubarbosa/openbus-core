@@ -21,6 +21,7 @@ local orb = oil.orb
 module "core.services.session.Session"
 
 local eventSinkInterface = Utils.SESSION_ES_INTERFACE
+local eventSinkInterfacePrev = Utils.SESSION_ES_INTERFACE_V1_04
 
 --------------------------------------------------------------------------------
 -- Faceta ISession
@@ -67,12 +68,19 @@ function Session:addMember(member)
   Log:session("Membro "..memberName.." adicionado à sessão "..self.identifier)
   -- Verifica se o membro recebe eventos
   local eventSink = member:getFacet(eventSinkInterface)
+  local eventSinkPrev = member:getFacet(eventSinkInterfacePrev)
   if eventSink then
     Log:session("Membro "..memberName.." receberá eventos")
     self.context.SessionEventSink.eventSinks[info.memberId] =
       orb:narrow(eventSink, eventSinkInterface)
   else
-    Log:session("Membro "..memberName.." não receberá eventos")
+    if eventSinkPrev then
+      Log:session("Membro "..memberName.." receberá eventos da versão " .. Utils.OB_PREV)
+      self.context.SessionEventSink.eventSinksPrev[info.memberId] =
+        orb:narrow(eventSinkPrev, eventSinkInterfacePrev)
+    else
+      Log:session("Membro "..memberName.." não receberá eventos")
+    end
   end
   return info.memberId
 end
@@ -97,6 +105,7 @@ function Session:removeMember(identifier)
   self.sessionMembers[info.memberId] = nil
   self.membersByCredential[info.credentialId][info.memberId] = nil
   self.context.SessionEventSink.eventSinks[info.memberId] = nil
+  self.context.SessionEventSink.eventSinksPrev[info.memberId] = nil
   if not (next(self.membersByCredential[info.credentialId])) then
     self.membersByCredential[info.credentialId] = nil
     self.sessionService:unObserve(info.credentialId, self)
@@ -114,6 +123,7 @@ function Session:credentialWasDeletedById(credentialId)
   for memberId in pairs(members) do
     self.sessionMembers[memberId] = nil
     self.context.SessionEventSink.eventSinks[memberId] = nil
+    self.context.SessionEventSink.eventSinksPrev[memberId] = nil
   end
   self.membersByCredential[credentialId] = nil
 end
@@ -147,7 +157,7 @@ end
 SessionEventSink = oop.class{}
 
 function SessionEventSink:__init()
-  return oop.rawnew(self, {eventSinks = {}})
+  return oop.rawnew(self, {eventSinks = {}, eventSinksPrev = {}})
 end
 
 ---
@@ -160,7 +170,13 @@ function SessionEventSink:push(sender, event)
   for memberId, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.push, sink, sender, event)
     if not result then
-      Log:session("Erro ao enviar evento para membro de sessão: "..errorMsg)
+      Log:session("Erro ao enviar evento para membro de sessão " .. Utils.OB_VERSION .. ": " .. errorMsg)
+    end
+  end
+  for memberId, sink in pairs(self.eventSinksPrev) do
+    local result, errorMsg = oil.pcall(sink.push, sink, event)
+    if not result then
+      Log:session("Erro ao enviar evento para membro de sessão " .. Utils.OB_PREV .. ": "..errorMsg)
     end
   end
 end
@@ -173,7 +189,13 @@ function SessionEventSink:disconnect(sender)
   for memberId, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.disconnect, sink, sender)
     if not result then
-      Log:session("Erro ao tentar desconectar membro de sessão: "..errorMsg)
+      Log:session("Erro ao tentar desconectar membro de sessão " .. Utils.OB_VERSION .. ": "..errorMsg)
+    end
+  end
+  for memberId, sink in pairs(self.eventSinksPrev) do
+    local result, errorMsg = oil.pcall(sink.disconnect, sink)
+    if not result then
+      Log:session("Erro ao tentar desconectar membro de sessão " .. Utils.OB_PREV .. ": "..errorMsg)
     end
   end
 end
