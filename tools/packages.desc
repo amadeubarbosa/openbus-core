@@ -341,6 +341,20 @@ packages = {
 			["../idl"] = "demo/hello",
 	  },
 	},
+	{ name = "openbus-demo-eventsink-lua",
+	  build = {
+	  	type = "tecmake",
+	  	src = SVNDIR .."/demo/eventSink/lua",
+	  	mf = { },
+	  },
+	  dev_files = {
+			["client.lua"] = "demo/eventSink/lua",
+			["client.sh"] = "demo/eventSink/lua",
+			["server.lua"] = "demo/eventSink/lua",
+			["server.sh"] = "demo/eventSink/lua",
+			["EventSink.properties"] = "demo/hello/lua",
+	  },
+	},
 	-- Orbix related packages
 	{ name = "scsorbix",
 	  build = {
