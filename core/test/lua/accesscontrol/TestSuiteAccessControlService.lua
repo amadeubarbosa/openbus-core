@@ -28,6 +28,7 @@ local suiteTestLoginByPassword = assert(loadfile(OPENBUS_HOME .."/core/test/lua/
 local suiteTestInvalidLoginByPassword = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestInvalidLoginByPassword.lua"))()
 local suiteTestLogout = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestLogout.lua"))()
 local suiteTestIsValid = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestIsValid.lua"))()
+local suiteTestIsValidPasswordDelegate = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestIsValidPasswordDelegate.lua"))()
 local suiteTestAreValid = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestAreValid.lua"))()
 local suiteTestObservers = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestObservers.lua"))()
 local suiteTestRemoveCredentialFromObserver = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestRemoveCredentialFromObserver.lua"))()
@@ -65,6 +66,8 @@ Suite = {
     afterEachTest = afterEachTest,
 
     testIsValid = suiteTestIsValid.Test1.testIsValid,
+
+    testIsValidPasswordDelegate = suiteTestIsValidPasswordDelegate.Test1.testIsValidPasswordDelegate,
 
     testAreValid = suiteTestAreValid.Test1.testAreValid,
 
