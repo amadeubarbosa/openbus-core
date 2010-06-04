@@ -6,6 +6,8 @@
 -----------------------------------------------------------------------------
 local tonumber = tonumber
 
+local string = string
+
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
@@ -167,7 +169,8 @@ function main()
 
   success, res = oil.pcall (rsInst.IComponent.startup, rsInst.IComponent)
   if not success then
-    Log:error("Falha ao iniciar o serviço de registro: "..tostring(res[1]).."\n")
+    Log:error(string.format("Falha ao iniciar o serviço de registro: %s\n",
+        tostring(res))
     os.exit(1)
   end
 
