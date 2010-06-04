@@ -310,7 +310,12 @@ function ACSFacet:isValid(credential)
     end
   end
 
-  if entry.credential.delegate ~= "" and not entry.certified then
+  if credential.owner ~= entry.credential.owner then
+    Log:access_control("A credencial {"..credential.identifier.." - "..
+        credential.owner.."/"..credential.delegate.."} não é válida.")
+    return false
+  end
+  if credential.delegate ~= "" and not entry.certified then
     Log:access_control("A credencial {"..credential.identifier.." - "..
         credential.owner.."/"..credential.delegate.."} não é válida.")
     return false

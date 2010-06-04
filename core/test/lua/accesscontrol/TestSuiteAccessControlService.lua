@@ -66,6 +66,8 @@ Suite = {
 
     testIsValid = suiteTestIsValid.Test1.testIsValid,
 
+    testIsValidPasswordDelegate = suiteTestIsValidPasswordDelegate.Test1.testIsValidPasswordDelegate,
+
     testAreValid = suiteTestAreValid.Test1.testAreValid,
 
     testInvalidGetChallenge = suiteTestInvalidGetChallenge.Test1.testInvalidGetChallenge,
