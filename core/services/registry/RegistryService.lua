@@ -469,7 +469,12 @@ function RSFacet:find(facets)
   local ftFacet = self.context.IFaultTolerantService
 
   local params = { facets = facets, criteria = {} }
+  --troca credenciais para verificacao de permissao na faceta FT
+  local intCredential = Openbus:getInterceptedCredential()
+  Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
   ftFacet:updateStatus(params)
+  --desfaz a troca
+  Openbus.serverInterceptor.picurrent:setValue(intCredential)
 
   local selectedOffers = {}
   -- Se nenhuma faceta foi discriminada, todas as ofertas de serviço
@@ -512,7 +517,12 @@ function RSFacet:findByCriteria(facets, criteria)
   local ftFacet = self.context.IFaultTolerantService
 
   local params = { facets = facets, criteria = criteria}
+  --troca credenciais para verificacao de permissao na faceta FT
+  local intCredential = Openbus:getInterceptedCredential()
+  Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
   ftFacet:updateStatus(params)
+  --desfaz a troca
+  Openbus.serverInterceptor.picurrent:setValue(intCredential)
 
   local selectedOffers = {}
   -- Se nenhuma faceta foi discriminada e nenhum critério foi

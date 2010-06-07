@@ -458,7 +458,7 @@ end
 --@param observerIdentifier O identificador do observador.
 --@param credentialIdentifier O identificador da credencial.
 --
---@return true caso a credencil tenha sido adicionada, ou false caso contrário.
+--@return true caso a credencial tenha sido adicionada, ou false caso contrário.
 ---
 function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifier)
   local entry = self.entries[credentialIdentifier]
@@ -468,7 +468,12 @@ function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifi
     local params = { credential = credential,
                     notInHostAdd = self.config.hostName..":"
                                    ..tostring(self.config.hostPort) }
+    --troca credenciais para verificacao de permissao na faceta FT
+    local intCredential = Openbus:getInterceptedCredential()
+    Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
     local gotEntry = ftFacet:updateStatus(params)
+    --desfaz a troca
+    Openbus.serverInterceptor.picurrent:setValue(intCredential)
     if gotEntry then
        --tenta de novo
        entry = self.entries[credential.identifier]
@@ -1564,13 +1569,6 @@ function FaultToleranceFacet:updateStatus(params)
 
         if entryCredential then
             Log:faulttolerance("[updateStatus] Encontrou credencial!")
-            -- ** Maíra: comentei essa verificacao porque nos casos de logins por senha
-            --           a credencial não é cetificada e mesmo assim deveria ser sincronizada
-            -- **
-            --if not entryCredential.certified then
-            --   Log:faulttolerance("[updateStatus] Mas não é certificada, nada retorna!")
-            --   return false
-            --else
                --ADICIONA LOCALMENTE
                local acsFacet = self.context.IAccessControlService
                local addEntry = {}
@@ -1586,7 +1584,6 @@ function FaultToleranceFacet:updateStatus(params)
                end
                acsFacet:addEntryCredential(addEntry)
                Log:faulttolerance("[updateStatus] Adicionou credencial localmente.")
-            --end
         else
            Log:faulttolerance("[updateStatus] Não encontrou credencial!")
            return false
