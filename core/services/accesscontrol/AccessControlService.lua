@@ -557,8 +557,7 @@ function ACSFacet:addEntry(name, certified)
   }
   local duration
   -- Credencial não expira para o ACS
-  if credential.owner == "AccessControlService" or
-     credential.delegate == "AccessControlService"
+  if credential.owner == "AccessControlService" 
   then
      duration = math.huge
   else
