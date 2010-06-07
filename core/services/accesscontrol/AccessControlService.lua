@@ -382,7 +382,6 @@ end
 function ACSFacet:getEntryCredential(credential)
   self.context.IManagement:checkPermission()
 
-  local duration = self.lease
   local emptyEntry = {
                 aCredential = {  identifier = "",
                                 owner = "",
@@ -556,7 +555,15 @@ function ACSFacet:addEntry(name, certified)
     owner = name,
     delegate = "",
   }
-  local duration = self.lease
+  local duration
+  -- Credencial não expira para o ACS
+  if credential.owner == "AccessControlService" or
+     credential.delegate == "AccessControlService"
+  then
+     duration = math.huge
+  else
+     duration = self.lease
+  end
   local lease = { lastUpdate = os.time(), duration = duration }
   local entry = {
     credential = credential,
@@ -570,8 +577,26 @@ function ACSFacet:addEntry(name, certified)
   return entry
 end
 
+---
+-- Adiciona uma credencial cuja lease não expira.
+-- Foi criado para login entre ACSs.
+--
+--@param name O nome da entidade para a qual a credencial será inserida.
+--@param credential A credencial que será inserida.
+--@param certified Boolean se credencial é certificada.
+--
+--@return A entrada da credencial.
+---
 function ACSFacet:addEntryWithCredential(name, credential, certified)
-  local duration = self.lease
+  local duration
+  -- Credencial não expira para o ACS
+  if credential.owner == "AccessControlService" or
+     credential.delegate == "AccessControlService"
+  then
+     duration = math.huge
+  else
+     duration = self.lease
+  end
   local lease = { lastUpdate = os.time(), duration = duration }
   local entry = {
     credential = credential,
@@ -593,10 +618,19 @@ end
 --@return A credencial.
 ---
 function ACSFacet:addEntryCredential(entry)
-  local duration = self.lease
+  local duration
+  -- Credencial não expira para o ACS
+  if entry.credential.owner == "AccessControlService" or
+     entry.credential.delegate == "AccessControlService"
+  then
+     duration = math.huge
+  else
+     duration = self.lease
+  end
   entry.lease = { lastUpdate = os.time(), duration = duration }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
+  Log:access_control("[addEntryCredential] A credencial {"..entry.credential.identifier.."} foi adicionada.")
   return entry
 end
 
@@ -1452,7 +1486,20 @@ function FaultToleranceFacet:init()
 end
 
 function FaultToleranceFacet:updateStatus(params)
-    self.context.IManagement:checkPermission()
+
+    --  O atributo _anyval so retorna em chamadas remotas, em chamadas locais (mesmo processo)
+    --  deve-se acessar o parametro diretamente, além disso ,
+    --  passar uma tabela no any tbm so funciona porque eh local
+    -- se fosse uma chamada remota teria q ter uma struct pois senao da problema de marshall
+    local input
+    if not params._anyval then
+        input = params
+    else
+        --chamada remota
+        input = params._anyval
+        --a permissão só é verificada em chamadas remotas
+        self.context.IManagement:checkPermission()
+    end
 
     --Atualiza estado das credenciais
     Log:faulttolerance("[updateStatus] Atualiza estado das credenciais.")
@@ -1466,18 +1513,6 @@ function FaultToleranceFacet:updateStatus(params)
     if # self.ftconfig.hosts.ACS <= 1 then
         Log:faulttolerance("[updateStatus] Nenhuma replica para atualizar credenciais.")
         return false
-    end
-
-    --  O atributo _anyval so retorna em chamadas remotas, em chamadas locais (mesmo processo)
-    --  deve-se acessar o parametro diretamente, além disso ,
-    --  passar uma tabela no any tbm so funciona porque eh local
-    -- se fosse uma chamada remota teria q ter uma struct pois senao da problema de marshall
-    local input
-    if not params._anyval then
-        input = params
-    else
-    --chamada remota
-        input = params._anyval
     end
 
     if input == "all" then
@@ -1506,34 +1541,37 @@ function FaultToleranceFacet:updateStatus(params)
                         end
                         --SINCRONIZA
                         for _,repEntry in pairs(repEntries) do
-                            local add = true
                             if type(repEntry) ~= "number" then
-                               for _,locEntry in pairs(localEntries) do
-                                  if locEntry.credential.identifier ==
-                                      repEntry.aCredential.identifier then
-                                    add = false
-                                    break
+                               if repEntry.aCredential.identifier ~= "" then
+                                  local add = true
+                                  for _,locEntry in pairs(localEntries) do
+                                     if locEntry.credential.identifier ==
+                                         repEntry.aCredential.identifier
+                                     then
+                                        add = false
+                                        break
+                                    end
                                   end
-                               end
 
-                               if add then
-                                 local addEntry = {}
-                                 addEntry.credential = repEntry.aCredential
-                                 addEntry.certified = repEntry.certified
-                                 addEntry.observers = {}
-                                 for _, observerId in pairs(repEntry.observers) do
-                                   addEntry.observers[observerId] = true
-                                 end
-                                 addEntry.observedBy = {}
-                                 for _, observerId in pairs(repEntry.observedBy) do
-                                   addEntry.observedBy[observerId] = true
-                                 end
-                                 acsFacet:addEntryCredential(addEntry)
-                                 updated = true
-                                 count = count + 1
-                              end
-                            end
-                        end
+                                  if add then
+                                    local addEntry = {}
+                                    addEntry.credential = repEntry.aCredential
+                                    addEntry.certified = repEntry.certified
+                                    addEntry.observers = {}
+                                    for _, observerId in pairs(repEntry.observers) do
+                                      addEntry.observers[observerId] = true
+                                    end
+                                    addEntry.observedBy = {}
+                                    for _, observerId in pairs(repEntry.observedBy) do
+                                      addEntry.observedBy[observerId] = true
+                                    end
+                                    acsFacet:addEntryCredential(addEntry)
+                                    updated = true
+                                    count = count + 1
+                                 end -- fim if add
+                               end -- fim if repEntry
+                            end -- fim if type
+                        end -- fim for repEntry
                     end
                     --********* CREDENCIAL - fim *****************
                 end
@@ -1567,8 +1605,10 @@ function FaultToleranceFacet:updateStatus(params)
              i = i + 1
         until entryCredential or i > # self.ftconfig.hosts.ACS
 
+        local updated = false
         if entryCredential then
-            Log:faulttolerance("[updateStatus] Encontrou credencial!")
+          if entryCredential.aCredential.identifier ~= "" then
+               Log:faulttolerance("[updateStatus] Encontrou credencial!")
                --ADICIONA LOCALMENTE
                local acsFacet = self.context.IAccessControlService
                local addEntry = {}
@@ -1584,13 +1624,16 @@ function FaultToleranceFacet:updateStatus(params)
                end
                acsFacet:addEntryCredential(addEntry)
                Log:faulttolerance("[updateStatus] Adicionou credencial localmente.")
-        else
-           Log:faulttolerance("[updateStatus] Não encontrou credencial!")
-           return false
+               updated = true
+           end
         end
+        if not updated then
+           Log:faulttolerance("[updateStatus] Não encontrou credencial!")
+        end
+        return updated
     end
 
-    return true
+    return false
 end
 
 

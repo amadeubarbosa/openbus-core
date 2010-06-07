@@ -295,10 +295,11 @@ function RSFacet:unregister(identifier)
   local ret = self:rawUnregister(identifier, Openbus:getInterceptedCredential())
   if ret then
     local credential = Openbus:getInterceptedCredential()
-    if credential.owner == "RegistryService" or
-       credential.delegate == "RegistryService"
-    then
-      return ret, false
+    if credential then
+       if credential.owner == "RegistryService" or
+          credential.delegate == "RegistryService" then
+          return ret, false
+       end
     end
 
     local ftFacet = self.context.IFaultTolerantService
@@ -774,10 +775,12 @@ end
 
 function RGSReceptacleFacet:updateConnectionState(command, data)
     local credential = Openbus:getInterceptedCredential()
-    if credential.owner == "RegistryService" or
-       credential.delegate == "RegistryService" then
-       --para nao entrar em loop
-         return
+    if credential then
+       if credential.owner == "RegistryService" or
+          credential.delegate == "RegistryService" then
+          --para nao entrar em loop
+            return
+       end
     end
     Log:faulttolerance("[updateConnectionState] Atualiza estado do RGS quanto ao [".. command .."].")
     local ftFacet = self.context.IFaultTolerantService
@@ -854,7 +857,29 @@ function FaultToleranceFacet:init()
 end
 
 function FaultToleranceFacet:updateStatus(params)
-  self.context.IManagement:checkPermission()
+  -- O atributo  _anyval so retorna  em chamadas remotas,  em chamadas
+  -- locais (mesmo processo)  deve-se acessar o parametro diretamente.
+  -- Além disso,  passar uma tabela no any tbm  so funciona porque é
+  -- local se  fosse uma  chamada remota teria  q ter uma  struct pois
+  -- senão da problema de marshall
+  local input
+  if not params._anyval then
+    input = params
+  else
+    --chamada remota
+    input = params._anyval
+
+    --A permissao so eh verificada em chamadas remotas
+    self.context.IManagement:checkPermission()
+  end
+
+  local facets = {}
+  local criteria = {}
+
+  if input ~= "all" then
+    facets = input.facets
+    criteria = input.criteria
+  end
 
   --Atualiza estado das ofertas
   Log:faulttolerance("[updateStatus] Atualiza estado das ofertas.")
@@ -868,26 +893,7 @@ function FaultToleranceFacet:updateStatus(params)
     Log:faulttolerance("[updateStatus] Nenhuma replica para atualizar ofertas.")
     return false
   end
-  -- O atributo  _anyval so retorna  em chamadas remotas,  em chamadas
-  -- locais (mesmo processo)  deve-se acessar o parametro diretamente.
-  -- Além disso,  passar uma tabela no any tbm  so funciona porque é
-  -- local se  fosse uma  chamada remota teria  q ter uma  struct pois
-  -- senão da problema de marshall
-  local input
-  if not params._anyval then
-    input = params
-  else
-    --chamada remota
-    input = params._anyval
-  end
 
-  local facets = {}
-  local criteria = {}
-
-  if input ~= "all" then
-    facets = input.facets
-    criteria = input.criteria
-  end
 
   return self:updateOffersStatus(facets, criteria)
 end
@@ -977,6 +983,7 @@ function startup(self)
   local mgm = self.context.IManagement
   local rs = self.context.IRegistryService
   local config = rs.config
+  self.context.IFaultTolerantService:init()
 
   -- Verifica se é o primeiro startup
   if not rs.initialized then
@@ -1072,8 +1079,6 @@ function startup(self)
  mgm:loadData()
 
  rs.started = true
-
- self.context.IFaultTolerantService:init()
 
  -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
  local acsIComp = Openbus:getACSIComponent()
@@ -1641,10 +1646,11 @@ end
 --
 function ManagementFacet:updateManagementStatus(command, data)
   local credential = Openbus:getInterceptedCredential()
-  if credential.owner == "RegistryService" or
-     credential.delegate == "RegistryService"
-  then
-    return
+  if crendential then
+     if credential.owner == "RegistryService" or
+       credential.delegate == "RegistryService" then
+       return
+     end
   end
 
   Log:faulttolerance("[updateManagementStatus] Atualiza estado das interfaces e autorizacoes para o comando[".. command .."].")
