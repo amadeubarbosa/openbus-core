@@ -24,7 +24,6 @@ local beforeTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/befor
 local afterTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterTestCase.lua")
 local beforeEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeEachTest.lua")
 
-
 Suite = {
 
   Test1 = {
@@ -51,8 +50,8 @@ Suite = {
           self.accessControlService:loginByPassword(self.login.user, self.login.password)
       self.credentialManager:setValue(self.credential)
       for i=1,3 do
-           Check.assertFalse(self.accessControlService:removeCredentialFromObserver
-                      (observersId[i], oldCredential.identifier))
+        Check.assertFalse(self.accessControlService:removeCredentialFromObserver(
+            observersId[i], oldCredential.identifier))
       end
     end,
 
