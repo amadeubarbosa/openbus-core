@@ -170,7 +170,7 @@ function main()
   success, res = oil.pcall (rsInst.IComponent.startup, rsInst.IComponent)
   if not success then
     Log:error(string.format("Falha ao iniciar o serviço de registro: %s\n",
-        tostring(res))
+        tostring(res)))
     os.exit(1)
   end
 
