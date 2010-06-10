@@ -153,8 +153,14 @@ end
 --Procedimento após a reconexão do serviço.
 ---
 function SessionServiceComponent:expired()
+  Log:registry("Reconectando o Serviço de Sessão.")
   Openbus:connectByCertificate(self.context._componentId.name,
-      self.privateKeyFile, self.accessControlServiceCertificateFile)
+    self.privateKeyFile, self.accessControlServiceCertificateFile)
+
+  if not Openbus:isConnected() then
+    Log:error("Falha ao reconectar no ACS.")
+    return false
+  end
 
   -- Procedimento realizado pela faceta
   self.sessionService:expired()
