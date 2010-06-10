@@ -321,7 +321,7 @@ function RSFacet:unregister(identifier)
       local ret, succ, remoteRGS = oil.pcall(Utils.fetchService,
         Openbus:getORB(), ftFacet.ftconfig.hosts.RS[i],
         Utils.REGISTRY_SERVICE_INTERFACE)
-      if succ then
+      if ret and succ then
         --encontrou outra replica
         Log:faulttolerance("[unregister] Atualizando replica "
           .. ftFacet.ftconfig.hosts.RS[i] ..".")
@@ -687,18 +687,19 @@ end
 --Procedimento após reconexão do serviço.
 ---
 function RSFacet:expired()
+  Log:registry("Reconectando o Serviço de Registro.")
   Openbus:connectByCertificate(self.context._componentId.name,
     self.privateKeyFile, self.accessControlServiceCertificateFile)
-  local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
-    orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService_v" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-  if not status or not acsFacet then
-    --erro já joi logado
-    return nil
+
+  if not Openbus:isConnected() then
+    Log:error("Falha ao reconectar no ACS.")
+    return false
   end
+
+  local acsFacet = Openbus:getAccessControlService()
   -- atualiza a referência junto ao serviço de controle de acesso
   -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
-  local acsIComp = acsFacet:_component()
+  local acsIComp = Openbus:getACSIComponent()
   local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
   acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
   local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
@@ -804,7 +805,7 @@ function RGSReceptacleFacet:updateConnectionState(command, data)
                                                 ftFacet.ftconfig.hosts.RS[i],
                                                 Utils.REGISTRY_SERVICE_INTERFACE)
 
-            if succ then
+            if ret and succ then
             --encontrou outra replica
                 Log:faulttolerance("[updateConnectionState] Atualizando replica ".. ftFacet.ftconfig.hosts.RS[i] ..".")
                 local remoteRSIC = remoteRS:_component()
@@ -906,11 +907,11 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
   local count = 0
   repeat
     if self.ftconfig.hosts.RS[i] ~= self.rsReference then
-      local ret, stop, remoteRS = oil.pcall(Utils.fetchService,
+      local ret, succ, remoteRS = oil.pcall(Utils.fetchService,
         Openbus:getORB(), self.ftconfig.hosts.RS[i],
         Utils.REGISTRY_SERVICE_INTERFACE)
 
-      if remoteRS then
+      if ret and succ then
         local selectedOffersEntries = remoteRS:localFind(facets, criteria)
 
         if not rgs.offersByIdentifier then

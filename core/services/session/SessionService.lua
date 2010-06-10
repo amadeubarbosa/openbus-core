@@ -249,12 +249,11 @@ end
 --Procedimento após a reconexão do serviço.
 ---
 function SessionService:expired()
-  local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
-    orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService_v" .. Utils.OB_VERSION, acsIDL)
-  if not status or not acsFacet then
-    -- Erro ja foi logado, só retorna
-    return nil
+
+  local acsFacet = Openbus:getAccessControlService()
+  if not acsFacet then
+    Log:error("Falha ao reconectar o Serviço de Sessão: ACS não encontrado.")
+    return false
   end
 
   -- Registra novamente o observador de credenciais
