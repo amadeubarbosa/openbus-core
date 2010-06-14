@@ -535,14 +535,7 @@ function ACSFacet:addEntry(name, certified)
     owner = name,
     delegate = "",
   }
-  local duration
-  -- Credencial não expira para o ACS
-  if credential.owner == "AccessControlService"
-  then
-     duration = math.huge
-  else
-     duration = self.lease
-  end
+  local duration = self.lease
   local lease = { lastUpdate = os.time(), duration = duration }
   local entry = {
     credential = credential,
@@ -570,15 +563,7 @@ end
 --@return A entrada da credencial.
 ---
 function ACSFacet:addEntryWithCredential(name, credential, certified)
-  local duration
-  -- Credencial não expira para o ACS
-  if credential.owner == "AccessControlService" or
-     credential.delegate == "AccessControlService"
-  then
-     duration = math.huge
-  else
-     duration = self.lease
-  end
+  local duration = self.lease
   local lease = { lastUpdate = os.time(), duration = duration }
   local entry = {
     credential = credential,
@@ -603,15 +588,7 @@ end
 --@return A credencial.
 ---
 function ACSFacet:addEntryCredential(entry)
-  local duration
-  -- Credencial não expira para o ACS
-  if entry.credential.owner == "AccessControlService" or
-     entry.credential.delegate == "AccessControlService"
-  then
-     duration = math.huge
-  else
-     duration = self.lease
-  end
+  local duration = self.lease
   entry.lease = { lastUpdate = os.time(), duration = duration }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
@@ -1724,14 +1701,16 @@ function startup(self)
       local lastUpdate = entry.lease.lastUpdate
       local secondChance = entry.lease.secondChance
       local duration = entry.lease.duration
-      local now = os.time()
-      if (os.difftime (now, lastUpdate) > duration ) then
-        if secondChance then
-          Log:warn(credential.owner.. " lease expirado: LOGOUT.")
-          acs:logout(credential) -- you may clear existing fields.
-        else
-          entry.lease.secondChance = true
-        end
+      if entry.credential.owner ~= "AccessControlService" then
+         local now = os.time()
+         if (os.difftime (now, lastUpdate) > duration ) then
+           if secondChance then
+             Log:warn(credential.owner.. " lease expirado: LOGOUT.")
+             acs:logout(credential) -- you may clear existing fields.
+           else
+             entry.lease.secondChance = true
+           end
+         end
       end
     end
   end
