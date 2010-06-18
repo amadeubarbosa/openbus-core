@@ -3,7 +3,6 @@
 local Openbus = require "openbus.Openbus" 
 local oop = require "loop.simple"
 local Utils = require "openbus.util.Utils"
-local print = print
 
 ---
 --Componente responsável pelo Serviço de Controle de Acesso na versao 1.04.
@@ -84,11 +83,7 @@ end
 --Metodo existente apenas na API 1.04.
 ---
 function ACSFacet:setRegistryService(rsComponent)
-  error(Openbus:getORB():newexcept {
-       "IDL:omg.org/CORBA/NO_PERMISSION:1.0",
-       minor_code_value = 0,
-       completion_status = 1,
-  })
+  return false
 end
 
 --------------------------------------------------------------------------------
