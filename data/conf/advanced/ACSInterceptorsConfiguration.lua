@@ -18,7 +18,7 @@ config.interfaces = {
   },
   {
     interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04,
-    excluded_ops = {"loginByPassword", "loginByCertificate", "getChallenge", "isValid"}
+    excluded_ops = {"loginByPassword", "loginByCertificate", "getChallenge"}
   },
   {
     interface = Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
