@@ -253,7 +253,7 @@ packages = {
     },
   },
   { name = "ftc",
-    url = SVNREPURL .. "/ftc/trunk",
+    url = SVNREPURL .. "/ftc/tags/FTC_v1_01_00_2010_06_19",
     build = {
       type = "tecmake",
       src = PRODAPP .."/ftc/cpp/src",
