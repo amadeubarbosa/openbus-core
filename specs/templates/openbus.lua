@@ -46,8 +46,8 @@ __call =  function(self,t,save)
     for key, msg in pairs(self) do
       print(CONFIG,"Property name: ".. t.name .." index: ".. count)
       print(CONFIG,msg)
-      if t.value and t.value[count] then
-        io.write("[" .. tostring(t.value[count][key] or "").. "]> ")
+      if t.value and t.value then
+        io.write("[" .. tostring(t.value[key] or "").. "]> ")
       else
         io.write("[]> ")
       end
@@ -95,7 +95,7 @@ messages = {
     msg = "Lista dos servidores LDAP com portas",
     type = "list",
     check = Types.ldapHosts,
-    value = { {name = "segall.tecgraf.puc-rio.br", port = 389}, },
+    value = { name = "segall.tecgraf.puc-rio.br", port = 389, },
   },
   { name = "ldapSuffixes",
     msg = "Sufixos de busca no servidor LDAP",
