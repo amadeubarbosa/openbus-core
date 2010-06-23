@@ -7,27 +7,27 @@ SUNOS64_TECMAKE_FLAGS="USE_NODEPEND=Yes TEC_UNAME=SunOS510_64 BUILD_64=yes"
 packages = {
   -- fake package to easy the download of the oil04, scs and friend projects
   { name = "oil-source",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/oil04",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/oil04",
     directory = PRODAPP .."/oil04", 
   },
   { name = "scs-source",
-    url = SVNREPURL .. "/scs/branches/SCS_v1_01_2010_05_13",
+    url = SVNREPURL .. "/scs/tags/SCS_v1_01_00_2010_06_23/",
     directory = PRODAPP .."/scs",
   },
   { name = "idl-source",
-    url = SVNREPURL .. "/openbus/idl/branches/OB_IDL_v1_05_2010_05_13",
+    url = SVNREPURL .. "/openbus/idl/tags/OB_IDL_v1_05_00_2010_06_23",
     directory = PRODAPP .."/idl",
   },
   { name = "idl-1.4-source",
-    url = SVNREPURL .. "/openbus/branches/OB_v1_04_2009_08_07/core/idl",
+    url = SVNREPURL .. "/openbus/tags/OB_v1_04_05_2010_04_12/core/idl",
     directory = PRODAPP .."/idl-1.4",
   },
   { name = "sdk-java-source",
-    url = SVNREPURL .. "/openbus/sdk/java/branches/OB_SDK_JAVA_v1_05_2010_05_13",
+    url = SVNREPURL .. "/openbus/sdk/java/tags/OB_SDK_JAVA_v1_05_00_2010_06_23",
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
-    url = SVNREPURL .. "/openbus/sdk/lua/branches/OB_SDK_LUA_v1_05_2010_05_13",
+    url = SVNREPURL .. "/openbus/sdk/lua/tags/OB_SDK_LUA_v1_05_00_2010_06_23",
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
@@ -35,7 +35,7 @@ packages = {
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
-    url = SVNREPURL .. "/openbus/branches/OB_v1_05_2010_05_13",
+    url = SVNREPURL .. "/openbus/tags/OB_v1_05_00_2010_06_23",
     directory = SVNDIR, -- main source directory for PUts!
                         -- other sources have to be in PRODAPP/something
   },
@@ -51,7 +51,7 @@ packages = {
     },
   },
   { name = "lua5.1",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/lua5.1.3",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/lua5.1.3",
     build = {
       type = "tecmake",
       src = PRODAPP .."/lua5.1/src",
@@ -80,7 +80,7 @@ packages = {
     },
   },
   { name = "tolua5.1",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/tolua5.1",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/tolua5.1",
     build = {
       type = "tecmake",
       src = PRODAPP .."/tolua5.1/src",
@@ -95,7 +95,7 @@ packages = {
     },
   },
   { name = "luafilesystem",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/luafilesystem-1.4.2/",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/luafilesystem-1.4.2/",
     build = {
       type = "tecmake",
       src = PRODAPP .."/luafilesystem/src",
@@ -113,7 +113,7 @@ packages = {
     },
   },
   { name = "luasocket2",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/luasocket2",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/luasocket2",
     build = {
       type = "tecmake",
       src = PRODAPP .."/luasocket2/src",
@@ -148,7 +148,7 @@ packages = {
     },
   },
   { name = "luuid",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/luuid",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/luuid",
     build = {
       type = "tecmake",
       src = PRODAPP .."/luuid/src",
@@ -166,7 +166,7 @@ packages = {
     },
   },
   { name = "lualdap-1.0.1",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/lualdap-1.0.1",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/lualdap-1.0.1",
     build = {
       type = "tecmake",
       src = PRODAPP .."/lualdap-1.0.1/src",
@@ -184,7 +184,7 @@ packages = {
     },
   },
   { name = "latt-1.0.0",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/latt-1.0.0",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/latt-1.0.0",
     build = {
       type = "tecmake",
       src = PRODAPP .."/latt-1.0.0",
@@ -253,7 +253,7 @@ packages = {
     },
   },
   { name = "ftc",
-    url = SVNREPURL .. "/ftc/trunk",
+    url = SVNREPURL .. "/ftc/tags/FTC_v1_01_00_2010_06_19/",
     build = {
       type = "tecmake",
       src = PRODAPP .."/ftc/cpp/src",
@@ -286,7 +286,7 @@ packages = {
     },
         },
   { name = "luatrace",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_01_2010_05_13/luatrace",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_01_00_2010_06_23/luatrace",
     build = {
       type = "command",
       src = PRODAPP .."/luatrace",
