@@ -379,6 +379,7 @@ packages = {
       ["../../specs/management"] = "specs",
       ["../../specs/shell"] = "specs",
       ["../../specs/templates"] = "specs",
+      ["../../docs/manual/*.pdf"] = "docs",
     },
     conf_files = {
       ["../../data/conf"] = "data",
