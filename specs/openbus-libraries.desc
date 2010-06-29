@@ -23,7 +23,7 @@ packages = {
     directory = PRODAPP .."/idl-1.4",
   },
   { name = "sdk-java-source",
-    url = SVNREPURL .. "/openbus/sdk/java/tags/OB_SDK_JAVA_v1_05_00_2010_06_23",
+    url = SVNREPURL .. "/openbus/sdk/java/tags/OB_SDK_JAVA_v1_05_00_2010_06_29",
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
