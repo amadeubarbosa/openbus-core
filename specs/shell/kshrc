@@ -47,7 +47,7 @@ if [ "${TEC_SYSNAME}" == "SunOS" ] ;then
   #sun compilers
   export LDFLAGS="-L/usr/lib -L/usr/sfw/lib -L/usr/local/lib -L/usr/ucblib"
   export CPPFLAGS="-I/usr/include -I/usr/sfw/include -I/usr/local/include -I/usr/ucbinclude"
-  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib:/usr/sfw/lib"
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/ucblib:/usr/local/lib:/usr/sfw/lib"
   export LD_LIBRARY_PATH_64="/usr/lib/64:/lib/64:/usr/openwin/lib/64:/usr/sfw/lib/64:/usr/local/lib/sparcv9:/usr/ucblib/sparcv9:${LD_LIBRARY_PATH_64}"
   export PATH="${PATH}:/usr/ucb:/usr/sfw/bin:/usr/local/bin:/usr/ccs/bin"
   
