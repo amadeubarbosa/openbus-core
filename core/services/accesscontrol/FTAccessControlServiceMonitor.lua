@@ -5,6 +5,7 @@ local tostring = tostring
 local print = print
 local loadfile = loadfile
 local assert = assert
+local string = string
 
 local oil = require "oil"
 local orb = oil.orb
@@ -94,10 +95,26 @@ function FTACSMonitorFacet:connect()
   Openbus:init(self.config.hostName, self.config.hostPort)
   Openbus.isFaultToleranceEnable = false
   Openbus:_setInterceptors()
+
+  local keyConfigPath = self.config.monitorPrivateKeyFile
+  local keyAbsolutePath
+  if string.match(keyConfigPath, "^/") then
+    keyAbsolutePath = keyConfigPath
+  else
+    keyAbsolutePath = DATA_DIR .. "/" .. keyConfigPath
+  end
+
+  local certConfigPath = self.config.accessControlServiceCertificateFile
+  local certAbsolutePath
+  if string.match(certConfigPath, "^/") then
+    certAbsolutePath = certConfigPath
+  else
+    certAbsolutePath = DATA_DIR .. "/" .. certConfigPath
+  end
+
   -- autentica o monitor, conectando-o ao barramento
   Openbus:connectByCertificate(self.context._componentId.name,
-      DATA_DIR.."/"..self.config.monitorPrivateKeyFile,
-      DATA_DIR.."/"..self.config.accessControlServiceCertificateFile)
+      keyAbsolutePath, certAbsolutePath)
 end
 
 
