@@ -33,7 +33,7 @@ local BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
 Log:level(4)
 oil.verbose:level(2)
 
-orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/access_control_service.idl")
 
 ---
 --Componente (membro) responsavel pelo Monitor do Servico de Controle de Acesso

@@ -16,7 +16,7 @@ local pairs = pairs
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local OilUtilities = require "openbus.util.OilUtilities"
-local utils = require "openbus.util.Utils"
+local Utils = require "openbus.util.Utils"
 
 local oop = require "loop.simple"
 
@@ -69,7 +69,7 @@ function FTRSMonitorFacet:getService()
     return nil
   elseif conns[1] then
     local service = conns[1].objref
-    service = Openbus:getORB():narrow(service, utils.FAULT_TOLERANT_SERVICE_INTERFACE)
+    service = Openbus:getORB():narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
     return service
   end
   log:error("Nao foi possivel obter o Serviço.")
@@ -192,9 +192,9 @@ function FTRSMonitorFacet:monitor()
           local rs = Openbus:getRegistryService()
           local rsIC = rs:_component()
           rsIC = Openbus:getORB():narrow(rsIC, "IDL:scs/core/IComponent:1.0")
-          local ftrsService = rsIC:getFacetByName("IFaultTolerantService_v" .. utils.OB_VERSION)
+          local ftrsService = rsIC:getFacetByName("IFaultTolerantService_v" .. Utils.OB_VERSION)
           ftrsService = Openbus:getORB():narrow(ftrsService,
-              utils.FAULT_TOLERANT_SERVICE_INTERFACE)
+              Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
 
           if OilUtilities:existent(ftrsService) then
             local ftRec = self:getFacetByName("IReceptacles")
@@ -248,7 +248,7 @@ function startup(self)
       ":".. tostring(monitor.config.registryServerHostPort)
 
   local ftrsService = Openbus:getORB():newproxy("corbaloc::"..hostAdd.. "/" ..
-      utils.FAULT_TOLERANT_RS_KEY,utils.FAULT_TOLERANT_SERVICE_INTERFACE)
+      Utils.FAULT_TOLERANT_RS_KEY,Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
   if ftrsService:_non_existent() then
     Log:error("Servico de registro nao encontrado.")
     os.exit(1)
