@@ -28,12 +28,10 @@ public final class EventSinkImpl extends SessionEventSinkPOA {
     return this.context.getIComponent();
   }
 
-  @Override
   public void push(SessionEvent arg0) {
     System.out.println("Evento Push recebido. Tipo: " + arg0.type);
   }
 
-  @Override
   public void disconnect() {
     System.out.println("Evento Disconnect recebido.");
   }

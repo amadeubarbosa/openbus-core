@@ -17,7 +17,6 @@ public final class HelloImpl extends IHelloPOA {
     return this.context.getIComponent();
   }
 
-  @Override
   public void sayHello() {
     System.out.println("Hello !!!");
   }
