@@ -39,7 +39,7 @@ local function init(self)
   -- Obtem a face de governança
   local succ
   local ic = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05", 
-    "IDL:scs/core/IComponent:1.0")
+    "synchronous", "IDL:scs/core/IComponent:1.0")
   local facet = ic:getFacet(
     "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   self.acs = orb:narrow(facet,
@@ -51,6 +51,7 @@ local function init(self)
     "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
   self.acsMgt = orb:narrow(facet,
     "IDL:tecgraf/openbus/core/v1_05/access_control_service/IManagement:1.0")
+  self.acsMgt = orb:newproxy(self.acsMgt, "protected") 
   --
   facet = ic:getFacetByName("IReceptacles")
   facet = orb:narrow(facet, "IDL:scs/core/IReceptacles:1.0")
@@ -60,10 +61,12 @@ local function init(self)
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
   self.rs = orb:narrow(facet,
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+  self.rs = orb:newproxy(self.rs, "protected")
   --
   facet = ic:getFacet("IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
   self.rsMgt = orb:narrow(facet,
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IManagement:1.0")
+  self.rsMgt = orb:newproxy(self.rsMgt, "protected")
 end
 
 -------------------------------------------------------------------------------
@@ -118,29 +121,29 @@ end
 --
 function Test1:afterEachTest()
   for _, system in ipairs(self.systems) do
-    self.acsMgt.__try:removeSystem(system.id)
+    self.acsMgt:removeSystem(system.id)
   end
 end
 
 function Test1:testAddGetRemoveSystem()
   local succ, err, added
   local system = self.systems[1]
-  succ, err = self.acsMgt.__try:addSystem(system.id, system.description)
+  succ, err = self.acsMgt:addSystem(system.id, system.description)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getSystem(system.id)
+  succ, added = self.acsMgt:getSystem(system.id)
   Check.assertTrue(succ)
   Check.assertEquals(system.id, added.id)
   Check.assertEquals(system.description, added.description)
   --
-  succ, err = self.acsMgt.__try:removeSystem(system.id)
+  succ, err = self.acsMgt:removeSystem(system.id)
   Check.assertTrue(succ)
 end
 
 function Test1:testAddGetRemoveSystems()
   local succ, err, list
   for _, system in ipairs(self.systems) do
-    succ, err = self.acsMgt.__try:addSystem(system.id, system.description)
+    succ, err = self.acsMgt:addSystem(system.id, system.description)
     Check.assertTrue(succ)
   end
   --
@@ -157,26 +160,26 @@ function Test1:testAddGetRemoveSystems()
   end
   --
   for _, system in ipairs(self.systems) do
-    succ, err = self.acsMgt.__try:removeSystem(system.id)
+    succ, err = self.acsMgt:removeSystem(system.id)
     Check.assertTrue(succ)
   end
 end
 
 function Test1:testAddSystem_SystemAlreadyExists()
   local system = self.systems[1]
-  local succ, err = self.acsMgt.__try:addSystem(system.id, system.description)
+  local succ, err = self.acsMgt:addSystem(system.id, system.description)
   Check.assertTrue(succ)
   --
-  succ, err = self.acsMgt.__try:addSystem(system.id, system.description)
+  succ, err = self.acsMgt:addSystem(system.id, system.description)
   Check.assertFalse(succ)
   Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0")
   --
-  succ, err = self.acsMgt.__try:removeSystem(system.id)
+  succ, err = self.acsMgt:removeSystem(system.id)
   Check.assertTrue(succ)
 end
 
 function Test1:testRemoveSystem_SystemNonExistent()
-  local succ, err = self.acsMgt.__try:removeSystem("AnInvalidIdToRemove")
+  local succ, err = self.acsMgt:removeSystem("AnInvalidIdToRemove")
   Check.assertFalse(succ)
   Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0")
 end
@@ -185,30 +188,30 @@ function Test1:testSetSystemDescription()
   local succ, err, added
   local desc = "NewDescription"
   local system = self.systems[1]
-  succ, err = self.acsMgt.__try:addSystem(system.id, system.description)
+  succ, err = self.acsMgt:addSystem(system.id, system.description)
   Check.assertTrue(succ)
   --
-  succ, err = self.acsMgt.__try:setSystemDescription(system.id, desc)
+  succ, err = self.acsMgt:setSystemDescription(system.id, desc)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getSystem(system.id)
+  succ, added = self.acsMgt:getSystem(system.id)
   Check.assertTrue(succ)
   Check.assertEquals(system.id, added.id)
   Check.assertEquals(added.description, desc)
   --
-  succ, err = self.acsMgt.__try:removeSystem(system.id)
+  succ, err = self.acsMgt:removeSystem(system.id)
   Check.assertTrue(succ)
 end
 
 function Test1:testSetSystemDescription_SystemNonExistent()
-  local succ, err = self.acsMgt.__try:setSystemDescription("InvalidId", 
+  local succ, err = self.acsMgt:setSystemDescription("InvalidId", 
     "New Description")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0", err[1])
 end
 
 function Test1:testGetSystem_SystemNonExistent()
-  local succ, err = self.acsMgt.__try:getSystem("InvalidId")
+  local succ, err = self.acsMgt:getSystem("InvalidId")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0", err[1])
 end
@@ -236,13 +239,13 @@ function Test2:beforeTestCase()
       systemId = system.id,
       description = string.format("Deployment %.2d Description", i),
     })
-    self.acsMgt.__try:addSystem(system.id, system.description)
+    self.acsMgt:addSystem(system.id, system.description)
   end
 end
 
 function Test2:afterTestCase()
   for _, system in ipairs(self.systems) do
-    self.acsMgt.__try:removeSystem(system.id)
+    self.acsMgt:removeSystem(system.id)
   end
   if (self.credentialManager:hasValue()) then
     self.acs:logout(self.credential)
@@ -252,7 +255,7 @@ end
 
 function Test2:afterEachTest()
   for _, depl in ipairs(self.deployments) do
-    self.acsMgt.__try:removeSystemDeployment(depl.id)
+    self.acsMgt:removeSystemDeployment(depl.id)
   end
 end
 
@@ -264,21 +267,21 @@ function Test2:testAddGetRemoveSystemDeployment()
   f:close()
   --
   depl = self.deployments[1]
-  succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+  succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
     depl.description, cert)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getSystemDeployment(depl.id)
+  succ, added = self.acsMgt:getSystemDeployment(depl.id)
   Check.assertTrue(succ)
   Check.assertEquals(added.id, depl.id)
   Check.assertEquals(added.systemId, depl.systemId)
   Check.assertEquals(added.description, depl.description)
   --
-  succ, added = self.acsMgt.__try:getSystemDeploymentCertificate(depl.id)
+  succ, added = self.acsMgt:getSystemDeploymentCertificate(depl.id)
   Check.assertTrue(succ)
   Check.assertEquals(added, cert)
   --
-  succ, err = self.acsMgt.__try:removeSystemDeployment(depl.id)
+  succ, err = self.acsMgt:removeSystemDeployment(depl.id)
   Check.assertTrue(succ)
 end
 
@@ -290,7 +293,7 @@ function Test2:testAddGetRemoveSystemDeployments()
   f:close()
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+    succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
       depl.description, cert)
     Check.assertTrue(succ)
   end
@@ -300,7 +303,7 @@ function Test2:testAddGetRemoveSystemDeployments()
     local tmp = false
     for _, added in ipairs(list) do
       if added.id == depl.id then
-        succ, err = self.acsMgt.__try:getSystemDeploymentCertificate(depl.id)
+        succ, err = self.acsMgt:getSystemDeploymentCertificate(depl.id)
         tmp = succ and (err == cert) and 
               (added.systemId == depl.systemId) and
               (added.description == depl.description)
@@ -311,7 +314,7 @@ function Test2:testAddGetRemoveSystemDeployments()
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.acsMgt.__try:removeSystemDeployment(depl.id)
+    succ, err = self.acsMgt:removeSystemDeployment(depl.id)
     Check.assertTrue(succ)
   end
 end
@@ -323,17 +326,17 @@ function Test2:testAddSystemDeployment_SystemDeploymentAlreadyExists()
   cert = f:read("*a")
   f:close()
   depl = self.deployments[1]
-  succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+  succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
     depl.description, cert)
   Check.assertTrue(succ)
   --
-  succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+  succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
     depl.description, cert)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0",
     err[1])
   --
-  succ, err = self.acsMgt.__try:removeSystemDeployment(depl.id)
+  succ, err = self.acsMgt:removeSystemDeployment(depl.id)
   Check.assertTrue(succ)
 end
 
@@ -344,7 +347,7 @@ function Test2:testAddSystemDeployment_SystemNonExistent()
   cert = f:read("*a")
   f:close()
   depl = self.deployments[1]
-  succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, 
+  succ, err = self.acsMgt:addSystemDeployment(depl.id, 
     "SystemIdDoesNotExist",
     depl.description, cert)
   Check.assertFalse(succ)
@@ -354,14 +357,14 @@ end
 function Test2:testAddSystemDeployment_InvalidCertificate()
   local depl, succ, err
   depl = self.deployments[1]
-  succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+  succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
     depl.description, "InvalidCertificate")
   Check.assertFalse(succ)
   Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0")
 end
 
 function Test2:testRemoveSystemDeployment_SystemDeploymentNonExistent()
-  local succ, err = self.acsMgt.__try:removeSystemDeployment("InvalidId")
+  local succ, err = self.acsMgt:removeSystemDeployment("InvalidId")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0",
     err[1])
@@ -373,27 +376,27 @@ function Test2:testSetSystemDeploymentDescription()
   local cert = f:read("*a")
   f:close()
   local depl = self.deployments[1]
-  local succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+  local succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
     depl.description, cert)
   Check.assertTrue(succ)
   --
   local desc = "New Description"
-  succ, err = self.acsMgt.__try:setSystemDeploymentDescription(depl.id, desc)
+  succ, err = self.acsMgt:setSystemDeploymentDescription(depl.id, desc)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getSystemDeployment(depl.id)
+  succ, added = self.acsMgt:getSystemDeployment(depl.id)
   Check.assertTrue(succ)
   Check.assertEquals(added.id, depl.id)
   Check.assertEquals(added.systemId, depl.systemId)
   Check.assertEquals(added.description, desc)
   --
-  succ, err = self.acsMgt.__try:removeSystemDeployment(depl.id)
+  succ, err = self.acsMgt:removeSystemDeployment(depl.id)
   Check.assertTrue(succ)
 end
 
 function Test2:testSetSystemDeploymentDescription_SystemDeploymentNonExistent()
   local desc = "New Description"
-  local succ, err = self.acsMgt.__try:setSystemDeploymentDescription("InvalidId",
+  local succ, err = self.acsMgt:setSystemDeploymentDescription("InvalidId",
     desc)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0",
@@ -401,7 +404,7 @@ function Test2:testSetSystemDeploymentDescription_SystemDeploymentNonExistent()
 end
 
 function Test2:testGetSystemDeploymentCertificate_SystemDeploymentNonExistent()
-  local succ, err = self.acsMgt.__try:getSystemDeploymentCertificate("InvalidId")
+  local succ, err = self.acsMgt:getSystemDeploymentCertificate("InvalidId")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0",
     err[1])
@@ -418,18 +421,18 @@ function Test2:testSetSystemDeploymentCertificate()
   f:close()
   --
   local depl = self.deployments[1]
-  local succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+  local succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
     depl.description, cert01)
   Check.assertTrue(succ)
   --
-  succ, err = self.acsMgt.__try:setSystemDeploymentCertificate(depl.id, cert02)
+  succ, err = self.acsMgt:setSystemDeploymentCertificate(depl.id, cert02)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getSystemDeploymentCertificate(depl.id)
+  succ, added = self.acsMgt:getSystemDeploymentCertificate(depl.id)
   Check.assertTrue(succ)
   Check.assertEquals(added, cert02)
   --
-  succ, err = self.acsMgt.__try:removeSystemDeployment(depl.id)
+  succ, err = self.acsMgt:removeSystemDeployment(depl.id)
   Check.assertTrue(succ)
 end
 
@@ -439,7 +442,7 @@ function Test2:testSetSystemDeploymentCertificate_SystemDeploymentNonExistent()
   local cert = f:read("*a")
   f:close()
   --
-  local succ, err = self.acsMgt.__try:setSystemDeploymentCertificate("InvalidId", 
+  local succ, err = self.acsMgt:setSystemDeploymentCertificate("InvalidId", 
     cert)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0", 
@@ -453,18 +456,18 @@ function Test2:testSetSystemDeploymentCertificate_InvalidCertificate()
   f:close()
   --
   local depl = self.deployments[1]
-  local succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+  local succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
     depl.description, cert)
   Check.assertTrue(succ)
   --
-  local succ, err = self.acsMgt.__try:setSystemDeploymentCertificate(depl.id,
+  local succ, err = self.acsMgt:setSystemDeploymentCertificate(depl.id,
     "InvalidCertificate")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0", err[1])
 end
 
 function Test2:testGetSystemDeployment_SystemDeploymentNonExistent()
-  local succ, err = self.acsMgt.__try:getSystemDeployment("InvalidId")
+  local succ, err = self.acsMgt:getSystemDeployment("InvalidId")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0",
     err[1])
@@ -488,7 +491,7 @@ function Test2:testGetSystemDeploymentsBySystemId()
       tmp.systemId = systemId
     end
     table.insert(deployments, tmp)
-    succ, err = self.acsMgt.__try:addSystemDeployment(tmp.id, tmp.systemId,
+    succ, err = self.acsMgt:addSystemDeployment(tmp.id, tmp.systemId,
       tmp.description, cert)
     Check.assertTrue(succ)
   end
@@ -498,7 +501,7 @@ function Test2:testGetSystemDeploymentsBySystemId()
     local tmp = false
     for _, depl in ipairs(deployments) do
       if depl.id == added.id then
-        succ, err = self.acsMgt.__try:getSystemDeploymentCertificate(depl.id)
+        succ, err = self.acsMgt:getSystemDeploymentCertificate(depl.id)
         tmp = succ and (added.description == depl.description) and
               (added.systemId == depl.systemId) and (err == cert)
         break
@@ -508,7 +511,7 @@ function Test2:testGetSystemDeploymentsBySystemId()
   end
   --
   for _, depl in ipairs(deployments) do
-    succ, err = self.acsMgt.__try:removeSystemDeployment(depl.id)
+    succ, err = self.acsMgt:removeSystemDeployment(depl.id)
     Check.assertTrue(succ)
   end
 end
@@ -521,19 +524,19 @@ function Test2:testRemoveSystem_SystemInUse()
   --
   local succ, err
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+    succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
       depl.description, cert)
     Check.assertTrue(succ)
   end
   --
   for _, system in ipairs(self.systems) do
-    succ, err = self.acsMgt.__try:removeSystem(system.id)
+    succ, err = self.acsMgt:removeSystem(system.id)
     Check.assertFalse(succ)
     Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0", err[1])
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.acsMgt.__try:removeSystemDeployment(depl.id)
+    succ, err = self.acsMgt:removeSystemDeployment(depl.id)
     Check.assertTrue(succ)
   end
 end
@@ -564,18 +567,18 @@ function Test3:beforeTestCase()
     table.insert(self.systems, system)
     table.insert(self.deployments, depl)
     table.insert(self.ifaces, string.format("IDL:openbusidl/test%.2d:1.0", i))
-    self.acsMgt.__try:addSystem(system.id, system.description)
-    self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+    self.acsMgt:addSystem(system.id, system.description)
+    self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
       depl.description, cert)
   end
 end
 
 function Test3:afterTestCase()
   for _, depl in ipairs(self.deployments) do
-    self.acsMgt.__try:removeSystemDeployment(depl.id)
+    self.acsMgt:removeSystemDeployment(depl.id)
   end
   for _, system in ipairs(self.systems) do
-    self.acsMgt.__try:removeSystem(system.id)
+    self.acsMgt:removeSystem(system.id)
   end
   if (self.credentialManager:hasValue()) then
     self.acs:logout(self.credential)
@@ -585,12 +588,12 @@ end
 
 function Test3:afterEachTest()
   for _, iface in ipairs(self.ifaces) do
-    self.rsMgt.__try:removeInterfaceIdentifier(iface)
+    self.rsMgt:removeInterfaceIdentifier(iface)
   end
 end
 
 function Test3:testAddGetRemoveInterfaceIdentifier()
-  local succ, err = self.rsMgt.__try:addInterfaceIdentifier(self.ifaces[1])
+  local succ, err = self.rsMgt:addInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
   local list = self.rsMgt:getInterfaceIdentifiers()
   succ = false
@@ -601,23 +604,23 @@ function Test3:testAddGetRemoveInterfaceIdentifier()
     end
   end
   Check.assertTrue(succ)
-  succ, err = self.rsMgt.__try:removeInterfaceIdentifier(self.ifaces[1])
+  succ, err = self.rsMgt:removeInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
 end
 
 function Test3:testAddInterfaceIdentifier_InterfaceIdentifierAlreadyExists()
-  local succ, err = self.rsMgt.__try:addInterfaceIdentifier(self.ifaces[1])
+  local succ, err = self.rsMgt:addInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
-  succ, err = self.rsMgt.__try:addInterfaceIdentifier(self.ifaces[1])
+  succ, err = self.rsMgt:addInterfaceIdentifier(self.ifaces[1])
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0",
     err[1])
-  succ, err = self.rsMgt.__try:removeInterfaceIdentifier(self.ifaces[1])
+  succ, err = self.rsMgt:removeInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
 end
 
 function Test3:testAddInterfaceIdentifier_InterfaceIdentifierNonExistent()
-  succ, err = self.rsMgt.__try:removeInterfaceIdentifier("InvalidInterface")
+  succ, err = self.rsMgt:removeInterfaceIdentifier("InvalidInterface")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0",
     err[1])
@@ -650,22 +653,22 @@ function Test4:beforeTestCase()
     table.insert(self.systems, system)
     table.insert(self.deployments, depl)
     table.insert(self.ifaces, iface)
-    self.acsMgt.__try:addSystem(system.id, system.description)
-    self.acsMgt.__try:addSystemDeployment(depl.id, depl.systemId,
+    self.acsMgt:addSystem(system.id, system.description)
+    self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
       depl.description, cert)
-    self.rsMgt.__try:addInterfaceIdentifier(iface)
+    self.rsMgt:addInterfaceIdentifier(iface)
   end
 end
 
 function Test4:afterTestCase()
   for _, iface in ipairs(self.ifaces) do
-    self.rsMgt.__try:removeInterfaceIdentifier(iface)
+    self.rsMgt:removeInterfaceIdentifier(iface)
   end
   for _, depl in ipairs(self.deployments) do
-    self.acsMgt.__try:removeSystemDeployment(depl.id)
+    self.acsMgt:removeSystemDeployment(depl.id)
   end
   for _, system in ipairs(self.systems) do
-    self.acsMgt.__try:removeSystem(system.id)
+    self.acsMgt:removeSystem(system.id)
   end
   if (self.credentialManager:hasValue()) then
     self.acs:logout(self.credential)
@@ -675,7 +678,7 @@ end
 
 function Test4:afterEachTest()
   for _, depl in ipairs(self.deployments) do
-    self.rsMgt.__try:removeAuthorization(depl.id)
+    self.rsMgt:removeAuthorization(depl.id)
   end
 end
 
@@ -683,20 +686,20 @@ function Test4:testGrantGetRemoveAuthorization()
   local succ, err, auth
   local depl = self.deployments[1]
   local iface = self.ifaces[1]
-  succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
+  succ, err = self.rsMgt:grant(depl.id, iface, true)
   Check.assertTrue(succ)
   --
-  succ, auth = self.rsMgt.__try:getAuthorization(depl.id)
+  succ, auth = self.rsMgt:getAuthorization(depl.id)
   Check.assertTrue(succ)
   Check.assertEquals(auth.id, depl.id)
   Check.assertEquals(auth.type, "ATSystemDeployment")
   Check.assertTrue(#auth.authorized == 1)
   Check.assertTrue(auth.authorized[1] == iface)
   --
-  succ, err = self.rsMgt.__try:removeAuthorization(depl.id)
+  succ, err = self.rsMgt:removeAuthorization(depl.id)
   Check.assertTrue(succ)
   --
-  succ, err = self.rsMgt.__try:getAuthorization(depl.id)
+  succ, err = self.rsMgt:getAuthorization(depl.id)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0",
     err[1])
@@ -704,14 +707,14 @@ end
 
 function Test4:testGrant_MemberNonExistent()
   local iface = self.ifaces[1]
-  local succ, err = self.rsMgt.__try:grant("InvalidId", iface, true)
+  local succ, err = self.rsMgt:grant("InvalidId", iface, true)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/MemberNonExistent:1.0", err[1])
 end
 
 function Test4:testGrant_InterfaceIdentifierNonExistent()
   local depl = self.deployments[1]
-  local succ, err = self.rsMgt.__try:grant(depl.id, "InvalidId", true)
+  local succ, err = self.rsMgt:grant(depl.id, "InvalidId", true)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0", 
     err[1])
@@ -721,7 +724,7 @@ function Test4:testGrant_InvalidRegularExpression()
   local succ, err, auth
   local depl = self.deployments[1]
   local iface = "IDL:*invalid:1.0"
-  succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
+  succ, err = self.rsMgt:grant(depl.id, iface, true)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0", 
     err[1])
@@ -741,11 +744,11 @@ function Test4:testGrantExpressions()
     "IDL:openbusidl/test/demo/hello*:1.*",
   }
   for _, iface in ipairs(ifaces) do
-    succ, err = self.rsMgt.__try:grant(depl.id, iface, false)
+    succ, err = self.rsMgt:grant(depl.id, iface, false)
     Check.assertTrue(succ)
   end
   --
-  succ, auth = self.rsMgt.__try:getAuthorization(depl.id)
+  succ, auth = self.rsMgt:getAuthorization(depl.id)
   Check.assertTrue(succ)
   Check.assertEquals(auth.id, depl.id)
   Check.assertEquals(auth.type, "ATSystemDeployment")
@@ -760,7 +763,7 @@ function Test4:testGrantExpressions()
     Check.assertTrue(succ)
   end
   --
-  succ, err = self.rsMgt.__try:removeAuthorization(depl.id)
+  succ, err = self.rsMgt:removeAuthorization(depl.id)
   Check.assertTrue(succ)
 end
 
@@ -768,16 +771,16 @@ function Test4:testGrantRevokeGetAuthorization()
   local succ, err, auth
   local depl = self.deployments[1]
   for _, iface in ipairs(self.ifaces) do
-    succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
+    succ, err = self.rsMgt:grant(depl.id, iface, true)
     Check.assertTrue(succ)
   end
   --
   for _, iface in ipairs(self.ifaces) do
-    succ, err = self.rsMgt.__try:revoke(depl.id, iface)
+    succ, err = self.rsMgt:revoke(depl.id, iface)
     Check.assertTrue(succ)
   end
   --
-  succ, err = self.rsMgt.__try:getAuthorization(depl.id)
+  succ, err = self.rsMgt:getAuthorization(depl.id)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0", err[1])
 end
@@ -787,7 +790,7 @@ function Test4:testGetAuthorizations()
   local tmp = {}
   for _, depl in ipairs(self.deployments) do
     for _, iface in ipairs(self.ifaces) do
-      succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
+      succ, err = self.rsMgt:grant(depl.id, iface, true)
       Check.assertTrue(succ)
       local t = tmp[depl.id]
       if not t then
@@ -798,7 +801,7 @@ function Test4:testGetAuthorizations()
     end
   end
   --
-  succ, auths = self.rsMgt.__try:getAuthorizations()
+  succ, auths = self.rsMgt:getAuthorizations()
   Check.assertTrue(succ)
   --
   -- Pode haver mais autorizações do que as cadastradas,
@@ -825,9 +828,9 @@ function Test4:testGetAuthorizations()
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt.__try:removeAuthorization(depl.id)
+    succ, err = self.rsMgt:removeAuthorization(depl.id)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt.__try:getAuthorization(depl.id)
+    succ, err = self.rsMgt:getAuthorization(depl.id)
     Check.assertFalse(succ)
     Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0", err[1])
   end
@@ -838,13 +841,13 @@ function Test4:testGetAuthorizationsByInterfaceId()
   local tmp = {}
   for i, depl in ipairs(self.deployments) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
+    succ, err = self.rsMgt:grant(depl.id, iface, true)
     Check.assertTrue(succ)
     tmp[depl.id] = iface
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({
+    succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({
       tmp[depl.id]
     })
     local auth = auths[1]
@@ -857,7 +860,7 @@ function Test4:testGetAuthorizationsByInterfaceId()
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt.__try:removeAuthorization(depl.id)
+    succ, err = self.rsMgt:removeAuthorization(depl.id)
     Check.assertTrue(succ)
   end
 end
@@ -868,19 +871,19 @@ function Test4:testGetAuthorizationsByInterfaceIdCommon()
   local tmp = {}
   for i, depl in ipairs(self.deployments) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
+    succ, err = self.rsMgt:grant(depl.id, iface, true)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt.__try:grant(depl.id, ibase, false)
+    succ, err = self.rsMgt:grant(depl.id, ibase, false)
     Check.assertTrue(succ)
     tmp[depl.id] = iface
   end
   --
-  succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({ibase})
+  succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({ibase})
   Check.assertTrue(succ)
   Check.assertTrue(#auths == #self.deployments)
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt.__try:removeAuthorization(depl.id)
+    succ, err = self.rsMgt:removeAuthorization(depl.id)
     Check.assertTrue(succ)
   end
 end
@@ -891,15 +894,15 @@ function Test4:testGetAuthorizationsByInterfaceIdMulti()
   local tmp = {}
   for i, depl in ipairs(self.deployments) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt.__try:grant(depl.id, iface, true)
+    succ, err = self.rsMgt:grant(depl.id, iface, true)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt.__try:grant(depl.id, ibase, false)
+    succ, err = self.rsMgt:grant(depl.id, ibase, false)
     Check.assertTrue(succ)
     tmp[depl.id] = iface
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({
+    succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({
       ibase,
       tmp[depl.id]
     })
@@ -918,7 +921,7 @@ function Test4:testGetAuthorizationsByInterfaceIdMulti()
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt.__try:removeAuthorization(depl.id)
+    succ, err = self.rsMgt:removeAuthorization(depl.id)
     Check.assertTrue(succ)
   end
 end
@@ -951,29 +954,29 @@ end
 --
 function Test5:afterEachTest()
   for _, user in ipairs(self.users) do
-    self.acsMgt.__try:removeUser(user.id)
+    self.acsMgt:removeUser(user.id)
   end
 end
 
 function Test5:testAddGetRemoveUser()
   local succ, err, added
   local user = self.users[1]
-  succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+  succ, err = self.acsMgt:addUser(user.id, user.name)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getUser(user.id)
+  succ, added = self.acsMgt:getUser(user.id)
   Check.assertTrue(succ)
   Check.assertEquals(user.id, added.id)
   Check.assertEquals(user.name, added.name)
   --
-  succ, err = self.acsMgt.__try:removeUser(user.id)
+  succ, err = self.acsMgt:removeUser(user.id)
   Check.assertTrue(succ)
 end
 
 function Test5:testAddGetRemoveUsers()
   local succ, err, list
   for _, user in ipairs(self.users) do
-    succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+    succ, err = self.acsMgt:addUser(user.id, user.name)
     Check.assertTrue(succ)
   end
   --
@@ -990,26 +993,26 @@ function Test5:testAddGetRemoveUsers()
   end
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.acsMgt.__try:removeUser(user.id)
+    succ, err = self.acsMgt:removeUser(user.id)
     Check.assertTrue(succ)
   end
 end
 
 function Test5:testAddUser_UserAlreadyExists()
   local user = self.users[1]
-  local succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+  local succ, err = self.acsMgt:addUser(user.id, user.name)
   Check.assertTrue(succ)
   --
-  succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+  succ, err = self.acsMgt:addUser(user.id, user.name)
   Check.assertFalse(succ)
   Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserAlreadyExists:1.0")
   --
-  succ, err = self.acsMgt.__try:removeUser(user.id)
+  succ, err = self.acsMgt:removeUser(user.id)
   Check.assertTrue(succ)
 end
 
 function Test5:testRemoveUser_UserNonExistent()
-  local succ, err = self.acsMgt.__try:removeUser("AnInvalidIdToRemove")
+  local succ, err = self.acsMgt:removeUser("AnInvalidIdToRemove")
   Check.assertFalse(succ)
   Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0")
 end
@@ -1018,29 +1021,29 @@ function Test5:testSetUserName()
   local succ, err, added
   local name = "New Name For An User"
   local user = self.users[1]
-  succ, err = self.acsMgt.__try:addUser(user.id, user.name)
+  succ, err = self.acsMgt:addUser(user.id, user.name)
   Check.assertTrue(succ)
   --
-  succ, err = self.acsMgt.__try:setUserName(user.id, name)
+  succ, err = self.acsMgt:setUserName(user.id, name)
   Check.assertTrue(succ)
   --
-  succ, added = self.acsMgt.__try:getUser(user.id)
+  succ, added = self.acsMgt:getUser(user.id)
   Check.assertTrue(succ)
   Check.assertEquals(user.id, added.id)
   Check.assertEquals(added.name, name)
   --
-  succ, err = self.acsMgt.__try:removeUser(user.id)
+  succ, err = self.acsMgt:removeUser(user.id)
   Check.assertTrue(succ)
 end
 
 function Test5:testSetUserName_UserNonExistent()
-  local succ, err = self.acsMgt.__try:setUserName("InvalidId", "New Name For An User")
+  local succ, err = self.acsMgt:setUserName("InvalidId", "New Name For An User")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0", err[1])
 end
 
 function Test5:testGetUser_UserNonExistent()
-  local succ, err = self.acsMgt.__try:getUser("InvalidId")
+  local succ, err = self.acsMgt:getUser("InvalidId")
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0", err[1])
 end
@@ -1062,17 +1065,17 @@ function Test6:beforeTestCase()
     local iface = string.format("IDL:openbusidl/test%.2d:1.0", i)
     table.insert(self.users, user)
     table.insert(self.ifaces, iface)
-    self.acsMgt.__try:addUser(user.id, user.name)
-    self.rsMgt.__try:addInterfaceIdentifier(iface)
+    self.acsMgt:addUser(user.id, user.name)
+    self.rsMgt:addInterfaceIdentifier(iface)
   end
 end
 
 function Test6:afterTestCase()
   for _, iface in ipairs(self.ifaces) do
-    self.rsMgt.__try:removeInterfaceIdentifier(iface)
+    self.rsMgt:removeInterfaceIdentifier(iface)
   end
   for _, user in ipairs(self.users) do
-    self.acsMgt.__try:removeUser(user.id)
+    self.acsMgt:removeUser(user.id)
   end
   if (self.credentialManager:hasValue()) then
     self.acs:logout(self.credential)
@@ -1082,7 +1085,7 @@ end
 
 function Test6:afterEachTest()
   for _, user in ipairs(self.users) do
-    self.rsMgt.__try:removeAuthorization(user.id)
+    self.rsMgt:removeAuthorization(user.id)
   end
 end
 
@@ -1090,20 +1093,20 @@ function Test6:testGrantGetRemoveAuthorization()
   local succ, err, auth
   local user = self.users[1]
   local iface = self.ifaces[1]
-  succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+  succ, err = self.rsMgt:grant(user.id, iface, true)
   Check.assertTrue(succ)
   --
-  succ, auth = self.rsMgt.__try:getAuthorization(user.id)
+  succ, auth = self.rsMgt:getAuthorization(user.id)
   Check.assertTrue(succ)
   Check.assertEquals(auth.id, user.id)
   Check.assertEquals(auth.type, "ATUser")
   Check.assertTrue(#auth.authorized == 1)
   Check.assertTrue(auth.authorized[1] == iface)
   --
-  succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+  succ, err = self.rsMgt:removeAuthorization(user.id)
   Check.assertTrue(succ)
   --
-  succ, err = self.rsMgt.__try:getAuthorization(user.id)
+  succ, err = self.rsMgt:getAuthorization(user.id)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0",
     err[1])
@@ -1111,14 +1114,14 @@ end
 
 function Test6:testGrant_MemberNonExistent()
   local iface = self.ifaces[1]
-  local succ, err = self.rsMgt.__try:grant("InvalidId", iface, true)
+  local succ, err = self.rsMgt:grant("InvalidId", iface, true)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/MemberNonExistent:1.0", err[1])
 end
 
 function Test6:testGrant_InterfaceIdentifierNonExistent()
   local user = self.users[1]
-  local succ, err = self.rsMgt.__try:grant(user.id, "InvalidId", true)
+  local succ, err = self.rsMgt:grant(user.id, "InvalidId", true)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0", 
     err[1])
@@ -1128,7 +1131,7 @@ function Test6:testGrant_InvalidRegularExpression()
   local succ, err, auth
   local user = self.users[1]
   local iface = "IDL:*invalid:1.0"
-  succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+  succ, err = self.rsMgt:grant(user.id, iface, true)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0", 
     err[1])
@@ -1148,11 +1151,11 @@ function Test6:testGrantExpressions()
     "IDL:openbusidl/test/demo/hello*:1.*",
   }
   for _, iface in ipairs(ifaces) do
-    succ, err = self.rsMgt.__try:grant(user.id, iface, false)
+    succ, err = self.rsMgt:grant(user.id, iface, false)
     Check.assertTrue(succ)
   end
   --
-  succ, auth = self.rsMgt.__try:getAuthorization(user.id)
+  succ, auth = self.rsMgt:getAuthorization(user.id)
   Check.assertTrue(succ)
   Check.assertEquals(auth.id, user.id)
   Check.assertEquals(auth.type, "ATUser")
@@ -1167,7 +1170,7 @@ function Test6:testGrantExpressions()
     Check.assertTrue(succ)
   end
   --
-  succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+  succ, err = self.rsMgt:removeAuthorization(user.id)
   Check.assertTrue(succ)
 end
 
@@ -1175,16 +1178,16 @@ function Test6:testGrantRevokeGetAuthorization()
   local succ, err, auth
   local user = self.users[1]
   for _, iface in ipairs(self.ifaces) do
-    succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+    succ, err = self.rsMgt:grant(user.id, iface, true)
     Check.assertTrue(succ)
   end
   --
   for _, iface in ipairs(self.ifaces) do
-    succ, err = self.rsMgt.__try:revoke(user.id, iface)
+    succ, err = self.rsMgt:revoke(user.id, iface)
     Check.assertTrue(succ)
   end
   --
-  succ, err = self.rsMgt.__try:getAuthorization(user.id)
+  succ, err = self.rsMgt:getAuthorization(user.id)
   Check.assertFalse(succ)
   Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0", err[1])
 end
@@ -1194,7 +1197,7 @@ function Test6:testGetAuthorizations()
   local tmp = {}
   for _, user in ipairs(self.users) do
     for _, iface in ipairs(self.ifaces) do
-      succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+      succ, err = self.rsMgt:grant(user.id, iface, true)
       Check.assertTrue(succ)
       local t = tmp[user.id]
       if not t then
@@ -1205,7 +1208,7 @@ function Test6:testGetAuthorizations()
     end
   end
   --
-  succ, auths = self.rsMgt.__try:getAuthorizations()
+  succ, auths = self.rsMgt:getAuthorizations()
   Check.assertTrue(succ)
   --
   -- Pode haver mais autorizações do que as cadastradas,
@@ -1232,9 +1235,9 @@ function Test6:testGetAuthorizations()
   end
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+    succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt.__try:getAuthorization(user.id)
+    succ, err = self.rsMgt:getAuthorization(user.id)
     Check.assertFalse(succ)
     Check.assertEquals("IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0", err[1])
   end
@@ -1245,13 +1248,13 @@ function Test6:testGetAuthorizationsByInterfaceId()
   local tmp = {}
   for i, user in ipairs(self.users) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+    succ, err = self.rsMgt:grant(user.id, iface, true)
     Check.assertTrue(succ)
     tmp[user.id] = iface
   end
   --
   for _, user in ipairs(self.users) do
-    succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({
+    succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({
       tmp[user.id]
     })
     local auth = auths[1]
@@ -1264,7 +1267,7 @@ function Test6:testGetAuthorizationsByInterfaceId()
   end
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+    succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
   end
 end
@@ -1275,19 +1278,19 @@ function Test6:testGetAuthorizationsByInterfaceIdCommon()
   local tmp = {}
   for i, user in ipairs(self.users) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+    succ, err = self.rsMgt:grant(user.id, iface, true)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt.__try:grant(user.id, ibase, false)
+    succ, err = self.rsMgt:grant(user.id, ibase, false)
     Check.assertTrue(succ)
     tmp[user.id] = iface
   end
   --
-  succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({ibase})
+  succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({ibase})
   Check.assertTrue(succ)
   Check.assertTrue(#auths == #self.users)
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+    succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
   end
 end
@@ -1298,15 +1301,15 @@ function Test6:testGetAuthorizationsByInterfaceIdMulti()
   local tmp = {}
   for i, user in ipairs(self.users) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt.__try:grant(user.id, iface, true)
+    succ, err = self.rsMgt:grant(user.id, iface, true)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt.__try:grant(user.id, ibase, false)
+    succ, err = self.rsMgt:grant(user.id, ibase, false)
     Check.assertTrue(succ)
     tmp[user.id] = iface
   end
   --
   for _, user in ipairs(self.users) do
-    succ, auths = self.rsMgt.__try:getAuthorizationsByInterfaceId({
+    succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({
       ibase,
       tmp[user.id]
     })
@@ -1325,7 +1328,7 @@ function Test6:testGetAuthorizationsByInterfaceIdMulti()
   end
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.rsMgt.__try:removeAuthorization(user.id)
+    succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
   end
 end
@@ -1385,7 +1388,7 @@ function Test7:beforeTestCase()
   }
   --
   self.user = login
-  self.acsMgt.__try:addUser(self.user, self.user)
+  self.acsMgt:addUser(self.user, self.user)
   --
   self.member = scs.newComponent(Hello.facets, Hello.receptacles,
     Hello.componentId)
@@ -1407,15 +1410,15 @@ end
 
 function Test7:afterEachTest()
   if type(self.rsId01) == "string" then
-    self.rs.__try:unregister(self.rsId01)
+    self.rs:unregister(self.rsId01)
   end
   if type(self.rsId02) == "string" then
-    self.rs.__try:unregister(self.rsId02)
+    self.rs:unregister(self.rsId02)
   end
   if type(self.rsId03) == "string" then
-    self.rs.__try:unregister(self.rsId03)
+    self.rs:unregister(self.rsId03)
   end
-  self.rsMgt.__try:removeAuthorization(self.user)
+  self.rsMgt:removeAuthorization(self.user)
 end
 
 function Test7:testGetOfferedInterfaces()
@@ -1425,10 +1428,10 @@ function Test7:testGetOfferedInterfaces()
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs.__try:register({
+  succ, self.rsId01 = self.rs:register({
     member = self.member.IComponent,
     properties = {},
   })
@@ -1460,10 +1463,10 @@ function Test7:testGetOfferedInterfaces_MoreRegisters()
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs.__try:register({
+  succ, self.rsId01 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1473,7 +1476,7 @@ function Test7:testGetOfferedInterfaces_MoreRegisters()
     }
   })
   Check.assertTrue(succ)
-  succ, self.rsId02 = self.rs.__try:register({
+  succ, self.rsId02 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1483,7 +1486,7 @@ function Test7:testGetOfferedInterfaces_MoreRegisters()
     }
   })
   Check.assertTrue(succ)
-  succ, self.rsId03 = self.rs.__try:register({
+  succ, self.rsId03 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1520,10 +1523,10 @@ function Test7:testGetOfferedInterfacesByMember()
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs.__try:register({
+  succ, self.rsId01 = self.rs:register({
     member = self.member.IComponent,
     properties = {},
   })
@@ -1555,10 +1558,10 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs.__try:register({
+  succ, self.rsId01 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1568,7 +1571,7 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
     }
   })
   Check.assertTrue(succ)
-  succ, self.rsId02 = self.rs.__try:register({
+  succ, self.rsId02 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1578,7 +1581,7 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
     }
   })
   Check.assertTrue(succ)
-  succ, self.rsId03 = self.rs.__try:register({
+  succ, self.rsId03 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1615,16 +1618,16 @@ function Test7:testGetUnauthorizedInterfaces()
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs.__try:register({
+  succ, self.rsId01 = self.rs:register({
     member = self.member.IComponent,
     properties = {},
   })
   Check.assertTrue(succ)
 
-  local succ = self.rsMgt.__try:revoke(self.user, "IDL:*:*")
+  local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
   Check.assertTrue(succ)
 
   local offers = self.rsMgt:getUnauthorizedInterfaces()
@@ -1653,10 +1656,10 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs.__try:register({
+  succ, self.rsId01 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1666,7 +1669,7 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
     }
   })
   Check.assertTrue(succ)
-  succ, self.rsId02 = self.rs.__try:register({
+  succ, self.rsId02 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1676,7 +1679,7 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
     }
   })
   Check.assertTrue(succ)
-  succ, self.rsId03 = self.rs.__try:register({
+  succ, self.rsId03 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1687,7 +1690,7 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
   })
   Check.assertTrue(succ)
 
-  local succ = self.rsMgt.__try:revoke(self.user, "IDL:*:*")
+  local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
   Check.assertTrue(succ)
 
   local offers = self.rsMgt:getUnauthorizedInterfaces()
@@ -1716,16 +1719,16 @@ function Test7:testGetUnauthorizedInterfacesByMember()
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs.__try:register({
+  succ, self.rsId01 = self.rs:register({
     member = self.member.IComponent,
     properties = {},
   })
   Check.assertTrue(succ)
 
-  local succ = self.rsMgt.__try:revoke(self.user, "IDL:*:*")
+  local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
   Check.assertTrue(succ)
 
   local offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
@@ -1754,10 +1757,10 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs.__try:register({
+  succ, self.rsId01 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1767,7 +1770,7 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
     }
   })
   Check.assertTrue(succ)
-  succ, self.rsId02 = self.rs.__try:register({
+  succ, self.rsId02 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1777,7 +1780,7 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
     }
   })
   Check.assertTrue(succ)
-  succ, self.rsId03 = self.rs.__try:register({
+  succ, self.rsId03 = self.rs:register({
     member = self.member.IComponent,
     properties = {
       {
@@ -1788,7 +1791,7 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
   })
   Check.assertTrue(succ)
 
-  local succ = self.rsMgt.__try:revoke(self.user, "IDL:*:*")
+  local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
   Check.assertTrue(succ)
 
   local offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
@@ -1811,10 +1814,10 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
 end
 
 function Test7:testUnregister()
-  local succ = self.rsMgt.__try:grant(self.user, "IDL:*:*", false)
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  local succ, id = self.rs.__try:register({
+  local succ, id = self.rs:register({
     member = self.member.IComponent,
     properties = {},
   })

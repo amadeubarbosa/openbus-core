@@ -69,7 +69,7 @@ Suite = {
 
 
       local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
-        "IDL:scs/core/IComponent:1.0")
+        "synchronous", "IDL:scs/core/IComponent:1.0")
       local facet = acsComp:getFacet(
         "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
       self.accessControlService = orb:narrow(facet,

@@ -88,8 +88,8 @@ Suite = {
 
        Check.assertTrue(# self.ftconfig.hosts.RS > 1)
 
-       local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
-                                    "IDL:scs/core/IComponent:1.0")
+       local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05", 
+                                    "synchronous", "IDL:scs/core/IComponent:1.0")
        local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
        local acsFacet = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
@@ -111,14 +111,15 @@ Suite = {
        acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
        local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
        local rsIComp1 = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-       rsFacet1 = rsIComp1:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
+       local rsFacet1 = rsIComp1:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
        rsFacet1 = orb:narrow(rsFacet1,
           "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+       rsFacet1 = orb:newproxy(rsFacet1, "protected")
        --cadastra oferta na primeira réplica
        local member = scs.newComponent(Hello_vft.facets, Hello_vft.receptacles,
         Hello_vft.componentId)
        -- Identificar local propositalmente
-       local success, registryIdentifier = rsFacet1.__try:register({
+       local success, registryIdentifier = rsFacet1:register({
         member = member.IComponent,
         properties = Hello_vft.properties,
        })
@@ -138,7 +139,7 @@ Suite = {
            end
        end
        --descadastra oferta na primeira réplica
-       local success, ret, retRemote = rsFacet1.__try:unregister(registryIdentifier)
+       local success, ret, retRemote = rsFacet1:unregister(registryIdentifier)
        Check.assertTrue(success)
        Check.assertTrue(ret)
        Check.assertTrue(retRemote)
