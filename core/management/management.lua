@@ -513,7 +513,7 @@ handlers["add-system"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
   if validId(id) then
-    local succ, err = acsmgm.__try:addSystem(id, cmd.params.description)
+    local succ, err = acsmgm:addSystem(id, cmd.params.description)
     if succ then
       printf("[INFO] Sistema '%s' cadastrado com sucesso", id)
     elseif err[1] == ACS_SystemAlreadyExistsException then
@@ -535,7 +535,7 @@ end
 handlers["del-system"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = acsmgm.__try:removeSystem(id)
+  local succ, err = acsmgm:removeSystem(id)
   if succ then
     printf("[INFO] Sistema '%s' removido com sucesso", id)
   elseif err[1] == ACS_SystemInUseException then
@@ -559,7 +559,7 @@ handlers["list-system"] = function(cmd)
     systems = acsmgm:getSystems()
   else
     -- Busca um sistema específico
-    local succ, system = acsmgm.__try:getSystem(cmd.params[cmd.name])
+    local succ, system = acsmgm:getSystem(cmd.params[cmd.name])
     if succ then
       systems = {system}
     else
@@ -609,7 +609,7 @@ end
 handlers["set-system"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = acsmgm.__try:setSystemDescription(id,
+  local succ, err = acsmgm:setSystemDescription(id,
     cmd.params.description)
   if succ then
     print(string.format("[INFO] Sistema '%s' atualizado com sucesso", id))
@@ -641,7 +641,7 @@ handlers["add-deployment"] = function(cmd)
       return
     end
     f:close()
-    local succ, err = acsmgm.__try:addSystemDeployment(id, cmd.params.system,
+    local succ, err = acsmgm:addSystemDeployment(id, cmd.params.system,
       cmd.params.description, cert)
     if succ then
       printf("[INFO] Implantação '%s' cadastrada com sucesso", id)
@@ -669,7 +669,7 @@ end
 handlers["del-deployment"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = acsmgm.__try:removeSystemDeployment(id)
+  local succ, err = acsmgm:removeSystemDeployment(id)
   if succ then
     printf("[INFO] Implantação '%s' removida com sucesso", id)
   elseif err[1] == ACS_SystemDeploymentNonExistentException then
@@ -699,7 +699,7 @@ handlers["set-deployment"] = function(cmd)
       return
     end
     f:close()
-    local succ, err = acsmgm.__try:setSystemDeploymentCertificate(id, cert)
+    local succ, err = acsmgm:setSystemDeploymentCertificate(id, cert)
     if succ then
       printf("[INFO] Certificado da implantação '%s' atualizado com sucesso",
         id)
@@ -714,7 +714,7 @@ handlers["set-deployment"] = function(cmd)
     end
   end
   if cmd.params.description then
-    local succ, err = acsmgm.__try:setSystemDeploymentDescription(id,
+    local succ, err = acsmgm:setSystemDeploymentDescription(id,
       cmd.params.description)
     if succ then
       printf("[INFO] Descrição da imlantação '%s' atualizada com sucesso", id)
@@ -739,7 +739,7 @@ handlers["list-deployment"] = function(cmd)
   local system = cmd.params.system
   -- Busca apenas uma implantação
   if id and id ~= null then
-    local succ, depl = acsmgm.__try:getSystemDeployment(id)
+    local succ, depl = acsmgm:getSystemDeployment(id)
     if succ then
       depls = { depl }
     elseif depl[1] == ACS_SystemDeploymentNonExistentException then
@@ -797,7 +797,7 @@ handlers["add-user"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
   if validId(id) then
-    local succ, err = acsmgm.__try:addUser(id, cmd.params.name)
+    local succ, err = acsmgm:addUser(id, cmd.params.name)
     if succ then
       printf("[INFO] Usuário '%s' cadastrado com sucesso", id)
     elseif err[1] == ACS_UserAlreadyExistsException then
@@ -819,7 +819,7 @@ end
 handlers["del-user"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = acsmgm.__try:removeUser(id)
+  local succ, err = acsmgm:removeUser(id)
   if succ then
     printf("[INFO] Usuário '%s' removido com sucesso", id)
   elseif err[1] == ACS_UserNonExistentException then
@@ -837,7 +837,7 @@ end
 handlers["set-user"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = acsmgm.__try:setUserName(id, cmd.params.name)
+  local succ, err = acsmgm:setUserName(id, cmd.params.name)
   if succ then
     print(string.format("[INFO] Usuário '%s' atualizado com sucesso", id))
   elseif err[1] == ACS_UserNonExistentException then
@@ -860,7 +860,7 @@ handlers["list-user"] = function(cmd)
     users = acsmgm:getUsers()
   else
     -- Busca um específico
-    local succ, user = acsmgm.__try:getUser(cmd.params[cmd.name])
+    local succ, user = acsmgm:getUser(cmd.params[cmd.name])
     if succ then
       users = {user}
     else
@@ -910,7 +910,7 @@ end
 handlers["add-interface"] = function(cmd)
   local rsmgm = getrsmgm()
   local iface = cmd.params[cmd.name]
-  local succ, err = rsmgm.__try:addInterfaceIdentifier(iface)
+  local succ, err = rsmgm:addInterfaceIdentifier(iface)
   if succ then
     printf("[INFO] Interface '%s' cadastrada com sucesso", iface)
   elseif err[1] == RS_InterfaceIdentifierAlreadyExistsException then
@@ -928,7 +928,7 @@ end
 handlers["del-interface"] = function(cmd)
   local rsmgm = getrsmgm()
   local iface = cmd.params[cmd.name]
-  local succ, err = rsmgm.__try:removeInterfaceIdentifier(iface)
+  local succ, err = rsmgm:removeInterfaceIdentifier(iface)
   if succ then
     printf("[INFO] Interface '%s' removida com sucesso", iface)
   elseif err[1] == RS_InterfaceIdentifierInUseException then
@@ -986,12 +986,12 @@ handlers["set-authorization"] = function(cmd)
   -- Concede uma autorização
   if cmd.params.grant then
     iface = cmd.params.grant
-    succ, err = rsmgm.__try:grant(id, iface, not cmd.params["no-strict"])
+    succ, err = rsmgm:grant(id, iface, not cmd.params["no-strict"])
     msg = string.format("[INFO] Autorização concedida a '%s': %s", id, iface)
   else
     -- Revoga autorização
     iface = cmd.params.revoke
-    succ, err = rsmgm.__try:revoke(id, iface)
+    succ, err = rsmgm:revoke(id, iface)
     msg = string.format("[INFO] Autorização revogada de '%s': %s", id, iface)
   end
   if succ then
@@ -1018,7 +1018,7 @@ end
 handlers["del-authorization"] = function(cmd)
   local rsmgm = getrsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = rsmgm.__try:removeAuthorization(id)
+  local succ, err = rsmgm:removeAuthorization(id)
   if succ then
     printf("[INFO] Autorizações de '%s' removidas com sucesso",
       cmd.params[cmd.name])
@@ -1040,7 +1040,7 @@ handlers["list-authorization"] = function(cmd)
   local id = cmd.params[cmd.name]
   if id and id ~= null then
     -- Busca de uma única implantação
-    local succ, auth = rsmgm.__try:getAuthorization(id)
+    local succ, auth = rsmgm:getAuthorization(id)
     if succ then
       auths = { auth }
     elseif auth[1] == RS_AuthorizationNonExistentException then
@@ -1394,6 +1394,7 @@ function getacsmgm()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   acsmgm = ic:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
   acsmgm = orb:narrow(acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
+  acsmgm = orb:newproxy(acsmgm, "protected")
   return acsmgm
 end
 
@@ -1417,6 +1418,7 @@ function getrsmgm()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   rsmgm = ic:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
   rsmgm = orb:narrow(rsmgm, Utils.MANAGEMENT_RS_INTERFACE)
+  rsmgm = orb:newproxy(rsmgm, "protected")
   return rsmgm
 end
 

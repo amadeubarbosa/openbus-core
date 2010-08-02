@@ -5,10 +5,10 @@
 -- If A depends on B then you should place B's description before than A's.
 SUNOS64_TECMAKE_FLAGS="USE_NODEPEND=Yes TEC_UNAME=SunOS510_64 BUILD_64=yes"
 packages = {
-  -- fake package to easy the download of the oil04, scs and friend projects
+  -- fake package to easy the download of the oil05, scs and friend projects
   { name = "oil-source",
-    url = SVNREPURL .. "/openbus/libs/trunk/oil04",
-    directory = PRODAPP .."/oil04", 
+    url = SVNREPURL .. "/openbus/libs/trunk/oil-0.5-beta-obv",
+    directory = PRODAPP .."/oil-0.5-beta-obv", 
   },
   { name = "scs-source",
     url = SVNREPURL .. "/scs/trunk",
@@ -133,7 +133,7 @@ packages = {
   { name = "oilall",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/oil04/src",
+      src = PRODAPP .."/oil-0.5-beta-obv/src",
       mf = { "oilall LUA51=../../lua5.1", },
     Darwin = { mf = {"oilall LUA51="..PRODAPP.."/lua5.1", "oilall BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "oilall LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
@@ -144,7 +144,7 @@ packages = {
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/liboilall.*"] = "libpath/${TEC_UNAME}",
-      ["oilall.h"] = "incpath/oil04",
+      ["oilall.h"] = "incpath/oil-0.5-beta-obv",
     },
   },
   { name = "luuid",
@@ -198,7 +198,7 @@ packages = {
   { name = "loop",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/oil04",
+      src = PRODAPP .."/oil-0.5-beta-obv",
       mf = { },
     },
     dev_files = {

@@ -127,7 +127,9 @@ function FTACSMonitorFacet:monitor()
 
   while true do
     local reinit = false
-    local ok, res = self:getService().__try:isAlive()
+    local service = self:getService()
+    service = orb:newproxy(service, "protected")
+    local ok, res = service:isAlive()
     Log:faulttolerance("[Monitor SCA] isAlive? "..tostring(ok))
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
