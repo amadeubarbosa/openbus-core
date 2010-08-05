@@ -1064,6 +1064,7 @@ function startup(self)
  -- Referência à faceta de gerenciamento do ACS
  mgm.acsmgm = acsIComp:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
  mgm.acsmgm = orb:narrow(mgm.acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
+ mgm.acsmgm = orb:newproxy(mgm.acsmgm, "protected")
  -- Administradores dos serviços
  mgm.admins = {}
  for _, name in ipairs(config.administrators) do
@@ -1201,9 +1202,9 @@ function ManagementFacet:loadData()
   for _, auth in ipairs(data) do
     local succ, err
     if auth.type == "ATSystemDeployment" then
-      succ, err = self.acsmgm.__try:getSystemDeployment(auth.id)
+      succ, err = self.acsmgm:getSystemDeployment(auth.id)
     else -- type == "ATUser"
-      succ, err = self.acsmgm.__try:getUser(auth.id)
+      succ, err = self.acsmgm:getUser(auth.id)
     end
     if succ then
       self.authorizations[auth.id] = auth
@@ -1315,13 +1316,13 @@ function ManagementFacet:grant(id, ifaceId, strict)
   if not auth then
     -- Cria uma nova autorização: verificar junto ao ACS se o membro existe
     local type = "ATSystemDeployment"
-    local succ, member = self.acsmgm.__try:getSystemDeployment(id)
+    local succ, member = self.acsmgm:getSystemDeployment(id)
     if not succ then
       if member[1] ~= SystemDeploymentNonExistentException then
         error(member)  -- Exceção desconhecida, repassando
       end
       type = "ATUser"
-      succ, member = self.acsmgm.__try:getUser(id)
+      succ, member = self.acsmgm:getUser(id)
       if not succ then
         if member[1] ~= UserNonExistentException then
           error(member)  -- Exceção desconhecida, repassando

@@ -961,7 +961,8 @@ function ManagementFacet:removeSystemDeployment(id)
       "IManagement_v" .. Utils.OB_VERSION,
       Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
-       rs.__try:removeAuthorization(id)
+      rs = orb:newproxy(rs, "protected")
+      rs:removeAuthorization(id)
     end
   end
 end
@@ -1146,7 +1147,8 @@ function ManagementFacet:removeUser(id)
                             "IManagement_v" .. Utils.OB_VERSION,
                             Utils.MANAGEMENT_RS_INTERFACE)
      if succ and rs then
-         rs.__try:removeAuthorization(id)
+       rs = orb:newproxy(rs, "protected")
+       rs:removeAuthorization(id)
      end
   end
 

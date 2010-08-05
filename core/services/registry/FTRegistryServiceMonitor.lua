@@ -135,7 +135,9 @@ function FTRSMonitorFacet:monitor()
 
   while true do
     local reinit = false
-    local ok, res = self:getService().__try:isAlive()
+    local ok, service = self:getService()
+    service = orb:newproxy(service, "protected")
+    local res = service:isAlive()
     Log:faulttolerance("[Monitor SR] isAlive? "..tostring(ok))
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
@@ -264,7 +266,9 @@ function startup(self)
       ":".. tostring(monitor.config.registryServerHostPort)
 
   local ftrsService = Openbus:getORB():newproxy("corbaloc::"..hostAdd.. "/" ..
-      Utils.FAULT_TOLERANT_RS_KEY,Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
+      Utils.FAULT_TOLERANT_RS_KEY,
+      "synchronous",
+      Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
   if ftrsService:_non_existent() then
     Log:error("Servico de registro nao encontrado.")
     os.exit(1)

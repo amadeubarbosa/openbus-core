@@ -71,6 +71,7 @@ function SessionServiceComponent:startup()
     if not registryService then
       error{"IDL:SCS/StartupFailed:1.0"}
     end
+    registryService = orb:newproxy(registryService, "protected")
   end
 
   -- Cadastra callback para LeaseExpired
@@ -85,7 +86,7 @@ function SessionServiceComponent:startup()
     Log:error("Erro durante conexão com serviço de Controle de Acesso.")
     Log:error(conId)
     error{"IDL:SCS/StartupFailed:1.0"}
- end
+  end
 
   -- configura faceta ISessionService
   self.sessionService = self.context.ISessionService
@@ -101,7 +102,7 @@ function SessionServiceComponent:startup()
     },
   }
 
-  local success, identifier = registryService.__try:register(self.serviceOffer)
+  local success, identifier = registryService:register(self.serviceOffer)
   if not success then
     if identifier[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
       Log:error("Erro ao registrar oferta do serviço de sessão")
@@ -126,8 +127,7 @@ function SessionServiceComponent:startup()
     },
   }
 
-
-  local success, identifierPrev = registryService.__try:register(self.serviceOfferPrev)
+  local success, identifierPrev = registryService:register(self.serviceOfferPrev)
   if not success then
     if identifierPrev[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
       Log:error("Erro ao registrar oferta do serviço de sessão da versão anterior")
@@ -176,8 +176,9 @@ function SessionServiceComponent:expired()
     Log:error("Servico de registro nao encontrado.\n")
     return
   end
+  registryService = orb:newproxy(registryService, "protected")
 
-  success, self.registryIdentifier = registryService.__try:register(self.serviceOffer)
+  success, self.registryIdentifier = registryService:register(self.serviceOffer)
   if not success then
     if self.registryIdentifier[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
       Log:error("Erro ao registrar oferta do serviço de sessão")
@@ -192,7 +193,7 @@ function SessionServiceComponent:expired()
     return
   end
 
-  success, self.registryIdentifierPrev = registryService.__try:register(self.serviceOfferPrev)
+  success, self.registryIdentifierPrev = registryService:register(self.serviceOfferPrev)
   if not success then
     if self.registryIdentifierPrev[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
       Log:error("Erro ao registrar oferta do serviço de sessão da versão anterior")
