@@ -46,7 +46,9 @@ function run()
 
   accessControlService = orb:newproxy("corbaloc::" .. 
       host .. ":" .. port .. 
-      "/ACS", "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+      "/ACS", 
+      "synchronous",
+      "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
   -- instala o interceptador de cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")

@@ -236,8 +236,8 @@ function init(self)
   end
 
   -- Recupera o Serviço de Acesso
-  local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
-      "IDL:scs/core/IComponent:1.0")
+  local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05", 
+    "synchronous", "IDL:scs/core/IComponent:1.0")
   local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   -- instala o interceptador de cliente
@@ -267,6 +267,7 @@ function init(self)
   self.registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
   self.registryService = orb:narrow(self.registryService,
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+  self.registryService = orb:newproxy(self.registryService, "protected")
 end
 
 -------------------------------------------------------------------------------
@@ -313,7 +314,7 @@ Suite = {
       local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
       -- Identificar local propositalmente
-      local success, registryIdentifier = self.registryService.__try:register({
+      local success, registryIdentifier = self.registryService:register({
         member = member.IComponent,
         properties = Hello_v2.properties,
       })
@@ -341,7 +342,7 @@ Suite = {
       local success
       local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         member = member.IComponent,
         properties = {
           {
@@ -365,7 +366,7 @@ Suite = {
     testRegister_NotImplemented = function(self)
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      local success, err = self.registryService.__try:register({
+      local success, err = self.registryService:register({
         member = member.IComponent,
         properties = {
           {
@@ -385,7 +386,7 @@ Suite = {
     testRegister_Unauthorized = function(self)
       local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles,
         Hello_v3.componentId)
-      local success, err = self.registryService.__try:register({
+      local success, err = self.registryService:register({
         member = member.IComponent,
         properties = {}, -- não informa as facetas, usa IMetaInterface
       })
@@ -397,7 +398,7 @@ Suite = {
     testRegister_UnauthorizedProperty = function(self)
       local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles,
         Hello_v3.componentId)
-      local success, err = self.registryService.__try:register({
+      local success, err = self.registryService:register({
         member = member.IComponent,
         properties = Hello_v3.properties,
       })
@@ -410,7 +411,7 @@ Suite = {
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
@@ -422,7 +423,7 @@ oil.verbose:print(offers)
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
-      Check.assertTrue(self.registryService.__try:update(self.registryIdentifier,
+      Check.assertTrue(self.registryService:update(self.registryIdentifier,
         Hello_v2.properties))
       offers = self.registryService:find({"IHello_v1"})
       Check.assertEquals(1, #offers)
@@ -433,7 +434,7 @@ oil.verbose:print(offers)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
@@ -442,7 +443,7 @@ oil.verbose:print(offers)
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
-      Check.assertTrue(self.registryService.__try:update(self.registryIdentifier,
+      Check.assertTrue(self.registryService:update(self.registryIdentifier,
   Hello_v1.properties))
       --
       offers = self.registryService:find({"IHello_v1"})
@@ -455,7 +456,7 @@ oil.verbose:print(offers)
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
       -- Tenta sobrescrita de propriedade definidas internamente no RS
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = self.fakeProps,
         member = member.IComponent,
       })
@@ -469,13 +470,13 @@ oil.verbose:print(offers)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = self.trueProps,
         member = member.IComponent,
       })
       Check.assertTrue(success)
       -- Tenta sobrescrita de propriedade definidas internamente no RS
-      Check.assertTrue(self.registryService.__try:update(self.registryIdentifier, self.fakeProps))
+      Check.assertTrue(self.registryService:update(self.registryIdentifier, self.fakeProps))
       --
       local offers = self.registryService:findByCriteria(
         {"IHello_v1"}, self.trueProps)
@@ -487,11 +488,11 @@ oil.verbose:print(offers)
       local success, err
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
-      success, err = self.registryService.__try:update("INVALID-IDENTIFIER",
+      success, err = self.registryService:update("INVALID-IDENTIFIER",
         Hello_v1.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/ServiceOfferNonExistent:1.0")
@@ -501,12 +502,12 @@ oil.verbose:print(offers)
       local success
       local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v2.properties,
         member = member.IComponent,
       })
       --
-      success = self.registryService.__try:update(self.registryIdentifier, {
+      success = self.registryService:update(self.registryIdentifier, {
         {
           name = "facets",
           value = {
@@ -523,7 +524,7 @@ oil.verbose:print(offers)
 oil.verbose:print(offers)
       Check.assertEquals(0, #offers)
       --
-      success = self.registryService.__try:update(self.registryIdentifier, {
+      success = self.registryService:update(self.registryIdentifier, {
         {
           name = "facets",
           value = {
@@ -545,12 +546,12 @@ oil.verbose:print(offers)
       local success, err
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
       --
-      success, err = self.registryService.__try:update(self.registryIdentifier, {
+      success, err = self.registryService:update(self.registryIdentifier, {
         {
           name = "facets",
           value = {
@@ -572,7 +573,7 @@ oil.verbose:print(offers)
       local success
       self.member_v1 = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.id_v1 = self.registryService.__try:register({
+      success, self.id_v1 = self.registryService:register({
         properties = Hello_v1.properties,
         member = self.member_v1.IComponent,
       })
@@ -580,7 +581,7 @@ oil.verbose:print(offers)
       --
       self.member_v2 = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
-      success, self.id_v2 = self.registryService.__try:register({
+      success, self.id_v2 = self.registryService:register({
         properties = Hello_v2.properties,
         member = self.member_v2.IComponent,
       })
@@ -933,7 +934,7 @@ oil.verbose:print(offers)
       --
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      local success, err = self.registryService.__try:register({
+      local success, err = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
@@ -945,7 +946,7 @@ oil.verbose:print(offers)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
@@ -953,7 +954,7 @@ oil.verbose:print(offers)
       self.credentialManager:invalidate()
       --
       local err
-      success, err = self.registryService.__try:find({"IHello_v1"})
+      success, err = self.registryService:find({"IHello_v1"})
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
     end,
@@ -962,7 +963,7 @@ oil.verbose:print(offers)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
@@ -970,7 +971,7 @@ oil.verbose:print(offers)
       self.credentialManager:invalidate()
       --
       local err
-      success, err = self.registryService.__try:update(self.registryIdentifier,
+      success, err = self.registryService:update(self.registryIdentifier,
         Hello_v1.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
@@ -980,7 +981,7 @@ oil.verbose:print(offers)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
@@ -988,7 +989,7 @@ oil.verbose:print(offers)
       self.credentialManager:invalidate()
       --
       local err
-      success, err = self.registryService.__try:findByCriteria(
+      success, err = self.registryService:findByCriteria(
   {"IHello_v1"}, Hello_v1.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
@@ -998,7 +999,7 @@ oil.verbose:print(offers)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, self.registryIdentifier = self.registryService.__try:register({
+      success, self.registryIdentifier = self.registryService:register({
         properties = Hello_v1.properties,
         member = member.IComponent,
       })
@@ -1006,7 +1007,7 @@ oil.verbose:print(offers)
       self.credentialManager:invalidate()
       --
       local err
-      success, err = self.registryService.__try:unregister(
+      success, err = self.registryService:unregister(
         self.registryIdentifier)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
@@ -1025,14 +1026,14 @@ oil.verbose:print(offers)
       local success, member_v1, member_v2, id_v1, id_v2
       member_v1 = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
         Hello_v1.componentId)
-      success, id_v1 = self.registryService.__try:register({
+      success, id_v1 = self.registryService:register({
         properties = Hello_v1.properties,
         member = member_v1.IComponent,
       })
       --
       member_v2 = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
-      success, id_v2 = self.registryService.__try:register({
+      success, id_v2 = self.registryService:register({
         properties = Hello_v2.properties,
         member = member_v2.IComponent,
       })
