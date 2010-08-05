@@ -65,17 +65,6 @@ Openbus:enableFaultTolerance()
 
 local orb = Openbus:getORB()
 
--- Carrega a IDL do serviço
-local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-if not IDLPATH_DIR then
-  log:error("Serviço de Sessão: A variável IDLPATH_DIR não foi definida.")
-  return false
-end
-local version = Utils.OB_VERSION
-local prev = Utils.OB_PREV
-local idlfile = IDLPATH_DIR .. "/v"..version.."/session_service.idl"
-orb:loadidlfile(idlfile)
-
 local scs = require "scs.core.base"
 local SessionServiceComponent =
   require "core.services.session.SessionServiceComponent"
