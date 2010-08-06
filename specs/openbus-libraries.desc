@@ -284,7 +284,7 @@ packages = {
     install_files = {
     ["target/ftc-*.jar"] = "libpath/java",
     },
-        },
+  },
   { name = "luatrace",
     url = SVNREPURL .. "/openbus/libs/trunk/luatrace",
     build = {
@@ -462,14 +462,25 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/scs/src/cpp",
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix" },
-    -- special compile instructions for solaris
-    SunOS = {
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix", "orbix sunos" },
-    },
-    SunOS510_64 = {
-      mf = { "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, "orbix "..SUNOS64_TECMAKE_FLAGS, "orbix sunos "..SUNOS64_TECMAKE_FLAGS },
-    },
+      mf = { 
+        "orbix genstubs", 
+        "orbix" 
+      },
+      -- special compile instructions for solaris
+      SunOS = {
+        mf = { 
+          "orbix genstubs", 
+          "orbix", 
+          "orbix sunosShared" 
+        },
+      },
+      SunOS510_64 = {
+        mf = { 
+          "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+          "orbix "..SUNOS64_TECMAKE_FLAGS, 
+          "orbix sunosShared "..SUNOS64_TECMAKE_FLAGS 
+        },
+      },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
@@ -487,14 +498,28 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1" },
-    -- special compile instructions for solaris
-    SunOS = {
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1", "orbix sunos" },
-    },
-    SunOS510_64 = {
-      mf = { "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, "orbix LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, "orbix sunos "..SUNOS64_TECMAKE_FLAGS },
-    },
+      mf = { 
+        "orbix genstubs", 
+        "orbix precompile", 
+        "orbix LUA51="..PRODAPP.."/lua5.1" 
+      },
+      -- special compile instructions for solaris
+      SunOS = {
+        mf = { 
+          "orbix genstubs", 
+          "orbix precompile", 
+          "orbix LUA51="..PRODAPP.."/lua5.1", 
+          "orbix sunosShared" 
+        },
+      },
+      SunOS510_64 = {
+        mf = { 
+          "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+          "orbix precompile", 
+          "orbix LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, 
+          "orbix sunosShared "..SUNOS64_TECMAKE_FLAGS 
+        },
+      },
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbusorbix.*"] = "libpath/${TEC_UNAME}",
@@ -514,13 +539,21 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/orbix",
-      mf = { "config cxxtest -C acs", "config -C acs LUA51="..PRODAPP.."/lua5.1", "config cxxtest -C rgs",  "config genstubs -C rgs", "config -C rgs LUA51="..PRODAPP.."/lua5.1" },
+      mf = { 
+        "config cxxtest -C acs", 
+        "config -C acs LUA51="..PRODAPP.."/lua5.1", 
+        "config cxxtest -C rgs",  
+        "config genstubs -C rgs", 
+        "config -C rgs LUA51="..PRODAPP.."/lua5.1" 
+      },
       SunOS510_64 = { 
-	    mf = { "config cxxtest -C acs",
-               "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
-               "config cxxtest -C rgs",
-               "config genstubs -C rgs",
-               "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, },
+  	    mf = { 
+  	      "config cxxtest -C acs",
+          "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
+          "config cxxtest -C rgs",
+          "config genstubs -C rgs",
+          "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
+        },
       },
     },
     install_files = {
@@ -543,42 +576,89 @@ packages = {
   { name = "openbus-demo-hello-orbix",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/demo/hello/orbix63",
-      mf = { "server genstubs USE_NODEPEND=Yes", 
-             "client LUA51="..PRODAPP.."/lua5.1", 
-             "server LUA51="..PRODAPP.."/lua5.1" },
+      src = PRODAPP .."/sdk-cpp/demo/hello/orbix",
+      mf = { 
+        "server genstubs USE_NODEPEND=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1", 
+        "server LUA51="..PRODAPP.."/lua5.1" 
+      },
       SunOS510_64 = { 
-        mf = { "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-               "client LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, 
-               "server LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS } 
+        mf = { 
+          "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+          "client LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, 
+          "server LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS 
+        }, 
       },
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/orbix63/bin/${TEC_UNAME}",
+      ["bin/${TEC_UNAME}/*"] = "demo/hello/orbix/bin/${TEC_UNAME}",
       ["../idl/hello.idl"] = "demo/hello/idl/",
       ["../management"] = "demo/hello",
-      ["client.cpp"] = "demo/hello/orbix63",
-      ["server.cpp"] = "demo/hello/orbix63",
-      ["run*"] = "demo/hello/orbix63",
-      ["*.mak"] = "demo/hello/orbix63",
-      ["*config"] = "demo/hello/orbix63",
-      ["run*"] = "demo/hello/orbix63",
-      ["client"] = "demo/hello/orbix63",
-      ["server"] = "demo/hello/orbix63",
+      ["client.cpp"] = "demo/hello/orbix",
+      ["server.cpp"] = "demo/hello/orbix",
+      ["run*"] = "demo/hello/orbix",
+      ["*.mak"] = "demo/hello/orbix",
+      ["*config"] = "demo/hello/orbix",
+      ["run*"] = "demo/hello/orbix",
+      ["client"] = "demo/hello/orbix",
+      ["server"] = "demo/hello/orbix",
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+      [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
+    },
+  },
+  { name = "openbus-demo-delegate-orbix",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/demo/delegate/singlethread/orbix",
+      mf = { 
+        "server genstubs", 
+        "client LUA51="..PRODAPP.."/lua5.1",
+        "server LUA51="..PRODAPP.."/lua5.1" 
+      },
+      SunOS510_64 = { 
+        mf = { 
+          "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+          "client LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
+          "server LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS 
+        }, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/orbix/bin/${TEC_UNAME}",
+      ["../../idl/delegate.idl"] = "demo/delegate/singlethread/idl/",
+      ["../../management"] = "demo/delegate/singlethread",
+      ["client.cpp"] = "demo/delegate/singlethread/orbix",
+      ["server.cpp"] = "demo/delegate/singlethread/orbix",
+      ["run*"] = "demo/delegate/singlethread/orbix",
+      ["*.mak"] = "demo/delegate/singlethread/orbix",
+      ["*config"] = "demo/delegate/singlethread/orbix",
+      ["run*"] = "demo/delegate/singlethread/orbix",
+      ["client"] = "demo/delegate/singlethread/orbix",
+      ["server"] = "demo/delegate/singlethread/orbix",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
       [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
     },
   },
   -- MICO related packages
---[[
   { name = "scsmico",
     build = {
       type = "tecmake",
       src = PRODAPP .."/scs/src/cpp",
-      mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1" },
-      SunOS510_64 = { mf = { 
-        "mico genstubs ".. SUNOS64_TECMAKE_FLAGS,
-        "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS },
+      mf = { 
+        "mico genstubs", 
+        "mico LUA51="..PRODAPP.."/lua5.1" 
+      },
+      Darwin104x86 = {
+        mf = { 
+          "mico genstubs LD=g++", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+        },
+      },
+      SunOS510_64 = { 
+        mf = { 
+          "mico genstubs ".. SUNOS64_TECMAKE_FLAGS,
+          "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS 
+        },
       }
     },
     install_files = {
@@ -597,15 +677,29 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
-      mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1" },
-    -- special compile instructions for solaris
+      mf = { 
+        "mico genstubs", 
+        "mico LUA51="..PRODAPP.."/lua5.1" },
+      -- special compile instructions for solaris
+      Darwin104x86 = {
+      mf = { 
+        "mico genstubs LD=g++", 
+        "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+      },
+    },
     SunOS = {
-      mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1", "mico sunos" },
+      mf = { 
+        "mico genstubs", 
+        "mico LUA51="..PRODAPP.."/lua5.1", 
+        "mico sunosShared" 
+      },
     },
       SunOS510_64 = { 
-        mf = { "mico genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-               "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
-               "mico sunos".. SUNOS64_TECMAKE_FLAGS },
+        mf = { 
+          "mico genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+          "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
+          "mico sunosShared ".. SUNOS64_TECMAKE_FLAGS 
+        },
       }
     },
     dev_files = {
@@ -626,13 +720,17 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/hello/mico",
-      mf = { "server genstubs USE_NODEPEND=Yes", 
-             "client LUA51="..PRODAPP.."/lua5.1",
-             "server LUA51="..PRODAPP.."/lua5.1" },
+      mf = { 
+        "server genstubs", 
+        "client LUA51="..PRODAPP.."/lua5.1",
+        "server LUA51="..PRODAPP.."/lua5.1" 
+      },
       SunOS510_64 = { 
-        mf = { "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-               "client LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
-               "server LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS }, 
+        mf = { 
+          "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+          "client LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
+          "server LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS 
+        }, 
       }
     },
     dev_files = {
@@ -651,26 +749,66 @@ packages = {
       [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
     },
   },
+  { name = "openbus-demo-delegate-mico",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/demo/delegate/singlethread/mico",
+      mf = { 
+        "server genstubs", 
+        "client LUA51="..PRODAPP.."/lua5.1",
+        "server LUA51="..PRODAPP.."/lua5.1" 
+      },
+      SunOS510_64 = { 
+        mf = { 
+          "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
+          "client LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
+          "server LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS 
+        }, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/mico/bin/${TEC_UNAME}",
+      ["../../idl/delegate.idl"] = "demo/delegate/singlethread/idl/",
+      ["../../management"] = "demo/delegate/singlethread",
+      ["client.cpp"] = "demo/delegate/singlethread/mico",
+      ["server.cpp"] = "demo/delegate/singlethread/mico",
+      ["run*"] = "demo/delegate/singlethread/mico",
+      ["*.mak"] = "demo/delegate/singlethread/mico",
+      ["*config"] = "demo/delegate/singlethread/mico",
+      ["run*"] = "demo/delegate/singlethread/mico",
+      ["client"] = "demo/delegate/singlethread/mico",
+      ["server"] = "demo/delegate/singlethread/mico",
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+      [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
+    },
+  },
   { name = "openbus-mico-test",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/mico",
-      mf = { "config cxxtest -C acs", "config -C acs LUA51="..PRODAPP.."/lua5.1", "config cxxtest -C rgs", "config genstubs -C rgs", "config -C rgs LUA51="..PRODAPP.."/lua5.1" },
+      mf = { 
+        "config cxxtest -C acs", 
+        "config -C acs LUA51="..PRODAPP.."/lua5.1", 
+        "config cxxtest -C rgs", 
+        "config genstubs -C rgs", 
+        "config -C rgs LUA51="..PRODAPP.."/lua5.1" 
+      },
       SunOS510_64 = { 
-	    mf = { "config cxxtest -C acs",
-               "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
-               "config cxxtest -C rgs",
-               "config genstubs -C rgs",
-               "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, },
+	    mf = { 
+	      "config cxxtest -C acs",
+        "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
+        "config cxxtest -C rgs",
+        "config genstubs -C rgs",
+        "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, },
       },
     },
     install_files = {
       ["bin/${TEC_UNAME}/*"] = "test/mico/bin/${TEC_UNAME}",
       ["config*"] = "test/mico/",
       ["runtests"] = "test/mico/",
+      ["../idl/*"] = "test/idl",
     },
   },
---]]
   -- Java related packages  
   { name = "scs-java-ant",
     build = {
