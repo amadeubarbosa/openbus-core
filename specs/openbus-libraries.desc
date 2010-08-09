@@ -57,7 +57,8 @@ packages = {
       src = PRODAPP .."/lua5.1/src",
       mf = { "config" },
       Darwin = { mf = {"config", "config BUILD_DYLIB=Yes"} },
-      SunOS510_64 = { mf = {"config ".. SUNOS64_TECMAKE_FLAGS} },
+      SunOS510 = { mf = {'config USE_NODEPEND=Yes CFLAGS=-KPIC LD=CC AR=CC STDLFLAGS+=-xar STDLFLAGS+=-o '} },
+      SunOS510_64 = { mf = {'config USE_NODEPEND=Yes CFLAGS=-KPIC CFLAGS+=-m64 LD=CC LFLAGS=-m64 AR=CC LFLAGS=-m64 STDLFLAGS=-m64 STDLFLAGS+=-xar STDLFLAGS+=-o '} },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/liblua5.1.so"] = "libpath/${TEC_UNAME}",
@@ -654,12 +655,18 @@ packages = {
           "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
         },
       },
+      SunOS510 = { 
+        mf = { 
+          "mico genstubs ",
+          "mico LD=CC LUA51="..PRODAPP.."/lua5.1 ",
+        },
+      },
       SunOS510_64 = { 
         mf = { 
-          "mico genstubs ".. SUNOS64_TECMAKE_FLAGS,
-          "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS 
+          "mico genstubs ",
+          'mico "LD=CC TEC_UNAME=SunOS510_64" LUA51='..PRODAPP.."/lua5.1 ",
         },
-      }
+      },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsmico.so"] = "libpath/${TEC_UNAME}",
@@ -682,25 +689,23 @@ packages = {
         "mico LUA51="..PRODAPP.."/lua5.1" },
       -- special compile instructions for solaris
       Darwin104x86 = {
-      mf = { 
-        "mico genstubs LD=g++", 
-        "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
-      },
-    },
-    SunOS = {
-      mf = { 
-        "mico genstubs", 
-        "mico LUA51="..PRODAPP.."/lua5.1", 
-        "mico sunosShared" 
-      },
-    },
-      SunOS510_64 = { 
         mf = { 
-          "mico genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-          "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
-          "mico sunosShared ".. SUNOS64_TECMAKE_FLAGS 
+          "mico genstubs LD=g++", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
         },
-      }
+      },
+      SunOS510 = {
+        mf = { 
+          "mico genstubs", 
+          "mico LD=CC LUA51="..PRODAPP.."/lua5.1", 
+        },
+      },
+      SunOS510_64 = {
+        mf = { 
+          "mico genstubs", 
+          'mico "TEC_UNAME=SunOS510_64 LD=CC" LUA51='..PRODAPP.."/lua5.1", 
+        },
+      },
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbusmico.*"] = "libpath/${TEC_UNAME}",
@@ -725,11 +730,18 @@ packages = {
         "client LUA51="..PRODAPP.."/lua5.1",
         "server LUA51="..PRODAPP.."/lua5.1" 
       },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs ",
+          'client "LUA51='..PRODAPP..'/lua5.1 "',
+          'server "LUA51='..PRODAPP..'/lua5.1 "',
+        }, 
+      },
       SunOS510_64 = { 
         mf = { 
-          "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-          "client LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
-          "server LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS 
+          "server genstubs ",
+          'client "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
+          'server "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
         }, 
       }
     },
@@ -758,13 +770,20 @@ packages = {
         "client LUA51="..PRODAPP.."/lua5.1",
         "server LUA51="..PRODAPP.."/lua5.1" 
       },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs ",
+          'client "LUA51='..PRODAPP..'/lua5.1 "',
+          'server "LUA51='..PRODAPP..'/lua5.1 "',
+        }, 
+      },
       SunOS510_64 = { 
         mf = { 
-          "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-          "client LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
-          "server LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS 
+          "server genstubs ",
+          'client "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
+          'server "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
         }, 
-      }
+      },
     },
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/mico/bin/${TEC_UNAME}",

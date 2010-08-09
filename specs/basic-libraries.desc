@@ -15,6 +15,16 @@ basesoft = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
       mf = { "config" },
+      SunOS510 = {
+        mf = {
+          "config LD=CC",
+        },
+      },
+      SunOS510_64 = {
+        mf = {
+          'config "LD=CC TEC_UNAME=SunOS510_64"',
+        },
+      },
     },
     install_files = {
       ["lib/${TEC_UNAME}/liblogger.so"] = "libpath/${TEC_UNAME}",
@@ -74,6 +84,8 @@ basesoft = {
       IRIX =   "./config shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
       SunOS =  "./config shared --prefix=".. TMPDIR ..
+               " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+      SunOS510 = "./Configure solaris-sparcv9-cc shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
       SunOS510_64 = "./Configure solaris64-sparcv9-cc shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
