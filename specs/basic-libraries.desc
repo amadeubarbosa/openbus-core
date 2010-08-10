@@ -180,6 +180,40 @@ basesoft = {
        version="2.3.0", pomFile="jacorb-idl-compiler-pom.xml" },
     },
   },
+  { name = "mico-2.3.13-singlethread",
+    url = SVNREPURL .. "/openbus/libs/trunk/mico-2.3.13",
+    build = {
+      type = "autotools",
+      test_libs = {"libmico*2.3.13*"},
+      Linux = "./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
+    },
+    install_files = {
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin"] = "bin/${TEC_UNAME}",
+    },
+    dev_files = {
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13",
+    },
+  },
+  { name = "mico-2.3.13-multithread",
+    url = SVNREPURL .. "/openbus/libs/trunk/mico-2.3.13",
+    build = {
+      type = "autotools",
+      test_libs = {"libmico*2.3.13*"},
+      Linux = "./configure --prefix=".. TMPDIR .. " && make && make install",
+    },
+    install_files = {
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin"] = "bin/${TEC_UNAME}",
+    },
+    dev_files = {
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13",
+    },
+  },
 }
 -- temporary hack! em breve vou renomear definitivamente a tabela basesoft e
 -- ela vai ficar incompativel com versoes antigas do 'tools.compile'
