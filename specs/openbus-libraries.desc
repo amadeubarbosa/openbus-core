@@ -708,6 +708,8 @@ packages = {
       },
     },
     dev_files = {
+-- TODO: CHANGES
+      ["specs/shell/mico*"] = "specs/shell/",
       ["lib/${TEC_UNAME}/libopenbusmico.*"] = "libpath/${TEC_UNAME}",
       ["*.h"] = "incpath/openbus/cpp", --include
       ["openbus/util/*.h"] = "incpath/openbus/cpp/openbus/util/",    --include
