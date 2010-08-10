@@ -1,3 +1,6 @@
+licenses
+lua5.1-dev
+openssl-0.9.9-dev
 mico-2.3.13-singlethread-dev
 logger-dev
 scsmico-dev
