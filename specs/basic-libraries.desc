@@ -15,6 +15,11 @@ basesoft = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
       mf = { "config" },
+      Darwin = {
+        mf = {
+          "config BUILD_DYLIB=Yes",
+        },
+      },
       SunOS510 = {
         mf = {
           "config LD=CC",
