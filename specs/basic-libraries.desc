@@ -189,11 +189,11 @@ basesoft = {
     },
     install_files = {
       [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
       [TMPDIR .."/include/*"] = "incpath/mico-2.3.13",
     },
   },
@@ -206,11 +206,11 @@ basesoft = {
     },
     install_files = {
       [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
       [TMPDIR .."/include/*"] = "incpath/mico-2.3.13",
     },
   },
