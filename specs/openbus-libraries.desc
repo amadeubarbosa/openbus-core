@@ -708,7 +708,7 @@ packages = {
       },
     },
     dev_files = {
--- TODO: CHANGES
+      ["./CHANGES"] = ".",
       ["specs/shell/mico*"] = "specs/shell/",
       ["lib/${TEC_UNAME}/libopenbusmico.*"] = "libpath/${TEC_UNAME}",
       ["*.h"] = "incpath/openbus/cpp", --include
