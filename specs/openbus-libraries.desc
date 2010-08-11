@@ -760,7 +760,7 @@ packages = {
       ["client"] = "demo/hello/mico",
       ["server"] = "demo/hello/mico",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-demo-delegate-mico",
@@ -800,7 +800,7 @@ packages = {
       ["client"] = "demo/delegate/singlethread/mico",
       ["server"] = "demo/delegate/singlethread/mico",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-mico-test",
