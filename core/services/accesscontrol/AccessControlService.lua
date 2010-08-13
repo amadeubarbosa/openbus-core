@@ -1308,12 +1308,14 @@ function ManagementFacet:updateManagementStatus(command, data)
                                                                       data.id, data.name)
                                        end)
                      end
-                end
-            end
+                     Log:faulttolerance("[updateManagementStatus] Replica ".. ftFacet.ftconfig.hosts.ACS[i] .." atualizada quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
+                end -- fim ok facet IManagement
+           else
+              Log:faulttolerance("[updateManagementStatus] Replica ".. ftFacet.ftconfig.hosts.ACS[i] .." não está disponível e não pode ser atualizada quanto quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
+           end
         end
         i = i + 1
     until i > # ftFacet.ftconfig.hosts.ACSIC
-    Log:faulttolerance("[updateManagementStatus] Replicas atualizadas quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
 end
 
 --------------------------------------------------------------------------------
@@ -1418,12 +1420,14 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
                                     local succ, ret = oil.pcall(remoteACSRecepFacet.disconnect, remoteACSRecepFacet, data.connId)
                                     end)
                      end
+                     Log:faulttolerance("[updateConnectionState] Replica ".. ftFacet.ftconfig.hosts.ACSIC[i] .." atualizada quanto ao [".. command .."].")
                 end
+            else
+                Log:faulttolerance("[updateConnectionState] Replica ".. ftFacet.ftconfig.hosts.ACSIC[i] .." não está disponível e não pode ser atualizada quanto ao [".. command .."].")
             end
         end
         i = i + 1
     until i > # ftFacet.ftconfig.hosts.ACSIC
-    Log:faulttolerance("[updateConnectionState] Replicas atualizadas quanto ao [".. command .."].")
 end
 
 --------------------------------------------------------------------------------
@@ -1525,7 +1529,7 @@ function FaultToleranceFacet:updateStatus(params)
                                     addEntry.certified = repEntry.certified
                                     addEntry.observers = {}
                                     for _, observerId in pairs(repEntry.observers) do
-                                       if type(observerId) == "string" then                                      
+                                       if type(observerId) == "string" then
                                          addEntry.observers[observerId] = true
                                        end
                                     end

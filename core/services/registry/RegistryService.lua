@@ -824,12 +824,14 @@ function RGSReceptacleFacet:updateConnectionState(command, data)
                                     local succ, ret = oil.pcall(remoteRSRecepFacet.disconnect, remoteRSRecepFacet, data.connId)
                                     end)
                      end
+                     Log:faulttolerance("[updateConnectionState] Replica ".. ftFacet.ftconfig.hosts.RS[i] .." atualizada quanto ao [".. command .."].")
                 end
+            else
+                Log:faulttolerance("[updateConnectionState] Replica ".. ftFacet.ftconfig.hosts.RS[i] .." não está disponível e não pode ser atualizada quanto ao [".. command .."].")
             end
         end
         i = i + 1
     until i > # ftFacet.ftconfig.hosts.RS
-    Log:faulttolerance("[updateConnectionState] Replicas atualizadas quanto ao [".. command .."].")
 end
 --------------------------------------------------------------------------------
 -- Faceta IFaultTolerantService
@@ -1716,10 +1718,13 @@ function ManagementFacet:updateManagementStatus(command, data)
                 remoteMgmFacet, data.id)
             end)
           end --fim command
+
+          Log:faulttolerance("[updateManagementStatus] Replica ".. ftFacet.ftconfig.hosts.RS[i] .." atualizada quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
         end -- fim ok facet IManagement
+      else
+        Log:faulttolerance("[updateManagementStatus] Replica ".. ftFacet.ftconfig.hosts.RS[i] .." não está disponível e não pode ser atualizada quanto quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
       end -- fim succ, encontrou replica
     end -- fim , nao eh a mesma replica
     i = i + 1
   until i > #ftFacet.ftconfig.hosts.RS
-  Log:faulttolerance("[updateManagementStatus] Replicas atualizadas quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
 end
