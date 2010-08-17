@@ -50,7 +50,6 @@ else
         Log:level(1)
     end
 end
-print(arguments.port)
 if arguments.port then
     AccessControlServerConfiguration.hostPort = tonumber(arguments.port)
 else
