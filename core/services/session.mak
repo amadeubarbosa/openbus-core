@@ -38,7 +38,7 @@ SRC= ${PRECMP_DIR}/ss.c ${PRECMP_DIR}/sspreloaded.c session.c
 
 INCLUDES= . \
         ${PRECMP_DIR} \
-        ${OPENBUSINC}/oil04 \
+        ${OPENBUSINC}/oil-0.5-beta-obv \
         ${OPENBUSINC}/luasocket2 \
         ${OPENBUSINC}/luuid \
         ${OPENBUSINC}/scs \

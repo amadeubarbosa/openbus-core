@@ -39,7 +39,7 @@ SRC= ${PRECMP_DIR}/rgs.c ${PRECMP_DIR}/rgspreloaded.c registry.c
 
 INCLUDES= . \
         ${PRECMP_DIR} \
-        ${OPENBUSINC}/oil04 \
+        ${OPENBUSINC}/oil-0.5-beta-obv \
         ${OPENBUSINC}/luasocket2 \
         ${OPENBUSINC}/luafilesystem \
         ${OPENBUSINC}/luuid \

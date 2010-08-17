@@ -43,7 +43,7 @@ SRC= ${PRECMP_DIR}/acs.c ${PRECMP_DIR}/acspreloaded.c accesscontrol.c
 
 INCLUDES= . \
         ${PRECMP_DIR} \
-        ${OPENBUSINC}/oil04 \
+        ${OPENBUSINC}/oil-0.5-beta-obv \
         ${OPENBUSINC}/luasocket2 \
         ${OPENBUSINC}/luafilesystem \
         ${OPENBUSINC}/luuid \
