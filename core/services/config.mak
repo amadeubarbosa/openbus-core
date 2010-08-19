@@ -7,7 +7,7 @@ OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
 SRC = servicelauncher.c
 
 INCLUDES += . \
-	    ${OPENBUSINC}/oil04 \
+	    ${OPENBUSINC}/oil-0.5-beta-obv \
             ${OPENBUSINC}/luasocket2 \
             ${OPENBUSINC}/luafilesystem \
             ${OPENBUSINC}/luuid \
