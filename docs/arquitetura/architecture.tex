@@ -1,0 +1,238 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage{a4}
+\usepackage[latin1]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{epsf}
+\usepackage[dvips]{graphicx}
+
+\lstset{
+  language = c++, 
+  breaklines = true,
+  breakatwhitespace = true,
+  showlines = true
+}
+
+\title{Openbus 1.5.0 - Architecture Description}
+\author{Maíra Gatti}
+\date{August 2010}
+
+\begin{document}
+\maketitle
+
+\abstract{The Openbus is a CORBA-based Enterprise Service Bus. The goal of this document is to describe the Openbus 1.5.0 release architecture. It helps on the rationale for the architecture evolution and also helps new developers to understand Openbus mechanisms details. It is not the goal of this document to present Openbus motivation or SOA concepts.}
+
+\section{Arquitecture Overview}
+
+The Openbus is a component-based ESB and uses the SCS model and middleware. SCS \cite{SCS} stands for Software Component System. It comprehends both a component model and a distributed service-oriented middleware, being inspired primarily by CCM and COM \cite{COM}. The Openbus goal is to provide support for component-based application integration on complex, distributed, multi-language and multi-platform scenarios. Applications that want to provide and publish their functionalities as services on the bus are granted access via certificate authentications, while clients that need to find and use such services authenticate via login and password.
+
+Like a CCM component, a SCS component is a composition of facets and receptacles. Facets are exported interfaces, which represent services provided by the component. Similarly, receptacles are required interfaces, which represent the component's external dependencies. SCS components can then be composed together themselves to create more complex applications. This composition between components is materialized by connections between facets and receptacles that can be established at runtime. It is important to note that although facets can be called services in a SOA semantic, components can also be, because they often represent a group of tightly associated services.
+
+The SCS model is language-independent and extensible. It specifies three basic facets available in every component, besides user-specified facets. These basic facets handle the complexities of life cycle (IComponent), connections (IReceptacles) and introspection (IMetaInterface). To allow for more adaptable components, the model doesn't impose any rules on the creation or destruction of facets and receptacles. At present, there are four implementations of the model: C++, Java, Lua and .NET/C sharp. SCS components developed in different languages interoperate through the CORBA middleware, which also provides remote communication.
+
+The SCS middleware also provides services to support remote deployment and execution that are composed as a Deployment Infrastructure and an Execution Infrastructure. All services are components themselves and benefit from both model and middleware features. They support dynamic (re)configuration of components at runtime, including the management of deployment plans, remote installation, remote instantiation and component connections, among other features.
+
+\section{Basic Mechanisms}
+
+Before presenting the basic component-based services of which Openbus is composed, it is important to understand the basic mechanisms underline the provided basic services. There are four basic mechanisms described as following.
+
+\subsection{Leasing Mechanism}
+
+A \textit{lease} is a contract that gives its holder specified rights
+over property for a limited period of time. If the lease is not renewed before expiring, the resource may become available.
+
+Openbus uses the leasing mechanism in order to control the components access through the bus. Through the access control service, the component can get a credential associated to a lease. If the lease expires, the credential is no longer valid and the component has to get a new one. 
+
+Therefore, the client is responsible for implementing or using an existent lease renewer in order to ensure its credential will never expire, unless there is a network fault or faults like these.
+
+\subsection{Security and Authentication}
+
+In order to consume a service offer registered in Openbus, the components must provide a credential in each request. This credential is given to the client at the time that it is authenticated through the access control service.
+
+Openbus uses CORBA Interceptors as a basic mechanism to support security and authentication. At the server side, if the client did not send its credential attached to the \textit{service context}, the server interceptor will not be able to validate the credential and the request will be refused.
+
+Therefore, client interceptors are responsible for automatically adding the client credential as a \textit{service context} while the server interceptors validate this credential whenever a request is done. This security mechanism is transparent to the service implementation. Moreover, throughout all the request inside Openbus, the credential is available and any necessary further validations can be done.
+
+\subsection{Interfaces Management and Authorization}
+
+Any component that will provide a service in the Openbus is a member. The services are available through facets. Opebus has a basic mechanism for managing and authorizing those facets. This management is both done through the access control service and the registry service.
+ 
+The access control service has a facet with methods for registering the members systems in Openbus. This register is based on the creation of the \textit{System} entity followed by the addition of its deployments. The \textit{Deployments} are the \textit{System} instances and they are the entities which really authenticates in Openbus and export interfaces (facets).
+
+The \textit{Deployment} identification has to be the same of the credential and the certificates must be registered by the management interface otherwise the login will not be validated by the access control service even though having the certificate into the Openbus security directory. During the Openbus installation, all the Openbus basic services are registered and it can be started without concerns.
+
+The offers registry service has a facet which manages which services (its facets) can be exported by the \textit{deployments}. It is possible to grant or revoke the right to export interfaces. However, only previously registered interfaces can be grants which means that there is an interface registration allowed by the registry service (the repID).
+
+The registry service uses the \textit{IMetaIterface} to get all the deployment interfaces at the registration time. Then it searches for the grants authorizations. It also validates the credential with the access control service.
+
+Any information (such as to list deployments or to list authorizations) can be queried by any user, but only administrators can update them.
+
+\subsection{Fault Tolerance}
+
+In order to deliver Quality of Service (QoS), Openbus has a replication mechanism which makes it highly fault tolerant. Both the access control service and the registry service can be replicated and have a monitor. The component replica monitor runs at the same host that the component replica to be monitored. To each component replica, there is one monitor. From time to time (which can be specified by the administrator) the monitor checks if the replica is alive. The replica might not be alive because of communication failures or because it has reached an undesired state. In both cases, the monitor will:
+\begin{itemize}
+ \item kill the component replica (if it is in an undesired state);
+ \item unplug the component replica from the receptacle;
+ \item restart another component replica;
+ \item plug the component replica into the receptacle.
+\end{itemize}
+
+Furthermore, if several component replicas exist, they will be connected to the adaptive receptacle. If the client requests a component from this receptacle, only failure-free component replicas references will be given. 
+
+The Smart Component Proxy encapsulates the component replicas group with transparency: the client thinks that she is interacting with a single server component. It detects when a fault is raised by the requested leader server component replica and forwards the request to another one, if any available. The number of times that the Smart Component will try to forward the request while no replica is available can be defined by the administrator.
+
+In our current solution the Smart Component Proxy contains a hash table that maps the service facets keys with their interfaces and node's address. Currently, if some of CORBA systems exceptions\footnote{\textit{NO\_RESPONSE, COMM\_FAILURE, OBJECT\_NOT\_EXIST, TRANSIENT, TIMEOUT, NO\_RESOURCES, FREE\_MEM, NO\_MEMORY, INTERNAL.}} are raised, the Smart Component will fetch another replica.
+
+The Smart Component can also be set by the administrator with regard to how many times it fetches a replica, how many time it waits for a reply, and how many time it waits between a fail reply and to fetch another replica. All those configurations can be externally updated during execution time, increasing adaptation.
+
+Portable Interceptors do the same work that a Smart Component do: the client thinks that she is interacting with a single server component. The main difference between both is that there is a Smart Component to each dependable component. While there is only one interceptor to all dependable components and the interceptor has the reference to all the replicas in the group of each component. 
+
+ACS and Registry Service components also have specific adaptive receptacle facets specialization in order to implement replica state synchronization according to one of the presented protocols with regard to the receptacle connections synchronization. 
+
+The ACS Adaptive Receptacle implementation uses the multicast protocol to update the state if a successful connection or disconnection is done. Which means that each component replica will be invoked at the end of the request. The same behavior was implemented on the Registry Service Adaptive Receptacle.
+
+During the Registry Service startup, it tries to connect to the ACS Adaptive Receptacle, therefore, all the active ACS component replicas will also receive this connection (if they are not already connected). In the case of the ACS startup, it will get all the connections of all active ACS component replicas and do a local connection, which means not activating the replication mechanism to avoid deadlocks.
+
+The Registry Service component replicas access ACS Smart Component operations, rather than an ACS component replica stub and any faulty request will be transparently handled and redirected to an available ACS component replica. The ACS is not a receptacle of Registry Service because of the security design constrains set in the bus.
+
+With regard to the compulsive leadercast protocol, all the ACS login operations (login by password, by certificate or by credential) activate the replication state using that protocol. They are the only operations which we decided to use this behavior since the credential generated by those operations is used all the time by the bus. On the other hand, we implemented the activation of this protocol as a dynamic policy: at any time the administrator can add or remove operations that activate the compulsive leadercast protocol.
+
+On the other hand, in order to synchronize the credentials and offers between the ACS and Registry Service replicas, respectively, we use the non compulsive leadercast. Which means that unless there is a miss in any credential validation or offer's search, those data will not be synchronized.
+
+Finally, all the clients that use the bus client library developed in Lua use Smart Components when they need a reference to the ACS component. We developed this feature through the Oil 0.5 \cite{oil05} \cite{oil10} facilities. While all the clients that use the bus client library developed in Java and C++ use our solution with Portable Interpcetors (those libraries use JacORB 2.3.0 \cite{jacorb}, Orbix 6.3 sp3 \cite{orbix} and MICO 2.3.13 \cite{mico}). In both cases they need to set the ACS component replicas host addresses in a configuration file and the fault manager iterative and cyclic searches for healthy replicas when a request fails. The administrator may specify how many times the fault manager is allowed to iterate over the replicas list.
+
+\section{Basic Component-based Services}
+%A infraestrutura do Openbus provê dois serviços básicos necessários para que 
+%o usuário possa utilizar o barramento, o serviço de acesso e o serviço de 
+%registro. Um terceiro serviço auxilia o compartilhamento de informações entre 
+%um grupo de clientes, que é o serviço de sessão. Por último, a arquitetura do 
+%Openbus disponibiliza uma interface comum para a implementação de um serviço 
+%de dados.
+
+[COLOCAR A FIGURA DE DIAGRAMA DE COMPONENTES SEM O SERVICO DE SESSAO]
+
+[COLOCAR DIAGRAMA DE CLASSES SEM O SERVICO DE SESSAO]
+
+\subsection{Access Control Service Component} 
+
+%É o ponto de entrada no barramento. Sua refererência
+%  é conhecida por todos. Para que um usuário possa entrar no barramento para 
+%  consumir ou prover serviços, é necessário que ele se autentique no mesmo
+%  adquirindo uma credencial de acesso. A autenticação pode ser realizada 
+%  através de um par usuário/senha ou através de um certificado digital.
+%  Tipicamente, aplicações "clientes" se autenticam com um par usuário/senha, 
+%  que normalmente será a identificação e a senha do usuário que iniciou a 
+%  aplicação. Servidores tipicamente se autenticam através de um certificado.
+
+%  Após a autenticação, uma credencial é emitida para o usuário para que o mesmo 
+%  possa acessar os serviços disponibilizados pelo barramento. Essa credencial é 
+%  composta por uma identificador unívoco e por um nome de uma entidade à 
+%  qual está associada, que pode ser um usuário ou um serviço. Essa credencial 
+%  tem um ciclo de vida e deve ser renovada para que não expire.
+
+\subsubsection{IAccessControlService Facet}
+
+\subsubsection{ILeaseProvider Facet}
+
+\subsubsection{IManagement Facet}
+
+\subsubsection{IFaultTolerantService Facet}
+
+\subsection{Access Control Service Monitor Component} 
+
+\subsection{Registry Service} 
+% Responsável por controlar as ofertas de 
+%  serviços disponí-veis no barramento. Um componente que queira oferecer um 
+%  serviço deve explicitamente registrar sua oferta no serviço de registro. 
+%  Componentes que desejam utilizar um serviço podem obter a localização e 
+%  as propriedades de 
+%  provedores desse servico através de consultas ao serviço de registro. 
+
+\subsubsection{IRegistryService Facet}
+
+\subsubsection{IManagement Facet}
+
+\subsubsection{IFaultTolerantService Facet}
+
+\subsection{Registry Service Monitor Component} 
+
+\section{Session Service Component} 
+[COLOCAR A FIGURA DE DIAGRAMA DE COMPONENTES COM O SERVICO DE SESSAO]
+
+[COLOCAR DIAGRAMA DE CLASSES COM O SERVICO DE SESSAO]
+
+%   Oferece um mecanismo simplificado de troca de 
+%  mensagens entre os componentes que compartilham uma mesma sessão.
+
+\subsubsection{ISessionService Facet}
+
+\subsubsection{ISession Facet}
+
+\section{Data Service} 
+% Disponibilização de uma interface para a 
+%  implementação de um serviço de acesso a dados hierárquicos ou não. A 
+%  interface 
+%  provê uma faceta para a navegação e outra para o acesso ao dado.
+
+\begin{thebibliography}{50}
+\bibitem[1]{Chappell}
+Chappell, D. 2004 Enterprise Service Bus. O'Reilly Media, Inc.
+
+\bibitem[2]{Szyperski1998}
+Szyperski, C. Component Software: Beyond Object-Oriented Programming. ACM Press : Addison-Wesley Publishing Co. 1998.
+
+\bibitem[3]{EJB}
+Sun Microsystems. Enterprise JavaBeans Specification. v3.0. http://java.sun.com/ejb/
+
+\bibitem[4]{OMG2004}
+OMG. CORBA Components. OMG Document formal/04-03-01 (CORBA, v3.0.3). 2004. http://www.omg.org
+
+\bibitem[5]{DotNet}
+Microsoft. Overview of the .NET Framework 4. http://msdn.microsoft.com/en-us/library/a4t23ktk.aspx
+
+\bibitem[6]{SCS}
+The SCS Project. http://www.tecgraf.puc-rio.br/~scorrea/scs/
+
+\bibitem[7]{Interceptors}
+OMG. CORBA Interceptors. OMG Document formal/04-03-01 (CORBA, v3.0.3). 2004. http://www.omg.org
+
+\bibitem[8]{COM}
+Microsoft COM: The Component Object Model Technologies. http://www.microsoft.com/com/ 
+
+\bibitem[9]{Budhiraja}
+Budhiraja, N., Marzulo, K., Schneider, F. B. e Toueg, S. The Primary-Backup Approach. In: Distributed Systems. Mullender, Sape (Ed.). Addison Wesley. 2nd Edition. 1993.
+
+\bibitem[10]{Aqua}
+Y. J. Ren, D. E. Bakken, T. Courtney, M. Cukier, D. A. Karr, P. Rubel, C. Sabnis, W. H. Sanders, R. E. Schantz, and M. Seri. Aqua: An adaptive architecture that provides dependable distributed objects. IEEE Transactions on Computers, 52(1):31--50, 2003.
+
+\bibitem[11]{Schumacher}
+Schumacher, M. et al., Security Patterns, J. Wiley \& Sons, 2005.
+
+\bibitem[12]{Meling}
+Meling, H., Montresor, A., Helvik, B. E. and Babaoglu, O.; Jgroup/ARM: A distributed object group platform with autonomous replication management. Software: Practice and Experience, page 39,2007.
+
+\bibitem[13]{pureCorba}
+Bolton, F.; \textit{Pure} CORBA. Sams Publishing, 2002.
+
+\bibitem[14]{oil05}
+Maia, R., Cerqueira, R. and Kon, F.; A Middleware for Experimentation on Dynamic Adaptation. In Proc. 4th Workshop on Adaptive and Reflective Middleware (ARM2005), co-located with 6th International Middleware Conference, Grenoble, France, November 2005.
+
+\bibitem[15]{oil10}
+The Oil Project: An Object Request Broker in Lua. http://oil.luaforge.net/index.html
+
+\bibitem[16]{jacorb}
+The JacORB Project. http://www.jacorb.org/
+
+\bibitem[17]{orbix}
+The Orbix Project. http://web.progress.com/en/orbix/index.html
+
+\bibitem[18]{mico}
+The Mico Project. http://www.mico.org
+
+\bibitem[19]{fraga}
+Fraga, J., Siqueira, F., and Favarim, F. 2003. An adaptive fault-tolerant component model. In Proceedings of the 9th IEEE International Workshop on Object-Oriented Real-Time Dependable Systems. IEEE, Los Alamitos, CA, 179-186.
+
+\end{thebibliography}
+
+\end{document}
