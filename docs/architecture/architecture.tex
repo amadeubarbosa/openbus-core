@@ -196,13 +196,13 @@ And finally, for optimizations purpose, the \textit{ServiceOffer} class has an i
 
 As already described, Openbus has a replication-based fault tolerant mechanism which increases Openbus QoS.
 
-Figure \ref{fig:ft} illustrates the main entities and relationships of the fault tolerant mechanism in an integrated overview. Since both the Access Control Service Component and the Registry Service Component can be replicate, they have their monitors which are implemented by the \textit{FTACSMonitorFacet} and \textit{FTRSMonitorFacet}. They are implementations of the \textit{IFTServiceMonitor} interface describe in the IDL.
+Figure \ref{fig:ft} illustrates the main entities and relationships of the fault tolerant mechanism in an integrated overview. Since both the Access Control Service Component and the Registry Service Component can be replicated, they have their monitors which are implemented by the \textit{FTACSMonitorFacet} and \textit{FTRSMonitorFacet}. They are implementations of the \textit{IFTServiceMonitor} interface describe in the IDL.
 
 At the Access Control Service Component and Registry Service Component startup, the \textit{(ACS)FaultToleranceFacet} and the \textit{(RS)FaultToleranceFacet} are intialized, respectively. They extend the \textit{FaultToleranceFacet} class which implements the common behavior as an implementation of the \textit{IFaultTolerantService\_v1\_05} interface.
 
 Because the \textit{(ACS)FaultToleranceFacet} update the \textit{ACSFacet} state, it depends on the \textit{EntryCredential}. The same occurs with the \textit{(RS)FaultToleranceFacet} with regard to the \textit{ServiceOfferEntry}. At the same time the \textit{ACSFacet} and the \textit{RSFacet} depend on their respectives fault tolerant facets in order to requesting for synchronization state if any data is missing.
 
-Finally, the \textit{FaultToleranceFacet} depends on the \textit{ManagementFacet}s in order to check the permission of updating or killing a replica. At the same time the \textit{ManagementFacet} depends on the \textit{FaultToleranceFacet}s in order to request for synchronization state each time any Management operation is requested in Openbus and there are two or more active replicas.
+Furthermore, the \textit{FaultToleranceFacet} depends on the \textit{ManagementFacet}s in order to check the permission of updating or killing a replica. At the same time the \textit{ManagementFacet} depends on the \textit{FaultToleranceFacet}s in order to request for synchronization state each time any Management operation is requested in Openbus and there are two or more active replicas.
 
 \begin{figure} [htb]
 \centering
@@ -210,6 +210,12 @@ Finally, the \textit{FaultToleranceFacet} depends on the \textit{ManagementFacet
 \caption{Fault Tolerance Conceptual Model: an integrated overview}
 \label{fig:ft}
 \end{figure}
+
+Finally, the \textit{ACSReceptacleFacet} and the \textit{RGSReceptacleFacet} extends the \textit{AdaptiveReceptacles} class which is the implementation of an adaptive receptacles. This means that this receptacle always checks for available and reliable services before providing them through the \textit{getConnections()} operation. In other words, any time the client requests the reference to the Registry Service Component, the Access Control Service Component will only provide an available and reliable replica.
+
+In each startup, both the Access Control Service Component and the Registry Service Component look for existent receptacles in their respective replicas. Which means that if there is any Registry Service Component connected to other Access Control Service replica, it will be connected to the current replica being started up. The same happens to the Registry Service Component. 
+
+When a service is disconnected from the receptacle, the replicas also disconnect it from their receptacles.
 
 \section{Session Service Component} 
 
