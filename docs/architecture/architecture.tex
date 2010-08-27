@@ -56,13 +56,13 @@ Therefore, client interceptors are responsible for automatically adding the clie
 
 \subsection{Interfaces Management and Authorization}
 
-Any component that will provide a service in the Openbus is a member. The services are available through facets. Opebus has a basic mechanism for managing and authorizing those facets. This management is both done through the access control service and the registry service.
+Any component that will provide a service in the Openbus is a member. The services are available through facets. Openbus has a basic mechanism for managing and authorizing those facets. This management is both done through the access control service and the registry service.
  
-The access control service has a facet with methods for registering the members systems in Openbus. This register is based on the creation of the \textit{System} entity followed by the addition of its deployments. The \textit{Deployments} are the \textit{System} instances and they are the entities which really authenticates in Openbus and export interfaces (facets).
+The access control service has a facet with methods for registering the members systems in Openbus. This registry is based on the creation of the \textit{System} entity followed by the addition of its deployments. The \textit{Deployments} are the \textit{System} instances and they are the entities which really authenticates in Openbus and export interfaces (facets).
 
 The \textit{Deployment} identification has to be the same of the credential and the certificates must be registered by the management interface otherwise the login will not be validated by the access control service even though having the certificate into the Openbus security directory. During the Openbus installation, all the Openbus basic services are registered and it can be started without concerns.
 
-The offers registry service has a facet which manages which services (its facets) can be exported by the \textit{deployments}. It is possible to grant or revoke the right to export interfaces. However, only previously registered interfaces can be grants which means that there is an interface registration allowed by the registry service (the repID).
+The registry service component has a facet which manages which services (its facets) can be exported by the \textit{deployments}. It is possible to grant or revoke the right to export interfaces. However, only previously registered interfaces can be grants which means that there is an interface registration allowed by the registry service (the repID).
 
 The registry service uses the \textit{IMetaIterface} to get all the deployment interfaces at the registration time. Then it searches for the grants authorizations. It also validates the credential with the access control service.
 
@@ -103,61 +103,118 @@ On the other hand, in order to synchronize the credentials and offers between th
 Finally, all the clients that use the bus client library developed in Lua use Smart Components when they need a reference to the ACS component. We developed this feature through the Oil 0.5 \cite{oil05} \cite{oil10} facilities. While all the clients that use the bus client library developed in Java and C++ use our solution with Portable Interpcetors (those libraries use JacORB 2.3.0 \cite{jacorb}, Orbix 6.3 sp3 \cite{orbix} and MICO 2.3.13 \cite{mico}). In both cases they need to set the ACS component replicas host addresses in a configuration file and the fault manager iterative and cyclic searches for healthy replicas when a request fails. The administrator may specify how many times the fault manager is allowed to iterate over the replicas list.
 
 \section{Basic Component-based Services}
-%A infraestrutura do Openbus provê dois serviços básicos necessários para que 
-%o usuário possa utilizar o barramento, o serviço de acesso e o serviço de 
-%registro. Um terceiro serviço auxilia o compartilhamento de informações entre 
-%um grupo de clientes, que é o serviço de sessão. Por último, a arquitetura do 
-%Openbus disponibiliza uma interface comum para a implementação de um serviço 
-%de dados.
 
-[COLOCAR A FIGURA DE DIAGRAMA DE COMPONENTES SEM O SERVICO DE SESSAO]
+The two basic component-based services that Openbus provides in order to implement the basic mechanisms described are the Access Control Service Component and the Registry Service Component.
 
-[COLOCAR DIAGRAMA DE CLASSES SEM O SERVICO DE SESSAO]
+\begin{figure} [htb]
+\centering
+\includegraphics[width=14cm]{acs-rs.eps} %height=3in, 
+\caption{Components Diagram: Access Control Service Component and Registry Service Component. The green facets are the ones used by (or visible for) the clients.}
+\label{fig:acs-rgs}
+\end{figure}
+
+From figure \ref{fig:acs-rgs}, it is possible to see all the components facets, dependencies, and relationships. Both the Access Control Service Component and the Registry Service Component are SCS Components, therefore they have three facets in common: \textit{IComponent}, \textit{IMetaInterface} and \textit{IReceptacles}.
+
+Moreover, the both components have two kind of facets, the ones which provide Openbus 1.4.x release services and the ones which provide Openbus 1.5.x release services. There are two new facets (they didn't exist in Openbus 1.4.x release) which are the \textit{IManagement\_v1\_05} and \textit{IFaultTolerantService\_v1\_05}. Although they are new, they are also tagged with the Openbus version's number because from  Openbus 1.5.0 release, any interface must be tagged with the Openbus version's number. This is a requirement in order to: i) make it clear that this interface didn't exist before to any new or old clients, and also ii)  make it a distribution pattern.
+
+Another new improvement implemented in Openbus with regard to its previous version is that the Access Control Service Component has a receptacle for the Registry Service Component and vice-versa. Both receptacles are adaptive as further described in this document.
+
+Finally, figure \ref{fig:acs-rgs} also illustrates two new components in Openbus: the monitors. They are not visible to the clients and only exist to increase dependability. Their mechanisms were explained in section 2.4, when we described the fault tolerant basic mechanisms implemented in Openbus and the fault tolerance conceptual model is also further described in this document.
 
 \subsection{Access Control Service Component} 
 
-%É o ponto de entrada no barramento. Sua refererência
-%  é conhecida por todos. Para que um usuário possa entrar no barramento para 
-%  consumir ou prover serviços, é necessário que ele se autentique no mesmo
-%  adquirindo uma credencial de acesso. A autenticação pode ser realizada 
-%  através de um par usuário/senha ou através de um certificado digital.
-%  Tipicamente, aplicações "clientes" se autenticam com um par usuário/senha, 
-%  que normalmente será a identificação e a senha do usuário que iniciou a 
-%  aplicação. Servidores tipicamente se autenticam através de um certificado.
+The Access Control Service Component is the Openbus entry point. All services have reference to it and through the \textit{IComponent} facet, the \textit{ILeaseProvider} and \textit{IAccessControlService} facets can be retrieved.
 
-%  Após a autenticação, uma credencial é emitida para o usuário para que o mesmo 
-%  possa acessar os serviços disponibilizados pelo barramento. Essa credencial é 
-%  composta por uma identificador unívoco e por um nome de uma entidade à 
-%  qual está associada, que pode ser um usuário ou um serviço. Essa credencial 
-%  tem um ciclo de vida e deve ser renovada para que não expire.
+In order to an user (clients or servers) to login in the bus to consume or provide services, it is necessary to authenticate to get a credential (that provides access in the bus). The authentication can be done by providing an user name and password or a digital certificate. Clients applications usually use the former and server applications usually use the latter.
 
-\subsubsection{IAccessControlService Facet}
+After the authentication, a credential is generated and given to the user. This credential is composed by an unique identification and by the entity name of which this credential is associated (which can be an user or service). This credential has a life cycle and must be renewed before expiring.
 
-\subsubsection{ILeaseProvider Facet}
+\subsubsection{Conceptual Model of the Basic Entities}
 
-\subsubsection{IManagement Facet}
+Figure \ref{fig:acs} illustrates the conceptual model of the basic entities of the Access Control Service Component. It is mainly composed by the facets that implements the \textit{IAccessControlService} interfaces (both versions), the relationship with the \textit{IManagement\_v1\_05} interface (and facet), the credential related entities, and finally the lease related entities.
 
-\subsubsection{IFaultTolerantService Facet}
+\begin{figure} [htb]
+\centering
+\includegraphics[width=10cm]{acs.eps} %height=3in, 
+\caption{Access Control Service Component: Conceptual Model of the Basic Entities}
+\label{fig:acs}
+\end{figure}
 
-\subsection{Access Control Service Monitor Component} 
+Let's start with the credential related entities. The IDL defines three basic entities: the \textit{CredentialIdentifier}, the \textit{Credential} and the \textit{EntryCredential}. The \textit{CredentialIdentifier} and \textit{Credential} previously were in the Openbus 1.4.x release, but the \textit{EntryCredential} was added in the Openbus 1.5.0 release. The  \textit{CredentialIdentifier} just provides the unique identification for each credential, while the \textit{Credential} describes the structure that the user receives when login in the Openbus. The \textit{EntryCredential} on the other hand are structures exchanged between the Access Control Service Component replicas during state synchronization and have more information such as if the credential is certified (was generated because of a login by certificate) and the lease time (for how long it is valid). The \textit{ACSFacet} has a list of credentials entries.
 
-\subsection{Registry Service} 
-% Responsável por controlar as ofertas de 
-%  serviços disponí-veis no barramento. Um componente que queira oferecer um 
-%  serviço deve explicitamente registrar sua oferta no serviço de registro. 
-%  Componentes que desejam utilizar um serviço podem obter a localização e 
-%  as propriedades de 
-%  provedores desse servico através de consultas ao serviço de registro. 
+For illustrative purposes, we put the number of the Openbus release version in front of the \textit{ACSFacet} names. As it is illustrated, the implementation of the \textit{IAcessControlService} delegates its behavior to the new \textit{ACSFacet} (the implementation of the \textit{IAccessControlSevice\_v1\_05}).
 
-\subsubsection{IRegistryService Facet}
+Because the Access Control Service Component provides a facet to behavior as a lease provider, called the \textit{LeaseProviderFacet}, this in turn depends on the \textit{ACSFacet} in order to renew the credentials' lease. The \textit{ACSFacet} also uses the \textit{LeaseProvider} (class provided by the sdk-lua) and implements the \textit{checkExpiredLease()} method of this class. We illustrated this polimorfism in the conceptual model through the \textit{(ACS)LeaseProvider} class which currently does not exist in Openbus 1.5.x release.
 
-\subsubsection{IManagement Facet}
+Finally, the \textit{ACSFacet} depends on the \textit{ManagementFacet} (illustrated as \textit{(ACS)ManagementFacet} in order to differentiate from the one implemented in the Registry Service Component) when checking for permissions and the \textit{ManagementFacet} also depends on the \textit{ACSFacet} when consulting the credentials entries.
 
-\subsubsection{IFaultTolerantService Facet}
 
-\subsection{Registry Service Monitor Component} 
+\subsection{Registry Service Component} 
+
+This component is responsible for controlling all the service offers available in the Openbus. Any component that needs to offer a service must register its offer explicitly in the Registry Service Component. The components that need to use a service can get the service providers localization and their properties through the registry service queries.
+
+\subsubsection{Conceptual Model of the Basic Entities}
+
+Figure \ref{fig:rgs} illustrates the conceptual model of the entities and related entities that the basic behavior of the Registry Service Component depends on.
+
+To start with, the \textit{RSComponent} class represents the implementation of the \textit{IComponent} interface implementation. At the \textit{startup} method, the Registry Service locates the Access Control Service Component through the \textit{Openbus} class (sdk-lua) and requests a login by certificate. Even if there is only one Access Control Service Component active replica, the Registry Service gets the Smart Component reference from the  \textit{Openbus} class and the \textit{IComponent} facet from the Access Control Service Component is connected to the Registry Service receptacle. At this time, the Access Control Service Component (more specifically, the \textit{connect} operation of the \textit{ACSReceptacle} facet) also connects the Registry Service \textit{IComponent} facet in its receptacle.
+
+Each service offer is represented by the \textit{ServiceOffer} entity. The services (both clients or servers) only manipulate this element. When a server application wants to provide a service offer, it creates a service offer entry with this structure. The \textit{ServiceOffer} has also a reference to the service through the association to the service's \textit{IComponent} facet. The \textit{RSFacet} class has a list of \textit{ServiceOfferEntry} which represents a complete entry of the service offer. The Registry Service Component replicas use this complete structure to synchronize the replicas state with regard to the service offers. The \textit{ServiceOffer} class has the service offer properties definition as defined in the IDL. While the \textit{ServiceOfferEntry} has an index map of those properties in order to speed client queries. It also has an index map of the authorized interfaces related to the services that works as a cache mechanism. This is further explained in the Management Conceptual Model section.
+
+\begin{figure} [htb]
+\centering
+\includegraphics[width=14cm]{rgs.eps} %height=3in, 
+\caption{Registry Service Component: Conceptual Model of the Basic Entities}
+\label{fig:rgs}
+\end{figure}
+
+Just like explained for the Access Control Service Component, for illustrative purposes, we put the number of the Openbus release version in front of the \textit{RSFacet} names. As it is illustrated, the implementation of the \textit{IRegistryService} delegates its behavior to the new \textit{RSFacet} (the implementation of the \textit{IRegistrySevice\_v1\_05}).
+
+Finally, the Openbus has a credential observer mechanism. The Registry Service Component implements \textit{credentialWasDeleted} method of the \textit{ICredentialObserver} interface. This behavior is illustrated through the \textit{(RS)CredentialObserver} class which in fact delegates this implementation to the \textit{RSFacet} class. The \textit{EntryCredential} class has a reference to all observers of the current credential entry. The \textit{EntryCredential} also as an index map of the observers for optimizations (illustrated by the \textit{observedBy} relationship).
+
+
+\subsection{Management Conceptual Model}
+
+As already described the Openbus has a basic mechanism for managing and authorizing those facets. This management is both done through the access control service and the registry service. 
+
+\begin{figure} [htb]
+\centering
+\includegraphics[width=14cm]{mgm.eps} %height=3in, 
+\caption{Management Conceptual Model: an integrated overview}
+\label{fig:mgm}
+\end{figure}
+
+The entities were already described before in this document, but in order to illustrate their relationships with the classes from the Access Control Service Component and the Registry Service Component figure \ref{fig:mgm} is presented.
+
+The \textit{ManagementFacet} class of the Access Control Service Component implements the \textit{IManagement\_v1\_05} interface. This class has a map of strings and booleans which represents the administrators of the system. The \textit{ManagementFacet} class of Registry Service Component also has this map. The \textit{(ACS)ManagementFacet} class manages the \textit{System}, \textit{User} and \textit{Deployment}. There are two types of members: users (represented by the \textit{User} class) and system deployments (represented by the \textit{Deployment} class). 
+
+When an authorization is added in Openbus through the \textit{(RS)ManagementFacet} class of the Registry Service Component, it is necessary to provide the identification of the \textit{Member} (a string in the code), and the \textit{Authorization} is saved according to the member type: \textit{User} or \textit{Deployment}, represented only illustrative by the \textit{ATUser} and \textit{ATSystemDeployment} classes - they are just strings in the \textit{type} attribute in the code. This type should not be misunderstood as the \textit{Authorization} type, which can be: an \textit{Expression}, \textit{Strict} or \textit{Normal}.
+
+And finally, for optimizations purpose, the \textit{ServiceOffer} class has an index map of the authorized interfaces.
+
+\subsection{Fault Tolerance Conceptual Model}
+
+As already described, Openbus has a replication-based fault tolerant mechanism which increases Openbus QoS.
+
+Figure \ref{fig:ft} illustrates the main entities and relationships of the fault tolerant mechanism in an integrated overview. Since both the Access Control Service Component and the Registry Service Component can be replicate, they have their monitors which are implemented by the \textit{FTACSMonitorFacet} and \textit{FTRSMonitorFacet}. They are implementations of the \textit{IFTServiceMonitor} interface describe in the IDL.
+
+At the Access Control Service Component and Registry Service Component startup, the \textit{(ACS)FaultToleranceFacet} and the \textit{(RS)FaultToleranceFacet} are intialized, respectively. They extend the \textit{FaultToleranceFacet} class which implements the common behavior as an implementation of the \textit{IFaultTolerantService\_v1\_05} interface.
+
+Because the \textit{(ACS)FaultToleranceFacet} update the \textit{ACSFacet} state, it depends on the \textit{EntryCredential}. The same occurs with the \textit{(RS)FaultToleranceFacet} with regard to the \textit{ServiceOfferEntry}. At the same time the \textit{ACSFacet} and the \textit{RSFacet} depend on their respectives fault tolerant facets in order to requesting for synchronization state if any data is missing.
+
+Finally, the \textit{FaultToleranceFacet} depends on the \textit{ManagementFacet}s in order to check the permission of updating or killing a replica. At the same time the \textit{ManagementFacet} depends on the \textit{FaultToleranceFacet}s in order to request for synchronization state each time any Management operation is requested in Openbus and there are two or more active replicas.
+
+\begin{figure} [htb]
+\centering
+\includegraphics[width=14cm]{ft.eps} %height=3in, 
+\caption{Fault Tolerance Conceptual Model: an integrated overview}
+\label{fig:ft}
+\end{figure}
 
 \section{Session Service Component} 
+
+There is also a third component, called Session Service Component that Openbus provides which helps on the information sharing between a group of clients.
+
 [COLOCAR A FIGURA DE DIAGRAMA DE COMPONENTES COM O SERVICO DE SESSAO]
 
 [COLOCAR DIAGRAMA DE CLASSES COM O SERVICO DE SESSAO]
@@ -170,6 +227,9 @@ Finally, all the clients that use the bus client library developed in Lua use Sm
 \subsubsection{ISession Facet}
 
 \section{Data Service} 
+
+Finally, Openbus provides the Data Service as a common interface for the implementation of a specific data service. 
+
 % Disponibilização de uma interface para a 
 %  implementação de um serviço de acesso a dados hierárquicos ou não. A 
 %  interface 
