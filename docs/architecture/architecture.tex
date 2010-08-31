@@ -1,11 +1,11 @@
 \documentclass[a4paper, 11pt]{article}
 \usepackage{a4}
 \usepackage[latin1]{inputenc}
-\usepackage[brazil]{babel}
 \usepackage{listings}
 \usepackage{verbatim}
 \usepackage{epsf}
 \usepackage[dvips]{graphicx}
+\usepackage{rotating}
 
 \lstset{
   language = c++, 
@@ -144,7 +144,7 @@ Let's start with the credential related entities. The IDL defines three basic en
 
 For illustrative purposes, we put the number of the Openbus release version in front of the \textit{ACSFacet} names. As it is illustrated, the implementation of the \textit{IAcessControlService} delegates its behavior to the new \textit{ACSFacet} (the implementation of the \textit{IAccessControlSevice\_v1\_05}).
 
-Because the Access Control Service Component provides a facet to behavior as a lease provider, called the \textit{LeaseProviderFacet}, this in turn depends on the \textit{ACSFacet} in order to renew the credentials' lease. The \textit{ACSFacet} also uses the \textit{LeaseProvider} (class provided by the sdk-lua) and implements the \textit{checkExpiredLease()} method of this class. We illustrated this polimorfism in the conceptual model through the \textit{(ACS)LeaseProvider} class which currently does not exist in Openbus 1.5.x release.
+Because the Access Control Service Component provides a facet to behavior as a lease provider, called the \textit{LeaseProviderFacet}, this in turn depends on the \textit{ACSFacet} in order to renew the credentials' lease. The \textit{ACSFacet} also uses the \textit{LeaseProvider} (class provided by the sdk-lua) and implements the \textit{checkExpiredLease()} method of this class. We illustrated this polymorphism in the conceptual model through the \textit{(ACS)LeaseProvider} class which currently does not exist in Openbus 1.5.x release.
 
 Finally, the \textit{ACSFacet} depends on the \textit{ManagementFacet} (illustrated as \textit{(ACS)ManagementFacet} in order to differentiate from the one implemented in the Registry Service Component) when checking for permissions and the \textit{ManagementFacet} also depends on the \textit{ACSFacet} when consulting the credentials entries.
 
@@ -221,25 +221,29 @@ When a service is disconnected from the receptacle, the replicas also disconnect
 
 There is also a third component, called Session Service Component that Openbus provides which helps on the information sharing between a group of clients.
 
-[COLOCAR A FIGURA DE DIAGRAMA DE COMPONENTES COM O SERVICO DE SESSAO]
+\begin{figure} [htb]
+\centering
+\includegraphics[width=14cm]{ss.eps} %height=3in, 
+\caption{Session Service Components Diagram and Openbus Basic Components}
+\label{fig:ss}
+\end{figure}
 
-[COLOCAR DIAGRAMA DE CLASSES COM O SERVICO DE SESSAO]
+As it is illustrated in figure \ref{fig:ss} the \textit{Session Service Component} and the \textit{Session Component} connect to the Access Control Service Component. The \textit{ISessionService\_v1\_05} interface is responsible for creating sessions and the \textit{SessionServiceComponent} facet (implementation of the \textit{IComponent} SCS interface) registers the \textit{ISessionService\_v1\_05} interface offers (and also the \textit{ISessionService} interface, from Openbus 1.4.x version release) into the Registry Service.
 
-%   Oferece um mecanismo simplificado de troca de 
-%  mensagens entre os componentes que compartilham uma mesma sessão.
+In figure \ref{fig:ss-classes} one can see in more details the Session Service elements and relationships. During the \textit{SessionServiceComponent} startup, first the properties for each session service interface are created. Then they are inserted as service offers and registered in the Registry Service (through the \textit{RSFacet}) so the clients can find them through the Registry Service. 
 
-\subsubsection{ISessionService Facet}
+\begin{sidewaysfigure}
+\includegraphics[height=18cm,width=24cm]{ss-classes.eps} %height=3in, 
+\caption{Session Service Class Diagram - Conceptual Model}
+\label{fig:ss-classes}
+\end{sidewaysfigure}
 
-\subsubsection{ISession Facet}
+Each \textit{SessionService} can have multiple \textit{Session}s. The \textit{Session} facet implements the \textit{ISession\_v1\_05} (or v1\_04, if the case) and the \textit{ICredentialObserver} interfaces. Which means that they are credential observers. The \textit{Session} facet has a list of session members which is a Map of \textit{info} indexed by the \textit{MemberIdentifier}. The \textit{info} class is a representation of a Lua table that contains the \textit{CredentialIdentifier} and \textit{MemberIdentifier}.
 
-\section{Data Service} 
+The \textit{Session} facet also has a list of members by credential (represented by the \textit{MemberByCredential} class), which is a Map of \textit{SessionMember} indexed by the \textit{CredentialIdentifier}.
 
-Finally, Openbus provides the Data Service as a common interface for the implementation of a specific data service. 
+The \textit{Session} facet manages the \textit{SessionEventSink} facets (both v1\_04 and v1\_05), which means that the former is responsinble for adding event sinks in their lists. An Event Sink is a service interface that will be implemented by the client. The information sharing works as follows: whenever a \textit{SessionEvent} in sent to the \textit{Session}, the \textit{SessionEventSink} facets (server) actively contacts one of more \textit{MemberSessionEventSink} (clients' implementation of the \textit{SessionEventSink} interface) in order to notify the former of specific events. This is done through the iteration of the \textit{eventSinks} list that the \textit{SessionEventSink} facet has. This list is a list of Maps that contain the \textit{MemberSessionEventSink} and is indexed by the \textit{MemberIdentifier}.
 
-% Disponibilização de uma interface para a 
-%  implementação de um serviço de acesso a dados hierárquicos ou não. A 
-%  interface 
-%  provê uma faceta para a navegação e outra para o acesso ao dado.
 
 \begin{thebibliography}{50}
 \bibitem[1]{Chappell}
