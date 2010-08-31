@@ -23,7 +23,7 @@
 
 \abstract{The Openbus is a CORBA-based Enterprise Service Bus. The goal of this document is to describe the Openbus 1.5.0 release architecture. It helps on the rationale for the architecture evolution and also helps new developers to understand Openbus mechanisms details. It is not the goal of this document to present Openbus motivation or SOA concepts.}
 
-\section{Arquitecture Overview}
+\section{Architecture Overview}
 
 The Openbus is a component-based ESB and uses the SCS model and middleware. SCS \cite{SCS} stands for Software Component System. It comprehends both a component model and a distributed service-oriented middleware, being inspired primarily by CCM and COM \cite{COM}. The Openbus goal is to provide support for component-based application integration on complex, distributed, multi-language and multi-platform scenarios. Applications that want to provide and publish their functionalities as services on the bus are granted access via certificate authentications, while clients that need to find and use such services authenticate via login and password.
 
@@ -100,7 +100,7 @@ With regard to the compulsive leadercast protocol, all the ACS login operations 
 
 On the other hand, in order to synchronize the credentials and offers between the ACS and Registry Service replicas, respectively, we use the non compulsive leadercast. Which means that unless there is a miss in any credential validation or offer's search, those data will not be synchronized.
 
-Finally, all the clients that use the bus client library developed in Lua use Smart Components when they need a reference to the ACS component. We developed this feature through the Oil 0.5 \cite{oil05} \cite{oil10} facilities. While all the clients that use the bus client library developed in Java and C++ use our solution with Portable Interpcetors (those libraries use JacORB 2.3.0 \cite{jacorb}, Orbix 6.3 sp3 \cite{orbix} and MICO 2.3.13 \cite{mico}). In both cases they need to set the ACS component replicas host addresses in a configuration file and the fault manager iterative and cyclic searches for healthy replicas when a request fails. The administrator may specify how many times the fault manager is allowed to iterate over the replicas list.
+Finally, all the clients that use the bus client library developed in Lua use Smart Components when they need a reference to the ACS component. We developed this feature through the Oil 0.5 \cite{oil05} \cite{oil10} facilities. While all the clients that use the bus client library developed in Java and C++ use our solution with Portable Interceptors (those libraries use JacORB 2.3.0 \cite{jacorb}, Orbix 6.3 sp3 \cite{orbix} and MICO 2.3.13 \cite{mico}). In both cases they need to set the ACS component replicas host addresses in a configuration file and the fault manager iterative and cyclic searches for healthy replicas when a request fails. The administrator may specify how many times the fault manager is allowed to iterate over the replicas list.
 
 \section{Basic Component-based Services}
 
@@ -198,7 +198,7 @@ As already described, Openbus has a replication-based fault tolerant mechanism w
 
 Figure \ref{fig:ft} illustrates the main entities and relationships of the fault tolerant mechanism in an integrated overview. Since both the Access Control Service Component and the Registry Service Component can be replicated, they have their monitors which are implemented by the \textit{FTACSMonitorFacet} and \textit{FTRSMonitorFacet}. They are implementations of the \textit{IFTServiceMonitor} interface describe in the IDL.
 
-At the Access Control Service Component and Registry Service Component startup, the \textit{(ACS)FaultToleranceFacet} and the \textit{(RS)FaultToleranceFacet} are intialized, respectively. They extend the \textit{FaultToleranceFacet} class which implements the common behavior as an implementation of the \textit{IFaultTolerantService\_v1\_05} interface.
+At the Access Control Service Component and Registry Service Component startup, the \textit{(ACS)FaultToleranceFacet} and the \textit{(RS)FaultToleranceFacet} are initialized, respectively. They extend the \textit{FaultToleranceFacet} class which implements the common behavior as an implementation of the \textit{IFaultTolerantService\_v1\_05} interface.
 
 Because the \textit{(ACS)FaultToleranceFacet} update the \textit{ACSFacet} state, it depends on the \textit{EntryCredential}. The same occurs with the \textit{(RS)FaultToleranceFacet} with regard to the \textit{ServiceOfferEntry}. At the same time the \textit{ACSFacet} and the \textit{RSFacet} depend on their respectives fault tolerant facets in order to requesting for synchronization state if any data is missing.
 
@@ -242,7 +242,7 @@ Each \textit{SessionService} can have multiple \textit{Session}s. The \textit{Se
 
 The \textit{Session} facet also has a list of members by credential (represented by the \textit{MemberByCredential} class), which is a Map of \textit{SessionMember} indexed by the \textit{CredentialIdentifier}.
 
-The \textit{Session} facet manages the \textit{SessionEventSink} facets (both v1\_04 and v1\_05), which means that the former is responsinble for adding event sinks in their lists. An Event Sink is a service interface that will be implemented by the client. The information sharing works as follows: whenever a \textit{SessionEvent} in sent to the \textit{Session}, the \textit{SessionEventSink} facets (server) actively contacts one of more \textit{MemberSessionEventSink} (clients' implementation of the \textit{SessionEventSink} interface) in order to notify the former of specific events. This is done through the iteration of the \textit{eventSinks} list that the \textit{SessionEventSink} facet has. This list is a list of Maps that contain the \textit{MemberSessionEventSink} and is indexed by the \textit{MemberIdentifier}.
+The \textit{Session} facet manages the \textit{SessionEventSink} facets (both v1\_04 and v1\_05), which means that the former is responsible for adding event sinks in their lists. An Event Sink is a service interface that will be implemented by the client. The information sharing works as follows: whenever a \textit{SessionEvent} in sent to the \textit{Session}, the \textit{SessionEventSink} facets (server) actively contacts one of more \textit{MemberSessionEventSink} (clients' implementation of the \textit{SessionEventSink} interface) in order to notify the former of specific events. This is done through the iteration of the \textit{eventSinks} list that the \textit{SessionEventSink} facet has. This list is a list of Maps that contains the \textit{MemberSessionEventSink} and is indexed by the \textit{MemberIdentifier}.
 
 
 \begin{thebibliography}{50}
