@@ -15,8 +15,8 @@ module("core.services.registry.RegistryService_v1_04")
 RSFacet = oop.class{}
 
 function RSFacet:register(serviceOffer)
-  local status, ret = oil.pcall(self.context.IRegistryService.register, 
-                                self.context.IRegistryService, 
+  local status, ret = oil.pcall(self.context.IRegistryService.register,
+                                self.context.IRegistryService,
                                 serviceOffer)
   if not status then
     return false, ""
@@ -25,12 +25,12 @@ function RSFacet:register(serviceOffer)
 end
 
 function RSFacet:unregister(identifier)
-  return self.context.IRegistryService:unregister(identifier) 
+  return self.context.IRegistryService:unregister(identifier)
 end
 
 function RSFacet:update(identifier, properties)
-  local status, ret = oil.pcall(self.context.IRegistryService.update, 
-                                self.context.IRegistryService, 
+  local status, ret = oil.pcall(self.context.IRegistryService.update,
+                                self.context.IRegistryService,
                                 identifier, properties)
   if not status then
     return false
