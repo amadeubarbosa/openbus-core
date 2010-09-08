@@ -553,10 +553,16 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-system"] = function(cmd)
+  local succ
   local systems
   local acsmgm = getacsmgm()
-  if cmd.params[cmd.name] == null then  -- Busca todos
-    systems = acsmgm:getSystems()
+  -- Busca todos
+  if cmd.params[cmd.name] == null then
+    succ, systems = acsmgm:getSystems()
+    if not succ then
+      printf("[ERRO] Falha ao recuperar informações: %s", systems[1])
+      return
+    end
   else
     -- Busca um sistema específico
     local succ, system = acsmgm:getSystem(cmd.params[cmd.name])
@@ -609,8 +615,7 @@ end
 handlers["set-system"] = function(cmd)
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = acsmgm:setSystemDescription(id,
-    cmd.params.description)
+  local succ, err = acsmgm:setSystemDescription(id,cmd.params.description)
   if succ then
     print(string.format("[INFO] Sistema '%s' atualizado com sucesso", id))
   elseif err[1] == ACS_SystemNonExistentException then
@@ -733,6 +738,7 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-deployment"] = function(cmd)
+  local succ
   local depls
   local acsmgm = getacsmgm()
   local id = cmd.params[cmd.name]
@@ -750,10 +756,18 @@ handlers["list-deployment"] = function(cmd)
     end
   elseif system then
     -- Filtra por sistema
-    depls = acsmgm:getSystemDeploymentsBySystemId(system)
+    succ, depls = acsmgm:getSystemDeploymentsBySystemId(system)
+    if not succ then
+       printf("[ERRO] Falha ao recuperar informações %s: %s", system, depls[1])
+      return
+    end
   else
     -- Busca todos
-    depls = acsmgm:getSystemDeployments()
+    succ, depls = acsmgm:getSystemDeployments()
+    if not succ then
+       printf("[ERRO] Falha ao recuperar informações: %s", depls[1])
+      return
+    end
   end
   -- Títulos e larguras iniciais das colunas
   local titles = { "", "ID IMPLANTAÇÃO", "ID SISTEMA", "DESCRIÇÃO" }
@@ -854,10 +868,16 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-user"] = function(cmd)
+  local succ
   local users
   local acsmgm = getacsmgm()
-  if cmd.params[cmd.name] == null then  -- Busca todos
-    users = acsmgm:getUsers()
+  -- Busca todos
+  if cmd.params[cmd.name] == null then
+    succ, users = acsmgm:getUsers()
+    if not succ then
+      printf("[ERRO] Falha ao recuperar informações: %s", users[1])
+      return
+    end
   else
     -- Busca um específico
     local succ, user = acsmgm:getUser(cmd.params[cmd.name])
@@ -947,7 +967,11 @@ end
 --
 handlers["list-interface"] = function(cmd)
   local rsmgm = getrsmgm()
-  local ifaces = rsmgm:getInterfaceIdentifiers()
+  local succ, ifaces = rsmgm:getInterfaceIdentifiers()
+  if not succ then
+    printf("[ERRO] Falha ao exibir interfaces: %s",ifaces[1])
+    return
+  end
   -- Títulos e larguras iniciais das colunas
   local titles = { "", "INTERFACE" }
   local sizes = { 3, #titles[2] }
@@ -1035,6 +1059,7 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-authorization"] = function(cmd)
+  local succ
   local auths
   local rsmgm = getrsmgm()
   local id = cmd.params[cmd.name]
@@ -1056,10 +1081,18 @@ handlers["list-authorization"] = function(cmd)
     for iface in string.gmatch(cmd.params.interface, "%S+") do
       ifaces[#ifaces+1] = iface
     end
-    auths = rsmgm:getAuthorizationsByInterfaceId(ifaces)
+    succ, auths = rsmgm:getAuthorizationsByInterfaceId(ifaces)
+    if not succ then
+      printf("[ERRO] Falha ao recuperar informações: %s", auths[1])
+      return
+    end
   else
     -- Busca todas
-    auths = rsmgm:getAuthorizations()
+    succ, auths = rsmgm:getAuthorizations()
+    if not succ then
+      printf("[ERRO] Falha ao recuperar informações: %s", auths[1])
+      return
+    end
   end
   -- Títulos e larguras das colunas do formulário de resposta
   local titles = { "", "ID MEMBRO", "TIPO", "INTERFACES"}
@@ -1117,19 +1150,40 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-offer"] = function(cmd)
+  local succ
   local offers
   local rsmgm = getrsmgm()
   if cmd.params[cmd.name] == null then
     if cmd.params.broken then
-      offers = rsmgm:getUnauthorizedInterfaces()
+      succ, offers = rsmgm:getUnauthorizedInterfaces()
+      if not succ then
+        printf("[ERRO] Falha ao listar interfaces não autorizadas: %s",
+            offers[1])
+        return
+      end
     else
-      offers = rsmgm:getOfferedInterfaces()
+      succ, offers = rsmgm:getOfferedInterfaces()
+      if not succ then
+        printf("[ERRO] Falha ao listar interfaces oferecidas: %s",offers[1])
+        return
+      end
     end
   else
     if cmd.params.broken then
-      offers = rsmgm:getUnauthorizedInterfacesByMember(cmd.params[cmd.name])
+      succ, offers = rsmgm:getUnauthorizedInterfacesByMember(
+          cmd.params[cmd.name])
+      if not succ then
+        printf("[ERRO] Falha ao listar interfaces não autorizadas %s: %s",
+            cmd.params[cmd.name], offers[1])
+        return
+      end
     else
-      offers = rsmgm:getOfferedInterfacesByMember(cmd.params[cmd.name])
+      succ, offers = rsmgm:getOfferedInterfacesByMember(cmd.params[cmd.name])
+      if not succ then
+        printf("[ERRO] Falha ao listar interfaces oferecidas %s: %s",
+           cmd.params[cmd.name], offers[1])
+        return
+      end
     end
   end
   -- Títulos e larguras das colunas do formulário de resposta
