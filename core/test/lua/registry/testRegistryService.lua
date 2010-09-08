@@ -419,7 +419,6 @@ Suite = {
       Check.assertNotNil(self.registryIdentifier)
       --
       local offers = self.registryService:find({"IHello_v1"})
-oil.verbose:print(offers)
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
@@ -521,7 +520,6 @@ oil.verbose:print(offers)
       Check.assertEquals(1, #offers)
       --
       offers = self.registryService:find({"IHello_v2"})
-oil.verbose:print(offers)
       Check.assertEquals(0, #offers)
       --
       success = self.registryService:update(self.registryIdentifier, {
