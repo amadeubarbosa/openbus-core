@@ -990,7 +990,7 @@ function startup(self)
 
   -- Verifica se é o primeiro startup
   if not rs.initialized then
-    Log:registry("serviço de registro estáinicializando")
+    Log:registry("serviço de registro está inicializando")
     if string.match(config.privateKeyFile, "^/") then
       rs.privateKeyFile = config.privateKeyFile
     else
