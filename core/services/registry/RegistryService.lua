@@ -1041,68 +1041,68 @@ function startup(self)
 
   local acsIComp = Openbus:getACSIComponent()
 
- -- registra um observador de credenciais
- local observer = {
-   registryService = rs,
-   credentialWasDeleted = function(self, credential)
-     Log:registry("Observador notificado para credencial "..
-       credential.identifier)
-     self.registryService:credentialWasDeleted(credential)
-   end
- }
- local orb = Openbus:getORB()
- rs.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
-   Utils.CREDENTIAL_OBSERVER_INTERFACE)
- rs.observerId = accessControlService:addObserver(rs.observer, {})
- Log:registry("Cadastrado observador para a credencial")
+  -- registra um observador de credenciais
+  local observer = {
+    registryService = rs,
+      credentialWasDeleted = function(self, credential)
+        Log:registry("Observador notificado para credencial "..
+          credential.identifier)
+        self.registryService:credentialWasDeleted(credential)
+      end
+  }
+  local orb = Openbus:getORB()
+  rs.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
+    Utils.CREDENTIAL_OBSERVER_INTERFACE)
+  rs.observerId = accessControlService:addObserver(rs.observer, {})
+  Log:registry("Cadastrado observador para a credencial")
 
- -- recupera ofertas persistidas
- Log:registry("Recuperando ofertas persistidas")
- local offerEntriesDB = rs.offersDB:retrieveAll()
- for _, offerEntry in pairs(offerEntriesDB) do
-   -- somente recupera ofertas de credenciais válidas
-   if accessControlService:isValid(offerEntry.credential) then
-     rs:addOffer(offerEntry)
-   else
-     Log:registry("Oferta de "..offerEntry.credential.identifier.." descartada")
-     rs.offersDB:delete(offerEntry)
-   end
- end
+  -- recupera ofertas persistidas
+  Log:registry("Recuperando ofertas persistidas")
+  local offerEntriesDB = rs.offersDB:retrieveAll()
+  for _, offerEntry in pairs(offerEntriesDB) do
+    -- somente recupera ofertas de credenciais válidas
+    if accessControlService:isValid(offerEntry.credential) then
+      rs:addOffer(offerEntry)
+    else
+      Log:registry("Oferta de "..offerEntry.credential.identifier.." descartada")
+      rs.offersDB:delete(offerEntry)
+    end
+  end
 
- -- Referência à faceta de gerenciamento do ACS
- mgm.acsmgm = acsIComp:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
- mgm.acsmgm = orb:narrow(mgm.acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
- mgm.acsmgm = orb:newproxy(mgm.acsmgm, "protected")
- -- Administradores dos serviços
- mgm.admins = {}
- for _, name in ipairs(config.administrators) do
-   mgm.admins[name] = true
- end
- -- ACS, RGS e monitor são sempre administradores
- mgm.admins.AccessControlService = true
- mgm.admins.RegistryService = true
- mgm.admins.RGSMonitor = true
+  -- Referência à faceta de gerenciamento do ACS
+  mgm.acsmgm = acsIComp:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
+  mgm.acsmgm = orb:narrow(mgm.acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
+  mgm.acsmgm = orb:newproxy(mgm.acsmgm, "protected")
+  -- Administradores dos serviços
+  mgm.admins = {}
+  for _, name in ipairs(config.administrators) do
+    mgm.admins[name] = true
+  end
+  -- ACS, RGS e monitor são sempre administradores
+  mgm.admins.AccessControlService = true
+  mgm.admins.RegistryService = true
+  mgm.admins.RGSMonitor = true
 
- -- Inicializa a base de gerenciamento
- mgm.authDB = TableDB(DATA_DIR.."/rs_auth.db")
- mgm.ifaceDB = TableDB(DATA_DIR.."/rs_iface.db")
- mgm:loadData()
+  -- Inicializa a base de gerenciamento
+  mgm.authDB = TableDB(DATA_DIR.."/rs_auth.db")
+  mgm.ifaceDB = TableDB(DATA_DIR.."/rs_iface.db")
+  mgm:loadData()
 
- rs.started = true
+  rs.started = true
 
- -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
- local acsIComp = Openbus:getACSIComponent()
- local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
- acsIRecep = orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
- local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
-   "RegistryServiceReceptacle", self.context.IComponent )
- if not status then
-   Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
-     conns[1])
-   return false
- end
+  -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
+  local acsIComp = Openbus:getACSIComponent()
+  local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
+  acsIRecep = orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
+  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
+    "RegistryServiceReceptacle", self.context.IComponent )
+  if not status then
+    Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
+      conns[1])
+    return false
+  end
 
- Log:registry("serviço de registro iniciado")
+  Log:registry("serviço de registro iniciado")
 end
 
 ---
