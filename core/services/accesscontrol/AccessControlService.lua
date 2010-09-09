@@ -82,7 +82,7 @@ function ACSFacet:loginByPassword(name, password)
       local entry = self:addEntry(name)
       return true, entry.credential, entry.lease.duration
     else
-       Log:warn(format("Erro ao validar o usuário %s: %s", name, err))
+      Log:warn(format("Erro ao validar o usuário %s: %s", name, err))
     end
   end
   Log:error("usuário "..name.." não pôde ser validado no sistema.")
@@ -118,45 +118,45 @@ function ACSFacet:loginByCertificate(name, answer)
   --Outra réplica tentando inserir sua credencial
   local interceptedCredential = Openbus:getInterceptedCredential()
   if interceptedCredential then
-     if interceptedCredential.owner == "AccessControlService" or
-        interceptedCredential.delegate == "AccessControlService" then
-        local entry = self.entries[interceptedCredential.identifier]
-        if not entry then
-          local ftFacet = self.context.IFaultTolerantService
-          if #ftFacet.ftconfig.hosts.ACS > 1 then
-            local i = 1
-            local stop = false
-            repeat
-               if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
-               local ret, succ, remoteACSFacet = oil.pcall(Utils.fetchService,
-                 Openbus:getORB(), ftFacet.ftconfig.hosts.ACS[i],
-                 Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-               if ret and succ then
-                 --encontrou outra replica
-                 Log:faulttolerance("[loginByCertificate] Verificando credencial na replica "
-                   .. ftFacet.ftconfig.hosts.ACS[i] ..".")
-                 stop = remoteACSFacet:isValid(interceptedCredential)
-               else
-                 Log:faulttolerance("[loginByCertificate] Credencial nao encontrada na replica "
-                    .. ftFacet.ftconfig.hosts.ACS[i]..".")
-               end -- fim succ
-             end -- fim , nao eh a mesma replica
-             i = i + 1
-            until stop or i > #ftFacet.ftconfig.hosts.ACS
-            if stop then
-              local entry = self:addEntryWithCredential(name, interceptedCredential, true)
-              Log:faulttolerance("[loginByCertificate] Credencial validada e inserida")
-              return true, entry.credential, entry.lease.duration
-            else
-              Log:error("[loginByCertificate] Replica do ACS "..name.." não pôde ser validado no sistema.")
-              return false, self.invalidCredential, self.invalidLease
-            end--fim stop
-          end --fim, if qt de replicas > 1
-        else --ja tem entrada
-           Log:faulttolerance("[loginByCertificate] Credencial do ACS ja existente")
-           return true, entry.credential, entry.lease.duration
-        end
-     end -- fim, eh o ACS
+    if interceptedCredential.owner == "AccessControlService" or
+      interceptedCredential.delegate == "AccessControlService" then
+      local entry = self.entries[interceptedCredential.identifier]
+      if not entry then
+        local ftFacet = self.context.IFaultTolerantService
+        if #ftFacet.ftconfig.hosts.ACS > 1 then
+          local i = 1
+          local stop = false
+          repeat
+            if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
+              local ret, succ, remoteACSFacet = oil.pcall(Utils.fetchService,
+                Openbus:getORB(), ftFacet.ftconfig.hosts.ACS[i],
+                Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+              if ret and succ then
+                --encontrou outra replica
+                Log:faulttolerance("[loginByCertificate] Verificando credencial na replica "
+                  .. ftFacet.ftconfig.hosts.ACS[i] ..".")
+                stop = remoteACSFacet:isValid(interceptedCredential)
+              else
+                Log:faulttolerance("[loginByCertificate] Credencial nao encontrada na replica "
+                  .. ftFacet.ftconfig.hosts.ACS[i]..".")
+              end -- fim succ
+            end -- fim , nao eh a mesma replica
+            i = i + 1
+          until stop or i > #ftFacet.ftconfig.hosts.ACS
+          if stop then
+            local entry = self:addEntryWithCredential(name, interceptedCredential, true)
+            Log:faulttolerance("[loginByCertificate] Credencial validada e inserida")
+            return true, entry.credential, entry.lease.duration
+          else
+            Log:error("[loginByCertificate] Replica do ACS "..name.." não pôde ser validado no sistema.")
+            return false, self.invalidCredential, self.invalidLease
+          end--fim stop
+        end --fim, if qt de replicas > 1
+      else --ja tem entrada
+        Log:faulttolerance("[loginByCertificate] Credencial do ACS ja existente")
+        return true, entry.credential, entry.lease.duration
+      end
+    end -- fim, eh o ACS
   end --fim tem credencial
 
   --se chegou aqui, nao tem credencial ou tem mas nao eh o ACS, loga normalmente
@@ -199,14 +199,14 @@ function ACSFacet:generateChallenge(name, certificate)
   self.challenges[name] = randomSequence
   local key = certificate:getpublickey()
   if key then
-     Log:access_control("Chave privada obtida.")
+    Log:access_control("Chave privada obtida.")
   else
-     Log:error("Não foi possível obter a chave privada.")
-     return ""
+    Log:error("Não foi possível obter a chave privada.")
+    return ""
   end
   local ret, erroMsg = lce.cipher.encrypt(key, randomSequence)
   if not ret then
-     Log:error(erroMsg)
+    Log:error(erroMsg)
   end
   return ret, erroMsg
 end
@@ -229,23 +229,23 @@ function ACSFacet:logout(credential)
 
   local interceptedCredential = Openbus:getInterceptedCredential()
   if interceptedCredential then
-     if interceptedCredential.owner == "AccessControlService" or
-       interceptedCredential.delegate == "AccessControlService" then
-         --nao faz nada
-         return true
-     end
+    if interceptedCredential.owner == "AccessControlService" or
+      interceptedCredential.delegate == "AccessControlService" then
+      --nao faz nada
+      return true
+    end
   end
 
   local ftFacet = self.context.IFaultTolerantService
   if not ftFacet.ftconfig then
-      Log:faulttolerance("[logout] Faceta precisa ser inicializada antes de ser chamada.")
-      Log:warn("[logout] não foi possível executar 'logout' nas replicas")
-      return true
+    Log:faulttolerance("[logout] Faceta precisa ser inicializada antes de ser chamada.")
+    Log:warn("[logout] não foi possível executar 'logout' nas replicas")
+    return true
   end
 
   if #ftFacet.ftconfig.hosts.ACS <= 1 then
-      Log:faulttolerance("[logout] Nenhuma replica para deslogar credencial.")
-      return true
+    Log:faulttolerance("[logout] Nenhuma replica para deslogar credencial.")
+    return true
   end
 
   local i = 1
@@ -264,8 +264,8 @@ function ACSFacet:logout(credential)
                   credential)
                 end)
       else
-           Log:faulttolerance("[logout] Replica [".. ftFacet.ftconfig.hosts.ACS[i]
-                              .."] nao encontrada.")
+        Log:faulttolerance("[logout] Replica [".. ftFacet.ftconfig.hosts.ACS[i]
+                           .."] nao encontrada.")
       end -- fim succ, encontrou replica
     end -- fim , nao eh a mesma replica
     i = i + 1
@@ -284,10 +284,10 @@ end
 ---
 function ACSFacet:isValid(credential)
   Log:access_control("Validando a credencial {"..credential.identifier.." - "..
-      credential.owner.."/"..credential.delegate.."}")
+    credential.owner.."/"..credential.delegate.."}")
   local entry = self.entries[credential.identifier]
   if not entry then
-  --VAI BUSCAR NAS REPLICAS
+    --VAI BUSCAR NAS REPLICAS
     --troca credenciais para verificacao de permissao na faceta FT
     local intCredential = Openbus:getInterceptedCredential()
     Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
@@ -297,15 +297,15 @@ function ACSFacet:isValid(credential)
     Openbus.serverInterceptor.picurrent:setValue(intCredential)
 
     if gotEntry then
-       --tenta de novo
-       entry = self.entries[credential.identifier]
+      --tenta de novo
+      entry = self.entries[credential.identifier]
     end
 
     if not entry then
     --realmente não encontrou
-       Log:access_control("A credencial {"..credential.identifier.." - "..
-        credential.owner.."/"..credential.delegate.."} não é válida.")
-       return false
+      Log:access_control("A credencial {"..credential.identifier.." - "..
+       credential.owner.."/"..credential.delegate.."} não é válida.")
+      return false
     end
   end
 
@@ -320,7 +320,7 @@ function ACSFacet:isValid(credential)
     return false
   end
   Log:access_control("A credencial {"..credential.identifier.." - "..
-      credential.owner.."/"..credential.delegate.."} é válida.")
+    credential.owner.."/"..credential.delegate.."} é válida.")
   return true
 end
 
@@ -423,24 +423,24 @@ function ACSFacet:getAllEntryCredential()
       retEntries[i] = {}
       retEntries[i].aCredential = entry.credential
       if entry.certified ~= nil then
-         retEntries[i].certified = entry.certified
+       retEntries[i].certified = entry.certified
       else
-         retEntries[i].certified = false
+       retEntries[i].certified = false
       end
       local j = 1
       retEntries[i].observers = {}
       for observerId, flag in pairs(entry.observers) do
         if flag then
-            retEntries[i].observers[j] = tostring(observerId)
-            j = j + 1
+          retEntries[i].observers[j] = tostring(observerId)
+          j = j + 1
         end
       end
       j = 1
       retEntries[i].observedBy = {}
       for observerId, flag in pairs(entry.observedBy) do
         if flag then
-            retEntries[i].observedBy[j] = tostring(observerId)
-            j = j + 1
+          retEntries[i].observedBy[j] = tostring(observerId)
+          j = j + 1
         end
       end
     end
@@ -461,8 +461,8 @@ end
 function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifier)
   local entry = self.entries[credentialIdentifier]
   if not entry then
-       Log:access_control("Não existe credencial com identificador: {"..credentialIdentifier .. "}")
-       return false
+    Log:access_control("Não existe credencial com identificador: {"..credentialIdentifier .. "}")
+    return false
   end
 
   local observerEntry = self.observers[observerIdentifier]
@@ -726,10 +726,10 @@ function ManagementFacet:checkPermission()
   local admin = self.admins[credential.owner] or
                 self.admins[credential.delegate]
   if not admin then
-     error(Openbus:getORB():newexcept {
-       "IDL:omg.org/CORBA/NO_PERMISSION:1.0",
-       minor_code_value = 0,
-       completion_status = 1,
+    error(Openbus:getORB():newexcept {
+      "IDL:omg.org/CORBA/NO_PERMISSION:1.0",
+      minor_code_value = 0,
+      completion_status = 1,
     })
   end
 end
@@ -780,7 +780,7 @@ function ManagementFacet:addSystem(id, description)
   else
     self.systems[id] = true
     self:updateManagementStatus("addSystem",
-                         { id = id, description = description})
+      { id = id, description = description})
   end
 end
 
@@ -909,7 +909,6 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
     Log:error(format("Falha ao salvar implantação %s na base de dados: %s",
       id, msg))
   else
-
     self:updateManagementStatus("addSystemDeployment",
                                 { id = id,
                                   systemId = systemId,
@@ -946,8 +945,8 @@ function ManagementFacet:removeSystemDeployment(id)
 
     succ, msg = self.certificateDB:remove(id)
     if not succ and msg ~= "not found" then
-       Log:error(format("Falha ao remover certificado da implantação '%s': %s",
-            id, msg))
+      Log:error(format("Falha ao remover certificado da implantação '%s': %s",
+        id, msg))
     end
 
     -- Invalida a credencial do membro que está sendo removido
@@ -991,7 +990,7 @@ function ManagementFacet:setSystemDeploymentDescription(id, description)
       Log:error(format("Falha ao salvar implantação '%s' na base de dados: %s",
         id, msg))
     else
-        self:updateManagementStatus("setSystemDeploymentDescription",
+      self:updateManagementStatus("setSystemDeploymentDescription",
                          { id = id, description = description})
     end
   end
@@ -1037,7 +1036,7 @@ function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
   if not succ then
     Log:error(format("Falha ao salvar certificado de '%s': %s", id, msg))
   else
-     self:updateManagementStatus("setSystemDeploymentCertificate",
+    self:updateManagementStatus("setSystemDeploymentCertificate",
                          { id = id, certificate = certificate})
   end
 end
@@ -1138,22 +1137,21 @@ function ManagementFacet:removeUser(id)
     Log:error(format("Falha ao remover usuário '%s' da base de dados: %s",
       id, msg))
   else
-     self:updateManagementStatus("removeUser", { id = id})
+    self:updateManagementStatus("removeUser", { id = id})
 
-     -- Remove todas as autorizações do membro
-     local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle,
+    -- Remove todas as autorizações do membro
+    local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle,
                             Openbus:getORB(),
                             self.context.IComponent,
                             "RegistryServiceReceptacle",
                             "IManagement_v" .. Utils.OB_VERSION,
                             Utils.MANAGEMENT_RS_INTERFACE)
-     if succ and rs then
-       local orb = Openbus:getORB()
-       rs = orb:newproxy(rs, "protected")
-       rs:removeAuthorization(id)
-     end
+    if succ and rs then
+      local orb = Openbus:getORB()
+      rs = orb:newproxy(rs, "protected")
+      rs:removeAuthorization(id)
+    end
   end
-
 end
 
 ---
@@ -1215,109 +1213,112 @@ function ManagementFacet:getUsers()
 end
 
 function ManagementFacet:updateManagementStatus(command, data)
-   local credential = Openbus:getInterceptedCredential()
-   if credential.owner == "AccessControlService" or
-       credential.delegate == "AccessControlService" then
+  local credential = Openbus:getInterceptedCredential()
+  if credential.owner == "AccessControlService" or
+    credential.delegate == "AccessControlService" then
     --para nao entrar em loop
-       return
-    end
-    Log:faulttolerance("[updateManagementStatus] Atualiza estado da gerencia para o comando[".. command .."].")
-    local ftFacet = self.context.IFaultTolerantService
-    if not ftFacet.ftconfig then
-        Log:faulttolerance("[updateManagementStatus] Faceta precisa ser inicializada antes de ser chamada.")
-        Log:warn("[updateManagementStatus] não foi possível executar 'updateManagementStatus'")
-        return false
-    end
+    return
+  end
+  Log:faulttolerance("[updateManagementStatus] Atualiza estado da gerencia para o comando[".. command .."].")
+  local ftFacet = self.context.IFaultTolerantService
+  if not ftFacet.ftconfig then
+    Log:faulttolerance("[updateManagementStatus] Faceta precisa ser inicializada antes de ser chamada.")
+    Log:warn("[updateManagementStatus] não foi possível executar 'updateManagementStatus'")
+    return false
+  end
 
-    if # ftFacet.ftconfig.hosts.ACS <= 1 then
-        Log:faulttolerance("[updateManagementStatus] Nenhuma replica para atualizar estado da gerencia.")
-        return false
-    end
+  if # ftFacet.ftconfig.hosts.ACS <= 1 then
+    Log:faulttolerance("[updateManagementStatus] Nenhuma replica para atualizar estado da gerencia.")
+    return false
+  end
 
-    local orb = Openbus:getORB()
-    local i = 1
-    repeat
-        if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
-            local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
-                                                Openbus:getORB(),
-                                                ftFacet.ftconfig.hosts.ACSIC[i],
-                                                Utils.COMPONENT_INTERFACE)
+  local orb = Openbus:getORB()
+  local i = 1
+  repeat
+    if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
+      local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
+                                               Openbus:getORB(),
+                                               ftFacet.ftconfig.hosts.ACSIC[i],
+                                               Utils.COMPONENT_INTERFACE)
 
-            if ret and succ then
-            --encontrou outra replica
-                Log:faulttolerance("[updateManagementStatus] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
-                 -- Recupera faceta IManagement da replica remota
-                local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement_v"..Utils.OB_VERSION)
-                if ok then
-                     remoteMgmFacet = orb:narrow(remoteMgmFacet,
+      if ret and succ then
+        --encontrou outra replica
+        Log:faulttolerance("[updateManagementStatus] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
+        -- Recupera faceta IManagement da replica remota
+        local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement_v"..Utils.OB_VERSION)
+        if ok then
+          remoteMgmFacet = orb:narrow(remoteMgmFacet,
                            Utils.MANAGEMENT_ACS_INTERFACE)
-                     --*** System operations***
-                     if command == "addSystem" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.addSystem, remoteMgmFacet, data.id, data.description)
-                                       end)
-                     elseif command == "setSystemDescription" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.setSystemDescription,  remoteMgmFacet,
-                                                                data.id, data.description)
-                                       end)
-                     elseif command == "removeSystem" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.removeSystem, remoteMgmFacet, data.id)
-                                       end)
-
-                     --*** System Deployment operations***
-                     elseif command == "addSystemDeployment" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.addSystemDeployment,remoteMgmFacet,
-                                                       data.id,
-                                                       data.systemId,
-                                                       data.description,
-                                                       data.certificate)
-                                       end)
-
-                     elseif command == "setSystemDeploymentDescription" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.setSystemDeploymentDescription, remoteMgmFacet,
-                                                                       data.id,
-                                                                       data.description)
-                                       end)
-                     elseif command == "setSystemDeploymentCertificate" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.setSystemDeploymentCertificate, remoteMgmFacet,
-                                                                      data.id,
-                                                                      data.certificate)
-                                       end)
-                     elseif command == "removeSystemDeployment" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.removeSystemDeployment, remoteMgmFacet, data.id)
-                                       end)
-
-                     --*** User operations***
-                     elseif command == "addUser" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.addUser,remoteMgmFacet,
-                                                                      data.id, data.name)
-                                       end)
-                     elseif command == "removeUser" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.removeUser,remoteMgmFacet,
-                                                                      data.id)
-                                       end)
-                     elseif command == "setUserName" then
-                         oil.newthread(function()
-                                          local succ, ret = oil.pcall(remoteMgmFacet.setUserName,remoteMgmFacet,
-                                                                      data.id, data.name)
-                                       end)
-                     end
-                     Log:faulttolerance("[updateManagementStatus] Replica ".. ftFacet.ftconfig.hosts.ACS[i] .." atualizada quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
-                end -- fim ok facet IManagement
-           else
-              Log:faulttolerance("[updateManagementStatus] Replica ".. ftFacet.ftconfig.hosts.ACS[i] .." não está disponível e não pode ser atualizada quanto quanto ao estado das interfaces e autorizacoes para o comando[".. command .."].")
-            end
-        end
-        i = i + 1
-    until i > # ftFacet.ftconfig.hosts.ACSIC
+          --*** System operations***
+          if command == "addSystem" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.addSystem, remoteMgmFacet, data.id, data.description)
+              end)
+          elseif command == "setSystemDescription" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.setSystemDescription, remoteMgmFacet,
+                                          data.id, data.description)
+              end)
+          elseif command == "removeSystem" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.removeSystem, remoteMgmFacet, data.id)
+              end)
+          --*** System Deployment operations***
+          elseif command == "addSystemDeployment" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.addSystemDeployment,remoteMgmFacet,
+                                          data.id,
+                                          data.systemId,
+                                          data.description,
+                                          data.certificate)
+              end)
+          elseif command == "setSystemDeploymentDescription" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.setSystemDeploymentDescription, remoteMgmFacet,
+                                          data.id,
+                                           data.description)
+              end)
+          elseif command == "setSystemDeploymentCertificate" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.setSystemDeploymentCertificate, remoteMgmFacet,
+                                          data.id,
+                                          data.certificate)
+              end)
+          elseif command == "removeSystemDeployment" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.removeSystemDeployment, remoteMgmFacet, data.id)
+              end)
+          --*** User operations***
+          elseif command == "addUser" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.addUser,remoteMgmFacet,
+                                          data.id, data.name)
+              end)
+          elseif command == "removeUser" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.removeUser,remoteMgmFacet,
+                                          data.id)
+              end)
+          elseif command == "setUserName" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteMgmFacet.setUserName,remoteMgmFacet,
+                                          data.id, data.name)
+              end)
+          end
+          Log:faulttolerance("[updateManagementStatus] Replica ".. 
+                             ftFacet.ftconfig.hosts.ACS[i] ..
+                             " atualizada quanto ao estado das interfaces e autorizacoes para o comando["..
+                             command .."].")
+        end -- fim ok facet IManagement
+      else
+        Log:faulttolerance("[updateManagementStatus] Replica ".. 
+                           ftFacet.ftconfig.hosts.ACS[i] ..
+                           " não está disponível e não pode ser atualizada quanto quanto ao estado das interfaces e autorizacoes para o comando["..
+                           command .."].")
+      end
+    end
+    i = i + 1
+  until i > # ftFacet.ftconfig.hosts.ACSIC
 end
 
 --------------------------------------------------------------------------------
@@ -1345,16 +1346,16 @@ function ACSReceptacleFacet:connect(receptacle, object)
                                                "IAccessControlService_v" .. Utils.OB_VERSION,
                                                Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
       if not acsFacet then
-         --Nao esta, vai conectar
-         local status, conns = oil.pcall(rsIRecep.connect, rsIRecep,
-                "AccessControlServiceReceptacle", self.context.IComponent )
-         if not status then
-            Log:error("Falha ao conectar o ACS no receptáculo do RGS: " ..
-                         conns[1])
-            AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect(self, connId)
-            Log:error("Não foi possível conectar RGS ao ACS.")
-            return nil
-         end
+        --Nao esta, vai conectar
+        local status, conns = oil.pcall(rsIRecep.connect, rsIRecep,
+               "AccessControlServiceReceptacle", self.context.IComponent )
+        if not status then
+          Log:error("Falha ao conectar o ACS no receptáculo do RGS: " ..
+                    conns[1])
+          AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect(self, connId)
+          Log:error("Não foi possível conectar RGS ao ACS.")
+          return nil
+        end
       end
     end
 
@@ -1371,66 +1372,70 @@ function ACSReceptacleFacet:disconnect(connId)
   -- calling inherited method
   local status = oil.pcall(AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect, self, connId)
   if status then
-      self:updateConnectionState("disconnect", { connId = connId })
+    self:updateConnectionState("disconnect", { connId = connId })
   else
-      Log:error("[disconnect] Não foi possível desconectar receptaculo.")
+    Log:error("[disconnect] Não foi possível desconectar receptaculo.")
   end
 end
 
 function ACSReceptacleFacet:updateConnectionState(command, data)
-    local credential = Openbus:getInterceptedCredential()
-    if credential.owner == "AccessControlService" or
-       credential.delegate == "AccessControlService" then
-       --para nao entrar em loop
-         return
-    end
-    Log:faulttolerance("[updateConnectionState] Atualiza estado do ACS quanto ao [".. command .."].")
-    local ftFacet = self.context.IFaultTolerantService
-    if not ftFacet.ftconfig then
-        Log:faulttolerance("[updateConnectionState] Faceta precisa ser inicializada antes de ser chamada.")
-        Log:warn("[updateConnectionState] não foi possível atualizar estado quanto ao [".. command .."]")
-        return
-    end
+  local credential = Openbus:getInterceptedCredential()
+  if credential.owner == "AccessControlService" or
+    credential.delegate == "AccessControlService" then
+    --para nao entrar em loop
+    return
+  end
+  Log:faulttolerance("[updateConnectionState] Atualiza estado do ACS quanto ao [".. command .."].")
+  local ftFacet = self.context.IFaultTolerantService
+  if not ftFacet.ftconfig then
+    Log:faulttolerance("[updateConnectionState] Faceta precisa ser inicializada antes de ser chamada.")
+    Log:warn("[updateConnectionState] não foi possível atualizar estado quanto ao [".. command .."]")
+    return
+  end
 
-    if # ftFacet.ftconfig.hosts.ACS <= 1 then
-        Log:faulttolerance("[updateConnectionState] Nenhuma replica para atualizar estado quanto ao [".. command .."].")
-        return
-    end
+  if # ftFacet.ftconfig.hosts.ACS <= 1 then
+    Log:faulttolerance("[updateConnectionState] Nenhuma replica para atualizar estado quanto ao [".. command .."].")
+    return
+  end
 
-    local orb = Openbus:getORB()
-    local i = 1
-    repeat
-        if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
-            local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
-                                                Openbus:getORB(),
-                                                ftFacet.ftconfig.hosts.ACSIC[i],
-                                                Utils.COMPONENT_INTERFACE)
+  local orb = Openbus:getORB()
+  local i = 1
+  repeat
+    if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
+      local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
+                                               Openbus:getORB(),
+                                               ftFacet.ftconfig.hosts.ACSIC[i],
+                                               Utils.COMPONENT_INTERFACE)
 
-            if ret and succ then
-            --encontrou outra replica
-                Log:faulttolerance("[updateConnectionState] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
-                 -- Recupera faceta IReceptacles da replica remota
-                local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
-                if ok then
-                     remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
-                           "IDL:scs/core/IReceptacles:1.0")
-                     if command == "connect" then
-                         oil.newthread(function()
-                                    local succ, ret = oil.pcall(remoteACSRecepFacet.connect, remoteACSRecepFacet, data.receptacle, data.object)
-                                    end)
-                     elseif command == "disconnect" then
-                         oil.newthread(function()
-                                    local succ, ret = oil.pcall(remoteACSRecepFacet.disconnect, remoteACSRecepFacet, data.connId)
-                                    end)
-                     end
-                     Log:faulttolerance("[updateConnectionState] Replica ".. ftFacet.ftconfig.hosts.ACSIC[i] .." atualizada quanto ao [".. command .."].")
-                end
-            else
-                Log:faulttolerance("[updateConnectionState] Replica ".. ftFacet.ftconfig.hosts.ACSIC[i] .." não está disponível e não pode ser atualizada quanto ao [".. command .."].")
-            end
+      if ret and succ then
+        --encontrou outra replica
+        Log:faulttolerance("[updateConnectionState] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
+        -- Recupera faceta IReceptacles da replica remota
+        local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
+        if ok then
+          remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
+                                           "IDL:scs/core/IReceptacles:1.0")
+          if command == "connect" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteACSRecepFacet.connect, remoteACSRecepFacet, data.receptacle, data.object)
+              end)
+          elseif command == "disconnect" then
+            oil.newthread(function()
+              local succ, ret = oil.pcall(remoteACSRecepFacet.disconnect, remoteACSRecepFacet, data.connId)
+              end)
+          end
+          Log:faulttolerance("[updateConnectionState] Replica ".. 
+                             ftFacet.ftconfig.hosts.ACSIC[i] ..
+                             " atualizada quanto ao [".. command .."].")
         end
-        i = i + 1
-    until i > # ftFacet.ftconfig.hosts.ACSIC
+      else
+        Log:faulttolerance("[updateConnectionState] Replica ".. 
+                           ftFacet.ftconfig.hosts.ACSIC[i] ..
+                           " não está disponível e não pode ser atualizada quanto ao [".. command .."].")
+      end
+    end
+    i = i + 1
+  until i > # ftFacet.ftconfig.hosts.ACSIC
 end
 
 --------------------------------------------------------------------------------
@@ -1459,158 +1464,156 @@ function FaultToleranceFacet:init()
 end
 
 function FaultToleranceFacet:updateStatus(params)
+  --  O atributo _anyval so retorna em chamadas remotas, em chamadas locais (mesmo processo)
+  --  deve-se acessar o parametro diretamente, além disso ,
+  --  passar uma tabela no any tbm so funciona porque eh local
+  -- se fosse uma chamada remota teria q ter uma struct pois senao da problema de marshall
+  local input
+  if not params._anyval then
+    input = params
+  else
+    --chamada remota
+    input = params._anyval
+    --a permissão só é verificada em chamadas remotas
+    self.context.IManagement:checkPermission()
+  end
 
-    --  O atributo _anyval so retorna em chamadas remotas, em chamadas locais (mesmo processo)
-    --  deve-se acessar o parametro diretamente, além disso ,
-    --  passar uma tabela no any tbm so funciona porque eh local
-    -- se fosse uma chamada remota teria q ter uma struct pois senao da problema de marshall
-    local input
-    if not params._anyval then
-        input = params
-    else
-        --chamada remota
-        input = params._anyval
-        --a permissão só é verificada em chamadas remotas
-        self.context.IManagement:checkPermission()
-    end
+  --Atualiza estado das credenciais
+  Log:faulttolerance("[updateStatus] Atualiza estado das credenciais.")
 
-    --Atualiza estado das credenciais
-    Log:faulttolerance("[updateStatus] Atualiza estado das credenciais.")
-
-    if not self.ftconfig then
-        Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
-        Log:warn("[updateStatus] não foi possível executar 'updatestatus'")
-        return false
-    end
-
-    if # self.ftconfig.hosts.ACS <= 1 then
-        Log:faulttolerance("[updateStatus] Nenhuma replica para atualizar credenciais.")
-        return false
-    end
-
-    if input == "all" then
-        --sincroniza todas as credenciais a mais das outras replicas
-        --com esta e os dados de gerencia
-        Log:faulttolerance("[updateStatus] Sincronizando base de credenciais com as replicas exceto em "..self.acsReference)
-          local updated = false
-          local i = 1
-          local count = 0
-          repeat
-            if self.ftconfig.hosts.ACS[i] ~= self.acsReference then
-               local ret, succ, acs = oil.pcall(Utils.fetchService,
-                                                Openbus:getORB(),
-                                                self.ftconfig.hosts.ACS[i],
-                                                Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-
-                if ret and succ then
-                --encontrou outra replica
-                    local acsFacet = self.context.IAccessControlService
-                    --********* CREDENCIAL - inicio *****************
-                    local repEntries = acs:getAllEntryCredential()
-                    if # repEntries > 0 then
-                        local localEntries = acsFacet.entries
-                        if localEntries == nil then
-                           localEntries = {}
-                        end
-                        --SINCRONIZA
-                        for _,repEntry in pairs(repEntries) do
-                            if type(repEntry) ~= "number" then
-                               if repEntry.aCredential.identifier ~= "" then
-                                  local add = true
-                                  for _,locEntry in pairs(localEntries) do
-                                     if locEntry.credential.identifier ==
-                                         repEntry.aCredential.identifier
-                                     then
-                                        add = false
-                                        break
-                                    end
-                                  end
-
-                                  if add then
-                                    local addEntry = {}
-                                    addEntry.credential = repEntry.aCredential
-                                    addEntry.certified = repEntry.certified
-                                    addEntry.observers = {}
-                                    for _, observerId in pairs(repEntry.observers) do
-                                       if type(observerId) == "string" then
-                                         addEntry.observers[observerId] = true
-                                       end
-                                    end
-                                    addEntry.observedBy = {}
-                                    for _, observerId in pairs(repEntry.observedBy) do
-                                       if type(observerId) == "string" then
-                                          addEntry.observedBy[observerId] = true
-                                       end
-                                    end
-                                    acsFacet:addEntryCredential(addEntry)
-                                    updated = true
-                                    count = count + 1
-                                 end -- fim if add
-                               end -- fim if repEntry
-                            end -- fim if type
-                        end -- fim for repEntry
-                    end
-                    --********* CREDENCIAL - fim *****************
-                end
-            end
-            i = i + 1
-          until i > # self.ftconfig.hosts.ACS
-          if updated then
-            Log:faulttolerance("[updateOffersStatus] Quantidade de credenciais inseridas:[".. tostring(count) .."].")
-          end
-          return updated
-    else
-        --procura por uma credencial específica
-        local credential = input
-        Log:faulttolerance("[updateStatus] Buscando uma credencial nas replicas exceto em "..self.acsReference)
-
-        local entryCredential = nil
-        local i = 1
-
-        repeat
-            if self.ftconfig.hosts.ACS[i] ~= self.acsReference then
-               Log:faulttolerance("[updateStatus] Buscando em "..self.ftconfig.hosts.ACS[i])
-               local ret, succ, acs = oil.pcall(Utils.fetchService,
-                                                Openbus:getORB(),
-                                                self.ftconfig.hosts.ACS[i],
-                                                Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-
-                if ret and succ then
-                    entryCredential = acs:getEntryCredential(credential)
-                end
-            end
-             i = i + 1
-        until entryCredential or i > # self.ftconfig.hosts.ACS
-
-        local updated = false
-        if entryCredential then
-          if entryCredential.aCredential.identifier ~= "" then
-               Log:faulttolerance("[updateStatus] Encontrou credencial!")
-               --ADICIONA LOCALMENTE
-               local acsFacet = self.context.IAccessControlService
-               local addEntry = {}
-               addEntry.credential = entryCredential.aCredential
-               addEntry.certified = entryCredential.certified
-               addEntry.observers = {}
-               for _, observerId in pairs(entryCredential.observers) do
-                   addEntry.observers[observerId] = true
-               end
-               addEntry.observedBy = {}
-               for _, observerId in pairs(entryCredential.observedBy) do
-                   addEntry.observedBy[observerId] = true
-               end
-               acsFacet:addEntryCredential(addEntry)
-               Log:faulttolerance("[updateStatus] Adicionou credencial localmente.")
-               updated = true
-           end
-        end
-        if not updated then
-           Log:faulttolerance("[updateStatus] Não encontrou credencial!")
-        end
-        return updated
-    end
-
+  if not self.ftconfig then
+    Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
+    Log:warn("[updateStatus] não foi possível executar 'updatestatus'")
     return false
+  end
+
+  if # self.ftconfig.hosts.ACS <= 1 then
+    Log:faulttolerance("[updateStatus] Nenhuma replica para atualizar credenciais.")
+    return false
+  end
+
+  if input == "all" then
+    --sincroniza todas as credenciais a mais das outras replicas
+    --com esta e os dados de gerencia
+    Log:faulttolerance("[updateStatus] Sincronizando base de credenciais com as replicas exceto em "..self.acsReference)
+    local updated = false
+    local i = 1
+    local count = 0
+    repeat
+      if self.ftconfig.hosts.ACS[i] ~= self.acsReference then
+        local ret, succ, acs = oil.pcall(Utils.fetchService,
+                                         Openbus:getORB(),
+                                         self.ftconfig.hosts.ACS[i],
+                                         Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+
+        if ret and succ then
+          --encontrou outra replica
+          local acsFacet = self.context.IAccessControlService
+          --********* CREDENCIAL - inicio *****************
+          local repEntries = acs:getAllEntryCredential()
+          if # repEntries > 0 then
+            local localEntries = acsFacet.entries
+            if localEntries == nil then
+              localEntries = {}
+            end
+            --SINCRONIZA
+            for _,repEntry in pairs(repEntries) do
+              if type(repEntry) ~= "number" then
+                if repEntry.aCredential.identifier ~= "" then
+                  local add = true
+                  for _,locEntry in pairs(localEntries) do
+                    if locEntry.credential.identifier ==
+                      repEntry.aCredential.identifier then
+                      add = false
+                      break
+                    end
+                  end
+
+                  if add then
+                    local addEntry = {}
+                    addEntry.credential = repEntry.aCredential
+                    addEntry.certified = repEntry.certified
+                    addEntry.observers = {}
+                    for _, observerId in pairs(repEntry.observers) do
+                      if type(observerId) == "string" then
+                        addEntry.observers[observerId] = true
+                      end
+                    end
+                    addEntry.observedBy = {}
+                    for _, observerId in pairs(repEntry.observedBy) do
+                      if type(observerId) == "string" then
+                        addEntry.observedBy[observerId] = true
+                      end
+                    end
+                    acsFacet:addEntryCredential(addEntry)
+                    updated = true
+                    count = count + 1
+                  end -- fim if add
+                end -- fim if repEntry
+              end -- fim if type
+            end -- fim for repEntry
+          end
+          --********* CREDENCIAL - fim *****************
+        end
+      end
+      i = i + 1
+    until i > # self.ftconfig.hosts.ACS
+    if updated then
+      Log:faulttolerance("[updateOffersStatus] Quantidade de credenciais inseridas:[".. tostring(count) .."].")
+    end
+    return updated
+  else
+    --procura por uma credencial específica
+    local credential = input
+    Log:faulttolerance("[updateStatus] Buscando uma credencial nas replicas exceto em "..self.acsReference)
+
+    local entryCredential = nil
+    local i = 1
+
+    repeat
+      if self.ftconfig.hosts.ACS[i] ~= self.acsReference then
+        Log:faulttolerance("[updateStatus] Buscando em "..self.ftconfig.hosts.ACS[i])
+        local ret, succ, acs = oil.pcall(Utils.fetchService,
+                                         Openbus:getORB(),
+                                         self.ftconfig.hosts.ACS[i],
+                                         Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+
+        if ret and succ then
+          entryCredential = acs:getEntryCredential(credential)
+        end
+      end
+      i = i + 1
+    until entryCredential or i > # self.ftconfig.hosts.ACS
+
+    local updated = false
+    if entryCredential then
+      if entryCredential.aCredential.identifier ~= "" then
+        Log:faulttolerance("[updateStatus] Encontrou credencial!")
+        --ADICIONA LOCALMENTE
+        local acsFacet = self.context.IAccessControlService
+        local addEntry = {}
+        addEntry.credential = entryCredential.aCredential
+        addEntry.certified = entryCredential.certified
+        addEntry.observers = {}
+        for _, observerId in pairs(entryCredential.observers) do
+          addEntry.observers[observerId] = true
+        end
+        addEntry.observedBy = {}
+        for _, observerId in pairs(entryCredential.observedBy) do
+          addEntry.observedBy[observerId] = true
+        end
+        acsFacet:addEntryCredential(addEntry)
+        Log:faulttolerance("[updateStatus] Adicionou credencial localmente.")
+        updated = true
+      end
+    end
+    if not updated then
+      Log:faulttolerance("[updateStatus] Não encontrou credencial!")
+    end
+    return updated
+  end
+
+  return false
 end
 
 
@@ -1715,15 +1718,15 @@ function startup(self)
       local secondChance = entry.lease.secondChance
       local duration = entry.lease.duration
       if entry.credential.owner ~= "AccessControlService" then
-         local now = os.time()
-         if (os.difftime (now, lastUpdate) > duration ) then
-           if secondChance then
-             Log:warn(credential.owner.. " lease expirado: LOGOUT.")
-             acs:logout(credential) -- you may clear existing fields.
-           else
-             entry.lease.secondChance = true
-           end
-         end
+        local now = os.time()
+        if (os.difftime (now, lastUpdate) > duration ) then
+          if secondChance then
+            Log:warn(credential.owner.. " lease expirado: LOGOUT.")
+            acs:logout(credential) -- you may clear existing fields.
+          else
+            entry.lease.secondChance = true
+          end
+        end
       end
     end
   end
@@ -1733,96 +1736,95 @@ function startup(self)
   ftFacet:init()
 
   if # ftFacet.ftconfig.hosts.ACS <= 1 then
-     Log:warn("Nenhuma replica para buscar conexoes com Servico de Registro.")
-     return
+    Log:warn("Nenhuma replica para buscar conexoes com Servico de Registro.")
+    return
   end
   local acsRecepFacet = self.context.IReceptacles
   local orb = Openbus:getORB()
   local i = 1
   repeat
-      if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
-         local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
-                                                Openbus:getORB(),
-                                                ftFacet.ftconfig.hosts.ACSIC[i],
-                                                Utils.COMPONENT_INTERFACE)
+    if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
+      local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
+                                               Openbus:getORB(),
+                                               ftFacet.ftconfig.hosts.ACSIC[i],
+                                               Utils.COMPONENT_INTERFACE)
 
-          if ret and succ then
-          --encontrou outra replica
-                Log:faulttolerance("Buscando conexoes na replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
-                -- Recupera faceta IAccessControlService da replica remota
-                local ok, remoteACSFacet =  oil.pcall(remoteACSIC.getFacet, remoteACSIC, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-                remoteACSFacet = orb:narrow(remoteACSFacet,
-                                      Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      if ret and succ then
+        --encontrou outra replica
+        Log:faulttolerance("Buscando conexoes na replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
+        -- Recupera faceta IAccessControlService da replica remota
+        local ok, remoteACSFacet =  oil.pcall(remoteACSIC.getFacet, remoteACSIC, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+        remoteACSFacet = orb:narrow(remoteACSFacet,
+                                    Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
 
-                local acsChallenge = remoteACSFacet:getChallenge("AccessControlService")
-                if acsChallenge and #acsChallenge > 0 then
-                    --local privateKey = lce.key.readprivatefrompemfile(self.testKeyFile)
-                    if acs.privateKey then
-                         local succ, err
-                         succ, acsChallenge, err = oil.pcall(lce.cipher.decrypt, acs.privateKey, acsChallenge)
-                         if acsChallenge then
-                            local certificate = lce.x509.readfromderfile(DATA_DIR .. "/" .. config.accessControlServiceCertificateFile)
-                            if certificate then
-                               local answer = lce.cipher.encrypt(certificate:getpublickey(), acsChallenge)
-                               if answer then
-                                   local succ, remoteACSCredential, lease =
-                                       remoteACSFacet:loginByCertificate("AccessControlService", answer)
-                                   if succ then
-                                        -- Recupera faceta IReceptacles da replica remota
-                                        local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
-                                        if ok then
-                                           remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
-                                                 "IDL:scs/core/IReceptacles:1.0")
-                                           --Recupera conexoes do Servico de Registro
-                                           local status, conns = oil.pcall(remoteACSRecepFacet.getConnections,
-                                                                             remoteACSRecepFacet,
-                                                                             "RegistryServiceReceptacle")
-                                           if not status then
-                                             Log:warn("Nao foi possivel obter o Serviço [IRegistryService_v" .. Utils.OB_VERSION .. "]: " .. conns[1])
-                                             return
-                                           elseif conns[1] then
-                                              for connId,conn in pairs(conns) do
-                                                 if type (conn) == "table" then
-                                                    local recepIC = conn.objref
-                                                    recepIC = orb:narrow(recepIC, "IDL:scs/core/IComponent:1.0")
-                                                    if recepIC then
-                                                    --Connecta localmente direto na AdaptiveReceptacle
-                                                    --para nao ativar atualizacao nas replicas
-                                                       local cid = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
-                                                       Log:faulttolerance("Conexao do Servico de Registro recuperado e conectado com id: " .. cid)
-                                                    end
-                                                  end
-                                              end -- fim for
-                                           end --fim elseif
-                                        end -- fim ok
-                                   else
-                                      Log:error("Nao foi possivel se logar na replica:" .. ftFacet.ftconfig.hosts.ACSIC[i])
-                                   end -- fim succ, conseguiu logar
-                               else
-                                 Log:error("Erro na encriptografia da chave privada.")
-                               end --fim answer
-                            else
-                              Log:error("Erro na leitura do certificado.")
-                            end -- fim certificate
-                         else
-                            Log:error("Erro na descriptografia da chave privada.")
-                         end --fim challenge
-                    else --fim privatekey
-                       Log:error("Erro na leitura da chave privada.")
-                    end
+        local acsChallenge = remoteACSFacet:getChallenge("AccessControlService")
+        if acsChallenge and #acsChallenge > 0 then
+          --local privateKey = lce.key.readprivatefrompemfile(self.testKeyFile)
+          if acs.privateKey then
+            local succ, err
+            succ, acsChallenge, err = oil.pcall(lce.cipher.decrypt, acs.privateKey, acsChallenge)
+            if acsChallenge then
+              local certificate = lce.x509.readfromderfile(DATA_DIR .. "/" .. config.accessControlServiceCertificateFile)
+              if certificate then
+                local answer = lce.cipher.encrypt(certificate:getpublickey(), acsChallenge)
+                if answer then
+                  local succ, remoteACSCredential, lease =
+                    remoteACSFacet:loginByCertificate("AccessControlService", answer)
+                  if succ then
+                    -- Recupera faceta IReceptacles da replica remota
+                    local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
+                    if ok then
+                      remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
+                                                       "IDL:scs/core/IReceptacles:1.0")
+                      --Recupera conexoes do Servico de Registro
+                      local status, conns = oil.pcall(remoteACSRecepFacet.getConnections,
+                                                      remoteACSRecepFacet,
+                                                      "RegistryServiceReceptacle")
+                      if not status then
+                        Log:warn("Nao foi possivel obter o Serviço [IRegistryService_v" .. Utils.OB_VERSION .. "]: " .. conns[1])
+                        return
+                      elseif conns[1] then
+                        for connId,conn in pairs(conns) do
+                          if type (conn) == "table" then
+                            local recepIC = conn.objref
+                            recepIC = orb:narrow(recepIC, "IDL:scs/core/IComponent:1.0")
+                            if recepIC then
+                              --Connecta localmente direto na AdaptiveReceptacle
+                              --para nao ativar atualizacao nas replicas
+                              local cid = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
+                              Log:faulttolerance("Conexao do Servico de Registro recuperado e conectado com id: " .. cid)
+                            end
+                          end
+                        end -- fim for
+                      end --fim elseif
+                    end -- fim ok
+                  else
+                    Log:error("Nao foi possivel se logar na replica:" .. ftFacet.ftconfig.hosts.ACSIC[i])
+                  end -- fim succ, conseguiu logar
                 else
-                  Log:error("Não foi possível obter desafio para deploymentId: AccessControlService.")
-                end -- fim challenge
-          elseif not ret then
-             Log:error("Execução do fetchService retornou com erro: " .. tostring(succ))
-          else
-             Log:error("Execução do fetchService retornou com sucesso, "..
-                      "porém não foi possível encontrar o serviço. Erro: " .. tostring(remoteACSIC))
-          end -- fim succ
-      end -- fim se nao eh a mesma replica
-      i = i + 1
+                  Log:error("Erro na encriptografia da chave privada.")
+                end --fim answer
+              else
+                Log:error("Erro na leitura do certificado.")
+              end -- fim certificate
+            else
+              Log:error("Erro na descriptografia da chave privada.")
+            end --fim challenge
+          else --fim privatekey
+            Log:error("Erro na leitura da chave privada.")
+          end
+        else
+          Log:error("Não foi possível obter desafio para deploymentId: AccessControlService.")
+        end -- fim challenge
+      elseif not ret then
+        Log:error("Execução do fetchService retornou com erro: " .. tostring(succ))
+      else
+        Log:error("Execução do fetchService retornou com sucesso, "..
+                  "porém não foi possível encontrar o serviço. Erro: " .. tostring(remoteACSIC))
+      end -- fim succ
+    end -- fim se nao eh a mesma replica
+    i = i + 1
   until i > # ftFacet.ftconfig.hosts.ACSIC
-
 end
 
 ---
