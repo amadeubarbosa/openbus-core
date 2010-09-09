@@ -125,6 +125,7 @@ function RSFacet:addOffer(offerEntry)
 
   -- A credencial deve ser observada, porque se for deletada as
   -- ofertas a ela relacionadas devem ser removidas
+  local orb = Openbus:getORB()
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
     "IAccessControlService_v" .. Utils.OB_VERSION,
@@ -200,6 +201,7 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
   local succ, facets, count
   local metaInterface = member:getFacetByName("IMetaInterface")
   if metaInterface then
+    local orb = Openbus:getORB()
     metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
     succ, facets, count = self:createFacetIndex(credential.owner,
       metaInterface:getFacets(), properties.facets)
@@ -326,6 +328,7 @@ function RSFacet:unregister(identifier)
         Log:faulttolerance("[unregister] Atualizando replica "
           .. ftFacet.ftconfig.hosts.RS[i] ..".")
         -- Recupera faceta IRegistryService da replica remota
+        local orb = Openbus:getORB()
         local remoteRGSIC = remoteRGS:_component()
         remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
         local ok, remoteRGSFacet = oil.pcall(remoteRGSIC.getFacetByName,
@@ -394,6 +397,7 @@ function RSFacet:rawUnregister(identifier, credential)
 
   if not next (credentialOffers) then
     -- Não há mais ofertas associadas à credencial
+    local orb = Openbus:getORB()
     self.offersByCredential[credential.identifier] = nil
     Log:registry("Última oferta da credencial: remove credencial do observador")
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
@@ -701,7 +705,8 @@ function RSFacet:expired()
   -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
   local acsIComp = Openbus:getACSIComponent()
   local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
-  acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
+  local orb = Openbus:getORB()
+  acsIRecep = orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
   local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
     "RegistryServiceReceptacle", self.context.IComponent )
   if not status then
@@ -1045,6 +1050,7 @@ function startup(self)
      self.registryService:credentialWasDeleted(credential)
    end
  }
+ local orb = Openbus:getORB()
  rs.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
    Utils.CREDENTIAL_OBSERVER_INTERFACE)
  rs.observerId = accessControlService:addObserver(rs.observer, {})
@@ -1087,7 +1093,7 @@ function startup(self)
  -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
  local acsIComp = Openbus:getACSIComponent()
  local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
- acsIRecep = Openbus.orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
+ acsIRecep = orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
  local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,
    "RegistryServiceReceptacle", self.context.IComponent )
  if not status then
@@ -1114,6 +1120,7 @@ function shutdown(self)
   rs.started = false
 
   -- Remove o observador
+  local orb = Openbus:getORB()
   if rs.observerId then
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
@@ -1670,6 +1677,7 @@ function ManagementFacet:updateManagementStatus(command, data)
     return false
   end
 
+  local orb = Openbus:getORB()
   local i = 1
   repeat
     if ftFacet.ftconfig.hosts.RS[i] ~= ftFacet.rsReference then
@@ -1683,7 +1691,6 @@ function ManagementFacet:updateManagementStatus(command, data)
         -- Recupera faceta IManagement da replica remota
         local remoteRGSIC = remoteRGS:_component()
         remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
-        local orb = Openbus:getORB()
         local ok, remoteMgmFacet = oil.pcall(remoteRGSIC.getFacetByName,
           remoteRGSIC, "IManagement_v" .. Utils.OB_VERSION)
 
