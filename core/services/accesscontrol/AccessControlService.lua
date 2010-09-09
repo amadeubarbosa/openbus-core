@@ -961,6 +961,7 @@ function ManagementFacet:removeSystemDeployment(id)
       "IManagement_v" .. Utils.OB_VERSION,
       Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
+      local orb = Openbus:getORB()
       rs = orb:newproxy(rs, "protected")
       rs:removeAuthorization(id)
     end
@@ -1147,6 +1148,7 @@ function ManagementFacet:removeUser(id)
                             "IManagement_v" .. Utils.OB_VERSION,
                             Utils.MANAGEMENT_RS_INTERFACE)
      if succ and rs then
+       local orb = Openbus:getORB()
        rs = orb:newproxy(rs, "protected")
        rs:removeAuthorization(id)
      end
@@ -1232,6 +1234,7 @@ function ManagementFacet:updateManagementStatus(command, data)
         return false
     end
 
+    local orb = Openbus:getORB()
     local i = 1
     repeat
         if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
@@ -1246,7 +1249,6 @@ function ManagementFacet:updateManagementStatus(command, data)
                  -- Recupera faceta IManagement da replica remota
                 local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement_v"..Utils.OB_VERSION)
                 if ok then
-                     local orb = Openbus:getORB()
                      remoteMgmFacet = orb:narrow(remoteMgmFacet,
                            Utils.MANAGEMENT_ACS_INTERFACE)
                      --*** System operations***
@@ -1329,14 +1331,15 @@ function ACSReceptacleFacet:connect(receptacle, object)
  local connId = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(self,
                           receptacle,
                           object) -- calling inherited method
+  local orb = Openbus:getORB()
   if connId then
     --Se for o RGS, faz a conexão de volta: [RS]--( 0--[ACS]
     if receptacle == "RegistryServiceReceptacle" then
-      object = Openbus.orb:narrow(object, "IDL:scs/core/IComponent:1.0")
+      object = orb:narrow(object, "IDL:scs/core/IComponent:1.0")
       local rsIRecep =  object:getFacetByName("IReceptacles")
-      rsIRecep = Openbus.orb:narrow(rsIRecep, "IDL:scs/core/IReceptacles:1.0")
+      rsIRecep = orb:narrow(rsIRecep, "IDL:scs/core/IReceptacles:1.0")
       --Verifica se ja nao esta conectado
-      local acsFacet =  Utils.getReplicaFacetByReceptacle(Openbus.orb,
+      local acsFacet =  Utils.getReplicaFacetByReceptacle(orb,
                                                           object,
                                                "AccessControlServiceReceptacle",
                                                "IAccessControlService_v" .. Utils.OB_VERSION,
@@ -1394,6 +1397,7 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
         return
     end
 
+    local orb = Openbus:getORB()
     local i = 1
     repeat
         if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
@@ -1408,7 +1412,6 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
                  -- Recupera faceta IReceptacles da replica remota
                 local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
                 if ok then
-                     local orb = Openbus:getORB()
                      remoteACSRecepFacet = orb:narrow(remoteACSRecepFacet,
                            "IDL:scs/core/IReceptacles:1.0")
                      if command == "connect" then
@@ -1734,6 +1737,7 @@ function startup(self)
      return
   end
   local acsRecepFacet = self.context.IReceptacles
+  local orb = Openbus:getORB()
   local i = 1
   repeat
       if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
@@ -1744,7 +1748,6 @@ function startup(self)
 
           if ret and succ then
           --encontrou outra replica
-                local orb = Openbus:getORB()
                 Log:faulttolerance("Buscando conexoes na replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
                 -- Recupera faceta IAccessControlService da replica remota
                 local ok, remoteACSFacet =  oil.pcall(remoteACSIC.getFacet, remoteACSIC, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
