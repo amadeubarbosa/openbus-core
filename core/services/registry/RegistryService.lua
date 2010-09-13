@@ -69,21 +69,6 @@ function RSFacet:register(serviceOffer)
   local credential = Openbus:getInterceptedCredential()
   local properties = self:createPropertyIndex(serviceOffer.properties,
     serviceOffer.member)
-
-  for _, existentOfferEntry in pairs(self.offersByIdentifier) do
-    -- (A contido em B) ^ (B contido A) -> (A == B)
-    if existentOfferEntry.credential.identifier == credential.identifier   and
-      Utils.containsProperties(existentOfferEntry.properties, properties)  and
-      Utils.containsProperties(properties, existentOfferEntry.properties)
-    then
-      Log:registry("Oferta já existente com id " ..
-        existentOfferEntry.identifier)
-      self:updateMemberInfoInExistentOffer(existentOfferEntry,
-        serviceOffer.member)
-      return existentOfferEntry.identifier
-    end
-  end
-
   local facets = self:getAuthorizedFacets(serviceOffer.member, credential,
     properties)
 
@@ -96,6 +81,18 @@ function RSFacet:register(serviceOffer)
     credential = credential,
     identifier = self:generateIdentifier(),
   }
+
+
+  local orb = Openbus:getORB()
+  for _, existentOfferEntry in pairs(self.offersByIdentifier) do
+    if Utils.equalsOfferEntries(offerEntry, existentOfferEntry) and
+       orb:tostring(offerEntry.offer.member) == orb:tostring(existentOfferEntry.offer.member) then
+      -- oferta idêntica a uma existente, não faz nada
+      Log:registry("Oferta já existente com id " ..
+        existentOfferEntry.identifier)
+      return existentOfferEntry.identifier
+    end
+  end
 
   Log:registry("Registrando oferta com id "..offerEntry.identifier)
 
