@@ -85,8 +85,7 @@ function RSFacet:register(serviceOffer)
 
   local orb = Openbus:getORB()
   for _, existentOfferEntry in pairs(self.offersByIdentifier) do
-    if Utils.equalsOfferEntries(offerEntry, existentOfferEntry) and
-       orb:tostring(offerEntry.offer.member) == orb:tostring(existentOfferEntry.offer.member) then
+    if Utils.equalsOfferEntries(offerEntry, existentOfferEntry, orb) then
       -- oferta idêntica a uma existente, não faz nada
       Log:registry("Oferta já existente com id " ..
         existentOfferEntry.identifier)
@@ -904,10 +903,11 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
   local updated = false
   local i = 1
   local count = 0
+  local orb = Openbus:getORB()
   repeat
     if self.ftconfig.hosts.RS[i] ~= self.rsReference then
       local ret, succ, remoteRS = oil.pcall(Utils.fetchService,
-        Openbus:getORB(), self.ftconfig.hosts.RS[i],
+        orb, self.ftconfig.hosts.RS[i],
         Utils.REGISTRY_SERVICE_INTERFACE)
 
       if ret and succ then
@@ -933,7 +933,7 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
               .. addOfferEntry.identifier .. "] ja existe localmente ...")
             for _, offerEntry in pairs(rgs.offersByIdentifier) do
               --se ja existir, nao adiciona
-              if Utils.equalsOfferEntries(addOfferEntry, offerEntry) then
+              if Utils.equalsOfferEntries(addOfferEntry, offerEntry, orb) then
                 --se ja existir, nao insere
                 insert = false
                 Log:faulttolerance("[updateOffersStatus] ... SIM, a oferta ["..
