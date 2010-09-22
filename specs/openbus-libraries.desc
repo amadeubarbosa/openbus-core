@@ -511,14 +511,14 @@ packages = {
       src = PRODAPP .."/sdk-cpp",
       mf = { 
         "orbix genstubs", 
-        "orbix precompile", 
+        "orbix precompile LUA51="..PRODAPP.."/lua5.1", 
         "orbix LUA51="..PRODAPP.."/lua5.1" 
       },
       -- special compile instructions for solaris
       SunOS = {
         mf = { 
           "orbix genstubs", 
-          "orbix precompile", 
+          "orbix precompile LUA51="..PRODAPP.."/lua5.1", 
           "orbix LUA51="..PRODAPP.."/lua5.1", 
           "orbix sunosShared" 
         },
@@ -526,7 +526,7 @@ packages = {
       SunOS510_64 = {
         mf = { 
           "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-          "orbix precompile", 
+          "orbix precompile LUA51="..PRODAPP.."/lua5.1", 
           "orbix LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, 
           "orbix sunosShared "..SUNOS64_TECMAKE_FLAGS 
         },
