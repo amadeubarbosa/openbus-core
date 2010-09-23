@@ -69,7 +69,7 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
     CFLAGS+= -m64
   endif
   LFLAGS= $(CFLAGS) -xildoff
-  LIBS += rt
+  LIBS += rt libresolv
 endif
 
 .PHONY: clean-custom
