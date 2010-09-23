@@ -27,7 +27,7 @@ packages = {
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
-    url = SVNREPURL .. "/openbus/sdk/lua/branches/OB_SDK_LUA_v1_05_2010_05_13",
+    url = SVNREPURL .. "/openbus/sdk/lua/branches/OB_SDK_LUA_V1_05_01_2010_09_23",
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
@@ -35,7 +35,7 @@ packages = {
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
-    url = SVNREPURL .. "/openbus/tags/OB_v1_05_00_2010_06_23",
+    url = SVNREPURL .. "/openbus/tags/OB_v1_05_01_2010_09_23",
     directory = SVNDIR, -- main source directory for PUts!
                         -- other sources have to be in PRODAPP/something
   },
