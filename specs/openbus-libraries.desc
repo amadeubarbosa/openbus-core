@@ -27,7 +27,7 @@ packages = {
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
-    url = SVNREPURL .. "/openbus/sdk/lua/branches/OB_SDK_LUA_V1_05_01_2010_09_23",
+    url = SVNREPURL .. "/openbus/sdk/lua/tags/OB_SDK_LUA_v1_05_01_2010_09_23",
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
