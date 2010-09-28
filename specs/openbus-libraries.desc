@@ -472,9 +472,11 @@ packages = {
   },
    -- Orbix related packages
   { name = "scsorbix",
+    url = SVNREPURL .. "/scs/core/cpp/trunk",
+    directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/scs/src/cpp",
+      src = PRODAPP .."/scs-cpp/src",
       mf = { 
         "orbix genstubs", 
         "orbix" 
@@ -497,11 +499,13 @@ packages = {
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
-      ["../../idl/scs.idl"] = "idlpath/v1_05",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idlpath/v1_05/scs.idl"] = "idlpath/v1_05",
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.*"] = "libpath/${TEC_UNAME}",
-      ["../../idl/scs.idl"] = "idlpath/v1_05",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idlpath/v1_05/scs.idl"] = "idlpath/v1_05",
       ["*.h"] = "incpath/scs/",
     },
   },
@@ -653,9 +657,11 @@ packages = {
   },
   -- MICO related packages
   { name = "scsmico",
+    url = SVNREPURL .. "/scs/core/cpp/trunk",
+    directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/scs/src/cpp",
+      src = PRODAPP .."/scs-cpp/src",
       mf = { 
         "mico genstubs", 
         "mico LUA51="..PRODAPP.."/lua5.1" 
@@ -681,11 +687,13 @@ packages = {
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsmico.so"] = "libpath/${TEC_UNAME}",
-      ["../../idl/scs.idl"] = "idlpath/v1_05",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idlpath/v1_05/scs.idl"] = "idlpath/v1_05",
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsmico.*"] = "libpath/${TEC_UNAME}",
-      ["../../idl/scs.idl"] = "idlpath/v1_05",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idlpath/v1_05/scs.idl"] = "idlpath/v1_05",
       ["*.h"] = "incpath/scs",
     },
   },
