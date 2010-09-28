@@ -20,6 +20,7 @@ LDIR += ${OPENBUSLIB}
 
 USE_LUA51 = YES
 NO_SCRIPTS = YES
+USE_NODEPEND = YES
 
 #############################
 # Usa bibliotecas dinâmicas #
