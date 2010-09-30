@@ -761,6 +761,17 @@ end
 
 RGSReceptacleFacet = oop.class({}, AdaptiveReceptacle.AdaptiveReceptacleFacet)
 
+function RGSReceptacleFacet:getConnections(receptacle)
+  --TODO: Generalizar esse método para o ACS e RGS porem dentro do Openbus (Maira)
+  --troca credenciais para verificacao de permissao no disconnect
+  local intCredential = Openbus:getInterceptedCredential()
+  Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
+  local conns = AdaptiveReceptacle.AdaptiveReceptacleFacet.getConnections(self, receptacle)
+  --desfaz a troca
+  Openbus.serverInterceptor.picurrent:setValue(intCredential)
+  return conns
+end
+
 function RGSReceptacleFacet:connect(receptacle, object)
  self.context.IManagement:checkPermission()
  local connId = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(self,

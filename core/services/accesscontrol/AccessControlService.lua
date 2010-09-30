@@ -256,7 +256,7 @@ function ACSFacet:logout(credential)
         Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
       if ret and succ then
         --encontrou outra replica
-        Log:faulttolerance("[logout] Atualizando replica "
+        Log:faulttolerance("[logout] Requisitou [logout] na replica "
           .. ftFacet.ftconfig.hosts.ACS[i] ..".")
             oil.newthread(function()
                 local succ, ret = oil.pcall(
@@ -270,7 +270,6 @@ function ACSFacet:logout(credential)
     end -- fim , nao eh a mesma replica
     i = i + 1
   until i > #ftFacet.ftconfig.hosts.ACS
-  Log:faulttolerance("[logout] Replicas atualizadas quanto ao estado para a operacao [logout]")
 
   return true
 end
@@ -961,6 +960,7 @@ function ManagementFacet:removeSystemDeployment(id)
       "IManagement_v" .. Utils.OB_VERSION,
       Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
+      local orb = Openbus:getORB()
       rs = orb:newproxy(rs, "protected")
       rs:removeAuthorization(id)
     end
@@ -1147,6 +1147,7 @@ function ManagementFacet:removeUser(id)
                             "IManagement_v" .. Utils.OB_VERSION,
                             Utils.MANAGEMENT_RS_INTERFACE)
      if succ and rs then
+       local orb = Openbus:getORB()
        rs = orb:newproxy(rs, "protected")
        rs:removeAuthorization(id)
      end
@@ -1323,6 +1324,17 @@ end
 --------------------------------------------------------------------------------
 
 ACSReceptacleFacet = oop.class({}, AdaptiveReceptacle.AdaptiveReceptacleFacet)
+
+function ACSReceptacleFacet:getConnections(receptacle)
+  --TODO: Generalizar esse método para o ACS e RGS porem dentro do Openbus (Maira)
+  --troca credenciais para verificacao de permissao no disconnect
+  local intCredential = Openbus:getInterceptedCredential()
+  Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
+  local conns = AdaptiveReceptacle.AdaptiveReceptacleFacet.getConnections(self, receptacle)
+  --desfaz a troca
+  Openbus.serverInterceptor.picurrent:setValue(intCredential)
+  return conns
+end
 
 function ACSReceptacleFacet:connect(receptacle, object)
  self.context.IManagement:checkPermission()
