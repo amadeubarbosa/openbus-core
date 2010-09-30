@@ -256,7 +256,7 @@ function ACSFacet:logout(credential)
         Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
       if ret and succ then
         --encontrou outra replica
-        Log:faulttolerance("[logout] Atualizando replica "
+        Log:faulttolerance("[logout] Requisitou [logout] na replica "
           .. ftFacet.ftconfig.hosts.ACS[i] ..".")
             oil.newthread(function()
                 local succ, ret = oil.pcall(
@@ -270,7 +270,6 @@ function ACSFacet:logout(credential)
     end -- fim , nao eh a mesma replica
     i = i + 1
   until i > #ftFacet.ftconfig.hosts.ACS
-  Log:faulttolerance("[logout] Replicas atualizadas quanto ao estado para a operacao [logout]")
 
   return true
 end
@@ -1305,13 +1304,13 @@ function ManagementFacet:updateManagementStatus(command, data)
                                           data.id, data.name)
               end)
           end
-          Log:faulttolerance("[updateManagementStatus] Replica ".. 
+          Log:faulttolerance("[updateManagementStatus] Replica "..
                              ftFacet.ftconfig.hosts.ACS[i] ..
                              " atualizada quanto ao estado das interfaces e autorizacoes para o comando["..
                              command .."].")
         end -- fim ok facet IManagement
       else
-        Log:faulttolerance("[updateManagementStatus] Replica ".. 
+        Log:faulttolerance("[updateManagementStatus] Replica "..
                            ftFacet.ftconfig.hosts.ACS[i] ..
                            " não está disponível e não pode ser atualizada quanto quanto ao estado das interfaces e autorizacoes para o comando["..
                            command .."].")
@@ -1326,6 +1325,17 @@ end
 --------------------------------------------------------------------------------
 
 ACSReceptacleFacet = oop.class({}, AdaptiveReceptacle.AdaptiveReceptacleFacet)
+
+function ACSReceptacleFacet:getConnections(receptacle)
+  --TODO: Generalizar esse método para o ACS e RGS porem dentro do Openbus (Maira)
+  --troca credenciais para verificacao de permissao no disconnect
+  local intCredential = Openbus:getInterceptedCredential()
+  Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
+  local conns = AdaptiveReceptacle.AdaptiveReceptacleFacet.getConnections(self, receptacle)
+  --desfaz a troca
+  Openbus.serverInterceptor.picurrent:setValue(intCredential)
+  return conns
+end
 
 function ACSReceptacleFacet:connect(receptacle, object)
  self.context.IManagement:checkPermission()
@@ -1424,12 +1434,12 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
               local succ, ret = oil.pcall(remoteACSRecepFacet.disconnect, remoteACSRecepFacet, data.connId)
               end)
           end
-          Log:faulttolerance("[updateConnectionState] Replica ".. 
+          Log:faulttolerance("[updateConnectionState] Replica "..
                              ftFacet.ftconfig.hosts.ACSIC[i] ..
                              " atualizada quanto ao [".. command .."].")
         end
       else
-        Log:faulttolerance("[updateConnectionState] Replica ".. 
+        Log:faulttolerance("[updateConnectionState] Replica "..
                            ftFacet.ftconfig.hosts.ACSIC[i] ..
                            " não está disponível e não pode ser atualizada quanto ao [".. command .."].")
       end
