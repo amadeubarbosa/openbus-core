@@ -7,6 +7,19 @@ local orb = oil.orb
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 
+function loadidls(self)
+  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+  if IDLPATH_DIR == nil then
+    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+    os.exit(1)
+  end
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
+  orb:loadidl("interface IHello_vft { };")
+end
+
 return function (self)
       local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")

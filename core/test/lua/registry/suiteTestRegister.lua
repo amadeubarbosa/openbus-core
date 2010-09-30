@@ -139,7 +139,7 @@ function init(self)
   end
 
   -- Recupera o Serviço de Acesso
-  local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
+  local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",nil,
       "IDL:scs/core/IComponent:1.0")
   local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
@@ -171,11 +171,12 @@ function init(self)
   self.registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
   self.registryService = orb:narrow(self.registryService,
     "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+  self.rgsProtected = orb:newproxy(self.registryService, "protected")
 end
 
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
-local beforeTestCase = dofile(OPENBUS_HOME .."/core/test/lua/registry/beforeTestCase.lua")
+local beforeTestCase = dofile(OPENBUS_HOME .."/core/test/lua/registry/beforeTestCaseFTRGS.lua")
 local afterTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterTestCase.lua")
 
 -------------------------------------------------------------------------------
@@ -204,13 +205,17 @@ Suite = {
       local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
         Hello_v2.componentId)
       -- Identificar local propositalmente
-      local success 
-      sucess, self.registryIdentifier = self.registryService.__try:register({
+      local success
+      sucess, self.registryIdentifier = self.rgsProtected:register({
         member = member.IComponent,
         properties = Hello_v2.properties,
       })
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
+
+      local offers = self.registryService:find({"IHello_v2_"..ltime})
+      Check.assertEquals(1, #offers)
+      --
     end,
   },
 }
