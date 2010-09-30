@@ -934,7 +934,7 @@ Suite = {
     afterEachTest = function(self)
       self.credentialManager:setValue(self.credential)
       if self.registryIdentifier then
-        self.rgsProtected:unregister(self.registryIdentifier)
+        self.registryService:unregister(self.registryIdentifier)
       end
     end,
 
