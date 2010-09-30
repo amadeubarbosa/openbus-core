@@ -3,6 +3,7 @@
 local os = os
 local table = table
 local string = string
+local socket = require "socket"
 
 local loadfile = loadfile
 local assert = assert
@@ -13,6 +14,7 @@ local next = next
 local format = string.format
 local print = print
 local tostring = tostring
+local tonumber = tonumber
 local type = type
 local setfenv = setfenv
 
@@ -140,7 +142,7 @@ function RSFacet:updateMemberInfoInExistentOffer(existentOfferEntry, member)
   --Atencao, o identificador da credencial antiga é o que prevalece
   --por causa dos observadores
   existentOfferEntry.offer.member = member
-  existentOfferEntry.offer.properties = self:createPropertyIndex(
+  existentOfferEntry.properties = self:createPropertyIndex(
     existentOfferEntry.offer.properties, existentOfferEntry.offer.member)
   self.offersDB:update(existentOfferEntry)
 
@@ -177,6 +179,11 @@ function RSFacet:createPropertyIndex(offerProperties, member)
   local credential = Openbus:getInterceptedCredential()
   properties["registered_by"] = {}
   properties["registered_by"][credential.owner] = true
+
+  --essa propriedade é usada pelo FT na sincronizacao das ofertas
+  --ela representa quando uma oferta foi inserida ou modificada
+  properties["modified"] = {}
+  properties["modified"][tostring(socket.gettime()*1000)] = true
 
   return properties
 end
@@ -629,6 +636,9 @@ function RSFacet:localFind(facets, criteria)
     Log:registry("Com critério, encontrei "..#selectedOffersEntries..
       " ENTRADAS de ofertas que implementam as facetas discriminadas.")
   end
+  for k,offerEntry in pairs(selectedOffersEntries) do
+    selectedOffersEntries[k].properties = Utils.convertToSendIndexedProperties( offerEntry.properties )
+  end
   return selectedOffersEntries
 end
 
@@ -932,18 +942,64 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
             addOfferEntry.offer = offerEntryFound.aServiceOffer
             addOfferEntry.facets =
               Utils.unmarshalHashFacets(offerEntryFound.authorizedFacets)
-            addOfferEntry.properties = offerEntryFound.properties
+
+            local memberProtected = orb:newproxy(addOfferEntry.offer.member, "protected")
+            local succ, metaInterface = memberProtected:getFacetByName("IMetaInterface")
+            if succ and metaInterface then
+              metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
+              local facets = metaInterface:getFacets()
+              for _, facet in ipairs(facets) do
+                if addOfferEntry.facets[facet.name] or
+                   addOfferEntry.facets[interface_name] then
+                  addOfferEntry.facets[facet.facet_ref] = "facet_ref"
+                end
+              end
+            end
+
+            --Recupera o indice das propriedades inseridas pelo RGS
+            addOfferEntry.properties =
+              Utils.convertToReceiveIndexedProperties(offerEntryFound.properties)
+            --Refazendo indice das propriedades
+            for _, property in ipairs(addOfferEntry.offer.properties) do
+              if not addOfferEntry.properties[property.name] then
+                addOfferEntry.properties[property.name] = {}
+              end
+              for _, val in ipairs(property.value) do
+                  addOfferEntry.properties[property.name][val] = true
+              end
+            end
+
             -- verifica se ja existem localmente
             Log:faulttolerance("[updateOffersStatus] Verificando se a oferta ["
               .. addOfferEntry.identifier .. "] ja existe localmente ...")
             for _, offerEntry in pairs(rgs.offersByIdentifier) do
               --se ja existir, nao adiciona
-              if Utils.equalsOfferEntries(addOfferEntry, offerEntry, orb) then
-                --se ja existir, nao insere
+              local sameOfferDescription =
+                    Utils.equalsOfferEntries(addOfferEntry, offerEntry, orb)
+              if addOfferEntry.identifier == offerEntry.identifier and
+                 sameOfferDescription then
+              --Existe entrada completa igual, nao insere
                 insert = false
                 Log:faulttolerance("[updateOffersStatus] ... SIM, a oferta ["..
                   addOfferEntry.identifier .. "] ja existe localmente.")
                 break
+              elseif addOfferEntry.identifier == offerEntry.identifier
+                     and not sameOfferDescription then
+                  -- Já existe uma oferta diferente com o mesmo id,
+                  -- atualiza a oferta mantendo o id somente se foi
+                  -- modificada depois que a que está localmente
+                  for field, value in pairs(addOfferEntry.properties.modified) do
+                    if tonumber(field) > socket.gettime()*1000 then
+                      --oferta é mais nova que a atual
+                      insert = false
+                      self.offersDB:update(addOfferEntry)
+                      updated = true
+                      count = count + 1
+                      Log:faulttolerance("[updateOffersStatus] ... SIM, a oferta ["..
+                        addOfferEntry.identifier .. "] ja existe localmente e será ATUALIZADA.")
+                      break
+                    end
+                  end
               end
             end
             if insert then
@@ -966,7 +1022,7 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
     i = i + 1
   until i > #self.ftconfig.hosts.RS
   if updated then
-    Log:faulttolerance("[updateOffersStatus] Quantidade de ofertas inseridas:["
+    Log:faulttolerance("[updateOffersStatus] Quantidade de ofertas inseridas/atualizadas:["
       .. tostring(count) .."].")
   else
     Log:faulttolerance("[updateOffersStatus] Nenhuma oferta inserida.")
