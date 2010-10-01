@@ -2,6 +2,7 @@ local lpw     = require "lpw"
 local oil     = require "oil"
 local Openbus = require "openbus.Openbus"
 local Utils   = require "openbus.util.Utils"
+local busLog  = require "openbus.util.Log"
 
 -- Alias
 local lower = string.lower
@@ -37,6 +38,8 @@ Uso: %s [opções] --login=<usuário> <comando>
     --acs-host=<endereço>
   * Informa a porta do Serviço de Acesso (padrão 2089):
     --acs-port=<porta>
+  * Aciona o verbose da API Openbus.
+    --verbose=<level>
 
 - Controle de Usuário
   * Adicionar usuário:
@@ -132,6 +135,7 @@ local null = {}
 local options = {
   ["acs-host"] = "127.0.0.1",
   ["acs-port"] = 2089,
+  oilVerbose   = 0,
   verbose      = 0,
 }
 
@@ -1406,6 +1410,10 @@ function getrsmgm()
   connect()
   local orb = Openbus:getORB()
   local rs = Openbus:getRegistryService()
+  if not rs then
+    print("[ERRO] Serviço de Registro não está conectado.")
+    os.exit(1)
+  end
   ic = rs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   rsmgm = ic:getFacetByName("IManagement_v" .. Utils.OB_VERSION)
@@ -1440,7 +1448,8 @@ password = command.params.password
 acshost  = command.params["acs-host"]
 acsport  = tonumber(command.params["acs-port"])
 
-oil.verbose:level(tonumber(command.params.verbose))
+oil.verbose:level(tonumber(command.params.oilVerbose))
+busLog:level(tonumber(command.params.verbose))
 
 ---
 -- Função principal responsável por despachar o comando.
