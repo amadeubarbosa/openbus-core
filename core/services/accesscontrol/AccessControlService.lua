@@ -545,9 +545,9 @@ function ACSFacet:addEntry(name, certified)
   }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
-  Log:access_control("[addEntry] A credencial {"
-     ..entry.credential.identifier.."} foi adicionada com lease de "
-     .. entry.lease.duration ..".")
+  Log:access_control(string.format("[addEntry] A credencial {%s} foi" ..
+      " adicionada com lease de %d segundos.",entry.credential.identifier,
+      entry.lease.duration))
   return entry
 end
 
