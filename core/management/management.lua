@@ -27,6 +27,12 @@ local handlers = {}
 -- Nome do script principal (usado no help)
 local program = arg[0]
 
+-------------------------------------------------------------------------------
+-- Constantes
+
+-- Maximo de tentativas de conexão com o barramento
+local MAXRETRIES = 3
+
 -- String de help
 local help = [[
 
@@ -1416,18 +1422,29 @@ end
 ---
 -- Efetua a conexão com o barramento.
 --
-local function connect()
+-- @param retry Parâmetro opcional que indica o número da tentativa de
+-- reconexão.
+---
+local function connect(retry)
+  retry = retry or 0
   if not Openbus:isConnected() then
     if not password then
       password = lpw.getpass("Senha: ")
     end
-    Openbus:init(acshost, acsport)
-    local orb = Openbus:getORB()
-    orb:loadidlfile(IDLPATH_DIR .. "/v1_05/registry_service.idl")
-    orb:loadidlfile(IDLPATH_DIR .. "/v1_05/access_control_service.idl")
+    if retry == 0 then
+      Openbus:init(acshost, acsport)
+      local orb = Openbus:getORB()
+      orb:loadidlfile(IDLPATH_DIR .. "/v1_05/registry_service.idl")
+      orb:loadidlfile(IDLPATH_DIR .. "/v1_05/access_control_service.idl")
+    end
     if Openbus:connectByLoginPassword(login, password) == false then
-      print("[ERRO] Falha no login")
-      os.exit(1)
+      print("[ERRO] Falha no login.")
+      retry = retry + 1
+      if retry < MAXRETRIES then
+        print("Tente novamente.")
+        password = nil
+        connect(retry)
+      end
     end
   end
 end
