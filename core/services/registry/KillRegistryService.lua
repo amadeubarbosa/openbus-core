@@ -62,13 +62,16 @@ end
 local hostAdd = RegistryServerConfiguration.registryServerHostName..":"
                 ..RegistryServerConfiguration.registryServerHostPort
 
--- Inicializa o ORB
-local orb = oil.init {
-                       flavor = "intercepted;corba;typed;cooperative;base",
-                       tcpoptions = {reuseaddr = true}
-                     }
+local props = {  host = RegistryServerConfiguration.registryServerHostName,
+           port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}
 
-oil.orb = orb
+-- Inicializa o barramento
+Openbus:init(RegistryServerConfiguration.accessControlServerHostName,
+  RegistryServerConfiguration.accessControlServerHostPort)
+
+Openbus:enableFaultTolerance()
+
+local orb = Openbus:getORB()
 
 orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/fault_tolerance.idl")
 
@@ -76,19 +79,17 @@ orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/fault_tolerance.idl")
 --Função que será executada pelo OiL em modo protegido.
 ---
 function main()
+  -- Aloca uma thread do OiL para o orb
+  Openbus:run()
+
   Log:faulttolerance("Injetando falha no Serviço de Registro inicio...")
 
   Log:faulttolerance("corbaloc::"..hostAdd.."/"..Utils.FAULT_TOLERANT_RS_KEY)
 
-
-
-  Openbus:init(RegistryServerConfiguration.accessControlServerHostName,
-               RegistryServerConfiguration.accessControlServerHostPort)
-  Openbus:_setInterceptors()
-  Openbus:enableFaultTolerance()
-
-  local ftregistryService = Openbus:getORB():newproxy("corbaloc::"..hostAdd.."/"..Utils.FAULT_TOLERANT_RS_KEY,
-               Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
+  local ftregistryService = orb:newproxy("corbaloc::"..hostAdd.."/"
+       ..Utils.FAULT_TOLERANT_RS_KEY,
+       "synchronous",
+       Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
   if ftregistryService:_non_existent() then
       Log:error("Servico de registro nao encontrado.")
       os.exit(1)
@@ -102,11 +103,13 @@ function main()
   if Openbus:isConnected() then
      ftregistryService:setStatus(false)
      Log:faulttolerance("Injetou falha no Servico de Registro -- fim.")
+     Openbus:disconnect()
   else
      Log:faulttolerance("Erro ao se logar no barramento.")
   end
 
-  os.exit(0)
+  Openbus:destroy()
+  os.exit(1)
 
 end
 

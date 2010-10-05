@@ -38,9 +38,6 @@ end
 
 local BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
 
-Log:level(4)
-oil.verbose:level(2)
-
 
 orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/registry_service.idl")
 ---
@@ -71,18 +68,13 @@ function FTRSMonitorFacet:getService()
   elseif conns[1] then
     local service = conns[1].objref
     service = Openbus:getORB():narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
-    return service
+    return orb:newproxy(service, "protected")
   end
   log:error("Nao foi possivel obter o Serviço.")
   return nil
 end
 
 function FTRSMonitorFacet:connect()
-  Openbus:init(self.config.accessControlServerHostName,
-      self.config.accessControlServerHostPort)
-  Openbus:_setInterceptors()
-  Openbus:enableFaultTolerance()
-
   local keyConfigPath = self.config.monitorPrivateKeyFile
   local keyAbsolutePath
   if string.match(keyConfigPath, "^/") then
@@ -132,17 +124,18 @@ end
 function FTRSMonitorFacet:monitor()
   Log:faulttolerance("[Monitor SR] Inicio")
   local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
+  local ftRec = self.context.IReceptacles
+  ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
 
   while true do
     local reinit = false
-    local ok, service = self:getService()
-    service = orb:newproxy(service, "protected")
-    local res = service:isAlive()
+    local service = self:getService()
+    local ok, res = service:isAlive()
     Log:faulttolerance("[Monitor SR] isAlive? "..tostring(ok))
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
     if ok then
-      --se objeto remoto esté em estado de falha, precisa ser reinicializado
+      --se objeto remoto está em estado de falha, precisa ser reinicializado
       if not res then
         reinit = true
         Log:faulttolerance("[Monitor SR] Servico de registro em estado de falha. Matando o processo...")
@@ -160,23 +153,12 @@ function FTRSMonitorFacet:monitor()
     else
       Log:faulttolerance("Enviando email para o administrador do barramento.")
       self:sendMail()
-      Openbus.credentialManager:invalidate()
-      Openbus.acs = nil
+
       local timeToTry = 0
 
       repeat
         if self.recConnId ~= nil then
-          local status, ftRecD = oil.pcall(self.context.IComponent.getFacet,
-              self.context.IComponent, "IDL:scs/core/IReceptacles:1.0")
-
-          if not status then
-            print("[IReceptacles::IComponent] Error while calling getFacet(IDL:scs/core/IReceptacles:1.0)")
-            print("[IReceptacles::IComponent] Error: " .. ftRecD)
-            return
-          end
-          ftRecD = Openbus:getORB():narrow(ftRecD)
-
-          local status, void = oil.pcall(ftRecD.disconnect, ftRecD, self.recConnId)
+          local status, void = oil.pcall(ftRec.disconnect, ftRec, self.recConnId)
           if not status then
             print("[IReceptacles::IReceptacles] Error while calling disconnect")
             print("[IReceptacles::IReceptacles] Error: " .. void)
@@ -189,7 +171,7 @@ function FTRSMonitorFacet:monitor()
         --Criando novo processo assincrono
         if self:isUnix() then
           os.execute(BIN_DIR.."/run_registry_server.sh --port="..
-              self.config.registryServerHostPort)
+              self.config.registryServerHostPort .. " &")
           --os.execute(BIN_DIR.."/run_registry_server.sh --port="..
           --self.config.registryServerHostPort..
           --" & > log_registry_server-"..tostring(t)..".txt")
@@ -205,24 +187,17 @@ function FTRSMonitorFacet:monitor()
         oil.sleep(timeOut.monitor.sleep)
 
         self.recConnId = nil
-        self:connect()
-        if Openbus:isConnected() then
-          local rs = Openbus:getRegistryService()
-          local rsIC = rs:_component()
-          rsIC = Openbus:getORB():narrow(rsIC, "IDL:scs/core/IComponent:1.0")
-          local ftrsService = rsIC:getFacetByName("IFaultTolerantService_v" .. Utils.OB_VERSION)
-          ftrsService = Openbus:getORB():narrow(ftrsService,
-              Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
 
-          if OilUtilities:existent(ftrsService) then
-            local ftRec = self:getFacetByName("IReceptacles")
-            ftRec = orb:narrow(ftRec)
+        local ftrsService = Openbus:getORB():newproxy("corbaloc::"..self.hostAdd.. "/" ..
+                                           Utils.FAULT_TOLERANT_RS_KEY,
+                                           "synchronous",
+                                           Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
+        if OilUtilities:existent(ftrsService) then
             self.recConnId = ftRec:connect("IFaultTolerantService",ftrsService)
             if not self.recConnId then
               Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTRSMonitor")
               os.exit(1)
             end
-          end
         else
           Log:faulttolerance("[Monitor SR] Nao conseguiu levantar RS de primeira porque porta esta bloqueada.")
           Log:faulttolerance("[Monitor SR] Espera " .. tostring(timeOut.monitor.sleep) .." segundos......")
@@ -259,13 +234,10 @@ function startup(self)
     os.exit(1)
   end
 
-  local ftRec = self.context.IReceptacles
-  ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
-
-  local hostAdd = monitor.config.registryServerHostName..
+  monitor.hostAdd = monitor.config.registryServerHostName..
       ":".. tostring(monitor.config.registryServerHostPort)
 
-  local ftrsService = Openbus:getORB():newproxy("corbaloc::"..hostAdd.. "/" ..
+  local ftrsService = Openbus:getORB():newproxy("corbaloc::"..monitor.hostAdd.. "/" ..
       Utils.FAULT_TOLERANT_RS_KEY,
       "synchronous",
       Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
@@ -273,6 +245,9 @@ function startup(self)
     Log:error("Servico de registro nao encontrado.")
     os.exit(1)
   end
+
+  local ftRec = self.context.IReceptacles
+  ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
 
   local connId = ftRec:connect("IFaultTolerantService",ftrsService)
   if not connId then

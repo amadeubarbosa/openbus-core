@@ -31,9 +31,6 @@ end
 
 local BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
 
-Log:level(4)
-oil.verbose:level(2)
-
 orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/access_control_service.idl")
 
 ---
@@ -74,7 +71,7 @@ function FTACSMonitorFacet:getService()
   elseif conns[1] then
     local service = conns[1].objref
     service = Openbus:getORB():narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
-    return service
+    return orb:newproxy(service, "protected")
   end
   log:error("Nao foi possivel obter o Serviço.")
   return nil
@@ -92,10 +89,6 @@ function FTACSMonitorFacet:sendMail()
 end
 
 function FTACSMonitorFacet:connect()
-  Openbus:init(self.config.hostName, self.config.hostPort)
-  Openbus.isFaultToleranceEnable = false
-  Openbus:_setInterceptors()
-
   local keyConfigPath = self.config.monitorPrivateKeyFile
   local keyAbsolutePath
   if string.match(keyConfigPath, "^/") then
@@ -124,11 +117,12 @@ end
 function FTACSMonitorFacet:monitor()
   Log:faulttolerance("[Monitor SCA] Inicio")
   local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
+  local ftRec = self.context.IReceptacles
+  ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
 
   while true do
     local reinit = false
     local service = self:getService()
-    service = orb:newproxy(service, "protected")
     local ok, res = service:isAlive()
     Log:faulttolerance("[Monitor SCA] isAlive? "..tostring(ok))
 
@@ -152,23 +146,11 @@ function FTACSMonitorFacet:monitor()
     else
       Log:faulttolerance("Enviando email para o administrador do barramento.")
       self:sendMail()
-      Openbus.credentialManager:invalidate()
-      Openbus.acs = nil
       local timeToTry = 0
 
       repeat
         if self.recConnId ~= nil then
-          local status, ftRecD = oil.pcall(self.context.IComponent.getFacet,
-              self.context.IComponent, "IDL:scs/core/IReceptacles:1.0")
-
-          if not status then
-            print("[IReceptacles::IComponent] Error while calling getFacet(IDL:scs/core/IReceptacles:1.0)")
-            print("[IReceptacles::IComponent] Error: " .. ftRecD)
-            return
-          end
-          ftRecD = Openbus:getORB():narrow(ftRecD)
-
-          local status, void = oil.pcall(ftRecD.disconnect, ftRecD, self.recConnId)
+          local status, void = oil.pcall(ftRec.disconnect, ftRec, self.recConnId)
           if not status then
             print("[IReceptacles::IReceptacles] Error while calling disconnect")
             print("[IReceptacles::IReceptacles] Error: " .. void)
@@ -184,23 +166,22 @@ function FTACSMonitorFacet:monitor()
         if self:isUnix() then
           --os.execute(BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort..
           --           " &  > log_access_control_server-"..tostring(t)..".txt")
-          os.execute(BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort)
+          os.execute(BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort .. " &")
         else
           --os.execute("start "..BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort..
           --           " > log_access_control_server-"..tostring(t)..".txt")
           os.execute("start "..BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort)
         end
 
-        -- Espera alguns segundos para que dê tempo do SCA ter sido levantado
+        -- Espera alguns segundos para que d� tempo do SCA ter sido levantado
         oil.sleep(timeOut.monitor.sleep)
 
         self.recConnId = nil
+
+        Openbus:_reset()
         self:connect()
         if Openbus:isConnected() then
           local ftacsService = Openbus.ft
-
-          local ftRec = self.context.IReceptacles
-          ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
           self.recConnId = ftRec:connect("IFaultTolerantService",ftacsService)
           if not self.recConnId then
             Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTACSMonitor")
@@ -242,6 +223,8 @@ function startup(self)
     Log:error("Erro ao se logar no ACS")
     os.exit(1)
   end
+
+  Openbus:setInterceptable("IDL:scs/core/IReceptacles:1.0", "disconnect", false)
 
   local ftRec = self.context.IReceptacles
   ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")

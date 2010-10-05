@@ -50,7 +50,6 @@ else
         Log:level(1)
     end
 end
-print(arguments.port)
 if arguments.port then
     AccessControlServerConfiguration.hostPort = tonumber(arguments.port)
 else
@@ -60,32 +59,32 @@ end
 local acsAdd = "corbaloc::"..AccessControlServerConfiguration.hostName..":"
                 ..AccessControlServerConfiguration.hostPort
 
--- Inicializa o ORB
-local orb = oil.init {
-                       flavor = "intercepted;corba;typed;cooperative;base",
-                       tcpoptions = {reuseaddr = true}
-                     }
+local props = { host = AccessControlServerConfiguration.hostName,
+  port = AccessControlServerConfiguration.hostPort}
 
-oil.orb = orb
+-- Inicializa o barramento
+Openbus:init(AccessControlServerConfiguration.hostName,
+  AccessControlServerConfiguration.hostPort)
 
-orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl")
+local orb = Openbus:getORB()
+
+orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/fault_tolerance.idl")
 
 ---
---Fun√ß√£o que ser√° executada pelo OiL em modo protegido.
+--FunÁ„o que ser· executada pelo OiL em modo protegido.
 ---
 function main()
+  -- Aloca uma thread do OiL para o orb
+  Openbus:run()
+
   Log:faulttolerance("Injetando falha no ACS inicio...")
 
   Log:faulttolerance(acsAdd)
 
-  local config = AccessControlServerConfiguration
-  Openbus:init(config.hostName, config.hostPort)
-  Openbus.isFaultToleranceEnable = false
-  Openbus:_setInterceptors()
   -- autentica o monitor, conectando-o ao barramento
   Openbus:connectByCertificate("ACSMonitor",
-      DATA_DIR.."/"..config.monitorPrivateKeyFile,
-      DATA_DIR.."/"..config.accessControlServiceCertificateFile)
+      DATA_DIR.."/"..AccessControlServerConfiguration.monitorPrivateKeyFile,
+      DATA_DIR.."/"..AccessControlServerConfiguration.accessControlServiceCertificateFile)
 
   if Openbus:isConnected() then
      Openbus.ft:setStatus(false)
@@ -94,6 +93,7 @@ function main()
      Log:faulttolerance("Erro ao se logar no barramento.")
   end
 
+  Openbus:destroy()
   os.exit(1)
 
 end
