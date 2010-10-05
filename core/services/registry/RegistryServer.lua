@@ -56,7 +56,7 @@ if arguments.port then
   RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
 end
 
-props = {  host = RegistryServerConfiguration.registryServerHostName,
+local props = {  host = RegistryServerConfiguration.registryServerHostName,
            port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}
 
 local TestLog = require "openbus.util.TestLog"
