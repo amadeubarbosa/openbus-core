@@ -1852,6 +1852,8 @@ function shutdown(self)
   orb:deactivate(self.context.ILeaseProvider)
   orb:deactivate(self.context.IFaultTolerantService)
   orb:deactivate(self.context.IComponent)
-  orb:shutdown()
+  --Mata as threads de validação de credencial e de atualização do estado
+  --e chama o finish que por sua vez mata o orb
+  Openbus:destroy()
   Log:faulttolerance("Servico de Controle de Acesso matou seu processo.")
 end

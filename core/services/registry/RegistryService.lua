@@ -1201,13 +1201,15 @@ function shutdown(self)
     Openbus:disconnect()
   end
 
-  Log:registry("serviço de registro finalizado")
+  Log:registry("Serviço de Registro finalizado")
 
   orb:deactivate(rs)
   orb:deactivate(self.context.IManagement)
   orb:deactivate(self.context.IFaultTolerantService)
   orb:deactivate(self.context.IComponent)
-  orb:shutdown()
+  --Mata as threads de validação de credencial e de atualização do estado
+  --e chama o finish que por sua vez mata o orb
+  Openbus:destroy()
   Log:faulttolerance("Servico de Registro matou seu processo.")
 end
 
