@@ -66,13 +66,16 @@ end
 local hostAdd = RegistryServerConfiguration.registryServerHostName..":"
                 ..RegistryServerConfiguration.registryServerHostPort
 
+local props = {  host = RegistryServerConfiguration.registryServerHostName,
+           port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}
 
--- Inicializa o ORB
-local orb = oil.init {
-                       flavor = "intercepted;corba;typed;cooperative;base",
-                       tcpoptions = {reuseaddr = true}
-                     }
-oil.orb = orb
+-- Inicializa o barramento
+Openbus:init(RegistryServerConfiguration.accessControlServerHostName,
+  RegistryServerConfiguration.accessControlServerHostPort)
+
+Openbus:enableFaultTolerance()
+
+local orb = Openbus:getORB()
 
 local FTRegistryServiceMonitor = require "core.services.registry.FTRegistryServiceMonitor"
 local scs = require "scs.core.base"
@@ -129,6 +132,8 @@ componentId.platform_spec = ""
 --Função que será executada pelo OiL em modo protegido.
 ---
 function main()
+  -- Aloca uma thread do OiL para o orb
+  Openbus:run()
 
   -- Cria o componente responsável pelo Monitor do Serviço de Registro
   local ftrsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)

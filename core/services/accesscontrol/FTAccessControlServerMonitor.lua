@@ -43,7 +43,7 @@ local usage_msg = [[
 local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" or arguments.v == ""  then
-    oil.verbose:level(5)
+    oil.verbose:level(3)
     Log:level(3)
 else
     if AccessControlServerConfiguration.oilVerboseLevel then
@@ -66,14 +66,13 @@ end
 local hostAdd = AccessControlServerConfiguration.hostName..":"..
                 AccessControlServerConfiguration.hostPort
 
+local props = { host = AccessControlServerConfiguration.hostName,
+  port = AccessControlServerConfiguration.hostPort}
 
--- Inicializa o ORB, fixando a localização do serviço em uma porta específica
-local orb = oil.init {  flavor = "intercepted;corba;typed;cooperative;base",
-                        tcpoptions = {reuseaddr = true}
-                     }
+Openbus:init(AccessControlServerConfiguration.hostName,
+  AccessControlServerConfiguration.hostPort)
 
-oil.orb = orb
-oil.verbose:level(2)
+local orb = Openbus:getORB()
 
 local FTAccessControlServiceMonitor = require "core.services.accesscontrol.FTAccessControlServiceMonitor"
 local scs = require "scs.core.base"
@@ -129,6 +128,8 @@ componentId.platform_spec = ""
 --Função que será executada pelo OiL em modo protegido.
 ---
 function main()
+  -- Aloca uma thread do OiL para o orb
+  Openbus:run()
 
   -- Cria o componente responsável pelo Monitor do Serviço de Controle de Acesso
   local ftacsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
