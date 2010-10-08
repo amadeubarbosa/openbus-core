@@ -255,23 +255,23 @@ function RSFacet:createFacetIndex(owner, allFacets, filter)
   local mgm = self.context.IManagement
   -- Inverte o índice para facilitar a busca
   for _, facet in ipairs(allFacets) do
-    tmp[facet.interface_name] = facet
+    tmp[facet.name] = facet
   end
   -- Verifica se não requisitou uma faceta que não implementa
   if filter then
-    for name in pairs(filter) do
-      if not tmp[name] then
-        invalidFacets[name] = true
+    for interface_name in pairs(filter) do
+      if not tmp[interface_name] then
+        invalidFacets[interface_name] = true
         invalidCount = invalidCount + 1
       end
     end
   end
   -- Verifica as autorizações
   for name, facet in pairs(tmp) do
-    if not IgnoredFacets[name] and ((not filter) or filter[name])
+    if not IgnoredFacets[facet.interface_name] and ((not filter) or filter[facet.interface_name])
     then
-      if not mgm:hasAuthorization(owner, name) then
-        invalidFacets[name] = true
+      if not mgm:hasAuthorization(owner, facet.interface_name) then
+        invalidFacets[facet.interface_name] = true
         invalidCount = invalidCount + 1
       elseif invalidCount == 0 then
         facets[facet.name] = "name"
@@ -279,7 +279,7 @@ function RSFacet:createFacetIndex(owner, allFacets, filter)
         facets[facet.facet_ref] = "facet_ref"
         count = count + 1
       end
-     end
+    end
   end
   if invalidCount == 0 then
     return true, facets, count
