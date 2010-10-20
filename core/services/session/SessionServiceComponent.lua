@@ -94,12 +94,7 @@ function SessionServiceComponent:startup()
   -- registra sua oferta de serviço junto ao Serviço de Registro
   self.serviceOffer = {
     member = self.context.IComponent,
-    properties = {
-      {
-        name  = "facets",
-        value = {Utils.SESSION_SERVICE_INTERFACE},
-      },
-    },
+    properties = {},
   }
 
   local success, identifier = registryService:register(self.serviceOffer)
@@ -119,12 +114,7 @@ function SessionServiceComponent:startup()
 
   self.serviceOfferPrev = {
     member = self.context.IComponent,
-    properties = {
-      {
-        name  = "facets",
-        value = {Utils.SESSION_SERVICE_INTERFACE_V1_04},
-      },
-    },
+    properties = {},
   }
 
   local success, identifierPrev = registryService:register(self.serviceOfferPrev)
