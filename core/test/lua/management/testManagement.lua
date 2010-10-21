@@ -146,8 +146,8 @@ function Test1:testAddGetRemoveSystems()
     succ, err = self.acsMgt:addSystem(system.id, system.description)
     Check.assertTrue(succ)
   end
-  --
-  list = self.acsMgt:getSystems()
+  succ, list = self.acsMgt:getSystems()
+  Check.assertTrue(succ)
   for _, system in ipairs(self.systems) do
     succ = false
     for _, added in ipairs(list) do
@@ -297,8 +297,9 @@ function Test2:testAddGetRemoveSystemDeployments()
       depl.description, cert)
     Check.assertTrue(succ)
   end
-  --
-  list = self.acsMgt:getSystemDeployments()
+
+  local succ, list = self.acsMgt:getSystemDeployments()
+  Check.assertTrue(succ)
   for _, depl in ipairs(self.deployments) do
     local tmp = false
     for _, added in ipairs(list) do
@@ -480,6 +481,7 @@ function Test2:testGetSystemDeploymentsBySystemId()
   f:close()
   -- Cria um conjunto compartilhando o mesmo systemId
   local succ, err
+  local list
   local deployments = {}
   local systemId = self.deployments[1].systemId
   for i, depl in ipairs(self.deployments) do
@@ -495,8 +497,9 @@ function Test2:testGetSystemDeploymentsBySystemId()
       tmp.description, cert)
     Check.assertTrue(succ)
   end
-  --
-  local list = self.acsMgt:getSystemDeploymentsBySystemId(systemId)
+
+  succ, list = self.acsMgt:getSystemDeploymentsBySystemId(systemId)
+  Check.assertTrue(succ)
   for _, added in ipairs(list) do
     local tmp = false
     for _, depl in ipairs(deployments) do
@@ -595,7 +598,8 @@ end
 function Test3:testAddGetRemoveInterfaceIdentifier()
   local succ, err = self.rsMgt:addInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
-  local list = self.rsMgt:getInterfaceIdentifiers()
+  local succ, list = self.rsMgt:getInterfaceIdentifiers()
+  Check.assertTrue(succ)
   succ = false
   for _, iface in ipairs(list) do
     if iface == self.ifaces[1] then
@@ -980,7 +984,8 @@ function Test5:testAddGetRemoveUsers()
     Check.assertTrue(succ)
   end
   --
-  list = self.acsMgt:getUsers()
+  succ, list = self.acsMgt:getUsers()
+  Check.assertTrue(succ)
   for _, user in ipairs(self.users) do
     succ = false
     for _, added in ipairs(list) do
@@ -1437,7 +1442,8 @@ function Test7:testGetOfferedInterfaces()
   })
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getOfferedInterfaces()
+  local succ, offers = self.rsMgt:getOfferedInterfaces()
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 1)
   Check.assertEquals(#offers[1].interfaces, 3)
   Check.assertEquals(offers[1].member, self.user)
@@ -1532,7 +1538,8 @@ function Test7:testGetOfferedInterfacesByMember()
   })
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 1)
   Check.assertEquals(#offers[1].interfaces, 3)
   Check.assertEquals(offers[1].member, self.user)
@@ -1630,7 +1637,8 @@ function Test7:testGetUnauthorizedInterfaces()
   local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getUnauthorizedInterfaces()
+  local succ, offers = self.rsMgt:getUnauthorizedInterfaces()
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 1)
   Check.assertEquals(#offers[1].interfaces, 3)
   Check.assertEquals(offers[1].member, self.user)
@@ -1731,7 +1739,8 @@ function Test7:testGetUnauthorizedInterfacesByMember()
   local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
+  local succ, offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 1)
   Check.assertEquals(#offers[1].interfaces, 3)
   Check.assertEquals(offers[1].member, self.user)
@@ -1823,13 +1832,15 @@ function Test7:testUnregister()
   })
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 1)
   Check.assertEquals(#offers[1].interfaces, 3)
   Check.assertEquals(offers[1].member, self.user)
   Check.assertEquals(offers[1].id, id)
 
   Check.assertTrue(self.rsMgt:unregister(offers[1].id))
-  offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 0)
 end
