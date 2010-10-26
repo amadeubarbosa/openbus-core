@@ -35,7 +35,7 @@ packages = {
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
-    url = SVNREPURL .. "/openbus/tags/OB_v1_05_01_2010_09_23",
+    url = SVNREPURL .. "/openbus/branches/OB_v1_05_2010_05_13",
     directory = SVNDIR, -- main source directory for PUts!
                         -- other sources have to be in PRODAPP/something
   },
