@@ -921,6 +921,8 @@ packages = {
       ["target/dependency/*.jar"] = "libpath/java",
     },
     dev_files = {
+      ["target/openbus-demo-hello-*.jar"] = "demo/hello",
+      ["target/dependency/*.jar"] = "libpath/java",
       ["resources"] = "demo/hello",
       ["src"] = "demo/hello",
       ["idl"] = "demo/hello",
@@ -937,6 +939,8 @@ packages = {
       ["target/dependency/*.jar"] = "libpath/java",
     },
     dev_files = {
+      ["target/openbus-demo-eventsink-*.jar"] = "demo/eventSink",
+      ["target/dependency/*.jar"] = "libpath/java",
       ["resources"] = "demo/eventSink",
       ["src"] = "demo/eventSink",
       ["idl"] = "demo/eventSink",
@@ -953,6 +957,8 @@ packages = {
       ["target/dependency/*.jar"] = "libpath/java",
     },
     dev_files = {
+      ["target/openbus-demo-delegate-*.jar"] = "demo/delegate",
+      ["target/dependency/*.jar"] = "libpath/java",
       ["resources"] = "demo/delegate",
       ["src"] = "demo/delegate",
       ["idl"] = "demo/delegate",
