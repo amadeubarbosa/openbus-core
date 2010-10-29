@@ -10,11 +10,6 @@ packages = {
     url = SVNREPURL .. "/openbus/libs/trunk/oil-0.5-beta-obv",
     directory = PRODAPP .."/oil-0.5-beta-obv", 
   },
-  -- [SCS-173] scs-source package is deprecated only scs-cpp code uses it
-  { name = "scs-source",
-    url = SVNREPURL .. "/scs/trunk",
-    directory = PRODAPP .."/scs",
-  },
   { name = "idl-source",
     url = SVNREPURL .. "/openbus/idl/trunk",
     directory = PRODAPP .."/idl",
@@ -243,9 +238,11 @@ packages = {
     },
   },
   { name = "scsoil",
+    url = SVNREPURL .. "/scs/core/cppoil/trunk",
+    directory = PRODAPP .."/scs-cppoil",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/scs/src/cpp/cppoil",
+      src = PRODAPP .."/scs-cppoil/src",
       mf = { "config LUA51="..PRODAPP.."/lua5.1", },
       Darwin = { mf = { 
         "config LUA51="..PRODAPP.."/lua5.1", 
@@ -255,13 +252,9 @@ packages = {
     install_files = {
       ["../lib/${TEC_UNAME}/libscsoil.so"] = "libpath/${TEC_UNAME}",
       ["../lib/${TEC_UNAME}/libscsoil.dylib"] = "libpath/${TEC_UNAME}",
-      ["../../../idl/scs.idl"] = "idlpath/v1_04",
-      [INSTALL.TOP.."/idlpath/v1_04/scs.idl"] = "idlpath/v1_05",
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsoil.*"] = "libpath/${TEC_UNAME}",
-      ["../../../idl/scs.idl"] = "idlpath/v1_04",
-      [INSTALL.TOP.."/idlpath/v1_04/scs.idl"] = "idlpath/v1_05",
       ["*.h"] = "incpath/scs/cppoil/",
       ["luaidl/*.h"] = "incpath/scs/cppoil/luaidl/",
     },
