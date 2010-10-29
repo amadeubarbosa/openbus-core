@@ -5,11 +5,12 @@
 -- If A depends on B then you should place B's description before than A's.
 SUNOS64_TECMAKE_FLAGS="USE_NODEPEND=Yes TEC_UNAME=SunOS510_64 BUILD_64=yes"
 packages = {
-  -- fake package to easy the download of the oil05, scs and friend projects
+  -- package to download the sources of the oil05, scs and friend projects
   { name = "oil-source",
     url = SVNREPURL .. "/openbus/libs/trunk/oil-0.5-beta-obv",
     directory = PRODAPP .."/oil-0.5-beta-obv", 
   },
+  -- [SCS-173] scs-source package is deprecated only scs-cpp code uses it
   { name = "scs-source",
     url = SVNREPURL .. "/scs/trunk",
     directory = PRODAPP .."/scs",
@@ -849,27 +850,26 @@ packages = {
     },
   },
   -- Java related packages  
-  { name = "scs-java-ant",
+  { name = "scsidl-java",
     build = {
-      type = "ant",
-      src = PRODAPP .."/scs/src/java",
-      target = "jar-core",
+      type = "maven",
+      src = PRODAPP .."/scs-idl",
+    },
+    install_files = {
+      ["target/*.jar"] = "libpath/java",
+      ["target/dependency/*.jar"] = "libpath/java",
     },
   },
   { name = "scs-java",
+    url = SVNREPURL .. "/scs/core/java/trunk",
+    directory = PRODAPP .."/scs-java",
     build = {
-      type = "mavenimport",
-      src = PRODAPP .. "/scs",
-    },
-    parameters = { 
-      ["libs/scs.jar"] = { groupId="tecgraf.scs", artifactId="scs-core",
-       version="1.1.0" },
-      ["libs/scsidl.jar"] = { groupId="tecgraf.scs", artifactId="scs-idl-jacorb",
-       version="1.1.0" },
+      type = "maven",
+      src = PRODAPP .."/scs-java",
     },
     install_files = {
-      ["idl/scs.idl"]  = "idlpath/v1_04",
-      [INSTALL.TOP.."/idlpath/v1_04/scs.idl"] = "idlpath/v1_05",
+      ["target/*.jar"] = "libpath/java",
+      ["target/dependency/*.jar"] = "libpath/java",
     },
   },
   { name = "openbusidl-java",
