@@ -29,6 +29,7 @@ local suiteTestInvalidLoginByPassword = assert(loadfile(OPENBUS_HOME .."/core/te
 local suiteTestLogout = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestLogout.lua"))()
 local suiteTestIsValid = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestIsValid.lua"))()
 local suiteTestAreValid = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestAreValid.lua"))()
+local suiteTestIsValidPasswordDelegate = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestIsValidPasswordDelegate.lua"))()
 local suiteTestObservers = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestObservers.lua"))()
 local suiteTestRemoveCredentialFromObserver = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestRemoveCredentialFromObserver.lua"))()
 local suiteTestRemoveObserver = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/suiteTestRemoveObserver.lua"))()
