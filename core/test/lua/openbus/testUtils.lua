@@ -10,6 +10,8 @@ local CredentialManager = require "openbus.util.CredentialManager"
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local Utils = require "openbus.util.Utils"
 
+local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
+
 Suite = {
   Test1 = {
     beforeTestCase = function(self)
@@ -20,9 +22,13 @@ Suite = {
       end
       orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
       orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
-     end,
+      orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl") 
+    end,
     testFetchACS = function(self)
-      local acs, lp, ic = Utils.fetchAccessControlService(orb, "localhost", 2089)
+      -- Obtém a configuração do serviço
+      assert(loadfile(OPENBUS_HOME.."/data/conf/AccessControlServerConfiguration.lua"))()
+      local acs, lp, ic = Utils.fetchAccessControlService(orb, AccessControlServerConfiguration.hostName, 
+                                                           AccessControlServerConfiguration.hostPort)
       local user = "tester"
       local password = "tester"
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
