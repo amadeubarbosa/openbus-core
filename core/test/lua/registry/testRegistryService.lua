@@ -243,8 +243,13 @@ function init(self)
     orb:loadidl(idl)
   end
 
+  -- Obtém a configuração do serviço
+  local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
+  assert(loadfile(OPENBUS_HOME.."/data/conf/AccessControlServerConfiguration.lua"))()
+
   -- Recupera o Serviço de Acesso
-  local acsComp = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
+  local acsComp = orb:newproxy("corbaloc::".. AccessControlServerConfiguration.hostName ..
+                               ":".. AccessControlServerConfiguration.hostPort .."/openbus_v1_05",
     "synchronous", "IDL:scs/core/IComponent:1.0")
   local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
