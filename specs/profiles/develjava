@@ -1,9 +1,8 @@
 licenses
+scsidl-java
 scs-java
 openbus-java
 openbusidl-java
 openbusapi-java-doc
-openbus-demo-hello-java
 openbus-demo-hello-java-dev
-openbus-demo-delegate-java
 openbus-demo-delegate-java-dev

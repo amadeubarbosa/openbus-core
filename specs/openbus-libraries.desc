@@ -15,7 +15,7 @@ packages = {
     directory = PRODAPP .."/scs",
   },
   { name = "idl-source",
-    url = SVNREPURL .. "/openbus/idl/tags/OB_IDL_v1_05_00_2010_06_23",
+    url = SVNREPURL .. "/openbus/idl/branches/OB_IDL_v1_05_2010_05_13",
     directory = PRODAPP .."/idl",
   },
   { name = "idl-1.4-source",
@@ -23,7 +23,7 @@ packages = {
     directory = PRODAPP .."/idl-1.4",
   },
   { name = "sdk-java-source",
-    url = SVNREPURL .. "/openbus/sdk/java/tags/OB_SDK_JAVA_v1_05_00_2010_06_29",
+    url = SVNREPURL .. "/openbus/sdk/java/branches/OB_SDK_JAVA_v1_05_2010_05_13",
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
@@ -215,7 +215,7 @@ packages = {
     },
   },
   { name = "scs-idl",
-    url = SVNREPURL .. "/scs/core/idl/tags/SCS_CORE_IDL_v1_02_00_2010_09_21",
+    url = SVNREPURL .. "/scs/core/idl/tags/SCS_CORE_IDL_v1_02_00_2010_11_09",
     directory = PRODAPP .."/scs-idl",
     install_files = {
       ["src/scs.idl"] = "idlpath/v1_05",
@@ -253,13 +253,9 @@ packages = {
     install_files = {
       ["../lib/${TEC_UNAME}/libscsoil.so"] = "libpath/${TEC_UNAME}",
       ["../lib/${TEC_UNAME}/libscsoil.dylib"] = "libpath/${TEC_UNAME}",
-      ["../../../idl/scs.idl"] = "idlpath/v1_04",
-      [INSTALL.TOP.."/idlpath/v1_04/scs.idl"] = "idlpath/v1_05",
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsoil.*"] = "libpath/${TEC_UNAME}",
-      ["../../../idl/scs.idl"] = "idlpath/v1_04",
-      [INSTALL.TOP.."/idlpath/v1_04/scs.idl"] = "idlpath/v1_05",
       ["*.h"] = "incpath/scs/cppoil/",
       ["luaidl/*.h"] = "incpath/scs/cppoil/luaidl/",
     },
@@ -685,27 +681,26 @@ packages = {
   },
 --]]
   -- Java related packages  
-  { name = "scs-java-ant",
+  { name = "scsidl-java",
     build = {
-      type = "ant",
-      src = PRODAPP .."/scs/src/java",
-      target = "jar-core",
+      type = "maven",
+      src = PRODAPP .."/scs-idl",
+    },
+    install_files = {
+      ["target/*.jar"] = "libpath/java",
+      ["target/dependency/*.jar"] = "libpath/java",
     },
   },
   { name = "scs-java",
+    url = SVNREPURL .. "/scs/core/java/tags/SCS_CORE_JAVA_v1_02_00_2010_11_09",
+    directory = PRODAPP .."/scs-java",
     build = {
-      type = "mavenimport",
-      src = PRODAPP .. "/scs",
-    },
-    parameters = { 
-      ["libs/scs.jar"] = { groupId="tecgraf.scs", artifactId="scs-core",
-       version="1.1.0" },
-      ["libs/scsidl.jar"] = { groupId="tecgraf.scs", artifactId="scs-idl-jacorb",
-       version="1.1.0" },
+      type = "maven",
+      src = PRODAPP .."/scs-java",
     },
     install_files = {
-      ["idl/scs.idl"]  = "idlpath/v1_04",
-      [INSTALL.TOP.."/idlpath/v1_04/scs.idl"] = "idlpath/v1_05",
+      ["target/*.jar"] = "libpath/java",
+      ["target/dependency/*.jar"] = "libpath/java",
     },
   },
   { name = "openbusidl-java",
@@ -757,6 +752,8 @@ packages = {
       ["target/dependency/*.jar"] = "libpath/java",
     },
     dev_files = {
+      ["target/openbus-demo-hello-*.jar"] = "demo/hello",
+      ["target/dependency/*.jar"] = "libpath/java",
       ["resources"] = "demo/hello",
       ["src"] = "demo/hello",
       ["idl"] = "demo/hello",
@@ -773,6 +770,8 @@ packages = {
       ["target/dependency/*.jar"] = "libpath/java",
     },
     dev_files = {
+      ["target/openbus-demo-eventsink-*.jar"] = "demo/eventSink",
+      ["target/dependency/*.jar"] = "libpath/java",
       ["resources"] = "demo/eventSink",
       ["src"] = "demo/eventSink",
       ["idl"] = "demo/eventSink",
@@ -789,6 +788,8 @@ packages = {
       ["target/dependency/*.jar"] = "libpath/java",
     },
     dev_files = {
+      ["target/openbus-demo-delegate-*.jar"] = "demo/delegate",
+      ["target/dependency/*.jar"] = "libpath/java",
       ["resources"] = "demo/delegate",
       ["src"] = "demo/delegate",
       ["idl"] = "demo/delegate",
