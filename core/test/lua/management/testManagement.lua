@@ -1509,7 +1509,8 @@ function Test7:testGetOfferedInterfaces_MoreRegisters()
   })
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getOfferedInterfaces()
+  local succ, offers = self.rsMgt:getOfferedInterfaces()
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 3)
   -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
@@ -1605,7 +1606,8 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
   })
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 3)
   -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
@@ -1707,7 +1709,8 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
   local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getUnauthorizedInterfaces()
+  local succ, offers = self.rsMgt:getUnauthorizedInterfaces()
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 3)
   -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
@@ -1809,7 +1812,8 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
   local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
   Check.assertTrue(succ)
 
-  local offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
+  local succ, offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
+  Check.assertTrue(succ)
   Check.assertEquals(#offers, 3)
   -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
