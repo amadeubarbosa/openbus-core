@@ -5,7 +5,7 @@
   <groupId>tecgraf.openbus</groupId>
   <artifactId>openbus</artifactId>
   <packaging>pom</packaging>
-  <version>1.4.6</version>
+  <version>1.4.7</version>
 
   <name>OpenBus</name>
   <url>https://subversion.tecgraf.puc-rio.br/engdist/openbus</url>
