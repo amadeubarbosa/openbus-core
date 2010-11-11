@@ -36,9 +36,15 @@ local function init(self)
     "/conf/advanced/InterceptorsConfiguration.lua"))()
   self.credentialManager = CredentialManager()
   orb:setclientinterceptor(ClientInterceptor(config, self.credentialManager))
+
+  -- Obtém a configuração do serviço
+  local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
+  assert(loadfile(OPENBUS_HOME.."/data/conf/AccessControlServerConfiguration.lua"))()
+
   -- Obtem a face de governança
   local succ
-  local ic = orb:newproxy("corbaloc::localhost:2089/openbus_v1_05",
+  local ic = orb:newproxy("corbaloc::".. AccessControlServerConfiguration.hostName
+                           ..":" .. AccessControlServerConfiguration.hostPort .."/openbus_v1_05",
     "synchronous", "IDL:scs/core/IComponent:1.0")
   local facet = ic:getFacet(
     "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
