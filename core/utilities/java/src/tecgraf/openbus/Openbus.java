@@ -291,6 +291,16 @@ public final class Openbus {
    * @return O Serviço de Registro.
    */
   public IRegistryService getRegistryService() {
+    if (this.rgs == null) {
+      if (this.acs != null) {
+        try {
+          this.rgs = this.acs.getRegistryService();
+        }
+        catch (SystemException e) {
+          Log.COMMON.severe("Falha ao tentar obter o serviço de registro", e);
+        }
+      }
+    }
     return this.rgs;
   }
 
