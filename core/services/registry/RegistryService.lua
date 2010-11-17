@@ -201,13 +201,13 @@ end
 --   mais facetas que o membro não tem autorização.
 --
 function RSFacet:getAuthorizedFacets(member, credential, properties)
-  local succ, facets, count
+  local succ, facets, memberFacets, count
   local metaInterface = member:getFacetByName("IMetaInterface")
   if metaInterface then
     local orb = Openbus:getORB()
     metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
-    succ, facets, count = self:createFacetIndex(credential.owner,
-      metaInterface:getFacets(), properties.facets)
+    memberFacets = metaInterface:getFacets()
+    succ, facets, count = self:createFacetIndex(credential.owner, memberFacets)
     if succ then
       Log:registry(format("Membro '%s' (%s) possui %d faceta(s) autorizada(s).",
         properties.component_id.name, credential.owner, count))
@@ -233,20 +233,17 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
 end
 
 ---
--- Busca as interfaces por meio da metainterface do membro e as
--- disponibiza para consulta.
+-- Verifica se as facetas do membro estão autorizadas no management.
 --
 -- @param owner Dono da credencial.
 -- @param allFacets Array de facetas do membro.
--- @param filter Tabela contendo facetas (repId) permitidas ou
---  nil para indicar sem filtro.
 --
 -- @return Em caso de sucesso, retorna true, o índice de facetas
 -- disponíveis do membro e o número de facetas no índice.
 -- No caso de falta de autorização, retorna false, um índice de
 -- facetas não autorizadas e o número de facetas no índice
 --
-function RSFacet:createFacetIndex(owner, allFacets, filter)
+function RSFacet:createFacetIndex(owner, allFacets)
   local tmp = {}
   local count = 0
   local facets = {}
@@ -257,19 +254,9 @@ function RSFacet:createFacetIndex(owner, allFacets, filter)
   for _, facet in ipairs(allFacets) do
     tmp[facet.interface_name] = facet
   end
-  -- Verifica se não requisitou uma faceta que não implementa
-  if filter then
-    for name in pairs(filter) do
-      if not tmp[name] then
-        invalidFacets[name] = true
-        invalidCount = invalidCount + 1
-      end
-    end
-  end
   -- Verifica as autorizações
   for name, facet in pairs(tmp) do
-    if not IgnoredFacets[name] and ((not filter) or filter[name])
-    then
+    if not IgnoredFacets[name] then
       if not mgm:hasAuthorization(owner, name) then
         invalidFacets[name] = true
         invalidCount = invalidCount + 1
