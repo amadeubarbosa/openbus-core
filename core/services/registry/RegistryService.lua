@@ -244,7 +244,7 @@ end
 -- facetas não autorizadas e o número de facetas no índice
 --
 function RSFacet:createFacetIndex(owner, allFacets)
-  local tmp = {}
+  local facetsByName = {}
   local count = 0
   local facets = {}
   local invalidCount = 0
@@ -252,13 +252,14 @@ function RSFacet:createFacetIndex(owner, allFacets)
   local mgm = self.context.IManagement
   -- Inverte o índice para facilitar a busca
   for _, facet in ipairs(allFacets) do
-    tmp[facet.interface_name] = facet
+    facetsByName[facet.name] = facet
   end
   -- Verifica as autorizações
-  for name, facet in pairs(tmp) do
-    if not IgnoredFacets[name] then
-      if not mgm:hasAuthorization(owner, name) then
-        invalidFacets[name] = true
+  for _, facet in pairs(facetsByName) do
+    local interfaceName = facet.interface_name
+    if not IgnoredFacets[interfaceName] then
+      if not mgm:hasAuthorization(owner, interfaceName) then
+        invalidFacets[interfaceName] = true
         invalidCount = invalidCount + 1
       elseif invalidCount == 0 then
         facets[facet.name] = "name"
