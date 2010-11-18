@@ -126,6 +126,49 @@ local Hello_v2  = {
   },
 }
 
+local Hello_v2_2  = {
+  -- Descrição dos receptáculos
+  receptacles = {},
+  -- Descrição das facetas
+  facets = {
+    IComponent = {
+      name = "IComponent",
+      interface_name = "IDL:scs/core/IComponent:1.0",
+      class = scs.Component
+    },
+    IMetaInterface = {
+      name = "IMetaInterface",
+      interface_name = "IDL:scs/core/IMetaInterface:1.0",
+      class = scs.MetaInterface
+    },
+    IHello_v2 = {
+      name = "IHello_v2",
+      interface_name = "IDL:IHello_v2:1.0",
+      class = oop.class({}),
+    },
+    IHello_v2_2 = {
+      name = "IHello_v2_2",
+      interface_name = "IDL:IHello_v2:1.0",
+      class = oop.class({}),
+    },
+  },
+  -- ComponentId
+  componentId = {
+    name = "Hello_v2_2",
+    major_version = 1,
+    minor_version = 0,
+    patch_version = 0,
+    platform_spec = "",
+  },
+  -- Propriedades para o registro.
+  -- Alguns testes levam em consideração que as propriedades dos dois
+  -- componentes são diferentes.
+  properties = {
+    {name = "type",        value = {"IHello"}},
+    {name = "description", value = {"IHello com duas facetas IHello v2.0"}},
+  },
+}
+
 local Hello_v3  = {
   -- Descrição dos receptáculos
   receptacles = {},
@@ -336,13 +379,35 @@ Suite = {
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
       --
-      Check.assertFalse(self.registryService:unregister("INVALID-IDENTIFIER"))
-      --
       Check.assertTrue(self.registryService:unregister(registryIdentifier))
       offers = self.registryService:find({"IHello_v1"})
       Check.assertEquals(0, #offers)
       offers = self.registryService:find({"IHello_v2"})
       Check.assertEquals(0, #offers)
+    end,
+
+    testRegister_UnregisterInvalidService = function(self)
+      Check.assertFalse(self.registryService:unregister("INVALID-IDENTIFIER"))
+    end,
+
+    testRegister_SameFacetInterface = function(self)
+      local success
+      local member = scs.newComponent(Hello_v2_2.facets, Hello_v2_2.receptacles,
+        Hello_v2_2.componentId)
+      success , self.registryIdentifier = self.rgsProtected:register({
+        member = member.IComponent,
+        properties = Hello_v2_2.properties,
+      })
+      Check.assertTrue(success)
+      Check.assertNotNil(self.registryIdentifier)
+      --
+      local offers = self.registryService:find({"IHello_v2"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2_2.properties))
+      --
+      local offers = self.registryService:find({"IHello_v2_2"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2_2.properties))
     end,
 
     testRegister_Unauthorized = function(self)
