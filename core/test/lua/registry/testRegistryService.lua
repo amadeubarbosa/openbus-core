@@ -151,7 +151,7 @@ local Hello_v3  = {
       interface_name = "IDL:IHello_v2:1.0",
       class = oop.class({}),
     },
-    IHello_v3 = {
+    IHello_v3 = { -- Não autorizada no RS
       name = "IHello_v3",
       interface_name = "IDL:IHello_v3:1.0",
       class = oop.class({}),
@@ -165,16 +165,7 @@ local Hello_v3  = {
     patch_version = 0,
     platform_spec = "",
   },
-  properties = {
-    {
-      name = "facets",
-      value = {
-        -- não exporta IHello_v1
-        "IDL:IHello_v2:1.0",  -- autorizada no RS
-        "IDL:IHello_v3:1.0",  -- não autorizada no RS
-      },
-    },
-  },
+  properties = { },
 }
 
 -------------------------------------------------------------------------------
@@ -354,69 +345,12 @@ Suite = {
       Check.assertEquals(0, #offers)
     end,
 
-    testRegister_Property = function(self)
-      local success
-      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
-        Hello_v2.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = {
-          {
-            name = "facets",
-            value = {
-              "IDL:IHello_v1:1.0",
-            }
-          },
-        }
-      })
-      Check.assertTrue(success)
-      Check.assertNotNil(self.registryIdentifier)
-      --
-      local offers = self.registryService:find({"IHello_v1"})
-      Check.assertEquals(1, #offers)
-      --
-      offers = self.registryService:find({"IHello_v2"})
-      Check.assertEquals(0, #offers)
-    end,
-
-    testRegister_NotImplemented = function(self)
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
-        Hello_v1.componentId)
-      local success, err = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = {
-          {
-            name = "facets",
-            value = {
-              "IDL:IHello_v1:1.0",
-              "IDL:IHello_v2:1.0",  -- IHello_v1 não implementa
-            }
-          },
-        }
-      })
-      Check.assertFalse(success)
-      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0")
-      Check.assertEquals(#err.facets, 1)
-    end,
-
     testRegister_Unauthorized = function(self)
       local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles,
         Hello_v3.componentId)
       local success, err = self.rgsProtected:register({
         member = member.IComponent,
-        properties = {}, -- não informa as facetas, usa IMetaInterface
-      })
-      Check.assertFalse(success)
-      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0")
-      Check.assertEquals(#err.facets, 1)
-    end,
-
-    testRegister_UnauthorizedProperty = function(self)
-      local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles,
-        Hello_v3.componentId)
-      local success, err = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = Hello_v3.properties,
+        properties = {},
       })
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0")
@@ -426,10 +360,10 @@ Suite = {
     testUpdate = function(self)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
-        Hello_v1.componentId)
+          Hello_v1.componentId)
       success, self.registryIdentifier = self.rgsProtected:register({
-        properties = Hello_v1.properties,
-        member = member.IComponent,
+          properties = Hello_v1.properties,
+          member = member.IComponent,
       })
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
@@ -439,19 +373,20 @@ Suite = {
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
       Check.assertTrue(self.rgsProtected:update(self.registryIdentifier,
-        Hello_v2.properties))
+          Hello_v2.properties))
       offers = self.registryService:find({"IHello_v1"})
       Check.assertEquals(1, #offers)
+      Check.assertFalse(equalsProps(offers[1].properties, Hello_v1.properties))
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
     end,
 
     testUpdate_Same = function(self)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
-        Hello_v1.componentId)
+          Hello_v1.componentId)
       success, self.registryIdentifier = self.rgsProtected:register({
-        properties = Hello_v1.properties,
-        member = member.IComponent,
+          properties = Hello_v1.properties,
+          member = member.IComponent,
       })
       --
       local offers = self.registryService:find({"IHello_v1"})
@@ -459,7 +394,7 @@ Suite = {
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
       --
       Check.assertTrue(self.rgsProtected:update(self.registryIdentifier,
-  Hello_v1.properties))
+          Hello_v1.properties))
       --
       offers = self.registryService:find({"IHello_v1"})
       Check.assertEquals(1, #offers)
@@ -469,15 +404,15 @@ Suite = {
     testRegister_InternalProperties = function(self)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
-        Hello_v1.componentId)
+          Hello_v1.componentId)
       -- Tenta sobrescrita de propriedade definidas internamente no RS
       success, self.registryIdentifier = self.rgsProtected:register({
-        properties = self.fakeProps,
-        member = member.IComponent,
+          properties = self.fakeProps,
+          member = member.IComponent,
       })
       --
       local offers = self.registryService:findByCriteria(
-        {"IHello_v1"}, self.trueProps)
+          {"IHello_v1"}, self.trueProps)
       Check.assertEquals(1, #offers)
     end,
 
@@ -499,84 +434,17 @@ Suite = {
     end,
 
     testUpdate_Invalid = function(self)
-      -- Coloca conteúdo no registro
       local success, err
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
-        Hello_v1.componentId)
+          Hello_v1.componentId)
       success, self.registryIdentifier = self.rgsProtected:register({
-        properties = Hello_v1.properties,
-        member = member.IComponent,
+          properties = Hello_v1.properties,
+          member = member.IComponent,
       })
       success, err = self.rgsProtected:update("INVALID-IDENTIFIER",
-        Hello_v1.properties)
+          Hello_v1.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/ServiceOfferNonExistent:1.0")
-    end,
-
-    testUpdate_Property = function(self)
-      local success
-      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
-        Hello_v2.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-        properties = Hello_v2.properties,
-        member = member.IComponent,
-      })
-      --
-      success = self.rgsProtected:update(self.registryIdentifier, {
-        {
-          name = "facets",
-          value = {
-            "IDL:IHello_v1:1.0",
-          }
-        },
-      })
-      Check.assertTrue(success)
-      --
-      local offers = self.registryService:find({"IHello_v1"})
-      Check.assertEquals(1, #offers)
-      --
-      offers = self.registryService:find({"IHello_v2"})
-      Check.assertEquals(0, #offers)
-      --
-      success = self.rgsProtected:update(self.registryIdentifier, {
-        {
-          name = "facets",
-          value = {
-            "IDL:IHello_v1:1.0",
-            "IDL:IHello_v2:1.0",
-          }
-        },
-      })
-      Check.assertTrue(success)
-      --
-      local offers = self.registryService:find({"IHello_v1"})
-      Check.assertEquals(1, #offers)
-      --
-      offers = self.registryService:find({"IHello_v2"})
-      Check.assertEquals(1, #offers)
-    end,
-
-    testUpdate_NotImplemented = function(self)
-      local success, err
-      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
-        Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-        properties = Hello_v1.properties,
-        member = member.IComponent,
-      })
-      --
-      success, err = self.rgsProtected:update(self.registryIdentifier, {
-        {
-          name = "facets",
-          value = {
-            "IDL:IHello_v1:1.0",
-            "IDL:IHello_v2:1.0",  -- IHello_v1 não implementa
-          }
-        },
-      })
-      Check.assertFalse(success)
-      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0")
-      Check.assertEquals(#err.facets, 1)
     end,
   },
 
