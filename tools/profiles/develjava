@@ -1,5 +1,6 @@
 licenses
 scs-java
 openbus-java
+openbusapi-java
 openbusidl-java
 openbus-demo-hello-java
