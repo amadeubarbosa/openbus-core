@@ -27,6 +27,8 @@ return function (self)
 
       -- Obtém a configuração do serviço
       assert(loadfile(OPENBUS_HOME.."/data/conf/AccessControlServerConfiguration.lua"))()
+      self.acsHostName = AccessControlServerConfiguration.hostName
+      self.acsHostPort = AccessControlServerConfiguration.hostPort
 
       local ltime = tostring(socket.gettime())
       ltime = string.gsub(ltime, "%.", "")
@@ -45,16 +47,16 @@ return function (self)
 
       os.execute(OPENBUS_HOME.."/specs/shell/openssl-generate.ksh -n " .. self.systemId .. " -c "..OPENBUS_HOME.."/openssl/openssl.cnf <TesteBarramentoCertificado_input.txt  2> genkey-err.txt >genkeyT.txt ")
 
-      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. AccessControlServerConfiguration.hostName ..
-                                                                        " --acs-port=" .. AccessControlServerConfiguration.hostPort  ..
+      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. self.acsHostName ..
+                                                                        " --acs-port=" .. self.acsHostPort  ..
                                                                         " --login=tester" ..
                                                                         " --password=tester" ..
                                                                         " --add-system="..self.systemId ..
                                                                         " --description=Teste_do_OpenBus" ..
                                                                         " 2>> management-err.txt >>management.txt ")
 
-      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. AccessControlServerConfiguration.hostName ..
-                                                                        " --acs-port=" .. AccessControlServerConfiguration.hostPort ..
+      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. self.acsHostName ..
+                                                                        " --acs-port=" .. self.acsHostPort..
                                                                         " --login=tester" ..
                                                                         " --password=tester" ..
                                                                         " --add-deployment="..self.deploymentId ..
@@ -63,8 +65,8 @@ return function (self)
                                                                         " --certificate="..self.systemId..".crt"..
                                                                         " 2>> management-err.txt >>management.txt ")
 
-      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. AccessControlServerConfiguration.hostName ..
-                                                                        " --acs-port=" .. AccessControlServerConfiguration.hostPort ..
+      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. self.acsHostName ..
+                                                                        " --acs-port=" .. self.acsHostPort ..
                                                                         " --login=tester" ..
                                                                         " --password=tester" ..
                                                                         " --set-authorization="..self.systemId ..
