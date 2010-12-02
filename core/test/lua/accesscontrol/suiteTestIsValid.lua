@@ -13,7 +13,7 @@ local afterTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterT
 local beforeEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeEachTest.lua")
 local afterEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterEachTest.lua")
 
-oil.verbose:level(2)
+oil.verbose:level(0)
 
 Suite = {
 
