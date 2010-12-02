@@ -410,6 +410,103 @@ Suite = {
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v2_2.properties))
     end,
 
+    ---
+    -- Testa se o registro permite criar dois componentes que só diferem pelo
+    -- componentId.
+    ---
+    testRegister_SameComponent_DiferentComponentId = function(self)
+      local success, registryIdentifier
+      local newComponentId = Hello_v2.componentId
+      newComponentId.major_version = 2
+
+      local member = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
+          Hello_v2.componentId)
+      local member2 = scs.newComponent(Hello_v2.facets, Hello_v2.receptacles,
+          newComponentId)
+
+      success , self.registryIdentifier = self.rgsProtected:register({
+        member = member.IComponent,
+        properties = Hello_v2.properties,
+      })
+      Check.assertTrue(success)
+      Check.assertNotNil(self.registryIdentifier)
+      --
+      success , registryIdentifier = self.rgsProtected:register({
+        member = member2.IComponent,
+        properties = Hello_v2.properties,
+      })
+      Check.assertTrue(success)
+      Check.assertNotNil(registryIdentifier)
+      Check.assertNotEquals(self.registryIdentifier, registryIdentifier)
+      --
+      local offers = self.registryService:find({"IHello_v2"})
+      Check.assertEquals(2, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v2.properties))
+      --
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    end,
+
+    ---
+    -- Testa se o serviço de registro permite criar réplicas de serviços com
+    -- propriedades iguais.
+    ---
+    testRegister_Replica = function(self)
+      local success
+      local member1 = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
+          Hello_v1.componentId)
+      local member2 = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
+          Hello_v1.componentId)
+
+      success, self.registryIdentifier = self.rgsProtected:register({
+        member = member1.IComponent,
+        properties = Hello_v1.properties,
+      })
+      Check.assertTrue(success)
+      Check.assertNotNil(self.registryIdentifier)
+      --
+      success, registryIdentifier = self.rgsProtected:register({
+        member = member2.IComponent,
+        properties = Hello_v1.properties,
+      })
+      Check.assertTrue(success)
+      Check.assertNotNil(registryIdentifier)
+      Check.assertNotEquals(registryIdentifier,self.registryIdentifier)
+      --
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(2, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, offers[2].properties))
+      --
+      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+    end,
+
+    ---
+    -- Testa se é possível registrar o mesmo componente instanciado duas vezes.
+    ---
+    testRegister_RegisterTwice = function(self)
+      local success
+      local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
+          Hello_v1.componentId)
+
+      success, self.registryIdentifier = self.rgsProtected:register({
+        member = member.IComponent,
+        properties = Hello_v1.properties,
+      })
+      Check.assertTrue(success)
+      Check.assertNotNil(self.registryIdentifier)
+      --
+      success, registryIdentifier = self.rgsProtected:register({
+        member = member.IComponent,
+        properties = Hello_v1.properties,
+      })
+      Check.assertTrue(success)
+      Check.assertNotNil(registryIdentifier)
+      Check.assertEquals(registryIdentifier,self.registryIdentifier)
+      --
+      local offers = self.registryService:find({"IHello_v1"})
+      Check.assertEquals(1, #offers)
+      Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
+    end,
+
     testRegister_Unauthorized = function(self)
       local member = scs.newComponent(Hello_v3.facets, Hello_v3.receptacles,
         Hello_v3.componentId)
@@ -466,6 +563,10 @@ Suite = {
       Check.assertTrue(equalsProps(offers[1].properties, Hello_v1.properties))
     end,
 
+    ---
+    -- Testa se as propriedades internas da oferta (componentId e registeredBy)
+    -- são corretamente sobrescritas pelo serviço.
+    ---
     testRegister_InternalProperties = function(self)
       local success
       local member = scs.newComponent(Hello_v1.facets, Hello_v1.receptacles,
@@ -496,6 +597,9 @@ Suite = {
       local offers = self.registryService:findByCriteria(
         {"IHello_v1"}, self.trueProps)
       Check.assertEquals(1, #offers)
+      local offers = self.registryService:findByCriteria(
+        {"IHello_v1"}, self.fakeProps)
+      Check.assertEquals(0, #offers)
     end,
 
     testUpdate_Invalid = function(self)
