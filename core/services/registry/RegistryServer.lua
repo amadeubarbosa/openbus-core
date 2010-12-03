@@ -10,7 +10,6 @@ local tostring = tostring
 local string = string
 
 local oil = require "oil"
-
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local Utils = require "openbus.util.Utils"
@@ -58,7 +57,7 @@ if arguments.port then
   RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
 end
 
-props = {  host = RegistryServerConfiguration.registryServerHostName,
+local props = {  host = RegistryServerConfiguration.registryServerHostName,
            port =  tonumber(RegistryServerConfiguration.registryServerHostPort)}
 
 local TestLog = require "openbus.util.TestLog"
@@ -133,7 +132,7 @@ facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_R
 facetDescriptions.IManagement.name            = "IManagement_v" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
 facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
-facetDescriptions.IManagement.key             = Utils.MANAGEMENT_KEY
+facetDescriptions.IManagement.key             = Utils.MANAGEMENT_RS_KEY
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
