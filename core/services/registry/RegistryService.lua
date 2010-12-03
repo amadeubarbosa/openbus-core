@@ -1143,7 +1143,6 @@ function startup(self)
   rs.started = true
 
   -- conecta-se com o controle de acesso:   [ACS]--( 0--[RS]
-  local acsIComp = Openbus:getACSIComponent()
   local acsIRecep =  acsIComp:getFacetByName("IReceptacles")
   acsIRecep = orb:narrow(acsIRecep, "IDL:scs/core/IReceptacles:1.0")
   local status, conns = oil.pcall(acsIRecep.connect, acsIRecep,

@@ -7,9 +7,10 @@ local string = string
 local oil = require "oil"
 
 local Openbus = require "openbus.Openbus"
-local Log = require "openbus.util.Log"
-local Utils = require "openbus.util.Utils"
-local Viewer = require "loop.debug.Viewer"
+local Log     = require "openbus.util.Log"
+local Utils   = require "openbus.util.Utils"
+local Viewer  = require "loop.debug.Viewer"
+local TableDB = require "openbus.util.TableDB"
 
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
@@ -23,6 +24,8 @@ if DATA_DIR == nil then
   Log:error("A variavel OPENBUS_DATADIR nao foi definida.\n")
   os.exit(1)
 end
+
+local dbfile = DATA_DIR .. "/acs_connections.db"
 
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/AccessControlServerConfiguration.lua"))()
@@ -147,10 +150,13 @@ facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLER
 facetDescriptions.IManagement.name            = "IManagement_v" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
+facetDescriptions.IManagement.key             = Utils.MANAGEMENT_ACS_KEY
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
 facetDescriptions.IReceptacles.class          = AccessControlService.ACSReceptacleFacet
+local acsReceptFacetRef = orb:newservant(AccessControlService.ACSReceptacleFacet(TableDB(dbfile)),"","IDL:scs/core/IReceptacles:1.0")
+facetDescriptions.IReceptacles.facet_ref      = acsReceptFacetRef
 
 
 --Log:faulttolerance(facetDescriptions)

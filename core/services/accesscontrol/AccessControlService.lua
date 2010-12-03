@@ -25,7 +25,7 @@ local SmartComponent = require "openbus.faulttolerance.SmartComponent"
 local OilUtilities = require "openbus.util.OilUtilities"
 local FaultTolerantService =
   require "core.services.faulttolerance.FaultTolerantService"
-local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
+local PersistentReceptacle = require "scs.adaptation.PersistentReceptacle"
 
 local LeaseProvider = require "openbus.lease.LeaseProvider"
 
@@ -1324,14 +1324,14 @@ end
 -- Faceta IReceptacle
 --------------------------------------------------------------------------------
 
-ACSReceptacleFacet = oop.class({}, AdaptiveReceptacle.AdaptiveReceptacleFacet)
+ACSReceptacleFacet = oop.class({}, PersistentReceptacle.PersistentReceptacleFacet)
 
 function ACSReceptacleFacet:getConnections(receptacle)
   --TODO: Generalizar esse método para o ACS e RGS porem dentro do Openbus (Maira)
   --troca credenciais para verificacao de permissao no disconnect
   local intCredential = Openbus:getInterceptedCredential()
   Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
-  local conns = AdaptiveReceptacle.AdaptiveReceptacleFacet.getConnections(self, receptacle)
+  local conns = PersistentReceptacle.PersistentReceptacleFacet.getConnections(self, receptacle)
   --desfaz a troca
   Openbus.serverInterceptor.picurrent:setValue(intCredential)
   return conns
@@ -1339,7 +1339,7 @@ end
 
 function ACSReceptacleFacet:connect(receptacle, object)
  self.context.IManagement:checkPermission()
- local connId = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(self,
+ local connId = PersistentReceptacle.PersistentReceptacleFacet.connect(self,
                           receptacle,
                           object) -- calling inherited method
   local orb = Openbus:getORB()
@@ -1362,7 +1362,7 @@ function ACSReceptacleFacet:connect(receptacle, object)
         if not status then
           Log:error("Falha ao conectar o ACS no receptáculo do RGS: " ..
                     conns[1])
-          AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect(self, connId)
+          PersistentReceptacle.PersistentReceptacleFacet.disconnect(self, connId)
           Log:error("Não foi possível conectar RGS ao ACS.")
           return nil
         end
@@ -1380,7 +1380,7 @@ end
 function ACSReceptacleFacet:disconnect(connId)
   self.context.IManagement:checkPermission()
   -- calling inherited method
-  local status = oil.pcall(AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect, self, connId)
+  local status = oil.pcall(PersistentReceptacle.PersistentReceptacleFacet.disconnect, self, connId)
   if status then
     self:updateConnectionState("disconnect", { connId = connId })
   else
@@ -1413,7 +1413,7 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
   repeat
     if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
       local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
-                                               Openbus:getORB(),
+                                               orb,
                                                ftFacet.ftconfig.hosts.ACSIC[i],
                                                Utils.COMPONENT_INTERFACE)
 
@@ -1741,6 +1741,11 @@ function startup(self)
     end
   end
   acs.leaseProvider = LeaseProvider(acs.checkExpiredLeases, acs.lease)
+  Log:faulttolerance("Recuperando as conexoes salvas em disco...")
+  local acsRecepFacet = self.context.IReceptacles
+  -- recupera conexoes salvas em disco, se existirem.
+  local recoveredConns = acsRecepFacet:getConnections("RegistryServiceReceptacle")
+  Log:faulttolerance("Total de " .. #recoveredConns .." conexoes com o Serviço de Registro recuperadas.")
 
   local ftFacet = self.context.IFaultTolerantService
   ftFacet:init()
@@ -1749,13 +1754,13 @@ function startup(self)
     Log:warn("Nenhuma replica para buscar conexoes com Servico de Registro.")
     return
   end
-  local acsRecepFacet = self.context.IReceptacles
+
   local orb = Openbus:getORB()
   local i = 1
   repeat
     if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then
       local ret, succ, remoteACSIC = oil.pcall(Utils.fetchService,
-                                               Openbus:getORB(),
+                                               orb,
                                                ftFacet.ftconfig.hosts.ACSIC[i],
                                                Utils.COMPONENT_INTERFACE)
 
@@ -1769,7 +1774,6 @@ function startup(self)
 
         local acsChallenge = remoteACSFacet:getChallenge("AccessControlService")
         if acsChallenge and #acsChallenge > 0 then
-          --local privateKey = lce.key.readprivatefrompemfile(self.testKeyFile)
           if acs.privateKey then
             local succ, err
             succ, acsChallenge, err = oil.pcall(lce.cipher.decrypt, acs.privateKey, acsChallenge)
@@ -1799,9 +1803,9 @@ function startup(self)
                             local recepIC = conn.objref
                             recepIC = orb:narrow(recepIC, "IDL:scs/core/IComponent:1.0")
                             if recepIC then
-                              --Connecta localmente direto na AdaptiveReceptacle
+                              --Connecta localmente direto na PersistentReceptacle
                               --para nao ativar atualizacao nas replicas
-                              local cid = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
+                              local cid = PersistentReceptacle.PersistentReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
                               Log:faulttolerance("Conexao do Servico de Registro recuperado e conectado com id: " .. cid)
                             end
                           end

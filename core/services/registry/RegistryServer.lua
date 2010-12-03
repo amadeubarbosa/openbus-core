@@ -131,7 +131,7 @@ facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_R
 facetDescriptions.IManagement.name            = "IManagement_v" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
 facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
-facetDescriptions.IManagement.key             = Utils.MANAGEMENT_KEY
+facetDescriptions.IManagement.key             = Utils.MANAGEMENT_RS_KEY
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
