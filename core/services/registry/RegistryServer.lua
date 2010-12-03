@@ -5,6 +5,7 @@
 --   $Id$
 -----------------------------------------------------------------------------
 local tonumber = tonumber
+local tostring = tostring
 
 local string = string
 
