@@ -1801,7 +1801,7 @@ function startup(self)
                             local recepIC = conn.objref
                             recepIC = orb:narrow(recepIC, "IDL:scs/core/IComponent:1.0")
                             if recepIC then
-                              --Connecta localmente direto na AdaptiveReceptacle
+                              --Connecta localmente direto na PersistentReceptacle
                               --para nao ativar atualizacao nas replicas
                               local cid = PersistentReceptacle.PersistentReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
                               Log:faulttolerance("Conexao do Servico de Registro recuperado e conectado com id: " .. cid)
