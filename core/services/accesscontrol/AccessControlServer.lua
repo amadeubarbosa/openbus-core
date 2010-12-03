@@ -152,10 +152,12 @@ facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_ACS_KEY
 
+local acsReceptFacetRef = 
+  orb:newservant(AccessControlService.ACSReceptacleFacet(TableDB(dbfile)),"","IDL:scs/core/IReceptacles:1.0")
+
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
 facetDescriptions.IReceptacles.class          = AccessControlService.ACSReceptacleFacet
-local acsReceptFacetRef = orb:newservant(AccessControlService.ACSReceptacleFacet(TableDB(dbfile)),"","IDL:scs/core/IReceptacles:1.0")
 facetDescriptions.IReceptacles.facet_ref      = acsReceptFacetRef
 
 
