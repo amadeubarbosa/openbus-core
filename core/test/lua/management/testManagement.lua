@@ -1449,48 +1449,6 @@ function Test7:afterEachTest()
 end
 
 function Test7:testGetOfferedInterfaces()
-  local ifaces = {
-    "IDL:IHello_v1:1.0",
-    "IDL:IHello_v2:1.0",
-    "IDL:IHello_v3:1.0",
-  }
-
-  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
-  Check.assertTrue(succ)
-
-  succ, self.rsId01 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {},
-  })
-  Check.assertTrue(succ)
-
-  local succ, offers = self.rsMgt:getOfferedInterfaces()
-  Check.assertTrue(succ)
-  Check.assertEquals(#offers, 1)
-  Check.assertEquals(#offers[1].interfaces, 3)
-  Check.assertEquals(offers[1].member, self.user)
-  -- Cada oferta deve corresponder a uma única interface
-  for _, offered in ipairs(offers[1].interfaces) do
-    local pos = nil
-    for n, iface in ipairs(ifaces) do
-      if offered == iface then
-        Check.assertNil(pos)  -- Repetiu?
-        pos = n
-      end
-    end
-    Check.assertNotNil(pos)   -- Existe?
-    -- Remover para não repetir interface
-    table.remove(ifaces, pos)
-  end
-end
-
-function Test7:testGetOfferedInterfaces_MoreRegisters()
-  local ifaces = {
-    "IDL:IHello_v1:1.0",
-    "IDL:IHello_v2:1.0",
-    "IDL:IHello_v3:1.0",
-  }
-
   local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
@@ -1498,8 +1456,8 @@ function Test7:testGetOfferedInterfaces_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[1]},
+        name  = "replica",
+        value = { "r1" },
       },
     }
   })
@@ -1508,8 +1466,8 @@ function Test7:testGetOfferedInterfaces_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[2]},
+        name  = "replica",
+        value = { "r2" },
       },
     }
   })
@@ -1518,8 +1476,8 @@ function Test7:testGetOfferedInterfaces_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[3]},
+        name  = "replica",
+        value = { "r3" },
       },
     }
   })
@@ -1528,20 +1486,8 @@ function Test7:testGetOfferedInterfaces_MoreRegisters()
   local succ, offers = self.rsMgt:getOfferedInterfaces()
   Check.assertTrue(succ)
   Check.assertEquals(#offers, 3)
-  -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
     Check.assertEquals(offer.member, self.user)
-    Check.assertEquals(#offer.interfaces, 1)
-    local pos = nil
-    for n, iface in ipairs(ifaces) do
-      if offer.interfaces[1] == iface then
-        Check.assertNil(pos)  -- Repetiu?
-        pos = n
-      end
-    end
-    Check.assertNotNil(pos)   -- Existe?
-    -- Remover para não repetir interface
-    table.remove(ifaces, pos)
   end
 end
 
@@ -1582,12 +1528,6 @@ function Test7:testGetOfferedInterfacesByMember()
 end
 
 function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
-  local ifaces = {
-    "IDL:IHello_v1:1.0",
-    "IDL:IHello_v2:1.0",
-    "IDL:IHello_v3:1.0",
-  }
-
   local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
@@ -1595,8 +1535,8 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[1]},
+        name  = "replica",
+        value = { "r1" },
       },
     }
   })
@@ -1605,8 +1545,8 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[2]},
+        name  = "replica",
+        value = { "r2" },
       },
     }
   })
@@ -1615,8 +1555,8 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[3]},
+        name  = "replica",
+        value = { "r3" },
       },
     }
   })
@@ -1628,17 +1568,6 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
   -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
     Check.assertEquals(offer.member, self.user)
-    Check.assertEquals(#offer.interfaces, 1)
-    local pos = nil
-    for n, iface in ipairs(ifaces) do
-      if offer.interfaces[1] == iface then
-        Check.assertNil(pos)  -- Repetiu?
-        pos = n
-      end
-    end
-    Check.assertNotNil(pos)   -- Existe?
-    -- Remover para não repetir interface
-    table.remove(ifaces, pos)
   end
 end
 
@@ -1681,7 +1610,7 @@ function Test7:testGetUnauthorizedInterfaces()
   end
 end
 
-function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
+function Test7:testGetUnauthorizedInterfaces()
   local ifaces = {
     "IDL:IHello_v1:1.0",
     "IDL:IHello_v2:1.0",
@@ -1695,8 +1624,8 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[1]},
+        name  = "replica",
+        value = { "r1" },
       },
     }
   })
@@ -1705,8 +1634,8 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[2]},
+        name  = "replica",
+        value = { "r2" },
       },
     }
   })
@@ -1715,8 +1644,8 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[3]},
+        name  = "replica",
+        value = { "r3" },
       },
     }
   })
@@ -1728,68 +1657,12 @@ function Test7:testGetUnauthorizedInterfaces_MoreRegisters()
   local succ, offers = self.rsMgt:getUnauthorizedInterfaces()
   Check.assertTrue(succ)
   Check.assertEquals(#offers, 3)
-  -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
     Check.assertEquals(offer.member, self.user)
-    Check.assertEquals(#offer.interfaces, 1)
-    local pos = nil
-    for n, iface in ipairs(ifaces) do
-      if offer.interfaces[1] == iface then
-        Check.assertNil(pos)  -- Repetiu?
-        pos = n
-      end
-    end
-    Check.assertNotNil(pos)   -- Existe?
-    -- Remover para não repetir interface
-    table.remove(ifaces, pos)
   end
 end
 
 function Test7:testGetUnauthorizedInterfacesByMember()
-  local ifaces = {
-    "IDL:IHello_v1:1.0",
-    "IDL:IHello_v2:1.0",
-    "IDL:IHello_v3:1.0",
-  }
-
-  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
-  Check.assertTrue(succ)
-
-  succ, self.rsId01 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {},
-  })
-  Check.assertTrue(succ)
-
-  local succ = self.rsMgt:revoke(self.user, "IDL:*:*")
-  Check.assertTrue(succ)
-
-  local succ, offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
-  Check.assertTrue(succ)
-  Check.assertEquals(#offers, 1)
-  Check.assertEquals(#offers[1].interfaces, 3)
-  Check.assertEquals(offers[1].member, self.user)
-  -- Cada oferta deve corresponder a uma única interface
-  for _, offered in ipairs(offers[1].interfaces) do
-    local pos = nil
-    for n, iface in ipairs(ifaces) do
-      if offered == iface then
-        Check.assertNil(pos)  -- Repetiu?
-        pos = n
-      end
-    end
-    Check.assertNotNil(pos)   -- Existe?
-    -- Remover para não repetir interface
-    table.remove(ifaces, pos)
-  end
-end
-
-function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
-  local ifaces = {
-    "IDL:IHello_v1:1.0",
-    "IDL:IHello_v2:1.0",
-    "IDL:IHello_v3:1.0",
-  }
 
   local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
@@ -1798,8 +1671,8 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[1]},
+        name  = "replica",
+        value = { "r1" },
       },
     }
   })
@@ -1808,8 +1681,8 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[2]},
+        name  = "replica",
+        value = { "r2" },
       },
     }
   })
@@ -1818,8 +1691,8 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
     member = self.member.IComponent,
     properties = {
       {
-        name  = "facets",
-        value = {ifaces[3]},
+        name  = "replica",
+        value = { "r3" },
       },
     }
   })
@@ -1831,20 +1704,8 @@ function Test7:testGetUnauthorizedInterfacesByMember_MoreRegisters()
   local succ, offers = self.rsMgt:getUnauthorizedInterfacesByMember(self.user)
   Check.assertTrue(succ)
   Check.assertEquals(#offers, 3)
-  -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
     Check.assertEquals(offer.member, self.user)
-    Check.assertEquals(#offer.interfaces, 1)
-    local pos = nil
-    for n, iface in ipairs(ifaces) do
-      if offer.interfaces[1] == iface then
-        Check.assertNil(pos)  -- Repetiu?
-        pos = n
-      end
-    end
-    Check.assertNotNil(pos)   -- Existe?
-    -- Remover para não repetir interface
-    table.remove(ifaces, pos)
   end
 end
 
