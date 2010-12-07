@@ -47,6 +47,8 @@ if [ -n "${ACS_PORT}" ]; then
   ACS_PORT_PARAM="--acs-port="${ACS_PORT}
 fi
 
+cd ${OPENBUS_HOME}/specs/management
+
 echo "Iniciando Serviço de Acesso"
 ACSOUTFILE=acs.out
 ACSERRFILE=acs.err
@@ -62,11 +64,8 @@ if ! ( kill -0 ${ACSPID} 2>/dev/null 2>&1 ) ;then
 fi
 
 # Cadastra o ACS e o RS
-cd ${OPENBUS_HOME}/specs/management
 run_management access_control_service.mgt
 run_management registry_service.mgt
-
-
 
 echo "Iniciando Serviço de Registro"
 RGSOUTFILE=rgs.out
@@ -85,11 +84,9 @@ if ! ( kill -0 ${RGSPID} 2>/dev/null 2>&1 ) ;then
 fi
 
 #Cadastra o SS
-cd ${OPENBUS_HOME}/specs/management
 run_management session_service.mgt
 
 #Cadastrar os Monitores
-cd ${OPENBUS_HOME}/specs/management
 run_management monitors.mgt
 
 #Finaliza os serviços
