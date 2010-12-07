@@ -395,7 +395,7 @@ packages = {
       SVNDIR .."/specs/templates/openbus.lua",
     },
     dev_files = {
-      ["../test"] = "core",
+      ["../test/*"] = "core/test",
     },
   },
   { name = "openbus-bin-acs",
