@@ -297,7 +297,7 @@ end
 
 function Test2:testAddGetRemoveSystemDeployment()
   local f, cert, depl, succ, err, added
-  f = io.open(self.certfiles[1])
+  f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   cert = f:read("*a")
   f:close()
@@ -323,7 +323,7 @@ end
 
 function Test2:testAddGetRemoveSystemDeployments()
   local f, cert, succ, err, list
-  f = io.open(self.certfiles[1])
+  f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   cert = f:read("*a")
   f:close()
@@ -358,7 +358,7 @@ end
 
 function Test2:testAddSystemDeployment_SystemDeploymentAlreadyExists()
   local f, cert, depl, succ, err
-  f = io.open(self.certfiles[1])
+  f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   cert = f:read("*a")
   f:close()
@@ -378,7 +378,7 @@ end
 
 function Test2:testAddSystemDeployment_SystemNonExistent()
   local f, cert, depl, succ, err
-  f = io.open(self.certfiles[1])
+  f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   cert = f:read("*a")
   f:close()
@@ -406,7 +406,7 @@ function Test2:testRemoveSystemDeployment_SystemDeploymentNonExistent()
 end
 
 function Test2:testSetSystemDeploymentDescription()
-  local f = io.open(self.certfiles[1])
+  local f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   local cert = f:read("*a")
   f:close()
@@ -444,11 +444,11 @@ function Test2:testGetSystemDeploymentCertificate_SystemDeploymentNonExistent()
 end
 
 function Test2:testSetSystemDeploymentCertificate()
-  local f = io.open(self.certfiles[1])
+  local f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   local cert01 = f:read("*a")
   f:close()
-  f = io.open(self.certfiles[2])
+  f = assert(io.open(self.certfiles[2]))
   Check.assertNotNil(f)
   local cert02 = f:read("*a")
   f:close()
@@ -470,7 +470,7 @@ function Test2:testSetSystemDeploymentCertificate()
 end
 
 function Test2:testSetSystemDeploymentCertificate_SystemDeploymentNonExistent()
-  local f = io.open(self.certfiles[1])
+  local f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   local cert = f:read("*a")
   f:close()
@@ -482,7 +482,7 @@ function Test2:testSetSystemDeploymentCertificate_SystemDeploymentNonExistent()
 end
 
 function Test2:testSetSystemDeploymentCertificate_InvalidCertificate()
-  local f = io.open(self.certfiles[1])
+  local f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   local cert = f:read("*a")
   f:close()
@@ -505,7 +505,7 @@ function Test2:testGetSystemDeployment_SystemDeploymentNonExistent()
 end
 
 function Test2:testGetSystemDeploymentsBySystemId()
-  local f = io.open(self.certfiles[1])
+  local f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   local cert = f:read("*a")
   f:close()
@@ -550,7 +550,7 @@ function Test2:testGetSystemDeploymentsBySystemId()
 end
 
 function Test2:testRemoveSystem_SystemInUse()
-  local f = io.open(self.certfiles[1])
+  local f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   local cert = f:read("*a")
   f:close()
@@ -584,7 +584,7 @@ function Test3:beforeTestCase()
   self.ifaces = {}
   self.systems = {}
   self.deployments = {}
-  local f = io.open(certificate1)
+  local f = assert(io.open(certificate1))
   local cert = f:read("*a")
   f:close()
   for i = 1, 10 do
@@ -668,7 +668,7 @@ function Test4:beforeTestCase()
   self.ifaces = {}
   self.systems = {}
   self.deployments = {}
-  local f = io.open(certificate1)
+  local f = assert(io.open(certificate1))
   local cert = f:read("*a")
   f:close()
   for i = 1, 10 do
