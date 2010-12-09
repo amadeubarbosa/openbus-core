@@ -296,9 +296,11 @@ function init(self)
     self.credentialManager))
   -- Login do serviço para a realização do teste
   local challenge = self.accessControlService:getChallenge(deploymentId)
-  local privateKey = lce.key.readprivatefrompemfile(testKeyFile)
+  local privateKey = assert(lce.key.readprivatefrompemfile(testKeyFile),
+    string.format("Arquivo '%s' não encontrado.",testKeyFile))
   challenge = lce.cipher.decrypt(privateKey, challenge)
-  cert = lce.x509.readfromderfile(acsCertFile)
+  cert = assert(lce.x509.readfromderfile(acsCertFile),
+    string.format("Arquivo '%s' não encontrado.",acsCertFile))
   challenge = lce.cipher.encrypt(cert:getpublickey(), challenge)
   local succ
   succ, self.credential, self.lease =
