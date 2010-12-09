@@ -1,5 +1,4 @@
 #!/bin/ksh
-
 showLog()
 {
   echo "================================ $1 Output Log ==============================="
@@ -18,10 +17,19 @@ run_management()
     ${ACS_PORT_PARAM} ${SCRIPT_PARAM} --verbose=0
 }
 
+run_management_test()
+{
+  cd ${OPENBUS_HOME}/core/test/management
+  run_management test.mgt
+  cd -
+}
+
 LOGIN=$1
 ACS_HOST=$2
 ACS_PORT=$3
 OPENBUS_PATH=$4
+
+RUN_MANAGEMENT_TEST=$5
 
 if [ -n "${OPENBUS_PATH}" ]; then
   OPENBUS_HOME=${OPENBUS_PATH}
@@ -88,6 +96,11 @@ run_management session_service.mgt
 
 #Cadastrar os Monitores
 run_management monitors.mgt
+
+#Verificar se é necessário cadastrar os testes.
+if [ -n "${RUN_MANAGEMENT_TEST}" ]; then
+  run_management_test
+fi
 
 #Finaliza os serviços
 kill -9 ${RGSPID}

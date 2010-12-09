@@ -18,8 +18,8 @@ local Check = require "latt.Check"
 
 local login = "tester"
 local password = "tester"
-local certificate1 = "testManagement01.crt"
-local certificate2 = "testManagement02.crt"
+local certificate1 = "TesteBarramento.crt"
+local certificate2 = "TesteBarramento02.crt"
 
 -------------------------------------------------------------------------------
 -- Faz login com o barramento e recupera as facetas de governança.

@@ -10,7 +10,18 @@ SystemDeployment {
   certificate = "TesteBarramento.crt",
 }
 
+Interface {
+  id = "IDL:IHello_v1:1.0" 
+}
+
+Interface {
+  id = "IDL:IHello_v2:1.0" 
+}
+
 Grant {
   id = "TesteBarramento",
-  interfaces = { "IDL:*:*" },
+  interfaces = { 
+    "IDL:IHello_v1:1.0",
+    "IDL:IHello_v2:1.0", 
+  },
 }

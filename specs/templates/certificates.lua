@@ -10,7 +10,7 @@ messages = {
 
 configure_action = function(answers, path, util)
   local installPath =  path
-  local openSSLGenerate = "../shell/openssl-generate.ksh -n "
+  local openSSLGenerate = installPath .. "/specs/shell/openssl-generate.ksh -n "
   -- Criando chaves dos serviços básicos.
   os.execute(
       "cd " .. installPath .. "/specs/management;" ..
@@ -32,11 +32,17 @@ configure_action = function(answers, path, util)
 
   -- Criando chaves para os testes.
   if string.upper(answers.test):find("SIM") then
-    openSSLGenerate = "../../../specs/specs/shell/openssl-generate.ksh -n "
+    os.execute(
+        "cd " .. installPath .. "/specs/management;" ..
+        "cp AccessControlService.crt ../../core/test/lua;"
+        )
 
     os.execute(
         "cd " .. installPath .. "/core/test/management;" ..
-        openSSLGenerate .. "TesteBarramento;"
+        openSSLGenerate .. "TesteBarramento;" ..
+        openSSLGenerate .. "TesteBarramento02;" ..
+        "cp TesteBarramento.key ../lua;" ..
+        "mv TesteBarramento*.crt ../lua"
         )
   end
 
