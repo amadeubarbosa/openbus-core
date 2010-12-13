@@ -193,6 +193,7 @@ function main()
     os.exit(1)
   end
   Log:info("O serviço de sessão foi iniciado com sucesso")
+  Audit:uptime("O serviço de sessão foi iniciado com sucesso")
 end
 
 local status, errMsg = oil.pcall(oil.main,main)
