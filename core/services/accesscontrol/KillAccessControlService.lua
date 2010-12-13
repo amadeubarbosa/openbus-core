@@ -3,6 +3,8 @@
 local ipairs = ipairs
 local tonumber = tonumber
 
+local format = string.format
+
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local oil = require "oil"
@@ -77,9 +79,9 @@ function main()
   -- Aloca uma thread do OiL para o orb
   Openbus:run()
 
-  Log:faulttolerance("Injetando falha no ACS inicio...")
-
-  Log:faulttolerance(acsAdd)
+  Log:info(format(
+      "Injetando falha no Serviço de Controle de Acesso localizado em %s",
+      acsAdd))
 
   -- autentica o monitor, conectando-o ao barramento
   Openbus:connectByCertificate("ACSMonitor",
@@ -88,9 +90,12 @@ function main()
 
   if Openbus:isConnected() then
      Openbus.ft:setStatus(false)
-     Log:faulttolerance("Injetou falha no ACS -- fim.")
+     Log:info(format(
+      "A falha foi injetada no Serviço de Controle de Acesso localizado em %s",
+      acsAdd))
   else
-     Log:faulttolerance("Erro ao se logar no barramento.")
+     Log:error(
+         "Ocorreu um erro ao fazer a conexão com o serviço de controle de acesso")
   end
 
   Openbus:destroy()

@@ -22,8 +22,20 @@ AccessControlServerConfiguration = {
   --o tempo máximo para o tratamento de falhas
   --vide /conf/FTTimeOutConfiguration.lua
   lease = 180,
-  logLevel = 3,
-  oilVerboseLevel = 1,
+  logs = {
+    service = {
+      level = 5,
+      file = "logs/access_control_service.log",
+    },
+    audit = {
+      level = 1,
+      file = "logs/access_control_service_audit.log",
+    },
+    oil = {
+      level = 5,
+      file = "logs/access_control_service_oil.log",
+    },
+  },
   validators = {
     "core.services.accesscontrol.LDAPLoginPasswordValidator",
     "core.services.accesscontrol.TestLoginPasswordValidator",

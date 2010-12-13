@@ -22,6 +22,8 @@ local pairs    = pairs
 local ipairs   = ipairs
 local next     = next
 
+local format = string.format
+
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 ---
@@ -112,7 +114,9 @@ componentId.platform_spec = ""
 function SessionService:createSession(member)
   local credential = Openbus:getInterceptedCredential()
   if self.sessions[credential.identifier] then
-    Log:err("Tentativa de criar sessão já existente")
+    Log:warn(format(
+        "A credencial {%s, %s, %s} tentou criar uma sessão e esta já existe",
+        credential.identifier, credential.owner, credential.delegate))
     return false, nil, self.invalidMemberIdentifier
   end
   -- Cria nova sessão
@@ -123,7 +127,9 @@ function SessionService:createSession(member)
   component.ISession.sessionService = self
   component.SessionEventSink.sessionService = self
   self.sessions[credential.identifier] = component
-  Log:session("Sessão criada com id "..component.ISession.identifier)
+  Log:debug(format("A credencial {%s. %s, %s} criou a sessão %s",
+      credential.identifier, credential.owner, credential.delegate,
+      component.ISession.identifier))
 
   -- A credencial deve ser observada!
   local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
@@ -164,8 +170,9 @@ function SessionService:credentialWasDeletedById(credentialId)
   -- Remove a sessão que o membro possui
   local component = self.sessions[credentialId]
   if component then
-    Log:session("Removendo sessão de credencial deletada ("..
-        credentialId..")")
+    Log:debug(format(
+        "A credencial %s deixou de ser válida e sua sessão foi removida",
+        credentialId))
     orb:deactivate(component.ISession)
     orb:deactivate(component.IMetaInterface)
     orb:deactivate(component.SessionEventSink)
@@ -239,7 +246,8 @@ function SessionService:getSession()
   local credential = Openbus:getInterceptedCredential()
   local session = self.sessions[credential.identifier]
   if not session then
-    Log:warn("Não há sessão para "..credential.identifier)
+    Log:warn(format("A credencial {%s, %s, %s} não possui sessão",
+        credential.identifier, credential.owner, credential.delegate))
     return nil
   end
   return session.IComponent
@@ -252,7 +260,7 @@ function SessionService:expired()
 
   local acsFacet = Openbus:getAccessControlService()
   if not acsFacet then
-    Log:error("Falha ao reconectar o Serviço de Sessão: ACS não encontrado.")
+    Log:error("Não foi possível reconectar o serviço de sessão.O serviço de controle de acesso não foi encontrado")
     return false
   end
 
@@ -260,17 +268,19 @@ function SessionService:expired()
   self.observerId = acsFacet:addObserver(
       self.context.ICredentialObserver, {}
   )
-  Log:session("Observador recadastrado")
+  Log:debug(format(
+      "O observador de credenciais foi recadastrado com o identificador %s",
+      self.observerId))
 
   -- Mantém apenas as sessões com credenciais válidas
   local invalidCredentials = {}
   for credentialId, sessions in pairs(self.observed) do
     if not acsFacet:addCredentialToObserver(self.observerId,
         credentialId) then
-      Log:session("Sessão para "..credentialId.." será removida")
+      Log:debug(format("A sessão da credencial %s será removida", credentialId))
       table.insert(invalidCredentials, credentialId)
     else
-      Log:session("Sessão para "..credentialId.." será mantida")
+      Log:debug(format("A sessão da credencial %s será mantida", credentialId))
     end
   end
   for _, credentialId in ipairs(invalidCredentials) do
@@ -284,14 +294,14 @@ end
 --@see scs.core.IComponent#startup
 ---
 function SessionService:startup()
-  -- conecta-se com o controle de acesso:   [SS]--( 0--[ACS]
   local acsIComp = Openbus:getACSIComponent()
   local success, conId =
     oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
               "AccessControlServiceReceptacle", acsIComp)
   if not success then
-    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
-    Log:error(conId)
+    Log:error(
+        "Ocorreu um erro ao conectar com o serviço de controle de acesso: ",
+        conId)
     error{"IDL:SCS/StartupFailed:1.0"}
  end
 end

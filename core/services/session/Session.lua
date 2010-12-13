@@ -64,22 +64,31 @@ function Session:addMember(member)
     self.sessionService:observe(info.credentialId, self)
   end
   members[info.memberId] = info
-  local memberName = member:getComponentId().name
-  Log:session("Membro "..memberName.." adicionado à sessão "..self.identifier)
+  local componentId = member:getComponentId()
+  Log:info(format("O membro %s:%d.%d.%d adicionado à sessão %s",
+      componentId.name, componentId.major_version, componentId.minor_version,
+      componentId.patch_version, self.identifier))
+
   -- Verifica se o membro recebe eventos
   local eventSink = member:getFacet(eventSinkInterface)
   local eventSinkPrev = member:getFacet(eventSinkInterfacePrev)
   if eventSink then
-    Log:session("Membro "..memberName.." receberá eventos")
+    Log:debug(format("O membro %s:%d.%d.%d receberá eventos", componentId.name,
+        componentId.major_version, componentId.minor_version,
+        componentId.patch_version))
     self.context.SessionEventSink.eventSinks[info.memberId] =
       orb:narrow(eventSink, eventSinkInterface)
   else
     if eventSinkPrev then
-      Log:session("Membro "..memberName.." receberá eventos da versão " .. Utils.OB_PREV)
+      Log:debug("O membro %s:%d.%d.%d receberá eventos da versão %d",
+          componentId.name, componentId.major_version, componentId.minor_version,
+          componentId.patch_version, Utils.OB_PREV)
       self.context.SessionEventSink.eventSinksPrev[info.memberId] =
         orb:narrow(eventSinkPrev, eventSinkInterfacePrev)
     else
-      Log:session("Membro "..memberName.." não receberá eventos")
+      Log:warn(format("O membro %s:%d.%d.%d não receberá eventos",
+          componentId.name, componentId.major_version, componentId.minor_version,
+          componentId.patch_version))
     end
   end
   return info.memberId
@@ -100,8 +109,10 @@ function Session:removeMember(identifier)
       ": não faz parte da sessão "..self.identifier)
     return false
   end
-  Log:session("Membro "..info.member:getComponentId().name..
-    " removido da sessão "..self.identifier)
+  local componentId = info.member:getComponentId()
+  Log:info(format("O membro %s:%d.%d.%d foi removido da sessão %s",
+      componentId.name, componentId.major_version, componentId.minor_version,
+      componentId.patch_version, self.identifier))
   self.sessionMembers[info.memberId] = nil
   self.membersByCredential[info.credentialId][info.memberId] = nil
   self.context.SessionEventSink.eventSinks[info.memberId] = nil
@@ -166,17 +177,21 @@ end
 --@param event O evento.
 ---
 function SessionEventSink:push(sender, event)
-  Log:session("O membro "..sender.." enviou o evento "..event.type)
+  Log:info(format("O membro %s enviou um evento do tipo %s", sender,
+      event.type))
+
   for memberId, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.push, sink, sender, event)
     if not result then
-      Log:session("Erro ao enviar evento para membro de sessão " .. Utils.OB_VERSION .. ": " .. errorMsg)
+      Log:debug(format("Falha ao tentar enviar um evento do tipo %s ao membro %s (versão %s",
+          event.type, memberId, Utils.OB_VERSION), errorMsg)
     end
   end
   for memberId, sink in pairs(self.eventSinksPrev) do
     local result, errorMsg = oil.pcall(sink.push, sink, event)
     if not result then
-      Log:session("Erro ao enviar evento para membro de sessão " .. Utils.OB_PREV .. ": "..errorMsg)
+      Log:debug(format("Falha ao tentar enviar um evento do tipo %s ao membro %s (versão %s)",
+          event.type, memberId, Utils.OB_PREV),errorMsg)
     end
   end
 end
@@ -185,17 +200,21 @@ end
 --Solicita a desconexão de todos os membros da sessão.
 ---
 function SessionEventSink:disconnect(sender)
-  Log:session("O membro "..sender.." enviou um pedido de fim de conexão")
+  Log:info(format("O membro %s enviou um evento de desconexão", sender))
+
   for memberId, sink in pairs(self.eventSinks) do
     local result, errorMsg = oil.pcall(sink.disconnect, sink, sender)
     if not result then
-      Log:session("Erro ao tentar desconectar membro de sessão " .. Utils.OB_VERSION .. ": "..errorMsg)
+      Log:warn(format("Falha ao tentar enviar um evento de desconexão ao membro %s (versão %s)",
+          memberId, Utils.OB_VERSION), errorMsg)
     end
   end
   for memberId, sink in pairs(self.eventSinksPrev) do
     local result, errorMsg = oil.pcall(sink.disconnect, sink)
     if not result then
-      Log:session("Erro ao tentar desconectar membro de sessão " .. Utils.OB_PREV .. ": "..errorMsg)
+      Log:warn(format("Falha ao tentar enviar um evento de desconexão ao membro %s (versão %s)",
+          memberId, Utils.OB_PREV), errorMsg)
     end
   end
 end
+

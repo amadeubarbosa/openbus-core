@@ -10,7 +10,6 @@ local oil = require "oil"
 local orb = oil.orb
 
 local tostring = tostring
-local print = print
 local pairs = pairs
 
 --local IComponent = require "scs.core.IComponent"
@@ -63,14 +62,15 @@ function FTRSMonitorFacet:getService()
   local status, conns = oil.pcall(recep.getConnections, recep,
       "IFaultTolerantService")
   if not status then
-    log:error("Nao foi possivel obter o Serviço: " .. conns[1])
+    Log:error("Não foi possível obter o a faceta de tolerância a falhas do serviço de registro",
+        conns)
     return nil
   elseif conns[1] then
     local service = conns[1].objref
     service = Openbus:getORB():narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
     return orb:newproxy(service, "protected")
   end
-  log:error("Nao foi possivel obter o Serviço.")
+  Log:error("Não foi possível obter o a faceta de tolerância a falhas do serviço de registro")
   return nil
 end
 
@@ -122,7 +122,6 @@ end
 --Monitora o serviÃ§o de registro e cria uma nova rÃ©plica se necessÃ¡rio.
 ---
 function FTRSMonitorFacet:monitor()
-  Log:faulttolerance("[Monitor SR] Inicio")
   local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
   local ftRec = self.context.IReceptacles
   ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
@@ -131,19 +130,21 @@ function FTRSMonitorFacet:monitor()
     local reinit = false
     local service = self:getService()
     local ok, res = service:isAlive()
-    Log:faulttolerance("[Monitor SR] isAlive? "..tostring(ok))
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
     if ok then
       --se objeto remoto estÃ© em estado de falha, precisa ser reinicializado
       if not res then
         reinit = true
-        Log:faulttolerance("[Monitor SR] Servico de registro em estado de falha. Matando o processo...")
+          Log:debug("O serviço de registro está em estado de falha. O serviço será finalizado")
         --pede para o objeto se matar
         self:getService():kill()
       end
     else
-      Log:faulttolerance("[Monitor SR] Servico de registro nao esta disponivel...")
+      Log:info(format(
+          "O serviço de registro localizado em {%s:%d} não está acessível",
+          self.config.hostName, self.config.hostPort))
+
       -- ocorreu falha de comunicacao com o objeto remoto
       reinit = true
     end
@@ -151,7 +152,7 @@ function FTRSMonitorFacet:monitor()
     if not reinit then
       oil.sleep(timeOut.monitor.sleep)
     else
-      Log:faulttolerance("Enviando email para o administrador do barramento.")
+      Log:info("Enviando email para o administrador do barramento")
       self:sendMail()
 
       local timeToTry = 0
@@ -160,13 +161,11 @@ function FTRSMonitorFacet:monitor()
         if self.recConnId ~= nil then
           local status, void = oil.pcall(ftRec.disconnect, ftRec, self.recConnId)
           if not status then
-            print("[IReceptacles::IReceptacles] Error while calling disconnect")
-            print("[IReceptacles::IReceptacles] Error: " .. void)
+            Log:error("Não foi possível desconectar o serviço de registro do receptáculo")
             return
           end
-          Log:faulttolerance("[Monitor SR] disconnect executed successfully!")
         end
-        Log:faulttolerance("[Monitor SR] Levantando Servico de registro...")
+        Log:info("Reiniciando o serviço de registro...")
 
         --Criando novo processo assincrono
         if self:isUnix() then
@@ -199,8 +198,9 @@ function FTRSMonitorFacet:monitor()
               os.exit(1)
             end
         else
-          Log:faulttolerance("[Monitor SR] Nao conseguiu levantar RS de primeira porque porta esta bloqueada.")
-          Log:faulttolerance("[Monitor SR] Espera " .. tostring(timeOut.monitor.sleep) .." segundos......")
+          Log:warn(format(
+              "Não foi possível reiniciar o serviço de registro possivelmente porque porta está bloqueada. Aguardando %d segundos para nova tentativa",
+              timeOut.monitor.sleep))
           oil.sleep(timeOut.monitor.sleep)
         end
 
@@ -211,7 +211,7 @@ function FTRSMonitorFacet:monitor()
          os.exit(1)
       end
 
-      Log:faulttolerance("[Monitor SR] Servico de registro criado.")
+      Log:info("O serviço de registro foi reiniciado")
     end --fim reinit
   end --fim while
 end
@@ -242,7 +242,7 @@ function startup(self)
       "synchronous",
       Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
   if ftrsService:_non_existent() then
-    Log:error("Servico de registro nao encontrado.")
+    Log:error("O serviço de registro não foi encontrado")
     os.exit(1)
   end
 
@@ -256,7 +256,6 @@ function startup(self)
   end
 
   monitor.recConnId = connId
-  Log:init("Monitor do servico de registro iniciado com sucesso")
 end
 
 

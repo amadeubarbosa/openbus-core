@@ -6,22 +6,24 @@
 -----------------------------------------------------------------------------
 local tonumber = tonumber
 
+local format = string.format
+
 local oil = require "oil"
+
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
+local Audit = require "openbus.util.Audit"
 local Utils = require "openbus.util.Utils"
-
--- Inicialização do nível de verbose do openbus.
-Log:level(1)
 
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
-  Log:error("A variavel OPENBUS_DATADIR nao foi definida.\n")
+  Log:error("A variavel OPENBUS_DATADIR não foi definida")
   os.exit(1)
 end
 
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/SessionServerConfiguration.lua"))()
+local ssConfig = SessionServerConfiguration
 local iConfig =
   assert(loadfile(DATA_DIR.."/conf/advanced/SSInterceptorsConfiguration.lua"))()
 
@@ -36,21 +38,52 @@ local usage_msg = [[
   So '--help' or '-help' or yet 'help' all are the same option.]]
 local arguments = Utils.parse_args(arg,usage_msg,true)
 
-if arguments.verbose == "" then
-  oil.verbose:level(5)
-else
-  if SessionServerConfiguration.oilVerboseLevel then
-      oil.verbose:level(SessionServerConfiguration.oilVerboseLevel)
+if arguments.verbose == "" or arguments.v == "" then
+  ssConfig.logs.service.level = 5
+  ssConfig.logs.oil.level = 5
+end
+if arguments.port then
+  ssConfig.sessionServerHostPort = tonumber(arguments.port)
+end
+
+-- Configurando os logs
+Log:level(ssConfig.logs.service.level)
+Audit:level(ssConfig.logs.audit.level)
+oil.verbose:level(ssConfig.logs.oil.level)
+
+local serviceLogFile
+if ssConfig.logs.service.file then
+  local errMsg
+  serviceLogFile, errMsg = Utils.setVerboseOutputFile(Log,
+      ssConfig.logs.service.file)
+  if not serviceLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de log do serviço de sessão: %s",
+        errMsg))
   end
 end
 
-if arguments.port then
-  SessionServerConfiguration.sessionServerHostPort = tonumber(arguments.port)
+local auditLogFile
+if ssConfig.logs.audit.file then
+  local errMsg
+  auditLogFile, errMsg = Utils.setVerboseOutputFile(Audit,
+      ssConfig.logs.audit.file)
+  if not auditLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de auditoria: %s", errMsg))
+  end
 end
 
--- Seta os níveis de verbose para o openbus e para o oil
-if SessionServerConfiguration.logLevel then
-  Log:level(SessionServerConfiguration.logLevel)
+local oilLogFile
+if ssConfig.logs.oil.file then
+  local errMsg
+  oilLogFile, errMsg =
+      Utils.setVerboseOutputFile(oil.verbose, ssConfig.logs.oil.file)
+  if not oilLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de log do OiL: %s",
+        errMsg))
+  end
 end
 
 props = {  host = SessionServerConfiguration.sessionServerHostName,
@@ -68,7 +101,7 @@ local orb = Openbus:getORB()
 -- Carrega a IDL do serviço
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if not IDLPATH_DIR then
- log:error("Serviço de Sessão: A variável IDLPATH_DIR não foi definida.")
+ log:error("A variável IDLPATH_DIR não foi definida")
  return false
 end
 local idlfile = IDLPATH_DIR .. "/v"..Utils.OB_VERSION.."/session_service.idl"
@@ -145,7 +178,9 @@ function main()
   success, res = oil.pcall(scs.newComponent, facetDescriptions, receptacleDescs,
       componentId)
   if not success then
-    Log:error("Falha criando componente: "..tostring(res).."\n")
+    Log:error(format(
+        "Ocorreu um erro ao criar o componente do serviço de sessão: %s",
+        tostring(res)))
     os.exit(1)
   end
   res.IComponent.config = SessionServerConfiguration
@@ -153,10 +188,27 @@ function main()
   success, res = oil.pcall(sessionServiceComponent.startup,
       sessionServiceComponent)
   if not success then
-    Log:error("Falha ao iniciar o serviço de sessão: "..tostring(res).."\n")
+    Log:error(format("Ocorreu um erro ao iniciar o serviço de sessão: ",
+      tostring(res)))
     os.exit(1)
   end
-  Log:init("Serviço de sessão iniciado com sucesso")
+  Log:info("O serviço de sessão foi iniciado com sucesso")
 end
 
-print(oil.pcall(oil.main,main))
+local status, errMsg = oil.pcall(oil.main,main)
+
+if serviceLogFile then
+  serviceLogFile:close()
+end
+if auditLogFile then
+  auditLogFile:close()
+end
+if oilLogFile then
+  oilLogFile:close()
+end
+
+if not status then
+  Log:error(format(
+      "Ocorreu uma falha na execução do serviço de sessão: %s",
+      errMsg))
+end

@@ -3,10 +3,11 @@
 local ipairs = ipairs
 local tonumber = tonumber
 
+local format = string.format
+
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local oil = require "oil"
-local Utils = require "openbus.util.Utils"
 local Utils = require "openbus.util.Utils"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
@@ -82,16 +83,16 @@ function main()
   -- Aloca uma thread do OiL para o orb
   Openbus:run()
 
-  Log:faulttolerance("Injetando falha no Serviço de Registro inicio...")
-
-  Log:faulttolerance("corbaloc::"..hostAdd.."/"..Utils.FAULT_TOLERANT_RS_KEY)
+  Log:info(format(
+      "Injetando falha no Serviço de Controle de Acesso localizado em %s",
+      hostAdd))
 
   local ftregistryService = orb:newproxy("corbaloc::"..hostAdd.."/"
        ..Utils.FAULT_TOLERANT_RS_KEY,
        "synchronous",
        Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
   if ftregistryService:_non_existent() then
-      Log:error("Servico de registro nao encontrado.")
+      Log:error("O serviço de registro não foi encontrado")
       os.exit(1)
   end
 
@@ -102,10 +103,12 @@ function main()
 
   if Openbus:isConnected() then
      ftregistryService:setStatus(false)
-     Log:faulttolerance("Injetou falha no Servico de Registro -- fim.")
+     Log:info (format(
+         "A falha foi injetada no serviço de registro localizado em %s", hostAdd))
      Openbus:disconnect()
   else
-     Log:faulttolerance("Erro ao se logar no barramento.")
+     Log:error(
+         "Ocorreu um erro ao fazer a conexão com o serviço de controle de acesso")
   end
 
   Openbus:destroy()

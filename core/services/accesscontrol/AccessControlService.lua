@@ -34,6 +34,7 @@ local CredentialDB  = require "core.services.accesscontrol.CredentialDB"
 local CertificateDB = require "core.services.accesscontrol.CertificateDB"
 
 local Log = require "openbus.util.Log"
+local Audit = require "openbus.util.Audit"
 
 local scs = require "scs.core.base"
 
@@ -76,16 +77,24 @@ ACSFacet.faultDescription = {_isAlive = false, _errorMsg = "" }
 --com sucesso, ou false e uma credencial e uma lease inválidos, caso contrário.
 ---
 function ACSFacet:loginByPassword(name, password)
+  if #self.loginPasswordValidators == 0 then
+    Log:error("Não há validadores de senha cadastrados")
+    return false, self.invalidCredential, self.invalidLease
+  end
+
   for _, validator in ipairs(self.loginPasswordValidators) do
     local result, err = validator:validate(name, password)
     if result then
       local entry = self:addEntry(name)
+      Audit:login_password(format("O usuário {%s, %s} executou um login",
+          entry.credential.identifier, entry.credential.owner))
       return true, entry.credential, entry.lease.duration
     else
-      Log:warn(format("Erro ao validar o usuário %s: %s", name, err))
+      Log:debug(format("Ocorreu um erro ao validar o usuário %s: %s", name, err))
     end
   end
-  Log:error("usuário "..name.." não pôde ser validado no sistema.")
+
+  Log:warn(format("O usuário %s não pôde ser validado", name))
   return false, self.invalidCredential, self.invalidLease
 end
 
@@ -103,14 +112,18 @@ end
 function ACSFacet:loginByCertificate(name, answer)
   local challenge = self.challenges[name]
   if not challenge then
-    Log:error("Nao existe desafio para "..name)
+    Log:warn(format("Nao existe desafio para a entidade %s", name))
     return false, self.invalidCredential, self.invalidLease
   end
+
   local errorMessage
   answer, errorMessage = lce.cipher.decrypt(self.privateKey, answer)
+  if not answer then
+    Log:error(format("Ocorreu um erro ao descriptografas a resposta de %s: %s",
+        name, errorMessage))
+  end
   if answer ~= challenge then
-    errorMessage = errorMessage or "desafio inválido"
-    Log:error(format("Erro ao obter a resposta de %s: %s", name, errorMessage))
+    Log:warn(format("A resposta de %s está incorreta", name))
     return false, self.invalidCredential, self.invalidLease
   end
   self.challenges[name] = nil
@@ -133,27 +146,23 @@ function ACSFacet:loginByCertificate(name, answer)
                 Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
               if ret and succ then
                 --encontrou outra replica
-                Log:faulttolerance("[loginByCertificate] Verificando credencial na replica "
-                  .. ftFacet.ftconfig.hosts.ACS[i] ..".")
+                -- Verificando credencial na replica
                 stop = remoteACSFacet:isValid(interceptedCredential)
-              else
-                Log:faulttolerance("[loginByCertificate] Credencial nao encontrada na replica "
-                  .. ftFacet.ftconfig.hosts.ACS[i]..".")
               end -- fim succ
             end -- fim , nao eh a mesma replica
             i = i + 1
           until stop or i > #ftFacet.ftconfig.hosts.ACS
           if stop then
             local entry = self:addEntryWithCredential(name, interceptedCredential, true)
-            Log:faulttolerance("[loginByCertificate] Credencial validada e inserida")
+            -- Credencial validada e inserida
             return true, entry.credential, entry.lease.duration
           else
-            Log:error("[loginByCertificate] Replica do ACS "..name.." não pôde ser validado no sistema.")
+            Log:error(format("A credencial {%s, %s, %s} de uma réplica não pôde ser validada no sistema",
+                interceptedCredential.identifier, interceptedCredential.owner, interceptedCredential.delegate))
             return false, self.invalidCredential, self.invalidLease
           end--fim stop
         end --fim, if qt de replicas > 1
       else --ja tem entrada
-        Log:faulttolerance("[loginByCertificate] Credencial do ACS ja existente")
         return true, entry.credential, entry.lease.duration
       end
     end -- fim, eh o ACS
@@ -161,7 +170,11 @@ function ACSFacet:loginByCertificate(name, answer)
 
   --se chegou aqui, nao tem credencial ou tem mas nao eh o ACS, loga normalmente
   local entry = self:addEntry(name, true)
-  Log:access_control("Usuario [" .. name .. "] logado com credencial [".. entry.credential.identifier .."].")
+  Log:debug(format("A entidade %s foi autenticada com sucesso", name))
+
+  Audit:login_certificate(format("O sistema {%s, %s, %s} executou um login",
+      entry.credential.identifier, entry.credential.owner,
+      entry.credential.delegate))
   return true, entry.credential, entry.lease.duration
 end
 
@@ -178,11 +191,12 @@ function ACSFacet:getChallenge(name)
   local mgm = self.context.IManagement
   local succ, cert = oil.pcall(mgm.getSystemDeploymentCertificate, mgm, name)
   if succ then
-    Log:access_control("Desafio obtido do Management para usuario [" .. name .. "] com certificado.")
+    Log:debug(format("O certificado da entidade %s foi encontrado", name))
     return self:generateChallenge(name, lce.x509.readfromderstring(cert))
+  else
+    Log:warn(format("Não foi possível obter o certificado da entidade %s", name))
+    return ""
   end
-  Log:error("Erro ao obter a desafio de : " .. name)
-  return ""
 end
 
 ---
@@ -194,14 +208,12 @@ end
 --@return O desafio.
 ---
 function ACSFacet:generateChallenge(name, certificate)
-  Log:access_control("Gerando desafio para ("..name..")")
   local randomSequence = tostring(luuid.new("time"))
   self.challenges[name] = randomSequence
   local key = certificate:getpublickey()
-  if key then
-    Log:access_control("Chave privada obtida.")
-  else
-    Log:error("Não foi possível obter a chave privada.")
+  if not key then
+    Log:error(format("Não foi possível obter a chave pública da entidade %s",
+        name))
     return ""
   end
   local ret, erroMsg = lce.cipher.encrypt(key, randomSequence)
@@ -226,6 +238,8 @@ function ACSFacet:logout(credential)
     return false
   end
   self:removeEntry(entry)
+  Audit:logout(format("A credencial {%s, %s, %s} executou um logout",
+      credential.identifier, credential.owner, credential.delegate))
 
   local interceptedCredential = Openbus:getInterceptedCredential()
   if interceptedCredential then
@@ -237,14 +251,13 @@ function ACSFacet:logout(credential)
   end
 
   local ftFacet = self.context.IFaultTolerantService
-  if not ftFacet.ftconfig then
-    Log:faulttolerance("[logout] Faceta precisa ser inicializada antes de ser chamada.")
-    Log:warn("[logout] não foi possível executar 'logout' nas replicas")
+  if not ftFacet:isFTInited() then
     return true
   end
 
   if #ftFacet.ftconfig.hosts.ACS <= 1 then
-    Log:faulttolerance("[logout] Nenhuma replica para deslogar credencial.")
+    Log:debug(format("Não existem réplicas cadastradas para deslogar a credencial {%s, %s, %s}",
+        credential.identifier, credential.owner, credential.delegate))
     return true
   end
 
@@ -256,16 +269,15 @@ function ACSFacet:logout(credential)
         Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
       if ret and succ then
         --encontrou outra replica
-        Log:faulttolerance("[logout] Requisitou [logout] na replica "
-          .. ftFacet.ftconfig.hosts.ACS[i] ..".")
+        Log:debug(format("Requisitou logout na replica %s",
+            ftFacet.ftconfig.hosts.ACS[i]))
             oil.newthread(function()
                 local succ, ret = oil.pcall(
                   remoteACSFacet.logout, remoteACSFacet,
                   credential)
                 end)
       else
-        Log:faulttolerance("[logout] Replica [".. ftFacet.ftconfig.hosts.ACS[i]
-                           .."] nao encontrada.")
+        Log:warn(format("A réplica %s não foi encontrada", ftFacet.ftconfig.hosts.ACS[i]))
       end -- fim succ, encontrou replica
     end -- fim , nao eh a mesma replica
     i = i + 1
@@ -282,8 +294,6 @@ end
 --@return true caso a credencial seja válida, ou false caso contrário.
 ---
 function ACSFacet:isValid(credential)
-  Log:access_control("Validando a credencial {"..credential.identifier.." - "..
-    credential.owner.."/"..credential.delegate.."}")
   local entry = self.entries[credential.identifier]
   if not entry then
     --VAI BUSCAR NAS REPLICAS
@@ -302,24 +312,25 @@ function ACSFacet:isValid(credential)
 
     if not entry then
     --realmente não encontrou
-      Log:access_control("A credencial {"..credential.identifier.." - "..
-       credential.owner.."/"..credential.delegate.."} não é válida.")
+      Log:debug(format("A credencial {%s, %s, %s} não é válida",
+          credential.identifier, credential.owner, credential.delegate))
       return false
     end
   end
 
   if credential.owner ~= entry.credential.owner then
-    Log:access_control("A credencial {"..credential.identifier.." - "..
-        credential.owner.."/"..credential.delegate.."} não é válida.")
+    Log:debug(format("A credencial {%s, %s, %s} não é válida",
+        credential.identifier, credential.owner, credential.delegate))
     return false
   end
   if credential.delegate ~= "" and not entry.certified then
-    Log:access_control("A credencial {"..credential.identifier.." - "..
-        credential.owner.."/"..credential.delegate.."} não é válida.")
+    Log:debug(format("A credencial {%s, %s, %s} não é válida",
+        credential.identifier, credential.owner, credential.delegate))
     return false
   end
-  Log:access_control("A credencial {"..credential.identifier.." - "..
-    credential.owner.."/"..credential.delegate.."} é válida.")
+
+  Log:debug(format("A credencial {%s, %s, %s} é válida",
+      credential.identifier, credential.owner, credential.delegate))
   return true
 end
 
@@ -335,7 +346,13 @@ function ACSFacet:areValid(credentials)
   local areValid = {}
   for _, credential in ipairs(credentials) do
     local result = self:isValid(credential)
-    Log:access_control(credential.identifier.." - "..tostring(result))
+    if result then
+      Log:debug(format("A credencial {%s, %s, %s} é válida",
+          credential.identifier, credential.owner, credential.delegate))
+    else
+      Log:debug(format("A credencial {%s, %s, %s} não é válida",
+          credential.identifier, credential.owner, credential.delegate))
+    end
     table.insert(areValid, result)
   end
   return areValid
@@ -391,18 +408,13 @@ function ACSFacet:getEntryCredential(credential)
   local entry = self.entries[credential.identifier]
 
   if not entry then
-    Log:access_control("Nao encontrou credencial, retorna entrada de credencial vazia")
+    Log:debug(format("A credencial {%s, %s, %s} não foi encontrada",
+        credential.identifier, credential.owner, credential.delegate))
     return emptyEntry
   end
-  if entry.credential.identifier ~= credential.identifier then
-    Log:access_control("Encontrou credencial porem nao coincide com o identificador da credencial local, retorna entrada de credencial vazia")
-    return emptyEntry
-  end
-  if entry.credential.delegate ~= "" and not entry.certified then
-    Log:access_control("Encontrou credencial porem possui delegate e não é certificada, retorna entrada de credencial vazia")
-    return emptyEntry
-  end
-  Log:access_control("Encontrou credencial e retorna sua entrada completa.")
+  Log:debug(format("A credencial {%s, %s, %s} foi encontrada",
+      entry.credential.identifier, entry.credential.owner,
+      entry.credential.delegate))
   local retEntry = {  aCredential = entry.credential,
                       certified = entry.certified or false,
                       observers = entry.observers or {},
@@ -444,7 +456,7 @@ function ACSFacet:getAllEntryCredential()
       end
     end
   end
-  Log:access_control("[getAllEntryCredential]Recuperando todas as [" .. tostring(i) .."] entradas")
+  Log:debug("Obtendo todas as %d credenciais", i)
   return retEntries
 end
 
@@ -460,13 +472,15 @@ end
 function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifier)
   local entry = self.entries[credentialIdentifier]
   if not entry then
-    Log:access_control("Não existe credencial com identificador: {"..credentialIdentifier .. "}")
+    Log:warn("Não foi possível adicionar a credential %s ao observador %s, pois a referida credencial não existe",
+        credentialIdentifier, observerIdentifier)
     return false
   end
 
   local observerEntry = self.observers[observerIdentifier]
   if not observerEntry then
-    Log:access_control("Não existe observador com identificador: {"..observerIdentifier .. "}")
+    Log:warn("Não foi possível adicionar a credential %s ao observador %s, pois o referido observador não existe",
+        credentialIdentifier, observerIdentifier)
     return false
   end
 
@@ -545,9 +559,8 @@ function ACSFacet:addEntry(name, certified)
   }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
-  Log:access_control(string.format("[addEntry] A credencial {%s} foi" ..
-      " adicionada com lease de %d segundos.",entry.credential.identifier,
-      entry.lease.duration))
+  Log:debug(format("A credencial {%s, %s, %s} foi adicionada",
+      credential.identifier, credential.owner, credential.delegate))
   return entry
 end
 
@@ -573,9 +586,10 @@ function ACSFacet:addEntryWithCredential(name, credential, certified)
   }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
-  Log:access_control("[addEntry] A credencial {"
-     ..entry.credential.identifier.."} foi adicionada com lease de "
-     .. entry.lease.duration ..".")
+  Log:debug(format(
+      "A credencial {%s, %s, %s} foi adicionada e será válida por %d segundos",
+      entry.credential.identifier, entry.credential.owner,
+      entry.credential.delegate, entry.lease.duration))
   return entry
 end
 
@@ -591,9 +605,10 @@ function ACSFacet:addEntryCredential(entry)
   entry.lease = { lastUpdate = os.time(), duration = duration }
   self.credentialDB:insert(entry)
   self.entries[entry.credential.identifier] = entry
-  Log:access_control("[addEntryCredential] A credencial {"
-     ..entry.credential.identifier.."} foi adicionada com lease de "
-     .. entry.lease.duration ..".")
+  Log:debug(format(
+      "A credencial {%s, %s, %s} foi adicionada e será válida por %d segundos",
+      entry.credential.identifier, entry.credential.owner,
+      entry.credential.delegate, entry.lease.duration))
   return entry
 end
 
@@ -683,9 +698,7 @@ LeaseProviderFacet = oop.class{}
 ---
 function LeaseProviderFacet:renewLease(credential)
   self = self.context.IAccessControlService
-  Log:lease(credential.owner.. " renovando lease.")
   if not self:isValid(credential) then
-    Log:warn(credential.owner.. " credencial inválida.")
     return false, self.invalidLease
   end
   local now = os.time()
@@ -1218,17 +1231,17 @@ function ManagementFacet:updateManagementStatus(command, data)
     --para nao entrar em loop
     return
   end
-  Log:faulttolerance("[updateManagementStatus] Atualiza estado da gerencia para o comando[".. command .."].")
+
   local ftFacet = self.context.IFaultTolerantService
-  if not ftFacet.ftconfig then
-    Log:faulttolerance("[updateManagementStatus] Faceta precisa ser inicializada antes de ser chamada.")
-    Log:warn("[updateManagementStatus] não foi possível executar 'updateManagementStatus'")
-    return false
+  if not ftFacet:isFTInited() then
+    return
   end
 
-  if # ftFacet.ftconfig.hosts.ACS <= 1 then
-    Log:faulttolerance("[updateManagementStatus] Nenhuma replica para atualizar estado da gerencia.")
-    return false
+  if #ftFacet.ftconfig.hosts.ACS <= 1 then
+    Log:debug(format(
+        "Não existem réplicas cadastradas para atualizar o estado da gerência para o comando %s",
+        command))
+    return
   end
 
   local orb = Openbus:getORB()
@@ -1242,7 +1255,8 @@ function ManagementFacet:updateManagementStatus(command, data)
 
       if ret and succ then
         --encontrou outra replica
-        Log:faulttolerance("[updateManagementStatus] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
+        Log:debug(format("Requisitou comando %s na réplica %s", command,
+            ftFacet.ftconfig.hosts.ACSIC[i]))
         -- Recupera faceta IManagement da replica remota
         local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement_v"..Utils.OB_VERSION)
         if ok then
@@ -1304,16 +1318,11 @@ function ManagementFacet:updateManagementStatus(command, data)
                                           data.id, data.name)
               end)
           end
-          Log:faulttolerance("[updateManagementStatus] Replica "..
-                             ftFacet.ftconfig.hosts.ACS[i] ..
-                             " atualizada quanto ao estado das interfaces e autorizacoes para o comando["..
-                             command .."].")
         end -- fim ok facet IManagement
       else
-        Log:faulttolerance("[updateManagementStatus] Replica "..
-                           ftFacet.ftconfig.hosts.ACS[i] ..
-                           " não está disponível e não pode ser atualizada quanto quanto ao estado das interfaces e autorizacoes para o comando["..
-                           command .."].")
+        Log:error(format(
+            "A réplica %s não está disponível para ser atualizada quanto ao estado da gerência para o comando %s",
+            ftFacet.ftconfig.hosts.ACSIC[i], command))
       end
     end
     i = i + 1
@@ -1332,6 +1341,10 @@ function ACSReceptacleFacet:getConnections(receptacle)
   local intCredential = Openbus:getInterceptedCredential()
   Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
   local conns = PersistentReceptacle.PersistentReceptacleFacet.getConnections(self, receptacle)
+  if #conns == 0 then
+    Log:warn(format("Não foi encontrada nenhuma faceta no receptáculo %s",
+        receptacle))
+  end
   --desfaz a troca
   Openbus.serverInterceptor.picurrent:setValue(intCredential)
   return conns
@@ -1395,16 +1408,16 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
     --para nao entrar em loop
     return
   end
-  Log:faulttolerance("[updateConnectionState] Atualiza estado do ACS quanto ao [".. command .."].")
+
   local ftFacet = self.context.IFaultTolerantService
-  if not ftFacet.ftconfig then
-    Log:faulttolerance("[updateConnectionState] Faceta precisa ser inicializada antes de ser chamada.")
-    Log:warn("[updateConnectionState] não foi possível atualizar estado quanto ao [".. command .."]")
+  if not ftFacet:isFTInited() then
     return
   end
 
   if # ftFacet.ftconfig.hosts.ACS <= 1 then
-    Log:faulttolerance("[updateConnectionState] Nenhuma replica para atualizar estado quanto ao [".. command .."].")
+    Log:debug(format(
+        "Não existem réplicas cadastradas para atualizar o estado do receptáculo %s para o comando %s",
+        data.receptacle, command))
     return
   end
 
@@ -1419,7 +1432,8 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
 
       if ret and succ then
         --encontrou outra replica
-        Log:faulttolerance("[updateConnectionState] Atualizando replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
+        Log:debug(format("Requisitou comando %s na réplica %s do receptáculo %s",
+            command, ftFacet.ftconfig.hosts.ACSIC[i], data.receptacle))
         -- Recupera faceta IReceptacles da replica remota
         local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
         if ok then
@@ -1434,14 +1448,11 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
               local succ, ret = oil.pcall(remoteACSRecepFacet.disconnect, remoteACSRecepFacet, data.connId)
               end)
           end
-          Log:faulttolerance("[updateConnectionState] Replica "..
-                             ftFacet.ftconfig.hosts.ACSIC[i] ..
-                             " atualizada quanto ao [".. command .."].")
         end
       else
-        Log:faulttolerance("[updateConnectionState] Replica "..
-                           ftFacet.ftconfig.hosts.ACSIC[i] ..
-                           " não está disponível e não pode ser atualizada quanto ao [".. command .."].")
+        Log:error(format(
+            "A réplica %s não está disponível para ser atualizada quanto ao estado do receptáculo %s para o comando %s",
+            ftFacet.ftconfig.hosts.ACSIC[i], data.receptacle, command))
       end
     end
     i = i + 1
@@ -1489,23 +1500,21 @@ function FaultToleranceFacet:updateStatus(params)
   end
 
   --Atualiza estado das credenciais
-  Log:faulttolerance("[updateStatus] Atualiza estado das credenciais.")
-
-  if not self.ftconfig then
-    Log:faulttolerance("[updateStatus] Faceta precisa ser inicializada antes de ser chamada.")
-    Log:warn("[updateStatus] não foi possível executar 'updatestatus'")
+  if not self:isFTInited() then
     return false
   end
 
   if # self.ftconfig.hosts.ACS <= 1 then
-    Log:faulttolerance("[updateStatus] Nenhuma replica para atualizar credenciais.")
+    Log:debug("Não existem réplicas cadastradas para atualizar o estado das credenciais")
     return false
   end
 
   if input == "all" then
     --sincroniza todas as credenciais a mais das outras replicas
     --com esta e os dados de gerencia
-    Log:faulttolerance("[updateStatus] Sincronizando base de credenciais com as replicas exceto em "..self.acsReference)
+    Log:debug(format(
+        "Sincronizando a base de credenciais com as replicas exceto %s",
+        self.acsReference))
     local updated = false
     local i = 1
     local count = 0
@@ -1519,7 +1528,7 @@ function FaultToleranceFacet:updateStatus(params)
         if ret and succ then
           --encontrou outra replica
           local acsFacet = self.context.IAccessControlService
-          --********* CREDENCIAL - inicio *****************
+
           local repEntries = acs:getAllEntryCredential()
           if # repEntries > 0 then
             local localEntries = acsFacet.entries
@@ -1563,26 +1572,25 @@ function FaultToleranceFacet:updateStatus(params)
               end -- fim if type
             end -- fim for repEntry
           end
-          --********* CREDENCIAL - fim *****************
         end
       end
       i = i + 1
     until i > # self.ftconfig.hosts.ACS
     if updated then
-      Log:faulttolerance("[updateOffersStatus] Quantidade de credenciais inseridas:[".. tostring(count) .."].")
+      Log:debug(format("Foram obtidas %d credenciais", count))
     end
     return updated
   else
     --procura por uma credencial específica
     local credential = input
-    Log:faulttolerance("[updateStatus] Buscando uma credencial nas replicas exceto em "..self.acsReference)
-
     local entryCredential = nil
     local i = 1
 
     repeat
       if self.ftconfig.hosts.ACS[i] ~= self.acsReference then
-        Log:faulttolerance("[updateStatus] Buscando em "..self.ftconfig.hosts.ACS[i])
+        Log:debug(format("Buscando a credencial {%s, %s, %s} na replica %s", credential.identifier,
+            credential.owner, credential.delegate, self.ftconfig.hosts.ACS[i]))
+
         local ret, succ, acs = oil.pcall(Utils.fetchService,
                                          Openbus:getORB(),
                                          self.ftconfig.hosts.ACS[i],
@@ -1598,7 +1606,6 @@ function FaultToleranceFacet:updateStatus(params)
     local updated = false
     if entryCredential then
       if entryCredential.aCredential.identifier ~= "" then
-        Log:faulttolerance("[updateStatus] Encontrou credencial!")
         --ADICIONA LOCALMENTE
         local acsFacet = self.context.IAccessControlService
         local addEntry = {}
@@ -1613,12 +1620,12 @@ function FaultToleranceFacet:updateStatus(params)
           addEntry.observedBy[observerId] = true
         end
         acsFacet:addEntryCredential(addEntry)
-        Log:faulttolerance("[updateStatus] Adicionou credencial localmente.")
         updated = true
       end
     end
     if not updated then
-      Log:faulttolerance("[updateStatus] Não encontrou credencial!")
+      Log:warn(format("A credencial {%s, %s, %s} não foi encontrada", credential.identifier, credential.owner,
+          credential.delegate))
     end
     return updated
   end
@@ -1626,9 +1633,13 @@ function FaultToleranceFacet:updateStatus(params)
   return false
 end
 
-
-
-
+function FaultToleranceFacet:isFTInited()
+  if not self.ftconfig then
+    Log:error("A faceta de tolerência a falhas não foi inicializada corretamente")
+    return false
+  end
+  return true
+end
 
 --------------------------------------------------------------------------------
 -- Faceta IComponent
@@ -1667,7 +1678,8 @@ function startup(self)
   local minLease = timeOut.fetch.MAX_TIMES * ( timeOut.fetch.sleep +
           (timeOut.non_existent.MAX_TIMES * timeOut.non_existent.sleep) )
   if (acs.lease < minLease) then
-     Log:warn(">>>> Tempo do lease foi definido menor que o tempo total de falha.")
+     Log:warn(format(
+         "O valor (%d segundos) definido para a duração do lease deveria ser maior que o tempo total de falha (%d segundos)", acs.lease, minLease))
   end
 
   -- Inicializa as base de dados de gerenciamento
@@ -1722,8 +1734,10 @@ function startup(self)
     -- ou precisamos acordar na hora "exata" que cada lease expira
     -- pra verificar?
     for id, entry in pairs(acs.entries) do
-      Log:lease("Verificando a credencial de "..id)
       local credential = entry.credential
+      Log:debug(format(
+          "Verificando a validade do lease da credencial {%s, %s, %s}",
+          id, credential.owner, credential.delegate))
       local lastUpdate = entry.lease.lastUpdate
       local secondChance = entry.lease.secondChance
       local duration = entry.lease.duration
@@ -1731,7 +1745,8 @@ function startup(self)
         local now = os.time()
         if (os.difftime (now, lastUpdate) > duration ) then
           if secondChance then
-            Log:warn(credential.owner.. " lease expirado: LOGOUT.")
+            Log:info(format("O lease da credencial {%s, %s, %s} expirou",
+                credential.identifier, credential.owner, credential.delegate))
             acs:logout(credential) -- you may clear existing fields.
           else
             entry.lease.secondChance = true
@@ -1741,17 +1756,18 @@ function startup(self)
     end
   end
   acs.leaseProvider = LeaseProvider(acs.checkExpiredLeases, acs.lease)
-  Log:faulttolerance("Recuperando as conexoes salvas em disco...")
+  Log:info("Recuperando os receptáculos salvos em disco...")
   local acsRecepFacet = self.context.IReceptacles
   -- recupera conexoes salvas em disco, se existirem.
   local recoveredConns = acsRecepFacet:getConnections("RegistryServiceReceptacle")
-  Log:faulttolerance("Total de " .. #recoveredConns .." conexoes com o Serviço de Registro recuperadas.")
+  Log:info(format("Foram recuperados %d receptáculos para o serviço de registro",
+      #recoveredConns))
 
   local ftFacet = self.context.IFaultTolerantService
   ftFacet:init()
 
   if # ftFacet.ftconfig.hosts.ACS <= 1 then
-    Log:warn("Nenhuma replica para buscar conexoes com Servico de Registro.")
+    Log:warn("Nenhuma replica para buscar conexões com Serviço de Registro")
     return
   end
 
@@ -1766,7 +1782,8 @@ function startup(self)
 
       if ret and succ then
         --encontrou outra replica
-        Log:faulttolerance("Buscando conexoes na replica ".. ftFacet.ftconfig.hosts.ACSIC[i] ..".")
+        Log:debug(format(
+            "Buscando conexões com o Serviço de Registro na replica %s", ftFacet.ftconfig.hosts.ACSIC[i]))
         -- Recupera faceta IAccessControlService da replica remota
         local ok, remoteACSFacet =  oil.pcall(remoteACSIC.getFacet, remoteACSIC, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
         remoteACSFacet = orb:narrow(remoteACSFacet,
@@ -1778,9 +1795,9 @@ function startup(self)
             local succ, err
             succ, acsChallenge, err = oil.pcall(lce.cipher.decrypt, acs.privateKey, acsChallenge)
             if acsChallenge then
-              local certificate = lce.x509.readfromderfile(DATA_DIR .. "/" .. config.accessControlServiceCertificateFile)
+              local certificate, err = lce.x509.readfromderfile(DATA_DIR .. "/" .. config.accessControlServiceCertificateFile)
               if certificate then
-                local answer = lce.cipher.encrypt(certificate:getpublickey(), acsChallenge)
+                local answer, err = lce.cipher.encrypt(certificate:getpublickey(), acsChallenge)
                 if answer then
                   local succ, remoteACSCredential, lease =
                     remoteACSFacet:loginByCertificate("AccessControlService", answer)
@@ -1806,35 +1823,38 @@ function startup(self)
                               --Connecta localmente direto na PersistentReceptacle
                               --para nao ativar atualizacao nas replicas
                               local cid = PersistentReceptacle.PersistentReceptacleFacet.connect(acsRecepFacet, "RegistryServiceReceptacle", recepIC)
-                              Log:faulttolerance("Conexao do Servico de Registro recuperado e conectado com id: " .. cid)
+                              Log:debug(format(
+                                  "Conexão com o Serviço de Registro recuperada e identificada por %s", cid))
                             end
                           end
                         end -- fim for
                       end --fim elseif
                     end -- fim ok
                   else
-                    Log:error("Nao foi possivel se logar na replica:" .. ftFacet.ftconfig.hosts.ACSIC[i])
+                    Log:error(format("Não foi possível se autenticar na replica %s",
+                        ftFacet.ftconfig.hosts.ACSIC[i]))
                   end -- fim succ, conseguiu logar
                 else
-                  Log:error("Erro na encriptografia da chave privada.")
+                  Log:error(format(
+                      "Não foi possível gerar a resposta para o desafio: %s", err))
                 end --fim answer
               else
-                Log:error("Erro na leitura do certificado.")
+                Log:error(format("Erro na leitura do certificado: %s", err))
               end -- fim certificate
             else
-              Log:error("Erro na descriptografia da chave privada.")
+              Log:error(format("Erro ao abrir o desafio: %s", err))
             end --fim challenge
           else --fim privatekey
-            Log:error("Erro na leitura da chave privada.")
+            Log:error(format("Erro na leitura da chave privada."))
           end
         else
           Log:error("Não foi possível obter desafio para deploymentId: AccessControlService.")
         end -- fim challenge
       elseif not ret then
-        Log:error("Execução do fetchService retornou com erro: " .. tostring(succ))
+        Log:error(format("Não foi possível obter a faceta %s: %s", ftFacet.ftconfig.hosts.ACSIC[i], succ))
       else
-        Log:error("Execução do fetchService retornou com sucesso, "..
-                  "porém não foi possível encontrar o serviço. Erro: " .. tostring(remoteACSIC))
+        Log:error(format("Não foi possível obter a faceta %s: %s", ftFacet.ftconfig.hosts.ACSIC[i],
+            tostring(remoteACSIC)))
       end -- fim succ
     end -- fim se nao eh a mesma replica
     i = i + 1
@@ -1847,7 +1867,6 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
-  Log:access_control("Pedido de shutdown para Serviço de controle de acesso")
   local acs = self.context.IAccessControlService
   acs.leaseProvider:stopCheck()
   local orb = Openbus:getORB()
@@ -1859,5 +1878,5 @@ function shutdown(self)
   --Mata as threads de validação de credencial e de atualização do estado
   --e chama o finish que por sua vez mata o orb
   Openbus:destroy()
-  Log:faulttolerance("Servico de Controle de Acesso matou seu processo.")
 end
+

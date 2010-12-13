@@ -4,7 +4,6 @@ local os = os
 local string = string
 
 local error    = error
-local print    = print
 local pairs    = pairs
 local ipairs   = ipairs
 local assert   = assert
@@ -37,13 +36,10 @@ SessionServiceComponent = oop.class({}, scs.Component)
 --@see scs.core.IComponent#startup
 ---
 function SessionServiceComponent:startup()
-  Log:session("Pedido de startup para o serviço de sessão")
-
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 
   -- Verifica se é o primeiro startup
   if not self.initialized then
-    Log:session("Serviço de sessão está inicializando")
     if (string.sub(self.config.privateKeyFile,1 , 1) == "/") then
       self.privateKeyFile = self.config.privateKeyFile
     else
@@ -59,8 +55,6 @@ function SessionServiceComponent:startup()
     end
 
     self.initialized = true
-  else
-    Log:session("Serviço de sessão já foi inicializado")
   end
 
   -- autentica o serviço, conectando-o ao barramento
@@ -83,8 +77,7 @@ function SessionServiceComponent:startup()
     oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
               "AccessControlServiceReceptacle", acsIComp)
   if not success then
-    Log:error("Erro durante conexão com serviço de Controle de Acesso.")
-    Log:error(conId)
+    Log:error("Falha ao conectar ao serviço de controle de acesso", conId)
     error{"IDL:SCS/StartupFailed:1.0"}
   end
 
@@ -100,13 +93,13 @@ function SessionServiceComponent:startup()
   local success, identifier = registryService:register(self.serviceOffer)
   if not success then
     if identifier[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
-      Log:error("Erro ao registrar oferta do serviço de sessão")
+      Log:error("Não foi possível registrar a oferta do serviço de sessão. As seguintes interfaces não foram autorizadas:")
       for _, facet in ipairs(identifier.facets) do
-        Log:error(string.format("Faceta '%s' não autorizada", facet))
+        Log:error(facet)
       end
     else
-      Log:error(string.format("Erro ao registrar oferta do servico de sessao: %s\n",
-        identifier[1]))
+      Log:error("Não foi possível registrar a oferta do servico de sessao",
+          identifier)
     end
     Openbus:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
@@ -120,13 +113,16 @@ function SessionServiceComponent:startup()
   local success, identifierPrev = registryService:register(self.serviceOfferPrev)
   if not success then
     if identifierPrev[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
-      Log:error("Erro ao registrar oferta do serviço de sessão da versão anterior")
+      Log:error(format(
+          "Não foi possível registrar a oferta do serviço de sessão (versão %d). As seguintes interfaces não foram autorizadas:",
+          Utils.OB_PREV))
       for _, facet in ipairs(identifierPrev.facets) do
-        Log:error(string.format("Faceta '%s' não autorizada", facet))
+        Log:error(facet)
       end
     else
-      Log:error(string.format("Erro ao registrar oferta do servico de sessao da versão anterior: %s\n",
-        identifierPrev[1]))
+      Log:error(format(
+          "Não foi possível registrar a oferta do servico de sessao (versão %d)",
+          identifierPrev, Utils.OB_PREV))
     end
     Openbus:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
@@ -136,34 +132,32 @@ function SessionServiceComponent:startup()
   self.registryIdentifierPrev = identifierPrev
 
   self.started = true
-  Log:session("Serviço de sessão iniciado")
 end
 
 ---
 --Procedimento após a reconexão do serviço.
 ---
 function SessionServiceComponent:expired()
-  Log:registry("Reconectando o Serviço de Sessão.")
   Openbus:connectByCertificate(self.context._componentId.name,
     self.privateKeyFile, self.accessControlServiceCertificateFile)
 
   if not Openbus:isConnected() then
-    Log:error("Falha ao reconectar no ACS.")
+    Log:error("Não foi possível reconectar ao serviço de controle de acesso")
     return false
   end
 
   -- Procedimento realizado pela faceta
   self.sessionService:expired()
 
-  Log:session("Serviço de sessão foi reconectado")
-
   -- Registra novamente a oferta de serviço, pois a credencial associada
+  Log:debug("O serviço de sessão foi reautenticado")
+
   -- agora é outra
   local registryService = Openbus:getRegistryService()
   if not registryService then
     self.registryIdentifier = nil
     self.registryIdentifierPrev = nil
-    Log:error("Servico de registro nao encontrado.\n")
+    Log:error("O serviço de registro não foi encontrado")
     return
   end
   registryService = orb:newproxy(registryService, "protected")
@@ -171,13 +165,13 @@ function SessionServiceComponent:expired()
   success, self.registryIdentifier = registryService:register(self.serviceOffer)
   if not success then
     if self.registryIdentifier[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
-      Log:error("Erro ao registrar oferta do serviço de sessão")
+      Log:error("Não foi possível registrar a oferta do serviço de sessão. As seguintes interfaces não foram autorizadas:")
       for _, facet in ipairs(self.registryIdentifier.facets) do
-        Log:error(string.format("Facet '%s' não autorizada", facet))
+        Log:error(facet)
       end
     else
-      Log:error(string.format("Erro ao registrar oferta do servico de sessao: %s\n",
-        self.registryIdentifier[1]))
+      Log:error("Não foi possível registrar a oferta do servico de sessao",
+          self.registryIdentifier)
     end
     self.registryIdentifier = nil
     return
@@ -186,13 +180,16 @@ function SessionServiceComponent:expired()
   success, self.registryIdentifierPrev = registryService:register(self.serviceOfferPrev)
   if not success then
     if self.registryIdentifierPrev[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
-      Log:error("Erro ao registrar oferta do serviço de sessão da versão anterior")
+      Log:error(format(
+          "Não foi possível registrar a oferta do serviço de sessão (versão %d). As seguintes interfaces não foram autorizadas:",
+          Utils.OB_PREV))
       for _, facet in ipairs(self.registryIdentifierPrev.facets) do
-        Log:error(string.format("Facet '%s' não autorizada", facet))
+        Log:error(facet)
       end
     else
-      Log:error(string.format("Erro ao registrar oferta do servico de sessao da versão anterior: %s\n",
-        self.registryIdentifierPrev[1]))
+      Log:error(format(
+          "Não foi possível registrar a oferta do servico de sessao (versão %d)",
+          self.registryIdentifierPrev, Utils.OB_PREV))
     end
     self.registryIdentifierPrev = nil
     return
@@ -205,9 +202,8 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function SessionServiceComponent:shutdown()
-  Log:session("Pedido de shutdown para o serviço de sessão")
   if not self.started then
-    Log:error("Servico ja foi finalizado.\n")
+    Log:error("O serviço de sessão já está finalizado")
     error{"IDL:SCS/ShutdownFailed:1.0"}
   end
   self.started = false
@@ -215,7 +211,7 @@ function SessionServiceComponent:shutdown()
   if self.registryIdentifier then
     local registryService = Openbus:getRegistryService()
     if not registryService then
-      Log:error("Serviço de registro não encontrado")
+      Log:error("O serviço de registro não foi encontrado")
     else
       registryService:unregister(self.registryIdentifier)
     end
@@ -225,7 +221,7 @@ function SessionServiceComponent:shutdown()
   if self.registryIdentifierPrev then
     local registryService = Openbus:getRegistryService()
     if not registryService then
-      Log:error("Serviço de registro não encontrado")
+      Log:error("O serviço de registro não foi encontrado")
     else
       registryService:unregister(self.registryIdentifierPrev)
     end
@@ -251,5 +247,5 @@ function SessionServiceComponent:shutdown()
     Openbus:disconnect()
   end
 
-  Log:session("Serviço de sessão finalizado")
+  Log:info("O serviço de sessão foi finalizado")
 end

@@ -1,6 +1,7 @@
 -- $Id$
 local io = io
 local string = string
+local format = string.format
 local os = os
 
 local error = error
@@ -34,11 +35,12 @@ FILE_SEPARATOR = "/"
 function __init(self, databaseDirectory)
   local mode = lfs.attributes(databaseDirectory, "mode")
   if not mode then
-    Log:registry("O diretorio ["..databaseDirectory..
-        "] nao foi encontrado. Criando...")
+    Log:info(format("O diretorio %s não foi encontrado. Criando...",
+        databaseDirectory))
     local status, errorMessage = lfs.mkdir(databaseDirectory)
     if not status then
-      Log:error("Nao foi possivel criar o diretorio ["..databaseDirectory.."]: "..errorMessage)
+      Log:error(format("Nao foi possível criar o diretório %s: %s",
+          databaseDirectory, errorMessage))
       error(errorMessage)
     end
   end

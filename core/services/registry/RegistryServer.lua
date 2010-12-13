@@ -8,15 +8,13 @@ local tonumber = tonumber
 local tostring = tostring
 
 local string = string
+local format = string.format
 
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
+local Audit = require "openbus.util.Audit"
 local Utils = require "openbus.util.Utils"
-local Viewer = require "loop.debug.Viewer"
-
--- Inicialização do nível de verbose do openbus.
-Log:level(1)
 
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
@@ -26,6 +24,7 @@ end
 
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/RegistryServerConfiguration.lua"))()
+local rsConfig = RegistryServerConfiguration
 local iConfig =
   assert(loadfile(DATA_DIR.."/conf/advanced/RSInterceptorsConfiguration.lua"))()
 
@@ -41,20 +40,51 @@ local usage_msg = [[
 local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" or arguments.v == "" then
-  oil.verbose:level(5)
-  Log:level(5)
-else
-  if RegistryServerConfiguration.oilVerboseLevel then
-      oil.verbose:level(RegistryServerConfiguration.oilVerboseLevel)
-  end
-  -- Define os níveis de verbose para o openbus e para o oil
-  if RegistryServerConfiguration.logLevel then
-    Log:level(RegistryServerConfiguration.logLevel)
+  rsConfig.logs.service.level = 5
+  rsConfig.logs.oil.level = 5
+end
+if arguments.port then
+  rsConfig.registryServerHostPort = tonumber(arguments.port)
+end
+
+-- Configurando os logs
+Log:level(rsConfig.logs.service.level)
+Audit:level(rsConfig.logs.audit.level)
+oil.verbose:level(rsConfig.logs.oil.level)
+
+local serviceLogFile
+if rsConfig.logs.service.file then
+  local errMsg
+  serviceLogFile, errMsg = Utils.setVerboseOutputFile(Log,
+      rsConfig.logs.service.file)
+  if not serviceLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de log do serviço de controle de acesso: %s",
+        errMsg))
   end
 end
 
-if arguments.port then
-  RegistryServerConfiguration.registryServerHostPort = tonumber(arguments.port)
+local auditLogFile
+if rsConfig.logs.audit.file then
+  local errMsg
+  auditLogFile, errMsg = Utils.setVerboseOutputFile(Audit,
+      rsConfig.logs.audit.file)
+  if not auditLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de auditoria: %s", errMsg))
+  end
+end
+
+local oilLogFile
+if rsConfig.logs.oil.file then
+  local errMsg
+  oilLogFile, errMsg =
+      Utils.setVerboseOutputFile(oil.verbose, rsConfig.logs.oil.file)
+  if not oilLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de log do OiL: %s",
+        errMsg))
+  end
 end
 
 local props = {  host = RegistryServerConfiguration.registryServerHostName,
@@ -175,7 +205,23 @@ function main()
     os.exit(1)
   end
 
-  Log:init("Serviço de registro iniciado com sucesso")
+  Log:info("O serviço de registro foi iniciado com sucesso")
 end
 
-print(oil.pcall(oil.main,main))
+local status, errMsg = oil.pcall(oil.main,main)
+
+if serviceLogFile then
+  serviceLogFile:close()
+end
+if auditLogFile then
+  auditLogFile:close()
+end
+if oilLogFile then
+  oilLogFile:close()
+end
+
+if not status then
+  Log:error(format(
+      "Ocorreu uma falha na execução do serviço de registro: %s",
+      errMsg))
+end

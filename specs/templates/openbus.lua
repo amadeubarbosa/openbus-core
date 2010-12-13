@@ -87,9 +87,9 @@ messages = {
     value = 5,
   },
   { name = "logLevel",
-    msg = "Nível de verbosidade do log do OpenBus [de 0 a 3]",
+    msg = "Nível de verbosidade do log do OpenBus [de 0 a 5]",
     type = "number",
-    value = 3,
+    value = 5,
   },
   { name = "ldapHosts",
     msg = "Lista dos servidores LDAP com portas",
@@ -125,8 +125,8 @@ configure_action = function(answers, path, util)
   AccessControlServerConfiguration.ldapHosts = answers.ldapHosts
   AccessControlServerConfiguration.ldapSuffixes = answers.ldapSuffixes
   AccessControlServerConfiguration.administrators = answers.administrators
-  AccessControlServerConfiguration.oilVerboseLevel = answers.oilVerboseLevel
-  AccessControlServerConfiguration.logLevel = answers.logLevel
+  AccessControlServerConfiguration.logs.service.level = answers.logLevel
+  AccessControlServerConfiguration.logs.oil.level = answers.oilVerboseLevel
   AccessControlServerConfiguration.adminMail = answers.adminMail
 
   AccessControlServerConfiguration.lease = 180
@@ -158,8 +158,8 @@ configure_action = function(answers, path, util)
       "certificates/AccessControlService.crt"
   RegistryServerConfiguration.databaseDirectory = "offers"
   RegistryServerConfiguration.administrators = answers.administrators
-  RegistryServerConfiguration.oilVerboseLevel = answers.oilVerboseLevel
-  RegistryServerConfiguration.logLevel = answers.logLevel
+  RegistryServerConfiguration.logs.service.level = answers.logLevel
+  RegistryServerConfiguration.logs.oil.level = answers.oilVerboseLevel
   RegistryServerConfiguration.adminMail = answers.adminMail
 
   local sesConfFile = path.."/data/conf/SessionServerConfiguration.lua"
@@ -175,8 +175,8 @@ configure_action = function(answers, path, util)
   SessionServerConfiguration.privateKeyFile = "certificates/SessionService.key"
   SessionServerConfiguration.accessControlServiceCertificateFile =
       "certificates/AccessControlService.crt"
-  SessionServerConfiguration.logLevel = answers.logLevel
-  SessionServerConfiguration.oilVerboseLevel = answers.oilVerboseLevel
+  SessionServerConfiguration.logs.service.level = answers.logLevel
+  SessionServerConfiguration.logs.oil.level = answers.oilVerboseLevel
 
   local ftACSConfFile = path .."/data/conf/ACSFaultToleranceConfiguration.lua"
   local loadConfig, err = loadfile(ftACSConfFile)

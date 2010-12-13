@@ -157,8 +157,7 @@ function main()
     Log:error("Falha na execução do Monitor do Servico de registro: "..tostring(res).."\n")
     os.exit(1)
   end
-  Log:faulttolerance("Monitor do servico de registro monitorando com sucesso.")
-
+  Log:info("O monitor do serviço de registro foi iniciado com sucesso.")
 end
 
 print(oil.pcall(oil.main,main))

@@ -8,6 +8,8 @@ local tonumber = tonumber
 local tostring = tostring
 local print = print
 
+local format = string.format
+
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local Utils = require "openbus.util.Utils"
@@ -62,6 +64,9 @@ if arguments.port then
 else
     Log:warn("Será usada porta padrão do ACS")
 end
+
+oil.verbose:level(5)
+Log:level(5)
 
 local hostAdd = AccessControlServerConfiguration.hostName..":"..
                 AccessControlServerConfiguration.hostPort
@@ -142,19 +147,22 @@ function main()
   -- Inicialização
   success, res = oil.pcall(ftacsInst.IComponent.startup, ftacsInst.IComponent)
   if not success then
-    Log:error("Falha ao iniciar o monitor do serviço de controle de acesso: "..
-        tostring(res).."\n")
+    Log:error(format(
+        "Falha ao iniciar o monitor do serviço de controle de acesso: %s",
+        tostring(res)))
     os.exit(1)
   end
 
   local success, res = oil.pcall(oil.newthread, ftacs.monitor, ftacs)
 
   if not success then
-    Log:error("Falha na execução do Monitor do Servico de Controle de Acesso: "..tostring(res).."\n")
+    Log:error(format(
+        "Falha na execução do monitor do servico de controle de acesso: %s",
+        tostring(res)))
     os.exit(1)
   end
-  Log:faulttolerance("Monitor do servico de controle monitorando com sucesso.")
-
+  Log:info("O monitor do serviço de controle de acesso foi iniciado com sucesso")
 end
 
 print(oil.pcall(oil.main,main))
+

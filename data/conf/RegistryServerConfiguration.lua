@@ -13,7 +13,19 @@ RegistryServerConfiguration = {
   monitorPrivateKeyFile = "certificates/RGSMonitor.key",
   databaseDirectory = "offers",
   administrators = {},
-  logLevel = 3,
-  oilVerboseLevel = 1,
+  logs = {
+    service = {
+      level = 4,
+      file = "logs/registry_service.log",
+    },
+    audit = {
+      level = 1,
+      file = "logs/registry_service_audit.log",
+    },
+    oil = {
+      level = 5,
+      file = "logs/registry_service_oil.log",
+    },
+  },
   adminMail = "root@localhost",
 }

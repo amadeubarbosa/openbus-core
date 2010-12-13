@@ -75,7 +75,11 @@ end
 --Metodo existente apenas na API 1.04.
 ---
 function ACSFacet:getRegistryService()
-  local ic = self.context.IReceptacles:getConnections("RegistryServiceReceptacle")[1].objref
+  local connections = self.context.IReceptacles:getConnections("RegistryServiceReceptacle")
+  if #connections == 0 then
+    return nil
+  end
+  local ic = connections[1].objref
   local rs = ic:getFacet(Utils.REGISTRY_SERVICE_INTERFACE_V1_04)
   return Openbus:getORB():narrow(rs, Utils.REGISTRY_SERVICE_INTERFACE_V1_04)
 end

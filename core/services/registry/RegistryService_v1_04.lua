@@ -1,8 +1,12 @@
 -- $Id: RegistryService.lua 102795 2010-03-10 20:24:18Z brunoos $
 
+local format = string.format
+local tostring = tostring
+
 local oop = require "loop.simple"
 local oil = require "oil"
 
+local Log = require "openbus.util.Log"
 ---
 --Componente (membro) responsável pelo Serviço de Registro na versao 1.04.
 ---
@@ -19,6 +23,8 @@ function RSFacet:register(serviceOffer)
                                 self.context.IRegistryService, 
                                 serviceOffer)
   if not status then
+    Log:error(format("Ocorreu uma falha ao registrar um componente: %s",
+        tostring(ret)))
     return false, ""
   end
   return true, ret

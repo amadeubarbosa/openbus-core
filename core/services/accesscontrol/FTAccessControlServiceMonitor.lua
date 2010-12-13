@@ -2,7 +2,6 @@
 
 local os = os
 local tostring = tostring
-local print = print
 local loadfile = loadfile
 local assert = assert
 local string = string
@@ -66,14 +65,14 @@ function FTACSMonitorFacet:getService()
   local status, conns = oil.pcall(recep.getConnections, recep,
       "IFaultTolerantService")
   if not status then
-    log:error("Nao foi possivel obter o ServiÃ§o: " .. conns[1])
+    Log:error("Nao foi possivel obter o ServiÃ§o: " .. conns[1])
     return nil
   elseif conns[1] then
     local service = conns[1].objref
     service = Openbus:getORB():narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
     return orb:newproxy(service, "protected")
   end
-  log:error("Nao foi possivel obter o ServiÃ§o.")
+  Log:error("Nao foi possivel obter o ServiÃ§o.")
   return nil
 end
 
@@ -115,7 +114,6 @@ end
 --Monitora o servico de controle de acesso e cria uma nova replica se necessario.
 ---
 function FTACSMonitorFacet:monitor()
-  Log:faulttolerance("[Monitor SCA] Inicio")
   local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
   local ftRec = self.context.IReceptacles
   ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
@@ -124,19 +122,23 @@ function FTACSMonitorFacet:monitor()
     local reinit = false
     local service = self:getService()
     local ok, res = service:isAlive()
-    Log:faulttolerance("[Monitor SCA] isAlive? "..tostring(ok))
+
+   if not ok then
+     Log:info(format("O serviço de controle de acesso localizado em {%s:%d} não está acessível",
+         self.config.hostName, self.config.hostPort))
+   end
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
     if ok then
       --se objeto remoto esta em estado de falha, precisa ser reinicializado
       if not res then
         reinit = true
-        Log:faulttolerance("[Monitor SCA] Servico de Controle de Acesso em estado de falha. Matando o processo...")
+        Log:debug("O serviço de controle de acesso está em estado de falha. O serviço será finalizado")
         --pede para o objeto se matar
         self:getService():kill()
       end
     else
-      Log:faulttolerance("[Monitor SCA] Servico de Controle de Acesso nao esta disponivel...")
+      Log:debug("O serviço de controle de acesso não pôde ser finalizado porque não esta disponivel")
       -- ocorreu falha de comunicacao com o objeto remoto
       reinit = true
     end
@@ -144,33 +146,26 @@ function FTACSMonitorFacet:monitor()
     if not reinit then
       oil.sleep(timeOut.monitor.sleep)
     else
-      Log:faulttolerance("Enviando email para o administrador do barramento.")
+      Log:info("Enviando email para o administrador do barramento")
       self:sendMail()
       local timeToTry = 0
 
 
       repeat
         if self.recConnId ~= nil then
-          local status, void = oil.pcall(ftRec.disconnect, ftRec, self.recConnId)
+          local status, err = oil.pcall(ftRec.disconnect, ftRec, self.recConnId)
           if not status then
-            print("[IReceptacles::IReceptacles] Error while calling disconnect")
-            print("[IReceptacles::IReceptacles] Error: " .. void)
+            Log:error("Não foi possível desconectar o serviço de controle de acesso do receptáculo")
             return
           end
-
-          Log:faulttolerance("[Monitor SCA] disconnect executed successfully!")
         end
 
-        Log:faulttolerance("[Monitor SCA] Levantando Servico de Controle de Acesso...")
+        Log:info("Reiniciando o serviço de controle de acesso...")
 
         --Criando novo processo assincrono
         if self:isUnix() then
-          --os.execute(BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort..
-          --           " &  > log_access_control_server-"..tostring(t)..".txt")
           os.execute(BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort .. " &")
         else
-          --os.execute("start "..BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort..
-          --           " > log_access_control_server-"..tostring(t)..".txt")
           os.execute("start "..BIN_DIR.."/run_access_control_server.sh --port=".. self.config.hostPort)
         end
 
@@ -189,8 +184,9 @@ function FTACSMonitorFacet:monitor()
             os.exit(1)
           end
         else
-          Log:faulttolerance("[Monitor SCA] Não conseguiu levantar ACS de primeira possivelmente porque porta está bloqueada.")
-          Log:faulttolerance("[Monitor SCA] Espera " .. tostring(timeOut.monitor.sleep) .." segundos......")
+          Log:warn(format(
+              "Não foi possível reiniciar o serviço de controle de acesso possivelmente porque porta está bloqueada. Aguardando %d segundos para nova tentativa",
+              timeOut.monitor.sleep))
           oil.sleep(timeOut.monitor.sleep)
         end
 
@@ -198,11 +194,11 @@ function FTACSMonitorFacet:monitor()
       until self.recConnId ~= nil or timeToTry == timeOut.monitor.MAX_TIMES
 
       if self.recConnId == nil then
-        Log:error("[Monitor SCA] Servico de controle de acesso nao pode ser levantado.")
+        Log:error("O serviço de controle de acesso não pôde ser reiniciado")
         os.exit(1)
       end
 
-      Log:faulttolerance("[Monitor SCA] Servico de Controle de Acesso criado.")
+      Log:info("O serviço de controle de acesso foi reiniciado")
     end
   end
 end
@@ -232,9 +228,8 @@ function startup(self)
   local connId = ftRec:connect("IFaultTolerantService",Openbus.ft)
   if not connId then
     Log:error("Erro ao conectar receptaculo IFaultTolerantService ao FTACSMonitor")
-    os.exit(1)
+    error{"IDL:scs/core/StartupFailed:1.0"}
   end
 
   monitor.recConnId = connId
-  Log:init("Monitor do servico de controle de acesso iniciado com sucesso")
 end

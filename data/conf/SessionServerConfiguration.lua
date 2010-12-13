@@ -10,6 +10,18 @@ SessionServerConfiguration = {
   sessionServerHostPort = 2029,
   privateKeyFile = "certificates/SessionService.key",
   accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
-  logLevel = 3,
-  oilVerboseLevel = 1,
+  logs = {
+    service = {
+      level = 4,
+      file = "logs/session_service.log",
+    },
+    audit = {
+      level = 1,
+      file = "logs/session_service_audit.log",
+    },
+    oil = {
+      level = 5,
+      file = "logs/session_service_oil.log",
+    },
+  },
 }

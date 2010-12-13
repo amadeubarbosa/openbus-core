@@ -4,24 +4,24 @@
 --Inicialização do Serviço de Controle de Acesso
 ---
 local string = string
+local format = string.format
 local oil = require "oil"
 
 local Openbus = require "openbus.Openbus"
-local Log     = require "openbus.util.Log"
-local Utils   = require "openbus.util.Utils"
-local Viewer  = require "loop.debug.Viewer"
+local Log = require "openbus.util.Log"
+local Audit = require "openbus.util.Audit"
+local Utils = require "openbus.util.Utils"
 local TableDB = require "openbus.util.TableDB"
-
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
-  Log:error("A variavel IDLPATH_DIR nao foi definida.\n")
+  Log:error("A variável IDLPATH_DIR não foi definida")
   os.exit(1)
 end
 
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
-  Log:error("A variavel OPENBUS_DATADIR nao foi definida.\n")
+  Log:error("A vari[avel OPENBUS_DATADIR não foi definida")
   os.exit(1)
 end
 
@@ -29,6 +29,7 @@ local dbfile = DATA_DIR .. "/acs_connections.db"
 
 -- Obtém a configuração do serviço
 assert(loadfile(DATA_DIR.."/conf/AccessControlServerConfiguration.lua"))()
+local acsConfig = AccessControlServerConfiguration
 local iconfig = assert(loadfile(DATA_DIR ..
   "/conf/advanced/ACSInterceptorsConfiguration.lua"))()
 
@@ -44,22 +45,51 @@ local usage_msg = [[
 local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" or arguments.v == "" then
-    oil.verbose:level(5)
-    Log:level(3)
-else
-    if AccessControlServerConfiguration.oilVerboseLevel then
-        oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
-    end
-    -- Define os níveis de verbose para o OpenBus e para o OiL.
-    if AccessControlServerConfiguration.logLevel then
-        Log:level(AccessControlServerConfiguration.logLevel)
-    else
-        Log:level(1)
-    end
+  acsConfig.logs.service.level = 5
+  acsConfig.logs.oil.level = 5
+end
+if arguments.port then
+  acsConfig.hostPort = tonumber(arguments.port)
 end
 
-if arguments.port then
-    AccessControlServerConfiguration.hostPort = tonumber(arguments.port)
+-- Configurando os logs
+Log:level(acsConfig.logs.service.level)
+Audit:level(acsConfig.logs.audit.level)
+oil.verbose:level(acsConfig.logs.oil.level)
+
+local serviceLogFile
+if acsConfig.logs.service.file then
+  local errMsg
+  serviceLogFile, errMsg = Utils.setVerboseOutputFile(Log,
+      acsConfig.logs.service.file)
+  if not serviceLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de log do serviço de controle de acesso: %s",
+        errMsg))
+  end
+end
+
+local auditLogFile
+if acsConfig.logs.audit.file then
+  local errMsg
+  auditLogFile, errMsg = Utils.setVerboseOutputFile(Audit,
+      acsConfig.logs.audit.file)
+  if not auditLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de auditoria: %s", errMsg))
+  end
+end
+
+local oilLogFile
+if acsConfig.logs.oil.file then
+  local errMsg
+  oilLogFile, errMsg =
+      Utils.setVerboseOutputFile(oil.verbose, acsConfig.logs.oil.file)
+  if not oilLogFile then
+    Log:error(format(
+        "Falha ao abrir o arquivo de log do OiL: %s",
+        errMsg))
+  end
 end
 
 local props = { host = AccessControlServerConfiguration.hostName,
@@ -161,8 +191,6 @@ facetDescriptions.IReceptacles.class          = AccessControlService.ACSReceptac
 facetDescriptions.IReceptacles.facet_ref      = acsReceptFacetRef
 
 
---Log:faulttolerance(facetDescriptions)
-
 -- Receptacle Descriptions
 local receptacleDescs = {}
 receptacleDescs.RegistryServiceReceptacle = {}
@@ -212,7 +240,24 @@ function main()
         tostring(res).."\n")
     os.exit(1)
   end
-  Log:init("Serviço de controle de acesso iniciado com sucesso")
+  Log:info("O serviço de controle de acesso foi iniciado com sucesso")
+  Audit:uptime("O serviço de controle de acesso foi iniciado com sucesso")
 end
 
-print(oil.pcall(oil.main,main))
+local status, errMsg = oil.pcall(oil.main,main)
+
+if serviceLogFile then
+  serviceLogFile:close()
+end
+if auditLogFile then
+  auditLogFile:close()
+end
+if oilLogFile then
+  oilLogFile:close()
+end
+
+if not status then
+  Log:error(format(
+      "Ocorreu uma falha na execução do serviço de controle de acesso: %s",
+      errMsg))
+end
