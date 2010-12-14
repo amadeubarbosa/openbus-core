@@ -69,6 +69,6 @@ if [ ${ft} -eq 1 ]; then
   echo
   echo "==============================================================================="
 
-  ${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua registry/TestSuiteFTRGSStateConsistency.lua
+  ${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua registry/FTRGSStateConsistencyTestSuite.lua
 
 fi 
