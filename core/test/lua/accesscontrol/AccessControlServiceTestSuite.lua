@@ -1,0 +1,104 @@
+--
+-- Suite de Testes do Serviço de Controle de Acesso
+--
+require "oil"
+local orb = oil.orb
+
+local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
+
+function loadidls(self)
+  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
+  if IDLPATH_DIR == nil then
+    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
+    os.exit(1)
+  end
+  local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
+  orb:loadidlfile(idlfile)
+  idlfile = IDLPATH_DIR.."/v1_04/access_control_service.idl"
+  orb:loadidlfile(idlfile)
+end
+
+local beforeTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeTestCase.lua")
+local beforeEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeEachTest.lua")
+local afterEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterEachTest.lua")
+local afterEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterEachTest.lua")
+
+local loginByPasswordTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/loginByPasswordTestCase.lua"))()
+local invalidLoginByPasswordTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/invalidLoginByPasswordTestCase.lua"))()
+local logoutTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/logoutTestCase.lua"))()
+local isValidTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/isValidTestCase.lua"))()
+local areValidTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/areValidTestCase.lua"))()
+local isValidPasswordDelegateTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/isValidPasswordDelegateTestCase.lua"))()
+local observersTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/observersTestCase.lua"))()
+local removeCredentialFromObserverTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/removeCredentialFromObserverTestCase.lua"))()
+local removeObserverTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/removeObserverTestCase.lua"))()
+local invalidGetChallengeTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/invalidGetChallengeTestCase.lua"))()
+local loginByCertificateTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/loginByCertificateTestCase.lua"))()
+local loginByCertificate_WrongAnswerTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/loginByCertificate_WrongAnswerTestCase.lua"))()
+local loginByCertificate_NoEncryptionTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/loginByCertificate_NoEncryptionTestCase.lua"))()
+local logoutAfterLoginByCertificateTestCase = assert(loadfile(OPENBUS_HOME .."/core/test/lua/accesscontrol/logoutAfterLoginByCertificateTestCase.lua"))()
+
+Suite = {
+
+  Test1 = {
+    beforeTestCase = beforeTestCase,
+
+    afterTestCase = afterTestCase,
+
+    testLoginByPassword = loginByPasswordTestCase.Test1.testLoginByPassword,
+
+    testInvalidLoginByPassword = invalidLoginByPasswordTestCase.Test1.testInvalidLoginByPassword,
+
+    testLogout = logoutTestCase.Test1.testLogout,
+  },
+
+  Test2 = {
+    beforeTestCase = beforeTestCase,
+
+    afterTestCase = afterTestCase,
+
+    beforeEachTest = beforeEachTest,
+
+    afterEachTest = afterEachTest,
+
+    testIsValid = isValidTestCase.Test1.testIsValid,
+
+    testIsValidPasswordDelegate = isValidPasswordDelegateTestCase.Test1.testIsValidPasswordDelegate,
+
+    testAreValid = areValidTestCase.Test1.testAreValid,
+
+    testInvalidGetChallenge = invalidGetChallengeTestCase.Test1.testInvalidGetChallenge,
+
+  },
+
+  Test3 = {
+    beforeTestCase = beforeTestCase,
+
+    afterTestCase = afterTestCase,
+
+    beforeEachTest = beforeEachTest,
+
+    afterEachTest = afterEachTest,
+
+    testObservers = observersTestCase.Test1.testObservers,
+
+    testRemoveCredentialFromObserver = removeCredentialFromObserverTestCase.Test1.testRemoveCredentialFromObserver,
+
+    testRemoveObserver = removeObserverTestCase.Test1.testRemoveObserver,
+  },
+
+  Test4 = {
+    beforeTestCase = beforeTestCase,
+
+    afterTestCase = afterTestCase,
+
+    testLoginByCertificate = loginByCertificateTestCase.Test1.testLoginByCertificate,
+
+    testLogoutAfterLoginByCertificate = logoutAfterLoginByCertificateTestCase.Test1.testLogoutAfterLoginByCertificate,
+
+    testLoginByCertificate_WrongAnswer = loginByCertificate_WrongAnswerTestCase.Test1.testLoginByCertificate_WrongAnswer,
+
+    testLoginByCertificate_NoEncryption = loginByCertificate_NoEncryptionTestCase.Test1.testLoginByCertificate_NoEncryption,
+  },
+
+}

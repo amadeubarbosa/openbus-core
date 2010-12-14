@@ -1,5 +1,5 @@
 --
--- Testes unitários para mecanismo de consistência do estado do Serviço de Controle de Acesso
+-- Suite de Testes para mecanismo de consistência do estado do Serviço de Controle de Acesso
 --
 --[[
   Esses testes assumem que existem *pelo menos* duas (2) réplicas do ACS e *somente* uma do RGS.
