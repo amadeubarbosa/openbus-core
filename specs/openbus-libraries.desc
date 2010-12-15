@@ -184,11 +184,11 @@ packages = {
       ["../include/*"] = "incpath/lualdap-1.0.1",
     },
   },
-  { name = "latt-1.0.0",
-    url = SVNREPURL .. "/openbus/libs/trunk/latt-1.0.0",
+  { name = "latt",
+    url = SVNREPURL.."/luautils/latt/trunk",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/latt-1.0.0",
+      src = PRODAPP .."/latt",
       mf = { },
     },
     dev_files = {
