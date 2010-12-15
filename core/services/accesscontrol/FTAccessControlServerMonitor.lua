@@ -82,7 +82,7 @@ local orb = Openbus:getORB()
 local FTAccessControlServiceMonitor = require "core.services.accesscontrol.FTAccessControlServiceMonitor"
 local scs = require "scs.core.base"
 
-orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl")
+orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/fault_tolerance.idl")
 
 -----------------------------------------------------------------------------
 -- FTAccessControlServiceMonitor Descriptions

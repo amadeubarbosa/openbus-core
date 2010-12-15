@@ -21,7 +21,7 @@ local orb = oil.orb
 module "core.services.session.Session"
 
 local eventSinkInterface = Utils.SESSION_ES_INTERFACE
-local eventSinkInterfacePrev = Utils.SESSION_ES_INTERFACE_V1_04
+local eventSinkInterfacePrev = Utils.SESSION_ES_INTERFACE_PREV
 
 --------------------------------------------------------------------------------
 -- Faceta ISession

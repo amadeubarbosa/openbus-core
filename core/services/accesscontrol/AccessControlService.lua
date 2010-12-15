@@ -716,16 +716,24 @@ end
 --
 -- Aliases
 --
-local SystemInUseException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0"
-local SystemNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"
-local SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0"
+local SystemInUseException = "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+    "/access_control_service/SystemInUse:1.0"
+local SystemNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemNonExistent:1.0"
+local SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemAlreadyExists:1.0"
 --
-local InvalidCertificateException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0"
-local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"
-local SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0"
+local InvalidCertificateException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/InvalidCertificate:1.0"
+local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
+local SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentAlreadyExists:1.0"
 --
-local UserAlreadyExistsException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserAlreadyExists:1.0"
-local UserNonExistentException = "IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0"
+local UserAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/UserAlreadyExists:1.0"
+local UserNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/UserNonExistent:1.0"
 
 
 ManagementFacet = oop.class{}
@@ -969,7 +977,7 @@ function ManagementFacet:removeSystemDeployment(id)
       Openbus:getORB(),
       self.context.IComponent,
       "RegistryServiceReceptacle",
-      "IManagement_v" .. Utils.OB_VERSION,
+      "IManagement_" .. Utils.OB_VERSION,
       Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
       local orb = Openbus:getORB()
@@ -1156,7 +1164,7 @@ function ManagementFacet:removeUser(id)
                             Openbus:getORB(),
                             self.context.IComponent,
                             "RegistryServiceReceptacle",
-                            "IManagement_v" .. Utils.OB_VERSION,
+                            "IManagement_" .. Utils.OB_VERSION,
                             Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
       local orb = Openbus:getORB()
@@ -1258,7 +1266,7 @@ function ManagementFacet:updateManagementStatus(command, data)
         Log:debug(format("Requisitou comando %s na réplica %s", command,
             ftFacet.ftconfig.hosts.ACSIC[i]))
         -- Recupera faceta IManagement da replica remota
-        local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement_v"..Utils.OB_VERSION)
+        local ok, remoteMgmFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IManagement_"..Utils.OB_VERSION)
         if ok then
           remoteMgmFacet = orb:narrow(remoteMgmFacet,
                            Utils.MANAGEMENT_ACS_INTERFACE)
@@ -1366,7 +1374,7 @@ function ACSReceptacleFacet:connect(receptacle, object)
       local acsFacet =  Utils.getReplicaFacetByReceptacle(orb,
                                                           object,
                                                "AccessControlServiceReceptacle",
-                                               "IAccessControlService_v" .. Utils.OB_VERSION,
+                                               "IAccessControlService" .. Utils.OB_VERSION,
                                                Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
       if not acsFacet then
         --Nao esta, vai conectar
@@ -1812,7 +1820,7 @@ function startup(self)
                                                       remoteACSRecepFacet,
                                                       "RegistryServiceReceptacle")
                       if not status then
-                        Log:warn("Nao foi possivel obter o Serviço [IRegistryService_v" .. Utils.OB_VERSION .. "]: " .. conns[1])
+                        Log:warn("Nao foi possivel obter o Serviço [IRegistryService_" .. Utils.OB_VERSION .. "]: " .. conns[1])
                         return
                       elseif conns[1] then
                         for connId,conn in pairs(conns) do

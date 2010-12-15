@@ -80,8 +80,8 @@ function ACSFacet:getRegistryService()
     return nil
   end
   local ic = connections[1].objref
-  local rs = ic:getFacet(Utils.REGISTRY_SERVICE_INTERFACE_V1_04)
-  return Openbus:getORB():narrow(rs, Utils.REGISTRY_SERVICE_INTERFACE_V1_04)
+  local rs = ic:getFacet(Utils.REGISTRY_SERVICE_INTERFACE_PREV)
+  return Openbus:getORB():narrow(rs, Utils.REGISTRY_SERVICE_INTERFACE_PREV)
 end
 
 ---

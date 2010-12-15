@@ -93,7 +93,7 @@ local props = {  host = RegistryServerConfiguration.registryServerHostName,
 local TestLog = require "openbus.util.TestLog"
 local tests = {}
 tests[Utils.REGISTRY_SERVICE_KEY] = TestLog()
-tests[Utils.REGISTRY_SERVICE_KEY_V1_04] = TestLog()
+tests[Utils.REGISTRY_SERVICE_KEY_PREV] = TestLog()
 tests[Utils.FAULT_TOLERANT_RS_KEY] = TestLog()
 local logfile
 for key, v in pairs(tests) do
@@ -118,7 +118,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local RegistryService = require "core.services.registry.RegistryService"
-local RegistryService_v1_04 = require "core.services.registry.RegistryService_v1_04"
+local RegistryServicePrev = require "core.services.registry.RegistryService_v1_04"
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -----------------------------------------------------------------------------
@@ -144,22 +144,22 @@ facetDescriptions.IMetaInterface.name              = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name    = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 
-facetDescriptions.IRegistryService.name            = "IRegistryService_v" .. Utils.OB_VERSION
+facetDescriptions.IRegistryService.name            = "IRegistryService_" .. Utils.OB_VERSION
 facetDescriptions.IRegistryService.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
 facetDescriptions.IRegistryService.key             = Utils.REGISTRY_SERVICE_KEY
 
 facetDescriptions.IRegistryService_Prev.name            = "IRegistryService"
-facetDescriptions.IRegistryService_Prev.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE_V1_04
-facetDescriptions.IRegistryService_Prev.class           = RegistryService_v1_04.RSFacet
-facetDescriptions.IRegistryService_Prev.key             = Utils.REGISTRY_SERVICE_KEY_V1_04
+facetDescriptions.IRegistryService_Prev.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE_PREV
+facetDescriptions.IRegistryService_Prev.class           = RegistryServicePrev.RSFacet
+facetDescriptions.IRegistryService_Prev.key             = Utils.REGISTRY_SERVICE_KEY_PREV
 
-facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService_v" .. Utils.OB_VERSION
+facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService_" .. Utils.OB_VERSION
 facetDescriptions.IFaultTolerantService.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
 facetDescriptions.IFaultTolerantService.class           = RegistryService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_RS_KEY
 
-facetDescriptions.IManagement.name            = "IManagement_v" .. Utils.OB_VERSION
+facetDescriptions.IManagement.name            = "IManagement_" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
 facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_RS_KEY
@@ -210,6 +210,11 @@ function main()
 end
 
 local status, errMsg = oil.pcall(oil.main,main)
+if not status then
+  Log:error(format(
+      "Ocorreu uma falha na execução do serviço de registro: %s",
+      errMsg))
+end
 
 if serviceLogFile then
   serviceLogFile:close()
@@ -219,10 +224,4 @@ if auditLogFile then
 end
 if oilLogFile then
   oilLogFile:close()
-end
-
-if not status then
-  Log:error(format(
-      "Ocorreu uma falha na execução do serviço de registro: %s",
-      errMsg))
 end

@@ -28,6 +28,9 @@ local oop = require "loop.simple"
 ---
 module "core.services.session.SessionServiceComponent"
 
+local UnathorizedFacets = "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+    "/registry_service/UnathorizedFacets:1.0"
+
 SessionServiceComponent = oop.class({}, scs.Component)
 
 ---
@@ -92,7 +95,7 @@ function SessionServiceComponent:startup()
 
   local success, identifier = registryService:register(self.serviceOffer)
   if not success then
-    if identifier[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+    if identifier[1] == UnathorizedFacets then
       Log:error("Não foi possível registrar a oferta do serviço de sessão. As seguintes interfaces não foram autorizadas:")
       for _, facet in ipairs(identifier.facets) do
         Log:error(facet)
@@ -112,7 +115,7 @@ function SessionServiceComponent:startup()
 
   local success, identifierPrev = registryService:register(self.serviceOfferPrev)
   if not success then
-    if identifierPrev[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+    if identifierPrev[1] == UnathorizedFacets then
       Log:error(format(
           "Não foi possível registrar a oferta do serviço de sessão (versão %d). As seguintes interfaces não foram autorizadas:",
           Utils.OB_PREV))
@@ -164,7 +167,7 @@ function SessionServiceComponent:expired()
 
   success, self.registryIdentifier = registryService:register(self.serviceOffer)
   if not success then
-    if self.registryIdentifier[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+    if self.registryIdentifier[1] == UnathorizedFacets then
       Log:error("Não foi possível registrar a oferta do serviço de sessão. As seguintes interfaces não foram autorizadas:")
       for _, facet in ipairs(self.registryIdentifier.facets) do
         Log:error(facet)
@@ -179,7 +182,7 @@ function SessionServiceComponent:expired()
 
   success, self.registryIdentifierPrev = registryService:register(self.serviceOfferPrev)
   if not success then
-    if self.registryIdentifierPrev[1] == "IDL:tecgraf/openbus/core/v1_05/registry_service/UnathorizedFacets:1.0" then
+    if self.registryIdentifierPrev[1] == UnathorizedFacets then
       Log:error(format(
           "Não foi possível registrar a oferta do serviço de sessão (versão %d). As seguintes interfaces não foram autorizadas:",
           Utils.OB_PREV))
@@ -233,7 +236,7 @@ function SessionServiceComponent:shutdown()
                   orb,
                             self.context.IComponent,
                             "AccessControlServiceReceptacle",
-                            "IAccessControlService_v" .. Utils.OB_VERSION,
+                            "IAccessControlService_" .. Utils.OB_VERSION,
                             Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if not status or not acsFacet then
       -- erro ja foi logado, só retorna

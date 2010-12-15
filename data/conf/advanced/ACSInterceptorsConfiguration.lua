@@ -17,7 +17,7 @@ config.interfaces = {
     excluded_ops = {"loginByPassword", "loginByCertificate", "getChallenge", "isValid"}
   },
   {
-    interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04,
+    interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_PREV,
     excluded_ops = {"loginByPassword", "loginByCertificate", "getChallenge", "isValid"}
   },
   {
@@ -33,7 +33,7 @@ config.ft_update_policy = {
     update_ops = {"loginByPassword", "loginByCertificate"}
   },
   {
-    interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04,
+    interface = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_PREV,
     update_ops = {"loginByPassword", "loginByCertificate"}
   },
 }

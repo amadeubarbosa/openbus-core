@@ -4,8 +4,6 @@
 -- Última alteração:
 --   $Id$
 -----------------------------------------------------------------------------
-local tonumber = tonumber
-
 local format = string.format
 
 local oil = require "oil"
@@ -101,19 +99,19 @@ local orb = Openbus:getORB()
 -- Carrega a IDL do serviço
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if not IDLPATH_DIR then
- log:error("A variável IDLPATH_DIR não foi definida")
+ Log:error("A variável IDLPATH_DIR não foi definida")
  return false
 end
-local idlfile = IDLPATH_DIR .. "/v"..Utils.OB_VERSION.."/session_service.idl"
+local idlfile = IDLPATH_DIR .. "/"..Utils.OB_VERSION.."/session_service.idl"
 orb:loadidlfile(idlfile)
-local idlfile = IDLPATH_DIR .. "/v"..Utils.OB_PREV.."/session_service.idl"
+idlfile = IDLPATH_DIR .. "/"..Utils.OB_PREV.."/session_service.idl"
 orb:loadidlfile(idlfile)
 
 local scs = require "scs.core.base"
 local SessionServiceComponent =
   require "core.services.session.SessionServiceComponent"
 local SessionService = require "core.services.session.SessionService"
-local SessionService_v1_04 = require "core.services.session.SessionService_v1_04"
+local SessionServicePrev = require "core.services.session.SessionService_v1_04"
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -----------------------------------------------------------------------------
@@ -137,13 +135,13 @@ facetDescriptions.IMetaInterface.name                = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name      = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class               = scs.MetaInterface
 
-facetDescriptions.ISessionService.name               = "ISessionService_v" .. Utils.OB_VERSION
+facetDescriptions.ISessionService.name               = "ISessionService_"..Utils.OB_VERSION
 facetDescriptions.ISessionService.interface_name     = Utils.SESSION_SERVICE_INTERFACE
 facetDescriptions.ISessionService.class              = SessionService.SessionService
 
-facetDescriptions.ISessionService_Prev.name           = "ISessionService"
-facetDescriptions.ISessionService_Prev.interface_name = Utils.SESSION_SERVICE_INTERFACE_V1_04
-facetDescriptions.ISessionService_Prev.class          = SessionService_v1_04.SessionService
+facetDescriptions.ISessionService_Prev.name           = "ISessionService_"..Utils.OB_PREV
+facetDescriptions.ISessionService_Prev.interface_name = Utils.SESSION_SERVICE_INTERFACE_PREV
+facetDescriptions.ISessionService_Prev.class          = SessionServicePrev.SessionService
 
 -- Nao precisa ter 2 versoes de credential observer pois e' uma comunicacao intra-barramento.
 -- O barramento como um todo sempre estara na mesma versao (mais nova).
@@ -188,7 +186,7 @@ function main()
   success, res = oil.pcall(sessionServiceComponent.startup,
       sessionServiceComponent)
   if not success then
-    Log:error(format("Ocorreu um erro ao iniciar o serviço de sessão: ",
+    Log:error(format("Ocorreu um erro ao iniciar o serviço de sessão: %s",
       tostring(res)))
     os.exit(1)
   end
@@ -197,6 +195,11 @@ function main()
 end
 
 local status, errMsg = oil.pcall(oil.main,main)
+if not status then
+  Log:error(format(
+      "Ocorreu uma falha na execução do serviço de sessão: %s",
+      errMsg))
+end
 
 if serviceLogFile then
   serviceLogFile:close()
@@ -206,10 +209,4 @@ if auditLogFile then
 end
 if oilLogFile then
   oilLogFile:close()
-end
-
-if not status then
-  Log:error(format(
-      "Ocorreu uma falha na execução do serviço de sessão: %s",
-      errMsg))
 end

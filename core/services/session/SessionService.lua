@@ -7,7 +7,7 @@ local orb = oil.orb
 local luuid = require "uuid"
 
 local Session = require "core.services.session.Session"
-local Session_v1_04 = require "core.services.session.Session_v1_04"
+local SessionPrev = require "core.services.session.Session_v1_04"
 
 local Log = require "openbus.util.Log"
 local Utils = require "openbus.util.Utils"
@@ -65,21 +65,21 @@ facetDescriptions.IMetaInterface.name             = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name   = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class            = scs.MetaInterface
 
-facetDescriptions.SessionEventSink.name           = "SessionEventSink_v" .. Utils.OB_VERSION
+facetDescriptions.SessionEventSink.name           = "SessionEventSink_"..Utils.OB_VERSION
 facetDescriptions.SessionEventSink.interface_name = Utils.SESSION_ES_INTERFACE
 facetDescriptions.SessionEventSink.class          = Session.SessionEventSink
 
-facetDescriptions.SessionEventSink_Prev.name           = "SessionEventSink"
-facetDescriptions.SessionEventSink_Prev.interface_name = Utils.SESSION_ES_INTERFACE_V1_04
-facetDescriptions.SessionEventSink_Prev.class          = Session_v1_04.SessionEventSink
+facetDescriptions.SessionEventSink_Prev.name           = "SessionEventSink_"..Utils.OB_PREV
+facetDescriptions.SessionEventSink_Prev.interface_name = Utils.SESSION_ES_INTERFACE_PREV
+facetDescriptions.SessionEventSink_Prev.class          = SessionPrev.SessionEventSink
 
-facetDescriptions.ISession.name                   = "ISession_v" .. Utils.OB_VERSION
+facetDescriptions.ISession.name                   = "ISession_"..Utils.OB_VERSION
 facetDescriptions.ISession.interface_name         = Utils.SESSION_INTERFACE
 facetDescriptions.ISession.class                  = Session.Session
 
-facetDescriptions.ISession_Prev.name             = "ISession"
-facetDescriptions.ISession_Prev.interface_name   = Utils.SESSION_INTERFACE_V1_04
-facetDescriptions.ISession_Prev.class            = Session_v1_04.Session
+facetDescriptions.ISession_Prev.name             = "ISession_"..Utils.OB_PREV
+facetDescriptions.ISession_Prev.interface_name   = Utils.SESSION_INTERFACE_PREV
+facetDescriptions.ISession_Prev.class            = SessionPrev.Session
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
@@ -134,7 +134,7 @@ function SessionService:createSession(member)
   -- A credencial deve ser observada!
   local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService_v" .. Utils.OB_VERSION, acsIDL)
+    "IAccessControlService_" .. Utils.OB_VERSION, acsIDL)
   if not status or not acsFacet then
     orb:deactivate(component.ISession)
     orb:deactivate(component.IMetaInterface)
@@ -195,7 +195,7 @@ function SessionService:observe(credentialId, session)
     -- Primeira sessão da credencial, começar a observar
     local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService_v" .. Utils.OB_VERSION, acsIDL)
+      "IAccessControlService_" .. Utils.OB_VERSION, acsIDL)
     if status and acsFacet then
       acsFacet:addCredentialToObserver(self.observerId, credentialId)
     end
@@ -219,7 +219,7 @@ function SessionService:unObserve(credentialId, session)
     self.observed[credentialId] = nil
     local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService_v" .. Utils.OB_VERSION, acsIDL)
+      "IAccessControlService_" .. Utils.OB_VERSION, acsIDL)
     if status and acsFacet then
       acsFacet:removeCredentialFromObserver(self.observerId, credentialId)
     end

@@ -69,8 +69,7 @@ Openbus:init(AccessControlServerConfiguration.hostName,
   AccessControlServerConfiguration.hostPort)
 
 local orb = Openbus:getORB()
-
-orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/fault_tolerance.idl")
+orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/fault_tolerance.idl")
 
 ---
 --Função que será executada pelo OiL em modo protegido.

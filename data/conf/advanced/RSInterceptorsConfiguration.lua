@@ -21,7 +21,7 @@ config.ft_update_policy = {
     update_ops = { }
   },
   {
-    interface = Utils.REGISTRY_SERVICE_INTERFACE_V1_04,
+    interface = Utils.REGISTRY_SERVICE_INTERFACE_PREV,
     update_ops = {"register", "update" }
   },
 }

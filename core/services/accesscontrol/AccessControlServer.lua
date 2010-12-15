@@ -92,6 +92,14 @@ if acsConfig.logs.oil.file then
   end
 end
 
+function exitServer(files, status)
+  for _, file in ipairs(files) do
+    file:close()
+  end
+  os.exit(status or 0)
+end
+
+
 local props = { host = AccessControlServerConfiguration.hostName,
   port = AccessControlServerConfiguration.hostPort}
 
@@ -99,9 +107,9 @@ local TestLog = require "openbus.util.TestLog"
 local tests = {}
 tests[Utils.OPENBUS_KEY] = TestLog()
 tests[Utils.ACCESS_CONTROL_SERVICE_KEY] = TestLog()
-tests[Utils.ACCESS_CONTROL_SERVICE_KEY_V1_04] = TestLog()
+tests[Utils.ACCESS_CONTROL_SERVICE_KEY_PREV] = TestLog()
 tests[Utils.LEASE_PROVIDER_KEY] = TestLog()
-tests[Utils.LEASE_PROVIDER_KEY_V1_04] = TestLog()
+tests[Utils.LEASE_PROVIDER_KEY_PREV] = TestLog()
 tests[Utils.FAULT_TOLERANT_ACS_KEY] = TestLog()
 
 for key, v in pairs(tests) do
@@ -116,8 +124,11 @@ end
 iconfig.tests = tests
 
 -- Inicializa o barramento
-Openbus:init(AccessControlServerConfiguration.hostName,
-  AccessControlServerConfiguration.hostPort, props, iconfig)
+if not (Openbus:init(AccessControlServerConfiguration.hostName,
+    AccessControlServerConfiguration.hostPort, props, iconfig)) then
+  Log:error("O OpenBus não foi inicializado")
+  exitServer({serviceLogFile, auditLogFile, OiLLogFile}, -1)
+end
 
 Openbus:enableFaultTolerance()
 
@@ -125,7 +136,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
-local AccessControlService_v1_04 = require "core.services.accesscontrol.AccessControlService_v1_04"
+local AccessControlServicePrev = require "core.services.accesscontrol.AccessControlService_v1_04"
 
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
@@ -152,32 +163,32 @@ facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IAccessControlService.name            = "IAccessControlService_v" .. Utils.OB_VERSION
+facetDescriptions.IAccessControlService.name            = "IAccessControlService_" .. Utils.OB_VERSION
 facetDescriptions.IAccessControlService.interface_name  = Utils.ACCESS_CONTROL_SERVICE_INTERFACE
 facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
 facetDescriptions.IAccessControlService.key             = Utils.ACCESS_CONTROL_SERVICE_KEY
 
 facetDescriptions.IAccessControlService_Prev.name           = "IAccessControlService"
-facetDescriptions.IAccessControlService_Prev.interface_name = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_V1_04
-facetDescriptions.IAccessControlService_Prev.class          = AccessControlService_v1_04.ACSFacet
-facetDescriptions.IAccessControlService_Prev.key            = Utils.ACCESS_CONTROL_SERVICE_KEY_V1_04
+facetDescriptions.IAccessControlService_Prev.interface_name = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_PREV
+facetDescriptions.IAccessControlService_Prev.class          = AccessControlServicePrev.ACSFacet
+facetDescriptions.IAccessControlService_Prev.key            = Utils.ACCESS_CONTROL_SERVICE_KEY_PREV
 
-facetDescriptions.ILeaseProvider.name                        = "ILeaseProvider_v" .. Utils.OB_VERSION
+facetDescriptions.ILeaseProvider.name                        = "ILeaseProvider_" .. Utils.OB_VERSION
 facetDescriptions.ILeaseProvider.interface_name              = Utils.LEASE_PROVIDER_INTERFACE
 facetDescriptions.ILeaseProvider.class                       = AccessControlService.LeaseProviderFacet
 facetDescriptions.ILeaseProvider.key                         = Utils.LEASE_PROVIDER_KEY
 
 facetDescriptions.ILeaseProvider_Prev.name                  = "ILeaseProvider"
-facetDescriptions.ILeaseProvider_Prev.interface_name        = Utils.LEASE_PROVIDER_INTERFACE_V1_04
-facetDescriptions.ILeaseProvider_Prev.class                 = AccessControlService_v1_04.LeaseProviderFacet
-facetDescriptions.ILeaseProvider_Prev.key                   = Utils.LEASE_PROVIDER_KEY_V1_04
+facetDescriptions.ILeaseProvider_Prev.interface_name        = Utils.LEASE_PROVIDER_INTERFACE_PREV
+facetDescriptions.ILeaseProvider_Prev.class                 = AccessControlServicePrev.LeaseProviderFacet
+facetDescriptions.ILeaseProvider_Prev.key                   = Utils.LEASE_PROVIDER_KEY_PREV
 
-facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService_v" .. Utils.OB_VERSION
+facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService_" .. Utils.OB_VERSION
 facetDescriptions.IFaultTolerantService.interface_name       = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
 facetDescriptions.IFaultTolerantService.class                = AccessControlService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLERANT_ACS_KEY
 
-facetDescriptions.IManagement.name            = "IManagement_v" .. Utils.OB_VERSION
+facetDescriptions.IManagement.name            = "IManagement_" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_ACS_KEY
@@ -245,19 +256,10 @@ function main()
 end
 
 local status, errMsg = oil.pcall(oil.main,main)
-
-if serviceLogFile then
-  serviceLogFile:close()
-end
-if auditLogFile then
-  auditLogFile:close()
-end
-if oilLogFile then
-  oilLogFile:close()
-end
-
 if not status then
   Log:error(format(
       "Ocorreu uma falha na execução do serviço de controle de acesso: %s",
       errMsg))
 end
+
+exitServer({serviceLogFile, auditLogFile, oilLogFile})

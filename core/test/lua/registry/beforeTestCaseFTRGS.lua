@@ -4,6 +4,7 @@ local tostring = tostring
 require "oil"
 local orb = oil.orb
 
+local Utils = require "openbus.util.Utils"
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 
@@ -13,10 +14,10 @@ function loadidls(self)
     io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
     os.exit(1)
   end
-  orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/registry_service.idl")
   orb:loadidl("interface IHello_vft { };")
 end
 

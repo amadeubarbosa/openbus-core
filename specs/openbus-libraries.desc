@@ -4,6 +4,10 @@
 -- ATTENTION: place the fundamental packages first!
 -- If A depends on B then you should place B's description before than A's.
 SUNOS64_TECMAKE_FLAGS="USE_NODEPEND=Yes TEC_UNAME=SunOS510_64 BUILD_64=yes"
+
+OB_VERSION="v1_06"
+OB_PREV="v1_05"
+
 packages = {
   -- package to download the sources of the oil05, scs and friend projects
   { name = "oil-source",
@@ -14,9 +18,9 @@ packages = {
     url = SVNREPURL .. "/openbus/idl/trunk",
     directory = PRODAPP .."/idl",
   },
-  { name = "idl-1.4-source",
-    url = SVNREPURL .. "/openbus/branches/OB_v1_04_2009_08_07/core/idl",
-    directory = PRODAPP .."/idl-1.4",
+  { name = "idl-prev-source",
+    url = SVNREPURL .. "/openbus/idl/branches/OB_IDL_v1_05_2010_05_13",
+    directory = PRODAPP .."/idl-prev",
   },
   { name = "sdk-java-source",
     url = SVNREPURL .. "/openbus/sdk/java/trunk",
@@ -208,14 +212,14 @@ packages = {
     url = SVNREPURL .. "/scs/tags/SCS_v1_00_02_2010_04_12/idl",
     directory = PRODAPP .."/scs-idl-prev",
     install_files = {
-      ["scs.idl"] = "idlpath/v1_04",
+      ["scs.idl"] = "idlpath/"..OB_VERSION,
     },
   },
   { name = "scs-idl",
-    url = SVNREPURL .. "/scs/core/idl/trunk",
+    url = SVNREPURL .. "/scs/core/idl/branches/SCS_CORE_IDL_v1_02_2010_09_21",
     directory = PRODAPP .."/scs-idl",
     install_files = {
-      ["src/scs.idl"] = "idlpath/v1_05",
+      ["src/scs.idl"] = "idlpath/"..OB_VERSION,
     },
   },
   { name = "scsall",
@@ -374,8 +378,8 @@ packages = {
       ["../bin/${TEC_UNAME}/servicelauncher"] = "core/bin/${TEC_UNAME}",
       ["../bin/*.sh"] = "core/bin",
       ["../bin/servicelauncher"] = "core/bin",
-      [PRODAPP.."/idl-1.4/*.idl"] = "idlpath/v1_04",
-      [PRODAPP.."/idl/src/*.idl"] = "idlpath/v1_05",
+      [PRODAPP.."/idl-prev/*.idl"] = "idlpath/"..OB_PREV,
+      [PRODAPP.."/idl/src/*.idl"] = "idlpath/"..OB_VERSION,
       ["../services/accesscontrol"] = "core/services",
       ["../services/registry"] = "core/services",
       ["../services/faulttolerance"] = "core/services",
@@ -494,12 +498,14 @@ packages = {
     install_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/v1_05/scs.idl"] = "idlpath/v1_05",
+      [INSTALL.TOP.."/idlpath/"..OB_VERSION.."/scs.idl"] =
+          "idlpath/"..OB_VERSION,
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.*"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/v1_05/scs.idl"] = "idlpath/v1_05",
+      [INSTALL.TOP.."/idlpath/"..OB_VERSION.."/scs.idl"] =
+          "idlpath/"..OB_VERSION,
       ["*.h"] = "incpath/scs/",
     },
   },
@@ -536,7 +542,7 @@ packages = {
       ["openbus/util/*.h"] = "incpath/openbus/cpp/openbus/util/",    --include
       ["openbus/interceptors/*.h"] = "incpath/openbus/cpp/openbus/interceptors/",    --include
       ["stubs/orbix"] = "incpath/openbus/cpp/stubs",     --include
-      [INSTALL.TOP.."/idlpath/v1_05/*"] = "idlpath/v1_05",
+      [INSTALL.TOP.."/idlpath/"..OB_VERSION.."/*"] = "idlpath/"..OB_VERSION,
       ["test/orbix/acs/*.cpp"] = "test/orbix/acs/",
       ["test/orbix/acs/config.mak"] = "test/orbix/acs/",
       ["test/orbix/rgs/*.cpp"] = "test/orbix/rgs/",
@@ -682,12 +688,14 @@ packages = {
     install_files = {
       ["../lib/${TEC_UNAME}/libscsmico.so"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/v1_05/scs.idl"] = "idlpath/v1_05",
+      [INSTALL.TOP.."/idlpath/"..OB_VERSION.."/scs.idl"] =
+          "idlpath/"..OB_VERSION,
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsmico.*"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/v1_05/scs.idl"] = "idlpath/v1_05",
+      [INSTALL.TOP.."/idlpath/"..OB_VERSION.."/scs.idl"] =
+          "idlpath/"..OB_VERSION,
       ["*.h"] = "incpath/scs",
     },
   },
@@ -726,7 +734,7 @@ packages = {
       ["openbus/util/*.h"] = "incpath/openbus/cpp/openbus/util/",    --include
       ["openbus/interceptors/*.h"] = "incpath/openbus/cpp/openbus/interceptors/",    --include
       ["stubs/mico"] = "incpath/openbus/cpp/stubs",     --include
-      [INSTALL.TOP.."/idlpath/v1_05/*"] = "idlpath/v1_05",
+      [INSTALL.TOP.."/idlpath/"..OB_PREV.."/*"] = "idlpath/"..OB_PREV,
       ["test/mico/acs/*.cpp"] = "test/mico/acs/",
       ["test/mico/acs/config.mak"] = "test/mico/acs/",
       ["test/mico/rgs/*.cpp"] = "test/mico/rgs/",
@@ -854,7 +862,7 @@ packages = {
     },
   },
   { name = "scs-java",
-    url = SVNREPURL .. "/scs/core/java/trunk",
+    url = SVNREPURL .. "/scs/core/java/branches/SCS_CORE_JAVA_v1_02_2010_11_08",
     directory = PRODAPP .."/scs-java",
     build = {
       type = "maven",
@@ -871,7 +879,7 @@ packages = {
       src = PRODAPP .."/idl",
     },
     install_files = {
-      ["src/*.idl"] = "idlpath/v1_05",
+      ["src/*.idl"] = "idlpath/"..OB_VERSION,
       ["target/openbus-idl-jacorb-*.jar"] = "libpath/java",
       ["target/dependency/*.jar"] = "libpath/java",
     },

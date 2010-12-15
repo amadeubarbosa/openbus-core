@@ -189,13 +189,14 @@ configure_action = function(answers, path, util)
   loadConfig()
 
   ftACS.ftconfig.hosts.ACS =
-      generateCorbalocString(answers.hostName,answers.hostPort,"ACS_v1_05")
+      generateCorbalocString(answers.hostName,answers.hostPort,"ACS_v1_06")
   ftACS.ftconfig.hosts.ACSIC =
-      generateCorbalocString(answers.hostName,answers.hostPort,"openbus_v1_05")
+      generateCorbalocString(answers.hostName,answers.hostPort,"openbus_v1_06")
   ftACS.ftconfig.hosts.LP =
-      generateCorbalocString(answers.hostName,answers.hostPort,"LP_v1_05")
+      generateCorbalocString(answers.hostName,answers.hostPort,"LP_v1_06")
+      
   ftACS.ftconfig.hosts.FTACS =
-      generateCorbalocString(answers.hostName,answers.hostPort,"FTACS_v1_05")
+      generateCorbalocString(answers.hostName,answers.hostPort,"FTACS_v1_06")
 
   local ftRSConfFile = path .."/data/conf/RSFaultToleranceConfiguration.lua"
   loadConfig, err = loadfile(ftRSConfFile)
@@ -208,9 +209,9 @@ configure_action = function(answers, path, util)
   loadConfig()
 
   ftRS.ftconfig.hosts.RS =
-    generateCorbalocString(answers.hostName,rsHostPort,"RS_v1_05")
+    generateCorbalocString(answers.hostName,rsHostPort,"RS_v1_06")
   ftRS.ftconfig.hosts.FTRS =
-    generateCorbalocString(answers.hostName,rsHostPort,"FTRS_v1_05")
+    generateCorbalocString(answers.hostName,rsHostPort,"FTRS_v1_06")
 
   -- Persisting the configurations to temporary tree where the tarball was extracted
   util.serialize_table(acsConfFile,AccessControlServerConfiguration,

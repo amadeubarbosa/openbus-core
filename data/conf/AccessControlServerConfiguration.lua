@@ -29,7 +29,7 @@ AccessControlServerConfiguration = {
     },
     audit = {
       level = 1,
-      file = "logs/access_control_service_audit.log",
+      -- file = "logs/access_control_service_audit.log",
     },
     oil = {
       level = 5,
