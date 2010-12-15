@@ -1428,8 +1428,9 @@ end
 local function connect(retry)
   retry = retry or 0
   if not Openbus:isConnected() then
-    if not password then
-      password = lpw.getpass("Senha: ")
+    local localPassword = password
+    if not localPassword then
+      localPassword = lpw.getpass("Senha: ")
     end
     if retry == 0 then
       Openbus:init(acshost, acsport)
@@ -1437,12 +1438,11 @@ local function connect(retry)
       orb:loadidlfile(IDLPATH_DIR .. "/v1_05/registry_service.idl")
       orb:loadidlfile(IDLPATH_DIR .. "/v1_05/access_control_service.idl")
     end
-    if Openbus:connectByLoginPassword(login, password) == false then
+    if Openbus:connectByLoginPassword(login, localPassword) == false then
       print("[ERRO] Falha no login.")
       retry = retry + 1
-      if retry < MAXRETRIES then
+      if (not password) and (retry < MAXRETRIES) then
         print("Tente novamente.")
-        password = nil
         connect(retry)
       end
     end
