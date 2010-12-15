@@ -317,9 +317,10 @@ packages = {
     },
   },
   { name = "lce",
+    url = SVNREPURL.."/luautils/lce/trunk",
     build = {
       type = "tecmake",
-      src = SVNDIR .."/lib/lce/src",
+      src = SVNDIR.."/lib/lce/src",
       mf = { "config LUA51="..PRODAPP.."/lua5.1", },
     Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
