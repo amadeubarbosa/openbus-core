@@ -209,7 +209,7 @@ packages = {
     },
   },
   { name = "scs-idl-prev",
-    url = SVNREPURL .. "/scs/tags/SCS_v1_00_02_2010_04_12/idl",
+    url = SVNREPURL .. "/scs/branches/SCS_v1_01_2010_05_13/idl",
     directory = PRODAPP .."/scs-idl-prev",
     install_files = {
       ["scs.idl"] = "idlpath/"..OB_VERSION,
@@ -223,7 +223,7 @@ packages = {
     },
   },
   { name = "scsall",
-    url = SVNREPURL .. "/scs/core/lua/trunk",
+    url = SVNREPURL .. "/scs/core/lua/branches/SCS_CORE_LUA_v1_02_2010_09_21",
     directory = PRODAPP .."/scs-lua",
     build = {
       type = "tecmake",
@@ -320,7 +320,7 @@ packages = {
     url = SVNREPURL.."/luautils/lce/trunk",
     build = {
       type = "tecmake",
-      src = SVNDIR.."/lib/lce/src",
+      src = PRODAPP.."/lce/src",
       mf = { "config LUA51="..PRODAPP.."/lua5.1", },
     Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
