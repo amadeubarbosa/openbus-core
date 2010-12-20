@@ -22,7 +22,7 @@ setenv SHLIB_PATH "$MICODIR/libpath/${TEC_UNAME}:$SHLIB_PATH"
 setenv LIBPATH "$MICODIR/libpath/${TEC_UNAME}:$LIBPATH"
 setenv MANPATH "$MICOSHAREDDIR/man:$MANPATH"
 setenv LIBRARY_PATH "$MICODIR/libpath/${TEC_UNAME}:$LIBRARY_PATH"
-setenv CPLUS_INCLUDE_PATH "$MICODIR/incpath/mico-2.3.13/mico:$CPLUS_INCLUDE_PATH"
+setenv CPLUS_INCLUDE_PATH "$MICODIR/incpath/mico-2.3.13:$CPLUS_INCLUDE_PATH"
 
 unset prefix
 unset exec_prefix
