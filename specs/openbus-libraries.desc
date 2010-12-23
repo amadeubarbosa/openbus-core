@@ -212,7 +212,7 @@ packages = {
     url = SVNREPURL .. "/scs/branches/SCS_v1_01_2010_05_13/idl",
     directory = PRODAPP .."/scs-idl-prev",
     install_files = {
-      ["scs.idl"] = "idlpath/"..OB_VERSION,
+      ["scs.idl"] = "idlpath/"..OB_PREV,
     },
   },
   { name = "scs-idl",
