@@ -264,19 +264,16 @@ packages = {
     },
   },
   { name = "ftc",
-    url = SVNREPURL .. "/ftc/tags/FTC_v1_01_00_2010_06_19",
+    url = SVNREPURL .. "/ftc/tags/FTC_v1_01_01_2010_11_29",
     build = {
       type = "tecmake",
       src = PRODAPP .."/ftc/cpp/src",
-      mf = { "config LUA51="..PRODAPP.."/lua5.1", "without_oil LUA51="..PRODAPP.."/lua5.1", },
+      mf = { "config LUA51="..PRODAPP.."/lua5.1"},
       Darwin = { mf = { 
-        "config LUA51="..PRODAPP.."/lua5.1", 
-        "config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes", 
-        "without_oil LUA51="..PRODAPP.."/lua5.1",
-        "without_oil LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes", 
+        "config BUILD_DYLIB=Yes", 
         }, 
       },
-      SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, "without_oil LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS } },
+      SunOS510_64 = { mf = { "config ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libftc*.so"] = "libpath/${TEC_UNAME}",
