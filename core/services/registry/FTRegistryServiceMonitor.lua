@@ -4,7 +4,7 @@ local os = os
 local loadfile = loadfile
 local assert = assert
 local string = string
-
+local format = string.format
 local oil = require "oil"
 
 local orb = oil.orb
@@ -38,7 +38,7 @@ end
 local BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
 
 
-orb:loadidlfile(IDLPATH_DIR.."/v"..Utils.OB_VERSION.."/registry_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
 ---
 --Componente responsável pelo Monitor do Serviço de Registro
 ---
@@ -119,7 +119,7 @@ function FTRSMonitorFacet:isUnix()
 end
 
 ---
---Monitora o serviÃ§o de registro e cria uma nova rÃ©plica se necessÃ¡rio.
+--Monitora o serviço de registro e cria uma nova réplica se necessário.
 ---
 function FTRSMonitorFacet:monitor()
   local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
@@ -133,7 +133,7 @@ function FTRSMonitorFacet:monitor()
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
     if ok then
-      --se objeto remoto estÃ© em estado de falha, precisa ser reinicializado
+      --se objeto remoto está em estado de falha, precisa ser reinicializado
       if not res then
         reinit = true
           Log:debug("O serviço de registro está em estado de falha. O serviço será finalizado")
@@ -143,7 +143,7 @@ function FTRSMonitorFacet:monitor()
     else
       Log:info(format(
           "O serviço de registro localizado em {%s:%d} não está acessível",
-          self.config.hostName, self.config.hostPort))
+          self.config.registryServerHostName, self.config.registryServerHostPort))
 
       -- ocorreu falha de comunicacao com o objeto remoto
       reinit = true
