@@ -1374,18 +1374,18 @@ function ACSReceptacleFacet:connect(receptacle, object)
       local acsFacet =  Utils.getReplicaFacetByReceptacle(orb,
                                                           object,
                                                "AccessControlServiceReceptacle",
-                                               "IAccessControlService" .. Utils.OB_VERSION,
+                                               "IAccessControlService_" .. Utils.OB_VERSION,
                                                Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
       if not acsFacet then
         --Nao esta, vai conectar
-        local status, conns = oil.pcall(rsIRecep.connect, rsIRecep,
+        local status, conn = oil.pcall(rsIRecep.connect, rsIRecep,
                "AccessControlServiceReceptacle", self.context.IComponent )
         if not status then
           Log:error("Falha ao conectar o ACS no receptáculo do RGS: " ..
-                    conns[1])
+                    conn[1])
           PersistentReceptacle.PersistentReceptacleFacet.disconnect(self, connId)
           Log:error("Não foi possível conectar RGS ao ACS.")
-          return nil
+          error ( orb:newexcept{"IDL:scs/core/InvalidConnection:1.0"} )
         end
       end
     end
@@ -1424,8 +1424,8 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
 
   if # ftFacet.ftconfig.hosts.ACS <= 1 then
     Log:debug(format(
-        "Não existem réplicas cadastradas para atualizar o estado do receptáculo %s para o comando %s",
-        data.receptacle, command))
+        "Não existem réplicas cadastradas para atualizar o estado do receptáculo para o comando %s",
+        command))
     return
   end
 
@@ -1440,8 +1440,8 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
 
       if ret and succ then
         --encontrou outra replica
-        Log:debug(format("Requisitou comando %s na réplica %s do receptáculo %s",
-            command, ftFacet.ftconfig.hosts.ACSIC[i], data.receptacle))
+        Log:debug(format("Requisitou comando %s no receptáculo da réplica %s",
+            command, ftFacet.ftconfig.hosts.ACSIC[i]))
         -- Recupera faceta IReceptacles da replica remota
         local ok, remoteACSRecepFacet =  oil.pcall(remoteACSIC.getFacetByName, remoteACSIC, "IReceptacles")
         if ok then
@@ -1459,8 +1459,8 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
         end
       else
         Log:error(format(
-            "A réplica %s não está disponível para ser atualizada quanto ao estado do receptáculo %s para o comando %s",
-            ftFacet.ftconfig.hosts.ACSIC[i], data.receptacle, command))
+            "A réplica %s não está disponível para ser atualizada quanto ao estado do receptáculo para o comando %s",
+            ftFacet.ftconfig.hosts.ACSIC[i], command))
       end
     end
     i = i + 1

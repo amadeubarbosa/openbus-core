@@ -832,8 +832,8 @@ function RGSReceptacleFacet:updateConnectionState(command, data)
 
     if # ftFacet.ftconfig.hosts.RS <= 1 then
        Log:debug(format(
-        "Não existem réplicas cadastradas para atualizar o estado do receptáculo %s para o comando %s",
-        data.receptacle, command))
+        "Não existem réplicas cadastradas para atualizar o estado do receptáculo para o comando %s",
+        command))
       return
     end
 
@@ -849,8 +849,8 @@ function RGSReceptacleFacet:updateConnectionState(command, data)
             if ret and succ then
             --encontrou outra replica
               Log:debug(format(
-                  "Requisitou comando %s na réplica %s do receptáculo %s",
-                  command, ftFacet.ftconfig.hosts.RS[i], data.receptacle))
+                  "Requisitou comando %s no receptáculo da réplica %s",
+                  command, ftFacet.ftconfig.hosts.RS[i]))
                 local remoteRSIC = remoteRS:_component()
                 remoteRSIC = orb:narrow(remoteRSIC,"IDL:scs/core/IComponent:1.0")
                  -- Recupera faceta IReceptacles da replica remota
@@ -870,8 +870,8 @@ function RGSReceptacleFacet:updateConnectionState(command, data)
                 end
             else
               Log:error(format(
-            "A réplica %s não está disponível para ser atualizada quanto ao estado do receptáculo %s para o comando %s",
-            ftFacet.ftconfig.hosts.RS[i], data.receptacle, command))
+            "A réplica %s não está disponível para ser atualizada quanto ao estado do receptáculo para o comando %s",
+            ftFacet.ftconfig.hosts.RS[i], command))
             end
         end
         i = i + 1
