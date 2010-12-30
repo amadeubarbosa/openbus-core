@@ -34,12 +34,12 @@ local Hello_v1  = {
   facets = {
     IComponent = {
       name = "IComponent",
-      interface_name = Utils.COMPONENT_INTERFACE,
+      interface_name = "IDL:scs/core/IComponent:1.0",
       class = scs.Component
     },
     IMetaInterface = {
       name = "IMetaInterface",
-      interface_name = Utils.METAINTERFACE_INTERFACE,
+      interface_name = "IDL:scs/core/IMetaInterface:1.0",
       class = scs.MetaInterface
     },
    IHello_v1 = {
@@ -75,13 +75,13 @@ local Hello_v2  = {
   facets = {
     IComponent = {
       name = "IComponent",
-      interface_name = Utils.COMPONENT_INTERFACE,
+      interface_name = "IDL:scs/core/IComponent:1.0",
       class = scs.Component
     },
 
     IMetaInterface = {
       name = "IMetaInterface",
-      interface_name = Utils.METAINTERFACE_INTERFACE,
+      interface_name = "IDL:scs/core/IMetaInterface:1.0",
       class = scs.MetaInterface
     },
     IHello_v1 = {
@@ -123,12 +123,12 @@ local Hello_v2_2  = {
   facets = {
     IComponent = {
       name = "IComponent",
-      interface_name = Utils.COMPONENT_INTERFACE,
+      interface_name = "IDL:scs/core/IComponent:1.0",
       class = scs.Component
     },
     IMetaInterface = {
       name = "IMetaInterface",
-      interface_name = Utils.METAINTERFACE_INTERFACE,
+      interface_name = "IDL:scs/core/IMetaInterface:1.0",
       class = scs.MetaInterface
     },
     IHello_v2 = {
@@ -166,12 +166,12 @@ local Hello_v3  = {
   facets = {
     IComponent = {
       name = "IComponent",
-      interface_name = Utils.COMPONENT_INTERFACE,
+      interface_name = "IDL:scs/core/IComponent:1.0",
       class = scs.Component
     },
     IMetaInterface = {
       name = "IMetaInterface",
-      interface_name = Utils.METAINTERFACE_INTERFACE,
+      interface_name = "IDL:scs/core/IMetaInterface:1.0",
       class = scs.MetaInterface
     },
     IHello_v1 = {
@@ -218,10 +218,10 @@ if IDLPATH_DIR == nil then
 end
 
 function loadidls()
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
 
   for _, idl in ipairs(IDL) do
     orb:loadidl(idl)
@@ -258,13 +258,11 @@ function Before:init()
 
   assert(loadfile(OPENBUS_HOME.."/data/conf/AccessControlServerConfiguration.lua"))()
   -- Recupera o Serviço de Acesso
-  local acsComp = orb:newproxy("corbaloc::"..
-      AccessControlServerConfiguration.hostName..":"..
-      AccessControlServerConfiguration.hostPort.."/"..Utils.OPENBUS_KEY, nil,
-      Utils.COMPONENT_INTERFACE)
-  local facet = acsComp:getFacet(Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
-  self.accessControlService = orb:narrow(facet,
-      Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+  local acsComp = orb:newproxy("corbaloc::".. AccessControlServerConfiguration.hostName ..":"..
+                               AccessControlServerConfiguration.hostPort .. "/openbus_v1_05",nil,
+                               "IDL:scs/core/IComponent:1.0")
+  local facet = acsComp:getFacet("IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
+  self.accessControlService = orb:narrow(facet, "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
   -- instala o interceptador de cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
   local config = assert(loadfile(
@@ -275,7 +273,7 @@ function Before:init()
   -- Login do serviço para a realização do teste
   local challenge = self.accessControlService:getChallenge(self.deploymentId)
   local privateKey = assert(lce.key.readprivatefrompemfile(self.testKeyFile),
-      string.format("Arquivo '%s' não encontrado.",self.testKeyFile))
+                          string.format("Arquivo '%s' não encontrado.",self.testKeyFile))
   challenge = lce.cipher.decrypt(privateKey, challenge)
   cert = assert(lce.x509.readfromderfile(self.acsCertFile),
                 string.format("Arquivo '%s' não encontrado.",self.acsCertFile))
@@ -287,15 +285,14 @@ function Before:init()
 
   -- Recupera o Serviço de Registro
   local acsIComp = self.accessControlService:_component()
-  acsIComp = orb:narrow(acsIComp, Utils.COMPONENT_INTERFACE)
+  acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
   local acsIRecept = acsIComp:getFacetByName("IReceptacles")
   acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
   local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-  self.registryService = rsIComp:getFacetByName("IRegistryService_"..
-      Utils.OB_VERSION)
+  self.registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
   self.registryService = orb:narrow(self.registryService,
-      Utils.REGISTRY_SERVICE_INTERFACE)
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
   self.rgsProtected = orb:newproxy(self.registryService, "protected")
   self.registryIdentifier = nil
 end

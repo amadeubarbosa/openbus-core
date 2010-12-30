@@ -20,9 +20,9 @@ Suite = {
         io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
         os.exit(1)
       end
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/fault_tolerance.idl") 
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_05/fault_tolerance.idl") 
     end,
     testFetchACS = function(self)
       -- Obtém a configuração do serviço

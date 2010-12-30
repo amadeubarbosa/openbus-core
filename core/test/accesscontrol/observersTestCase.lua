@@ -5,7 +5,6 @@
 require "oil"
 local orb = oil.orb
 local Check = require "latt.Check"
-local Utils = require "openbus.util.Utils"
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
 
@@ -28,8 +27,7 @@ Suite = {
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential, credential)
       end
-      credentialObserver = orb:newservant(credentialObserver, nil,
-          Utils.CREDENTIAL_OBSERVER_INTERFACE)
+      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0")
       local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
       Check.assertNotEquals("", observerIdentifier)
       Check.assertTrue(self.accessControlService:removeObserver(observerIdentifier))

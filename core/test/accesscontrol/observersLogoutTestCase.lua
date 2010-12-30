@@ -5,14 +5,12 @@
 require "oil"
 local orb = oil.orb
 local Check = require "latt.Check"
-local Utils = require "openbus.util.Utils"
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
 
 local beforeTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeTestCase.lua")
 local afterTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterTestCase.lua")
 local beforeEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeEachTest.lua")
-local afterEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterEachTest.lua")
 
 Suite = {
 
@@ -23,15 +21,12 @@ Suite = {
 
     beforeEachTest = beforeEachTest,
 
-    afterEachTest = afterEachTest,
-
-    testRemoveCredentialFromObserver = function(self)
+    testObserversLogout =   function(self)
       local credentialObserver = { credential = self.credential }
       function credentialObserver:credentialWasDeleted(credential)
         Check.assertEquals(self.credential.identifier, credential.identifier)
       end
-      credentialObserver = orb:newservant(credentialObserver, nil,
-          Utils.CREDENTIAL_OBSERVER_INTERFACE)
+      credentialObserver = orb:newservant(credentialObserver, nil, "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0")
       local observersId = {}
       for i=1,3 do
         observersId[i] = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
@@ -43,7 +38,8 @@ Suite = {
           self.accessControlService:loginByPassword(self.login.user, self.login.password)
       self.credentialManager:setValue(self.credential)
       for i=1,3 do
-Check.assertFalse(self.accessControlService:removeCredentialFromObserver(observersId[i], oldCredential.identifier))
+        Check.assertFalse(self.accessControlService:removeCredentialFromObserver(
+            observersId[i], oldCredential.identifier))
       end
     end,
 
@@ -52,3 +48,4 @@ Check.assertFalse(self.accessControlService:removeCredentialFromObserver(observe
 }
 
 return Suite
+

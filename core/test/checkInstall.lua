@@ -36,22 +36,19 @@ if IDLPATH_DIR == nil then
 end
 
 function run()
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/session_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION..
-      "/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/session_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV..
-      "/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/session_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/session_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
 
 
   accessControlService = orb:newproxy("corbaloc::" .. 
       host .. ":" .. port .. 
       "/ACS", 
       "synchronous",
-      "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/access_control_service/IAccessControlService:1.0")
+      "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
   -- instala o interceptador de cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -85,19 +82,17 @@ function run()
      os.exit(1)
   end 
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-  local registryService = rsIComp:getFacetByName("IRegistryService_" .. Utils.OB_VERSION)
+  local registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
   registryService = orb:narrow(registryService,
-    "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-        "/registry_service/IRegistryService:1.0")
-  local serviceOffers = registryService:find({"ISessionService_" .. Utils.OB_VERSION})
+    "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
+  local serviceOffers = registryService:find({"ISessionService_v" .. Utils.OB_VERSION})
   
   if #serviceOffers == 0 then
     print("[ERRO] O servico de sessao nao esta conectado ao barramento.")
     os.exit(1)
   end
   local sessionServiceComponent = orb:narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
-  local sessionServiceInterface = "IDL:tecgraf/openbus/session_service/"..
-      Utils.OB_VERSION"/ISessionService:1.0"
+  local sessionServiceInterface = "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0"
   sessionService = sessionServiceComponent:getFacet(sessionServiceInterface)
   sessionService = orb:narrow(sessionService, sessionServiceInterface)
 end

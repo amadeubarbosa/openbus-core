@@ -23,16 +23,16 @@ local password = "tester"
 local facetDescriptions = {
   IComponent = {
     name = "IComponent",
-    interface_name = Utils.COMPONENT_INTERFACE,
+    interface_name = "IDL:scs/core/IComponent:1.0",
     class = scs.Component
   },
   SessionEventSink = {
     name = "SessionEventSink",
-    interface_name = Utils.SESSION_ES_INTERFACE,
+    interface_name =
+      "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0",
     class = oop.class{
       push = function(self, sender, event)
-        print("Membro "..sender.." enviou evento "..event.type..
-            " com o valor "..event.value._anyval)
+        print("Membro "..sender.." enviou evento "..event.type.." com o valor "..event.value._anyval)
       end,
       disconnect = function(self, sender)
         print("Aviso de desconexão enviado pelo membro "..sender)
@@ -60,21 +60,22 @@ Suite = {
 
       oil.verbose:level(0)
 
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/session_service.idl")
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_05/session_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_04/session_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
 
       local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
-      assert(loadfile(
-          OPENBUS_HOME.."/data/conf/AccessControlServerConfiguration.lua"))()
-      local acsComp = orb:newproxy("corbaloc::"..
-          AccessControlServerConfiguration.hostName..":"..
-          AccessControlServerConfiguration.hostPort.."/"..Utils.OPENBUS_KEY,
-          "synchronous", Utils.COMPONENT_INTERFACE)
-      local facet = acsComp:getFacet(Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      assert(loadfile(OPENBUS_HOME.."/data/conf/AccessControlServerConfiguration.lua"))()
+      local acsComp = orb:newproxy("corbaloc::".. AccessControlServerConfiguration.hostName ..
+                                   ":".. AccessControlServerConfiguration.hostPort .."/openbus_v1_05",
+        "synchronous", "IDL:scs/core/IComponent:1.0")
+      local facet = acsComp:getFacet(
+        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
       self.accessControlService = orb:narrow(facet,
-          Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+        "IDL:tecgraf/openbus/core/v1_05/access_control_service/IAccessControlService:1.0")
 
       -- instala o interceptador de cliente
       local DATA_DIR = os.getenv("OPENBUS_DATADIR")
@@ -93,25 +94,23 @@ Suite = {
       self.credentialManager:setValue(self.credential)
 
       local acsIComp = self.accessControlService:_component()
-      acsIComp = orb:narrow(acsIComp, Utils.COMPONENT_INTERFACE)
+      acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
       local acsIRecept = acsIComp:getFacetByName("IReceptacles")
       acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
       local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
-      local rsIComp = orb:narrow(conns[1].objref, Utils.COMPONENT_INTERFACE)
-      local registryService = rsIComp:getFacetByName("IRegistryService_"..
-          Utils.OB_VERSION)
+      local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
+      local registryService = rsIComp:getFacetByName("IRegistryService_v" .. Utils.OB_VERSION)
       registryService = orb:narrow(registryService,
-          Utils.REGISTRY_SERVICE_INTERFACE)
+         "IDL:tecgraf/openbus/core/v1_05/registry_service/IRegistryService:1.0")
 
-      local serviceOffers = registryService:find(
-          {Utils.SESSION_SERVICE_FACET_NAME})
+      local serviceOffers = registryService:find({"ISessionService_v" .. Utils.OB_VERSION})
       Check.assertNotEquals(#serviceOffers, 0)
       local sessionServiceComponent = orb:narrow(serviceOffers[1].member,
-          Utils.COMPONENT_INTERFACE)
+          "IDL:scs/core/IComponent:1.0")
       self.sessionService = sessionServiceComponent:getFacet(
-          Utils.SESSION_SERVICE_INTERFACE)
+        "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0")
       self.sessionService = orb:narrow(self.sessionService,
-          Utils.SESSION_SERVICE_INTERFACE)
+        "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0")
     end,
 
     afterEachTest = function(self)
@@ -126,8 +125,10 @@ Suite = {
       Check.assertTrue(success)
       Check.assertNotNil(session)
       Check.assertNotNil(id)
-      session = session:getFacet(Utils.SESSION_INTERFACE)
-      session = orb:narrow(session, Utils.SESSION_INTERFACE)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
       Check.assertTrue(session:removeMember(id))
     end,
 
@@ -141,8 +142,10 @@ Suite = {
       Check.assertTrue(success)
       Check.assertNotNil(session1)
       Check.assertNotNil(id1)
-      session1 = session1:getFacet(Utils.SESSION_INTERFACE)
-      session1 = orb:narrow(session1, Utils.SESSION_INTERFACE)
+      session1 = session1:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session1 = orb:narrow(session1,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
 
       success, session2, id2 =
         self.sessionService:createSession(member2.IComponent)
@@ -158,13 +161,17 @@ Suite = {
       Check.assertTrue(success)
       Check.assertNotNil(session1)
       Check.assertNotNil(id)
-      session1 = session1:getFacet(Utils.SESSION_INTERFACE)
-      session1 = orb:narrow(session1, Utils.SESSION_INTERFACE)
+      session1 = session1:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session1 = orb:narrow(session1,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
 
       local session2 = self.sessionService:getSession()
       Check.assertNotNil(session2)
-      session2 = session2:getFacet(Utils.SESSION_INTERFACE)
-      session2 = orb:narrow(session2, Utils.SESSION_INTERFACE)
+      session2 = session2:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session2 = orb:narrow(session2,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
       Check.assertEquals(session1:getIdentifier(), session2:getIdentifier())
 
       Check.assertTrue(session2:removeMember(id))
@@ -181,8 +188,10 @@ Suite = {
       local success, session, id1, id2
       success, session, id1 =
         self.sessionService:createSession(member1.IComponent)
-      session = session:getFacet(Utils.SESSION_INTERFACE)
-      session = orb:narrow(session, Utils.SESSION_INTERFACE)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
       id2 = session:addMember(member2.IComponent)
       Check.assertTrue(id2 and id2 ~= "")
 
@@ -203,8 +212,10 @@ Suite = {
       Check.assertTrue(success)
       Check.assertNotNil(session)
       Check.assertNotNil(id)
-      session = session:getFacet(Utils.SESSION_INTERFACE)
-      session = orb:narrow(session, Utils.SESSION_INTERFACE)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
       Check.assertFalse(session:removeMember("INVALID_ID_FOR_SESSION"))
       Check.assertTrue(session:removeMember(id))
     end,
@@ -215,8 +226,10 @@ Suite = {
 
       local success, session, id1 =
         self.sessionService:createSession(member1.IComponent)
-      session = session:getFacet(Utils.SESSION_INTERFACE)
-      session = orb:narrow(session, Utils.SESSION_INTERFACE)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
 
       local _, credential = self.accessControlService:loginByPassword(user,
         password)
@@ -245,8 +258,10 @@ Suite = {
 
       local success, session, id1 =
         self.sessionService:createSession(member1.IComponent)
-      session = session:getFacet(Utils.SESSION_INTERFACE)
-      session = orb:narrow(session, Utils.SESSION_INTERFACE)
+      session = session:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
 
       self.credentialManager:setValue(self.credential)
       local id2 = session:addMember(member2.IComponent)
@@ -267,10 +282,14 @@ Suite = {
       local success, sessionComponent, id1 =
         self.sessionService:createSession(member1.IComponent)
 
-      local session = sessionComponent:getFacet(Utils.SESSION_INTERFACE)
-      session = orb:narrow(session, Utils.SESSION_INTERFACE)
-      local sink = sessionComponent:getFacet(Utils.SESSION_ES_INTERFACE)
-      sink = orb:narrow(sink, Utils.SESSION_ES_INTERFACE)
+      local session = sessionComponent:getFacet(
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      session = orb:narrow(session,
+        "IDL:tecgraf/openbus/session_service/v1_05/ISession:1.0")
+      local sink = sessionComponent:getFacet(
+          "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0")
+      sink = orb:narrow(sink,
+          "IDL:tecgraf/openbus/session_service/v1_05/SessionEventSink:1.0")
 
       local id2 = session:addMember(member2.IComponent)
       local id3 = session:addMember(member3.IComponent)

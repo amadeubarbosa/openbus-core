@@ -18,9 +18,9 @@ function loadidls(self)
     io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
     os.exit(1)
   end
-  local idlfile = IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl"
+  local idlfile = IDLPATH_DIR.."/v1_05/access_control_service.idl"
   orb:loadidlfile(idlfile)
-  idlfile = IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl"
+  idlfile = IDLPATH_DIR.."/v1_04/access_control_service.idl"
   orb:loadidlfile(idlfile)
 end
 
