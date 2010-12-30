@@ -71,7 +71,7 @@ fi
 
 ###############################################################################
 
-cd ${OPENBUS_HOME}/core/test/lua
+cd ${OPENBUS_HOME}/core/test
 cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh testManagement01
 echo

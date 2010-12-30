@@ -95,7 +95,7 @@ fi
 
 ###############################################################################
 
-cd ${OPENBUS_HOME}/core/test/lua
+cd ${OPENBUS_HOME}/core/test
 ./run_unit_test.sh session/testSessionService.lua
 CODE=$?
 
