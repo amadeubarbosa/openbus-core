@@ -13,9 +13,9 @@ local scs = require "scs.core.base"
 local Check = require "latt.Check"
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
-local Before = dofile(OPENBUS_HOME .."/core/test/lua/registry/beforeTestCase.lua")
+local Before = dofile("registry/beforeTestCase.lua")
 local beforeTestCase = Before.beforeTestCase
-local afterTestCase = dofile(OPENBUS_HOME .."/core/test/lua/registry/afterTestCase.lua")
+local afterTestCase = dofile("registry/afterTestCase.lua")
 
 -------------------------------------------------------------------------------
 

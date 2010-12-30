@@ -7,9 +7,9 @@ local orb = oil.orb
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
 
-local beforeTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeTestCase.lua")
-local beforeEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeEachTest.lua")
-local afterEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterEachTest.lua")
+local beforeTestCase = dofile("accesscontrol/beforeTestCase.lua")
+local beforeEachTest = dofile("accesscontrol/beforeEachTest.lua")
+local afterEachTest = dofile("accesscontrol/afterEachTest.lua")
 
 
 Suite = {

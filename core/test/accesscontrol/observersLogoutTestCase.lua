@@ -8,9 +8,9 @@ local Check = require "latt.Check"
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
 
-local beforeTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeTestCase.lua")
-local afterTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterTestCase.lua")
-local beforeEachTest = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeEachTest.lua")
+local beforeTestCase = dofile("accesscontrol/beforeTestCase.lua")
+local afterTestCase = dofile("accesscontrol/afterTestCase.lua")
+local beforeEachTest = dofile("accesscontrol/beforeEachTest.lua")
 
 Suite = {
 

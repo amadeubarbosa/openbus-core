@@ -24,7 +24,7 @@ function loadidls(self)
   orb:loadidlfile(idlfile)
 end
 
-local beforeTestCaseFTACS = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/beforeTestCaseFTACS.lua")
+local beforeTestCaseFTACS = dofile("accesscontrol/beforeTestCaseFTACS.lua")
 
 Suite = {
 

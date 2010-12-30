@@ -27,8 +27,8 @@ function loadidls(self)
   orb:loadidl("interface IHello_vft { };")
 end
 
-local beforeTestCaseFTRGS = dofile(OPENBUS_HOME .."/core/test/lua/registry/beforeTestCaseFTRGS.lua")
-local afterTestCase = dofile(OPENBUS_HOME .."/core/test/lua/accesscontrol/afterTestCase.lua")
+local beforeTestCaseFTRGS = dofile("registry/beforeTestCaseFTRGS.lua")
+local afterTestCase = dofile("accesscontrol/afterTestCase.lua")
 
 -------------------------------------------------------------------------------
 -- Informações sobre os componentes usados nos testes
