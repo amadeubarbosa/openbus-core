@@ -4,7 +4,7 @@ local tostring = tostring
 require "oil"
 local orb = oil.orb
 
-local Utils - require "openbus.util.Utils"
+local Utils = require "openbus.util.Utils"
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 
