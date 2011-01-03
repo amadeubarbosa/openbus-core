@@ -5,6 +5,7 @@
 require "oil"
 local orb = oil.orb
 local Check = require "latt.Check"
+local Utils = require "openbus.util.Utils"
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
 
@@ -30,7 +31,7 @@ Suite = {
         Check.assertEquals(self.credential.identifier, credential.identifier)
       end
       credentialObserver = orb:newservant(credentialObserver, nil,
-        "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0")
+          Utils.CREDENTIAL_OBSERVER_INTERFACE)
       local observersId = {}
       for i=1,3 do
         observersId[i] = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})

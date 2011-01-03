@@ -32,11 +32,11 @@ local function init(self)
     os.exit(1)
   end
   oil.verbose:level(0)
-  orb:loadidlfile(IDLPATH_DIR.."/v1_05/scs.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/v1_05/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/v1_05/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/v1_04/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/v1_04/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/scs.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/registry_service.idl")
   -- Instala o interceptador cliente
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
   local config = assert(loadfile(DATA_DIR ..
@@ -51,7 +51,7 @@ local function init(self)
   -- Obtem a faceta de governança
   local succ
   local ic = orb:newproxy("corbaloc::".. AccessControlServerConfiguration.hostName
-      ..":" .. AccessControlServerConfiguration.hostPort .."/openbus_v1_05",
+      ..":" .. AccessControlServerConfiguration.hostPort .."/"..Utils.OPENBUS_KEY,
       "synchronous", Utils.COMPONENT_INTERFACE)
   local facet = ic:getFacet(Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
   self.acs = orb:narrow(facet, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
@@ -78,32 +78,32 @@ end
 -------------------------------------------------------------------------------
 -- Constantes
 --
-local SystemAlreadyExistsException =
-"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemAlreadyExists:1.0"
-local SystemNonExistentException =
-"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemNonExistent:1.0"
-local SystemDeploymentAlreadyExistsException =
-"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentAlreadyExists:1.0"
-local SystemDeploymentNonExistentException =
-"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemDeploymentNonExistent:1.0"
-local UserAlreadyExistsException =
-"IDL:tecgraf/openbus/core/v1_05/access_control_service/UserAlreadyExists:1.0"
-local UserNonExistentException =
-"IDL:tecgraf/openbus/core/v1_05/access_control_service/UserNonExistent:1.0"
-local InvalidCertificateException =
-"IDL:tecgraf/openbus/core/v1_05/access_control_service/InvalidCertificate:1.0"
-local SystemInUseException =
-"IDL:tecgraf/openbus/core/v1_05/access_control_service/SystemInUse:1.0"
-local InterfaceIdentifierAlreadyExistsException =
-"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierAlreadyExists:1.0"
-local InterfaceIdentifierNonExistentException =
-"IDL:tecgraf/openbus/core/v1_05/registry_service/InterfaceIdentifierNonExistent:1.0"
-local MemberNonExistentException =
-"IDL:tecgraf/openbus/core/v1_05/registry_service/MemberNonExistent:1.0"
-local AuthorizationNonExistentException =
-"IDL:tecgraf/openbus/core/v1_05/registry_service/AuthorizationNonExistent:1.0"
-local InvalidRegularExpression =
-"IDL:tecgraf/openbus/core/v1_05/registry_service/InvalidRegularExpression:1.0"
+local SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemAlreadyExists:1.0"
+local SystemNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemNonExistent:1.0"
+local SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentAlreadyExists:1.0"
+local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
+local UserAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/UserAlreadyExists:1.0"
+local UserNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/UserNonExistent:1.0"
+local InvalidCertificateException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/InvalidCertificate:1.0"
+local SystemInUseException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemInUse:1.0"
+local InterfaceIdentifierAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierAlreadyExists:1.0"
+local InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
+local MemberNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/MemberNonExistent:1.0"
+local AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/AuthorizationNonExistent:1.0"
+local InvalidRegularExpression = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InvalidRegularExpression:1.0"
 
 -------------------------------------------------------------------------------
 -- Casos de teste.

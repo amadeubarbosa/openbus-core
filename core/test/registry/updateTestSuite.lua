@@ -4,6 +4,8 @@
 --
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
+local Utils = require "openbus.util.Utils"
+
 local utils = require "core.test.lua.registry.utils"
 
 local scs = require "scs.core.base"
@@ -105,7 +107,8 @@ Suite = {
       success, err = self.rgsProtected:update("INVALID-IDENTIFIER",
           self.Hello_v1.properties)
       Check.assertFalse(success)
-      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/v1_05/registry_service/ServiceOfferNonExistent:1.0")
+      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+          "/registry_service/ServiceOfferNonExistent:1.0")
     end,
   },
 }
