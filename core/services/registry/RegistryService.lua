@@ -133,7 +133,7 @@ function RSFacet:addOffer(offerEntry)
   local orb = Openbus:getORB()
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService" .. Utils.OB_VERSION,
+    "IAccessControlService_" .. Utils.OB_VERSION,
     Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
   if status and acsFacet then
     acsFacet:addCredentialToObserver(self.observerId, credential.identifier)
@@ -409,7 +409,7 @@ function RSFacet:rawUnregister(identifier, credential)
         credential.identifier, credential.owner, credential.delegate))
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      "IAccessControlService_" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if status and acsFacet then
       acsFacet:removeCredentialFromObserver(self.observerId,
         credential.identifier)
@@ -513,8 +513,8 @@ function RSFacet:find(facets)
         table.insert(selectedOffers, offerEntry.offer)
       end
     end
-    Log:debug("Foram encontradas %d ofertas com as facetas especificadas",
-        #selectedOffers)
+    Log:debug(format("Foram encontradas %d ofertas com as facetas especificadas",
+        #selectedOffers))
   end
   return selectedOffers
 end
@@ -561,9 +561,9 @@ function RSFacet:findByCriteria(facets, criteria)
         end
         if hasAllFacets then
           table.insert(selectedOffers, offerEntry.offer)
-          Log:debug(
+          Log:debug(format(
               "Foram encontrados %d serviços com os critérios especificados",
-              #selectedOffers)
+              #selectedOffers))
         else
           Log:debug(
               "Não foram encontrados serviços com os critérios especificados")
@@ -1204,7 +1204,7 @@ function shutdown(self)
   if rs.observerId then
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      "IAccessControlService_" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if not status or not acsFacet then
       -- erro ja foi logado
       error{"IDL:SCS/ShutdownFailed:1.0"}
