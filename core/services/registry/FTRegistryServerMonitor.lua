@@ -13,6 +13,8 @@ local Log = require "openbus.util.Log"
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
+
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
 
@@ -75,6 +77,11 @@ Openbus:init(RegistryServerConfiguration.accessControlServerHostName,
 
 Openbus:enableFaultTolerance()
 
+local iConfig = assert(loadfile(DATA_DIR ..
+      "/conf/advanced/InterceptorsConfiguration.lua"))()
+local miConfig = assert(loadfile(DATA_DIR ..
+      "/conf/advanced/MonitorInterceptorsConfiguration.lua"))()
+
 local orb = Openbus:getORB()
 
 local FTRegistryServiceMonitor = require "core.services.registry.FTRegistryServiceMonitor"
@@ -134,6 +141,19 @@ componentId.platform_spec = ""
 function main()
   -- Aloca uma thread do OiL para o orb
   Openbus:run()
+
+  Openbus:__fetchACS()
+  --(Maira) Esse require está aqui porque acessa a classe Openbus que é usada como "singleton"
+  --O problema é que se o require é feito antes de a classe Openbus tiver sido iniciada, o compilador reclama o seu uso
+  --Isso explica porque os requires do ClientInterceptor e ServerInterceptor estão dentro de Openbus:init
+  --TODO: Achar uma solução melhor para esse problema
+  local SameProcessServerInterceptor = require "openbus.interceptors.SameProcessServerInterceptor"
+  local serverInterceptor = SameProcessServerInterceptor:__init(iConfig, Openbus.acs, 
+                                                         Openbus.credentialValidationPolicy, 
+                                                         miConfig, Openbus.credentialManager)
+  Openbus:_setServerInterceptor(serverInterceptor)
+  local clientInterceptor = ClientInterceptor(iConfig, Openbus.credentialManager)
+  Openbus:_setClientInterceptor( clientInterceptor )
 
   -- Cria o componente responsável pelo Monitor do Serviço de Registro
   local ftrsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
