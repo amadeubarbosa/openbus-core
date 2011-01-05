@@ -871,17 +871,6 @@ packages = {
       ["target/dependency/*.jar"] = "libpath/java",
     },
   },
-  { name = "openbusidl-java",
-    build = {
-      type = "maven",
-      src = PRODAPP .."/idl",
-    },
-    install_files = {
-      ["src/*.idl"] = "idlpath/"..OB_VERSION,
-      ["target/openbus-idl-jacorb-*.jar"] = "libpath/java",
-      ["target/dependency/*.jar"] = "libpath/java",
-    },
-  },
   { name = "openbus-java",
     build = {
       type = "maven",
