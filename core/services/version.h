@@ -1,5 +1,5 @@
 #ifndef OPENBUS_VERSION
-#define OPENBUS_VERSION "OB_v1_05_02_2011_01_05"
+#define OPENBUS_VERSION "OB_v1_05_02_2011_01_07"
 #endif  
 
 #define OPENBUS_PROJECT "Openbus Project (http://www.tecgraf.puc-rio.br/openbus)\nVersion: "OPENBUS_VERSION
