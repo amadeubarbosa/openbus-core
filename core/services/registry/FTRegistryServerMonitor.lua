@@ -13,8 +13,6 @@ local Log = require "openbus.util.Log"
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
 
-local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
-
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
 
@@ -148,10 +146,11 @@ function main()
   --Isso explica porque os requires do ClientInterceptor e ServerInterceptor estão dentro de Openbus:init
   --TODO: Achar uma solução melhor para esse problema
   local SameProcessServerInterceptor = require "openbus.interceptors.SameProcessServerInterceptor"
-  local serverInterceptor = SameProcessServerInterceptor:__init(iConfig, Openbus.acs, 
-                                                         Openbus.credentialValidationPolicy, 
+  local serverInterceptor = SameProcessServerInterceptor:__init(iConfig, Openbus.acs,
+                                                         Openbus.credentialValidationPolicy,
                                                          miConfig, Openbus.credentialManager)
   Openbus:_setServerInterceptor(serverInterceptor)
+  local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
   local clientInterceptor = ClientInterceptor(iConfig, Openbus.credentialManager)
   Openbus:_setClientInterceptor( clientInterceptor )
 
