@@ -71,8 +71,7 @@ function retrieveAll(self)
 
       -- caso especial para referencias a membros
       local memberIOR = offerEntry.offer.member
-      offerEntry.offer.member = orb:newproxy(memberIOR)
-
+      offerEntry.offer.member = orb:newproxy(memberIOR, "protected", "IDL:scs/core/IComponent:1.0")
       offerEntries[offerEntry.identifier] = offerEntry
     end
   end
