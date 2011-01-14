@@ -22,9 +22,10 @@ SCRIPT_DIR=$OPENBUS_HOME/core/bin
 SCRIPT_ACS=./run_access_control_server.sh
 SCRIPT_RGS=./run_registry_server.sh
 SCRIPT_SS=./run_session_server.sh
-LOG_ACS=$OPENBUS_HOME/data/acs.log
-LOG_RGS=$OPENBUS_HOME/data/rgs.log
-LOG_SS=$OPENBUS_HOME/data/ss.log
+LOG_DIR=$OPENBUS_HOME/data/log
+LOG_ACS=$LOG_DIR/acs.log
+LOG_RGS=$LOG_DIR/rgs.log
+LOG_SS=$LOG_DIR/ss.log
 PID_ACS=$OPENBUS_HOME/data/acs.pid
 PID_RGS=$OPENBUS_HOME/data/rgs.pid
 PID_SS=$OPENBUS_HOME/data/ss.pid
@@ -49,6 +50,10 @@ if [ ! -x "$SCRIPT_DIR/$SCRIPT_SS" ]; then
   exit 2
 fi
 
+if [ ! -d "$LOG_DIR" ]; then
+  mkdir $LOG_DIR
+fi
+
 # Read configuration variable file if it is present
 #[ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
@@ -69,13 +74,20 @@ do_start()
   #   1 if daemon was already running
   #   2 if daemon could not be started
 
+  check_pid
+  ret=$?
+  if [ "$ret" -ne 0 ]; then
+    echo " [FAILED] Try to execute 'openbus.init stop'"
+    return 2
+  fi
+
   # Launchs AccessControlServer
   echo "Starting $DESC : AccessControlServer "
   cd $SCRIPT_DIR 2>/dev/null
   echo "============= accesscontrolserver starting: `date` at: `pwd` ===============" >> $LOG_ACS
   $SCRIPT_ACS >> $LOG_ACS 2>&1 &
   pid=$!
-  sleep 1
+  sleep 5
   # Checks if any signal can be sent (process exists)
   kill -0 $pid 2>/dev/null
   ret=$?
@@ -84,18 +96,19 @@ do_start()
     echo "$pid" > $PID_ACS
   else
     echo "[ FAILED ]"
+    echo "=========== AccessControlService Log ==========="
+    tail -25 $LOG_ACS
     cd - >/dev/null
+    do_stop > /dev/null
     return 2
   fi
-  # Wait a bit while AccessControl starts correctly
-  sleep 1
 
   # Launchs RegistryServer
   echo "Starting $DESC : RegistryServer "
   echo "============= registryserver starting: `date` at: `pwd` ===============" >> $LOG_RGS
   $SCRIPT_RGS >> $LOG_RGS 2>&1 &
   pid=$!
-  sleep 1
+  sleep 5
   # Checks if any signal can be sent (process exists)
   kill -0 $pid 2>/dev/null
   ret=$?
@@ -104,18 +117,19 @@ do_start()
     echo "$pid" > $PID_RGS
   else
     echo "[ FAILED ]"
+    echo "=========== RegistryService Log ==========="
+    tail -25 $LOG_RGS
     cd - >/dev/null
+    do_stop > /dev/null
     return 2
   fi
-  # Wait a bit while AccessControl starts correctly
-  sleep 1
 
   # Launchs SessionServer
   echo "Starting $DESC : SessionServer"
   echo "============= Sessionserver starting: `date` at: `pwd` ===============" >> $LOG_SS
   $SCRIPT_SS >> $LOG_SS 2>&1 &
   pid=$!
-  sleep 1
+  sleep 5
   # Checks if any signal can be sent (process exists)
   kill -0 $pid 2>/dev/null
   ret=$?
@@ -124,10 +138,52 @@ do_start()
     echo "$pid" > $PID_SS
   else
     echo "[ FAILED ]"
+    echo "=========== SessionSrvice Log ==========="
+    tail -25 $LOG_SS
     cd - >/dev/null
+    do_stop > /dev/null
     return 2
   fi
   cd - >/dev/null
+  return 0
+}
+
+#
+# Check persistent pids
+#
+check_pid()
+{
+  # Check PID_ACS
+  pid=$(cat $PID_ACS 2>/dev/null)
+  if [ -n "$pid" ]; then
+    kill -0 $pid 2>/dev/null
+    if [ "$?" == 0 ]; then
+      echo " [ERROR] AccessControlService already started up ( PID = '$pid')"
+      return 1
+    fi
+  fi
+
+
+  # Check PID_RS
+  pid=$(cat $PID_RGS 2>/dev/null)
+  if [ -n "$pid" ]; then
+    kill -0 $pid 2>/dev/null
+    if [ "$?" == 0 ]; then
+      echo " [ERROR] RegistryService already started up ( PID = '$pid')"
+      return 1
+    fi
+  fi
+
+  # Check PID_ACS
+  pid=$(cat $PID_SS 2>/dev/null)
+  if [ -n "$pid" ]; then
+    kill -0 $pid 2>/dev/null
+    if [ "$?" == 0 ]; then
+      echo " [ERROR] SessionService already started up ( PID = '$pid')"
+      return 1
+    fi
+  fi
+
   return 0
 }
 
@@ -144,26 +200,43 @@ do_stop()
 
   echo "Stopping $DESC : SessionServer"
   pid=$(cat $PID_SS 2>/dev/null)
-  if [ -n "$pid" ]; then
-    kill -15 $pid || kill -9 $pid
-  fi
-  echo "[ OK ]"
+  kill_proccess $pid
+
   echo "Stopping $DESC : RegistryServer "
   pid=$(cat $PID_RGS 2>/dev/null)
-  if [ -n "$pid" ]; then
-    kill -15 $pid || kill -9 $pid
-  fi
-  echo "[ OK ]"
+  kill_proccess $pid
+
   echo "Stopping $DESC : AccessControlServer "
   pid=$(cat $PID_ACS 2>/dev/null)
-  if [ -n "$pid" ]; then
-    kill -15 $pid || kill -9 $pid
-  fi
-  echo "[ OK ]"
+  kill_proccess $pid
 
   rm -f $PID_ACS $PID_RGS $PID_SS
   return 0
 }
+
+#
+# Function that kill the proccess
+#
+kill_proccess()
+{
+  # Return
+  #   0 if daemon has been stopped
+  #   other if a failure occurred
+
+  process=$1
+  if [ -n "$process" ]; then
+    kill -15 $process || kill -9 $process
+    ret=$?
+    if [ "$ret" == 0 ]; then
+      echo " [ OK ]"
+      return 0
+    fi
+  fi
+
+  echo " [INFO] Already stopped "
+  return 1
+}
+
 
 case "$1" in
   start)
