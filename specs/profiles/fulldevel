@@ -8,8 +8,6 @@ luasocket2-dev
 luuid-dev
 lualdap-1.0.1-dev
 oilall-dev
-scs-idl-prev
-scs-idl
 scsall-dev
 scsoil-dev
 scsorbix-dev
@@ -25,9 +23,7 @@ openbus-demo-hello-lua-dev
 openbus-lua-dev
 openbus-orbix-dev
 openbus-demo-hello-orbix-dev
-scsidl-java
 scs-java
 openbus-java
 openbusidl-java
-openbus-demo-hello-java-dev
-openbus-demo-delegate-java-dev
+openbus-demo-hello-java
