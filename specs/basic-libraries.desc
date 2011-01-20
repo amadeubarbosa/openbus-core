@@ -10,7 +10,7 @@ basesoft = {
     },
   },
   { name = "logger",
-    url = SVNREPURL .. "/cpputils/logger/trunk",
+    url = SVNREPURL .. "/cpputils/logger/tags/LG_v1_01_00_2010_08_10",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
@@ -197,6 +197,7 @@ basesoft = {
       [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
       [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
       [TMPDIR .."/include/*"] = "incpath/mico-2.3.13",
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "mico-2.3.13-multithread",
@@ -214,6 +215,7 @@ basesoft = {
       [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
       [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
       [TMPDIR .."/include/*"] = "incpath/mico-2.3.13",
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
 }
