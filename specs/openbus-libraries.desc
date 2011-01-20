@@ -31,7 +31,7 @@ packages = {
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
-    url = SVNREPURL .. "/openbus/sdk/cpp/trunk",
+    url = SVNREPURL .. "/openbus/sdk/cpp/branches/OB_v1_05_2010_05_13",
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
@@ -576,7 +576,6 @@ packages = {
     },
   },
   -- MICO related packages
---[[
   { name = "scsmico",
     build = {
       type = "tecmake",
@@ -585,7 +584,13 @@ packages = {
       SunOS510_64 = { mf = { 
         "mico genstubs ".. SUNOS64_TECMAKE_FLAGS,
         "mico LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS },
-      }
+      },
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+        },
+      },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsmico.so"] = "libpath/${TEC_UNAME}",
@@ -604,6 +609,12 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
       mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1" },
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+        },
+      },
     -- special compile instructions for solaris
     SunOS = {
       mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1", "mico sunos" },
@@ -654,7 +665,86 @@ packages = {
       ["client"] = "demo/hello/mico",
       ["server"] = "demo/hello/mico",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
+    },
+  },
+  { name = "openbus-demo-delegate-singlethread-mico",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/demo/delegate/singlethread/mico",
+      mf = { 
+        "server genstubs", 
+        "client LUA51="..PRODAPP.."/lua5.1",
+        "server LUA51="..PRODAPP.."/lua5.1" 
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs ",
+          'client "LUA51='..PRODAPP..'/lua5.1 "',
+          'server "LUA51='..PRODAPP..'/lua5.1 "',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { 
+          "server genstubs ",
+          'client "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
+          'server "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
+        }, 
+      },
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/mico/bin/${TEC_UNAME}",
+      ["../../idl/delegate.idl"] = "demo/delegate/singlethread/idl/",
+      ["../../management"] = "demo/delegate/singlethread",
+      ["client.cpp"] = "demo/delegate/singlethread/mico",
+      ["server.cpp"] = "demo/delegate/singlethread/mico",
+      ["run*"] = "demo/delegate/singlethread/mico",
+      ["*.mak"] = "demo/delegate/singlethread/mico",
+      ["*config"] = "demo/delegate/singlethread/mico",
+      ["run*"] = "demo/delegate/singlethread/mico",
+      ["client"] = "demo/delegate/singlethread/mico",
+      ["server"] = "demo/delegate/singlethread/mico",
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
+    },
+  },
+  { name = "openbus-demo-delegate-multithread-mico",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/demo/delegate/multithread/mico",
+      mf = { 
+        "server genstubs", 
+        "client LUA51="..PRODAPP.."/lua5.1",
+        "server LUA51="..PRODAPP.."/lua5.1" 
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs ",
+          'client "LUA51='..PRODAPP..'/lua5.1 "',
+          'server "LUA51='..PRODAPP..'/lua5.1 "',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { 
+          "server genstubs ",
+          'client "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
+          'server "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
+        }, 
+      },
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "demo/delegate/multithread/mico/bin/${TEC_UNAME}",
+      ["../../idl/delegate.idl"] = "demo/delegate/multithread/idl/",
+      ["../../management"] = "demo/delegate/multithread",
+      ["client.cpp"] = "demo/delegate/multithread/mico",
+      ["server.cpp"] = "demo/delegate/multithread/mico",
+      ["run*"] = "demo/delegate/multithread/mico",
+      ["*.mak"] = "demo/delegate/multithread/mico",
+      ["*config"] = "demo/delegate/multithread/mico",
+      ["run*"] = "demo/delegate/multithread/mico",
+      ["client"] = "demo/delegate/multithread/mico",
+      ["server"] = "demo/delegate/multithread/mico",
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-mico-test",
@@ -676,7 +766,6 @@ packages = {
       ["runtests"] = "test/mico/",
     },
   },
---]]
   -- Java related packages  
   { name = "scsidl-java",
     build = {
