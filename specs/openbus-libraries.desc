@@ -781,7 +781,7 @@ packages = {
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
-  { name = "openbus-demo-delegate-mico",
+  { name = "openbus-demo-delegate-singlethread-mico",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/delegate/singlethread/mico",
@@ -817,6 +817,46 @@ packages = {
       ["run*"] = "demo/delegate/singlethread/mico",
       ["client"] = "demo/delegate/singlethread/mico",
       ["server"] = "demo/delegate/singlethread/mico",
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
+    },
+  },
+  { name = "openbus-demo-delegate-multithread-mico",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/demo/delegate/multithread/mico",
+      mf = { 
+        "server genstubs", 
+        "client LUA51="..PRODAPP.."/lua5.1",
+        "server LUA51="..PRODAPP.."/lua5.1" 
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs ",
+          'client "LUA51='..PRODAPP..'/lua5.1 "',
+          'server "LUA51='..PRODAPP..'/lua5.1 "',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { 
+          "server genstubs ",
+          'client "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
+          'server "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
+        }, 
+      },
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "demo/delegate/multithread/mico/bin/${TEC_UNAME}",
+      ["../../idl/delegate.idl"] = "demo/delegate/multithread/idl/",
+      ["../../management"] = "demo/delegate/multithread",
+      ["client.cpp"] = "demo/delegate/multithread/mico",
+      ["server.cpp"] = "demo/delegate/multithread/mico",
+      ["run*"] = "demo/delegate/multithread/mico",
+      ["*.mak"] = "demo/delegate/multithread/mico",
+      ["*config"] = "demo/delegate/multithread/mico",
+      ["run*"] = "demo/delegate/multithread/mico",
+      ["client"] = "demo/delegate/multithread/mico",
+      ["server"] = "demo/delegate/multithread/mico",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },

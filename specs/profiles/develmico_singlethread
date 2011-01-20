@@ -7,5 +7,5 @@ scs-idl
 scsmico-dev
 openbus-mico-dev
 openbus-demo-hello-mico-dev
-openbus-demo-delegate-mico-dev
+openbus-demo-delegate-singlethread-mico-dev
 openbus-mico-test
