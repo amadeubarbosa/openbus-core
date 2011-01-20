@@ -10,7 +10,7 @@ basesoft = {
     },
   },
   { name = "logger",
-    url = SVNREPURL .. "/cpputils/logger/trunk",
+    url = SVNREPURL .. "/cpputils/logger/tags/LG_v1_01_00_2010_08_10",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
@@ -206,7 +206,7 @@ basesoft = {
       Darwin = "./configure --prefix=".. TMPDIR .. " && make && make install",
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
       [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
