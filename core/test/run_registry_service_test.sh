@@ -18,7 +18,7 @@ echo "                   TESTE DA OPERAÇÃO 'REGISTER' DO SERVIÇO DE REGISTRO    
 echo
 echo "==============================================================================="
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua  registry/registerTestSuite.lua
+./run_unit_test.sh registry/registerTestSuite.lua
 
 echo "==============================================================================="
 echo
@@ -26,7 +26,7 @@ echo "                   TESTE DA OPERAÇÃO 'UNREGISTER' DO SERVIÇO DE REGISTRO  
 echo
 echo "==============================================================================="
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua  registry/unregisterTestSuite.lua
+./run_unit_test.sh registry/unregisterTestSuite.lua
 
 echo "==============================================================================="
 echo
@@ -34,7 +34,7 @@ echo "                   TESTE DA OPERAÇÃO 'UPDATE' DO SERVIÇO DE REGISTRO      
 echo
 echo "==============================================================================="
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua  registry/updateTestSuite.lua
+./run_unit_test.sh registry/updateTestSuite.lua
 
 echo "==============================================================================="
 echo
@@ -42,7 +42,7 @@ echo "                   TESTE DA OPERAÇÃO 'FIND'  DO SERVIÇO DE REGISTRO       
 echo
 echo "==============================================================================="
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua  registry/findTestSuite.lua
+./run_unit_test.sh registry/findTestSuite.lua
 
 echo "==============================================================================="
 echo
@@ -50,7 +50,7 @@ echo "                   TESTE DO USO DO SERVIÇO DE REGISTRO SEM CREDENCIAL     
 echo
 echo "==============================================================================="
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua  registry/noCredentialTestSuite.lua
+./run_unit_test.sh registry/noCredentialTestSuite.lua
 
 echo "==============================================================================="
 echo
@@ -58,7 +58,7 @@ echo "                   TESTE DA REMOÇÃO DAS OFERTAS APÓS LOGOUT DO CLIENTE    
 echo
 echo "==============================================================================="
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua  registry/logoutTestSuite.lua
+./run_unit_test.sh registry/logoutTestSuite.lua
 
 
 if [ ${ft} -eq 1 ]; then
@@ -69,6 +69,6 @@ if [ ${ft} -eq 1 ]; then
   echo
   echo "==============================================================================="
 
-  ${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua registry/FTRGSStateConsistencyTestSuite.lua
+  ./run_unit_test.sh registry/FTRGSStateConsistencyTestSuite.lua
 
 fi 

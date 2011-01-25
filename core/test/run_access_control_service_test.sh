@@ -19,7 +19,7 @@ echo
 echo "========================================================================================"
 
 suite=accesscontrol/AccessControlServiceTestSuite.lua
-${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua  ${suite}
+./run_unit_test.sh ${suite}
 
 
 if [ ${ft} -eq 1 ]; then
@@ -31,6 +31,6 @@ if [ ${ft} -eq 1 ]; then
   echo "========================================================================================"
 
   suite=accesscontrol/FTACSStateConsistencyTestSuite.lua
-  ${OPENBUS_HOME}/core/bin/servicelauncher ${LATT_HOME}/extras/OiLTestRunner.lua  ${suite}
+  ./run_unit_test.sh ${suite}
 
 fi
