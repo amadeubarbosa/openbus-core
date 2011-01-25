@@ -73,6 +73,19 @@ fi
 
 cd ${OPENBUS_HOME}/core/test
 cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
+echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento
+echo
+
+${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
+  --add-system=TesteBarramento --description=Teste
+${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
+  --add-deployment=TesteBarramento --description=Teste \
+  --certificate=TesteBarramento.crt --system=TesteBarramento
+${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
+  --set-authorization=TesteBarramento --grant="IDL:IHello_v1:1.0" --no-strict
+${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
+  --set-authorization=TesteBarramento --grant="IDL:IHello_v2:1.0" --no-strict
+
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh testManagement01
 echo
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh testManagement02

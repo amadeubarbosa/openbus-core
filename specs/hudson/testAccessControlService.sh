@@ -76,7 +76,8 @@ fi
 cd ${OPENBUS_HOME}/core/test
 cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
 
-./run_unit_test.sh accesscontrol/TestSuiteAccessControlService.lua
+
+./run_access_control_service_test.sh
 CODE=$?
 
 kill -9 ${RGSPID}
