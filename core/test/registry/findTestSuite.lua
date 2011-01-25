@@ -6,7 +6,7 @@ local oil = require "oil"
 
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
-local utils = require "core.test.lua.registry.utils"
+local utils = require "core.test.registry.utils"
 
 local scs = require "scs.core.base"
 

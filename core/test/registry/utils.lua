@@ -3,7 +3,7 @@ local ipairs = ipairs
 local print = print
 local type = type
 
-module "core.test.lua.registry.utils"
+module "core.test.registry.utils"
 
 -------------------------------------------------------------------------------
 -- Funções auxiliares
