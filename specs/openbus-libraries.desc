@@ -741,6 +741,8 @@ packages = {
       ["test/mico/rgs/config.mak"] = "test/mico/rgs/",
       ["test/mico/config*"] = "test/mico/",
       ["test/mico/runtests"] = "test/mico/",
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-demo-hello-mico",
@@ -782,7 +784,6 @@ packages = {
       ["run*"] = "demo/hello/mico",
       ["client"] = "demo/hello/mico",
       ["server"] = "demo/hello/mico",
-      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
@@ -824,8 +825,6 @@ packages = {
       ["run*"] = "demo/delegate/singlethread/mico",
       ["client"] = "demo/delegate/singlethread/mico",
       ["server"] = "demo/delegate/singlethread/mico",
-      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-demo-delegate-multithread-mico",
@@ -866,8 +865,6 @@ packages = {
       ["run*"] = "demo/delegate/multithread/mico",
       ["client"] = "demo/delegate/multithread/mico",
       ["server"] = "demo/delegate/multithread/mico",
-      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-mico-test",
