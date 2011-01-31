@@ -201,6 +201,7 @@ basesoft = {
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
+      Linux26_64 = "./configure --prefix="..TMPDIR.. " --disable-shared --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
       Linux = "./configure --prefix=".. TMPDIR .. " && make && make install",
     },
     install_files = {
