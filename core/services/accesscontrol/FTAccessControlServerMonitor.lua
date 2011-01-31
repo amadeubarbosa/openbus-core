@@ -14,6 +14,7 @@ local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local Utils = require "openbus.util.Utils"
 local oil = require "oil"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
@@ -46,7 +47,7 @@ local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" or arguments.v == ""  then
     oil.verbose:level(3)
-    Log:level(3)
+    Log:level(5)
 else
     if AccessControlServerConfiguration.oilVerboseLevel then
         oil.verbose:level(AccessControlServerConfiguration.oilVerboseLevel)
@@ -65,9 +66,6 @@ else
     Log:warn("Será usada porta padrão do ACS")
 end
 
-oil.verbose:level(5)
-Log:level(5)
-
 local hostAdd = AccessControlServerConfiguration.hostName..":"..
                 AccessControlServerConfiguration.hostPort
 
@@ -76,6 +74,11 @@ local props = { host = AccessControlServerConfiguration.hostName,
 
 Openbus:init(AccessControlServerConfiguration.hostName,
   AccessControlServerConfiguration.hostPort)
+
+local iConfig = assert(loadfile(DATA_DIR ..
+      "/conf/advanced/InterceptorsConfiguration.lua"))()
+local miConfig = assert(loadfile(DATA_DIR ..
+      "/conf/advanced/MonitorInterceptorsConfiguration.lua"))()
 
 local orb = Openbus:getORB()
 
@@ -135,6 +138,18 @@ componentId.platform_spec = ""
 function main()
   -- Aloca uma thread do OiL para o orb
   Openbus:run()
+
+  --(Maira) Esse require está aqui porque acessa a classe Openbus que é usada como "singleton"
+  --O problema é que se o require é feito antes de a classe Openbus tiver sido iniciada, o compilador reclama o seu uso
+  --Isso explica porque os requires do ClientInterceptor e ServerInterceptor estão dentro de Openbus:init
+  --TODO: Achar uma solução melhor para esse problema
+  local SameProcessServerInterceptor = require "openbus.interceptors.SameProcessServerInterceptor"
+  local serverInterceptor = SameProcessServerInterceptor:__init(iConfig, Openbus.acs,
+                                                         Openbus.credentialValidationPolicy,
+                                                         miConfig, Openbus.credentialManager)
+  Openbus:_setServerInterceptor(serverInterceptor)
+  local clientInterceptor = ClientInterceptor(iConfig, Openbus.credentialManager)
+  Openbus:_setClientInterceptor( clientInterceptor )
 
   -- Cria o componente responsável pelo Monitor do Serviço de Controle de Acesso
   local ftacsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
