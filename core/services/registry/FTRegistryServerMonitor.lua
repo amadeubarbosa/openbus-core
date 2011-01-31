@@ -12,6 +12,7 @@ local Utils = require "openbus.util.Utils"
 local Log = require "openbus.util.Log"
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
+local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
@@ -43,7 +44,7 @@ local usage_msg = [[
 local arguments = Utils.parse_args(arg,usage_msg,true)
 
 if arguments.verbose == "" or arguments.v == "" then
-  oil.verbose:level(5)
+  oil.verbose:level(3)
   Log:level(5)
 else
   if RegistryServerConfiguration.oilVerboseLevel then
@@ -150,7 +151,6 @@ function main()
                                                          Openbus.credentialValidationPolicy,
                                                          miConfig, Openbus.credentialManager)
   Openbus:_setServerInterceptor(serverInterceptor)
-  local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
   local clientInterceptor = ClientInterceptor(iConfig, Openbus.credentialManager)
   Openbus:_setClientInterceptor( clientInterceptor )
 
