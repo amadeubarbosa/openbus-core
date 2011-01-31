@@ -5,6 +5,7 @@ local tostring = tostring
 local loadfile = loadfile
 local assert = assert
 local string = string
+local format = string.format
 
 local oil = require "oil"
 local orb = oil.orb
@@ -65,7 +66,7 @@ function FTACSMonitorFacet:getService()
   local status, conns = oil.pcall(recep.getConnections, recep,
       "IFaultTolerantService")
   if not status then
-    Log:error("Nao foi possivel obter o ServiÃ§o: " .. conns[1])
+    Log:error("Nao foi possivel obter o Serviço: " .. conns[1])
     return nil
   elseif conns[1] then
     local service = conns[1].objref
@@ -121,24 +122,23 @@ function FTACSMonitorFacet:monitor()
   while true do
     local reinit = false
     local service = self:getService()
-    local ok, res = service:isAlive()
-
-   if not ok then
-     Log:info(format("O serviço de controle de acesso localizado em {%s:%d} não está acessível",
-         self.config.hostName, self.config.hostPort))
-   end
+    local ok, res
+    if OilUtilities:existent(service) then
+      ok, res = service:isAlive()
+    end
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
     if ok then
       --se objeto remoto esta em estado de falha, precisa ser reinicializado
       if not res then
         reinit = true
-        Log:debug("O serviço de controle de acesso está em estado de falha. O serviço será finalizado")
+        Log:info("O serviço de controle de acesso está em estado de falha. O serviço será finalizado")
         --pede para o objeto se matar
         self:getService():kill()
       end
     else
-      Log:debug("O serviço de controle de acesso não pôde ser finalizado porque não esta disponivel")
+      Log:info(format("O serviço de controle de acesso localizado em {%s:%d} não está acessível",
+         self.config.hostName, self.config.hostPort))
       -- ocorreu falha de comunicacao com o objeto remoto
       reinit = true
     end

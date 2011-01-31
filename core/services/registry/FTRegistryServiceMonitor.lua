@@ -129,14 +129,17 @@ function FTRSMonitorFacet:monitor()
   while true do
     local reinit = false
     local service = self:getService()
-    local ok, res = service:isAlive()
+    local ok, res
+    if OilUtilities:existent(service) then
+      ok, res = service:isAlive()
+    end
 
     --verifica se metodo conseguiu ser executado - isto eh, se nao ocoreu falha de comunicacao
     if ok then
       --se objeto remoto está em estado de falha, precisa ser reinicializado
       if not res then
         reinit = true
-          Log:debug("O serviço de registro está em estado de falha. O serviço será finalizado")
+          Log:info("O serviço de registro está em estado de falha. O serviço será finalizado")
         --pede para o objeto se matar
         self:getService():kill()
       end
