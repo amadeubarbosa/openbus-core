@@ -190,6 +190,42 @@ check_pid()
 }
 
 #
+# Function that shows if running or not
+#
+do_status()
+{
+  acspid=$(cat $PID_SS 2>/dev/null)
+  rgspid=$(cat $PID_RGS 2>/dev/null)
+  sspid=$(cat $PID_ACS 2>/dev/null)
+
+  if [ -n "$acspid" ] && [ -n "$rgspid" ] && [ -n "$sspid" ]; then
+    kill -0 $acspid 2>/dev/null
+    running=$?
+    if [ "$running" == 0 ]; then
+      echo " [INFO] AccessControlService is running (PID = $acspid)" 
+    else
+      echo " [ERROR] AccessControlService is NOT running !!"
+    fi
+    kill -0 $rgspid 2>/dev/null
+    running=$?
+    if [ "$running" == 0 ]; then
+      echo " [INFO] RegistryService is running (PID = $acspid)" 
+    else
+      echo " [ERROR] RegistryService is NOT running !!"
+    fi
+    kill -0 $sspid 2>/dev/null
+    running=$?
+    if [ "$running" == 0 ]; then
+      echo " [INFO] SessionService is running (PID = $acspid)" 
+    else
+      echo " [ERROR] SessionSrvice is NOT running !!"
+    fi
+  else
+    echo $DESC is NOT running
+  fi 
+}
+
+#
 # Function that stops the daemon/service
 #
 do_stop()
@@ -243,6 +279,13 @@ kill_proccess()
 case "$1" in
   start)
   do_start
+  case "$?" in
+    0|1) exit 0 ;;
+    2) exit 1 ;;
+  esac
+  ;;
+  status)
+  do_status
   case "$?" in
     0|1) exit 0 ;;
     2) exit 1 ;;
