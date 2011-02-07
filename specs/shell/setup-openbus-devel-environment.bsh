@@ -14,7 +14,7 @@ function die {
         exit 1
 }                                                   
 function fetch_tecmake {
-	FILE="tecmake.tar.gz"
+	FILE="tecmake-3.21.tar.gz"
 	URL="http://www.tecgraf.puc-rio.br/tecmake/download/${FILE}"
 	#see SOURCES definition in the ##variables section of this script
 	export TECMAKE_HOME="${SOURCES}/tecmake" 
