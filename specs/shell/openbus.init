@@ -194,9 +194,9 @@ check_pid()
 #
 do_status()
 {
-  acspid=$(cat $PID_SS 2>/dev/null)
+  acspid=$(cat $PID_ACS 2>/dev/null)
   rgspid=$(cat $PID_RGS 2>/dev/null)
-  sspid=$(cat $PID_ACS 2>/dev/null)
+  sspid=$(cat $PID_SS 2>/dev/null)
 
   if [ -n "$acspid" ] && [ -n "$rgspid" ] && [ -n "$sspid" ]; then
     kill -0 $acspid 2>/dev/null
@@ -209,14 +209,14 @@ do_status()
     kill -0 $rgspid 2>/dev/null
     running=$?
     if [ "$running" == 0 ]; then
-      echo " [INFO] RegistryService is running (PID = $acspid)" 
+      echo " [INFO] RegistryService is running (PID = $rgspid)" 
     else
       echo " [ERROR] RegistryService is NOT running !!"
     fi
     kill -0 $sspid 2>/dev/null
     running=$?
     if [ "$running" == 0 ]; then
-      echo " [INFO] SessionService is running (PID = $acspid)" 
+      echo " [INFO] SessionService is running (PID = $sspid)" 
     else
       echo " [ERROR] SessionSrvice is NOT running !!"
     fi
