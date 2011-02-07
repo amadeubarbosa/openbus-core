@@ -16,21 +16,23 @@
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 # === CHANGE HERE !!! == Please provide your path to openbus installation
 OPENBUS_HOME=${OPENBUS_HOME:=/local/openbus/running}
+OPENBUS_DATADIR=${OPENBUS_DATADIR:=$OPENBUS_HOME/data}
+export OPENBUS_HOME
+export OPENBUS_DATADIR
+
 DESC="OpenBus Middleware Services"
 NAME=openbus
 SCRIPT_DIR=$OPENBUS_HOME/core/bin
 SCRIPT_ACS=./run_access_control_server.sh
 SCRIPT_RGS=./run_registry_server.sh
 SCRIPT_SS=./run_session_server.sh
-LOG_DIR=$OPENBUS_HOME/data/log
+LOG_DIR=$OPENBUS_DATADIR/log
 LOG_ACS=$LOG_DIR/acs.log
 LOG_RGS=$LOG_DIR/rgs.log
 LOG_SS=$LOG_DIR/ss.log
-PID_ACS=$OPENBUS_HOME/data/acs.pid
-PID_RGS=$OPENBUS_HOME/data/rgs.pid
-PID_SS=$OPENBUS_HOME/data/ss.pid
-
-export OPENBUS_HOME
+PID_ACS=$OPENBUS_DATADIR/acs.pid
+PID_RGS=$OPENBUS_DATADIR/rgs.pid
+PID_SS=$OPENBUS_DATADIR/ss.pid
 
 # Exit if the package is not installed
 if [ -z "$OPENBUS_HOME" ]; then

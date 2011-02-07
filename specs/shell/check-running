@@ -24,17 +24,20 @@ if [ -z "$OPENBUS_HOME" ] && [ -z "$1" ]; then
 	die "Usage: $0 OPENBUS_HOME"
 fi
 
-ARGUMENT=$1
-OPENBUS_HOME=${ARGUMENT:=/local/openbus/running}
-CRASH_DIR=$OPENBUS_HOME/data/crashes
+INSTALL=$1
+DATA=$2
+OPENBUS_HOME=${INSTALL:=/local/openbus/running}
+OPENBUS_DATADIR=${DATA:=$OPENBUS_HOME/data}
 export OPENBUS_HOME
+export OPENBUS_DATADIR
+CRASH_DIR=$OPENBUS_DATADIR/crashes
 
 OPENBUS_INIT=/etc/init.d/openbus
 [ -x "$OPENBUS_INIT" ] || die "ERROR: $OPENBUS_INIT not found or execute permission missing."
 HOSTNAME=$(hostname)
-ACS_PID=$OPENBUS_HOME/data/acs.pid
-RGS_PID=$OPENBUS_HOME/data/rgs.pid
-SS_PID=$OPENBUS_HOME/data/ss.pid
+ACS_PID=$OPENBUS_DATADIR/acs.pid
+RGS_PID=$OPENBUS_DATADIR/rgs.pid
+SS_PID=$OPENBUS_DATADIR/ss.pid
 
 # function to check if is running actually
 is_running() {
@@ -84,11 +87,11 @@ if [ $ret -gt 0 ] ; then
 	TAG=`date +%Y%m%d-%H:%M:%S`
 	mkdir -p $CRASH_DIR
 
-	cp $OPENBUS_HOME/data/acs.log $CRASH_DIR/acs-$TAG.log
+	cp $OPENBUS_DATADIR/acs.log $CRASH_DIR/acs-$TAG.log
 	gzip $CRASH_DIR/acs-$TAG.log
-	cp $OPENBUS_HOME/data/rgs.log $CRASH_DIR/rgs-$TAG.log
+	cp $OPENBUS_DATADIR/rgs.log $CRASH_DIR/rgs-$TAG.log
 	gzip $CRASH_DIR/rgs-$TAG.log
-	cp $OPENBUS_HOME/data/ss.log $CRASH_DIR/ss-$TAG.log
+	cp $OPENBUS_DATADIR/ss.log $CRASH_DIR/ss-$TAG.log
 	gzip $CRASH_DIR/ss-$TAG.log
 	
 	$OPENBUS_INIT start
