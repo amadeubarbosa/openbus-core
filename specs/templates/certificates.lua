@@ -41,8 +41,8 @@ configure_action = function(answers, path, util)
         "cd " .. installPath .. "/core/test/resources;" ..
         openSSLGenerate .. "TesteBarramento;" ..
         openSSLGenerate .. "TesteBarramento02;" ..
-        "mv TesteBarramento.key ../lua;" ..
-        "cp TesteBarramento*.crt ../lua"
+        "mv TesteBarramento*.key ../;" ..
+        "cp TesteBarramento*.crt ../"
         )
   end
 
