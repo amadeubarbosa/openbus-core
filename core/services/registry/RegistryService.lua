@@ -369,8 +369,6 @@ end
 --@return true caso a oferta tenha sido removida, ou false caso contrário.
 ---
 function RSFacet:rawUnregister(identifier, credential)
-  Log:debug(format("Removendo a oferta %s da credencial {%s, %s, %s}",
-      identifier, credential.identifier, credential.owner, credential.delegate))
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
     Log:warn(format("A oferta %s não pode ser removida porque não foi encontrada",
@@ -387,6 +385,8 @@ function RSFacet:rawUnregister(identifier, credential)
   else
     credential = offerEntry.credential
   end
+  Log:debug(format("Removendo a oferta %s da credencial {%s, %s, %s}",
+      identifier, credential.identifier, credential.owner, credential.delegate))
 
   -- Remove oferta do índice por identificador
   self.offersByIdentifier[identifier] = nil
