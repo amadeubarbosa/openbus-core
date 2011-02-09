@@ -74,6 +74,7 @@ fi
 cd ${OPENBUS_HOME}/core/test
 cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento
+echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento02
 echo
 
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
@@ -86,10 +87,6 @@ ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
   --set-authorization=TesteBarramento --grant="IDL:IHello_v2:1.0" --no-strict
 
-echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh testManagement01
-echo
-echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh testManagement02
-echo
 ./run_unit_test.sh management/testManagement.lua
 CODE=$?
 
