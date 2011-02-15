@@ -188,10 +188,10 @@ function SessionEventSink:push(sender, event)
     end
   end
   for memberId, sink in pairs(self.eventSinksPrev) do
-    local result, errorMsg = oil.pcall(sink.push, sink, event)
+    local result, errorMsg = oil.pcall(sink.push, sink, sender, event)
     if not result then
       Log:debug(format("Falha ao tentar enviar um evento do tipo %s ao membro %s (versão %s)",
-          event.type, memberId, Utils.OB_PREV),errorMsg)
+          event.type, memberId, Utils.OB_PREV), errorMsg)
     end
   end
 end
@@ -210,7 +210,7 @@ function SessionEventSink:disconnect(sender)
     end
   end
   for memberId, sink in pairs(self.eventSinksPrev) do
-    local result, errorMsg = oil.pcall(sink.disconnect, sink)
+    local result, errorMsg = oil.pcall(sink.disconnect, sink, sender)
     if not result then
       Log:warn(format("Falha ao tentar enviar um evento de desconexão ao membro %s (versão %s)",
           memberId, Utils.OB_PREV), errorMsg)

@@ -111,7 +111,7 @@ local scs = require "scs.core.base"
 local SessionServiceComponent =
   require "core.services.session.SessionServiceComponent"
 local SessionService = require "core.services.session.SessionService"
-local SessionServicePrev = require "core.services.session.SessionService_v1_04"
+local SessionServicePrev = require "core.services.session.SessionService_Prev"
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -----------------------------------------------------------------------------
@@ -121,19 +121,14 @@ local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 -- Facet Descriptions
 local facetDescriptions = {}
 facetDescriptions.IComponent            = {}
-facetDescriptions.IMetaInterface        = {}
 facetDescriptions.ISessionService       = {}
 facetDescriptions.ISessionService_Prev  = {}
 facetDescriptions.ICredentialObserver   = {}
 facetDescriptions.IReceptacles          = {}
 
 facetDescriptions.IComponent.name                    = "IComponent"
-facetDescriptions.IComponent.interface_name          = "IDL:scs/core/IComponent:1.0"
+facetDescriptions.IComponent.interface_name          = Utils.COMPONENT_INTERFACE
 facetDescriptions.IComponent.class                   = SessionServiceComponent.SessionServiceComponent
-
-facetDescriptions.IMetaInterface.name                = "IMetaInterface"
-facetDescriptions.IMetaInterface.interface_name      = "IDL:scs/core/IMetaInterface:1.0"
-facetDescriptions.IMetaInterface.class               = scs.MetaInterface
 
 facetDescriptions.ISessionService.name               = "ISessionService_"..Utils.OB_VERSION
 facetDescriptions.ISessionService.interface_name     = Utils.SESSION_SERVICE_INTERFACE
@@ -150,7 +145,7 @@ facetDescriptions.ICredentialObserver.interface_name = Utils.CREDENTIAL_OBSERVER
 facetDescriptions.ICredentialObserver.class          = SessionService.Observer
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE
 facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
 
 -- Receptacle Descriptions

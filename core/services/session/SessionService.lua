@@ -7,7 +7,7 @@ local orb = oil.orb
 local luuid = require "uuid"
 
 local Session = require "core.services.session.Session"
-local SessionPrev = require "core.services.session.Session_v1_04"
+local SessionPrev = require "core.services.session.Session_Prev"
 
 local Log = require "openbus.util.Log"
 local Utils = require "openbus.util.Utils"
@@ -49,21 +49,11 @@ SessionService = oop.class{
 
 -- Facet Descriptions
 local facetDescriptions = {}
-facetDescriptions.IComponent             = {}
-facetDescriptions.IMetaInterface         = {}
 facetDescriptions.SessionEventSink       = {}
 facetDescriptions.SessionEventSink_Prev  = {}
 facetDescriptions.ISession               = {}
 facetDescriptions.ISession_Prev          = {}
 facetDescriptions.IReceptacles           = {}
-
-facetDescriptions.IComponent.name                 = "IComponent"
-facetDescriptions.IComponent.interface_name       = "IDL:scs/core/IComponent:1.0"
-facetDescriptions.IComponent.class                = scs.Component
-
-facetDescriptions.IMetaInterface.name             = "IMetaInterface"
-facetDescriptions.IMetaInterface.interface_name   = "IDL:scs/core/IMetaInterface:1.0"
-facetDescriptions.IMetaInterface.class            = scs.MetaInterface
 
 facetDescriptions.SessionEventSink.name           = "SessionEventSink_"..Utils.OB_VERSION
 facetDescriptions.SessionEventSink.interface_name = Utils.SESSION_ES_INTERFACE
@@ -82,7 +72,7 @@ facetDescriptions.ISession_Prev.interface_name   = Utils.SESSION_INTERFACE_PREV
 facetDescriptions.ISession_Prev.class            = SessionPrev.Session
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE
 facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
 
 -- Receptacle Descriptions

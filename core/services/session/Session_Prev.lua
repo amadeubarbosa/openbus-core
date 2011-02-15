@@ -1,11 +1,11 @@
--- $Id: Session.lua 103010 2010-03-15 18:12:26Z brunoos $
+-- $Id:
 
 local oop = require "loop.base"
 
 ---
---Sessão compartilhada pelos membros associados a uma mesma credencial na versao 1.04.
+--Sessão compartilhada pelos membros associados a uma mesma credencial na versão anterior.
 ---
-module "core.services.session.Session_v1_04"
+module "core.services.session.Session_Prev"
 
 --------------------------------------------------------------------------------
 -- Faceta ISession
@@ -35,11 +35,11 @@ end
 
 SessionEventSink = oop.class{}
 
-function SessionEventSink:push(event)
-  self.context.SessionEventSink:push("v1_04", event)
+function SessionEventSink:push(sender, event)
+  self.context.SessionEventSink:push(sender, event)
 end
 
-function SessionEventSink:disconnect()
-  self.context.SessionEventSink:disconnect("v1_04")
+function SessionEventSink:disconnect(sender)
+  self.context.SessionEventSink:disconnect(sender)
 end
 

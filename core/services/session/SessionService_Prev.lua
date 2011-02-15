@@ -1,11 +1,11 @@
--- $Id: SessionService.lua 103125 2010-03-17 03:52:33Z mgatti $
+-- $Id: 
 
 local oop = require "loop.base"
 
 ---
---Faceta que disponibiliza a funcionalidade básica do serviço de sessão na versao 1.04.
+--Faceta que disponibiliza a funcionalidade básica do serviço de sessão na versão anterior.
 ---
-module "core.services.session.SessionService_v1_04"
+module "core.services.session.SessionService_Prev"
 
 --------------------------------------------------------------------------------
 -- Faceta ISessionService
