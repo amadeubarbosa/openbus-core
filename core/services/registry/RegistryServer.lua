@@ -118,7 +118,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local RegistryService = require "core.services.registry.RegistryService"
-local RegistryServicePrev = require "core.services.registry.RegistryService_v1_04"
+local RegistryServicePrev = require "core.services.registry.RegistryService_Prev"
 local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 -----------------------------------------------------------------------------
@@ -127,29 +127,26 @@ local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 ---- Facet Descriptions
 local facetDescriptions = {}
-facetDescriptions.IComponent       = {}
-facetDescriptions.IMetaInterface   = {}
-facetDescriptions.IRegistryService = {}
-facetDescriptions.IRegistryService_Prev = {}
-facetDescriptions.IManagement      = {}
-facetDescriptions.IFaultTolerantService = {}
-facetDescriptions.IReceptacles          = {}
+facetDescriptions.IComponent                 = {}
+facetDescriptions.IRegistryService           = {}
+facetDescriptions.IRegistryService_Prev      = {}
+facetDescriptions.IManagement                = {}
+facetDescriptions.IManagement_Prev           = {}
+facetDescriptions.IFaultTolerantService      = {}
+facetDescriptions.IFaultTolerantService_Prev = {}
+facetDescriptions.IReceptacles               = {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
-facetDescriptions.IComponent.interface_name        = "IDL:scs/core/IComponent:1.0"
+facetDescriptions.IComponent.interface_name        = Utils.COMPONENT_INTERFACE
 facetDescriptions.IComponent.class                 = scs.Component
 facetDescriptions.IComponent.key                   = "IC"
-
-facetDescriptions.IMetaInterface.name              = "IMetaInterface"
-facetDescriptions.IMetaInterface.interface_name    = "IDL:scs/core/IMetaInterface:1.0"
-facetDescriptions.IMetaInterface.class             = scs.MetaInterface
 
 facetDescriptions.IRegistryService.name            = "IRegistryService_" .. Utils.OB_VERSION
 facetDescriptions.IRegistryService.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
 facetDescriptions.IRegistryService.key             = Utils.REGISTRY_SERVICE_KEY
 
-facetDescriptions.IRegistryService_Prev.name            = "IRegistryService"
+facetDescriptions.IRegistryService_Prev.name            = "IRegistryService_" .. Utils.OB_PREV
 facetDescriptions.IRegistryService_Prev.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE_PREV
 facetDescriptions.IRegistryService_Prev.class           = RegistryServicePrev.RSFacet
 facetDescriptions.IRegistryService_Prev.key             = Utils.REGISTRY_SERVICE_KEY_PREV
@@ -159,20 +156,30 @@ facetDescriptions.IFaultTolerantService.interface_name  = Utils.FAULT_TOLERANT_S
 facetDescriptions.IFaultTolerantService.class           = RegistryService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_RS_KEY
 
+facetDescriptions.IFaultTolerantService_Prev.name            = "IFaultTolerantService_" .. Utils.OB_PREV
+facetDescriptions.IFaultTolerantService_Prev.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE_PREV
+facetDescriptions.IFaultTolerantService_Prev.class           = RegistryServicePrev.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService_Prev.key             = Utils.FAULT_TOLERANT_RS_KEY_PREV
+
 facetDescriptions.IManagement.name            = "IManagement_" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
 facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_RS_KEY
 
+facetDescriptions.IManagement_Prev.name            = "IManagement_" .. Utils.OB_PREV
+facetDescriptions.IManagement_Prev.interface_name  = Utils.MANAGEMENT_RS_INTERFACE_PREV
+facetDescriptions.IManagement_Prev.class           = RegistryServicePrev.ManagementFacet
+facetDescriptions.IManagement_Prev.key             = Utils.MANAGEMENT_RS_KEY_PREV
+
 facetDescriptions.IReceptacles.name           = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE
 facetDescriptions.IReceptacles.class          = RegistryService.RGSReceptacleFacet
 
 -- Receptacle Descriptions
 local receptacleDescs = {}
 receptacleDescs.AccessControlServiceReceptacle = {}
 receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
-receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:scs/core/IComponent:1.0"
+receptacleDescs.AccessControlServiceReceptacle.interface_name = Utils.COMPONENT_INTERFACE
 receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = true
 
 
