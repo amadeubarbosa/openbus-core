@@ -136,7 +136,7 @@ local orb = Openbus:getORB()
 
 local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
-local AccessControlServicePrev = require "core.services.accesscontrol.AccessControlService_v1_04"
+local AccessControlServicePrev = require "core.services.accesscontrol.AccessControlService_Prev"
 
 -----------------------------------------------------------------------------
 -- AccessControlService Descriptions
@@ -145,13 +145,15 @@ local AccessControlServicePrev = require "core.services.accesscontrol.AccessCont
 -- Facet Descriptions
 local facetDescriptions = {}
 facetDescriptions.IComponent                  = {}
-facetDescriptions.IMetaInterface              = {}
+facetDescriptions.IComponent_Prev             = {}
 facetDescriptions.IAccessControlService       = {}
 facetDescriptions.IAccessControlService_Prev  = {}
 facetDescriptions.ILeaseProvider              = {}
 facetDescriptions.ILeaseProvider_Prev         = {}
 facetDescriptions.IFaultTolerantService       = {}
+facetDescriptions.IFaultTolerantService_Prev  = {}
 facetDescriptions.IManagement                 = {}
+facetDescriptions.IManagement_Prev            = {}
 facetDescriptions.IReceptacles                = {}
 
 facetDescriptions.IComponent.name           = "IComponent"
@@ -159,16 +161,17 @@ facetDescriptions.IComponent.interface_name = "IDL:scs/core/IComponent:1.0"
 facetDescriptions.IComponent.class          = scs.Component
 facetDescriptions.IComponent.key            = Utils.OPENBUS_KEY
 
-facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
-facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
-facetDescriptions.IMetaInterface.class                = scs.MetaInterface
+facetDescriptions.IComponent_Prev.name           = "IComponent_" .. Utils.OB_PREV
+facetDescriptions.IComponent_Prev.interface_name = "IDL:scs/core/IComponent:1.0"
+facetDescriptions.IComponent_Prev.class          = AccessControlServicePrev.ComponentFacet
+facetDescriptions.IComponent_Prev.key            = Utils.OPENBUS_KEY_PREV
 
 facetDescriptions.IAccessControlService.name            = "IAccessControlService_" .. Utils.OB_VERSION
 facetDescriptions.IAccessControlService.interface_name  = Utils.ACCESS_CONTROL_SERVICE_INTERFACE
 facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
 facetDescriptions.IAccessControlService.key             = Utils.ACCESS_CONTROL_SERVICE_KEY
 
-facetDescriptions.IAccessControlService_Prev.name           = "IAccessControlService"
+facetDescriptions.IAccessControlService_Prev.name           = "IAccessControlService_" .. Utils.OB_PREV
 facetDescriptions.IAccessControlService_Prev.interface_name = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_PREV
 facetDescriptions.IAccessControlService_Prev.class          = AccessControlServicePrev.ACSFacet
 facetDescriptions.IAccessControlService_Prev.key            = Utils.ACCESS_CONTROL_SERVICE_KEY_PREV
@@ -178,7 +181,7 @@ facetDescriptions.ILeaseProvider.interface_name              = Utils.LEASE_PROVI
 facetDescriptions.ILeaseProvider.class                       = AccessControlService.LeaseProviderFacet
 facetDescriptions.ILeaseProvider.key                         = Utils.LEASE_PROVIDER_KEY
 
-facetDescriptions.ILeaseProvider_Prev.name                  = "ILeaseProvider"
+facetDescriptions.ILeaseProvider_Prev.name                  = "ILeaseProvider_" .. Utils.OB_PREV
 facetDescriptions.ILeaseProvider_Prev.interface_name        = Utils.LEASE_PROVIDER_INTERFACE_PREV
 facetDescriptions.ILeaseProvider_Prev.class                 = AccessControlServicePrev.LeaseProviderFacet
 facetDescriptions.ILeaseProvider_Prev.key                   = Utils.LEASE_PROVIDER_KEY_PREV
@@ -188,16 +191,26 @@ facetDescriptions.IFaultTolerantService.interface_name       = Utils.FAULT_TOLER
 facetDescriptions.IFaultTolerantService.class                = AccessControlService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLERANT_ACS_KEY
 
+facetDescriptions.IFaultTolerantService_Prev.name                 = "IFaultTolerantService_" .. Utils.OB_PREV
+facetDescriptions.IFaultTolerantService_Prev.interface_name       = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
+facetDescriptions.IFaultTolerantService_Prev.class                = AccessControlServicePrev.FaultToleranceFacet
+facetDescriptions.IFaultTolerantService_Prev.key                  = Utils.FAULT_TOLERANT_ACS_KEY_PREV
+
 facetDescriptions.IManagement.name            = "IManagement_" .. Utils.OB_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_ACS_KEY
 
+facetDescriptions.IManagement_Prev.name            = "IManagement_" .. Utils.OB_PREV
+facetDescriptions.IManagement_Prev.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
+facetDescriptions.IManagement_Prev.class           = AccessControlServicePrev.ManagementFacet
+facetDescriptions.IManagement_Prev.key             = Utils.MANAGEMENT_ACS_KEY_PREV
+
 local acsReceptFacetRef = 
-  orb:newservant(AccessControlService.ACSReceptacleFacet(TableDB(dbfile)),"","IDL:scs/core/IReceptacles:1.0")
+  orb:newservant(AccessControlService.ACSReceptacleFacet(TableDB(dbfile)),"",Utils.RECEPTACLES_INTERFACE)
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name = "IDL:scs/core/IReceptacles:1.0"
+facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE
 facetDescriptions.IReceptacles.class          = AccessControlService.ACSReceptacleFacet
 facetDescriptions.IReceptacles.facet_ref      = acsReceptFacetRef
 
@@ -206,7 +219,7 @@ facetDescriptions.IReceptacles.facet_ref      = acsReceptFacetRef
 local receptacleDescs = {}
 receptacleDescs.RegistryServiceReceptacle = {}
 receptacleDescs.RegistryServiceReceptacle.name           = "RegistryServiceReceptacle"
-receptacleDescs.RegistryServiceReceptacle.interface_name =  "IDL:scs/core/IComponent:1.0"
+receptacleDescs.RegistryServiceReceptacle.interface_name = Utils.COMPONENT_INTERFACE
 receptacleDescs.RegistryServiceReceptacle.is_multiplex   = true
 
 
