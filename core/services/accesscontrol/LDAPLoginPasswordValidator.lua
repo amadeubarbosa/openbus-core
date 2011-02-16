@@ -5,6 +5,7 @@ local string = string
 
 local lualdap = require "lualdap"
 local oop = require "loop.simple"
+local Log = require "openbus.util.Log"
 
 local LoginPasswordValidator =
     require "core.services.accesscontrol.LoginPasswordValidator"
@@ -42,8 +43,10 @@ function validate(self, name, password)
   for _, ldapHost in ipairs(self.ldapHosts) do
     for _, ldapSuffix in ipairs(self.ldapSuffixes) do
       local connection, err = lualdap.open_simple(
-          ldapHost.name..":"..ldapHost.port, name..ldapSuffix, password, false,5)
+          ldapHost.name..":"..ldapHost.port, name..ldapSuffix, password, false, 5)
       if connection then
+        Log:debug(string.format("O usuário %s foi autenticado por %s",
+            name..ldapSuffix, ldapHost.name))
         connection:close()
         return true
       end
