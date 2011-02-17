@@ -666,7 +666,7 @@ packages = {
         "mico genstubs", 
         "mico LUA51="..PRODAPP.."/lua5.1" 
       },
-      Darwin104x86 = {
+      Darwin = {
         mf = { 
           "mico genstubs LD=g++", 
           "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
@@ -707,7 +707,7 @@ packages = {
         "mico genstubs", 
         "mico LUA51="..PRODAPP.."/lua5.1" },
       -- special compile instructions for solaris
-      Darwin104x86 = {
+      Darwin = {
         mf = { 
           "mico genstubs LD=g++", 
           "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
