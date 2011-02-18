@@ -1245,7 +1245,8 @@ end
 handlers["del-offer"] = function(cmd)
   local rsmgm = getrsmgm()
   local id = cmd.params[cmd.name]
-  if rsmgm:unregister(id) then
+  local succ, removed = rsmgm:unregister(id)
+  if succ and removed then
     print("[INFO] Oferta removida com sucesso")
   else
     printf("[ERRO] Falha ao remover oferta '%s'", id)
