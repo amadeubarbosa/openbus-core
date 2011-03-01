@@ -119,6 +119,50 @@ basesoft = {
       [TMPDIR .."/openssl/*"] = "openssl",
     },
   },
+    { name = "openssl-1.0.0",
+      url = "http://www.tecgraf.puc-rio.br/ftp_pub/openbus/repository/openssl-1.0.0d.tar.gz",
+      build = {
+        type = "autotools",
+        test_libs = {"libcrypto*1.0.0*"},
+        Darwin = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        Darwin98x86 = "./config no-asm shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        Linux =  "./config shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        IRIX =   "./config shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        SunOS =  "./config shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        SunOS510 = "./Configure solaris-sparcv9-cc shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        SunOS510_64 = "./Configure solaris64-sparcv9-cc shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        SunOS510x86 = "./config no-asm shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+      },
+      install_files = {
+        [TMPDIR .."/lib/libssl*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+        [TMPDIR .."/lib/libcrypto*.so*"] = "libpath/${TEC_UNAME}",
+        [TMPDIR .."/lib/libssl*.dylib*"] = "libpath/${TEC_UNAME}",    --dynamic macos
+        [TMPDIR .."/lib/libcrypto*.dylib*"] = "libpath/${TEC_UNAME}",
+        [TMPDIR .."/bin/openssl"] = "bin/${TEC_UNAME}",
+        [TMPDIR .."/bin/c_rehash"] = "bin/${TEC_UNAME}",
+        [TMPDIR .."/openssl/*"] = "openssl",
+      },
+      dev_files = {
+        [TMPDIR .."/include/openssl"] = "incpath/openssl-1.0.0",
+        [TMPDIR .."/lib/libssl*.a*"] = "libpath/${TEC_UNAME}",        --static linux,aix,sunos
+        [TMPDIR .."/lib/libcrypto*.a*"] = "libpath/${TEC_UNAME}",     
+        [TMPDIR .."/lib/libssl*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
+        [TMPDIR .."/lib/libcrypto*.so*"] = "libpath/${TEC_UNAME}",
+        [TMPDIR .."/lib/libssl*.dylib*"] = "libpath/${TEC_UNAME}",    --dynamic macos
+        [TMPDIR .."/lib/libcrypto*.dylib*"] = "libpath/${TEC_UNAME}",
+        [TMPDIR .."/bin/openssl"] = "bin/${TEC_UNAME}",
+        [TMPDIR .."/bin/c_rehash"] = "bin/${TEC_UNAME}",
+        [TMPDIR .."/openssl/*"] = "openssl",
+      },
+    },
   { name = "openldap-2.4.11",
     url = SVNREPURL .. "/openbus/libs/trunk/openldap-2.4.11",
     build = {
