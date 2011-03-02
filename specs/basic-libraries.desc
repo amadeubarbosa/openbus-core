@@ -10,7 +10,7 @@ basesoft = {
     },
   },
   { name = "logger",
-    url = SVNREPURL .. "/cpputils/logger/tags/LG_v1_01_00_2010_08_10",
+    url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",

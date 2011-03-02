@@ -11,7 +11,7 @@ packages = {
     directory = PRODAPP .."/oil-0.5", 
   },
   { name = "scs-source",
-    url = SVNREPURL .. "/scs/tags/SCS_v1_01_00_2010_06_23/",
+    url = SVNREPURL .. "/scs/branches/SCS_v1_01_2010_05_13",
     directory = PRODAPP .."/scs",
   },
   { name = "idl-source",
