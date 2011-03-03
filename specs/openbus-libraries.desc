@@ -678,12 +678,6 @@ packages = {
           "mico LD=CC LUA51="..PRODAPP.."/lua5.1 ",
         },
       },
-      SunOS510_64 = { 
-        mf = { 
-          "mico genstubs ",
-          'mico "LD=CC TEC_UNAME=SunOS510_64" LUA51='..PRODAPP.."/lua5.1 ",
-        },
-      },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsmico.so"] = "libpath/${TEC_UNAME}",
@@ -717,12 +711,6 @@ packages = {
         mf = { 
           "mico genstubs", 
           "mico LD=CC LUA51="..PRODAPP.."/lua5.1", 
-        },
-      },
-      SunOS510_64 = {
-        mf = { 
-          "mico genstubs", 
-          'mico "TEC_UNAME=SunOS510_64 LD=CC" LUA51='..PRODAPP.."/lua5.1", 
         },
       },
     },
@@ -761,13 +749,6 @@ packages = {
           'server "LUA51='..PRODAPP..'/lua5.1 "',
         }, 
       },
-      SunOS510_64 = { 
-        mf = { 
-          "server genstubs ",
-          'client "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
-          'server "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
-        }, 
-      }
     },
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
@@ -803,13 +784,6 @@ packages = {
           'server "LUA51='..PRODAPP..'/lua5.1 "',
         }, 
       },
-      SunOS510_64 = { 
-        mf = { 
-          "server genstubs ",
-          'client "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
-          'server "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
-        }, 
-      },
     },
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/mico/bin/${TEC_UNAME}",
@@ -843,13 +817,6 @@ packages = {
           'server "LUA51='..PRODAPP..'/lua5.1 "',
         }, 
       },
-      SunOS510_64 = { 
-        mf = { 
-          "server genstubs ",
-          'client "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
-          'server "TEC_UNAME=SunOS510_64 LUA51='..PRODAPP..'/lua5.1 "',
-        }, 
-      },
     },
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/delegate/multithread/mico/bin/${TEC_UNAME}",
@@ -877,14 +844,6 @@ packages = {
         "config cxxtest -C rgs", 
         "config genstubs -C rgs", 
         "config -C rgs LUA51="..PRODAPP.."/lua5.1" 
-      },
-      SunOS510_64 = { 
-	    mf = { 
-	      "config cxxtest -C acs",
-        "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
-        "config cxxtest -C rgs",
-        "config genstubs -C rgs",
-        "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, },
       },
     },
     install_files = {
