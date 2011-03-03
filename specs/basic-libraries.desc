@@ -25,11 +25,6 @@ basesoft = {
           "config LD=CC",
         },
       },
-      SunOS510_64 = {
-        mf = {
-          'config "LD=CC TEC_UNAME=SunOS510_64"',
-        },
-      },
     },
     install_files = {
       ["lib/${TEC_UNAME}/liblogger.so"] = "libpath/${TEC_UNAME}",
