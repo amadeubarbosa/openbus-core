@@ -41,7 +41,7 @@ basesoft = {
       test_libs = {"libuuid.*"},
       Darwin = "./configure --prefix=".. TMPDIR ..
                " --enable-bsd-shlibs && cd lib/uuid && make && make install",
-      Linux =  "./configure --prefix=".. TMPDIR ..
+      Linux =  "./configure CC=gcc --prefix=".. TMPDIR ..
                " --enable-elf-shlibs && cd lib/uuid && gmake && gmake install",
       SunOS =  "./configure --prefix=".. TMPDIR ..
                " --with-gnu-ld=no --enable-elf-shlibs && cd lib/uuid && make && make install",
