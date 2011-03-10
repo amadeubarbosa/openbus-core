@@ -615,9 +615,14 @@ packages = {
           "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1" 
         },
       },
-    -- special compile instructions for solaris
-    SunOS = {
-      mf = { "mico genstubs USE_NODEPEND=Yes", "mico LUA51="..PRODAPP.."/lua5.1", "mico sunos" },
+      -- special compile instructions for solaris
+      SunOS = {
+        mf = { 
+          "mico genstubs USE_NODEPEND=Yes", 
+          "mico LUA51="..PRODAPP.."/lua5.1", 
+          "mico sunos" 
+        },
+      },
     },
     dev_files = {
       ["CHANGES"] = ".",
