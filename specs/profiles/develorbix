@@ -2,7 +2,7 @@ licenses
 lua5.1-dev
 openssl-0.9.9-dev
 scs-idl
-scsorbix-dev
+scs-orbix-dev
 openbus-orbix-dev
 openbus-demo-hello-orbix-dev
 openbus-orbix-test

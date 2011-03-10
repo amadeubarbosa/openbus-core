@@ -467,7 +467,7 @@ packages = {
     },
   },
    -- Orbix related packages
-  { name = "scsorbix",
+  { name = "scs-orbix",
     url = SVNREPURL .. "/scs/core/cpp/trunk",
     directory = PRODAPP .."/scs-cpp",
     build = {
@@ -656,7 +656,7 @@ packages = {
     },
   },
   -- MICO related packages
-  { name = "scsmico",
+  { name = "scs-mico",
     url = SVNREPURL .. "/scs/core/cpp/trunk",
     directory = PRODAPP .."/scs-cpp",
     build = {

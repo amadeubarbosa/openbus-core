@@ -16,7 +16,7 @@ cp ${WORKSPACE}/hudson/toolsconf.lua .
 
 if [ "${TEC_SYSNAME}" == "Linux" ] ;then
   EXCLUDE="\
-    scsmico \
+    scs-mico \
     openbus-mico \
     openbus-demo-hello-mico"
 fi
@@ -26,10 +26,10 @@ if [ "${TEC_SYSNAME}" == "SunOS" ] ;then
     jacorb-2.3.0 \
     luatrace \
     ftc-java \
-    scsmico \
+    scs-mico \
     openbus-mico \
     openbus-demo-hello-mico \
-    scsorbix \
+    scs-orbix \
     openbus-orbix \
     openbus-orbix-doc \
     openbus-orbix-test \
