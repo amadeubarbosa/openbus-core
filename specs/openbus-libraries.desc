@@ -464,7 +464,7 @@ packages = {
     },
   },
    -- Orbix related packages
-  { name = "scsorbix",
+  { name = "scs-orbix",
     build = {
       type = "tecmake",
       src = PRODAPP .."/scs/src/cpp",
@@ -580,7 +580,7 @@ packages = {
     },
   },
   -- MICO related packages
-  { name = "scsmico",
+  { name = "scs-mico",
     build = {
       type = "tecmake",
       src = PRODAPP .."/scs/src/cpp",
