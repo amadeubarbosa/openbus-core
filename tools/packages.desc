@@ -327,6 +327,21 @@ packages = {
 			["../test/lua"] = "core/test",
 		},
 	},
+	{ name = "openbus-lua",
+	  build = {
+	  	type = "tecmake",
+	  	src = SVNDIR .."/core/services",
+	  	mf = { "config LUA51="..PRODAPP.."/lua5.1", },
+	  },
+	  dev_files = {
+		["../bin/${TEC_UNAME}/servicelauncher"] = "core/bin/${TEC_UNAME}",
+		["../bin/servicelauncher"] = "core/bin",
+		["../../data/conf/config"] = "data/conf",
+		["../utilities/lua/openbus"] = "core/utilities/lua",
+		["../utilities/lua/*.lua"] = "core/utilities/lua",
+		["../idl/*.idl"] = "idlpath",
+          },
+	},
 	{ name = "openbus-demo-hello-lua",
 	  build = {
 	  	type = "tecmake",
