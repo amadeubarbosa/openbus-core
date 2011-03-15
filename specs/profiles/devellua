@@ -1,0 +1,14 @@
+licenses
+openssl-0.9.9-dev
+lua5.1-dev
+luafilesystem-dev
+luasocket2-dev
+luuid-dev
+oilall-dev
+scs-idl-prev
+scs-idl
+scsall-dev
+lce-dev
+latt-1.0.0-dev
+openbus-lua-dev
+openbus-demo-hello-lua-dev
