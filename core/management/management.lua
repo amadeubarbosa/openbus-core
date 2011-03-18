@@ -1449,7 +1449,13 @@ local function connect(retry)
       localPassword = lpw.getpass("Senha: ")
     end
     if retry == 0 then
-      Openbus:init(acshost, acsport)
+      local initialized = Openbus:init(acshost, acsport)
+      if not initialized then
+        print(string.format(
+            "[ERRO] Openbus não pode ser inicializado. Verifique se existe um barramento em %s:%s",
+            acshost or "nil", acsport or "nil"))
+        return
+      end
       local orb = Openbus:getORB()
       orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.OB_VERSION..
           "/registry_service.idl")
@@ -1479,6 +1485,10 @@ function getacsmgm()
   connect()
   local orb = Openbus:getORB()
   local acs = Openbus:getAccessControlService()
+  if not acs then
+    print("[ERRO] Serviço de Controle de Acesso não está conectado.")
+    os.exit(1)
+  end
   local ic = acs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   acsmgm = ic:getFacetByName("IManagement_" .. Utils.OB_VERSION)
