@@ -179,7 +179,7 @@ basesoft = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
       Linux = "./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
-      Darwin = "./configure --prefix=".. TMPDIR .. " && make && make install",
+      Darwin = "./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
     },
     install_files = {
       [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
