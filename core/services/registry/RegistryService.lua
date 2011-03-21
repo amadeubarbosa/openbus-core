@@ -276,7 +276,6 @@ function RSFacet:createFacetIndex(owner, allFacets)
       elseif invalidCount == 0 then
         facets[facet.name] = "name"
         facets[facet.interface_name] = "interface_name"
-        facets[facet.facet_ref] = "facet_ref"
         count = count + 1
       end
      end
@@ -974,19 +973,6 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
             addOfferEntry.offer = offerEntryFound.aServiceOffer
             addOfferEntry.facets =
               Utils.unmarshalHashFacets(offerEntryFound.authorizedFacets)
-
-            local memberProtected = orb:newproxy(addOfferEntry.offer.member, "protected")
-            local succ, metaInterface = memberProtected:getFacetByName("IMetaInterface")
-            if succ and metaInterface then
-              metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
-              local facets = metaInterface:getFacets()
-              for _, facet in ipairs(facets) do
-                if addOfferEntry.facets[facet.name] or
-                   addOfferEntry.facets[interface_name] then
-                  addOfferEntry.facets[facet.facet_ref] = "facet_ref"
-                end
-              end
-            end
 
             --Recupera o indice das propriedades inseridas pelo RGS
             addOfferEntry.properties =
