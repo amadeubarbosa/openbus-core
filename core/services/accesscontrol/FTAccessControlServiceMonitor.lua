@@ -29,7 +29,7 @@ if DATA_DIR == nil then
   os.exit(1)
 end
 
-local BIN_DIR = os.getenv("OPENBUS_DATADIR") .. "/../core/bin"
+local BIN_DIR = os.getenv("OPENBUS_HOME") .. "/core/bin"
 
 orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
 
