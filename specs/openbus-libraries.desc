@@ -15,7 +15,7 @@ packages = {
     directory = PRODAPP .."/scs",
   },
   { name = "idl-source",
-    url = SVNREPURL .. "/openbus/idl/branches/OB_IDL_v1_05_2010_05_13",
+    url = SVNREPURL .. "/openbus/idl/tags/OB_IDL_v1_05_01_2011_03_23",
     directory = PRODAPP .."/idl",
   },
   { name = "idl-1.4-source",
