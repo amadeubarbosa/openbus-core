@@ -699,7 +699,7 @@ function RSFacet:credentialWasDeleted(credential)
       local succ, msg = self.offersDB:delete(offerEntry)
       if not succ then
         Log:error(format("Não foi possível remover a oferta %s: %s",
-            identifier, msg))
+            identifier, tostring(msg)))
       end
     end
   else
@@ -1325,7 +1325,7 @@ function ManagementFacet:addInterfaceIdentifier(ifaceId)
   local succ, msg = self.ifaceDB:save(ifaceId, ifaceId)
   if not succ then
     Log:error(format("Falha ao salvar a interface '%s': %s",
-      ifaceId, msg))
+      ifaceId, tostring(msg)))
   else
     self:updateManagementStatus("addInterfaceIdentifier", {ifaceId = ifaceId})
   end
@@ -1351,7 +1351,7 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   self.interfaces[ifaceId] = nil
   local succ, msg = self.ifaceDB:remove(ifaceId)
   if not succ then
-    Log:error(format("Falha ao remover interface '%s': %s", iface, msg))
+    Log:error(format("Falha ao remover interface '%s': %s", iface, tostring(msg)))
   else
     self:updateManagementStatus("removeInterfaceIdentifier",
       { ifaceId = ifaceId })
@@ -1433,7 +1433,7 @@ function ManagementFacet:grant(id, ifaceId, strict)
   end
   local succ, msg = self.authDB:save(id, auth)
   if not succ then
-    Log:error(format("Falha ao salvar autorização '%s': %s", id, msg))
+    Log:error(format("Falha ao salvar autorização '%s': %s", id, tostring(msg)))
   else
      self:updateManagementStatus("grant", { id = id, ifaceId = ifaceId, strict = strict})
   end
@@ -1462,7 +1462,7 @@ function ManagementFacet:revoke(id, ifaceId)
     succ, msg = self.authDB:remove(id)
   end
   if not succ then
-    Log:error(format("Falha ao remover autorização  '%s': %s", id, msg))
+    Log:error(format("Falha ao remover autorização  '%s': %s", id, tostring(msg)))
   else
     self:updateManagementStatus("revoke", { id = id, ifaceId = ifaceId})
   end
@@ -1482,7 +1482,7 @@ function ManagementFacet:removeAuthorization(id)
   self.authorizations[id] = nil
   local succ, msg = self.authDB:remove(id)
   if not succ then
-    Log:error(format("Falha ao remover autorização '%s': %s", id, msg))
+    Log:error(format("Falha ao remover autorização '%s': %s", id, tostring(msg)))
   else
     self:updateManagementStatus("removeAuthorization", { id = id})
   end
