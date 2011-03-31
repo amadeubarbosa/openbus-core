@@ -80,9 +80,9 @@ function Session:addMember(member)
       orb:narrow(eventSink, eventSinkInterface)
   else
     if eventSinkPrev then
-      Log:debug("O membro %s:%d.%d.%d receberá eventos da versão %d",
+      Log:debug(format("O membro %s:%d.%d.%d receberá eventos da versão %d",
           componentId.name, componentId.major_version, componentId.minor_version,
-          componentId.patch_version, Utils.OB_PREV)
+          componentId.patch_version, Utils.OB_PREV))
       self.context.SessionEventSink.eventSinksPrev[info.memberId] =
         orb:narrow(eventSinkPrev, eventSinkInterfacePrev)
     else
@@ -184,14 +184,14 @@ function SessionEventSink:push(sender, event)
     local result, errorMsg = oil.pcall(sink.push, sink, sender, event)
     if not result then
       Log:debug(format("Falha ao tentar enviar um evento do tipo %s ao membro %s (versão %s",
-          event.type, memberId, Utils.OB_VERSION), errorMsg)
+          event.type, memberId, Utils.OB_VERSION), tostring(errorMsg))
     end
   end
   for memberId, sink in pairs(self.eventSinksPrev) do
     local result, errorMsg = oil.pcall(sink.push, sink, sender, event)
     if not result then
       Log:debug(format("Falha ao tentar enviar um evento do tipo %s ao membro %s (versão %s)",
-          event.type, memberId, Utils.OB_PREV), errorMsg)
+          event.type, memberId, Utils.OB_PREV), tostring(errorMsg))
     end
   end
 end
@@ -206,14 +206,14 @@ function SessionEventSink:disconnect(sender)
     local result, errorMsg = oil.pcall(sink.disconnect, sink, sender)
     if not result then
       Log:warn(format("Falha ao tentar enviar um evento de desconexão ao membro %s (versão %s)",
-          memberId, Utils.OB_VERSION), errorMsg)
+          memberId, Utils.OB_VERSION), tostring(errorMsg))
     end
   end
   for memberId, sink in pairs(self.eventSinksPrev) do
     local result, errorMsg = oil.pcall(sink.disconnect, sink, sender)
     if not result then
       Log:warn(format("Falha ao tentar enviar um evento de desconexão ao membro %s (versão %s)",
-          memberId, Utils.OB_PREV), errorMsg)
+          memberId, Utils.OB_PREV), tostring(errorMsg))
     end
   end
 end

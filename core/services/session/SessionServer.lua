@@ -57,7 +57,7 @@ if ssConfig.logs.service.file then
   if not serviceLogFile then
     Log:error(format(
         "Falha ao abrir o arquivo de log do serviço de sessão: %s",
-        errMsg))
+        tostring(errMsg)))
   end
 end
 
@@ -68,7 +68,7 @@ if ssConfig.logs.audit.file then
       ssConfig.logs.audit.file)
   if not auditLogFile then
     Log:error(format(
-        "Falha ao abrir o arquivo de auditoria: %s", errMsg))
+        "Falha ao abrir o arquivo de auditoria: %s", tostring(errMsg)))
   end
 end
 
@@ -80,7 +80,7 @@ if ssConfig.logs.oil.file then
   if not oilLogFile then
     Log:error(format(
         "Falha ao abrir o arquivo de log do OiL: %s",
-        errMsg))
+        tostring(errMsg)))
   end
 end
 
@@ -193,7 +193,7 @@ local status, errMsg = oil.pcall(oil.main,main)
 if not status then
   Log:error(format(
       "Ocorreu uma falha na execução do serviço de sessão: %s",
-      errMsg))
+      tostring(errMsg)))
 end
 
 if serviceLogFile then
