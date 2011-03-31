@@ -4,6 +4,7 @@ local io = io
 local string = string
 local format = string.format
 local os = os
+local tostring = tostring
 
 local error = error
 
@@ -41,7 +42,7 @@ function __init(self, databaseDirectory)
     local status, errorMessage = lfs.mkdir(databaseDirectory)
     if not status then
       Log:error(format("Nao foi possivel criar o diretorio %s: %s",
-          databaseDirectory, errorMessage))
+          databaseDirectory, tostring(errorMessage)))
       error(errorMessage)
     end
   end

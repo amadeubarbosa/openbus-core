@@ -5,6 +5,7 @@
 ---
 local string = string
 local format = string.format
+local tostring = tostring
 local oil = require "oil"
 
 local Openbus = require "openbus.Openbus"
@@ -65,7 +66,7 @@ if acsConfig.logs.service.file then
   if not serviceLogFile then
     Log:error(format(
         "Falha ao abrir o arquivo de log do serviço de controle de acesso: %s",
-        errMsg))
+        tostring(errMsg)))
   end
 end
 
@@ -76,7 +77,7 @@ if acsConfig.logs.audit.file then
       acsConfig.logs.audit.file)
   if not auditLogFile then
     Log:error(format(
-        "Falha ao abrir o arquivo de auditoria: %s", errMsg))
+        "Falha ao abrir o arquivo de auditoria: %s", tostring(errMsg)))
   end
 end
 
@@ -88,7 +89,7 @@ if acsConfig.logs.oil.file then
   if not oilLogFile then
     Log:error(format(
         "Falha ao abrir o arquivo de log do OiL: %s",
-        errMsg))
+        tostring(errMsg)))
   end
 end
 
@@ -272,7 +273,7 @@ local status, errMsg = oil.pcall(oil.main,main)
 if not status then
   Log:error(format(
       "Ocorreu uma falha na execução do serviço de controle de acesso: %s",
-      errMsg))
+      tostring(errMsg)))
 end
 
 exitServer({serviceLogFile, auditLogFile, oilLogFile})

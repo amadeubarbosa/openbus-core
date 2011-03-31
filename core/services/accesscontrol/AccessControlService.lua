@@ -90,7 +90,7 @@ function ACSFacet:loginByPassword(name, password)
           entry.credential.identifier, entry.credential.owner))
       return true, entry.credential, entry.lease.duration
     else
-      Log:debug(format("Ocorreu um erro ao validar o usuário %s: %s", name, err))
+      Log:debug(format("Ocorreu um erro ao validar o usuário %s: %s", name, tostring(err)))
     end
   end
 
@@ -120,7 +120,7 @@ function ACSFacet:loginByCertificate(name, answer)
   answer, errorMessage = lce.cipher.decrypt(self.privateKey, answer)
   if not answer then
     Log:error(format("Ocorreu um erro ao descriptografas a resposta de %s: %s",
-        name, errorMessage))
+        name, tostring(errorMessage)))
   end
   if answer ~= challenge then
     Log:warn(format("A resposta de %s está incorreta", name))
@@ -796,7 +796,7 @@ function ManagementFacet:addSystem(id, description)
     description = description
   })
   if not succ then
-    Log:error(format("Falha ao salvar sistema '%s': %s", id, msg))
+    Log:error(format("Falha ao salvar sistema '%s': %s", id, tostring(msg)))
   else
     self.systems[id] = true
     self:updateManagementStatus("addSystem",
@@ -826,7 +826,7 @@ function ManagementFacet:removeSystem(id)
   self.systems[id] = nil
   local succ, msg = self.systemDB:remove(id)
   if not succ then
-    Log:error(format("Falha ao remover sistema '%s': %s", id, msg))
+    Log:error(format("Falha ao remover sistema '%s': %s", id, tostring(msg)))
   else
     self:updateManagementStatus("removeSystem", { id = id})
   end
@@ -850,13 +850,13 @@ function ManagementFacet:setSystemDescription(id, description)
     system.description = description
     succ, msg = self.systemDB:save(id, system)
     if not succ then
-      Log:error(format("Falha ao salvar sistema '%s': %s", id, msg))
+      Log:error(format("Falha ao salvar sistema '%s': %s", id, tostring(msg)))
     else
       self:updateManagementStatus("setSystemDescription",
                          { id = id, description = description})
     end
   else
-    Log:error(format("Falha ao recuperar sistema '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar sistema '%s': %s", id, tostring(msg)))
   end
 end
 
@@ -868,7 +868,7 @@ end
 function ManagementFacet:getSystems()
   local systems, msg = self.systemDB:getValues()
   if not systems then
-    Log:error(format("Falha ao recuperar os sistemas: %s", msg))
+    Log:error(format("Falha ao recuperar os sistemas: %s", tostring(msg)))
   end
   return systems
 end
@@ -887,7 +887,7 @@ function ManagementFacet:getSystem(id)
   end
   local system, msg = self.systemDB:get(id)
   if not system then
-    Log:error(format("Falha ao recuperar os sistemas: %s", msg))
+    Log:error(format("Falha ao recuperar os sistemas: %s", tostring(msg)))
   end
   return system
 end
@@ -927,7 +927,7 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
   })
   if not succ then
     Log:error(format("Falha ao salvar implantação %s na base de dados: %s",
-      id, msg))
+      id, tostring(msg)))
   else
     self:updateManagementStatus("addSystemDeployment",
                                 { id = id,
@@ -937,7 +937,7 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
 
     succ, msg = self.certificateDB:save(id, certificate)
     if not succ then
-      Log:error(format("Falha ao salvar certificado de '%s': %s", id, msg))
+      Log:error(format("Falha ao salvar certificado de '%s': %s", id, tostring(msg)))
     end
 
   end
@@ -959,14 +959,14 @@ function ManagementFacet:removeSystemDeployment(id)
   local succ, msg = self.deploymentDB:remove(id)
   if not succ then
     Log:error(format("Falha ao remover implantação '%s' da base de dados: %s",
-      id, msg))
+      id, tostring(msg)))
   else
     self:updateManagementStatus("removeSystemDeployment", { id = id})
 
     succ, msg = self.certificateDB:remove(id)
     if not succ and msg ~= "not found" then
       Log:error(format("Falha ao remover certificado da implantação '%s': %s",
-        id, msg))
+        id, tostring(msg)))
     end
 
     -- Invalida a credencial do membro que está sendo removido
@@ -1001,14 +1001,14 @@ function ManagementFacet:setSystemDeploymentDescription(id, description)
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
-    Log:error(format("Falha ao recuperar implantação '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar implantação '%s': %s", id, tostring(msg)))
   else
     local succ
     depl.description = description
     succ, msg = self.deploymentDB:save(id, depl)
     if not succ then
       Log:error(format("Falha ao salvar implantação '%s' na base de dados: %s",
-        id, msg))
+        id, tostring(msg)))
     else
       self:updateManagementStatus("setSystemDeploymentDescription",
                          { id = id, description = description})
@@ -1030,7 +1030,7 @@ function ManagementFacet:getSystemDeploymentCertificate(id)
   end
   local cert, msg = self.certificateDB:get(id)
   if not cert then
-    Log:error(format("Falha ao recuperar certificado de '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar certificado de '%s': %s", id, tostring(msg)))
   end
   return cert
 end
@@ -1049,12 +1049,12 @@ function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
   end
   local tmp, msg = lce.x509.readfromderstring(certificate)
   if not tmp then
-    Log:error(format("%s: certificado inválido.", id, msg))
+    Log:error(format("%s: certificado inválido.", id, tostring(msg)))
     error{InvalidCertificateException}
   end
   local succ, msg = self.certificateDB:save(id, certificate)
   if not succ then
-    Log:error(format("Falha ao salvar certificado de '%s': %s", id, msg))
+    Log:error(format("Falha ao salvar certificado de '%s': %s", id, tostring(msg)))
   else
     self:updateManagementStatus("setSystemDeploymentCertificate",
                          { id = id, certificate = certificate})
@@ -1069,7 +1069,7 @@ end
 function ManagementFacet:getSystemDeployments()
   local depls, msg = self.deploymentDB:getValues()
   if not depls then
-    Log:error(format("Falha ao recuperar implantações: %s", msg))
+    Log:error(format("Falha ao recuperar implantações: %s", tostring(msg)))
   end
   return depls
 end
@@ -1086,7 +1086,7 @@ function ManagementFacet:getSystemDeployment(id)
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
-    Log:error(format("Falha ao recuperar implantação '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar implantação '%s': %s", id, tostring(msg)))
   end
   return depl
 end
@@ -1102,7 +1102,7 @@ function ManagementFacet:getSystemDeploymentsBySystemId(systemId)
   local array = {}
   local depls, msg = self.deploymentDB:getValues()
   if not depls then
-    Log:error(format("Falha ao recuperar implantações: %s", msg))
+    Log:error(format("Falha ao recuperar implantações: %s", tostring(msg)))
   else
     for _, depl in pairs(depls) do
       if depl.systemId == systemId then
@@ -1134,7 +1134,7 @@ function ManagementFacet:addUser(id, name)
   })
   if not succ then
     Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
-      id, msg))
+      id, tostring(msg)))
   else
     self:updateManagementStatus("addUser", { id = id, name = name})
   end
@@ -1155,7 +1155,7 @@ function ManagementFacet:removeUser(id)
   local succ, msg = self.userDB:remove(id)
   if not succ then
     Log:error(format("Falha ao remover usuário '%s' da base de dados: %s",
-      id, msg))
+      id, tostring(msg)))
   else
     self:updateManagementStatus("removeUser", { id = id})
 
@@ -1188,14 +1188,14 @@ function ManagementFacet:setUserName(id, name)
   end
   local user, msg = self.userDB:get(id)
   if not user then
-    Log:error(format("Falha ao recuperar usuário '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar usuário '%s': %s", id, tostring(msg)))
   else
     local succ
     user.name = name
     succ, msg = self.userDB:save(id, user)
     if not succ then
       Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
-        id, msg))
+        id, tostring(msg)))
     else
       self:updateManagementStatus("setUserName", { id = id, name = name})
     end
@@ -1214,7 +1214,7 @@ function ManagementFacet:getUser(id)
   end
   local user, msg = self.userDB:get(id)
   if not user then
-    Log:error(format("Falha ao recuperar usuário '%s': %s", id, msg))
+    Log:error(format("Falha ao recuperar usuário '%s': %s", id, tostring(msg)))
   end
   return user
 end
@@ -1227,7 +1227,7 @@ end
 function ManagementFacet:getUsers()
   local users, msg = self.userDB:getValues()
   if not users then
-    Log:error(format("Falha ao recuperar usuários: %s", msg))
+    Log:error(format("Falha ao recuperar usuários: %s", tostring(msg)))
   end
   return users
 end
@@ -1844,13 +1844,13 @@ function startup(self)
                   end -- fim succ, conseguiu logar
                 else
                   Log:error(format(
-                      "Não foi possível gerar a resposta para o desafio: %s", err))
+                      "Não foi possível gerar a resposta para o desafio: %s", tostring(err)))
                 end --fim answer
               else
-                Log:error(format("Erro na leitura do certificado: %s", err))
+                Log:error(format("Erro na leitura do certificado: %s", tostring(err)))
               end -- fim certificate
             else
-              Log:error(format("Erro ao abrir o desafio: %s", err))
+              Log:error(format("Erro ao abrir o desafio: %s", tostring(err)))
             end --fim challenge
           else --fim privatekey
             Log:error(format("Erro na leitura da chave privada."))
@@ -1859,7 +1859,7 @@ function startup(self)
           Log:error("Não foi possível obter desafio para deploymentId: AccessControlService.")
         end -- fim challenge
       elseif not ret then
-        Log:error(format("Não foi possível obter a faceta %s: %s", ftFacet.ftconfig.hosts.ACSIC[i], succ))
+        Log:error(format("Não foi possível obter a faceta %s: %s", ftFacet.ftconfig.hosts.ACSIC[i], tostring(succ)))
       else
         Log:error(format("Não foi possível obter a faceta %s: %s", ftFacet.ftconfig.hosts.ACSIC[i],
             tostring(remoteACSIC)))
