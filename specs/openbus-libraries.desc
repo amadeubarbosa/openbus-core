@@ -7,7 +7,7 @@ SUNOS64_TECMAKE_FLAGS="USE_NODEPEND=Yes TEC_UNAME=SunOS510_64 BUILD_64=yes"
 packages = {
   -- fake package to easy the download of the oil05, scs and friend projects
   { name = "oil-source",
-    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_02_01_2011_01_07/oil-0.5.0",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_02_2010_09_21/oil-0.5.0",
     directory = PRODAPP .."/oil-0.5", 
   },
   { name = "scs-source",
