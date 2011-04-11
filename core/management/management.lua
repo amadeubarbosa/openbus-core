@@ -4,6 +4,8 @@ local Openbus = require "openbus.Openbus"
 local Utils   = require "openbus.util.Utils"
 local busLog  = require "openbus.util.Log"
 
+local UI = require "core.management.ManagementUI"
+
 -- Alias
 local lower = string.lower
 
@@ -385,75 +387,6 @@ local function parse(argv)
 end
 
 -------------------------------------------------------------------------------
--- Define as funções que imprimem as informações na tela em forma de relatório.
---
-
----
--- Imprime uma linha divisória de acordo com o tamanho das colunas.
--- O tamanho total da linha é normalizado para no mínimo 80 caracteres.
---
--- @param sizes Array com o tamanho de cada coluna
---
-local function hdiv(sizes)
-  local l = {}
-  for k, size in ipairs(sizes) do
-    l[k] = string.rep("-", size+2)
-  end
-  l = table.concat(l, "+")
-  if #l < 80 then
-    l = l .. string.rep("-", 80-#l)
-  end
-  print(l)
-end
-
----
--- Imprime os títulos das colunas, preenchendo o necessário com espaço para
--- completar o tamanho esperado da coluna.
---
--- @param titles Títulos das colunas.
--- @param sizes Array com os tamanhos das colunas.
---
-local function header(titles, sizes)
-  local l = {}
-  for k, title in ipairs(titles) do
-    l[k] = string.format(" %s%s ", title, string.rep(" ", sizes[k]-#title))
-  end
-  hdiv(sizes)
-  print(table.concat(l, "|"))
-  hdiv(sizes)
-end
-
----
--- Imprime uma linha de dados.
---
--- @param sizes Array com o tamanho das colunas. Ele também indica quantas
--- colunas devem ser impressas.
--- @param ... Dados a serem impressos em cada coluna.
---
-local function dataline(sizes, ...)
-  local l = {}
-  for k, size in ipairs(sizes) do
-    local val = select(k, ...)
-    l[k] = string.format(" %s%s ", val, string.rep(" ", size-#val))
-  end
-  print(table.concat(l, "|"))
-end
-
----
--- Imprime uma linha vazia.
---
--- @param sizes Array com o tamanho das colunas. Ele também indica quantas
--- colunas devem ser impressas.
---
-local function emptyline(sizes)
-  local l = {}
-  for k, size in ipairs(sizes) do
-    l[k] = string.rep(" ", size+2)
-  end
-  print(table.concat(l, "|"))
-end
-
--------------------------------------------------------------------------------
 -- Funções auxiliares
 
 ---
@@ -598,34 +531,8 @@ handlers["list-system"] = function(cmd)
       end
     end
   end
-  -- Mostra os dados em um forumulário
-  local titles = {"", "ID SISTEMA", "DESCRIÇÃO"}
-  -- Largura inicial das colunas
-  local sizes = {3, #titles[2], #titles[3]}
-  if #systems == 0 then
-    header(titles, sizes)
-    emptyline(sizes)
-    hdiv(sizes)
-  else
-    -- Ajusta as larguras das colunas de acordo com o conteúdo
-    for k, system in ipairs(systems) do
-      if #system.id > sizes[2] then
-        sizes[2] = #system.id
-      end
-      if #system.description > sizes[3] then
-        sizes[3] = #system.description
-      end
-    end
-    -- Ordena e monta o formulário
-    table.sort(systems, function(a, b)
-      return lower(a.id) < lower(b.id)
-    end)
-    header(titles, sizes)
-    for k, system in ipairs(systems) do
-      dataline(sizes, string.format("%.3d", k), system.id, system.description)
-    end
-    hdiv(sizes)
-  end
+
+  UI.showSystem(systems)
 end
 
 ---
@@ -790,37 +697,8 @@ handlers["list-deployment"] = function(cmd)
       return
     end
   end
-  -- Títulos e larguras iniciais das colunas
-  local titles = { "", "ID IMPLANTAÇÃO", "ID SISTEMA", "DESCRIÇÃO" }
-  local sizes = { 3, #titles[2], #titles[3], #titles[4] }
-  if #depls == 0 then
-    header(titles, sizes)
-    emptyline(sizes)
-    hdiv(sizes)
-  else
-    -- Ajusta as larguras das colunas de acordo com o conteúdo
-    for k, depl in ipairs(depls) do
-      if sizes[2] < #depl.id then
-        sizes[2] = #depl.id
-      end
-      if sizes[3] < #depl.systemId then
-        sizes[3] = #depl.systemId
-      end
-      if sizes[4] < #depl.description then
-        sizes[4] = #depl.description
-      end
-    end
-    -- Ordena e monta o formulário
-    table.sort(depls, function(a, b)
-      return lower(a.id) < lower(b.id)
-    end)
-    header(titles, sizes)
-    for k, depl in ipairs(depls) do
-      dataline(sizes, string.format("%.3d", k), depl.id, depl.systemId,
-        depl.description)
-    end
-    hdiv(sizes)
-  end
+
+  UI.showSystemDeployment(depls)
 end
 
 ---
@@ -913,34 +791,8 @@ handlers["list-user"] = function(cmd)
       end
     end
   end
-  -- Mostra os dados em um forumulário
-  local titles = {"", "ID USUÁRIO", "NOME"}
-  -- Largura inicial das colunas
-  local sizes = {3, #titles[2], #titles[3]}
-  if #users == 0 then
-    header(titles, sizes)
-    emptyline(sizes)
-    hdiv(sizes)
-  else
-    -- Ajusta as larguras das colunas de acordo com o conteúdo
-    for k, user in ipairs(users) do
-      if #user.id > sizes[2] then
-        sizes[2] = #user.id
-      end
-      if #user.name > sizes[3] then
-        sizes[3] = #user.name
-      end
-    end
-    -- Ordena e monta o formulário
-    table.sort(users, function(a, b)
-      return lower(a.name) < lower(b.name)
-    end)
-    header(titles, sizes)
-    for k, user in ipairs(users) do
-      dataline(sizes, string.format("%.3d", k), user.id, user.name)
-    end
-    hdiv(sizes)
-  end
+
+  UI.showUser(users)
 end
 
 ---
@@ -993,30 +845,8 @@ handlers["list-interface"] = function(cmd)
     printf("[ERRO] Falha ao exibir interfaces: %s",ifaces[1])
     return
   end
-  -- Títulos e larguras iniciais das colunas
-  local titles = { "", "INTERFACE" }
-  local sizes = { 3, #titles[2] }
-  if #ifaces == 0 then
-    header(titles, sizes)
-    emptyline(sizes)
-    hdiv(sizes)
-  else
-    -- Ajusta as larguras das colunas de acordo com o conteúdo
-    for k, iface in ipairs(ifaces) do
-      if sizes[2] < #iface then
-        sizes[2] = #iface
-      end
-    end
-    -- Ordena e exibe e monta o formulário
-    table.sort(ifaces, function(a, b)
-      return lower(a) < lower(b)
-    end)
-    header(titles, sizes)
-    for k, iface in ipairs(ifaces) do
-      dataline(sizes, string.format("%.3d", k), iface)
-    end
-    hdiv(sizes)
-  end
+
+  UI.showInterface(ifaces)
 end
 
 ---
@@ -1115,54 +945,8 @@ handlers["list-authorization"] = function(cmd)
       return
     end
   end
-  -- Títulos e larguras das colunas do formulário de resposta
-  local titles = { "", "ID MEMBRO", "TIPO", "INTERFACES"}
-  local sizes = { 3, #titles[2], #titles[3], #titles[4] }
-  if #auths == 0 then
-    header(titles, sizes)
-    emptyline(sizes)
-    hdiv(sizes)
-  else
-    -- Ajusta as larguras das colunas de acordo com o conteúdo
-    for k, auth in ipairs(auths) do
-      if sizes[2] < #auth.id then
-        sizes[2] = #auth.id
-      end
-      if sizes[3] < #auth.type then
-        sizes[3] = #auth.type
-      end
-      for _, iface in ipairs(auth.authorized) do
-        if sizes[4] < #iface then
-          sizes[4] = #iface
-        end
-      end
-    end
-    -- Ordena e monta o formulário
-    table.sort(auths, function(a, b)
-      return lower(a.id) < lower(b.id)
-    end)
-    header(titles, sizes)
-    for k, auth in ipairs(auths) do
-      local type = ((auth.type == "ATUser") and "Usuário") or "Implantação"
-      if #auth.authorized == 0 then
-        dataline(sizes, string.format("%.3d", k), auth.id, type, "")
-      else
-        -- Uma implantação pode ter várias interfaces
-        table.sort(auth.authorized, function(a, b)
-          return lower(a) < lower(b)
-        end)
-        dataline(sizes, string.format("%.3d", k), auth.id, type,
-          auth.authorized[1])
-        local count = 2
-        local total = #auth.authorized
-        while count <= total do
-          dataline(sizes, "", "", "", auth.authorized[count])
-          count = count + 1
-        end
-      end
-    end
-    hdiv(sizes)
-  end
+
+  UI.showAuthorization(auths)
 end
 
 --
@@ -1207,49 +991,8 @@ handlers["list-offer"] = function(cmd)
       end
     end
   end
-  -- Títulos e larguras das colunas do formulário de resposta
-  local titles = { "", "ID OFERTA", "ID MEMBRO", "INTERFACES"}
-  local sizes = { 3, #titles[2], #titles[3], #titles[4] }
-  if #offers == 0 then
-    header(titles, sizes)
-    emptyline(sizes)
-    hdiv(sizes)
-  else
-    -- Ajusta as larguras das colunas de acordo com o conteúdo
-    for k, offer in ipairs(offers) do
-      if sizes[2] < #offer.id then
-        sizes[2] = #offer.id
-      end
-      if sizes[3] < #offer.member then
-        sizes[3] = #offer.member
-      end
-      for _, iface in ipairs(offer.interfaces) do
-        if sizes[4] < #iface then
-          sizes[4] = #iface
-        end
-      end
-    end
-    -- Ordena e monta o formulário
-    table.sort(offers, function(a, b)
-      return lower(a.member) < lower(b.member)
-    end)
-    header(titles, sizes)
-    for k, offer in ipairs(offers) do
-      -- Ordena as interfaces
-      table.sort(offer.interfaces, function(a, b)
-        return lower(a) < lower(b)
-      end)
-      dataline(sizes, string.format("%.3d", k), offer.id, offer.member,
-        offer.interfaces[1])
-      local count = 2
-      local total = #offer.interfaces
-      while count <= total do
-        dataline(sizes, "", "", "", offer.interfaces[count])
-        count = count + 1
-      end
-    end
-    hdiv(sizes)
-  end
+
+  UI.showOffer(offers)
 end
 
 --
