@@ -661,7 +661,7 @@ packages = {
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/scs-cpp/src",
+      src = PRODAPP .."/scs-cpp",
       mf = { 
         "mico genstubs", 
         "mico LUA51="..PRODAPP.."/lua5.1" 
@@ -669,7 +669,7 @@ packages = {
       Darwin = {
         mf = { 
           "mico genstubs LD=g++", 
-          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1" 
         },
       },
       SunOS510 = { 
@@ -680,17 +680,17 @@ packages = {
       },
     },
     install_files = {
-      ["../lib/${TEC_UNAME}/libscsmico.so"] = "libpath/${TEC_UNAME}",
+      ["lib/${TEC_UNAME}/libscsmico.*"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idlpath/"..OB_VERSION.."/scs.idl"] =
           "idlpath/"..OB_VERSION,
     },
     dev_files = {
-      ["../lib/${TEC_UNAME}/libscsmico.*"] = "libpath/${TEC_UNAME}",
+      ["lib/${TEC_UNAME}/libscsmico.*"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idlpath/"..OB_VERSION.."/scs.idl"] =
           "idlpath/"..OB_VERSION,
-      ["*.h"] = "incpath/scs",
+      ["include/scs/*"] = "incpath/scs",
     },
   },
   { name = "openbus-mico",
