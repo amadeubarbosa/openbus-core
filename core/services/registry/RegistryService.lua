@@ -76,14 +76,12 @@ function RSFacet:register(serviceOffer)
 
   local offerEntry = {
     offer = serviceOffer,
-    -- Mapeia as propriedades.
     properties = properties,
-    -- Mapeia as facetas do componente.
     facets = facets,
     credential = credential,
     identifier = self:generateIdentifier(),
+    registrationDate = tonumber(os.date("%s"))
   }
-
 
   local orb = Openbus:getORB()
   for _, existentOfferEntry in pairs(self.offersByIdentifier) do
@@ -1601,21 +1599,22 @@ end
 function ManagementFacet:getOfferedInterfaces()
   self:checkPermission()
   local array = {}
-  local ifaces = {}
   local offers = self.context.IRegistryService.offersByIdentifier
   for id, offer in pairs(offers) do
+    local ifaces = {}
     for facet, type in pairs(offer.facets) do
       if type == "interface_name" then
         ifaces[#ifaces+1] = facet
       end
     end
+
     if #ifaces > 0 then
       array[#array+1] = {
         id = id,
         member = offer.credential.owner,
         interfaces = ifaces,
+        registrationDate = offer.registrationDate,
       }
-      ifaces = {}
     end
   end
   return array
@@ -1633,8 +1632,10 @@ function ManagementFacet:getOfferedInterfacesByMember(member)
   local array = {}
   local ifaces = {}
   local offers = self.context.IRegistryService.offersByIdentifier
+
   for id, offer in pairs(offers) do
     if offer.credential.owner == member then
+      local ifaces = {}
       for facet, type in pairs(offer.facets) do
         if type == "interface_name" then
           ifaces[#ifaces+1] = facet
@@ -1645,8 +1646,8 @@ function ManagementFacet:getOfferedInterfacesByMember(member)
           id = id,
           member = offer.credential.owner,
           interfaces = ifaces,
+          registrationDate = offer.registrationDate
         }
-        ifaces = {}
       end
     end
   end
