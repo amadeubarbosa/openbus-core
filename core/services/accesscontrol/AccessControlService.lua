@@ -915,8 +915,9 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
   end
   local succ, msg = lce.x509.readfromderstring(certificate)
   if not succ then
-    Log:error(format("Falha ao criar implantação '%s': certificado inválido.",
-      id))
+    Log:error(format(
+      "Falha ao criar implantação '%s': certificado inválido. Motivo: '%s'.",
+      id, msg))
     error{InvalidCertificateException}
   end
   self.deployments[id] = true
