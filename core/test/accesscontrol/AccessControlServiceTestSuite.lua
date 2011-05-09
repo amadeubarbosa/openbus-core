@@ -37,6 +37,7 @@ local loginByCertificateTestCase = assert(loadfile("accesscontrol/loginByCertifi
 local loginByCertificate_WrongAnswerTestCase = assert(loadfile("accesscontrol/loginByCertificate_WrongAnswerTestCase.lua"))()
 local loginByCertificate_NoEncryptionTestCase = assert(loadfile("accesscontrol/loginByCertificate_NoEncryptionTestCase.lua"))()
 local logoutAfterLoginByCertificateTestCase = assert(loadfile("accesscontrol/logoutAfterLoginByCertificateTestCase.lua"))()
+local getEntryCredentialTestCase = assert(loadfile("accesscontrol/getEntryCredentialTestCase.lua"))()
 
 Suite = {
 
@@ -99,6 +100,23 @@ Suite = {
     testLoginByCertificate_WrongAnswer = loginByCertificate_WrongAnswerTestCase.Test1.testLoginByCertificate_WrongAnswer,
 
     testLoginByCertificate_NoEncryption = loginByCertificate_NoEncryptionTestCase.Test1.testLoginByCertificate_NoEncryption,
+  },
+
+  Test5 = {
+    beforeTestCase = beforeTestCase,
+
+    beforeEachTest = beforeEachTest,
+
+    afterTestCase = afterTestCase,
+
+    testGetEntryCredential = getEntryCredentialTestCase.Test1.testGetEntryCredential,
+
+    testGetEntryCredentialOfOtherUser = getEntryCredentialTestCase.Test1.testGetEntryCredentialOfOtherUser,
+
+    testGetEntryCredentialNoPermission = getEntryCredentialTestCase.Test1.testGetEntryCredentialNoPermission,
+
+    testGetEntryCredentialInvalidCredential = getEntryCredentialTestCase.Test1.testGetEntryCredentialInvalidCredential,
+
   },
 
 }
