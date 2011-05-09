@@ -230,7 +230,7 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
         credential.identifier, credential.owner, credential.delegate,
         properties.component_id.name, count))
     local unathorizedFacets = {}
-    for facet in pairs(unathorizedFacets) do
+    for facet in pairs(facets) do
       unathorizedFacets[#unathorizedFacets+1] = facet
     end
     error(Openbus:getORB():newexcept {
