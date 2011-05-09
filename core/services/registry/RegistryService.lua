@@ -207,38 +207,39 @@ end
 function RSFacet:getAuthorizedFacets(member, credential, properties)
   local succ, facets, memberFacets, count
   local metaInterface = member:getFacetByName("IMetaInterface")
-  if metaInterface then
-    local orb = Openbus:getORB()
-    metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
-    memberFacets = metaInterface:getFacets()
-    succ, facets, count = self:createFacetIndex(credential.owner, memberFacets)
-    if succ then
-      Log:debug(format(
-          "A credencial {%s, %s, %s} está registrando o componente %s com %d interface(s) autorizada(s)",
-          credential.identifier, credential.owner, credential.delegate,
-          properties.component_id.name, count))
-    else
-      Log:warn(format("A credencial {%s, %s, %s} tentou registrar o componente %s com %d interface(s) não autorizada(s)",
-          credential.identifier, credential.owner, credential.delegate,
-          properties.component_id.name, count))
-      local tmp = {}
-      for facet in pairs(facets) do
-        tmp[#tmp+1] = facet
-      end
-      error(Openbus:getORB():newexcept {
-        "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-            "/registry_service/UnathorizedFacets:1.0",
-        facets = tmp,
-      })
-    end
-  else
-    facets = {}
+  if not metaInterface then
     Log:warn(format("O componente %s:%d.%d.%d da credencial {%s, %s, %s} não oferece uma faceta do tipo %s"),
         properties.component_id.name, properties.component_id.major_version,
         properties.component_id.minor_version,
         properties.component_id.patch_version,credential.identifier,
         credential.owner, credential.delegate, Utils.METAINTERFACE_INTERFACE)
+    return {}
   end
+
+  local orb = Openbus:getORB()
+  metaInterface = orb:narrow(metaInterface, "IDL:scs/core/IMetaInterface:1.0")
+  memberFacets = metaInterface:getFacets()
+  succ, facets, count = self:createFacetIndex(credential.owner, memberFacets)
+  if succ then
+    Log:debug(format(
+        "A credencial {%s, %s, %s} está registrando o componente %s com %d interface(s) autorizada(s)",
+        credential.identifier, credential.owner, credential.delegate,
+        properties.component_id.name, count))
+  else
+    Log:warn(format("A credencial {%s, %s, %s} tentou registrar o componente %s com %d interface(s) não autorizada(s)",
+        credential.identifier, credential.owner, credential.delegate,
+        properties.component_id.name, count))
+    local unathorizedFacets = {}
+    for facet in pairs(unathorizedFacets) do
+      unathorizedFacets[#unathorizedFacets+1] = facet
+    end
+    error(Openbus:getORB():newexcept {
+      "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+          "/registry_service/UnathorizedFacets:1.0",
+      facets = unathorizedFacets,
+    })
+  end
+
   return facets
 end
 
@@ -1316,7 +1317,7 @@ end
 function ManagementFacet:addInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' já cadastrada.", ifaceId))
+    Log:info(format("Interface '%s' já cadastrada.", ifaceId))
     error{InterfaceIdentifierAlreadyExistsException}
   end
   self.interfaces[ifaceId] = true
@@ -1337,12 +1338,12 @@ end
 function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if not self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' não está cadastrada.", ifaceId))
+    Log:info(format("Interface '%s' não está cadastrada.", ifaceId))
     error{InterfaceIdentifierNonExistentException}
   end
   for _, auth in pairs(self.authorizations) do
     if auth.authorized[ifaceId] == "strict" then
-      Log:error(format("Interface '%s' em uso.", ifaceId))
+      Log:info(format("Interface '%s' em uso.", ifaceId))
       error{InterfaceIdentifierInUseException}
     end
   end
@@ -1387,11 +1388,11 @@ function ManagementFacet:grant(id, ifaceId, strict)
       end
     end
     if not expression then
-      Log:error(format("Expressão regular inválida: '%s'", ifaceId))
+      Log:info(format("Expressão regular inválida: '%s'", ifaceId))
       error{InvalidRegularExpressionException}
     end
   elseif strict and not self.interfaces[ifaceId] then
-    Log:error(format("Interface '%s' não cadastrada.", ifaceId))
+    Log:info(format("Interface '%s' não cadastrada.", ifaceId))
     error{InterfaceIdentifierNonExistentException}
   end
   local auth = self.authorizations[id]
@@ -1409,7 +1410,7 @@ function ManagementFacet:grant(id, ifaceId, strict)
         if member[1] ~= UserNonExistentException then
           error(member)  -- Exceção desconhecida, repassando
         end
-        Log:error(format("Membro '%s' não cadastrado.", id))
+        Log:info(format("Membro '%s' não cadastrado.", id))
         error{MemberNonExistentException}
       end
     end
@@ -1447,7 +1448,7 @@ function ManagementFacet:revoke(id, ifaceId)
   self:checkPermission()
   local auth = self.authorizations[id]
   if not (auth and auth.authorized[ifaceId]) then
-    Log:error(format("Não há autorização para '%s'.", id))
+    Log:info(format("Não há autorização para '%s'.", id))
     error{AuthorizationNonExistentException}
   end
   local succ, msg
@@ -1474,7 +1475,7 @@ end
 function ManagementFacet:removeAuthorization(id)
   self:checkPermission()
   if not self.authorizations[id] then
-    Log:error(format("Não há autorização  para '%s'.", id))
+    Log:info(format("Não há autorização  para '%s'.", id))
     error{AuthorizationNonExistentException}
   end
   self.authorizations[id] = nil
@@ -1509,7 +1510,7 @@ function ManagementFacet:copyAuthorization(auth)
 end
 
 ---
--- Verifica se o membro é autorizado a exporta uma determinada interface.
+-- Verifica se o membro é autorizado a exportar uma determinada interface.
 --
 -- @param id Identificador do membro.
 -- @param iface Interface a ser consultada (repID).
@@ -1518,18 +1519,21 @@ end
 --
 function ManagementFacet:hasAuthorization(id, iface)
   local auth = self.authorizations[id]
-  if auth and auth.authorized[iface] then
+  if not auth then
+    return false
+  end
+  if auth.authorized[iface] then
     return true
-  elseif auth then
-    for exp, type in pairs(auth.authorized) do
-      if type == "expression" then
-        for pat, sub in pairs(self.expressions) do
-          -- Tenta criar o padrão para Lua a partir da autorização
-          pat, sub = string.gsub(exp, pat, sub)
-          -- Se o padrão foi criado, verifica se a interface é reconhecida
-          if sub == 1 and string.match(iface, pat) then
-            return true
-          end
+  end
+
+  for exp, type in pairs(auth.authorized) do
+    if type == "expression" then
+      for pat, sub in pairs(self.expressions) do
+        -- Tenta criar o padrão para Lua a partir da autorização
+        pat, sub = string.gsub(exp, pat, sub)
+        -- Se o padrão foi criado, verifica se a interface é reconhecida
+        if sub == 1 and string.match(iface, pat) then
+          return true
         end
       end
     end
@@ -1547,7 +1551,7 @@ end
 function ManagementFacet:getAuthorization(id)
   local auth = self.authorizations[id]
   if not auth then
-    Log:error(format("Não há autorização para '%s'.", id))
+    Log:info(format("Não há autorização para '%s'.", id))
     error{AuthorizationNonExistentException}
   end
   return self:copyAuthorization(auth)
@@ -1648,70 +1652,6 @@ function ManagementFacet:getOfferedInterfacesByMember(member)
           interfaces = ifaces,
           registrationDate = offer.registrationDate
         }
-      end
-    end
-  end
-  return array
-end
-
----
--- Recupera do  registro as  ofertas que contém  que interfaces  que o
--- membro não está autorizado a ofertar.
---
--- @return Array contendo as ofertas.
---
-function ManagementFacet:getUnauthorizedInterfaces()
-  self:checkPermission()
-  local array = {}
-  local ifaces = {}
-  local offers = self.context.IRegistryService.offersByIdentifier
-  for id, offer in pairs(offers) do
-    local owner = offer.credential.owner
-    for facet, type in pairs(offer.facets) do
-      if type == "interface_name" and not self:hasAuthorization(owner, facet) then
-        ifaces[#ifaces+1] = facet
-      end
-    end
-    if #ifaces > 0 then
-      array[#array+1] = {
-        id = id,
-        member = offer.credential.owner,
-        interfaces = ifaces,
-      }
-      ifaces = {}
-    end
-  end
-  return array
-end
-
----
--- Recupera do registro as ofertas de um membro que contém que
--- interfaces sem autorização para serem ofertadas.
---
--- @param member Identificador do membro do barramento.
---
--- @return Array contendo as ofertas.
---
-function ManagementFacet:getUnauthorizedInterfacesByMember(member)
-  self:checkPermission()
-  local array = {}
-  local ifaces = {}
-  local offers = self.context.IRegistryService.offersByIdentifier
-  for id, offer in pairs(offers) do
-    local owner = offer.credential.owner
-    if owner == member then
-      for facet, type in pairs(offer.facets) do
-        if type == "interface_name" and not self:hasAuthorization(owner, facet) then
-          ifaces[#ifaces+1] = facet
-        end
-      end
-      if #ifaces > 0 then
-        array[#array+1] = {
-          id = id,
-          member = offer.credential.owner,
-          interfaces = ifaces,
-        }
-        ifaces = {}
       end
     end
   end

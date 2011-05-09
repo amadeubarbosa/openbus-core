@@ -118,10 +118,6 @@ Uso: %s [opções] --login=<usuário> <comando>
      --list-offer
   * Mostrar todas interfaces ofertadas por um membro:
      --list-offer=<id_membro>
-  * Mostrar todas interfaces ofertadas com problemas de autorização:
-     --list-offer --broken
-  * Mostrar interfaces ofertadas pelo membro, com problemas de autorização:
-     --list-offer=<id_membro> --broken
 
 - Script
   * Executa script Lua com um lote de comandos:
@@ -959,36 +955,17 @@ handlers["list-offer"] = function(cmd)
   local offers
   local rsmgm = getrsmgm()
   if cmd.params[cmd.name] == null then
-    if cmd.params.broken then
-      succ, offers = rsmgm:getUnauthorizedInterfaces()
-      if not succ then
-        printf("[ERRO] Falha ao listar interfaces não autorizadas: %s",
-            offers[1])
-        return
-      end
-    else
-      succ, offers = rsmgm:getOfferedInterfaces()
-      if not succ then
-        printf("[ERRO] Falha ao listar interfaces oferecidas: %s",offers[1])
-        return
-      end
+    succ, offers = rsmgm:getOfferedInterfaces()
+    if not succ then
+      printf("[ERRO] Falha ao listar interfaces oferecidas: %s",offers[1])
+      return
     end
   else
-    if cmd.params.broken then
-      succ, offers = rsmgm:getUnauthorizedInterfacesByMember(
-          cmd.params[cmd.name])
-      if not succ then
-        printf("[ERRO] Falha ao listar interfaces não autorizadas %s: %s",
-            cmd.params[cmd.name], offers[1])
-        return
-      end
-    else
-      succ, offers = rsmgm:getOfferedInterfacesByMember(cmd.params[cmd.name])
-      if not succ then
-        printf("[ERRO] Falha ao listar interfaces oferecidas %s: %s",
-           cmd.params[cmd.name], offers[1])
-        return
-      end
+    succ, offers = rsmgm:getOfferedInterfacesByMember(cmd.params[cmd.name])
+    if not succ then
+      printf("[ERRO] Falha ao listar interfaces oferecidas %s: %s",
+         cmd.params[cmd.name], offers[1])
+      return
     end
   end
 
