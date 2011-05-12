@@ -35,7 +35,7 @@ return function (self)
       local ltime = tostring(socket.gettime())
       ltime = string.gsub(ltime, "%.", "")
 
-      -- Login do administrador
+      -- Login do usuário de teste
       self.login = {}
       self.login.user = "tester-" .. ltime
       self.login.password = "tester-" .. ltime

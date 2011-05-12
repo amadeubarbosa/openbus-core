@@ -3,66 +3,155 @@
 --
 require "oil"
 local orb = oil.orb
+local Utils = require "openbus.util.Utils"
+local Check = require "latt.Check"
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
-
-function loadidls(self)
-  local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
-  if IDLPATH_DIR == nil then
-    io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
-    os.exit(1)
-  end
-  local idlfile = IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl"
-  orb:loadidlfile(idlfile)
-  idlfile = IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl"
-  orb:loadidlfile(idlfile)
-end
 
 local beforeTestCase = dofile("accesscontrol/beforeTestCase.lua")
 local beforeEachTest = dofile("accesscontrol/beforeEachTest.lua")
 local afterEachTest = dofile("accesscontrol/afterEachTest.lua")
 local afterEachTest = dofile("accesscontrol/afterEachTest.lua")
 
-local loginByPasswordTestCase = assert(loadfile("accesscontrol/loginByPasswordTestCase.lua"))()
-local invalidLoginByPasswordTestCase = assert(loadfile("accesscontrol/invalidLoginByPasswordTestCase.lua"))()
-local logoutTestCase = assert(loadfile("accesscontrol/logoutTestCase.lua"))()
-local isValidTestCase = assert(loadfile("accesscontrol/isValidTestCase.lua"))()
-local areValidTestCase = assert(loadfile("accesscontrol/areValidTestCase.lua"))()
-local isValidPasswordDelegateTestCase = assert(loadfile("accesscontrol/isValidPasswordDelegateTestCase.lua"))()
-local observersTestCase = assert(loadfile("accesscontrol/observersTestCase.lua"))()
-local removeCredentialFromObserverTestCase = assert(loadfile("accesscontrol/removeCredentialFromObserverTestCase.lua"))()
-local removeObserverTestCase = assert(loadfile("accesscontrol/removeObserverTestCase.lua"))()
-local invalidGetChallengeTestCase = assert(loadfile("accesscontrol/invalidGetChallengeTestCase.lua"))()
-local loginByCertificateTestCase = assert(loadfile("accesscontrol/loginByCertificateTestCase.lua"))()
-local loginByCertificate_WrongAnswerTestCase = assert(loadfile("accesscontrol/loginByCertificate_WrongAnswerTestCase.lua"))()
-local loginByCertificate_NoEncryptionTestCase = assert(loadfile("accesscontrol/loginByCertificate_NoEncryptionTestCase.lua"))()
-local logoutAfterLoginByCertificateTestCase = assert(loadfile("accesscontrol/logoutAfterLoginByCertificateTestCase.lua"))()
-local getEntryCredentialTestCase = assert(loadfile("accesscontrol/getEntryCredentialTestCase.lua"))()
-local getAllEntryCredentialTestCase = assert(loadfile("accesscontrol/getAllEntryCredentialTestCase.lua"))()
+--------------------------------------------------------------------------------
+-- Funções auxiliares dos testes
+--------------------------------------------------------------------------------
+
+---
+-- Compara se as credenciais passandas são iguais.
+--
+-- @param credential1 uma credencial
+-- @param credential2 outra credencial
+--
+-- @return True se são iguais e false caso contrário
+---
+local function compareCredentials(credential1, credential2)
+  for k,_ in pairs (credential1) do
+    if credential1[k] ~= credential2[k] then
+      return false
+    end
+  end 
+  return true
+end
+
+--------------------------------------------------------------------------------
 
 Suite = {
 
-  Test1 = {
+  Test1 = { -- testes apenas com beforeTestCase e afterTestCase
     beforeTestCase = beforeTestCase,
 
     afterTestCase = afterTestCase,
 
-    testLoginByPassword = loginByPasswordTestCase.Test1.testLoginByPassword,
+    testLoginByPassword = function(self)
+      local success, credential = self.accessControlService:loginByPassword(self.login.user, self.login.password)
+      Check.assertTrue(success)
 
-    testInvalidLoginByPassword = invalidLoginByPasswordTestCase.Test1.testInvalidLoginByPassword,
+      local success, credential2 = self.accessControlService:loginByPassword(self.login.user, self.login.password)
+      Check.assertTrue(success)
+      Check.assertNotEquals(credential.identifier, credential2.identifier)
 
-    testLogout = logoutTestCase.Test1.testLogout,
+      self.credentialManager:setValue(credential)
+      Check.assertTrue(self.accessControlService:logout(credential))
+      self.credentialManager:setValue(credential2)
+      Check.assertTrue(self.accessControlService:logout(credential2))
+      self.credentialManager:invalidate()
+    end,
+
+    testInvalidLoginByPassword = function(self)
+      local success, credential = 
+        self.accessControlService:loginByPassword("INVALID", "INVALID")
+      Check.assertFalse(success)
+      Check.assertEquals("", credential.identifier)
+    end,
+
+    testLogout = function(self)
+      local _, credential =
+          self.accessControlService:loginByPassword(self.login.user, 
+            self.login.password)
+      self.credentialManager:setValue(credential)
+      Check.assertFalse(self.accessControlService:logout({identifier = "", owner = "abcd", delegate = "", }))
+      Check.assertTrue(self.accessControlService:logout(credential))
+      self.credentialManager:invalidate(credential)
+      Check.assertError(self.accessControlService.logout,self.accessControlService,credential)
+    end,
     
-    testLoginByCertificate = loginByCertificateTestCase.Test1.testLoginByCertificate,
+    testLoginByCertificate = function(self)
+      local challenge =
+      self.accessControlService:getChallenge(self.deploymentId)
+      Check.assertTrue(challenge and #challenge > 0)
+      local privateKey = lce.key.readprivatefrompemfile(self.testKeyFile)
+      Check.assertNotNil(privateKey)
+      local succ, err
+      succ, challenge, err = oil.pcall(lce.cipher.decrypt, privateKey, challenge)
+      Check.assertNotNil(challenge)
+      local certificate = lce.x509.readfromderfile(self.acsCertFile)
+      Check.assertNotNil(certificate)
+      local answer = lce.cipher.encrypt(certificate:getpublickey(), challenge)
+      Check.assertNotNil(answer)
+      local succ, credential, lease = self.accessControlService:loginByCertificate(self.deploymentId, answer)
+      Check.assertTrue(succ)
+      self.credentialManager:setValue(credential)
+      self.accessControlService:logout(credential)
+      self.credentialManager:invalidate()
+    end,
 
-    testLogoutAfterLoginByCertificate = logoutAfterLoginByCertificateTestCase.Test1.testLogoutAfterLoginByCertificate,
+    testLogoutAfterLoginByCertificate = function(self)
+      local challenge = self.accessControlService:getChallenge(self.deploymentId)
+      Check.assertTrue(challenge and #challenge > 0)
+      local privateKey = lce.key.readprivatefrompemfile(self.testKeyFile)
+      Check.assertNotNil(privateKey)
+      challenge = lce.cipher.decrypt(privateKey, challenge)
+      Check.assertNotNil(challenge)
+      local certificate = lce.x509.readfromderfile(self.acsCertFile)
+      Check.assertNotNil(certificate)
+      local answer = lce.cipher.encrypt(certificate:getpublickey(), challenge)
+      Check.assertNotNil(answer)
+      local succ, credential, lease =
+          self.accessControlService:loginByCertificate(self.deploymentId,
+          answer)
+      Check.assertTrue(succ)
+      self.credentialManager:setValue(credential)
+      Check.assertFalse(self.accessControlService:logout({
+        identifier = "InvalidIdentifier",
+        owner = "InvalidName",
+        delegate = "",
+      }))
+      Check.assertTrue(self.accessControlService:logout(credential))
+      self.credentialManager:invalidate(credential)
+      Check.assertError(self.accessControlService.logout, self.accessControlService, credential)
+    end,
 
-    testLoginByCertificate_WrongAnswer = loginByCertificate_WrongAnswerTestCase.Test1.testLoginByCertificate_WrongAnswer,
+    testLoginByCertificate_WrongAnswer = function(self)
+      local challenge =
+          self.accessControlService:getChallenge(self.deploymentId)
+      Check.assertTrue(challenge and #challenge > 0)
+      local privateKey = lce.key.readprivatefrompemfile(self.testKeyFile)
+      Check.assertNotNil(privateKey)
+      challenge = lce.cipher.decrypt(privateKey, challenge)
+      Check.assertNotNil(challenge)
+      local certificate = lce.x509.readfromderfile(self.acsCertFile)
+      Check.assertNotNil(certificate)
+      local answer = lce.cipher.encrypt(certificate:getpublickey(), challenge.."->Wrong")
+      Check.assertNotNil(answer)
+      local succ =
+          self.accessControlService:loginByCertificate(self.deploymentId,
+          answer)
+      Check.assertFalse(succ)
+    end,
 
-    testLoginByCertificate_NoEncryption = loginByCertificate_NoEncryptionTestCase.Test1.testLoginByCertificate_NoEncryption,
+    testLoginByCertificate_NoEncryption = function(self)
+      local challenge = self.accessControlService:getChallenge(self.deploymentId)
+      Check.assertTrue(challenge and #challenge > 0)
+      local succ =
+          self.accessControlService:loginByCertificate(self.deploymentId,
+          "InvalidAnswer")
+      Check.assertFalse(succ)
+    end,
+
   },
 
-  Test2 = {
+  Test2 = { -- testes com beforeTestCase, beforeEachTest, afterEachTest e afterTestCase
     beforeTestCase = beforeTestCase,
 
     afterTestCase = afterTestCase,
@@ -71,23 +160,132 @@ Suite = {
 
     afterEachTest = afterEachTest,
 
-    testIsValid = isValidTestCase.Test1.testIsValid,
+    testIsValid = function(self)
+      Check.assertTrue(self.accessControlService:isValid(self.credential))
+      Check.assertFalse(self.accessControlService:isValid({identifier = "123", owner = self.login.user, delegate = "",}))
+      self.accessControlService:logout(self.credential)
+      -- neste caso o proprio interceptador do serviço rejeita o request
+      Check.assertFalse(self.accessControlService:isValid(self.credential))
+      self.credentialManager:invalidate()
+    end,
 
-    testIsValidPasswordDelegate = isValidPasswordDelegateTestCase.Test1.testIsValidPasswordDelegate,
+    testIsValidPasswordDelegate = function(self)
+      Check.assertTrue(self.accessControlService:isValid(self.credential))
+      local delegatedCredential = {
+        identifier = self.credential.identifier,
+        owner = self.credential.identifier,
+        delegate = "DELEGATE",
+      }
+      Check.assertFalse(self.accessControlService:isValid(delegatedCredential))
+    end,
 
-    testAreValid = areValidTestCase.Test1.testAreValid,
+    testAreValid = function(self)
+      local credentials = {self.credential, {identifier = "INVALID_IDENTIFIER", owner = self.login.user, delegate = "",},}
+      local results = self.accessControlService:areValid(credentials)
+      Check.assertTrue(results[1])
+      Check.assertFalse(results[2])
+      credentials = {{identifier = "INVALID_IDENTIFIER", owner = self.login.user, delegate = "",}, self.credential}
+      results = self.accessControlService:areValid(credentials)
+      Check.assertFalse(results[1])
+      Check.assertTrue(results[2])
 
-    testInvalidGetChallenge = invalidGetChallengeTestCase.Test1.testInvalidGetChallenge,
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+    end,
 
-    testObservers = observersTestCase.Test1.testObservers,
+    testInvalidGetChallenge = function(self)
+      local challenge = self.accessControlService:getChallenge("InvalidNameForChallenge")
+      Check.assertTrue(not challenge or #challenge == 0)
+      challenge = self.accessControlService:getChallenge("")
+      Check.assertTrue(not challenge or #challenge == 0)
+    end,
 
-    testRemoveCredentialFromObserver = removeCredentialFromObserverTestCase.Test1.testRemoveCredentialFromObserver,
+    testObservers = function(self)
+      local credentialObserver = { credential = self.credential }
+      function credentialObserver:credentialWasDeleted(credential)
+        Check.assertEquals(self.credential, credential)
+      end
+      credentialObserver = orb:newservant(credentialObserver, nil,
+          Utils.CREDENTIAL_OBSERVER_INTERFACE)
+      local observerIdentifier = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
+      Check.assertNotEquals("", observerIdentifier)
+      Check.assertTrue(self.accessControlService:removeObserver(observerIdentifier))
+      Check.assertFalse(self.accessControlService:removeObserver(observerIdentifier))
+    end,
 
-    testRemoveObserver = removeObserverTestCase.Test1.testRemoveObserver,
+    testObserversLogout = function(self)
+      local credentialObserver = { credential = self.credential }
+      function credentialObserver:credentialWasDeleted(credential)
+        Check.assertEquals(self.credential.identifier, credential.identifier)
+      end
+      credentialObserver = orb:newservant(credentialObserver, nil,
+          Utils.CREDENTIAL_OBSERVER_INTERFACE)
+      local observersId = {}
+      for i=1,3 do
+        observersId[i] = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
+      end
+      local oldCredential = self.credential
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+      _, self.credential =
+          self.accessControlService:loginByPassword(self.login.user, self.login.password)
+      self.credentialManager:setValue(self.credential)
+      for i=1,3 do
+        Check.assertFalse(self.accessControlService:removeCredentialFromObserver(
+            observersId[i], oldCredential.identifier))
+      end
+    end,
 
-    testGetEntryCredentialNoPermission = getEntryCredentialTestCase.Test2.testGetEntryCredentialNoPermission,
+    testRemoveCredentialFromObserver = function(self)
+      local credentialObserver = { credential = self.credential }
+      function credentialObserver:credentialWasDeleted(credential)
+        Check.assertEquals(self.credential.identifier, credential.identifier)
+      end
+      credentialObserver = orb:newservant(credentialObserver, nil,
+          Utils.CREDENTIAL_OBSERVER_INTERFACE)
+      local observersId = {}
+      for i=1,3 do
+        observersId[i] = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
+      end
+      local oldCredential = self.credential
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+      _, self.credential =
+          self.accessControlService:loginByPassword(self.login.user, self.login.password)
+      self.credentialManager:setValue(self.credential)
+      for i=1,3 do
+        Check.assertFalse(self.accessControlService:removeCredentialFromObserver(observersId[i], oldCredential.identifier))
+      end
+    end,
 
-    testGetAllEntryCredentialNoPermission = getEntryCredentialTestCase.Test2.testGetEntryCredentialNoPermission,
+    testRemoveObserver = function(self)
+      local credentialObserver = { credential = self.credential }
+      function credentialObserver:credentialWasDeleted(credential)
+        Check.assertEquals(self.credential.identifier, credential.identifier)
+      end
+      credentialObserver = orb:newservant(credentialObserver, nil,
+          Utils.CREDENTIAL_OBSERVER_INTERFACE)
+      local observerId = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+      _, self.credential = self.accessControlService:loginByPassword(self.login.user, self.login.password)
+      self.credentialManager:setValue(self.credential)
+      Check.assertFalse(self.accessControlService:removeObserver(observerId))
+    end,
+
+    testGetEntryCredentialNoPermission = function(self)
+      -- testa a chamada do método com um login sem permissão de administrador.
+      local success, err = oil.pcall(self.accessControlService.getEntryCredential, self.accessControlService, self.credential)
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+    end,
+
+    testGetAllEntryCredentialNoPermission = function(self)
+      -- testa a chamada do método com um login sem permissão de administrador.
+      local success, err = oil.pcall(self.accessControlService.getAllEntryCredential, self.accessControlService)
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+    end,
 
   },
 
@@ -95,31 +293,102 @@ Suite = {
     beforeTestCase = beforeTestCase,
 
     beforeEachTest = function(self)
-          -- loga com uma conta de administração
-          _, self.admCredential =
-              self.accessControlService:loginByPassword("tester", "tester")
-          self.credentialManager:setValue(self.admCredential)
-        end,
+      -- loga com uma conta de administração
+      _, self.admCredential =
+          self.accessControlService:loginByPassword("tester", "tester")
+      self.credentialManager:setValue(self.admCredential)
+    end,
 
     afterTestCase = afterTestCase,
 
     afterEachTest = function(self)
-          -- desloga o administrador
-          if (self.credentialManager:hasValue()) then
-            self.accessControlService:logout(self.admCredential)
-            self.credentialManager:invalidate()
-          end
-        end,
+      -- desloga o administrador
+      if (self.credentialManager:hasValue()) then
+        self.accessControlService:logout(self.admCredential)
+        self.credentialManager:invalidate()
+      end
+    end,
 
-    testGetEntryCredential = getEntryCredentialTestCase.Test1.testGetEntryCredential,
+    testGetEntryCredential = function(self)
+      local entry = self.accessControlService:getEntryCredential(self.admCredential)
+      Check.assertNotNil(entry)
+      Check.assertTrue(compareCredentials(entry.aCredential, self.admCredential))
+    end,
 
-    testGetEntryCredentialOfOtherUser = getEntryCredentialTestCase.Test1.testGetEntryCredentialOfOtherUser,
+    testGetEntryCredentialOfOtherUser = function(self)
+      -- loga com outra conta sem permissão de administração
+      local success, credential = self.accessControlService:loginByPassword(self.login.user, self.login.password)
+      Check.assertTrue(success)
+      -- recupera o Entry de uma credencial de outro usuário
+      local entry = self.accessControlService:getEntryCredential(credential)
+      Check.assertNotNil(entry)
+      Check.assertTrue(compareCredentials(entry.aCredential, credential))
+      Check.assertFalse(compareCredentials(entry.aCredential, self.admCredential))
+    end,
 
-    testGetEntryCredentialInvalidCredential = getEntryCredentialTestCase.Test1.testGetEntryCredentialInvalidCredential,
+    testGetEntryCredentialInvalidCredential = function(self)
+      -- passa uma credencial inválida.
+      local invalidCredential = {}
+      invalidCredential.identifier = "unknown"
+      invalidCredential.owner = "unknown"
+      invalidCredential.delegate = "false"
+      -- Credencial vazia
+      local emptyCredential = { identifier = "", owner = "", delegate = "" }
+      local entry = self.accessControlService:getEntryCredential(invalidCredential)
+      Check.assertNotNil(entry)
+      Check.assertFalse(compareCredentials(entry.aCredential, invalidCredential))
+      Check.assertTrue(compareCredentials(entry.aCredential, emptyCredential))
+    end,
 
-    testGetAllEntryCredential = getAllEntryCredentialTestCase.Test1.testGetAllEntryCredential,
+    testGetAllEntryCredential = function(self)
+      local entries = self.accessControlService:getAllEntryCredential()
+      Check.assertNotNil(entries)
+      Check.assertTrue(#entries ~= 0)
+      -- busca pela credencial do administrador
+      local found = 0
+      for _,v in ipairs(entries) do
+        if compareCredentials(v.aCredential, self.admCredential) then
+          found = found + 1
+        end  
+      end
+      Check.assertEquals(found, 1)
+    end,
 
-    testGetAllEntryCredentialLogginOtherUser = getAllEntryCredentialTestCase.Test1.testGetAllEntryCredentialLogginOtherUser,
+    testGetAllEntryCredentialLogginOtherUser = function(self)
+      -- loga com outra conta de usuário sem permissão de administração
+      local success, credential = self.accessControlService:loginByPassword(self.login.user, self.login.password)
+      Check.assertTrue(success)
+      -- executa a chamada ainda com a conta do administrador
+      local entries = self.accessControlService:getAllEntryCredential()
+      Check.assertNotNil(entries)
+      Check.assertTrue(#entries ~= 0)
+      -- busca pelas credenciais do administrador e do usuário
+      local found = 0
+      for _,v in ipairs(entries) do
+        if compareCredentials(v.aCredential, self.admCredential) or
+           compareCredentials(v.aCredential, credential) then
+          found = found + 1
+        end  
+      end
+      -- deve encontrar as duas credenciais
+      Check.assertEquals(found, 2)
+      -- desloga o usuário
+      Check.assertTrue(self.accessControlService:logout(credential))
+      -- executa a chamada ainda com a conta do administrador
+      entries = self.accessControlService:getAllEntryCredential()
+      Check.assertNotNil(entries)
+      Check.assertTrue(#entries ~= 0)
+      -- busca pelas credenciais do administrador e do usuário
+      found = 0
+      for _,v in ipairs(entries) do
+        if compareCredentials(v.aCredential, self.admCredential) or
+           compareCredentials(v.aCredential, credential) then
+          found = found + 1
+        end  
+      end
+      -- só deve encontrar a credencial do administrador
+      Check.assertEquals(found, 1)
+    end,
 
   }
 }
