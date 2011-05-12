@@ -349,7 +349,7 @@ Suite = {
 
   },
 
-  Test3 = {
+  Test3 = { -- testes com before e after each personalizados.
     beforeTestCase = beforeTestCase,
 
     beforeEachTest = function(self)
