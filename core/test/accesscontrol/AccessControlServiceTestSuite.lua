@@ -11,7 +11,7 @@ local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
 local beforeTestCase = dofile("accesscontrol/beforeTestCase.lua")
 local beforeEachTest = dofile("accesscontrol/beforeEachTest.lua")
 local afterEachTest = dofile("accesscontrol/afterEachTest.lua")
-local afterEachTest = dofile("accesscontrol/afterEachTest.lua")
+local afterTestCase = dofile("accesscontrol/afterTestCase.lua")
 
 --------------------------------------------------------------------------------
 -- Funções auxiliares dos testes
