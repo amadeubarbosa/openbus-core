@@ -236,6 +236,66 @@ Suite = {
       end
     end,
 
+    testAddCredentialToOberserver = function(self)
+      -- criando observador
+      local credentialObserver = { credentials = {} }
+      function credentialObserver:credentialWasDeleted(credential)
+        local found = false
+        -- verifica se a credencial esta na lista de credenciais observadas
+        for id, cred in pairs(self.credentials) do
+          if id == credential.identifier then
+            found = compareCredentials(cred, credential)
+          end
+        end
+        Check.assertTrue(found)
+      end
+      credentialObserver = orb:newservant(credentialObserver, nil,
+          Utils.CREDENTIAL_OBSERVER_INTERFACE)
+      -- adicionando a credencial do usuário 1 no observador
+      credentialObserver.credentials[self.credential.identifier] = self.credential
+      local observerId = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
+      -- realizando novo login
+      local _, user2Credential = self.accessControlService:loginByPassword(
+        self.login.user, self.login.password)
+      -- adicionando a credencial do usuario 2 no observador
+      credentialObserver.credentials[user2Credential.identifier] = user2Credential
+      Check.assertTrue(self.accessControlService:addCredentialToObserver(
+        observerId, user2Credential.identifier))
+      -- removendo o usuário 2
+      self.accessControlService:logout(user2Credential)
+      Check.assertFalse(self.accessControlService:removeCredentialFromObserver(
+        observerId, user2Credential.identifier))
+      -- removendo o primeiro usuário
+      local user1Credential = self.credential
+      self.accessControlService:logout(self.credential)
+      self.credentialManager:invalidate()
+      -- logando um usuario 3
+      _, self.credential =
+          self.accessControlService:loginByPassword(self.login.user, self.login.password)
+      self.credentialManager:setValue(self.credential)
+      Check.assertFalse(self.accessControlService:removeCredentialFromObserver(
+        observerId, user1Credential.identifier))
+    end,
+
+    testAddInvalidCredentialToObeserver = function (self)
+      -- criando observador
+      local credentialObserver = { credential = self.credential }
+      function credentialObserver:credentialWasDeleted(credential)
+        Check.assertEquals(self.credential.identifier, credential.identifier)
+      end
+      credentialObserver = orb:newservant(credentialObserver, nil,
+          Utils.CREDENTIAL_OBSERVER_INTERFACE)
+      local observerId = self.accessControlService:addObserver(credentialObserver, {self.credential.identifier,})
+      -- credencial inválida.
+      local invalidCredential = {}
+      invalidCredential.identifier = "unknown"
+      invalidCredential.owner = "unknown"
+      invalidCredential.delegate = "false"
+      -- adiciona uma credencial inválida
+      Check.assertFalse(self.accessControlService:addCredentialToObserver(
+        observerId, invalidCredential.identifier))
+    end,
+
     testRemoveCredentialFromObserver = function(self)
       local credentialObserver = { credential = self.credential }
       function credentialObserver:credentialWasDeleted(credential)
