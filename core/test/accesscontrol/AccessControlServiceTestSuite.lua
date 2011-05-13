@@ -6,8 +6,6 @@ local orb = oil.orb
 local Utils = require "openbus.util.Utils"
 local Check = require "latt.Check"
 
-local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
-
 local beforeTestCase = dofile("accesscontrol/beforeTestCase.lua")
 local beforeEachTest = dofile("accesscontrol/beforeEachTest.lua")
 local afterEachTest = dofile("accesscontrol/afterEachTest.lua")

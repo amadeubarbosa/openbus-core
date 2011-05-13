@@ -76,11 +76,11 @@ return function (self)
                                                                         " 2>> management-err.txt >>management.txt ")
 
 
-      local acsComp = orb:newproxy("corbaloc::"..
+      self.acsComp = orb:newproxy("corbaloc::"..
           AccessControlServerConfiguration.hostName ..":"..
           AccessControlServerConfiguration.hostPort.."/"..Utils.OPENBUS_KEY,
           "synchronous", Utils.COMPONENT_INTERFACE)
-      local facet = acsComp:getFacet(Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      local facet = self.acsComp:getFacet(Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
       self.accessControlService = orb:narrow(facet,
           Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
 
