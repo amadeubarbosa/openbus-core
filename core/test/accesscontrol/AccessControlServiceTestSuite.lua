@@ -16,7 +16,7 @@ local afterTestCase = dofile("accesscontrol/afterTestCase.lua")
 --------------------------------------------------------------------------------
 
 ---
--- Compara se as credenciais passandas são iguais.
+-- Compara se as credenciais passadas são iguais.
 --
 -- @param credential1 uma credencial
 -- @param credential2 outra credencial
