@@ -1485,10 +1485,24 @@ function Test7:testGetOfferedInterfaces()
 
   local succ, offers = self.rsMgt:getOfferedInterfaces()
   Check.assertTrue(succ)
-  Check.assertEquals(#offers, 3)
+  -- este código foi modificado para levar em consideração que o serviço de 
+  -- sessão está de pé. Este pedaço de código deverá ser atualizado assim que o
+  -- serviço de sessão não fizer mais parte do CORE do OpenBus.
+  -- início
+  Check.assertEquals(#offers, 4)
+  local userCount = 0
+  local sessionCount = 0
   for _, offer in ipairs(offers) do
-    Check.assertEquals(offer.member, self.user)
+    Check.assertTrue(offer.member == self.user or offer.member == "SessionService")
+    if offer.member == self.user then
+      userCount = userCount + 1
+    elseif offer.member == "SessionService" then
+      sessionCount = sessionCount + 1
+    end
   end
+  Check.assertEquals(1, sessionCount)
+  Check.assertEquals(3, userCount)
+  -- fim 
 end
 
 function Test7:testGetOfferedInterfacesByMember()
