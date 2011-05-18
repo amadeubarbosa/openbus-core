@@ -618,7 +618,7 @@ function RSFacet:localFind(facets, criteria)
     end
     Log:debug(format(
         "Foram encontradas %d ofertas com os critérios especificados",
-        #selectedOfferEntries))
+        #selectedOffersEntries))
   else
     -- Para cada oferta de serviço disponível, seleciona-se
     -- a oferta que implementa todas as facetas discriminadas,
@@ -646,7 +646,7 @@ function RSFacet:localFind(facets, criteria)
     end
     Log:debug(format(
         "Foram encontradas %d ofertas com os critérios especificados",
-        #selectedOfferEntries))
+        #selectedOffersEntries))
   end
 
   for k,offerEntry in pairs(selectedOffersEntries) do
