@@ -409,11 +409,6 @@ Suite = {
       end
     end,
 
-    testLocalFind = function(self)
-      local entrys = self.registryService:localFind({self.Hello_v2.facets.IHello_v2.name}, {})
-      Check.assertEquals(1, #entrys)
-    end,
-
     testFindByName_NotFound = function(self)
       local offers = self.registryService:find({"IServiceNotRegistered"})
       Check.assertEquals(0, #offers)
@@ -757,6 +752,376 @@ Suite = {
         }
       )
       Check.assertEquals(0, #offers)
+    end,
+
+    testLocalFind = function(self)
+      local entrys = self.registryService:localFind({self.Hello_v2.facets.IHello_v2.name}, {})
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFind_NameNotFound = function(self)
+      local entrys = self.registryService:localFind({"IServiceNotRegistered"}, {})
+      Check.assertEquals(0, #entrys)
+    end,
+
+    testLocalFindByName_MoreResults = function(self)
+      local entrys = self.registryService:localFind({self.Hello_v1.facets.IHello_v1.name}, {})
+      Check.assertEquals(2, #entrys)
+      local offers = { entrys[1].aServiceOffer, entrys[2].aServiceOffer }
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, self.Hello_v1.properties) or
+        equalsProps(offers[2].properties, self.Hello_v1.properties))
+       and
+       (equalsProps(offers[1].properties, self.Hello_v2.properties) or
+        equalsProps(offers[2].properties, self.Hello_v2.properties))
+      )
+    end,
+
+    testLocalFindByName_List = function(self)
+      local entrys = self.registryService:localFind({self.Hello_v1.facets.IHello_v1.name,
+                                                self.Hello_v2.facets.IHello_v2.name}, {})
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindbyInterfaceName_NotFound = function(self)
+      local entrys = self.registryService:localFind({"IDL:service/not/registered/:1.0"}, {})
+      Check.assertEquals(0, #entrys)
+    end,
+
+    testLocalFindbyInterfaceName = function(self)
+      local entrys = self.registryService:localFind({self.Hello_v2.facets.IHello_v2.interface_name}, {})
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindbyInterfaceName_MoreResults = function(self)
+      local entrys = self.registryService:localFind({self.Hello_v1.facets.IHello_v1.interface_name}, {})
+      Check.assertEquals(2, #entrys)
+      local offers = { entrys[1].aServiceOffer, entrys[2].aServiceOffer }
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, self.Hello_v1.properties) or
+        equalsProps(offers[2].properties, self.Hello_v1.properties))
+       and
+       (equalsProps(offers[1].properties, self.Hello_v2.properties) or
+        equalsProps(offers[2].properties, self.Hello_v2.properties))
+      )
+    end,
+
+    testLocalFindbyInterfaceName_List = function(self)
+      local entrys = self.registryService:localFind({self.Hello_v2.facets.IHello_v1.interface_name,
+                                                self.Hello_v2.facets.IHello_v2.interface_name},
+                                                {})
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Facet_Equals = function(self)
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.name}, self.Hello_v1.properties)
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v1.properties))
+      --
+      entrys = self.registryService:localFind(
+        {self.Hello_v2.facets.IHello_v1.name,
+         self.Hello_v2.facets.IHello_v2.name}, self.Hello_v2.properties)
+      Check.assertEquals(1, #entrys)
+      offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Facet_One = function(self)
+      local versionValue
+      for _, prop in ipairs(self.Hello_v2.properties) do
+        if prop.name == "version" then
+          versionValue = prop.value
+          break
+        end
+      end
+      local entrys = self.registryService:localFind(
+        {self.Hello_v2.facets.IHello_v1.name},
+        {
+          {name = "version",
+           value = versionValue}
+        }
+      )
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Facet_Empty = function(self)
+      local entrys = self.registryService:localFind(
+        {self.Hello_v2.facets.IHello_v1.name},
+        {
+          {name = "bugs", value = {}}
+        }
+      )
+      Check.assertEquals(2, #entrys)
+      local offers = { entrys[1].aServiceOffer, entrys[2].aServiceOffer }
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, self.Hello_v1.properties) or
+        equalsProps(offers[2].properties, self.Hello_v1.properties))
+       and
+       (equalsProps(offers[1].properties, self.Hello_v2.properties) or
+        equalsProps(offers[2].properties, self.Hello_v2.properties))
+      )
+    end,
+
+    testLocalFindByCriteria_Facet_Any = function(self)
+      local versionValue
+      for _, prop in pairs(self.Hello_v1.properties) do
+        if prop.name == "version" then
+          versionValue = prop.value
+          break
+        end
+      end
+      local entrys = self.registryService:localFind(
+        {self.Hello_v2.facets.IHello_v1.name},
+        {
+          {name = "version", value = versionValue}
+        }
+      )
+      Check.assertEquals(2, #entrys)
+      local offers = { entrys[1].aServiceOffer, entrys[2].aServiceOffer }
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, self.Hello_v1.properties) or
+        equalsProps(offers[2].properties, self.Hello_v1.properties))
+       and
+       (equalsProps(offers[1].properties, self.Hello_v2.properties) or
+        equalsProps(offers[2].properties, self.Hello_v2.properties))
+      )
+    end,
+
+    testLocalFindByCriteria_Facet_ComponentId = function(self)
+      local componentId = self.Hello_v1.componentId
+      local compId = componentId.name..":"..componentId.major_version.. "."
+        .. componentId.minor_version.."."..componentId.patch_version
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.name},
+        {
+          {name = "component_id", value = {compId}},
+        }
+      )
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v1.properties))
+    end,
+
+    testLocalFindByCriteria_Facet_ComponentId_MoreComponents = function(self)
+      local componentId = self.Hello_v2.componentId
+      local compId = componentId.name..":"..componentId.major_version.. "."
+        .. componentId.minor_version.."."..componentId.patch_version
+      local entrys = self.registryService:localFind(
+        {self.Hello_v2.facets.IHello_v1.name},
+        {
+          {name = "component_id", value = {compId}},
+        }
+      )
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Interface_Equals = function(self)
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.interface_name}, self.Hello_v1.properties)
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v1.properties))
+      --
+      entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.interface_name,
+         self.Hello_v2.facets.IHello_v2.interface_name}, self.Hello_v2.properties)
+      Check.assertEquals(1, #entrys)
+      offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Interface_One = function(self)
+      local versionValue
+      for _, prop in pairs(self.Hello_v2.properties) do
+        if prop.name == "version" then
+          versionValue = prop.value
+          break
+        end
+      end
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.interface_name},
+        {
+          {name = "version", value = versionValue}
+        }
+      )
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Interface_Empty = function(self)
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.interface_name},
+        {
+          {name = "bugs", value = {}}
+        }
+      )
+      Check.assertEquals(2, #entrys)
+      local offers = { entrys[1].aServiceOffer, entrys[2].aServiceOffer }
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, self.Hello_v1.properties) or
+        equalsProps(offers[2].properties, self.Hello_v1.properties))
+       and
+       (equalsProps(offers[1].properties, self.Hello_v2.properties) or
+        equalsProps(offers[2].properties, self.Hello_v2.properties))
+      )
+    end,
+
+    testLocalFindByCriteria_Interface_Any = function(self)
+      local versionValue
+      for _, prop in pairs(self.Hello_v1.properties) do
+        if prop.name == "version" then
+          versionValue = prop.value
+          break
+        end
+      end
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.interface_name},
+        {
+          {name = "version", value = versionValue}
+        }
+      )
+      Check.assertEquals(2, #entrys)
+      local offers = { entrys[1].aServiceOffer, entrys[2].aServiceOffer }
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, self.Hello_v1.properties) or
+        equalsProps(offers[2].properties, self.Hello_v1.properties))
+       and
+       (equalsProps(offers[1].properties, self.Hello_v2.properties) or
+        equalsProps(offers[2].properties, self.Hello_v2.properties))
+      )
+    end,
+
+    testLocalFindByCriteria_Interface_ComponentId = function(self)
+      local componentId = self.Hello_v2.componentId
+      local compId = componentId.name..":"..componentId.major_version.. "."
+        .. componentId.minor_version.."."..componentId.patch_version
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.interface_name},
+        {
+          {name = "component_id", value = {compId}},
+        }
+      )
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Interface_ComponentId_MoreComponents = function(self)
+      local componentId = self.Hello_v2.componentId
+      local compId = componentId.name..":"..componentId.major_version.. "."
+        .. componentId.minor_version.."."..componentId.patch_version
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.interface_name},
+        {
+          {name = "component_id", value = {compId}},
+        }
+      )
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Facet_Owner = function(self)
+      local entrys = self.registryService:localFind(
+        {self.Hello_v2.facets.IHello_v2.name},
+        {
+          {name = "registered_by", value = {self.deploymentId}},
+        }
+      )
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Facet_Owner_MoreResults = function(self)
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.name},
+        {
+          {name = "registered_by", value = {self.deploymentId}},
+        }
+      )
+      Check.assertEquals(2, #entrys)
+      local offers = { entrys[1].aServiceOffer, entrys[2].aServiceOffer }
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, self.Hello_v1.properties) or
+        equalsProps(offers[2].properties, self.Hello_v1.properties))
+       and
+       (equalsProps(offers[1].properties, self.Hello_v2.properties) or
+        equalsProps(offers[2].properties, self.Hello_v2.properties))
+      )
+    end,
+
+    testLocalFindByCriteria_Facet_Owner_NotFound = function(self)
+      local entrys = self.registryService:localFind(
+        {"InvalidFacet"},
+        {
+          {name = "registered_by", value = {self.deploymentId}},
+        }
+      )
+      Check.assertEquals(0, #entrys)
+    end,
+
+    testLocalFindByCriteria_Interface_Owner = function(self)
+      local entrys = self.registryService:localFind(
+        {self.Hello_v2.facets.IHello_v2.interface_name},
+        {
+          {name = "registered_by", value = {self.deploymentId}},
+        }
+      )
+      Check.assertEquals(1, #entrys)
+      local offer = entrys[1].aServiceOffer
+      Check.assertTrue(equalsProps(offer.properties, self.Hello_v2.properties))
+    end,
+
+    testLocalFindByCriteria_Interface_Owner_MoreResults = function(self)
+      local entrys = self.registryService:localFind(
+        {self.Hello_v1.facets.IHello_v1.interface_name},
+        {
+          {name = "registered_by", value = {self.deploymentId}},
+        }
+      )
+      Check.assertEquals(2, #entrys)
+      local offers = { entrys[1].aServiceOffer, entrys[2].aServiceOffer }
+      -- Expressão válida pois v1.properties ~= v2.properties
+      Check.assertTrue(
+       (equalsProps(offers[1].properties, self.Hello_v1.properties) or
+        equalsProps(offers[2].properties, self.Hello_v1.properties))
+       and
+       (equalsProps(offers[1].properties, self.Hello_v2.properties) or
+        equalsProps(offers[2].properties, self.Hello_v2.properties))
+      )
+    end,
+
+    testLocalFindByCriteria_Interface_Owner_NotFound = function(self)
+      local entrys = self.registryService:localFind(
+        {"IDL:InvalidFacet:1.0"},
+        {
+          {name = "registered_by", value = {self.deploymentId}},
+        }
+      )
+      Check.assertEquals(0, #entrys)
     end,
   },
   

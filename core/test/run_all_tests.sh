@@ -32,6 +32,15 @@ suite=accesscontrol/AccessControlServiceTestSuite.lua
 
 echo "========================================================================="
 echo
+echo "                    TESTE DO PROVEDOR DE LEASE                           "
+echo
+echo "========================================================================="
+
+suite=accesscontrol/ILeaseProviderTestSuite.lua
+./run_unit_test.sh ${suite}
+
+echo "========================================================================="
+echo
 echo "                   TESTE DO SERVIÇO DE REGISTRO                          "
 echo
 echo "========================================================================="
