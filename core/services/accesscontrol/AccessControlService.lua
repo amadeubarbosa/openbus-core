@@ -694,7 +694,11 @@ end
 LeaseProviderFacet = oop.class{}
 
 ---
---@see openbus.common.LeaseProvider#renewLease
+-- Renova o lease de uma credencial.
+--
+-- @param credential A credencial da entidade.
+--
+-- @return Indicador se a lease foi renovada (true ou false) e o valor do lease.
 ---
 function LeaseProviderFacet:renewLease(credential)
   self = self.context.IAccessControlService
