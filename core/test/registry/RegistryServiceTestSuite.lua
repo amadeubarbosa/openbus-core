@@ -89,7 +89,30 @@ Suite = {
       Check.assertEquals(1, #offers)
       --
     end,
-    
+
+    testRegister_NoMetaInterfaceFacet = function(self)
+      local member = scs.newComponent(self.Hello_v2.facets, self.Hello_v2.receptacles,
+        self.Hello_v2.componentId)
+      -- removendo a faceta IMetaInterface
+      member._orb:deactivate(member.IMetaInterface)
+      member._facetDescs.IMetaInterface = nil
+      member.IMetaInterface = nil
+      local success, err = self.rgsProtected:register({
+        member = member.IComponent,
+        properties = self.Hello_v2.properties,
+      })
+      Check.assertFalse(success)
+      -- TODO: Complementar o teste para recupera a exceção correta após o 
+      -- témino do item de revisão das exceções das interfaces principais
+      local success, err = self.rgsProtected:register({
+        member = member.IComponent,
+        properties = {},
+      })
+      Check.assertFalse(success)
+      -- TODO: Complementar o teste para recupera a exceção correta após o 
+      -- témino do item de revisão das exceções das interfaces principais
+      end,
+
     testFind_AfterLogout = function(self)
       local success, member_v1, member_v2, id_v1, id_v2
       member_v1 = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
