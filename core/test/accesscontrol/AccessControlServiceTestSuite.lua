@@ -382,6 +382,7 @@ Suite = {
       Check.assertNotNil(entry)
       Check.assertTrue(compareCredentials(entry.aCredential, credential))
       Check.assertFalse(compareCredentials(entry.aCredential, self.admCredential))
+      self.accessControlService:logout(credential)
     end,
 
     testGetEntryCredentialInvalidCredential = function(self)
