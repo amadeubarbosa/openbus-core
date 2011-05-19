@@ -263,36 +263,6 @@ packages = {
       ["luaidl/*.h"] = "incpath/scs/cppoil/luaidl/",
     },
   },
-  { name = "ftc",
-    url = SVNREPURL .. "/ftc/tags/FTC_v1_01_02_2011_01_12",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/ftc/cpp/src",
-      mf = { "config LUA51="..PRODAPP.."/lua5.1"},
-      Darwin = { mf = { 
-        "config BUILD_DYLIB=Yes", 
-        }, 
-      },
-      SunOS510_64 = { mf = { "config ".. SUNOS64_TECMAKE_FLAGS } },
-    },
-    install_files = {
-      ["../lib/${TEC_UNAME}/libftc*.so"] = "libpath/${TEC_UNAME}",
-      ["../lib/${TEC_UNAME}/libftc*.dylib"] = "libpath/${TEC_UNAME}",
-    },
-    dev_files = {
-      ["*.h"] = "incpath/ftc/",
-      ["../lib/${TEC_UNAME}/libftc.*"] = "libpath/${TEC_UNAME}",
-    },
-  },
-  { name = "ftc-java",
-    build = {
-    type = "maven",
-    src = PRODAPP .."/ftc/java",
-    },
-    install_files = {
-    ["target/ftc-*.jar"] = "libpath/java",
-    },
-  },
   { name = "luatrace",
     url = SVNREPURL .. "/openbus/libs/trunk/luatrace",
     build = {
