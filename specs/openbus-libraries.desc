@@ -442,26 +442,12 @@ packages = {
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/scs-cpp/src",
-      mf = { 
-        "orbix genstubs", 
-        "orbix" 
-      },
-      -- special compile instructions for solaris
-      SunOS = {
-        mf = { 
-          "orbix genstubs", 
-          "orbix", 
-          "orbix sunosShared" 
-        },
-      },
-      SunOS510_64 = {
-        mf = { 
-          "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-          "orbix "..SUNOS64_TECMAKE_FLAGS, 
-          "orbix sunosShared "..SUNOS64_TECMAKE_FLAGS 
-        },
-      },
+      src = PRODAPP .."/scs/src/cpp",
+      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix" },
+    -- special compile instructions for solaris
+    SunOS510_64 = {
+      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix USE_NODEPEND=Yes", "orbix sunos USE_NODEPEND=Yes"},
+    },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
@@ -481,28 +467,11 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
-      mf = { 
-        "orbix genstubs", 
-        "orbix precompile LUA51="..PRODAPP.."/lua5.1", 
-        "orbix LUA51="..PRODAPP.."/lua5.1" 
-      },
-      -- special compile instructions for solaris
-      SunOS = {
-        mf = { 
-          "orbix genstubs", 
-          "orbix precompile LUA51="..PRODAPP.."/lua5.1", 
-          "orbix LUA51="..PRODAPP.."/lua5.1", 
-          "orbix sunosShared" 
-        },
-      },
-      SunOS510_64 = {
-        mf = { 
-          "orbix genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-          "orbix precompile LUA51="..PRODAPP.."/lua5.1", 
-          "orbix LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, 
-          "orbix sunosShared "..SUNOS64_TECMAKE_FLAGS 
-        },
-      },
+      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1" },
+    -- special compile instructions for solaris
+    SunOS510_64 = {
+      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", "orbix sunos USE_NODEPEND=Yes"},
+    },
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbusorbix.*"] = "libpath/${TEC_UNAME}",
@@ -531,13 +500,11 @@ packages = {
         "config -C rgs LUA51="..PRODAPP.."/lua5.1" 
       },
       SunOS510_64 = { 
-  	    mf = { 
-  	      "config cxxtest -C acs",
-          "config -C acs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS,
-          "config cxxtest -C rgs",
-          "config genstubs -C rgs",
-          "config -C rgs LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, 
-        },
+	    mf = { "config cxxtest -C acs USE_NODEPEND=Yes",
+               "config -C acs LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes",
+               "config cxxtest -C rgs USE_NODEPEND=Yes",
+               "config genstubs -C rgs USE_NODEPEND=Yes",
+               "config -C rgs LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", },
       },
     },
     install_files = {
@@ -561,17 +528,13 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/hello/orbix",
-      mf = { 
-        "server genstubs USE_NODEPEND=Yes", 
-        "client LUA51="..PRODAPP.."/lua5.1", 
-        "server LUA51="..PRODAPP.."/lua5.1" 
-      },
+      mf = { "server genstubs USE_NODEPEND=Yes", 
+             "client LUA51="..PRODAPP.."/lua5.1", 
+             "server LUA51="..PRODAPP.."/lua5.1" },
       SunOS510_64 = { 
-        mf = { 
-          "server genstubs ".. SUNOS64_TECMAKE_FLAGS, 
-          "client LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, 
-          "server LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS 
-        }, 
+        mf = { "server genstubs USE_NODEPEND=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes"} 
       },
     },
     dev_files = {
@@ -579,7 +542,7 @@ packages = {
       ["../idl/hello.idl"] = "demo/hello/idl/",
       ["../management"] = "demo/hello",
       ["../../README"] = "demo",      
-      ["Makefile"] = "demo/hello/orbix63",
+      ["Makefile"] = "demo/hello/orbix",
       ["client.cpp"] = "demo/hello/orbix",
       ["server.cpp"] = "demo/hello/orbix",
       ["run*"] = "demo/hello/orbix",
@@ -636,6 +599,10 @@ packages = {
         "mico genstubs", 
         "mico LUA51="..PRODAPP.."/lua5.1" 
       },
+      SunOS510_64 = { mf = { 
+        "mico genstubs USE_NODEPEND=Yes",
+        "mico LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes"},
+      },
       Darwin = {
         mf = { 
           "mico genstubs LD=g++", 
@@ -677,12 +644,11 @@ packages = {
           "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
         },
       },
-      SunOS510 = {
-        mf = { 
-          "mico genstubs", 
-          "mico LD=CC LUA51="..PRODAPP.."/lua5.1", 
-        },
-      },
+      SunOS510_64 = { 
+        mf = { "mico genstubs USE_NODEPEND=Yes", 
+               "mico LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes",
+               "mico sunos USE_NODEPEND=Yes"},
+      }
     },
     dev_files = {
       ["CHANGES"] = ".",
@@ -719,6 +685,11 @@ packages = {
           'server "LUA51='..PRODAPP..'/lua5.1 "',
         }, 
       },
+      SunOS510_64 = { 
+        mf = { "server genstubs USE_NODEPEND=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes"}, 
+      }
     },
     dev_files = {
       ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
@@ -747,11 +718,11 @@ packages = {
         "client LUA51="..PRODAPP.."/lua5.1",
         "server LUA51="..PRODAPP.."/lua5.1" 
       },
-      SunOS510 = { 
+      SunOS510_64 = { 
         mf = { 
-          "server genstubs ",
-          'client "LUA51='..PRODAPP..'/lua5.1 "',
-          'server "LUA51='..PRODAPP..'/lua5.1 "',
+          "server genstubs USE_NODEPEND=Yes",
+          'client USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
+          'server USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
         }, 
       },
     },
@@ -780,11 +751,11 @@ packages = {
         "client LUA51="..PRODAPP.."/lua5.1",
         "server LUA51="..PRODAPP.."/lua5.1" 
       },
-      SunOS510 = { 
+      SunOS510_64 = { 
         mf = { 
           "server genstubs ",
-          'client "LUA51='..PRODAPP..'/lua5.1 "',
-          'server "LUA51='..PRODAPP..'/lua5.1 "',
+          'client USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
+          'server USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
         }, 
       },
     },
@@ -814,6 +785,13 @@ packages = {
         "config cxxtest -C rgs", 
         "config genstubs -C rgs", 
         "config -C rgs LUA51="..PRODAPP.."/lua5.1" 
+      },
+      SunOS510_64 = { 
+	    mf = { "config cxxtest -C acs USE_NODEPEND=Yes",
+               "config -C acs LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes",
+               "config cxxtest -C rgs USE_NODEPEND=Yes",
+               "config genstubs -C rgs USE_NODEPEND=Yes",
+               "config -C rgs LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", },
       },
     },
     install_files = {
