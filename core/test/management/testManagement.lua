@@ -652,7 +652,7 @@ function Test3:testAddInterfaceIdentifier_InterfaceIdentifierAlreadyExists()
   Check.assertTrue(succ)
 end
 
-function Test3:testAddInterfaceIdentifier_InterfaceIdentifierNonExistent()
+function Test3:testRemoveInterfaceIdentifier_InterfaceIdentifierNonExistent()
   succ, err = self.rsMgt:removeInterfaceIdentifier("InvalidInterface")
   Check.assertFalse(succ)
   Check.assertEquals(InterfaceIdentifierNonExistentException, err[1])
@@ -953,6 +953,18 @@ function Test4:testGetAuthorizationsByInterfaceIdMulti()
     succ, err = self.rsMgt:removeAuthorization(depl.id)
     Check.assertTrue(succ)
   end
+end
+
+function Test4:testRemoveAuthorization_AuthorizationNonExistent()
+  local succ, err = self.rsMgt:removeAuthorization("invalidId")
+  Check.assertFalse(succ)
+  Check.assertEquals(AuthorizationNonExistentException, err[1])
+end
+
+function Test4:testRevoke_AuthorizationNonExistent()
+  local succ, err = self.rsMgt:revoke("invalidId", "invalidInterfaceId")
+  Check.assertFalse(succ)
+  Check.assertEquals(AuthorizationNonExistentException, err[1])
 end
 
 --------------------------------------------------------------------------------
