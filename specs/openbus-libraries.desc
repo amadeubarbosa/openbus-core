@@ -471,7 +471,9 @@ packages = {
       mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix" },
     -- special compile instructions for solaris
     SunOS510_64 = {
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix USE_NODEPEND=Yes", "orbix sunos USE_NODEPEND=Yes"},
+      mf = { 
+        "orbix genstubs USE_NODEPEND=Yes", 
+        "orbix USE_NODEPEND=Yes"},
     },
     },
     install_files = {
@@ -493,7 +495,9 @@ packages = {
       mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1" },
     -- special compile instructions for solaris
     SunOS510_64 = {
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", "orbix sunos USE_NODEPEND=Yes"},
+      mf = { 
+        "orbix genstubs USE_NODEPEND=Yes", 
+        "orbix LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes"},
     },
     },
     dev_files = {
@@ -615,8 +619,7 @@ packages = {
       },
       SunOS510_64 = { 
         mf = { "mico genstubs USE_NODEPEND=Yes", 
-               "mico LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes",
-               "mico sunos USE_NODEPEND=Yes"},
+               "mico LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes"},
       }
     },
     dev_files = {
