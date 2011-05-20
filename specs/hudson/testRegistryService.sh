@@ -74,7 +74,7 @@ fi
 cd ${OPENBUS_HOME}/core/test
 cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
 
-./run_registry_service_test.sh
+./run_unit_test.sh registry/RegistryServiceTestSuite.lua
 CODE=$?
 
 kill -9 ${RGSPID}
