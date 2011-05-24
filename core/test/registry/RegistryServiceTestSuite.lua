@@ -395,6 +395,31 @@ Suite = {
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
           "/registry_service/ServiceOfferNonExistent:1.0")
     end,
+
+    testUpdate_UnauthorizedFacets = function(self)
+      local success, err
+      local member = scs.newComponent(self.Hello_v3.facets, self.Hello_v3.receptacles,
+        self.Hello_v3.componentId)
+      -- guardando localmente a faceta hello v3
+      local hellov3_desc = member._facetDescs.IHello_v3
+      local hellov3 = member.IHello_v3
+      -- removendo a faceta hello v3 do componente
+      member._facetDescs.IHello_v3 = nil
+      member.IHello_v3 = nil
+      success, self.registryIdentifier = self.rgsProtected:register({
+        member = member.IComponent,
+        properties = {},
+      })
+      Check.assertTrue(success) 
+      -- incluindo a faceta hello v3
+      member._facetDescs.IHello_v3 = hellov3_desc
+      member.IHello_v3 = hellov3
+      success, err = self.rgsProtected:update(self.registryIdentifier,
+          self.Hello_v3.properties)
+      Check.assertFalse(success)
+      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+          "/registry_service/UnathorizedFacets:1.0")
+    end,
   },
 
   Test2 = {

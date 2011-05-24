@@ -198,7 +198,14 @@ local Hello_v3  = {
     patch_version = 0,
     platform_spec = "",
   },
-  properties = { },
+  properties = {
+    {name = "type",        value = {"IHello"}},
+    {name = "description", value = {"IHello versões 1.0, 2.0 e 3.0"}},
+    -- Teste de múltiplos valores
+    {name = "version",     value = {"1.0", "2.0", "3.0"}},
+    -- Teste de propriedade vazia
+    {name = "bugs",        value = {}},
+  },
 }
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
