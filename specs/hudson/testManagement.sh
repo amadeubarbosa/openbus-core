@@ -31,10 +31,13 @@ ShowLog() {
 
 ACSPIDFILE=${WORKSPACE}/acs.pid
 RGSPIDFILE=${WORKSPACE}/rgs.pid
+SSSPIDFILE=${WORKSPACE}/sss.pid
 ACSOUTFILE=${WORKSPACE}/acs-job-${BUILD_NUMBER}-date-${BUILD_ID}.out
 ACSERRFILE=${WORKSPACE}/acs-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
 RGSOUTFILE=${WORKSPACE}/rgs-job-${BUILD_NUMBER}-date-${BUILD_ID}.out
 RGSERRFILE=${WORKSPACE}/rgs-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
+SSSOUTFILE=${WORKSPACE}/sss-job-${BUILD_NUMBER}-date-${BUILD_ID}.out
+SSSERRFILE=${WORKSPACE}/sss-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
 
 ###############################################################################
 
@@ -111,14 +114,17 @@ ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
 ./run_unit_test.sh management/testManagement.lua
 CODE=$?
 
+kill -9 ${SSSPID}
 kill -9 ${RGSPID}
 kill -9 ${ACSPID}
 
 if [ ${CODE} -eq 1 ] ;then
   ShowLog "ACS" ${ACSOUTFILE} ${ACSERRFILE}
   ShowLog "RGS" ${RGSOUTFILE} ${RGSERRFILE}
+  ShowLog "SSS" ${SSSOUTFILE} ${SSSERRFILE}
 fi
 
 rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE} ${RGSOUTFILE} ${RGSERRFILE} ${RGSPIDFILE}
+rm -f ${SSSOUTFILE} ${SSSERRFILE} ${SSSPIDFILE}
 
 exit ${CODE}
