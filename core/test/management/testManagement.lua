@@ -98,6 +98,8 @@ local InterfaceIdentifierAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/InterfaceIdentifierAlreadyExists:1.0"
 local InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
+local InterfaceIdentifierInUseException = "IDL:tecgraf/openbus/core/"..
+        Utils.OB_VERSION.."/registry_service/InterfaceIdentifierInUse:1.0"
 local MemberNonExistentException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/MemberNonExistent:1.0"
 local AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/"..
@@ -1369,6 +1371,21 @@ function Test6:testGetAuthorizationsByInterfaceIdMulti()
   for _, user in ipairs(self.users) do
     succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
+  end
+end
+
+function Test6:testInterfaceIndentierInUse()
+  local succ, err, auth
+  local user = self.users[1]
+  for _, iface in ipairs(self.ifaces) do
+    succ, err = self.rsMgt:grant(user.id, iface, true)
+    Check.assertTrue(succ)
+  end
+  --
+  for _, iface in ipairs(self.ifaces) do
+    succ, err = self.rsMgt:removeInterfaceIdentifier(iface)
+    Check.assertFalse(succ)
+    Check.assertEquals(InterfaceIdentifierInUseException, err[1])
   end
 end
 
