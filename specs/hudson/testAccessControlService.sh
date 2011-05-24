@@ -78,14 +78,19 @@ cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
 
 
 ./run_unit_test.sh accesscontrol/AccessControlServiceTestSuite.lua
-CODE=$?
+ACSCODE=$?
+
+./run_unit_test.sh accesscontrol/ILeaseProviderTestSuite.lua
+LPCODE=$?
 
 kill -9 ${RGSPID}
 kill -9 ${ACSPID}
 
-if [ ${CODE} -eq 1 ] ;then
+CODE=0
+if [ [ ${ACSCODE} -eq 1 ] -o [ ${LPCODE} -eq 1 ] ] ;then
   ShowLog "ACS" ${ACSOUTFILE} ${ACSERRFILE}
   ShowLog "RGS" ${RGSOUTFILE} ${RGSERRFILE}
+  CODE=1
 fi
 
 rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE} ${RGSOUTFILE} ${RGSERRFILE} ${RGSPIDFILE}
