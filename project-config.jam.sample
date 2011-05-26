@@ -1,0 +1,46 @@
+
+use-project ssl : ../ssl ;
+use-project sql : ../sql ;
+use-project boost : ../boost_1_46_1 ;
+
+project openbus ;
+
+lib sdk-cpp : : <name>sdkmico <search>../new-sdk/build <link>static
+ : : <include>../new-sdk/include ;
+
+project mico ;
+
+lib mico : : <name>mico2.3.13 <link>static  ;
+
+project openssl ;
+
+alias openssl : : : : <cxxflags>"`pkg-config openssl --cflags`"
+ <linkflags>"`pkg-config openssl --libs`"
+ ;
+
+project core_idl ;
+
+actions callidl
+{
+  cp $(>) $(<:D)
+  cd $(<:D) && idl $(>:D=)
+}
+
+actions donotcall
+{
+}
+
+make core.h : ../core_idl/src/core.idl : @callidl ;
+make access_control_service.h : ../core_idl/src/access_control_service.idl : @callidl : <dependency>core.h ;
+make core.cc : ../core_idl/src/access_control_service.idl : @donotcall : <dependency>core.h ;
+make access_control_service.cc : ../core_idl/src/access_control_service.idl : @donotcall
+ : <dependency>access_control_service.h
+ ;
+
+alias core_idl : core.cc core.h access_control_service.cc access_control_service.h ;
+
+project sqlite ;
+
+alias sqlite : : : : <cxxflags>"`pkg-config sqlite3 --cflags`"
+  <linkflags>"`pkg-config sqlite3 --libs`"
+ ;

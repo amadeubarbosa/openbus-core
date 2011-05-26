@@ -1,0 +1,13 @@
+
+project access_control_service 
+  : source-location src
+;
+
+exe acs
+ : main.cpp access_control_servant.cpp
+   /openbus//sdk-cpp /mico//mico /openssl//openssl /boost//headers /core_idl//core_idl
+   /ssl//ssl /sql//sql
+ : <threading>multi <link>static <include>include <implicit-dependency>/core_idl//core_idl
+ ;
+
+install stage : acs ;
