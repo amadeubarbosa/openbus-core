@@ -107,33 +107,8 @@ function SessionServiceComponent:startup()
     Openbus:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
-
-  self.serviceOfferPrev = {
-    member = self.context.IComponent,
-    properties = {},
-  }
-
-  local success, identifierPrev = registryService:register(self.serviceOfferPrev)
-  if not success then
-    if identifierPrev[1] == UnathorizedFacets then
-      Log:error(format(
-          "Não foi possível registrar a oferta do serviço de sessão (versão %d). As seguintes interfaces não foram autorizadas:",
-          Utils.OB_PREV))
-      for _, facet in ipairs(identifierPrev.facets) do
-        Log:error(facet)
-      end
-    else
-      Log:error(format(
-          "Não foi possível registrar a oferta do servico de sessao (versão %d)",
-          identifierPrev, Utils.OB_PREV))
-    end
-    Openbus:disconnect()
-    error{"IDL:SCS/StartupFailed:1.0"}
-  end
-
   self.registryIdentifier = identifier
-  self.registryIdentifierPrev = identifierPrev
-
+  
   self.started = true
 end
 
@@ -159,7 +134,6 @@ function SessionServiceComponent:expired()
   local registryService = Openbus:getRegistryService()
   if not registryService then
     self.registryIdentifier = nil
-    self.registryIdentifierPrev = nil
     Log:error("O serviço de registro não foi encontrado")
     return
   end
@@ -177,24 +151,6 @@ function SessionServiceComponent:expired()
           self.registryIdentifier)
     end
     self.registryIdentifier = nil
-    return
-  end
-
-  success, self.registryIdentifierPrev = registryService:register(self.serviceOfferPrev)
-  if not success then
-    if self.registryIdentifierPrev[1] == UnathorizedFacets then
-      Log:error(format(
-          "Não foi possível registrar a oferta do serviço de sessão (versão %d). As seguintes interfaces não foram autorizadas:",
-          Utils.OB_PREV))
-      for _, facet in ipairs(self.registryIdentifierPrev.facets) do
-        Log:error(facet)
-      end
-    else
-      Log:error(format(
-          "Não foi possível registrar a oferta do servico de sessao (versão %d)",
-          self.registryIdentifierPrev, Utils.OB_PREV))
-    end
-    self.registryIdentifierPrev = nil
     return
   end
 end
@@ -219,16 +175,6 @@ function SessionServiceComponent:shutdown()
       registryService:unregister(self.registryIdentifier)
     end
     self.registryIdentifier = nil
-  end
-
-  if self.registryIdentifierPrev then
-    local registryService = Openbus:getRegistryService()
-    if not registryService then
-      Log:error("O serviço de registro não foi encontrado")
-    else
-      registryService:unregister(self.registryIdentifierPrev)
-    end
-    self.registryIdentifierPrev = nil
   end
 
   if self.sessionService.observerId then
