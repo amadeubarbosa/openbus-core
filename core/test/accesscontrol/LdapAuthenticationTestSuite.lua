@@ -1,7 +1,7 @@
 --
 -- Testa o funcionamento do lualdap.
 -- 
--- $Id:$
+-- $Id$
 --
 require "lualdap"
 require "oil"
