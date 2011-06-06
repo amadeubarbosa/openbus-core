@@ -1,6 +1,8 @@
 --
 -- Suite de Testes do Serviço de Controle de Acesso
 --
+-- $Id$
+--
 require "oil"
 local orb = oil.orb
 local Utils = require "openbus.util.Utils"

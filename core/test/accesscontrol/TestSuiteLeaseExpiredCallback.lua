@@ -1,7 +1,7 @@
 --
 -- Testes unitários do arquivo LeaseExpiredCallback.lua
 --
--- $Id: testLeaseExpiredCallback.lua $
+-- $Id$
 --
 local LeaseExpiredCallback = require "openbus.lease.LeaseExpiredCallback"
 local Check = require "latt.Check"
