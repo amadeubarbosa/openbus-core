@@ -18,9 +18,31 @@ packages = {
     url = SVNREPURL .. "/openbus/idl/trunk",
     directory = PRODAPP .."/idl",
   },
+  { name = "idl-doc",
+    build = {
+      type = "command",
+      src = PRODAPP .. "/idl/docs",
+      cmd = "doxygen",
+      arguments = "openbus.dox"
+    },
+    install_files = {
+      ["html"] = "docs/"..OB_VERSION,
+    },
+  },
   { name = "idl-prev-source",
     url = SVNREPURL .. "/openbus/idl/branches/OB_IDL_v1_05_2010_05_13",
     directory = PRODAPP .."/idl-prev",
+  },
+  { name = "idl-prev-doc",
+    build = {
+      type = "command",
+      src = PRODAPP .. "/idl-prev/docs",
+      cmd = "doxygen",
+      arguments = "openbus.dox"
+    },
+    install_files = {
+      ["html"] = "docs/"..OB_PREV,
+    },
   },
   { name = "sdk-java-source",
     url = SVNREPURL .. "/openbus/sdk/java/trunk",
@@ -220,6 +242,17 @@ packages = {
     directory = PRODAPP .."/scs-idl",
     install_files = {
       ["src/scs.idl"] = "idlpath/"..OB_VERSION,
+    },
+  },
+  { name = "scs-idl-doc",
+    build = {
+      type = "command",
+      src = PRODAPP .. "/scs-idl/docs",
+      cmd = "doxygen",
+      arguments = "scs.dox"
+    },
+    install_files = {
+      ["html"] = "docs/"..OB_VERSION.."/scs",
     },
   },
   { name = "scsall",
