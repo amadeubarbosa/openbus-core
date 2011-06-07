@@ -8,13 +8,13 @@ exec_prefix="${prefix}"
 MICODIR="$exec_prefix"
 MICOSHAREDDIR="$prefix"
 MICOVERSION=` sed -n '/MICO_VERSION/ { y/b/./; s#^[^"]*"\([^"]*\)".*$#\1#p; }' \
-  "$MICODIR/incpath/mico-2.3.13/mico/version.h" `
+  "$MICODIR/incpath/mico-2.3.13/${TEC_UNAME}/mico/version.h" `
 PATH="$MICODIR/bin/${TEC_UNAME}:$PATH"
 LD_LIBRARY_PATH="$MICODIR/libpath/${TEC_UNAME}:${LD_LIBRARY_PATH:-}"
 SHLIB_PATH="$MICODIR/libpath/${TEC_UNAME}:${SHLIB_PATH:-}"
 LIBPATH="$MICODIR/libpath/${TEC_UNAME}:${LIBPATH:-}"
 MANPATH="$MICOSHAREDDIR/man:${MANPATH:-}"
-CPLUS_INCLUDE_PATH="$MICODIR/incpath/mico-2.3.13"
+CPLUS_INCLUDE_PATH="$MICODIR/incpath/mico-2.3.13/${TEC_UNAME}"
 LIBRARY_PATH="$MICODIR/libpath/${TEC_UNAME}"
 
 export MICOVERSION PATH LD_LIBRARY_PATH MANPATH CPLUS_INCLUDE_PATH LIBRARY_PATH
