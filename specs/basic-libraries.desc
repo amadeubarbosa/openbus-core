@@ -218,8 +218,8 @@ basesoft = {
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
-      Linux = "./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
-      Darwin = "./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
+      Linux = "rm -f config.cache && ./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
+      Darwin = "rm -f config.cache && ./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
     },
     install_files = {
       [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
@@ -237,9 +237,9 @@ basesoft = {
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
-      Linux26_64 = "./configure --prefix="..TMPDIR.. " --disable-shared --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
-      Linux = "./configure --prefix=".. TMPDIR .. " && make && make install",
-      Darwin = "./configure --prefix=".. TMPDIR .. " && make && make install",
+      Linux26_64 = "rm -f config.cache && ./configure --prefix="..TMPDIR.. " --disable-shared --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
+      Linux = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
+      Darwin = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
     },
     install_files = {
       [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
