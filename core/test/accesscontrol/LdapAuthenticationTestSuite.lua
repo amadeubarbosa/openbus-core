@@ -99,7 +99,7 @@ Suite = {
     testInvalidUserSSL = function(self)
       local host = self.hostname .. self.SSLPort
       local user = "unknown"
-      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, user, self.password, false)
+      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, user, self.password, true)
       Check.assertTrue(success)
       Check.assertNil(connection)
       Check.assertEquals("Invalid DN syntax", errorMessage)
@@ -108,7 +108,7 @@ Suite = {
     testInvalidUser2SSL = function(self)
       local host = self.hostname .. self.SSLPort
       local user = "cn=unknown,ou=usuarios,dc=tecgraf,dc=puc-rio,dc=br"
-      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, user, self.password, false)
+      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, user, self.password, true)
       Check.assertTrue(success)
       Check.assertNil(connection)
       Check.assertEquals("Invalid credentials", errorMessage)
@@ -118,33 +118,33 @@ Suite = {
       local host = self.hostname .. self.SSLPort
       -- incluindo dc=com
       local user = "cn=teste,ou=usuarios,dc=tecgraf,dc=puc-rio,dc=com,dc=br"
-      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, user, self.password, false)
+      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, user, self.password, true)
       Check.assertTrue(success)
       Check.assertNil(connection)
       Check.assertEquals("Invalid credentials", errorMessage)
     end,
 
-    testInvalidPassword = function(self)
+    testInvalidPasswordSSL = function(self)
       local host = self.hostname .. self.SSLPort
       local password = "invalid"
-      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, self.user, password, false)
+      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, self.user, password, true)
       Check.assertTrue(success)
       Check.assertNil(connection)
       Check.assertEquals("Invalid credentials", errorMessage)
     end,
 
-    testBlankPassword = function(self)
+    testBlankPasswordSSL = function(self)
       local host = self.hostname .. self.SSLPort
       local password = ""
-      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, self.user, password, false)
+      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, self.user, password, true)
       Check.assertTrue(success)
       Check.assertNil(connection)
       Check.assertEquals("Server is unwilling to perform", errorMessage)
     end,
 
-    testNilPassword = function(self)
+    testNilPasswordSSL = function(self)
       local host = self.hostname .. self.SSLPort
-      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, self.user, nil, false)
+      local success, connection, errorMessage = oil.pcall(lualdap.open_simple, host, self.user, nil, true)
       Check.assertTrue(success)
       Check.assertNil(connection)
       Check.assertEquals("Server is unwilling to perform", errorMessage)
