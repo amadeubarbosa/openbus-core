@@ -228,7 +228,7 @@ basesoft = {
     dev_files = {
       [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
       [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13",
+      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13/${TEC_UNAME}",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
@@ -248,7 +248,7 @@ basesoft = {
     dev_files = {
       [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
       [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13",
+      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13/${TEC_UNAME}",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
