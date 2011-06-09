@@ -203,7 +203,7 @@ facetDescriptions.IManagement.class           = AccessControlService.ManagementF
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_ACS_KEY
 
 facetDescriptions.IManagement_Prev.name            = "IManagement_" .. Utils.OB_PREV
-facetDescriptions.IManagement_Prev.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
+facetDescriptions.IManagement_Prev.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE_PREV
 facetDescriptions.IManagement_Prev.class           = AccessControlServicePrev.ManagementFacet
 facetDescriptions.IManagement_Prev.key             = Utils.MANAGEMENT_ACS_KEY_PREV
 
