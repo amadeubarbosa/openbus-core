@@ -69,15 +69,7 @@ basesoft = {
     build = {
       type = "autotools",
       test_libs = {"libcrypto*0.9.9*"},
-      Darwin104x86 = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
-               " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
-      Darwin103x86 = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
-               " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
-      Darwin102x86 = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
-               " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
-      Darwin100x86 = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
-               " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
-      Darwin = "./config no-asm shared --prefix=".. TMPDIR ..
+      Darwin = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
       Linux =  "./config shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
@@ -183,13 +175,13 @@ basesoft = {
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -mt -xar -o" CFLAGS="-xO2 -DPIC -KPIC -mt -m64" CXXFLAGS="-erroff=badargtype2w -xO2 -library=stlport4 -DPIC -KPIC -mt -m64" ./configure --disable-threads --prefix=' .. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-singlethread",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-singlethread",
+      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13-singlethread/${TEC_UNAME}",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
@@ -204,13 +196,13 @@ basesoft = {
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -mt -xar -o" CFLAGS="-xO2 -DPIC -KPIC -mt -m64" CXXFLAGS="-erroff=badargtype2w -xO2 -library=stlport4 -DPIC -KPIC -mt -m64" ./configure --disable-threads  --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-multithread",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-multithread",
+      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13-multithread/${TEC_UNAME}",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },

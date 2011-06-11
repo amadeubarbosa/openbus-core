@@ -516,7 +516,7 @@ packages = {
       ["test/orbix/runtests"] = "test/orbix/",
     },
   },  
-  { name = "openbus-orbix-test",
+  { name = "openbus-test-orbix",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/orbix",
@@ -737,7 +737,7 @@ packages = {
       ["server"] = "demo/delegate/multithread/mico",
     },
   },
-  { name = "openbus-mico-test",
+  { name = "openbus-test-mico",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/mico",
