@@ -223,13 +223,13 @@ basesoft = {
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -mt -xar -o" CFLAGS="-xO2 -DPIC -KPIC -mt -m64" CXXFLAGS="-erroff=badargtype2w -xO2 -library=stlport4 -DPIC -KPIC -mt -m64" ./configure --disable-threads --prefix=' .. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-singlethread",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-singlethread",
+      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13-singlethread/${TEC_UNAME}",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
@@ -244,13 +244,13 @@ basesoft = {
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -mt -xar -o" CFLAGS="-xO2 -DPIC -KPIC -mt -m64" CXXFLAGS="-erroff=badargtype2w -xO2 -library=stlport4 -DPIC -KPIC -mt -m64" ./configure --disable-threads  --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-multithread",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-multithread",
+      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13-multithread/${TEC_UNAME}",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },

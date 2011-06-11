@@ -32,7 +32,7 @@ if [ "${TEC_SYSNAME}" == "SunOS" ] ;then
     scs-orbix \
     openbus-orbix \
     openbus-orbix-doc \
-    openbus-orbix-test \
+    openbus-test-orbix \
     openbus-demo-hello-orbix  \
     scs-java-ant \
     scs-java \
