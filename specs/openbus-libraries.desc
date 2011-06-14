@@ -79,8 +79,7 @@ packages = {
       src = PRODAPP .."/lua5.1/src",
       mf = { "config" },
       Darwin = { mf = {"config", "config BUILD_DYLIB=Yes"} },
-      SunOS510 = { mf = {'config USE_NODEPEND=Yes CFLAGS=-KPIC LD=CC AR=CC STDLFLAGS+=-xar STDLFLAGS+=-o '} },
-      SunOS510_64 = { mf = {'config USE_NODEPEND=Yes CFLAGS=-KPIC CFLAGS+=-m64 LD=CC LFLAGS=-m64 AR=CC LFLAGS=-m64 STDLFLAGS=-m64 STDLFLAGS+=-xar STDLFLAGS+=-o '} },
+      SunOS510_64 = { mf = { "config ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/liblua5.1.so"] = "libpath/${TEC_UNAME}",
@@ -357,6 +356,7 @@ packages = {
       src = PRODAPP .."/sdk-lua",
       mf = { "config LUA51="..PRODAPP.."/lua5.1" },
       Darwin = { mf = { "config LUA51="..PRODAPP.."/lua5.1","config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=YES" }, },
+      SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
       ["lib/${TEC_UNAME}/libluaopenbus.so"] = "libpath/${TEC_UNAME}",
@@ -408,6 +408,7 @@ packages = {
       type = "tecmake",
       src = SVNDIR .."/core/services",
       mf = { "accesscontrol LUA51="..PRODAPP.."/lua5.1", },
+      SunOS510_64 = { mf = { "accesscontrol LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
       ["../bin/${TEC_UNAME}/acs"] = "core/bin/${TEC_UNAME}",
@@ -419,6 +420,7 @@ packages = {
       type = "tecmake",
       src = SVNDIR .."/core/services",
       mf = { "registry LUA51="..PRODAPP.."/lua5.1", },
+      SunOS510_64 = { mf = { "registry LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
       ["../bin/${TEC_UNAME}/rgs"] = "core/bin/${TEC_UNAME}",
@@ -430,6 +432,7 @@ packages = {
       type = "tecmake",
       src = SVNDIR .."/core/services",
       mf = { "session LUA51="..PRODAPP.."/lua5.1", },
+      SunOS510_64 = { mf = { "session LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
       ["../bin/${TEC_UNAME}/ss"] = "core/bin/${TEC_UNAME}",

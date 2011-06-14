@@ -41,6 +41,14 @@ if [ "${TEC_SYSNAME}" == "Darwin" ]; then
 fi
 
 if [ "${TEC_SYSNAME}" == "SunOS" ] ;then
+  #fix LD_LIBRARY_PATH on 64bit sunos machines
+  if [ "${TEC_UNAME}" == "SunOS510_64" ]; then
+    if [ -z ${LD_LIBRARY_PATH_64} ]; then
+      export LD_LIBRARY_PATH_64="${OB_LD_LIBRARY_PATH}"
+    else
+      export LD_LIBRARY_PATH_64="${OB_LD_LIBRARY_PATH}:${LD_LIBRARY_PATH_64}"
+    fi 
+  fi
   #gnu compilers
   export LIBRARY_PATH="${LIBRARY_PATH}:/usr/sfw/lib:/usr/local/lib:/usr/ucblib"
   export CPATH="${CPATH}:/usr/sfw/include:/usr/local/include:/usr/ucbinclude"

@@ -41,6 +41,14 @@ if ($?TEC_SYSNAME == 1) then
     endif
   endif
   if ($TEC_SYSNAME == "SunOS" ) then
+    #fix LD_LIBRARY_PATH on 64bit sunos machines
+    if ($TEC_UNAME == "SunOS510_64" ) then
+      if ($?LD_LIBRARY_PATH_64 == 0) then
+        setenv LD_LIBRARY_PATH_64 "${OB_LD_LIBRARY_PATH}"
+      else
+        setenv LD_LIBRARY_PATH_64 "${OB_LD_LIBRARY_PATH}:${LD_LIBRARY_PATH_64}"
+      endif 
+    endif
     #gnu compilers
     setenv LIBRARY_PATH "${LIBRARY_PATH}:/usr/sfw/lib:/usr/local/lib:/usr/ucblib"
     setenv CPATH "${CPATH}:/usr/sfw/include:/usr/local/include:/usr/ucbinclude"
