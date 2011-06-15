@@ -294,7 +294,7 @@ Suite = {
       })
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/UnathorizedFacets:1.0")
+          "/registry_service/UnauthorizedFacets:1.0")
       Check.assertEquals(#err.facets, 1)
     end,
 
@@ -393,7 +393,7 @@ Suite = {
           self.Hello_v1.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/ServiceOfferNonExistent:1.0")
+          "/registry_service/ServiceOfferDoesNotExist:1.0")
     end,
 
     testUpdate_UnauthorizedFacets = function(self)
@@ -418,7 +418,7 @@ Suite = {
           self.Hello_v3.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/UnathorizedFacets:1.0")
+          "/registry_service/UnauthorizedFacets:1.0")
     end,
   },
 

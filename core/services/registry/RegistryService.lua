@@ -201,7 +201,7 @@ end
 --
 -- @return Índice de facetas autorizadas.
 --
--- @exception UnathorizedFacets Contém a lista com uma ou
+-- @exception UnauthorizedFacets Contém a lista com uma ou
 --   mais facetas que o membro não tem autorização.
 --
 function RSFacet:getAuthorizedFacets(member, credential, properties)
@@ -235,7 +235,7 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
     end
     error(Openbus:getORB():newexcept {
       "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/UnathorizedFacets:1.0",
+          "/registry_service/UnauthorizedFacets:1.0",
       facets = unathorizedFacets,
     })
   end
