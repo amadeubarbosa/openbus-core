@@ -722,22 +722,22 @@ end
 --
 local SystemInUseException = "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
     "/access_control_service/SystemInUse:1.0"
-local SystemNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemNonExistent:1.0"
+local SystemDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDoesNotExist:1.0"
 local SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/SystemAlreadyExists:1.0"
 --
 local InvalidCertificateException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/InvalidCertificate:1.0"
-local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
+local SystemDeploymentDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentDoesNotExist:1.0"
 local SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/SystemDeploymentAlreadyExists:1.0"
 --
 local UserAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/UserAlreadyExists:1.0"
-local UserNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/UserNonExistent:1.0"
+local UserDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/UserDoesNotExist:1.0"
 
 
 ManagementFacet = oop.class{}
@@ -818,7 +818,7 @@ function ManagementFacet:removeSystem(id)
   self:checkPermission()
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{SystemNonExistentException}
+    error{SystemDoesNotExistException}
   end
   local depls = self.deploymentDB:getValues()
   for _, depl in ipairs(depls) do
@@ -846,7 +846,7 @@ function ManagementFacet:setSystemDescription(id, description)
   self:checkPermission()
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{SystemNonExistentException}
+    error{SystemDoesNotExistException}
   end
   local system, msg = self.systemDB:get(id)
   if system then
@@ -887,7 +887,7 @@ end
 function ManagementFacet:getSystem(id)
   if not self.systems[id] then
     Log:error(format("Sistema '%s' não cadastrado.", id))
-    error{SystemNonExistentException}
+    error{SystemDoesNotExistException}
   end
   local system, msg = self.systemDB:get(id)
   if not system then
@@ -915,7 +915,7 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
   if not self.systems[systemId] then
     Log:error(format("Falha ao criar implantação '%s': sistema %s "..
                      "não cadastrado.", id, systemId))
-    error{SystemNonExistentException}
+    error{SystemDoesNotExistException}
   end
   local succ, msg = lce.x509.readfromderstring(certificate)
   if not succ then
@@ -958,7 +958,7 @@ function ManagementFacet:removeSystemDeployment(id)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("implantação '%s' não cadastrada.", id))
-    error{SystemDeploymentNonExistentException}
+    error{SystemDeploymentDoesNotExistException}
   end
   self.deployments[id] = nil
   local succ, msg = self.deploymentDB:remove(id)
@@ -1002,7 +1002,7 @@ function ManagementFacet:setSystemDeploymentDescription(id, description)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("implantação '%s' não cadastrada.", id))
-    error{SystemDeploymentNonExistentException}
+    error{SystemDeploymentDoesNotExistException}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
@@ -1031,7 +1031,7 @@ end
 function ManagementFacet:getSystemDeploymentCertificate(id)
   if not self.deployments[id] then
     Log:error(format("implantação '%s' não cadastrada.", id))
-    error{SystemDeploymentNonExistentException}
+    error{SystemDeploymentDoesNotExistException}
   end
   local cert, msg = self.certificateDB:get(id)
   if not cert then
@@ -1050,7 +1050,7 @@ function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
   self:checkPermission()
   if not self.deployments[id] then
     Log:error(format("implantação '%s' não cadastrada.", id))
-    error{SystemDeploymentNonExistentException}
+    error{SystemDeploymentDoesNotExistException}
   end
   local tmp, msg = lce.x509.readfromderstring(certificate)
   if not tmp then
@@ -1087,7 +1087,7 @@ end
 function ManagementFacet:getSystemDeployment(id)
   if not self.deployments[id] then
     Log:error(format("implantação '%s' não cadastrada.", id))
-    error{SystemDeploymentNonExistentException}
+    error{SystemDeploymentDoesNotExistException}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
@@ -1154,7 +1154,7 @@ function ManagementFacet:removeUser(id)
   self:checkPermission()
   if not self.users[id] then
     Log:error(format("usuário '%s' não cadastrado.", id))
-    error{UserNonExistentException}
+    error{UserDoesNotExistException}
   end
   self.users[id] = nil
   local succ, msg = self.userDB:remove(id)
@@ -1189,7 +1189,7 @@ function ManagementFacet:setUserName(id, name)
   self:checkPermission()
   if not self.users[id] then
     Log:error(format("usuário '%s' não cadastrado.", id))
-    error{UserNonExistentException}
+    error{UserDoesNotExistException}
   end
   local user, msg = self.userDB:get(id)
   if not user then
@@ -1215,7 +1215,7 @@ end
 function ManagementFacet:getUser(id)
   if not self.users[id] then
     Log:error(format("usuário '%s' não cadastrado.", id))
-    error{UserNonExistentException}
+    error{UserDoesNotExistException}
   end
   local user, msg = self.userDB:get(id)
   if not user then

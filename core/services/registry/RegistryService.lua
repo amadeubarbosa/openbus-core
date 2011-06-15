@@ -433,7 +433,7 @@ end
 --@exception UnauthorizedFacets Exceção contendo a lista de facetas
 --que o membro não tem autorização.
 --
---@exception ServiceOfferNonExistent O membro não possui nenhuma oferta
+--@exception ServiceOfferDoesNotExist O membro não possui nenhuma oferta
 --relacionada com o identificador informado.
 ---
 function RSFacet:update(identifier, properties)
@@ -445,7 +445,7 @@ function RSFacet:update(identifier, properties)
         identifier))
     error(Openbus:getORB():newexcept {
       "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/ServiceOfferNonExistent:1.0",
+          "/registry_service/ServiceOfferDoesNotExist:1.0",
     })
   end
 
@@ -455,7 +455,7 @@ function RSFacet:update(identifier, properties)
         identifier, credential.identifier, credential.owner, credential.delegate))
     error(Openbus:getORB():newexcept {
       "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/ServiceOfferNonExistent:1.0",
+          "/registry_service/ServiceOfferDoesNotExist:1.0",
     })
   end
 
@@ -1220,20 +1220,20 @@ end
 -- Aliases
 local InvalidRegularExpressionException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/InvalidRegularExpression:1.0"
-local InterfaceIdentifierInUseException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierInUse:1.0"
-local InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
-local InterfaceIdentifierAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierAlreadyExists:1.0"
-local UserNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/UserNonExistent:1.0"
-local MemberNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/MemberNonExistent:1.0"
-local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
-local AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/AuthorizationNonExistent:1.0"
+local InterfaceInUseException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceInUse:1.0"
+local InterfaceDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceDoesNotExist:1.0"
+local InterfaceAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceAlreadyExists:1.0"
+local UserDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/UserDoesNotExist:1.0"
+local EntityDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/EntityDoesNotExist:1.0"
+local SystemDeploymentDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentDoesNotExist:1.0"
+local AuthorizationDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/AuthorizationDoesNotExist:1.0"
 
 ManagementFacet = oop.class{}
 
@@ -1292,8 +1292,8 @@ function ManagementFacet:loadData()
     if succ then
       self.authorizations[auth.id] = auth
     else
-      if err[1] == SystemDeploymentNonExistentException or
-         err[1] == UserNonExistentException
+      if err[1] == SystemDeploymentDoesNotExistException or
+         err[1] == UserDoesNotExistException
       then
         remove[auth] = true
         Log:warn(format("Removendo autorizações de '%s': " ..
@@ -1318,7 +1318,7 @@ function ManagementFacet:addInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if self.interfaces[ifaceId] then
     Log:info(format("Interface '%s' já cadastrada.", ifaceId))
-    error{InterfaceIdentifierAlreadyExistsException}
+    error{InterfaceAlreadyExistsException}
   end
   self.interfaces[ifaceId] = true
   local succ, msg = self.ifaceDB:save(ifaceId, ifaceId)
@@ -1339,12 +1339,12 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   self:checkPermission()
   if not self.interfaces[ifaceId] then
     Log:info(format("Interface '%s' não está cadastrada.", ifaceId))
-    error{InterfaceIdentifierNonExistentException}
+    error{InterfaceDoesNotExistException}
   end
   for _, auth in pairs(self.authorizations) do
     if auth.authorized[ifaceId] == "strict" then
       Log:info(format("Interface '%s' em uso.", ifaceId))
-      error{InterfaceIdentifierInUseException}
+      error{InterfaceInUseException}
     end
   end
   self.interfaces[ifaceId] = nil
@@ -1393,7 +1393,7 @@ function ManagementFacet:grant(id, ifaceId, strict)
     end
   elseif strict and not self.interfaces[ifaceId] then
     Log:info(format("Interface '%s' não cadastrada.", ifaceId))
-    error{InterfaceIdentifierNonExistentException}
+    error{InterfaceDoesNotExistException}
   end
   local auth = self.authorizations[id]
   if not auth then
@@ -1401,17 +1401,17 @@ function ManagementFacet:grant(id, ifaceId, strict)
     local type = "ATSystemDeployment"
     local succ, member = self.acsmgm:getSystemDeployment(id)
     if not succ then
-      if member[1] ~= SystemDeploymentNonExistentException then
+      if member[1] ~= SystemDeploymentDoesNotExistException then
         error(member)  -- Exceção desconhecida, repassando
       end
       type = "ATUser"
       succ, member = self.acsmgm:getUser(id)
       if not succ then
-        if member[1] ~= UserNonExistentException then
+        if member[1] ~= UserDoesNotExistException then
           error(member)  -- Exceção desconhecida, repassando
         end
         Log:info(format("Membro '%s' não cadastrado.", id))
-        error{MemberNonExistentException}
+        error{EntityDoesNotExistException}
       end
     end
     auth = {
@@ -1449,7 +1449,7 @@ function ManagementFacet:revoke(id, ifaceId)
   local auth = self.authorizations[id]
   if not (auth and auth.authorized[ifaceId]) then
     Log:info(format("Não há autorização para '%s'.", id))
-    error{AuthorizationNonExistentException}
+    error{AuthorizationDoesNotExistException}
   end
   local succ, msg
   auth.authorized[ifaceId] = nil
@@ -1476,7 +1476,7 @@ function ManagementFacet:removeAuthorization(id)
   self:checkPermission()
   if not self.authorizations[id] then
     Log:info(format("Não há autorização  para '%s'.", id))
-    error{AuthorizationNonExistentException}
+    error{AuthorizationDoesNotExistException}
   end
   self.authorizations[id] = nil
   local succ, msg = self.authDB:remove(id)
@@ -1552,7 +1552,7 @@ function ManagementFacet:getAuthorization(id)
   local auth = self.authorizations[id]
   if not auth then
     Log:info(format("Não há autorização para '%s'.", id))
-    error{AuthorizationNonExistentException}
+    error{AuthorizationDoesNotExistException}
   end
   return self:copyAuthorization(auth)
 end
