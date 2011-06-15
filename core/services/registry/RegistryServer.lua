@@ -131,7 +131,6 @@ facetDescriptions.IComponent                 = {}
 facetDescriptions.IRegistryService           = {}
 facetDescriptions.IRegistryService_Prev      = {}
 facetDescriptions.IManagement                = {}
-facetDescriptions.IManagement_Prev           = {}
 facetDescriptions.IFaultTolerantService      = {}
 facetDescriptions.IFaultTolerantService_Prev = {}
 facetDescriptions.IReceptacles               = {}
@@ -165,11 +164,6 @@ facetDescriptions.IManagement.name            = "IManagement_" .. Utils.OB_VERSI
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
 facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_RS_KEY
-
-facetDescriptions.IManagement_Prev.name            = "IManagement_" .. Utils.OB_PREV
-facetDescriptions.IManagement_Prev.interface_name  = Utils.MANAGEMENT_RS_INTERFACE_PREV
-facetDescriptions.IManagement_Prev.class           = RegistryServicePrev.ManagementFacet
-facetDescriptions.IManagement_Prev.key             = Utils.MANAGEMENT_RS_KEY_PREV
 
 facetDescriptions.IReceptacles.name           = "IReceptacles"
 facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE

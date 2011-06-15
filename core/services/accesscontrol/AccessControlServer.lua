@@ -154,7 +154,6 @@ facetDescriptions.ILeaseProvider_Prev         = {}
 facetDescriptions.IFaultTolerantService       = {}
 facetDescriptions.IFaultTolerantService_Prev  = {}
 facetDescriptions.IManagement                 = {}
-facetDescriptions.IManagement_Prev            = {}
 facetDescriptions.IReceptacles                = {}
 
 facetDescriptions.IComponent.name           = "IComponent"
@@ -201,11 +200,6 @@ facetDescriptions.IManagement.name            = "IManagement_" .. Utils.OB_VERSI
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_ACS_KEY
-
-facetDescriptions.IManagement_Prev.name            = "IManagement_" .. Utils.OB_PREV
-facetDescriptions.IManagement_Prev.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE_PREV
-facetDescriptions.IManagement_Prev.class           = AccessControlServicePrev.ManagementFacet
-facetDescriptions.IManagement_Prev.key             = Utils.MANAGEMENT_ACS_KEY_PREV
 
 local acsReceptFacetRef = 
   orb:newservant(AccessControlService.ACSReceptacleFacet(TableDB(dbfile)),"",Utils.RECEPTACLES_INTERFACE)
