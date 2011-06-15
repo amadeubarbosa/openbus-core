@@ -28,8 +28,8 @@ local oop = require "loop.simple"
 ---
 module "core.services.session.SessionServiceComponent"
 
-local UnathorizedFacets = "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-    "/registry_service/UnathorizedFacets:1.0"
+local UnauthorizedFacets = "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+    "/registry_service/UnauthorizedFacets:1.0"
 
 SessionServiceComponent = oop.class({}, scs.Component)
 
@@ -95,7 +95,7 @@ function SessionServiceComponent:startup()
 
   local success, identifier = registryService:register(self.serviceOffer)
   if not success then
-    if identifier[1] == UnathorizedFacets then
+    if identifier[1] == UnauthorizedFacets then
       Log:error("Não foi possível registrar a oferta do serviço de sessão. As seguintes interfaces não foram autorizadas:")
       for _, facet in ipairs(identifier.facets) do
         Log:error(facet)
@@ -141,7 +141,7 @@ function SessionServiceComponent:expired()
 
   success, self.registryIdentifier = registryService:register(self.serviceOffer)
   if not success then
-    if self.registryIdentifier[1] == UnathorizedFacets then
+    if self.registryIdentifier[1] == UnauthorizedFacets then
       Log:error("Não foi possível registrar a oferta do serviço de sessão. As seguintes interfaces não foram autorizadas:")
       for _, facet in ipairs(self.registryIdentifier.facets) do
         Log:error(facet)
