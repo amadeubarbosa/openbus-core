@@ -119,10 +119,8 @@ Suite = {
        local member = scs.newComponent(Hello_vft.facets, Hello_vft.receptacles,
         Hello_vft.componentId)
        -- Identificar local propositalmente
-       local success, registryIdentifier = rsFacet1:register({
-        member = member.IComponent,
-        properties = Hello_vft.properties,
-       })
+       local success, registryIdentifier = rsFacet1:register(
+        Hello_vft.properties, member.IComponent)
        Check.assertTrue(success)
        Check.assertNotNil(registryIdentifier)
 
@@ -140,10 +138,9 @@ Suite = {
            end
        end
        --descadastra oferta na primeira réplica
-       local success, ret, retRemote = rsFacet1:unregister(registryIdentifier)
+       local success, err = rsFacet1:unregister(registryIdentifier)
        Check.assertTrue(success)
-       Check.assertTrue(ret)
-       Check.assertTrue(retRemote)
+       Check.assertNil(err)
 
        --busca oferta nas outras réplicas (nao deveria encontrar)
        for connId,conn in pairs(conns) do

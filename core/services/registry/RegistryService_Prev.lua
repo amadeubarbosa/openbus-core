@@ -19,7 +19,23 @@ module("core.services.registry.RegistryService_Prev")
 RSFacet = oop.class{}
 
 function RSFacet:register(serviceOffer)
-  return self.context.IRegistryService:register(serviceOffer)
+  local rs = self.context.IRegistryService
+  local succ, offerId = oil.pcall(rs.register, rs, serviceOffer.properties, 
+    serviceOffer.member)
+  if not succ then
+    -- convertendo exceções desconhecidas da versão 1.5
+    if offerId[1] == "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+        "/registry_service/UnauthorizedFacets:1.0" then
+      error(Openbus:getORB():newexcept{ "IDL:tecgraf/openbus/core/"..
+        Utils.OB_PREV.."/registry_service/UnauthorizedFacets:1.0", 
+        facets = offerId.fFacets })
+    else
+      -- registra o erro e repassa como CORBA::UNKNOWN
+      Log:error(offerId[1])
+      error(Openbus:getORB():newexcept{ "CORBA::UNKNOWN" })
+    end
+  end
+  return offerId
 end
 
 function RSFacet:unregister(identifier)

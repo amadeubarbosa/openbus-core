@@ -89,11 +89,12 @@ function SessionServiceComponent:startup()
 
   -- registra sua oferta de serviço junto ao Serviço de Registro
   self.serviceOffer = {
-    member = self.context.IComponent,
-    properties = {},
+    fMember = self.context.IComponent,
+    fProperties = {},
   }
 
-  local success, identifier = registryService:register(self.serviceOffer)
+  local success, identifier = registryService:register(
+    self.serviceOffer.fProperties, self.serviceOffer.fMember)
   if not success then
     if identifier[1] == UnauthorizedFacets then
       Log:error("Não foi possível registrar a oferta do serviço de sessão. As seguintes interfaces não foram autorizadas:")
@@ -103,6 +104,7 @@ function SessionServiceComponent:startup()
     else
       Log:error("Não foi possível registrar a oferta do servico de sessao",
           identifier)
+      Log:error(identifier[1])
     end
     Openbus:disconnect()
     error{"IDL:SCS/StartupFailed:1.0"}
@@ -139,7 +141,8 @@ function SessionServiceComponent:expired()
   end
   registryService = orb:newproxy(registryService, "protected")
 
-  success, self.registryIdentifier = registryService:register(self.serviceOffer)
+  success, self.registryIdentifier = registryService:register(
+    self.serviceOffer.fProperties, self.serviceOffer.fMember)
   if not success then
     if self.registryIdentifier[1] == UnauthorizedFacets then
       Log:error("Não foi possível registrar a oferta do serviço de sessão. As seguintes interfaces não foram autorizadas:")

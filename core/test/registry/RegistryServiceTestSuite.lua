@@ -75,10 +75,8 @@ Suite = {
         self.Hello_v2.componentId)
       -- Identificar local propositalmente
       local success
-      sucess, self.registryIdentifier = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = self.Hello_v2.properties,
-      })
+      sucess, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v2.properties, member.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
 
@@ -97,17 +95,12 @@ Suite = {
       member._orb:deactivate(member.IMetaInterface)
       member._facetDescs.IMetaInterface = nil
       member.IMetaInterface = nil
-      local success, err = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = self.Hello_v2.properties,
-      })
+      local success, err = self.rgsProtected:register(self.Hello_v2.properties, 
+        member.IComponent)
       Check.assertFalse(success)
       -- TODO: Complementar o teste para recupera a exceção correta após o 
       -- témino do item de revisão das exceções das interfaces principais
-      local success, err = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = {},
-      })
+      local success, err = self.rgsProtected:register({}, member.IComponent)
       Check.assertFalse(success)
       -- TODO: Complementar o teste para recupera a exceção correta após o 
       -- témino do item de revisão das exceções das interfaces principais
@@ -117,17 +110,13 @@ Suite = {
       local success, member_v1, member_v2, id_v1, id_v2
       member_v1 = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
         self.Hello_v1.componentId)
-      success, id_v1 = self.rgsProtected:register({
-        properties = self.Hello_v1.properties,
-        member = member_v1.IComponent,
-      })
+      success, id_v1 = self.rgsProtected:register(
+        self.Hello_v1.properties, member_v1.IComponent)
       --
       member_v2 = scs.newComponent(self.Hello_v2.facets, self.Hello_v2.receptacles,
         self.Hello_v2.componentId)
-      success, id_v2 = self.rgsProtected:register({
-        properties = self.Hello_v2.properties,
-        member = member_v2.IComponent,
-      })
+      success, id_v2 = self.rgsProtected:register(
+        self.Hello_v2.properties, member_v2.IComponent)
       --Limpa o Serviço de Registro
       self.accessControlService:logout(self.credential)
       self.credentialManager:invalidate()
@@ -144,14 +133,14 @@ Suite = {
         self.Hello_v2.componentId)
       -- Identificar local propositalmente
       local success
-      sucess, self.registryIdentifier = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = self.Hello_v2.properties,
-      })
+      sucess, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v2.properties, member.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
 
-      Check.assertTrue(self.registryService:unregister(self.registryIdentifier))
+      local succ, err = oil.pcall(self.registryService.unregister, 
+        self.registryService, self.registryIdentifier)
+      Check.assertTrue(succ)
       local offers = self.registryService:find({self.Hello_v2.facets.IHello_v1.name})
       Check.assertEquals(0, #offers)
       offers = self.registryService:find({self.Hello_v2.facets.IHello_v2.name})
@@ -162,7 +151,10 @@ Suite = {
     end,
 
     testUnregister_InvalidService = function(self)
-      Check.assertFalse(self.registryService:unregister("INVALID-IDENTIFIER"))
+      local succ, err = oil.pcall(self.registryService.unregister, 
+        self.registryService, "INVALID-IDENTIFIER")
+      Check.assertFalse(succ)
+      -- TODO: check excepetion
     end,
 
     ---
@@ -172,10 +164,8 @@ Suite = {
       local success
       local member = scs.newComponent(self.Hello_v2_2.facets, self.Hello_v2_2.receptacles,
         self.Hello_v2_2.componentId)
-      success , self.registryIdentifier = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = self.Hello_v2_2.properties,
-      })
+      success , self.registryIdentifier = self.rgsProtected:register(
+        Hello_v2_2.properties, member.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
       --
@@ -202,17 +192,13 @@ Suite = {
       local member2 = scs.newComponent(self.Hello_v2.facets, self.Hello_v2.receptacles,
           newComponentId)
 
-      success , self.registryIdentifier = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = self.Hello_v2.properties,
-      })
+      success , self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v2.properties, member.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
       --
-      success , registryIdentifier = self.rgsProtected:register({
-        member = member2.IComponent,
-        properties = self.Hello_v2.properties,
-      })
+      success , registryIdentifier = self.rgsProtected:register(
+        self.Hello_v2.properties, member2.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(registryIdentifier)
       Check.assertNotEquals(self.registryIdentifier, registryIdentifier)
@@ -221,7 +207,9 @@ Suite = {
       Check.assertEquals(2, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, self.Hello_v2.properties))
       --
-      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+      local succ, err = oil.pcall(self.registryService.unregister, 
+        self.registryService, registryIdentifier)
+      Check.assertTrue(succ)
     end,
 
     ---
@@ -235,17 +223,13 @@ Suite = {
       local member2 = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
           self.Hello_v1.componentId)
 
-      success, self.registryIdentifier = self.rgsProtected:register({
-        member = member1.IComponent,
-        properties = self.Hello_v1.properties,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member1.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
       --
-      success, registryIdentifier = self.rgsProtected:register({
-        member = member2.IComponent,
-        properties = self.Hello_v1.properties,
-      })
+      success, registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member2.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(registryIdentifier)
       Check.assertNotEquals(registryIdentifier,self.registryIdentifier)
@@ -254,7 +238,9 @@ Suite = {
       Check.assertEquals(2, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, offers[2].properties))
       --
-      Check.assertTrue(self.registryService:unregister(registryIdentifier))
+      local succ, err = oil.pcall(self.registryService.unregister, 
+        self.registryService, registryIdentifier)
+      Check.assertTrue(succ)
     end,
 
     ---
@@ -265,17 +251,13 @@ Suite = {
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
           self.Hello_v1.componentId)
 
-      success, self.registryIdentifier = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = self.Hello_v1.properties,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
       --
-      success, registryIdentifier = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = self.Hello_v1.properties,
-      })
+      success, registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(registryIdentifier)
       Check.assertEquals(registryIdentifier,self.registryIdentifier)
@@ -288,10 +270,7 @@ Suite = {
     testRegister_Unauthorized = function(self)
       local member = scs.newComponent(self.Hello_v3.facets, self.Hello_v3.receptacles,
         self.Hello_v3.componentId)
-      local success, err = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = {},
-      })
+      local success, err = self.rgsProtected:register({}, member.IComponent)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
           "/registry_service/UnauthorizedFacets:1.0")
@@ -307,10 +286,8 @@ Suite = {
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
           self.Hello_v1.componentId)
       -- Tenta sobrescrita de propriedade definidas internamente no RS
-      success, self.registryIdentifier = self.rgsProtected:register({
-          properties = self.fakeProps,
-          member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.fakeProps, member.IComponent)
       --
       local offers = self.registryService:findByCriteria(
           {self.Hello_v1.facets.IHello_v1.name}, self.trueProps)
@@ -321,10 +298,8 @@ Suite = {
       local success
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
           self.Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-          properties = self.Hello_v1.properties,
-          member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       Check.assertTrue(success)
       Check.assertNotNil(self.registryIdentifier)
       --
@@ -344,10 +319,8 @@ Suite = {
       local success
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
           self.Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-          properties = self.Hello_v1.properties,
-          member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       --
       local offers = self.registryService:find({self.Hello_v1.facets.IHello_v1.name})
       Check.assertEquals(1, #offers)
@@ -365,10 +338,8 @@ Suite = {
       local success
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
         self.Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-        properties = self.trueProps,
-        member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.trueProps, member.IComponent)
       Check.assertTrue(success)
       -- Tenta sobrescrita de propriedade definidas internamente no RS
       Check.assertTrue(self.rgsProtected:update(self.registryIdentifier, self.fakeProps))
@@ -385,10 +356,8 @@ Suite = {
       local success, err
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
           self.Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-          properties = self.Hello_v1.properties,
-          member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       success, err = self.rgsProtected:update("INVALID-IDENTIFIER",
           self.Hello_v1.properties)
       Check.assertFalse(success)
@@ -406,10 +375,8 @@ Suite = {
       -- removendo a faceta hello v3 do componente
       member._facetDescs.IHello_v3 = nil
       member.IHello_v3 = nil
-      success, self.registryIdentifier = self.rgsProtected:register({
-        member = member.IComponent,
-        properties = {},
-      })
+      success, self.registryIdentifier = self.rgsProtected:register({},
+        member.IComponent)
       Check.assertTrue(success) 
       -- incluindo a faceta hello v3
       member._facetDescs.IHello_v3 = hellov3_desc
@@ -429,25 +396,24 @@ Suite = {
       local success
       self.member_v1 = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
         self.Hello_v1.componentId)
-      success, self.id_v1 = self.rgsProtected:register({
-        properties = self.Hello_v1.properties,
-        member = self.member_v1.IComponent,
-      })
+      success, self.id_v1 = self.rgsProtected:register(
+        self.Hello_v1.properties, self.member_v1.IComponent)
 
       --
       self.member_v2 = scs.newComponent(self.Hello_v2.facets, self.Hello_v2.receptacles,
         self.Hello_v2.componentId)
-      success, self.id_v2 = self.rgsProtected:register({
-        properties = self.Hello_v2.properties,
-        member = self.member_v2.IComponent,
-      })
-
+      success, self.id_v2 = self.rgsProtected:register(
+        self.Hello_v2.properties, self.member_v2.IComponent)
       Check.assertNotEquals(self.id_v1, self.id_v2)
     end,
 
     afterTestCase = function(self)
-      Check.assertTrue(self.registryService:unregister(self.id_v1))
-      Check.assertTrue(self.registryService:unregister(self.id_v2))
+      local succ, err = oil.pcall(self.registryService.unregister, 
+        self.registryService, self.id_v1)
+      Check.assertTrue(succ)
+      succ, err = oil.pcall(self.registryService.unregister, 
+        self.registryService, self.id_v2)
+      Check.assertTrue(succ)
       afterTestCase(self)
     end,
 
@@ -1195,10 +1161,8 @@ Suite = {
       --
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
         self.Hello_v1.componentId)
-      local success, err = self.rgsProtected:register({
-        properties = self.Hello_v1.properties,
-        member = member.IComponent,
-      })
+      local success, err = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
     end,
@@ -1207,10 +1171,8 @@ Suite = {
       local success
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
         self.Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-        properties = self.Hello_v1.properties,
-        member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       --
       self.credentialManager:invalidate()
       --
@@ -1224,10 +1186,8 @@ Suite = {
       local success
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
         self.Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-        properties = self.Hello_v1.properties,
-        member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       --
       self.credentialManager:invalidate()
       --
@@ -1242,10 +1202,8 @@ Suite = {
       local success
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
         self.Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-        properties = self.Hello_v1.properties,
-        member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       --
       self.credentialManager:invalidate()
       --
@@ -1260,10 +1218,8 @@ Suite = {
       local success
       local member = scs.newComponent(self.Hello_v1.facets, self.Hello_v1.receptacles,
         self.Hello_v1.componentId)
-      success, self.registryIdentifier = self.rgsProtected:register({
-        properties = self.Hello_v1.properties,
-        member = member.IComponent,
-      })
+      success, self.registryIdentifier = self.rgsProtected:register(
+        self.Hello_v1.properties, member.IComponent)
       --
       self.credentialManager:invalidate()
       --

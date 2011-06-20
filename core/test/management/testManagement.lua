@@ -1481,35 +1481,30 @@ function Test7:testGetOfferedInterfaces()
   local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {
-      {
-        name  = "replica",
-        value = { "r1" },
-      },
-    }
-  })
+  local member = self.member.IComponent
+  local properties = {
+    {
+      name  = "replica",
+      value = { "r1" },
+    },
+  }
+  succ, self.rsId01 = self.rs:register(properties, member)
   Check.assertTrue(succ)
-  succ, self.rsId02 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {
-      {
-        name  = "replica",
-        value = { "r2" },
-      },
-    }
-  })
+  properties = {
+    {
+      name  = "replica",
+      value = { "r2" },
+    },
+  }
+  succ, self.rsId02 = self.rs:register(properties, member)
   Check.assertTrue(succ)
-  succ, self.rsId03 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {
-      {
-        name  = "replica",
-        value = { "r3" },
-      },
-    }
-  })
+  properties = {
+    {
+      name  = "replica",
+      value = { "r3" },
+    },
+  }
+  succ, self.rsId03 = self.rs:register(properties, member)
   Check.assertTrue(succ)
 
   local succ, offers = self.rsMgt:getOfferedInterfaces()
@@ -1544,10 +1539,8 @@ function Test7:testGetOfferedInterfacesByMember()
   local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {},
-  })
+  local member = self.member.IComponent
+  succ, self.rsId01 = self.rs:register({}, member)
   Check.assertTrue(succ)
 
   local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
@@ -1574,35 +1567,30 @@ function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
   local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  succ, self.rsId01 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {
-      {
-        name  = "replica",
-        value = { "r1" },
-      },
-    }
-  })
+  local member = self.member.IComponent
+  local properties = {
+    {
+      name  = "replica",
+      value = { "r1" },
+    },
+  }
+  succ, self.rsId01 = self.rs:register(properties, member)
   Check.assertTrue(succ)
-  succ, self.rsId02 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {
-      {
-        name  = "replica",
-        value = { "r2" },
-      },
-    }
-  })
+  properties = {
+    {
+      name  = "replica",
+      value = { "r2" },
+    },
+  }
+  succ, self.rsId02 = self.rs:register(properties, member)
   Check.assertTrue(succ)
-  succ, self.rsId03 = self.rs:register({
-    member = self.member.IComponent,
-    properties = {
-      {
-        name  = "replica",
-        value = { "r3" },
-      },
-    }
-  })
+  properties = {
+    {
+      name  = "replica",
+      value = { "r3" },
+    },
+  }
+  succ, self.rsId03 = self.rs:register(properties, member)
   Check.assertTrue(succ)
 
   local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
@@ -1618,10 +1606,7 @@ function Test7:testUnregister()
   local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  local succ, id = self.rs:register({
-    member = self.member.IComponent,
-    properties = {},
-  })
+  local succ, id = self.rs:register({}, self.member.IComponent)
   Check.assertTrue(succ)
 
   local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
@@ -1631,7 +1616,8 @@ function Test7:testUnregister()
   Check.assertEquals(offers[1].member, self.user)
   Check.assertEquals(offers[1].id, id)
 
-  Check.assertTrue(self.rsMgt:unregister(offers[1].id))
+  local succ, err = oil.pcall(self.rs.unregister, self.rs, offers[1].id)
+  Check.assertTrue(succ)
   succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
   Check.assertTrue(succ)
   Check.assertEquals(#offers, 0)

@@ -43,6 +43,25 @@ module("core.services.registry.RegistryService")
 ------------------------------------------------------------------------------
 -- Faceta IRegistryService
 ------------------------------------------------------------------------------
+-- Indica uma falha inesperada em um serviço básico
+local ServiceFailureException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/ServiceFailure:1.0"
+
+-- Indica que Serviço de Registro não possui a oferta de serviço indicada
+local UnauthorizedFacetsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/UnauthorizedFacets:1.0"
+
+-- Indica que o membro é inválido
+local ServiceOfferDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/ServiceOfferDoesNotExist:1.0"
+
+-- Indica que as propriedades são inválidas
+local InvalidMemberException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InvalidMember:1.0"
+
+-- Indica que as propriedades são inválidas
+local InvalidPropertiesException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InvalidProperties:1.0"
 
 -- Estas facetas são ignoradas durante o registro
 local IgnoredFacets = {
@@ -56,31 +75,35 @@ RSFacet = oop.class{}
 ---
 --Registra uma nova oferta de serviço. A oferta de serviço é representada por
 --uma tabela com os campos:
---   properties: lista de propriedades associadas à oferta (opcional)
+--   fProperties: lista de propriedades associadas à oferta (opcional)
 --               cada propriedade a um par nome/valor (lista de strings)
---   member: referência para o membro que faz a oferta
+--   fMember: referência para o membro que faz a oferta
 --
---@param serviceOffer A oferta de serviço.
+--@param fProperties Lista de propriedades.
+--@param fMember Componente a ser registrado.
 --
---@return Identificador do registro da oferta.
+--@return Identificador do serviço ofertado.
 --
---@exception UnauthorizedFacets Exceção contendo a lista de facetas
---que o membro não tem autorização.
+--@exception InvalidMember Componente inválido.
+--@exception InvalidProperties Propriedades inválidas.
+--@exception UnauthorizedFacets Serviço sem autorização para publicar uma
+--  ou mais facetas.
+--@exception ServiceFailure Erro na execução do serviço
 ---
-function RSFacet:register(serviceOffer)
+function RSFacet:register(fProperties, fMember)
+  if not fMember or fMember:_non_existent() then
+    error(Openbus:getORB():newexcept{ InvalidMemberException })
+  end
   local credential = Openbus:getInterceptedCredential()
-  local properties = self:createPropertyIndex(serviceOffer.properties,
-    serviceOffer.member)
-  local facets = self:getAuthorizedFacets(serviceOffer.member, credential,
-    properties)
+  local properties = self:createPropertyIndex(fProperties, fMember)
+  local facets = self:getAuthorizedFacets(fMember, credential, properties)
 
   local offerEntry = {
-    offer = serviceOffer,
+    offer = { fProperties = fProperties, fMember = fMember },
     properties = properties,
     facets = facets,
     credential = credential,
-    identifier = self:generateIdentifier(),
-    registrationDate = tonumber(os.date("%s"))
+    identifier = self:generateIdentifier()
   }
 
   local orb = Openbus:getORB()
@@ -147,9 +170,9 @@ end
 function RSFacet:updateMemberInfoInExistentOffer(existentOfferEntry, member)
   --Atencao, o identificador da credencial antiga é o que prevalece
   --por causa dos observadores
-  existentOfferEntry.offer.member = member
+  existentOfferEntry.offer.fMember = member
   existentOfferEntry.properties = self:createPropertyIndex(
-    existentOfferEntry.offer.properties, existentOfferEntry.offer.member)
+    existentOfferEntry.offer.fProperties, existentOfferEntry.offer.fMember)
   self.offersDB:update(existentOfferEntry)
 
   self.offersByCredential[existentOfferEntry.credential.identifier][existentOfferEntry.identifier] = existentOfferEntry
@@ -166,6 +189,9 @@ end
 --propriedade.
 ---
 function RSFacet:createPropertyIndex(offerProperties, member)
+  if offerProperties == nil or type(offerProperties) ~= "table" then
+    error(Openbus:getORB():newexcept{ InvalidPropertiesException })
+  end
   local properties = {}
   for _, property in ipairs(offerProperties) do
     properties[property.name] = {}
@@ -208,11 +234,12 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
   local succ, facets, memberFacets, count
   local metaInterface = member:getFacetByName("IMetaInterface")
   if not metaInterface then
-    Log:warn(format("O componente %s:%d.%d.%d da credencial {%s, %s, %s} não oferece uma faceta do tipo %s"),
+    Log:error(format("O componente %s:%d.%d.%d da credencial {%s, %s, %s} não oferece uma faceta do tipo %s"),
         properties.component_id.name, properties.component_id.major_version,
         properties.component_id.minor_version,
         properties.component_id.patch_version,credential.identifier,
         credential.owner, credential.delegate, Utils.METAINTERFACE_INTERFACE)
+    error(Openbus:getORB():newexcept{ InvalidMemberException })
     return {}
   end
 
@@ -226,17 +253,15 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
         credential.identifier, credential.owner, credential.delegate,
         properties.component_id.name, count))
   else
-    Log:warn(format("A credencial {%s, %s, %s} tentou registrar o componente %s com %d interface(s) não autorizada(s)",
+    Log:error(format("A credencial {%s, %s, %s} tentou registrar o componente %s com %d interface(s) não autorizada(s)",
         credential.identifier, credential.owner, credential.delegate,
         properties.component_id.name, count))
     local unathorizedFacets = {}
     for facet in pairs(facets) do
       unathorizedFacets[#unathorizedFacets+1] = facet
     end
-    error(Openbus:getORB():newexcept {
-      "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/UnauthorizedFacets:1.0",
-      facets = unathorizedFacets,
+    error(Openbus:getORB():newexcept { UnauthorizedFacetsException,
+      fFacets = unathorizedFacets,
     })
   end
 
@@ -289,10 +314,6 @@ end
 --Remove uma oferta de serviço.
 --
 --@param identifier A identificação da oferta de serviço.
---
---@return true caso a oferta tenha sido removida, ou false caso contrário.
---        e true caso a operacao tenha sido executada remotamente, ou false caso contrário
---        em algumas das replicas.
 ---
 function RSFacet:unregister(identifier)
   local ret = self:rawUnregister(identifier, Openbus:getInterceptedCredential())
@@ -338,7 +359,7 @@ function RSFacet:unregister(identifier)
           remoteRGSFacet = orb:narrow(remoteRGSFacet,
             Utils.REGISTRY_SERVICE_INTERFACE)
             oil.newthread(function()
-                local succ, ret = oil.pcall(
+                local succ, err = oil.pcall(
                   remoteRGSFacet.unregister, remoteRGSFacet,
                   identifier)
                 end)
@@ -460,12 +481,12 @@ function RSFacet:update(identifier, properties)
   end
 
   local indexedProperties = self:createPropertyIndex(properties,
-    offerEntry.offer.member)
+    offerEntry.offer.fMember)
 
   -- Atualiza as propriedades da oferta de serviço
   offerEntry.facets = self:getAuthorizedFacets(
-    offerEntry.offer.member, credential, indexedProperties)
-  offerEntry.offer.properties = properties
+    offerEntry.offer.fMember, credential, indexedProperties)
+  offerEntry.offer.fProperties = properties
   offerEntry.properties = indexedProperties
   self.offersDB:update(offerEntry)
 end
@@ -977,7 +998,7 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
             addOfferEntry.properties =
               Utils.convertToReceiveIndexedProperties(offerEntryFound.properties)
             --Refazendo indice das propriedades
-            for _, property in ipairs(addOfferEntry.offer.properties) do
+            for _, property in ipairs(addOfferEntry.offer.fProperties) do
               if not addOfferEntry.properties[property.name] then
                 addOfferEntry.properties[property.name] = {}
               end
