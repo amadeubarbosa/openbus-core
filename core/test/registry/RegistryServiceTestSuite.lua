@@ -307,8 +307,8 @@ Suite = {
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, self.Hello_v1.properties))
       --
-      Check.assertTrue(self.rgsProtected:update(self.registryIdentifier,
-          self.Hello_v2.properties))
+      Check.assertTrue(self.rgsProtected:setOfferProperties(
+        self.registryIdentifier, self.Hello_v2.properties))
       offers = self.registryService:find({self.Hello_v1.facets.IHello_v1.name})
       Check.assertEquals(1, #offers)
       Check.assertFalse(equalsProps(offers[1].properties, self.Hello_v1.properties))
@@ -326,7 +326,7 @@ Suite = {
       Check.assertEquals(1, #offers)
       Check.assertTrue(equalsProps(offers[1].properties, self.Hello_v1.properties))
       --
-      Check.assertTrue(self.rgsProtected:update(self.registryIdentifier,
+      Check.assertTrue(self.rgsProtected:setOfferProperties(self.registryIdentifier,
           self.Hello_v1.properties))
       --
       offers = self.registryService:find({self.Hello_v1.facets.IHello_v1.name})
@@ -342,7 +342,8 @@ Suite = {
         self.trueProps, member.IComponent)
       Check.assertTrue(success)
       -- Tenta sobrescrita de propriedade definidas internamente no RS
-      Check.assertTrue(self.rgsProtected:update(self.registryIdentifier, self.fakeProps))
+      Check.assertTrue(self.rgsProtected:setOfferProperties(
+        self.registryIdentifier, self.fakeProps))
       --
       local offers = self.registryService:findByCriteria(
         {self.Hello_v1.facets.IHello_v1.name}, self.trueProps)
@@ -358,34 +359,11 @@ Suite = {
           self.Hello_v1.componentId)
       success, self.registryIdentifier = self.rgsProtected:register(
         self.Hello_v1.properties, member.IComponent)
-      success, err = self.rgsProtected:update("INVALID-IDENTIFIER",
+      success, err = self.rgsProtected:setOfferProperties("INVALID-IDENTIFIER",
           self.Hello_v1.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
           "/registry_service/ServiceOfferDoesNotExist:1.0")
-    end,
-
-    testUpdate_UnauthorizedFacets = function(self)
-      local success, err
-      local member = scs.newComponent(self.Hello_v3.facets, self.Hello_v3.receptacles,
-        self.Hello_v3.componentId)
-      -- guardando localmente a faceta hello v3
-      local hellov3_desc = member._facetDescs.IHello_v3
-      local hellov3 = member.IHello_v3
-      -- removendo a faceta hello v3 do componente
-      member._facetDescs.IHello_v3 = nil
-      member.IHello_v3 = nil
-      success, self.registryIdentifier = self.rgsProtected:register({},
-        member.IComponent)
-      Check.assertTrue(success) 
-      -- incluindo a faceta hello v3
-      member._facetDescs.IHello_v3 = hellov3_desc
-      member.IHello_v3 = hellov3
-      success, err = self.rgsProtected:update(self.registryIdentifier,
-          self.Hello_v3.properties)
-      Check.assertFalse(success)
-      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/UnauthorizedFacets:1.0")
     end,
   },
 
@@ -1192,7 +1170,7 @@ Suite = {
       self.credentialManager:invalidate()
       --
       local err
-      success, err = self.rgsProtected:update(self.registryIdentifier,
+      success, err = self.rgsProtected:setOfferProperties(self.registryIdentifier,
         self.Hello_v1.properties)
       Check.assertFalse(success)
       Check.assertEquals(err[1], "IDL:omg.org/CORBA/NO_PERMISSION:1.0")

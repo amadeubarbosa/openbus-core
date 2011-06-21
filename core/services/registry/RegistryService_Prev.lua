@@ -7,14 +7,23 @@ local oop = require "loop.simple"
 local oil = require "oil"
 
 local Log = require "openbus.util.Log"
+local rgs = require "core.services.registry.RegistryService"
 ---
 -- Código responsável pelo Serviço de Registro na versao anterior à atual do barramento.
 ---
 module("core.services.registry.RegistryService_Prev")
 
 ------------------------------------------------------------------------------
--- Faceta IRegistryService
+-- Faceta IRegistryService_Prev
 ------------------------------------------------------------------------------
+
+-- Indica que o serviço tentou registrar alguma faceta não autorizada
+local UnauthorizedFacetsException = "IDL:tecgraf/openbus/core/"..
+  Utils.PREV.."/registry_service/UnathorizedFacets:1.0"
+
+-- Indica que Serviço de Registro não possui a oferta de serviço indicada
+local ServiceOfferNonExistentException = "IDL:tecgraf/openbus/core/"..
+  Utils.OB_PREV.."/registry_service/ServiceOfferNonExistent:1.0"
 
 RSFacet = oop.class{}
 
@@ -24,10 +33,8 @@ function RSFacet:register(serviceOffer)
     serviceOffer.member)
   if not succ then
     -- convertendo exceções desconhecidas da versão 1.5
-    if offerId[1] == "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-        "/registry_service/UnauthorizedFacets:1.0" then
-      error(Openbus:getORB():newexcept{ "IDL:tecgraf/openbus/core/"..
-        Utils.OB_PREV.."/registry_service/UnauthorizedFacets:1.0", 
+    if offerId[1] == rgs.UnauthorizedFacetsException then
+      error(Openbus:getORB():newexcept{ UnauthorizedFacetsException, 
         facets = offerId.fFacets })
     else
       -- registra o erro e repassa como CORBA::UNKNOWN
@@ -39,11 +46,29 @@ function RSFacet:register(serviceOffer)
 end
 
 function RSFacet:unregister(identifier)
-  return self.context.IRegistryService:unregister(identifier) 
+  local rs = self.context.IRegistryService
+  local succ, err = oil.pcall(rs.unregister, rs, identifier) 
+  if not succ then
+    -- registra o erro e retorna false
+    Log:error(err[1])
+    return false
+  end
+  return true
 end
 
 function RSFacet:update(identifier, properties)
-  return self.context.IRegistryService:update(identifier, properties)
+  local rs = self.context.IRegistryService
+  local succ, err = oil.pcall(rs.setOfferProperties, rs, identifier, properties)
+  if not succ then
+    if offerId[1] == rgs.ServiceOfferDoesNotExistException then
+      error(Openbus:getORB():newexcept{ UnauthorizedFacetsException, 
+        facets = offerId.fFacets })
+    else
+      -- registra o erro e repassa como CORBA::UNKNOWN
+      Log:error(err[1])
+      error(Openbus:getORB():newexcept{ "CORBA::UNKNOWN" })
+    end
+  end
 end
 
 function RSFacet:find(facets)

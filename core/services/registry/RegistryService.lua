@@ -44,24 +44,24 @@ module("core.services.registry.RegistryService")
 -- Faceta IRegistryService
 ------------------------------------------------------------------------------
 -- Indica uma falha inesperada em um serviço básico
-local ServiceFailureException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/ServiceFailure:1.0"
+ServiceFailureException = "IDL:tecgraf/openbus/core/"..
+  Utils.OB_VERSION.."/ServiceFailure:1.0"
+
+-- Indica que o serviço tentou registrar alguma faceta não autorizada
+UnauthorizedFacetsException = "IDL:tecgraf/openbus/core/"..
+  Utils.OB_VERSION.."/registry_service/UnauthorizedFacets:1.0"
 
 -- Indica que Serviço de Registro não possui a oferta de serviço indicada
-local UnauthorizedFacetsException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/UnauthorizedFacets:1.0"
+ServiceOfferDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+  Utils.OB_VERSION.."/registry_service/ServiceOfferDoesNotExist:1.0"
 
 -- Indica que o membro é inválido
-local ServiceOfferDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/ServiceOfferDoesNotExist:1.0"
+InvalidMemberException = "IDL:tecgraf/openbus/core/"..
+  Utils.OB_VERSION.."/registry_service/InvalidMember:1.0"
 
 -- Indica que as propriedades são inválidas
-local InvalidMemberException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InvalidMember:1.0"
-
--- Indica que as propriedades são inválidas
-local InvalidPropertiesException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InvalidProperties:1.0"
+InvalidPropertiesException = "IDL:tecgraf/openbus/core/"..
+  Utils.OB_VERSION.."/registry_service/InvalidProperties:1.0"
 
 -- Estas facetas são ignoradas durante o registro
 local IgnoredFacets = {
@@ -314,68 +314,63 @@ end
 --Remove uma oferta de serviço.
 --
 --@param identifier A identificação da oferta de serviço.
+--
+--@exception ServiceOfferDoesNotExist Erro na execução do serviço
+--@exception ServiceFailure Erro na execução do serviço
 ---
 function RSFacet:unregister(identifier)
-  local ret = self:rawUnregister(identifier, Openbus:getInterceptedCredential())
-  if ret then
-    local credential = Openbus:getInterceptedCredential()
-    if credential then
-       if credential.owner == "RegistryService" or
-          credential.delegate == "RegistryService" then
-          return ret, false
-       end
-    end
+  local credential = Openbus:getInterceptedCredential()
+  self:rawUnregister(identifier, credential)
+  
+  if credential.owner == "RegistryService" or
+    credential.delegate == "RegistryService" then
+    return
+  end
+  
+  local ftFacet = self.context.IFaultTolerantService
+  if not ftFacet:isFTInited() then
+    return
+  end
 
-    local ftFacet = self.context.IFaultTolerantService
-    if not ftFacet:isFTInited() then
-      return ret, false
-    end
+  if #ftFacet.ftconfig.hosts.RS <= 1 then
+    Log:debug(format(
+        "Não existem réplicas cadastradas para desfazer o registro da oferta %s",
+        identifier))
+    return
+  end
 
-    if #ftFacet.ftconfig.hosts.RS <= 1 then
-      Log:debug(format(
-          "Não existem réplicas cadastradas para desfazer o registro da oferta %s",
-          identifier))
-      return ret, false
-    end
-
-    local i = 1
-    local retRemote = true
-    repeat
-    if ftFacet.ftconfig.hosts.RS[i] ~= ftFacet.rsReference then
-      local ret, succ, remoteRGS = oil.pcall(Utils.fetchService,
-        Openbus:getORB(), ftFacet.ftconfig.hosts.RS[i],
-        Utils.REGISTRY_SERVICE_INTERFACE)
-      if ret and succ then
-        --encontrou outra replica
-        Log:debug(format("Requisitou unregister na réplica %s",
+  local i = 1
+  repeat
+  if ftFacet.ftconfig.hosts.RS[i] ~= ftFacet.rsReference then
+    local ret, succ, remoteRGS = oil.pcall(Utils.fetchService,
+      Openbus:getORB(), ftFacet.ftconfig.hosts.RS[i],
+      Utils.REGISTRY_SERVICE_INTERFACE)
+    if ret and succ then
+      --encontrou outra replica
+      Log:debug(format("Requisitou unregister na réplica %s",
+          ftFacet.ftconfig.hosts.RS[i]))
+      -- Recupera faceta IRegistryService da replica remota
+      local orb = Openbus:getORB()
+      local remoteRGSIC = remoteRGS:_component()
+      remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
+      local ok, remoteRGSFacet = oil.pcall(remoteRGSIC.getFacetByName,
+          remoteRGSIC, "IRegistryService_" .. Utils.OB_VERSION)
+      if ok and remoteRGSFacet then
+        remoteRGSFacet = orb:narrow(remoteRGSFacet,
+          Utils.REGISTRY_SERVICE_INTERFACE)
+          oil.newthread(function()
+              local succ, err = oil.pcall(
+                remoteRGSFacet.unregister, remoteRGSFacet,
+                identifier)
+              end)
+      else
+        Log:warn(format("A réplica %s não foi encontrada",
             ftFacet.ftconfig.hosts.RS[i]))
-        -- Recupera faceta IRegistryService da replica remota
-        local orb = Openbus:getORB()
-        local remoteRGSIC = remoteRGS:_component()
-        remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
-        local ok, remoteRGSFacet = oil.pcall(remoteRGSIC.getFacetByName,
-            remoteRGSIC, "IRegistryService_" .. Utils.OB_VERSION)
-        if ok and remoteRGSFacet then
-          remoteRGSFacet = orb:narrow(remoteRGSFacet,
-            Utils.REGISTRY_SERVICE_INTERFACE)
-            oil.newthread(function()
-                local succ, err = oil.pcall(
-                  remoteRGSFacet.unregister, remoteRGSFacet,
-                  identifier)
-                end)
-        else
-          Log:warn(format("A réplica %s não foi encontrada",
-              ftFacet.ftconfig.hosts.RS[i]))
-           retRemote = false
-        end -- fim ok facet IRegistryService
-      end -- fim succ, encontrou replica
-    end -- fim , nao eh a mesma replica
-    i = i + 1
-    until i > #ftFacet.ftconfig.hosts.RS
-
-  end -- fim ret da execucao local
-
-  return ret, retRemote
+      end -- fim ok facet IRegistryService
+    end -- fim succ, encontrou replica
+  end -- fim , nao eh a mesma replica
+  i = i + 1
+  until i > #ftFacet.ftconfig.hosts.RS
 end
 
 ---
@@ -385,21 +380,24 @@ end
 --@param credential Credencial do membro que efetuou o registro ou
 --  nil se for uma remoção forçada pelo administrador do barramento.
 --
---@return true caso a oferta tenha sido removida, ou false caso contrário.
+--@exception ServiceOfferDoesNotExist Erro na execução do serviço
+--@exception ServiceFailure Erro na execução do serviço
 ---
 function RSFacet:rawUnregister(identifier, credential)
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
     Log:warn(format("A oferta %s não pode ser removida porque não foi encontrada",
         identifier))
-    return false
+    error(Openbus:getORB():newexcept { ServiceOfferDoesNotExistException })
   end
   if credential then
     if credential.identifier ~= offerEntry.credential.identifier then
-      Log:warn(format("A oferta %s não pode ser removida porque não foi registrada pela credencial {%s, %s, %s}",
+      local message = format("A oferta %s não pode ser removida porque não foi registrada pela credencial {%s, %s, %s}",
           identifier, credential.identifier, credential.owner,
-          credential.delegate))
-      return false
+          credential.delegate)
+      Log:warn(message)
+      error(Openbus:getORB():newexcept { ServiceFailureException, 
+        fMessage = message})
     end
   else
     credential = offerEntry.credential
@@ -417,7 +415,7 @@ function RSFacet:rawUnregister(identifier, credential)
   else
     Log:debug(format("A credencial {%s, %s, %s} não possui ofertas de serviço",
         credential.identifier, credential.owner, credential.delegate))
-    return true
+    return
   end
 
   if not next (credentialOffers) then
@@ -441,7 +439,6 @@ function RSFacet:rawUnregister(identifier, credential)
   self.offersDB:delete(offerEntry)
   Log:debug(format("A oferta %s da credencial {%s, %s, %s} foi removida",
       identifier, credential.identifier, credential.owner, credential.delegate))
-  return true
 end
 
 ---
@@ -451,33 +448,27 @@ end
 --@param identifier O identificador da oferta.
 --@param properties As novas propriedades da oferta.
 --
---@exception UnauthorizedFacets Exceção contendo a lista de facetas
---que o membro não tem autorização.
---
+--@exception InvalidProperties Propriedades inválidas.
 --@exception ServiceOfferDoesNotExist O membro não possui nenhuma oferta
 --relacionada com o identificador informado.
+--@exception ServiceFailure Erro na execução do serviço
 ---
-function RSFacet:update(identifier, properties)
+function RSFacet:setOfferProperties(identifier, properties)
   Log:debug(format("Iniciando a atualizando da oferta %s", identifier))
 
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
     Log:warn(format("A oferta %s não foi encontrada e, por isso, não pode ser atualizada",
         identifier))
-    error(Openbus:getORB():newexcept {
-      "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/ServiceOfferDoesNotExist:1.0",
-    })
+    error(Openbus:getORB():newexcept { ServiceOfferDoesNotExistException })
   end
 
   local credential = Openbus:getInterceptedCredential()
   if credential.identifier ~= offerEntry.credential.identifier then
-    Log:warn(format("A oferta %s não foi registrada pela credencial {%s, %s, %s} e, por isso, não pode ser atualizada",
-        identifier, credential.identifier, credential.owner, credential.delegate))
-    error(Openbus:getORB():newexcept {
-      "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
-          "/registry_service/ServiceOfferDoesNotExist:1.0",
-    })
+    local msg = format("A oferta %s não foi registrada pela credencial {%s, %s, %s} e, por isso, não pode ser atualizada",
+      identifier, credential.identifier, credential.owner, credential.delegate)
+    Log:warn(msg)
+    error(Openbus:getORB():newexcept { ServiceFailureException, fMessage = msg})
   end
 
   local indexedProperties = self:createPropertyIndex(properties,
