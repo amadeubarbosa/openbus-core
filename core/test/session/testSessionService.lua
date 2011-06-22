@@ -170,7 +170,7 @@ Suite = {
       Check.assertTrue(session2:removeMember(id))
     end,
 
-    testGetSession_DoesNotExist = function(self)
+    testGetSession_NonExistent = function(self)
       Check.assertNil(self.sessionService:getSession())
     end,
 

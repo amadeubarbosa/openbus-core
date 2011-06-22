@@ -13,9 +13,6 @@ local scs = require "scs.core.base"
 
 local Check = require "latt.Check"
 
-local Log = require "openbus.util.Log"
-
-
 -------------------------------------------------------------------------------
 -- Configuração
 
@@ -83,36 +80,32 @@ end
 --
 local SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/SystemAlreadyExists:1.0"
-local SystemDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemDoesNotExist:1.0"
+local SystemNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemNonExistent:1.0"
 local SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/SystemDeploymentAlreadyExists:1.0"
-local SystemDeploymentDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemDeploymentDoesNotExist:1.0"
+local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
 local UserAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/UserAlreadyExists:1.0"
-local UserDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/UserDoesNotExist:1.0"
+local UserNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/UserNonExistent:1.0"
 local InvalidCertificateException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/InvalidCertificate:1.0"
 local SystemInUseException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/SystemInUse:1.0"
-local InterfaceAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceAlreadyExists:1.0"
-local InterfaceDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceDoesNotExist:1.0"
-local InterfacesDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfacesDoesNotExist:1.0"
-local EntityDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/EntityDoesNotExist:1.0"
-local AuthorizationDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/AuthorizationDoesNotExist:1.0"
-local InvalidRegularExpressionException = "IDL:tecgraf/openbus/core/"..
+local InterfaceIdentifierAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierAlreadyExists:1.0"
+local InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
+local InterfaceIdentifierInUseException = "IDL:tecgraf/openbus/core/"..
+        Utils.OB_VERSION.."/registry_service/InterfaceIdentifierInUse:1.0"
+local MemberNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/MemberNonExistent:1.0"
+local AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/AuthorizationNonExistent:1.0"
+local InvalidRegularExpression = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/InvalidRegularExpression:1.0"
-local InvalidInterfaceIdentifierException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InvalidInterfaceIdentifier:1.0"
-local InterfaceInUseException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceInUse:1.0"
 
 -------------------------------------------------------------------------------
 -- Casos de teste.
@@ -125,7 +118,6 @@ Suite.Test4 = {}
 Suite.Test5 = {}
 Suite.Test6 = {}
 Suite.Test7 = {}
-Suite.Test8 = {}
 
 -- Aliases
 local Test1 = Suite.Test1
@@ -135,7 +127,6 @@ local Test4 = Suite.Test4
 local Test5 = Suite.Test5
 local Test6 = Suite.Test6
 local Test7 = Suite.Test7
-local Test8 = Suite.Test8
 
 --------------------------------------------------------------------------------
 -- Testa o cadastro de sistemas da interface IManagement do ACS.
@@ -225,16 +216,10 @@ function Test1:testAddSystem_SystemAlreadyExists()
   Check.assertTrue(succ)
 end
 
-function Test1:testRemoveSystem_SystemDoesNotExist()
+function Test1:testRemoveSystem_SystemNonExistent()
   local succ, err = self.acsMgt:removeSystem("AnInvalidIdToRemove")
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], SystemDoesNotExistException)
-end
-
-function Test1:testRemoveSystemForcefully_SystemDoesNotExist()
-  local succ, err = self.acsMgt:removeSystemForcefully("AnInvalidIdToRemove")
-  Check.assertFalse(succ)
-  Check.assertEquals(err[1], SystemDoesNotExistException)
+  Check.assertEquals(err[1], SystemNonExistentException)
 end
 
 function Test1:testSetSystemDescription()
@@ -256,21 +241,23 @@ function Test1:testSetSystemDescription()
   Check.assertTrue(succ)
 end
 
-function Test1:testSetSystemDescription_SystemDoesNotExist()
+function Test1:testSetSystemDescription_SystemNonExistent()
   local succ, err = self.acsMgt:setSystemDescription("InvalidId",
     "New Description")
   Check.assertFalse(succ)
-  Check.assertEquals(SystemDoesNotExistException, err[1])
+  Check.assertEquals(SystemNonExistentException, err[1])
 end
 
-function Test1:testGetSystem_SystemDoesNotExist()
+function Test1:testGetSystem_SystemNonExistent()
   local succ, err = self.acsMgt:getSystem("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals(SystemDoesNotExistException, err[1])
+  Check.assertEquals(SystemNonExistentException, err[1])
 end
 
 --------------------------------------------------------------------------------
 -- Testa o cadastro de implantação de sistemas da interface IManagement do ACS.
+-- Também testa a exceção de SystemInUse de removeSystem(), pois precisa
+-- do cadastro de implantações.
 --
 
 function Test2:beforeTestCase()
@@ -391,7 +378,7 @@ function Test2:testAddSystemDeployment_SystemDeploymentAlreadyExists()
   Check.assertTrue(succ)
 end
 
-function Test2:testAddSystemDeployment_SystemDoesNotExist()
+function Test2:testAddSystemDeployment_SystemNonExistent()
   local f, cert, depl, succ, err
   f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
@@ -402,7 +389,7 @@ function Test2:testAddSystemDeployment_SystemDoesNotExist()
     "SystemIdDoesNotExist",
     depl.description, cert)
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], SystemDoesNotExistException)
+  Check.assertEquals(err[1], SystemNonExistentException)
 end
 
 function Test2:testAddSystemDeployment_InvalidCertificate()
@@ -414,10 +401,10 @@ function Test2:testAddSystemDeployment_InvalidCertificate()
   Check.assertEquals(err[1], InvalidCertificateException)
 end
 
-function Test2:testRemoveSystemDeployment_SystemDeploymentDoesNotExist()
+function Test2:testRemoveSystemDeployment_SystemDeploymentNonExistent()
   local succ, err = self.acsMgt:removeSystemDeployment("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals(SystemDeploymentDoesNotExistException, err[1])
+  Check.assertEquals(SystemDeploymentNonExistentException, err[1])
 end
 
 function Test2:testSetSystemDeploymentDescription()
@@ -444,18 +431,18 @@ function Test2:testSetSystemDeploymentDescription()
   Check.assertTrue(succ)
 end
 
-function Test2:testSetSystemDeploymentDescription_SystemDeploymentDoesNotExist()
+function Test2:testSetSystemDeploymentDescription_SystemDeploymentNonExistent()
   local desc = "New Description"
   local succ, err = self.acsMgt:setSystemDeploymentDescription("InvalidId",
     desc)
   Check.assertFalse(succ)
-  Check.assertEquals(SystemDeploymentDoesNotExistException, err[1])
+  Check.assertEquals(SystemDeploymentNonExistentException, err[1])
 end
 
-function Test2:testGetSystemDeploymentCertificate_SystemDeploymentDoesNotExist()
+function Test2:testGetSystemDeploymentCertificate_SystemDeploymentNonExistent()
   local succ, err = self.acsMgt:getSystemDeploymentCertificate("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals(SystemDeploymentDoesNotExistException, err[1])
+  Check.assertEquals(SystemDeploymentNonExistentException, err[1])
 end
 
 function Test2:testSetSystemDeploymentCertificate()
@@ -484,7 +471,7 @@ function Test2:testSetSystemDeploymentCertificate()
   Check.assertTrue(succ)
 end
 
-function Test2:testSetSystemDeploymentCertificate_SystemDeploymentDoesNotExist()
+function Test2:testSetSystemDeploymentCertificate_SystemDeploymentNonExistent()
   local f = assert(io.open(self.certfiles[1]))
   Check.assertNotNil(f)
   local cert = f:read("*a")
@@ -493,7 +480,7 @@ function Test2:testSetSystemDeploymentCertificate_SystemDeploymentDoesNotExist()
   local succ, err = self.acsMgt:setSystemDeploymentCertificate("InvalidId",
     cert)
   Check.assertFalse(succ)
-  Check.assertEquals(SystemDeploymentDoesNotExistException, err[1])
+  Check.assertEquals(SystemDeploymentNonExistentException, err[1])
 end
 
 function Test2:testSetSystemDeploymentCertificate_InvalidCertificate()
@@ -513,10 +500,10 @@ function Test2:testSetSystemDeploymentCertificate_InvalidCertificate()
   Check.assertEquals(InvalidCertificateException, err[1])
 end
 
-function Test2:testGetSystemDeployment_SystemDeploymentDoesNotExist()
+function Test2:testGetSystemDeployment_SystemDeploymentNonExistent()
   local succ, err = self.acsMgt:getSystemDeployment("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals(SystemDeploymentDoesNotExistException, err[1])
+  Check.assertEquals(SystemDeploymentNonExistentException, err[1])
 end
 
 function Test2:testGetSystemDeploymentsBySystemId()
@@ -559,6 +546,31 @@ function Test2:testGetSystemDeploymentsBySystemId()
   end
   --
   for _, depl in ipairs(deployments) do
+    succ, err = self.acsMgt:removeSystemDeployment(depl.id)
+    Check.assertTrue(succ)
+  end
+end
+
+function Test2:testRemoveSystem_SystemInUse()
+  local f = assert(io.open(self.certfiles[1]))
+  Check.assertNotNil(f)
+  local cert = f:read("*a")
+  f:close()
+  --
+  local succ, err
+  for _, depl in ipairs(self.deployments) do
+    succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
+      depl.description, cert)
+    Check.assertTrue(succ)
+  end
+  --
+  for _, system in ipairs(self.systems) do
+    succ, err = self.acsMgt:removeSystem(system.id)
+    Check.assertFalse(succ)
+    Check.assertEquals(SystemInUseException, err[1])
+  end
+  --
+  for _, depl in ipairs(self.deployments) do
     succ, err = self.acsMgt:removeSystemDeployment(depl.id)
     Check.assertTrue(succ)
   end
@@ -611,14 +623,14 @@ end
 
 function Test3:afterEachTest()
   for _, iface in ipairs(self.ifaces) do
-    self.rsMgt:removeInterface(iface)
+    self.rsMgt:removeInterfaceIdentifier(iface)
   end
 end
 
-function Test3:testAddGetremoveInterface()
-  local succ, err = self.rsMgt:addInterface(self.ifaces[1])
+function Test3:testAddGetRemoveInterfaceIdentifier()
+  local succ, err = self.rsMgt:addInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
-  local succ, list = self.rsMgt:getInterfaces()
+  local succ, list = self.rsMgt:getInterfaceIdentifiers()
   Check.assertTrue(succ)
   succ = false
   for _, iface in ipairs(list) do
@@ -628,36 +640,28 @@ function Test3:testAddGetremoveInterface()
     end
   end
   Check.assertTrue(succ)
-  succ, err = self.rsMgt:removeInterface(self.ifaces[1])
+  succ, err = self.rsMgt:removeInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
 end
 
-function Test3:testaddInterface_InterfaceAlreadyExists()
-  local succ, err = self.rsMgt:addInterface(self.ifaces[1])
+function Test3:testAddInterfaceIdentifier_InterfaceIdentifierAlreadyExists()
+  local succ, err = self.rsMgt:addInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
-  succ, err = self.rsMgt:addInterface(self.ifaces[1])
+  succ, err = self.rsMgt:addInterfaceIdentifier(self.ifaces[1])
   Check.assertFalse(succ)
-  Check.assertEquals(InterfaceAlreadyExistsException, err[1])
-  succ, err = self.rsMgt:removeInterface(self.ifaces[1])
+  Check.assertEquals(InterfaceIdentifierAlreadyExistsException, err[1])
+  succ, err = self.rsMgt:removeInterfaceIdentifier(self.ifaces[1])
   Check.assertTrue(succ)
 end
 
-function Test3:testaddInterface_InvalidInterfaceIdentifier()
-  succ, err = self.rsMgt:addInterface("InvalidInterface")
+function Test3:testRemoveInterfaceIdentifier_InterfaceIdentifierNonExistent()
+  succ, err = self.rsMgt:removeInterfaceIdentifier("InvalidInterface")
   Check.assertFalse(succ)
-  Check.assertEquals(InvalidInterfaceIdentifierException, err[1])
+  Check.assertEquals(InterfaceIdentifierNonExistentException, err[1])
 end
-
-function Test3:testaddInterface_InterfaceDoesNotExist()
-  succ, err = self.rsMgt:removeInterface("IDL:InterfaceDoesNotExist")
-  Check.assertFalse(succ)
-  Check.assertEquals(InterfaceDoesNotExistException, err[1])
-end
-
-
 
 --------------------------------------------------------------------------------
--- Testa a autorização e revogação das autorizações para implantações no RS.
+-- Testa o cadastro das autorizações para implantações no RS.
 --
 
 function Test4:beforeTestCase()
@@ -686,17 +690,14 @@ function Test4:beforeTestCase()
     self.acsMgt:addSystem(system.id, system.description)
     self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
       depl.description, cert)
-    self.rsMgt:addInterface(iface)
+    self.rsMgt:addInterfaceIdentifier(iface)
   end
-  self.ibase = "IDL:test/management/do/not/use/this/for/real:1.0"
-  self.rsMgt:addInterface(self.ibase)
 end
 
 function Test4:afterTestCase()
   for _, iface in ipairs(self.ifaces) do
-    self.rsMgt:removeInterface(iface)
+    self.rsMgt:removeInterfaceIdentifier(iface)
   end
-  self.rsMgt:removeInterface(self.ibase)
   for _, depl in ipairs(self.deployments) do
     self.acsMgt:removeSystemDeployment(depl.id)
   end
@@ -711,66 +712,53 @@ end
 
 function Test4:afterEachTest()
   for _, depl in ipairs(self.deployments) do
-    self.rsMgt:revokeAll(depl.id)
+    self.rsMgt:removeAuthorization(depl.id)
   end
 end
 
-function Test4:testGrantGetrevoke()
-  local succ, err, auth, out
-  local entityId = self.deployments[1].id
-  local interface = self.ifaces[1]
-  local notGrantedInterface = self.ifaces[2]
-  succ, err = self.rsMgt:grant(entityId, interface)
+function Test4:testGrantGetRemoveAuthorization()
+  local succ, err, auth
+  local depl = self.deployments[1]
+  local iface = self.ifaces[1]
+  succ, err = self.rsMgt:grant(depl.id, iface, true)
   Check.assertTrue(succ)
   --
-  succ, auth = self.rsMgt:getEntityAuthorizations(entityId)
+  succ, auth = self.rsMgt:getAuthorization(depl.id)
   Check.assertTrue(succ)
-  Check.assertEquals(auth.entityId, entityId)
+  Check.assertEquals(auth.id, depl.id)
   Check.assertEquals(auth.type, "ATSystemDeployment")
   Check.assertTrue(#auth.authorized == 1)
-  Check.assertTrue(auth.authorized[1] == interface)
+  Check.assertTrue(auth.authorized[1] == iface)
   --
-  succ, out = self.rsMgt:revoke(entityId, notGrantedInterface)
-  Check.assertTrue(succ)
-  Check.assertFalse(out)
-  --
-  succ, err = self.rsMgt:revoke(entityId, interface)
+  succ, err = self.rsMgt:removeAuthorization(depl.id)
   Check.assertTrue(succ)
   --
-  succ, err = self.rsMgt:getEntityAuthorizations(entityId)
+  succ, err = self.rsMgt:getAuthorization(depl.id)
   Check.assertFalse(succ)
-  Check.assertEquals(EntityDoesNotExistException, err[1])
+  Check.assertEquals(AuthorizationNonExistentException, err[1])
 end
 
-function Test4:testGrant_EntityDoesNotExist()
+function Test4:testGrant_MemberNonExistent()
   local iface = self.ifaces[1]
-  local succ, err = self.rsMgt:grant("InvalidId", iface)
+  local succ, err = self.rsMgt:grant("InvalidId", iface, true)
   Check.assertFalse(succ)
-  Check.assertEquals(EntityDoesNotExistException, err[1])
+  Check.assertEquals(MemberNonExistentException, err[1])
 end
 
-function Test4:testGrant_InterfaceDoesNotExist()
+function Test4:testGrant_InterfaceIdentifierNonExistent()
   local depl = self.deployments[1]
-  local succ, err = self.rsMgt:grant(depl.id, "InvalidId")
+  local succ, err = self.rsMgt:grant(depl.id, "InvalidId", true)
   Check.assertFalse(succ)
-  Check.assertEquals(InterfaceDoesNotExistException, err[1])
-end
-
-function Test4:testGrant_InterfaceDoesNotExist2()
-  local depl = self.deployments[1]
-  local invalidInterface = "IDL:openbusidl/Test4/InvalidInterface:1.0"
-  local succ, err = self.rsMgt:grant(depl.id, invalidInterface)
-  Check.assertFalse(succ)
-  Check.assertEquals(InterfaceDoesNotExistException, err[1])
+  Check.assertEquals(InterfaceIdentifierNonExistentException, err[1])
 end
 
 function Test4:testGrant_InvalidRegularExpression()
   local succ, err, auth
   local depl = self.deployments[1]
   local iface = "IDL:*invalid:1.0"
-  succ, err = self.rsMgt:grant(depl.id, iface)
+  succ, err = self.rsMgt:grant(depl.id, iface, true)
   Check.assertFalse(succ)
-  Check.assertEquals(InvalidRegularExpressionException, err[1])
+  Check.assertEquals(InvalidRegularExpression, err[1])
 end
 
 function Test4:testGrantExpressions()
@@ -781,18 +769,19 @@ function Test4:testGrantExpressions()
     "IDL:*:1.*",
     "IDL:*:1.0",
     "IDL:openbusidl/test/demo/hello:*",
+    "IDL:openbusidl/test/demo/hello:1.0",
     "IDL:openbusidl/test/demo/hello*:1.0",
     "IDL:openbusidl/test/demo/hello*:*",
     "IDL:openbusidl/test/demo/hello*:1.*",
   }
   for _, iface in ipairs(ifaces) do
-    succ, err = self.rsMgt:grant(depl.id, iface)
+    succ, err = self.rsMgt:grant(depl.id, iface, false)
     Check.assertTrue(succ)
   end
   --
-  succ, auth = self.rsMgt:getEntityAuthorizations(depl.id)
+  succ, auth = self.rsMgt:getAuthorization(depl.id)
   Check.assertTrue(succ)
-  Check.assertEquals(auth.entityId, depl.id)
+  Check.assertEquals(auth.id, depl.id)
   Check.assertEquals(auth.type, "ATSystemDeployment")
   for _, iface in ipairs(ifaces) do
     succ = false
@@ -805,7 +794,7 @@ function Test4:testGrantExpressions()
     Check.assertTrue(succ)
   end
   --
-  succ, err = self.rsMgt:revokeAll(depl.id)
+  succ, err = self.rsMgt:removeAuthorization(depl.id)
   Check.assertTrue(succ)
 end
 
@@ -813,7 +802,7 @@ function Test4:testGrantRevokeGetAuthorization()
   local succ, err, auth
   local depl = self.deployments[1]
   for _, iface in ipairs(self.ifaces) do
-    succ, err = self.rsMgt:grant(depl.id, iface)
+    succ, err = self.rsMgt:grant(depl.id, iface, true)
     Check.assertTrue(succ)
   end
   --
@@ -822,17 +811,17 @@ function Test4:testGrantRevokeGetAuthorization()
     Check.assertTrue(succ)
   end
   --
-  succ, err = self.rsMgt:getEntityAuthorizations(depl.id)
+  succ, err = self.rsMgt:getAuthorization(depl.id)
   Check.assertFalse(succ)
-  Check.assertEquals(EntityDoesNotExistException, err[1])
+  Check.assertEquals(AuthorizationNonExistentException, err[1])
 end
 
-function Test4:testgetAllEntityAuthorizations()
+function Test4:testGetAuthorizations()
   local succ, err, auths
   local tmp = {}
   for _, depl in ipairs(self.deployments) do
     for _, iface in ipairs(self.ifaces) do
-      succ, err = self.rsMgt:grant(depl.id, iface)
+      succ, err = self.rsMgt:grant(depl.id, iface, true)
       Check.assertTrue(succ)
       local t = tmp[depl.id]
       if not t then
@@ -843,7 +832,7 @@ function Test4:testgetAllEntityAuthorizations()
     end
   end
   --
-  succ, auths = self.rsMgt:getAllEntityAuthorizations()
+  succ, auths = self.rsMgt:getAuthorizations()
   Check.assertTrue(succ)
   --
   -- Pode haver mais autorizações do que as cadastradas,
@@ -870,135 +859,114 @@ function Test4:testgetAllEntityAuthorizations()
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt:revokeAll(depl.id)
+    succ, err = self.rsMgt:removeAuthorization(depl.id)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt:getEntityAuthorizations(depl.id)
+    succ, err = self.rsMgt:getAuthorization(depl.id)
     Check.assertFalse(succ)
-    Check.assertEquals(EntityDoesNotExistException, err[1])
+    Check.assertEquals(AuthorizationNonExistentException, err[1])
   end
 end
 
-function Test4:testgetAuthorizationsByInterfaceId()
+function Test4:testGetAuthorizationsByInterfaceId()
   local succ, err, auths
   local tmp = {}
   for i, depl in ipairs(self.deployments) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt:grant(depl.id, iface)
-    Check.assertTrue(succ)
-    tmp[depl.id] = iface
-  end
-  --
-  for _, depl in ipairs(self.deployments) do
-    interface = tmp[depl.id]
-    succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({ interface })
-    local auth = auths[1]
-    Check.assertTrue(succ)
-    Check.assertTrue(#auths == 1)
-    Check.assertEquals(auth.entityId, depl.id)
-    Check.assertEquals(auth.type, "ATSystemDeployment")
-    Check.assertTrue(#auth.authorized == 1)
-    Check.assertEquals(auth.authorized[1], tmp[depl.id])
-  end
-  --
-  for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt:revokeAll(depl.id)
-    Check.assertTrue(succ)
-  end
-end
-
-function Test4:testgetAuthorizationsByInterfaceIdCommon()
-  local succ, err, auths
-  local tmp = {}
-  for i, depl in ipairs(self.deployments) do
-    local iface = self.ifaces[i]
-    succ, err = self.rsMgt:grant(depl.id, iface)
-    Check.assertTrue(succ)
-    succ, err = self.rsMgt:grant(depl.id, self.ibase)
-    Check.assertTrue(succ)
-    tmp[depl.id] = iface
-  end
-  --
-  succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({self.ibase})
-  Check.assertTrue(succ)
-  Check.assertTrue(#auths == #self.deployments)
-  --
-  for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt:revokeAll(depl.id)
-    Check.assertTrue(succ)
-  end
-end
-
-function Test4:testgetAuthorizationsByInterfaceIdBMulti()
-  local succ, err, auths
-  local tmp = {}
-  for i, depl in ipairs(self.deployments) do
-    local iface = self.ifaces[i]
-    succ, err = self.rsMgt:grant(depl.id, iface)
-    Check.assertTrue(succ)
-    succ, err = self.rsMgt:grant(depl.id, self.ibase)
+    succ, err = self.rsMgt:grant(depl.id, iface, true)
     Check.assertTrue(succ)
     tmp[depl.id] = iface
   end
   --
   for _, depl in ipairs(self.deployments) do
     succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({
-      self.ibase,
       tmp[depl.id]
     })
     local auth = auths[1]
     Check.assertTrue(succ)
     Check.assertTrue(#auths == 1)
-    Check.assertEquals(auth.entityId, depl.id)
+    Check.assertEquals(auth.id, depl.id)
     Check.assertEquals(auth.type, "ATSystemDeployment")
-    Check.assertTrue(#auth.authorized == 2)
-    Check.assertTrue(((auth.authorized[1] == tmp[depl.id]) and
-                      (auth.authorized[2] == self.ibase))
-                     or
-                     ((auth.authorized[2] == tmp[depl.id]) and
-                      (auth.authorized[1] == self.ibase))
-    )
+    Check.assertTrue(#auth.authorized == 1)
+    Check.assertEquals(auth.authorized[1], tmp[depl.id])
   end
   --
   for _, depl in ipairs(self.deployments) do
-    succ, err = self.rsMgt:revokeAll(depl.id)
+    succ, err = self.rsMgt:removeAuthorization(depl.id)
     Check.assertTrue(succ)
   end
 end
 
-function Test4:testgetAuthorizationsByInterfaceId_InterfacesDoesNotExist()
-  local interfaces = {
-      "IDL:openbusidl/Test4/InvalidInterface1:1.0",
-      "IDL:openbusidl/Test4/InvalidInterface2:1.0"
-  }
-  local succ, err = self.rsMgt:getAuthorizationsByInterfaceId(interfaces)
-  Check.assertFalse(succ)
-  Check.assertEquals(InterfacesDoesNotExistException,err[1])
-end
-
-function Test4:testRevoke_EntityDoesNotExist()
-  local entity = "Test4_NotDeployed"
-  local interface = self.ifaces[1]
-  local succ, err = self.rsMgt:revoke(entity,interface)
-  Check.assertFalse(succ)
-  Check.assertEquals(EntityDoesNotExistException, err[1])
-end
-
-function Test4:testRevoke_InterfaceDoesNotExist()
-  local entityId = self.deployments[1].id
-  local interface = self.ifaces[1]
-  local incorretctInterface = "IDL:openbusidl/Test4/InvalidInterface:1.0"
-  local succ, err = self.rsMgt:grant(entityId, interface)
+function Test4:testGetAuthorizationsByInterfaceIdCommon()
+  local succ, err, auths
+  local ibase = "IDL:test/management/do/not/use/this/for/real:1.0"
+  local tmp = {}
+  for i, depl in ipairs(self.deployments) do
+    local iface = self.ifaces[i]
+    succ, err = self.rsMgt:grant(depl.id, iface, true)
+    Check.assertTrue(succ)
+    succ, err = self.rsMgt:grant(depl.id, ibase, false)
+    Check.assertTrue(succ)
+    tmp[depl.id] = iface
+  end
+  --
+  succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({ibase})
   Check.assertTrue(succ)
-  succ, err = self.rsMgt:revoke(entityId, incorretctInterface)
-  Check.assertFalse(succ)
-  Check.assertEquals(InterfaceDoesNotExistException, err[1])
+  Check.assertTrue(#auths == #self.deployments)
+  --
+  for _, depl in ipairs(self.deployments) do
+    succ, err = self.rsMgt:removeAuthorization(depl.id)
+    Check.assertTrue(succ)
+  end
 end
 
-function Test4:testRevokeAll_EntityDoesNotExist()
-  local entity = "Test4_NotDeployed"
-  local succ, err = self.rsMgt:revokeAll(entity)
+function Test4:testGetAuthorizationsByInterfaceIdMulti()
+  local succ, err, auths
+  local ibase = "IDL:test/management/do/not/use/this/for/real:1.0"
+  local tmp = {}
+  for i, depl in ipairs(self.deployments) do
+    local iface = self.ifaces[i]
+    succ, err = self.rsMgt:grant(depl.id, iface, true)
+    Check.assertTrue(succ)
+    succ, err = self.rsMgt:grant(depl.id, ibase, false)
+    Check.assertTrue(succ)
+    tmp[depl.id] = iface
+  end
+  --
+  for _, depl in ipairs(self.deployments) do
+    succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({
+      ibase,
+      tmp[depl.id]
+    })
+    local auth = auths[1]
+    Check.assertTrue(succ)
+    Check.assertTrue(#auths == 1)
+    Check.assertEquals(auth.id, depl.id)
+    Check.assertEquals(auth.type, "ATSystemDeployment")
+    Check.assertTrue(#auth.authorized == 2)
+    Check.assertTrue(((auth.authorized[1] == tmp[depl.id]) and
+                      (auth.authorized[2] == ibase))
+                     or
+                     ((auth.authorized[2] == tmp[depl.id]) and
+                      (auth.authorized[1] == ibase))
+    )
+  end
+  --
+  for _, depl in ipairs(self.deployments) do
+    succ, err = self.rsMgt:removeAuthorization(depl.id)
+    Check.assertTrue(succ)
+  end
+end
+
+function Test4:testRemoveAuthorization_AuthorizationNonExistent()
+  local succ, err = self.rsMgt:removeAuthorization("invalidId")
   Check.assertFalse(succ)
-  Check.assertEquals(EntityDoesNotExistException, err[1])
+  Check.assertEquals(AuthorizationNonExistentException, err[1])
+end
+
+function Test4:testRevoke_AuthorizationNonExistent()
+  local succ, err = self.rsMgt:revoke("invalidId", "invalidInterfaceId")
+  Check.assertFalse(succ)
+  Check.assertEquals(AuthorizationNonExistentException, err[1])
 end
 
 --------------------------------------------------------------------------------
@@ -1087,10 +1055,10 @@ function Test5:testAddUser_UserAlreadyExists()
   Check.assertTrue(succ)
 end
 
-function Test5:testRemoveUser_UserDoesNotExist()
+function Test5:testRemoveUser_UserNonExistent()
   local succ, err = self.acsMgt:removeUser("AnInvalidIdToRemove")
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], UserDoesNotExistException)
+  Check.assertEquals(err[1], UserNonExistentException)
 end
 
 function Test5:testSetUserName()
@@ -1112,16 +1080,16 @@ function Test5:testSetUserName()
   Check.assertTrue(succ)
 end
 
-function Test5:testSetUserName_UserDoesNotExist()
+function Test5:testSetUserName_UserNonExistent()
   local succ, err = self.acsMgt:setUserName("InvalidId", "New Name For An User")
   Check.assertFalse(succ)
-  Check.assertEquals(UserDoesNotExistException, err[1])
+  Check.assertEquals(UserNonExistentException, err[1])
 end
 
-function Test5:testGetUser_UserDoesNotExist()
+function Test5:testGetUser_UserNonExistent()
   local succ, err = self.acsMgt:getUser("InvalidId")
   Check.assertFalse(succ)
-  Check.assertEquals(UserDoesNotExistException, err[1])
+  Check.assertEquals(UserNonExistentException, err[1])
 end
 
 --------------------------------------------------------------------------------
@@ -1142,17 +1110,14 @@ function Test6:beforeTestCase()
     table.insert(self.users, user)
     table.insert(self.ifaces, iface)
     self.acsMgt:addUser(user.id, user.name)
-    self.rsMgt:addInterface(iface)
+    self.rsMgt:addInterfaceIdentifier(iface)
   end
-  self.ibase = "IDL:test/management/do/not/use/this/for/real:1.0"
-  self.rsMgt:addInterface(self.ibase)
 end
 
 function Test6:afterTestCase()
   for _, iface in ipairs(self.ifaces) do
-    self.rsMgt:removeInterface(iface)
+    self.rsMgt:removeInterfaceIdentifier(iface)
   end
-  self.rsMgt:removeInterface(self.ibase)
   for _, user in ipairs(self.users) do
     self.acsMgt:removeUser(user.id)
   end
@@ -1164,53 +1129,53 @@ end
 
 function Test6:afterEachTest()
   for _, user in ipairs(self.users) do
-    self.rsMgt:revoke(user.id)
+    self.rsMgt:removeAuthorization(user.id)
   end
 end
 
-function Test6:testGrantGetrevoke()
+function Test6:testGrantGetRemoveAuthorization()
   local succ, err, auth
   local user = self.users[1]
   local iface = self.ifaces[1]
-  succ, err = self.rsMgt:grant(user.id, iface)
+  succ, err = self.rsMgt:grant(user.id, iface, true)
   Check.assertTrue(succ)
   --
-  succ, auth = self.rsMgt:getEntityAuthorizations(user.id)
+  succ, auth = self.rsMgt:getAuthorization(user.id)
   Check.assertTrue(succ)
-  Check.assertEquals(auth.entityId, user.id)
+  Check.assertEquals(auth.id, user.id)
   Check.assertEquals(auth.type, "ATUser")
   Check.assertTrue(#auth.authorized == 1)
   Check.assertTrue(auth.authorized[1] == iface)
   --
-  succ, err = self.rsMgt:revokeAll(user.id)
+  succ, err = self.rsMgt:removeAuthorization(user.id)
   Check.assertTrue(succ)
   --
-  succ, err = self.rsMgt:getEntityAuthorizations(user.id)
+  succ, err = self.rsMgt:getAuthorization(user.id)
   Check.assertFalse(succ)
-  Check.assertEquals(EntityDoesNotExistException, err[1])
+  Check.assertEquals(AuthorizationNonExistentException, err[1])
 end
 
-function Test6:testGrant_EntityDoesNotExist()
+function Test6:testGrant_MemberNonExistent()
   local iface = self.ifaces[1]
-  local succ, err = self.rsMgt:grant("InvalidId", iface)
+  local succ, err = self.rsMgt:grant("InvalidId", iface, true)
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], EntityDoesNotExistException)
+  Check.assertEquals(MemberNonExistentException, err[1])
 end
 
-function Test6:testGrant_InterfaceDoesNotExist()
+function Test6:testGrant_InterfaceIdentifierNonExistent()
   local user = self.users[1]
-  local succ, err = self.rsMgt:grant(user.id, "InvalidId")
+  local succ, err = self.rsMgt:grant(user.id, "InvalidId", true)
   Check.assertFalse(succ)
-  Check.assertEquals(InterfaceDoesNotExistException, err[1])
+  Check.assertEquals(InterfaceIdentifierNonExistentException, err[1])
 end
 
 function Test6:testGrant_InvalidRegularExpression()
   local succ, err, auth
   local user = self.users[1]
   local iface = "IDL:*invalid:1.0"
-  succ, err = self.rsMgt:grant(user.id, iface)
+  succ, err = self.rsMgt:grant(user.id, iface, true)
   Check.assertFalse(succ)
-  Check.assertEquals(InvalidRegularExpressionException, err[1])
+  Check.assertEquals(InvalidRegularExpression, err[1])
 end
 
 function Test6:testGrantExpressions()
@@ -1221,18 +1186,19 @@ function Test6:testGrantExpressions()
     "IDL:*:1.*",
     "IDL:*:1.0",
     "IDL:openbusidl/test/demo/hello:*",
+    "IDL:openbusidl/test/demo/hello:1.0",
     "IDL:openbusidl/test/demo/hello*:1.0",
     "IDL:openbusidl/test/demo/hello*:*",
     "IDL:openbusidl/test/demo/hello*:1.*",
   }
   for _, iface in ipairs(ifaces) do
-    succ, err = self.rsMgt:grant(user.id, iface)
+    succ, err = self.rsMgt:grant(user.id, iface, false)
     Check.assertTrue(succ)
   end
   --
-  succ, auth = self.rsMgt:getEntityAuthorizations(user.id)
+  succ, auth = self.rsMgt:getAuthorization(user.id)
   Check.assertTrue(succ)
-  Check.assertEquals(auth.entityId, user.id)
+  Check.assertEquals(auth.id, user.id)
   Check.assertEquals(auth.type, "ATUser")
   for _, iface in ipairs(ifaces) do
     succ = false
@@ -1245,7 +1211,7 @@ function Test6:testGrantExpressions()
     Check.assertTrue(succ)
   end
   --
-  succ, err = self.rsMgt:revokeAll(user.id)
+  succ, err = self.rsMgt:removeAuthorization(user.id)
   Check.assertTrue(succ)
 end
 
@@ -1253,7 +1219,7 @@ function Test6:testGrantRevokeGetAuthorization()
   local succ, err, auth
   local user = self.users[1]
   for _, iface in ipairs(self.ifaces) do
-    succ, err = self.rsMgt:grant(user.id, iface)
+    succ, err = self.rsMgt:grant(user.id, iface, true)
     Check.assertTrue(succ)
   end
   --
@@ -1262,17 +1228,17 @@ function Test6:testGrantRevokeGetAuthorization()
     Check.assertTrue(succ)
   end
   --
-  succ, err = self.rsMgt:getEntityAuthorizations(user.id)
+  succ, err = self.rsMgt:getAuthorization(user.id)
   Check.assertFalse(succ)
-  Check.assertEquals(err[1], EntityDoesNotExistException)
+  Check.assertEquals(AuthorizationNonExistentException, err[1])
 end
 
-function Test6:testgetAllEntityAuthorizations()
+function Test6:testGetAuthorizations()
   local succ, err, auths
   local tmp = {}
   for _, user in ipairs(self.users) do
     for _, iface in ipairs(self.ifaces) do
-      succ, err = self.rsMgt:grant(user.id, iface)
+      succ, err = self.rsMgt:grant(user.id, iface, true)
       Check.assertTrue(succ)
       local t = tmp[user.id]
       if not t then
@@ -1283,7 +1249,7 @@ function Test6:testgetAllEntityAuthorizations()
     end
   end
   --
-  succ, auths = self.rsMgt:getAllEntityAuthorizations()
+  succ, auths = self.rsMgt:getAuthorizations()
   Check.assertTrue(succ)
   --
   -- Pode haver mais autorizações do que as cadastradas,
@@ -1310,20 +1276,20 @@ function Test6:testgetAllEntityAuthorizations()
   end
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.rsMgt:revokeAll(user.id)
+    succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt:getEntityAuthorizations(user.id)
+    succ, err = self.rsMgt:getAuthorization(user.id)
     Check.assertFalse(succ)
-    Check.assertEquals(err[1], EntityDoesNotExistException)
+    Check.assertEquals(AuthorizationNonExistentException, err[1])
   end
 end
 
-function Test6:testgetAuthorizationsByInterfaceId()
+function Test6:testGetAuthorizationsByInterfaceId()
   local succ, err, auths
   local tmp = {}
   for i, user in ipairs(self.users) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt:grant(user.id, iface)
+    succ, err = self.rsMgt:grant(user.id, iface, true)
     Check.assertTrue(succ)
     tmp[user.id] = iface
   end
@@ -1335,73 +1301,91 @@ function Test6:testgetAuthorizationsByInterfaceId()
     local auth = auths[1]
     Check.assertTrue(succ)
     Check.assertTrue(#auths == 1)
-    Check.assertEquals(auth.entityId, user.id)
+    Check.assertEquals(auth.id, user.id)
     Check.assertEquals(auth.type, "ATUser")
     Check.assertTrue(#auth.authorized == 1)
     Check.assertEquals(auth.authorized[1], tmp[user.id])
   end
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.rsMgt:revokeAll(user.id)
+    succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
   end
 end
 
-function Test6:testgetAuthorizationsByInterfaceIdCommon()
+function Test6:testGetAuthorizationsByInterfaceIdCommon()
   local succ, err, auths
+  local ibase = "IDL:test/management/do/not/use/this/for/real:1.0"
   local tmp = {}
   for i, user in ipairs(self.users) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt:grant(user.id, iface)
+    succ, err = self.rsMgt:grant(user.id, iface, true)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt:grant(user.id, self.ibase)
+    succ, err = self.rsMgt:grant(user.id, ibase, false)
     Check.assertTrue(succ)
     tmp[user.id] = iface
   end
   --
-  succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({self.ibase})
+  succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({ibase})
   Check.assertTrue(succ)
   Check.assertTrue(#auths == #self.users)
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.rsMgt:revokeAll(user.id)
+    succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
   end
 end
 
-function Test6:testgetAuthorizationsByInterfaceIdMulti()
+function Test6:testGetAuthorizationsByInterfaceIdMulti()
   local succ, err, auths
+  local ibase = "IDL:test/management/do/not/use/this/for/real:1.0"
   local tmp = {}
   for i, user in ipairs(self.users) do
     local iface = self.ifaces[i]
-    succ, err = self.rsMgt:grant(user.id, iface)
+    succ, err = self.rsMgt:grant(user.id, iface, true)
     Check.assertTrue(succ)
-    succ, err = self.rsMgt:grant(user.id, self.ibase)
+    succ, err = self.rsMgt:grant(user.id, ibase, false)
     Check.assertTrue(succ)
     tmp[user.id] = iface
   end
   --
   for _, user in ipairs(self.users) do
     succ, auths = self.rsMgt:getAuthorizationsByInterfaceId({
-      self.ibase, tmp[user.id] })
-
+      ibase,
+      tmp[user.id]
+    })
     local auth = auths[1]
     Check.assertTrue(succ)
-    Check.assertEquals(1, #auths)
-    Check.assertEquals(auth.entityId, user.id)
-    Check.assertEquals("ATUser", auth.type)
-    Check.assertEquals(2, #auth.authorized)
+    Check.assertTrue(#auths == 1)
+    Check.assertEquals(auth.id, user.id)
+    Check.assertEquals(auth.type, "ATUser")
+    Check.assertTrue(#auth.authorized == 2)
     Check.assertTrue(((auth.authorized[1] == tmp[user.id]) and
-                      (auth.authorized[2] == self.ibase))
+                      (auth.authorized[2] == ibase))
                      or
                      ((auth.authorized[2] == tmp[user.id]) and
-                      (auth.authorized[1] == self.ibase))
+                      (auth.authorized[1] == ibase))
     )
   end
   --
   for _, user in ipairs(self.users) do
-    succ, err = self.rsMgt:revokeAll(user.id)
+    succ, err = self.rsMgt:removeAuthorization(user.id)
     Check.assertTrue(succ)
+  end
+end
+
+function Test6:testInterfaceIndentierInUse()
+  local succ, err, auth
+  local user = self.users[1]
+  for _, iface in ipairs(self.ifaces) do
+    succ, err = self.rsMgt:grant(user.id, iface, true)
+    Check.assertTrue(succ)
+  end
+  --
+  for _, iface in ipairs(self.ifaces) do
+    succ, err = self.rsMgt:removeInterfaceIdentifier(iface)
+    Check.assertFalse(succ)
+    Check.assertEquals(InterfaceIdentifierInUseException, err[1])
   end
 end
 
@@ -1490,11 +1474,11 @@ function Test7:afterEachTest()
   if type(self.rsId03) == "string" then
     self.rs:unregister(self.rsId03)
   end
-  self.rsMgt:revoke(self.user)
+  self.rsMgt:removeAuthorization(self.user)
 end
 
 function Test7:testGetOfferedInterfaces()
-  local succ = self.rsMgt:grant(self.user, "IDL:*:*")
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
   succ, self.rsId01 = self.rs:register({
@@ -1530,20 +1514,34 @@ function Test7:testGetOfferedInterfaces()
 
   local succ, offers = self.rsMgt:getOfferedInterfaces()
   Check.assertTrue(succ)
-  Check.assertEquals(#offers, 3)
+  -- este código foi modificado para levar em consideração que o serviço de 
+  -- sessão está de pé. Este pedaço de código deverá ser atualizado assim que o
+  -- serviço de sessão não fizer mais parte do CORE do OpenBus.
+  -- início
+  Check.assertEquals(#offers, 4)
+  local userCount = 0
+  local sessionCount = 0
   for _, offer in ipairs(offers) do
-    Check.assertEquals(offer.entityId, self.user)
+    Check.assertTrue(offer.member == self.user or offer.member == "SessionService")
+    if offer.member == self.user then
+      userCount = userCount + 1
+    elseif offer.member == "SessionService" then
+      sessionCount = sessionCount + 1
+    end
   end
+  Check.assertEquals(1, sessionCount)
+  Check.assertEquals(3, userCount)
+  -- fim 
 end
 
-function Test7:testgetOfferedInterfacesByEntity()
+function Test7:testGetOfferedInterfacesByMember()
   local ifaces = {
     "IDL:IHello_v1:1.0",
     "IDL:IHello_v2:1.0",
     "IDL:IHello_v3:1.0",
   }
 
-  local succ = self.rsMgt:grant(self.user, "IDL:*:*")
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
   succ, self.rsId01 = self.rs:register({
@@ -1552,11 +1550,11 @@ function Test7:testgetOfferedInterfacesByEntity()
   })
   Check.assertTrue(succ)
 
-  local succ, offers = self.rsMgt:getOfferedInterfacesByEntity(self.user)
+  local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
   Check.assertTrue(succ)
   Check.assertEquals(#offers, 1)
   Check.assertEquals(#offers[1].interfaces, 3)
-  Check.assertEquals(offers[1].entityId, self.user)
+  Check.assertEquals(offers[1].member, self.user)
   -- Cada oferta deve corresponder a uma única interface
   for _, offered in ipairs(offers[1].interfaces) do
     local pos = nil
@@ -1572,8 +1570,8 @@ function Test7:testgetOfferedInterfacesByEntity()
   end
 end
 
-function Test7:testgetOfferedInterfacesByEntity_MoreRegisters()
-  local succ = self.rsMgt:grant(self.user, "IDL:*:*")
+function Test7:testGetOfferedInterfacesByMember_MoreRegisters()
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
   succ, self.rsId01 = self.rs:register({
@@ -1607,113 +1605,34 @@ function Test7:testgetOfferedInterfacesByEntity_MoreRegisters()
   })
   Check.assertTrue(succ)
 
-  local succ, offers = self.rsMgt:getOfferedInterfacesByEntity(self.user)
+  local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
   Check.assertTrue(succ)
   Check.assertEquals(#offers, 3)
   -- Cada oferta deve corresponder a uma única interface
   for _, offer in ipairs(offers) do
-    Check.assertEquals(offer.entityId, self.user)
+    Check.assertEquals(offer.member, self.user)
   end
 end
 
-function Test7:testgetOfferedInterfacesByEntity_EntityDoesNotExist()
-  local entityId = "Test7_InvalidEntity"
-  local succ, err = self.rsMgt:getOfferedInterfacesByEntity(entityId)
-  Check.assertFalse(succ)
-  Check.assertEquals(EntityDoesNotExistException,err[1])
-end
-
---------------------------------------------------------------------------------
--- Testa remover um sistema que possua implantações.
---
-
-
-function Test8:beforeTestCase()
-  init(self)
-  -- Dados para os testes
-  self.certfiles = {certificate1}
-  self.systems = {}
-  self.deployments = {}
-  self.ifaces = {}
-
-  local system = {
-      id = "system01",
-      description = "System 01 Description",
-  }
-  table.insert(self.systems, system)
-
-  for i = 1, 10 do
-    local deployment = {
-      id = string.format("deployment%.2d", i),
-      systemId = system.id,
-      description = string.format("Deployment %.2d Description", i),
-    }
-    table.insert(self.deployments, deployment)
-  end
-
-  table.insert(self.ifaces, "IDL:openbusidl/Test8/interface1:1.0")
-end
-
-function Test8:beforeEachTest()
-  local system = self.systems[1]
-  local file = assert(io.open(self.certfiles[1]))
-  Check.assertNotNil(file)
-  local cert = file:read("*a")
-  file:close()
-
-  local succ = self.acsMgt:addSystem(system.id, system.description)
+function Test7:testUnregister()
+  local succ = self.rsMgt:grant(self.user, "IDL:*:*", false)
   Check.assertTrue(succ)
 
-  for _, depl in ipairs(self.deployments) do
-    succ, err = self.acsMgt:addSystemDeployment(depl.id, depl.systemId,
-        depl.description, cert)
-    Check.assertTrue(succ)
-  end
-end
-
-function Test8:afterEachTest()
-  local system = self.systems[1]
-  local iface = self.ifaces[1]
-  self.acsMgt:removeSystemForcefully(system.id)
-  self.rsMgt:removeInterface(iface)
-end
-
-function Test8:testRemoveSystem_SystemInUse()
-  local system = self.systems[1]
-  succ, err = self.acsMgt:removeSystem(system.id)
-  Check.assertFalse(succ)
-  Check.assertEquals(SystemInUseException, err[1])
-
-  for _, depl in ipairs(self.deployments) do
-    succ, err = self.acsMgt:removeSystemDeployment(depl.id)
-    Check.assertTrue(succ)
-  end
-
-  succ = self.acsMgt:removeSystem(system.id)
-  Check.assertTrue(succ)
-end
-
-function Test8:testRemoveSystemForcefully()
-  local system = self.systems[1]
-  succ = self.acsMgt:removeSystemForcefully(system.id)
-  Check.assertTrue(succ)
-end
-
-function Test8:testRemoveInterface_InterfaceInUse()
-  local depl = self.deployments[1]
-  local iface = self.ifaces[1]
-  local succ, err = self.rsMgt:addInterface(iface)
-
-  Check.assertTrue(succ)
-  succ, err = self.rsMgt:grant(depl.id, iface)
+  local succ, id = self.rs:register({
+    member = self.member.IComponent,
+    properties = {},
+  })
   Check.assertTrue(succ)
 
-  succ, err = self.rsMgt:removeInterface(iface)
-  Check.assertFalse(succ)
-  Check.assertEquals(InterfaceInUseException, err[1])
+  local succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
+  Check.assertTrue(succ)
+  Check.assertEquals(#offers, 1)
+  Check.assertEquals(#offers[1].interfaces, 3)
+  Check.assertEquals(offers[1].member, self.user)
+  Check.assertEquals(offers[1].id, id)
 
-  succ, err = self.rsMgt:revoke(depl.id,iface)
+  Check.assertTrue(self.rsMgt:unregister(offers[1].id))
+  succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
   Check.assertTrue(succ)
-  succ, err = self.rsMgt:removeInterface(iface)
-  Check.assertTrue(succ)
+  Check.assertEquals(#offers, 0)
 end
