@@ -359,6 +359,8 @@ packages = {
     dev_files = {
       ["lib/${TEC_UNAME}/libluaopenbus.*"] = "libpath/${TEC_UNAME}",
       ["obj/${TEC_UNAME}/openbus.h"] = "incpath/openbus/lua/",
+      [PRODAPP.."/idl-1.4/*.idl"] = "idlpath/v1_04",
+      [PRODAPP.."/idl/src/*.idl"] = "idlpath/v1_05",
     },
   },
   { name = "openbus-core",
@@ -396,6 +398,15 @@ packages = {
     },
     dev_files = {
       ["../test/lua"] = "core/test",
+      -- issue [OPENBUS-1361]: os arquivos abaixo serao incluidos no 
+      -- tarball do sdk-lua, enquanto esse precisar deles (não deveria)
+      [PRODAPP.."/idl-1.4/*.idl"] = "idlpath/v1_04",
+      [PRODAPP.."/idl/src/*.idl"] = "idlpath/v1_05",
+      ["../../data/conf/config"] = "data/conf",
+      ["../../data/conf/ACSFaultToleranceConfiguration.lua"] = "data/conf",
+      ["../../data/conf/RSFaultToleranceConfiguration.lua"] = "data/conf",
+      ["../../data/conf/FTTimeOutConfiguration.lua"] = "data/conf",
+      ["../../data/conf/advanced/InterceptorsConfiguration.lua"] = "data/conf/advanced",
     },
   },
   { name = "openbus-bin-acs",

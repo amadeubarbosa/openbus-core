@@ -1,6 +1,7 @@
 licenses
 openssl-0.9.9-dev
 lua5.1-dev
+lua5.1-bin
 luafilesystem-dev
 luasocket2-dev
 luuid-dev
@@ -11,4 +12,5 @@ scsall-dev
 lce-dev
 latt-1.0.0-dev
 openbus-lua-dev
+openbus-core-dev
 openbus-demo-hello-lua-dev
