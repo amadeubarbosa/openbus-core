@@ -455,7 +455,9 @@ end
 ---
 function RSFacet:setOfferProperties(identifier, properties)
   Log:debug(format("Iniciando a atualizando da oferta %s", identifier))
-
+  if properties == nil or type(properties) ~= "table" then
+    error(Openbus:getORB():newexcept{ InvalidPropertiesException })
+  end
   local offerEntry = self.offersByIdentifier[identifier]
   if not offerEntry then
     Log:warn(format("A oferta %s não foi encontrada e, por isso, não pode ser atualizada",
@@ -475,8 +477,19 @@ function RSFacet:setOfferProperties(identifier, properties)
     offerEntry.offer.fMember)
 
   -- Atualiza as propriedades da oferta de serviço
-  offerEntry.facets = self:getAuthorizedFacets(
+  local succ, facets = oil.pcall(self.getAuthorizedFacets, self, 
     offerEntry.offer.fMember, credential, indexedProperties)
+  if not succ then
+    if facets[1] == UnauthorizedFacetsException then
+      local msg = "Método RSFacet:setOfferProperties não deveria lançar exceção UnauthorizedFacets"
+      Log:error(msg)
+      error(Openbus:getORB():newexcept { ServiceFailureException, fMessage = msg})
+    else
+      -- relança o erro
+      error(facets)
+    end
+  end
+  offerEntry.facets = facets
   offerEntry.offer.fProperties = properties
   offerEntry.properties = indexedProperties
   self.offersDB:update(offerEntry)
@@ -489,6 +502,8 @@ end
 --@param facets As facetas da busca.
 --
 --@return As ofertas de serviço que foram encontradas.
+--
+--@exception ServiceFailure Erro na execução do serviço
 ---
 function RSFacet:find(facets)
   local ftFacet = self.context.IFaultTolerantService
@@ -537,6 +552,8 @@ end
 --@param criteria Os critérios da busca.
 --
 --@return As ofertas de serviço que foram encontradas.
+--
+--@exception ServiceFailure Erro na execução do serviço
 ---
 function RSFacet:findByCriteria(facets, criteria)
   local ftFacet = self.context.IFaultTolerantService
@@ -584,10 +601,20 @@ function RSFacet:findByCriteria(facets, criteria)
   return selectedOffers
 end
 
+---
+--Busca por ofertas de serviço que implementam as facetas descritas, e,
+--que atendam aos critérios (propriedades) especificados.
+--
+--@param facets As facetas da busca.
+--@param criteria Os critérios da busca.
+--
+--@return As ofertas de serviço que foram encontradas.
+--
+--@exception ServiceFailure Erro na execução do serviço
+---
 function RSFacet:localFind(facets, criteria)
   Log:debug("Procurando por ofertas de serviço na réplica local")
   local selectedOffersEntries = {}
-
   local i = 1
   -- Se nenhuma faceta foi discriminada e nenhum critério foi
   -- definido, todas as ofertas de serviço que não existem localmente
