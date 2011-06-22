@@ -12,7 +12,6 @@ local ipairs = ipairs
 local error = error
 local next = next
 local format = string.format
-local print = print
 local tostring = tostring
 local tonumber = tonumber
 local type = type
@@ -71,6 +70,18 @@ local IgnoredFacets = {
 }
 
 RSFacet = oop.class{}
+
+---
+-- Verifica se a credencial recebida é um administrador do barramento.
+--
+-- @param credential A credencial que será verificada.
+--
+-- @return true se é um administrador, false caso contrário.
+---
+function RSFacet:isAdministrator(adminName)
+  local mgm = self.context.IManagement
+  return mgm.admins[adminName]
+end
 
 ---
 --Registra uma nova oferta de serviço. A oferta de serviço é representada por
@@ -143,11 +154,11 @@ function RSFacet:addOffer(offerEntry)
   if not self.offersByCredential[credential.identifier] then
     Log:debug(format(
         "A credencial {%s. %s, %s} está tentando registrar sua primeira oferta",
-            credential.identifier, credential.owner, credential.delegate))
+        credential.identifier, credential.owner, credential.delegate))
     self.offersByCredential[credential.identifier] = {}
   end
   self.offersByCredential[credential.identifier][offerEntry.identifier] =
-    offerEntry
+      offerEntry
 
   -- A credencial deve ser observada, porque se for deletada as
   -- ofertas a ela relacionadas devem ser removidas
@@ -234,7 +245,7 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
   local succ, facets, memberFacets, count
   local metaInterface = member:getFacetByName("IMetaInterface")
   if not metaInterface then
-    Log:error(format("O componente %s:%d.%d.%d da credencial {%s, %s, %s} não oferece uma faceta do tipo %s"),
+    Log:warn(format("O componente %s:%d.%d.%d da credencial {%s, %s, %s} não oferece uma faceta do tipo %s"),
         properties.component_id.name, properties.component_id.major_version,
         properties.component_id.minor_version,
         properties.component_id.patch_version,credential.identifier,
@@ -253,7 +264,7 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
         credential.identifier, credential.owner, credential.delegate,
         properties.component_id.name, count))
   else
-    Log:error(format("A credencial {%s, %s, %s} tentou registrar o componente %s com %d interface(s) não autorizada(s)",
+    Log:warn(format("A credencial {%s, %s, %s} tentou registrar o componente %s com %d interface(s) não autorizada(s)",
         credential.identifier, credential.owner, credential.delegate,
         properties.component_id.name, count))
     local unathorizedFacets = {}
@@ -1263,6 +1274,8 @@ local InterfaceInUseException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/InterfaceInUse:1.0"
 local InterfaceDoesNotExistException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/InterfaceDoesNotExist:1.0"
+local InterfacesDoesNotExistException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfacesDoesNotExist:1.0"
 local InterfaceAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/InterfaceAlreadyExists:1.0"
 local UserDoesNotExistException = "IDL:tecgraf/openbus/core/"..
@@ -1273,6 +1286,10 @@ local SystemDeploymentDoesNotExistException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/access_control_service/SystemDeploymentDoesNotExist:1.0"
 local AuthorizationDoesNotExistException = "IDL:tecgraf/openbus/core/"..
     Utils.OB_VERSION.."/registry_service/AuthorizationDoesNotExist:1.0"
+local InvalidInterfaceIdentifierException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InvalidInterfaceIdentifier:1.0"
+local ServiceFailureException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/ServiceFailure:1.0"
 
 ManagementFacet = oop.class{}
 
@@ -1294,9 +1311,9 @@ ManagementFacet.expressions = {
 --
 function ManagementFacet:checkPermission()
   local credential = Openbus:getInterceptedCredential()
-  local admin = self.admins[credential.owner] or
-                self.admins[credential.delegate]
-  if not admin then
+  local rgs = self.context.IRegistryService
+  local hasPermission = rgs:isAdministrator(credential.owner)
+  if not hasPermission then
     error(Openbus:getORB():newexcept {
       "IDL:omg.org/CORBA/NO_PERMISSION:1.0",
       minor_code_value = 0,
@@ -1324,27 +1341,27 @@ function ManagementFacet:loadData()
   for _, auth in ipairs(data) do
     local succ, err
     if auth.type == "ATSystemDeployment" then
-      succ, err = self.acsmgm:getSystemDeployment(auth.id)
+      succ, err = self.acsmgm:getSystemDeployment(auth.entityId)
     else -- type == "ATUser"
-      succ, err = self.acsmgm:getUser(auth.id)
+      succ, err = self.acsmgm:getUser(auth.entityId)
     end
     if succ then
-      self.authorizations[auth.id] = auth
+      self.authorizations[auth.entityId] = auth
     else
       if err[1] == SystemDeploymentDoesNotExistException or
          err[1] == UserDoesNotExistException
       then
         remove[auth] = true
         Log:warn(format("Removendo autorizações de '%s': " ..
-         "removido do serviço de Controle de Acesso.", auth.id))
+         "removido do serviço de Controle de Acesso.", auth.entityId))
       else
         error(err) -- Exceção desconhecida, repassando
       end
     end
   end
   for auth in pairs(remove) do
-    self.authDB:remove(auth.id)
-    self:updateManagementStatus("removeAuthorization", {id = auth.id})
+    self.authDB:remove(auth.entityId)
+    self:updateManagementStatus("revoke", {id = auth.entityId})
   end
 end
 
@@ -1353,8 +1370,12 @@ end
 --
 -- @param ifaceId Identificador de interface.
 --
-function ManagementFacet:addInterfaceIdentifier(ifaceId)
+function ManagementFacet:addInterface(ifaceId)
   self:checkPermission()
+  if not string.match(ifaceId, "IDL:[%w/]+:%d+.%d+") then
+    Log:info(format("Interface '%s' não é um repositoryId", ifaceId))
+    error{InvalidInterfaceIdentifierException}
+  end
   if self.interfaces[ifaceId] then
     Log:info(format("Interface '%s' já cadastrada.", ifaceId))
     error{InterfaceAlreadyExistsException}
@@ -1362,10 +1383,11 @@ function ManagementFacet:addInterfaceIdentifier(ifaceId)
   self.interfaces[ifaceId] = true
   local succ, msg = self.ifaceDB:save(ifaceId, ifaceId)
   if not succ then
-    Log:error(format("Falha ao salvar a interface '%s': %s",
-      ifaceId, tostring(msg)))
+    Log:error(format("Falha ao salvar a interface '%s': %s", ifaceId,
+        tostring(msg)))
+    error{ServiceFailureException}
   else
-    self:updateManagementStatus("addInterfaceIdentifier", {ifaceId = ifaceId})
+    self:updateManagementStatus("addInterface", {ifaceId = ifaceId})
   end
 end
 
@@ -1374,15 +1396,15 @@ end
 --
 -- @param ifaceId Identificador de interface.
 --
-function ManagementFacet:removeInterfaceIdentifier(ifaceId)
+function ManagementFacet:removeInterface(ifaceId)
   self:checkPermission()
   if not self.interfaces[ifaceId] then
     Log:info(format("Interface '%s' não está cadastrada.", ifaceId))
     error{InterfaceDoesNotExistException}
   end
   for _, auth in pairs(self.authorizations) do
-    if auth.authorized[ifaceId] == "strict" then
-      Log:info(format("Interface '%s' em uso.", ifaceId))
+    if auth.authorized[ifaceId] == "normal" then
+      Log:info(format("Interface '%s' está em uso.", ifaceId))
       error{InterfaceInUseException}
     end
   end
@@ -1390,8 +1412,9 @@ function ManagementFacet:removeInterfaceIdentifier(ifaceId)
   local succ, msg = self.ifaceDB:remove(ifaceId)
   if not succ then
     Log:error(format("Falha ao remover interface '%s': %s", iface, tostring(msg)))
+    error{ServiceFailureException}
   else
-    self:updateManagementStatus("removeInterfaceIdentifier",
+    self:updateManagementStatus("removeInterface",
       { ifaceId = ifaceId })
   end
 end
@@ -1401,7 +1424,7 @@ end
 --
 -- @return Sequência de identificadores de interface.
 --
-function ManagementFacet:getInterfaceIdentifiers()
+function ManagementFacet:getInterfaces()
   local array = {}
   for iface in pairs(self.interfaces) do
     array[#array+1] = iface
@@ -1416,7 +1439,7 @@ end
 -- @param id Identificador do membro.
 -- @param ifaceId Identificador da interface.
 --
-function ManagementFacet:grant(id, ifaceId, strict)
+function ManagementFacet:grant(id, ifaceId)
   self:checkPermission()
   local expression
   if string.match(ifaceId, "%*") then
@@ -1430,51 +1453,37 @@ function ManagementFacet:grant(id, ifaceId, strict)
       Log:info(format("Expressão regular inválida: '%s'", ifaceId))
       error{InvalidRegularExpressionException}
     end
-  elseif strict and not self.interfaces[ifaceId] then
+  elseif not self.interfaces[ifaceId] then
     Log:info(format("Interface '%s' não cadastrada.", ifaceId))
     error{InterfaceDoesNotExistException}
   end
+
   local auth = self.authorizations[id]
   if not auth then
-    -- Cria uma nova autorização: verificar junto ao ACS se o membro existe
-    local type = "ATSystemDeployment"
-    local succ, member = self.acsmgm:getSystemDeployment(id)
-    if not succ then
-      if member[1] ~= SystemDeploymentDoesNotExistException then
-        error(member)  -- Exceção desconhecida, repassando
-      end
-      type = "ATUser"
-      succ, member = self.acsmgm:getUser(id)
-      if not succ then
-        if member[1] ~= UserDoesNotExistException then
-          error(member)  -- Exceção desconhecida, repassando
-        end
-        Log:info(format("Membro '%s' não cadastrado.", id))
-        error{EntityDoesNotExistException}
-      end
+    local entityType = self:getEntityType(id)
+    if not entityType then
+      Log:info(format("Membro '%s' não cadastrado.", id))
+      error{EntityDoesNotExistException}
     end
     auth = {
-      id = id,
-      type = type,
+      entityId = id,
+      type = entityType,
       authorized = {},
     }
     self.authorizations[id] = auth
-  elseif auth and auth.authorized[ifaceId] then
+  end
+  if auth.authorized[ifaceId] then
     return
   end
-  if expression then
-    auth.authorized[ifaceId] = "expression"
-  elseif strict then
-    auth.authorized[ifaceId] = "strict"
-  else
-    auth.authorized[ifaceId] = "normal"
-  end
+
+  auth.authorized[ifaceId] = expression and "expression" or "normal"
   local succ, msg = self.authDB:save(id, auth)
   if not succ then
     Log:error(format("Falha ao salvar autorização '%s': %s", id, tostring(msg)))
-  else
-     self:updateManagementStatus("grant", { id = id, ifaceId = ifaceId, strict = strict})
+    error{ServiceFailureException}
   end
+
+  self:updateManagementStatus("grant", { id = id, ifaceId = ifaceId})
 end
 
 ---
@@ -1486,10 +1495,19 @@ end
 function ManagementFacet:revoke(id, ifaceId)
   self:checkPermission()
   local auth = self.authorizations[id]
-  if not (auth and auth.authorized[ifaceId]) then
-    Log:info(format("Não há autorização para '%s'.", id))
-    error{AuthorizationDoesNotExistException}
+  if not auth then
+    Log:info(format("Não há autorização  para '%s'.", id))
+    error{EntityDoesNotExistException}
   end
+  if not self.interfaces[ifaceId] then
+    Log:info(format("Interface '%s' não está cadastrada.", ifaceId))
+    error{InterfaceDoesNotExistException}
+  end
+  if not auth.authorized[ifaceId] then
+    Log:info(format("Membro %s não possui autorização para %s.", id, ifaceId))
+    return false
+  end
+
   local succ, msg
   auth.authorized[ifaceId] = nil
   -- Se não houver mais autorizações, remover a entrada
@@ -1499,11 +1517,13 @@ function ManagementFacet:revoke(id, ifaceId)
     self.authorizations[id] = nil
     succ, msg = self.authDB:remove(id)
   end
+
   if not succ then
     Log:error(format("Falha ao remover autorização  '%s': %s", id, tostring(msg)))
-  else
-    self:updateManagementStatus("revoke", { id = id, ifaceId = ifaceId})
+    error{ServiceFailureException}
   end
+  self:updateManagementStatus("revoke", { id = id, ifaceId = ifaceId})
+  return true
 end
 
 ---
@@ -1511,41 +1531,41 @@ end
 --
 -- @param id Identificador do membro.
 --
-function ManagementFacet:removeAuthorization(id)
+function ManagementFacet:revokeAll(id)
   self:checkPermission()
   if not self.authorizations[id] then
     Log:info(format("Não há autorização  para '%s'.", id))
-    error{AuthorizationDoesNotExistException}
+    error{EntityDoesNotExistException}
   end
   self.authorizations[id] = nil
   local succ, msg = self.authDB:remove(id)
   if not succ then
     Log:error(format("Falha ao remover autorização '%s': %s", id, tostring(msg)))
+    error{ServiceFailureException}
   else
-    self:updateManagementStatus("removeAuthorization", { id = id})
+    self:updateManagementStatus("revoke", { id = id})
   end
 end
 
 ---
--- Duplica a autorização , mas a lista de interfaces é retornada
--- como array e não como hash. Essa função é usada para exportar
--- a autorização'.
+-- Cria a estrutura EntityAuthorizations utilizando a estrutura a armazenada no
+-- serviço.
 --
--- @param auth Autorização a ser duplicada.
--- @return Cópia da autorização.
+-- @param auth A estrutura aramazenada no serviço.
+-- @return A estrutura definida na IDL.
 --
-function ManagementFacet:copyAuthorization(auth)
-  local tmp = {}
+function ManagementFacet:createEntityAuthorizations(auth)
+  local entityAuthorizations = {}
   for k, v in pairs(auth) do
-    tmp[k] = v
+    entityAuthorizations[k] = v
   end
   -- Muda de hash para array
   local authorized = {}
-  for iface in pairs(tmp.authorized) do
+  for iface in pairs(entityAuthorizations.authorized) do
     authorized[#authorized+1] = iface
   end
-  tmp.authorized = authorized
-  return tmp
+  entityAuthorizations.authorized = authorized
+  return entityAuthorizations
 end
 
 ---
@@ -1587,13 +1607,13 @@ end
 --
 -- @return Autorização do membro.
 --
-function ManagementFacet:getAuthorization(id)
+function ManagementFacet:getEntityAuthorizations(id)
   local auth = self.authorizations[id]
   if not auth then
     Log:info(format("Não há autorização para '%s'.", id))
-    error{AuthorizationDoesNotExistException}
+    error{EntityDoesNotExistException}
   end
-  return self:copyAuthorization(auth)
+  return self:createEntityAuthorizations(auth)
 end
 
 ---
@@ -1601,10 +1621,10 @@ end
 --
 -- @return Sequência de autorizações
 --
-function ManagementFacet:getAuthorizations()
+function ManagementFacet:getAllEntityAuthorizations()
   local array = {}
   for _, auth in pairs(self.authorizations) do
-    array[#array+1] = self:copyAuthorization(auth)
+    array[#array+1] = self:createEntityAuthorizations(auth)
   end
   return array
 end
@@ -1618,6 +1638,15 @@ end
 -- @return Sequência de autorizações.
 --
 function ManagementFacet:getAuthorizationsByInterfaceId(ifaceIds)
+  local invalidInterfaces = {}
+  for _,interface in ipairs(ifaceIds) do
+    if not self.interfaces[interface] then
+      table.insert(invalidInterfaces, interface)
+    end
+  end
+  if #invalidInterfaces > 0 then
+    error{InterfacesDoesNotExistException, fInterfaces = invalidInterfaces}
+  end
   local array = {}
   for _, auth in pairs(self.authorizations) do
     local found = true
@@ -1628,7 +1657,7 @@ function ManagementFacet:getAuthorizationsByInterfaceId(ifaceIds)
       end
     end
     if found then
-      array[#array+1] = self:copyAuthorization(auth)
+      array[#array+1] = self:createEntityAuthorizations(auth)
     end
   end
   return array
@@ -1653,8 +1682,8 @@ function ManagementFacet:getOfferedInterfaces()
 
     if #ifaces > 0 then
       array[#array+1] = {
-        id = id,
-        member = offer.credential.owner,
+        offerId = id,
+        entityId = offer.credential.owner,
         interfaces = ifaces,
         registrationDate = offer.registrationDate,
       }
@@ -1670,41 +1699,62 @@ end
 --
 -- @return Array contendo as intefaces oferecidas
 --
-function ManagementFacet:getOfferedInterfacesByMember(member)
+function ManagementFacet:getOfferedInterfacesByEntity(entityId)
   self:checkPermission()
+  if not self.authorizations[entityId] then
+    Log:info(format("Não há autorização  para '%s'.", entityId))
+    error{EntityDoesNotExistException}
+  end
+
   local array = {}
-  local ifaces = {}
   local offers = self.context.IRegistryService.offersByIdentifier
 
   for id, offer in pairs(offers) do
-    if offer.credential.owner == member then
+    if offer.credential.owner == entityId then
       local ifaces = {}
       for facet, type in pairs(offer.facets) do
         if type == "interface_name" then
           ifaces[#ifaces+1] = facet
         end
       end
-      if #ifaces > 0 then
-        array[#array+1] = {
-          id = id,
-          member = offer.credential.owner,
-          interfaces = ifaces,
-          registrationDate = offer.registrationDate
-        }
-      end
+
+      array[#array+1] = {
+        offerId = id,
+        entityId = offer.credential.owner,
+        interfaces = ifaces,
+        registrationDate = offer.registrationDate
+      }
     end
   end
   return array
 end
 
 ---
--- Remove do registro a oferta identificada.
+-- Fornece o tipo da entidade (usuário ou sistema) dado o identificador.
 --
--- @param id Identificador da oferta no registro.
+-- @param id Id da entidade
 --
-function ManagementFacet:unregister(id)
-  self:checkPermission()
-  return self.context.IRegistryService:rawUnregister(id)
+-- @return 'ATSystemDeployment' caso seja um sistema, "ATUser" caso seja um
+-- usuário ou nil caso contrário.
+---
+function ManagementFacet:getEntityType(id)
+  local succ, member = self.acsmgm:getSystemDeployment(id)
+  if succ then
+    return "ATSystemDeployment"
+  end
+
+  if member[1] ~= SystemDeploymentDoesNotExistException then
+    error(member)  -- Exceção desconhecida, repassando
+  end
+  succ, member = self.acsmgm:getUser(id)
+  if succ then
+    return "ATUser"
+  end
+
+  if member[1] ~= UserDoesNotExistException then
+    error(member)  -- Exceção desconhecida, repassando
+  end
+  return nil
 end
 
 ---
@@ -1751,31 +1801,31 @@ function ManagementFacet:updateManagementStatus(command, data)
         if ok then
           remoteMgmFacet = orb:narrow(remoteMgmFacet,
             Utils.MANAGEMENT_RS_INTERFACE)
-          if command == "addInterfaceIdentifier" then
+          if command == "addInterface" then
             oil.newthread(function()
               local succ, ret = oil.pcall(
-                remoteMgmFacet.addInterfaceIdentifier, remoteMgmFacet,
+                remoteMgmFacet.addInterface, remoteMgmFacet,
                 data.ifaceId)
             end)
-          elseif command == "removeInterfaceIdentifier" then
+          elseif command == "removeInterface" then
             oil.newthread(function()
               local succ, ret = oil.pcall(
-                remoteMgmFacet.removeInterfaceIdentifier,
+                remoteMgmFacet.removeInterface,
                 remoteMgmFacet, data.ifaceId)
             end)
           elseif command == "grant" then
             oil.newthread(function()
               local succ, ret = oil.pcall(remoteMgmFacet.grant, remoteMgmFacet,
-                data.id, data.ifaceId, data.strict)
+                data.id, data.ifaceId)
             end)
           elseif command == "revoke" then
             oil.newthread(function()
               local succ, ret = oil.pcall(remoteMgmFacet.revoke,
                 remoteMgmFacet, data.id, data.ifaceId)
             end)
-          elseif command == "removeAuthorization" then
+          elseif command == "revoke" then
             oil.newthread(function()
-              local succ, ret = oil.pcall(remoteMgmFacet.removeAuthorization,
+              local succ, ret = oil.pcall(remoteMgmFacet.revoke,
                 remoteMgmFacet, data.id)
             end)
           end --fim command
