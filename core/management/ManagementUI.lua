@@ -250,7 +250,7 @@ function showOffer(offers)
   end
 
   table.sort(offers, function(a, b)
-    return lower(a.member) < lower(b.member)
+    return lower(a.entityId) < lower(b.entityId)
   end)
 
   offerList = {}
@@ -260,8 +260,8 @@ function showOffer(offers)
     end)
     local registrationDate = os.date("%F %X", offer.registrationDate)
 
-    table.insert(offerList, { {string.format("%.3d", i)}, {offer.id},
-        {offer.member}, {registrationDate}, offer.interfaces })
+    table.insert(offerList, { {string.format("%.3d", i)}, {offer.offerId},
+        {offer.entityId}, {registrationDate}, offer.interfaces })
   end
   local sizes = adjustColumnWidth(titles, offerList)
 
@@ -281,7 +281,7 @@ function showAuthorization(authorizations)
   end
 
   table.sort(authorizations, function(a, b)
-    return lower(a.id) < lower(b.id)
+    return lower(a.entityId) < lower(b.entityId)
   end)
 
   local authorizationList = {}
@@ -292,7 +292,7 @@ function showAuthorization(authorizations)
 
     local memberType = authorization.type == "ATUser" and "Usuário" or "Implantação"
     table.insert(authorizationList, { {string.format("%.3d", i)},
-        {authorization.id}, {memberType}, authorization.authorized })
+        {authorization.entityId}, {memberType}, authorization.authorized })
   end
 
   local sizes = adjustColumnWidth(titles, authorizationList)
