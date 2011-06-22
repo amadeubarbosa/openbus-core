@@ -40,6 +40,12 @@ local scs = require "scs.core.base"
 
 local oop = require "loop.simple"
 
+--
+-- Aliases
+--
+local ServiceFailureException = "IDL:tecgraf/openbus/core/" .. Utils.OB_VERSION ..
+    "/ServiceFailure:1.0"
+
 
 ---
 --Componente responsável pelo Serviço de Controle de Acesso
@@ -694,11 +700,7 @@ end
 LeaseProviderFacet = oop.class{}
 
 ---
--- Renova o lease de uma credencial.
---
--- @param credential A credencial da entidade.
---
--- @return Indicador se a lease foi renovada (true ou false) e o valor do lease.
+--@see openbus.common.LeaseProvider#renewLease
 ---
 function LeaseProviderFacet:renewLease(credential)
   self = self.context.IAccessControlService
@@ -792,7 +794,7 @@ end
 function ManagementFacet:addSystem(id, description)
   self:checkPermission()
   if self.systems[id] then
-    Log:error(format("Sistema '%s' já cadastrado.", id))
+    Log:info(format("Sistema '%s' já cadastrado.", id))
     error{SystemAlreadyExistsException}
   end
   local succ, msg = self.systemDB:save(id, {
@@ -801,6 +803,7 @@ function ManagementFacet:addSystem(id, description)
   })
   if not succ then
     Log:error(format("Falha ao salvar sistema '%s': %s", id, tostring(msg)))
+    error{ServiceFailureException, fMessage="Falha na persistência do Sistema."}
   else
     self.systems[id] = true
     self:updateManagementStatus("addSystem",
@@ -817,24 +820,68 @@ end
 function ManagementFacet:removeSystem(id)
   self:checkPermission()
   if not self.systems[id] then
-    Log:error(format("Sistema '%s' não cadastrado.", id))
+    Log:info(format("Sistema '%s' não cadastrado.", id))
     error{SystemDoesNotExistException}
   end
-  local depls = self.deploymentDB:getValues()
+
+  local depls, msg = self.deploymentDB:getValues()
+  if not depls then
+    Log:error(format("Falha ao recuperar implantações: %s",tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
+  end
   for _, depl in ipairs(depls) do
     if depl.systemId == id then
-      Log:error(format("Sistema '%s' em uso.", id))
+      Log:info(format("Sistema '%s' em uso.", id))
       error{SystemInUseException}
     end
   end
+
+  local succ
   self.systems[id] = nil
-  local succ, msg = self.systemDB:remove(id)
+  succ, msg = self.systemDB:remove(id)
   if not succ then
     Log:error(format("Falha ao remover sistema '%s': %s", id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   else
     self:updateManagementStatus("removeSystem", { id = id})
   end
 end
+
+
+---
+-- Remove o sistema e todos as implantações referente ao sistema.
+--
+-- @param id Identificador do sistema.
+--
+function ManagementFacet:removeSystemForcefully(id)
+  self:checkPermission()
+  if not self.systems[id] then
+    Log:info(format("Sistema '%s' não cadastrado.", id))
+    error{SystemDoesNotExistException}
+  end
+
+  local depls, msg = self.deploymentDB:getValues()
+  if not depls then
+    Log:error(format("Falha ao recuperar implantações: %s",tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
+  end
+  for _, depl in ipairs(depls) do
+    if depl.systemId == id then
+      self:removeSystemDeployment(depl.id)
+    end
+  end
+
+  local succ
+  self.systems[id] = nil
+  succ, msg = self.systemDB:remove(id)
+  if not succ then
+    Log:error(format("Falha ao remover sistema '%s': %s", id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
+  else
+    self:updateManagementStatus("removeSystem", { id = id})
+  end
+end
+
 
 ---
 -- Atualiza a descrição do sistema.
@@ -845,23 +892,25 @@ end
 function ManagementFacet:setSystemDescription(id, description)
   self:checkPermission()
   if not self.systems[id] then
-    Log:error(format("Sistema '%s' não cadastrado.", id))
+    Log:info(format("Sistema '%s' não cadastrado.", id))
     error{SystemDoesNotExistException}
   end
   local system, msg = self.systemDB:get(id)
-  if system then
-    local succ
-    system.description = description
-    succ, msg = self.systemDB:save(id, system)
-    if not succ then
-      Log:error(format("Falha ao salvar sistema '%s': %s", id, tostring(msg)))
-    else
-      self:updateManagementStatus("setSystemDescription",
-                         { id = id, description = description})
-    end
-  else
+  if not system then
     Log:error(format("Falha ao recuperar sistema '%s': %s", id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
+
+  local succ
+  system.description = description
+  succ, msg = self.systemDB:save(id, system)
+  if not succ then
+    Log:error(format("Falha ao salvar sistema '%s': %s", id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
+  end
+
+  self:updateManagementStatus("setSystemDescription",
+      { id = id, description = description})
 end
 
 ---
@@ -873,6 +922,7 @@ function ManagementFacet:getSystems()
   local systems, msg = self.systemDB:getValues()
   if not systems then
     Log:error(format("Falha ao recuperar os sistemas: %s", tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
   return systems
 end
@@ -886,12 +936,13 @@ end
 --
 function ManagementFacet:getSystem(id)
   if not self.systems[id] then
-    Log:error(format("Sistema '%s' não cadastrado.", id))
+    Log:info(format("Sistema '%s' não cadastrado.", id))
     error{SystemDoesNotExistException}
   end
   local system, msg = self.systemDB:get(id)
   if not system then
     Log:error(format("Falha ao recuperar os sistemas: %s", tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
   return system
 end
@@ -909,44 +960,40 @@ function ManagementFacet:addSystemDeployment(id, systemId, description,
                                              certificate)
   self:checkPermission()
   if self.deployments[id] then
-    Log:error(format("implantação '%s' já cadastrada.", id))
+    Log:info(format("implantação '%s' já cadastrada.", id))
     error{SystemDeploymentAlreadyExistsException}
   end
   if not self.systems[systemId] then
-    Log:error(format("Falha ao criar implantação '%s': sistema %s "..
-                     "não cadastrado.", id, systemId))
+    Log:info(format("Falha ao criar implantação '%s': sistema %s não cadastrado.",
+        id, systemId))
     error{SystemDoesNotExistException}
   end
   local succ, msg = lce.x509.readfromderstring(certificate)
   if not succ then
-    Log:error(format(
-      "Falha ao criar implantação '%s': certificado inválido. Motivo: '%s'.",
+    Log:info(format("Falha ao criar implantação '%s': certificado inválido. Motivo: '%s'.",
       id, msg))
     error{InvalidCertificateException}
   end
   self.deployments[id] = true
-  succ, msg = self.deploymentDB:save(id, {
+  local systemDeployment = {
     id = id,
     systemId = systemId,
     description = description,
-  })
+  }
+  succ, msg = self.deploymentDB:save(id, systemDeployment)
   if not succ then
     Log:error(format("Falha ao salvar implantação %s na base de dados: %s",
-      id, tostring(msg)))
-  else
-    self:updateManagementStatus("addSystemDeployment",
-                                { id = id,
-                                  systemId = systemId,
-                                  description = description,
-                                  certificate = certificate})
-
-    succ, msg = self.certificateDB:save(id, certificate)
-    if not succ then
-      Log:error(format("Falha ao salvar certificado de '%s': %s", id, tostring(msg)))
-    end
-
+        id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
 
+  self:updateManagementStatus("addSystemDeployment", systemDeployment)
+  succ, msg = self.certificateDB:save(id, certificate)
+  if not succ then
+    Log:error(format("Falha ao salvar certificado de '%s': %s",
+        id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
+  end
 end
 
 ---
@@ -957,39 +1004,42 @@ end
 function ManagementFacet:removeSystemDeployment(id)
   self:checkPermission()
   if not self.deployments[id] then
-    Log:error(format("implantação '%s' não cadastrada.", id))
+    Log:info(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentDoesNotExistException}
   end
   self.deployments[id] = nil
   local succ, msg = self.deploymentDB:remove(id)
   if not succ then
     Log:error(format("Falha ao remover implantação '%s' da base de dados: %s",
-      id, tostring(msg)))
-  else
-    self:updateManagementStatus("removeSystemDeployment", { id = id})
-
-    succ, msg = self.certificateDB:remove(id)
-    if not succ and msg ~= "not found" then
-      Log:error(format("Falha ao remover certificado da implantação '%s': %s",
         id, tostring(msg)))
-    end
-
-    -- Invalida a credencial do membro que está sendo removido
-    local acs = self.context.IAccessControlService
-    acs:removeEntryById(id)
-    -- Remove todas as autorizações do membro
-    local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle,
-      Openbus:getORB(),
-      self.context.IComponent,
-      "RegistryServiceReceptacle",
-      "IManagement_" .. Utils.OB_VERSION,
-      Utils.MANAGEMENT_RS_INTERFACE)
-    if succ and rs then
-      local orb = Openbus:getORB()
-      rs = orb:newproxy(rs, "protected")
-      rs:removeAuthorization(id)
-    end
+    error{ServiceFailureException, fMessage=msg}
   end
+  self:updateManagementStatus("removeSystemDeployment", { id = id})
+
+  succ, msg = self.certificateDB:remove(id)
+  if not succ then
+    Log:error(format("Falha ao remover certificado da implantação '%s': %s",
+        id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
+  end
+
+  -- Invalida a credencial do membro que está sendo removido
+  local acs = self.context.IAccessControlService
+  acs:removeEntryById(id)
+  -- Remove todas as autorizações do membro
+  local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle,
+      Openbus:getORB(), self.context.IComponent, "RegistryServiceReceptacle",
+      "IManagement_" .. Utils.OB_VERSION, Utils.MANAGEMENT_RS_INTERFACE)
+  if not succ or not rs then
+    local msg = format("Falha ao tentar remover as autorizações referente à implantação '%s'. Serviço de registro não está no ar.",
+        id)
+    Log:warn(msg)
+    error{ServiceFailureException, fMessage=msg}
+  end
+
+  local orb = Openbus:getORB()
+  rs = orb:newproxy(rs, "protected")
+  rs:revokeAll(id)
 end
 
 ---
@@ -1001,24 +1051,26 @@ end
 function ManagementFacet:setSystemDeploymentDescription(id, description)
   self:checkPermission()
   if not self.deployments[id] then
-    Log:error(format("implantação '%s' não cadastrada.", id))
+    Log:info(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentDoesNotExistException}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
     Log:error(format("Falha ao recuperar implantação '%s': %s", id, tostring(msg)))
-  else
-    local succ
-    depl.description = description
-    succ, msg = self.deploymentDB:save(id, depl)
-    if not succ then
-      Log:error(format("Falha ao salvar implantação '%s' na base de dados: %s",
-        id, tostring(msg)))
-    else
-      self:updateManagementStatus("setSystemDeploymentDescription",
-                         { id = id, description = description})
-    end
+    error{ServiceFailureException, fMessage=msg}
   end
+
+  local succ
+  depl.description = description
+  succ, msg = self.deploymentDB:save(id, depl)
+  if not succ then
+    Log:error(format("Falha ao salvar implantação '%s' na base de dados: %s",
+      id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
+  end
+
+  self:updateManagementStatus("setSystemDeploymentDescription",
+      { id = id, description = description})
 end
 
 ---
@@ -1030,12 +1082,14 @@ end
 --
 function ManagementFacet:getSystemDeploymentCertificate(id)
   if not self.deployments[id] then
-    Log:error(format("implantação '%s' não cadastrada.", id))
+    Log:info(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentDoesNotExistException}
   end
   local cert, msg = self.certificateDB:get(id)
   if not cert then
-    Log:error(format("Falha ao recuperar certificado de '%s': %s", id, tostring(msg)))
+    Log:error(format("Falha ao recuperar certificado de '%s': %s",
+        id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
   return cert
 end
@@ -1049,21 +1103,22 @@ end
 function ManagementFacet:setSystemDeploymentCertificate(id, certificate)
   self:checkPermission()
   if not self.deployments[id] then
-    Log:error(format("implantação '%s' não cadastrada.", id))
+    Log:info(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentDoesNotExistException}
   end
-  local tmp, msg = lce.x509.readfromderstring(certificate)
-  if not tmp then
-    Log:error(format("%s: certificado inválido.", id, tostring(msg)))
+  local succ, msg = lce.x509.readfromderstring(certificate)
+  if not succ then
+    Log:info(format("%s: certificado inválido.", id, tostring(msg)))
     error{InvalidCertificateException}
   end
-  local succ, msg = self.certificateDB:save(id, certificate)
+  succ, msg = self.certificateDB:save(id, certificate)
   if not succ then
     Log:error(format("Falha ao salvar certificado de '%s': %s", id, tostring(msg)))
-  else
-    self:updateManagementStatus("setSystemDeploymentCertificate",
-                         { id = id, certificate = certificate})
+    error{ServiceFailureException, fMessage=msg}
   end
+
+  self:updateManagementStatus("setSystemDeploymentCertificate",
+      { id = id, certificate = certificate})
 end
 
 ---
@@ -1075,6 +1130,7 @@ function ManagementFacet:getSystemDeployments()
   local depls, msg = self.deploymentDB:getValues()
   if not depls then
     Log:error(format("Falha ao recuperar implantações: %s", tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
   return depls
 end
@@ -1086,12 +1142,14 @@ end
 --
 function ManagementFacet:getSystemDeployment(id)
   if not self.deployments[id] then
-    Log:error(format("implantação '%s' não cadastrada.", id))
+    Log:info(format("implantação '%s' não cadastrada.", id))
     error{SystemDeploymentDoesNotExistException}
   end
   local depl, msg = self.deploymentDB:get(id)
   if not depl then
-    Log:error(format("Falha ao recuperar implantação '%s': %s", id, tostring(msg)))
+    Log:error(format("Falha ao recuperar implantação '%s': %s",
+        id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
   return depl
 end
@@ -1108,6 +1166,7 @@ function ManagementFacet:getSystemDeploymentsBySystemId(systemId)
   local depls, msg = self.deploymentDB:getValues()
   if not depls then
     Log:error(format("Falha ao recuperar implantações: %s", tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   else
     for _, depl in pairs(depls) do
       if depl.systemId == systemId then
@@ -1129,20 +1188,22 @@ end
 function ManagementFacet:addUser(id, name)
   self:checkPermission()
   if self.users[id] then
-    Log:error(format("usuário '%s' já cadastrado.", id))
+    Log:info(format("usuário '%s' já cadastrado.", id))
     error{UserAlreadyExistsException}
   end
   self.users[id] = true
-  succ, msg = self.userDB:save(id, {
+  local newUser = {
     id = id,
     name = name
-  })
+  }
+  succ, msg = self.userDB:save(id, newUser)
   if not succ then
     Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
-      id, tostring(msg)))
-  else
-    self:updateManagementStatus("addUser", { id = id, name = name})
+        id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
+
+  self:updateManagementStatus("addUser", newUser)
 end
 
 ---
@@ -1153,7 +1214,7 @@ end
 function ManagementFacet:removeUser(id)
   self:checkPermission()
   if not self.users[id] then
-    Log:error(format("usuário '%s' não cadastrado.", id))
+    Log:info(format("usuário '%s' não cadastrado.", id))
     error{UserDoesNotExistException}
   end
   self.users[id] = nil
@@ -1161,22 +1222,24 @@ function ManagementFacet:removeUser(id)
   if not succ then
     Log:error(format("Falha ao remover usuário '%s' da base de dados: %s",
       id, tostring(msg)))
-  else
-    self:updateManagementStatus("removeUser", { id = id})
-
-    -- Remove todas as autorizações do membro
-    local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle,
-                            Openbus:getORB(),
-                            self.context.IComponent,
-                            "RegistryServiceReceptacle",
-                            "IManagement_" .. Utils.OB_VERSION,
-                            Utils.MANAGEMENT_RS_INTERFACE)
-    if succ and rs then
-      local orb = Openbus:getORB()
-      rs = orb:newproxy(rs, "protected")
-      rs:removeAuthorization(id)
-    end
+    error{ServiceFailureException, fMessage=msg}
   end
+
+  self:updateManagementStatus("removeUser", { id = id})
+  -- Remove todas as autorizações do membro
+  local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle,
+      Openbus:getORB(), self.context.IComponent, "RegistryServiceReceptacle",
+      "IManagement_" .. Utils.OB_VERSION, Utils.MANAGEMENT_RS_INTERFACE)
+  if not succ or not rs then
+    local msg = format("Falha ao tentar remover as autorizações referente ao usuário '%s'. Serviço de registro não está no ar.",
+        id)
+    Log:warn(msg)
+    error{ServiceFailureException, fMessage=msg}
+  end
+
+  local orb = Openbus:getORB()
+  rs = orb:newproxy(rs, "protected")
+  rs:revokeAll(id)
 end
 
 ---
@@ -1188,23 +1251,25 @@ end
 function ManagementFacet:setUserName(id, name)
   self:checkPermission()
   if not self.users[id] then
-    Log:error(format("usuário '%s' não cadastrado.", id))
+    Log:info(format("usuário '%s' não cadastrado.", id))
     error{UserDoesNotExistException}
   end
   local user, msg = self.userDB:get(id)
   if not user then
     Log:error(format("Falha ao recuperar usuário '%s': %s", id, tostring(msg)))
-  else
-    local succ
-    user.name = name
-    succ, msg = self.userDB:save(id, user)
-    if not succ then
-      Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
-        id, tostring(msg)))
-    else
-      self:updateManagementStatus("setUserName", { id = id, name = name})
-    end
+    error{ServiceFailureException, fMessage=msg}
   end
+
+  local succ
+  user.name = name
+  succ, msg = self.userDB:save(id, user)
+  if not succ then
+    Log:error(format("Falha ao salvar usuário '%s' na base de dados: %s",
+        id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
+  end
+
+  self:updateManagementStatus("setUserName", { id = id, name = name})
 end
 
 ---
@@ -1214,12 +1279,13 @@ end
 --
 function ManagementFacet:getUser(id)
   if not self.users[id] then
-    Log:error(format("usuário '%s' não cadastrado.", id))
+    Log:info(format("usuário '%s' não cadastrado.", id))
     error{UserDoesNotExistException}
   end
   local user, msg = self.userDB:get(id)
   if not user then
     Log:error(format("Falha ao recuperar usuário '%s': %s", id, tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
   return user
 end
@@ -1233,6 +1299,7 @@ function ManagementFacet:getUsers()
   local users, msg = self.userDB:getValues()
   if not users then
     Log:error(format("Falha ao recuperar usuários: %s", tostring(msg)))
+    error{ServiceFailureException, fMessage=msg}
   end
   return users
 end
