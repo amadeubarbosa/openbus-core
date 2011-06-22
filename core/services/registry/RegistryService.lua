@@ -84,11 +84,7 @@ function RSFacet:isAdministrator(adminName)
 end
 
 ---
---Registra uma nova oferta de serviço. A oferta de serviço é representada por
---uma tabela com os campos:
---   fProperties: lista de propriedades associadas à oferta (opcional)
---               cada propriedade a um par nome/valor (lista de strings)
---   fMember: referência para o membro que faz a oferta
+--Registra uma nova oferta de serviço. 
 --
 --@param fProperties Lista de propriedades.
 --@param fMember Componente a ser registrado.
