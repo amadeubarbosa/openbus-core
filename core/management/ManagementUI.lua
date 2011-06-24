@@ -9,7 +9,6 @@ local print = print
 local table = table
 local tostring = tostring
 local type = type
-local os = os
 local lower = string.lower
 
 ---
@@ -243,7 +242,7 @@ end
 -- @param offers Estrutura definida na IDL.
 ---
 function showOffer(offers)
-  local titles = { "", "ID OFERTA", "ID MEMBRO", "DATA DE REGISTRO", "INTERFACES"}
+  local titles = { "", "ID OFERTA", "ID MEMBRO", "INTERFACES"}
   if #offers == 0 then
     showEmptyTable(titles)
     return
@@ -258,10 +257,9 @@ function showOffer(offers)
     table.sort(offer.interfaces, function(a, b)
       return lower(a) < lower(b)
     end)
-    local registrationDate = os.date("%F %X", offer.registrationDate)
 
     table.insert(offerList, { {string.format("%.3d", i)}, {offer.id},
-        {offer.member}, {registrationDate}, offer.interfaces })
+        {offer.member}, offer.interfaces })
   end
   local sizes = adjustColumnWidth(titles, offerList)
 

@@ -80,7 +80,6 @@ function RSFacet:register(serviceOffer)
     facets = facets,
     credential = credential,
     identifier = self:generateIdentifier(),
-    registrationDate = tonumber(os.date("%s"))
   }
 
   local orb = Openbus:getORB()
@@ -1617,7 +1616,6 @@ function ManagementFacet:getOfferedInterfaces()
         id = id,
         member = offer.credential.owner,
         interfaces = ifaces,
-        registrationDate = offer.registrationDate,
       }
     end
   end
@@ -1650,7 +1648,6 @@ function ManagementFacet:getOfferedInterfacesByMember(member)
           id = id,
           member = offer.credential.owner,
           interfaces = ifaces,
-          registrationDate = offer.registrationDate
         }
       end
     end
