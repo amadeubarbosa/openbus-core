@@ -118,6 +118,7 @@ Suite.Test4 = {}
 Suite.Test5 = {}
 Suite.Test6 = {}
 Suite.Test7 = {}
+Suite.Test8 = {}
 
 -- Aliases
 local Test1 = Suite.Test1
@@ -127,6 +128,7 @@ local Test4 = Suite.Test4
 local Test5 = Suite.Test5
 local Test6 = Suite.Test6
 local Test7 = Suite.Test7
+local Test8 = Suite.Test8
 
 --------------------------------------------------------------------------------
 -- Testa o cadastro de sistemas da interface IManagement do ACS.
@@ -1514,7 +1516,7 @@ function Test7:testGetOfferedInterfaces()
 
   local succ, offers = self.rsMgt:getOfferedInterfaces()
   Check.assertTrue(succ)
-  -- este código foi modificado para levar em consideração que o serviço de 
+  -- este código foi modificado para levar em consideração que o serviço de
   -- sessão está de pé. Este pedaço de código deverá ser atualizado assim que o
   -- serviço de sessão não fizer mais parte do CORE do OpenBus.
   -- início
@@ -1531,7 +1533,7 @@ function Test7:testGetOfferedInterfaces()
   end
   Check.assertEquals(1, sessionCount)
   Check.assertEquals(3, userCount)
-  -- fim 
+  -- fim
 end
 
 function Test7:testGetOfferedInterfacesByMember()
@@ -1635,4 +1637,24 @@ function Test7:testUnregister()
   succ, offers = self.rsMgt:getOfferedInterfacesByMember(self.user)
   Check.assertTrue(succ)
   Check.assertEquals(#offers, 0)
+end
+
+--------------------------------------------------------------------------------
+--
+
+function Test8:beforeTestCase()
+  init(self)
+  self.noImplementException = "IDL:omg.org/CORBA/NO_IMPLEMENT:1.0"
+end
+
+function Test8:testgetUnauthorizedInterfacesByMember()
+  local succ, err = self.rsMgt:getUnauthorizedInterfacesByMember("something")
+  Check.assertFalse(succ)
+  Check.assertEquals(self.noImplementException, err[1])
+end
+
+function Test8:testgetUnauthorizedInterfaces()
+  local succ, err = self.rsMgt:getUnauthorizedInterfaces()
+  Check.assertFalse(succ)
+  Check.assertEquals(self.noImplementException, err[1])
 end

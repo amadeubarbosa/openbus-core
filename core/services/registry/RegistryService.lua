@@ -1668,6 +1668,15 @@ function ManagementFacet:unregister(id)
   return self.context.IRegistryService:rawUnregister(id)
 end
 
+
+function ManagementFacet:getUnauthorizedInterfaces()
+  error(Openbus:getORB():newexcept{ "CORBA::NO_IMPLEMENT" })
+end
+
+function ManagementFacet:getUnauthorizedInterfacesByMember(member)
+  error(Openbus:getORB():newexcept{ "CORBA::NO_IMPLEMENT" })
+end
+
 ---
 --
 --
