@@ -40,6 +40,9 @@ local usage_msg = [[
     --verbose (v)            : turn ON the VERBOSE mode (show the system commands)
     --port=<port number>     : defines the service port (default=]]
                                 .. tostring(AccessControlServerConfiguration.hostPort) .. [[)
+    --host=<IP number>       : defines the IP number (or hostname) to use (default=]]
+                                .. tostring(AccessControlServerConfiguration.hostName) .. [[)
+
  NOTES:
     The prefix '--' is optional in all options.
     So '--help' or '-help' or yet 'help' all are the same option.]]
@@ -51,6 +54,9 @@ if arguments.verbose == "" or arguments.v == "" then
 end
 if arguments.port then
   acsConfig.hostPort = tonumber(arguments.port)
+end
+if arguments.host then
+  acsConfig.hostName = arguments.host
 end
 
 -- Configurando os logs

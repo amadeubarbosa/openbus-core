@@ -32,8 +32,14 @@ local iConfig =
 local usage_msg = [[
   --help                   : show this help
   --verbose  (v)           : turn ON the VERBOSE mode (show the system commands)
+  --acs-host=<IP number>   : defines the ACS service IP number (or hostname) (default=]]
+                .. tostring(RegistryServerConfiguration.accessControlServerHostName) .. [[)
+  --acs-port=<port number> : defines the ACS service port (default=]]
+                .. tostring(RegistryServerConfiguration.accessControlServerHostPort) .. [[)
   --port=<port number>     : defines the service port (default=]]
                 .. tostring(RegistryServerConfiguration.registryServerHostPort) .. [[)
+  --host=<IP number>       : defines the IP number (or hostname) to use (default=]]
+                .. tostring(RegistryServerConfiguration.registryServerHostName) .. [[)
  NOTES:
   The prefix '--' is optional in all options.
   So '--help' or '-help' or yet 'help' all are the same option.]]
@@ -45,6 +51,15 @@ if arguments.verbose == "" or arguments.v == "" then
 end
 if arguments.port then
   rsConfig.registryServerHostPort = tonumber(arguments.port)
+end
+if arguments.host then
+  rsConfig.registryServerHostName = arguments.host
+end
+if arguments["acs-host"] then
+  rsConfig.accessControlServerHostName = arguments["acs-host"]
+end
+if arguments["acs-port"] then
+  rsConfig.accessControlServerHostPort = arguments["acs-port"]
 end
 
 -- Configurando os logs
