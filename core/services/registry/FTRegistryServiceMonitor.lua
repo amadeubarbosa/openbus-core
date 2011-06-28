@@ -38,7 +38,7 @@ end
 local BIN_DIR = os.getenv("OPENBUS_HOME") .. "/core/bin"
 
 
-orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
+orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
 ---
 --Componente responsável pelo Monitor do Serviço de Registro
 ---

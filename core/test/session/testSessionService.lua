@@ -60,10 +60,10 @@ Suite = {
 
       oil.verbose:level(0)
 
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/session_service.idl")
-      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/access_control_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/session_service.idl")
+      orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/access_control_service.idl")
 
       local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
       assert(loadfile(
@@ -99,7 +99,7 @@ Suite = {
       local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
       local rsIComp = orb:narrow(conns[1].objref, Utils.COMPONENT_INTERFACE)
       local registryService = rsIComp:getFacetByName("IRegistryService_"..
-          Utils.OB_VERSION)
+          Utils.IDL_VERSION)
       registryService = orb:narrow(registryService,
           Utils.REGISTRY_SERVICE_INTERFACE)
 

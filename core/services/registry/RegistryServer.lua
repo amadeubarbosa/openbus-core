@@ -132,7 +132,6 @@ facetDescriptions.IRegistryService           = {}
 facetDescriptions.IRegistryService_Prev      = {}
 facetDescriptions.IManagement                = {}
 facetDescriptions.IFaultTolerantService      = {}
-facetDescriptions.IFaultTolerantService_Prev = {}
 facetDescriptions.IReceptacles               = {}
 
 facetDescriptions.IComponent.name                  = "IComponent"
@@ -140,27 +139,22 @@ facetDescriptions.IComponent.interface_name        = Utils.COMPONENT_INTERFACE
 facetDescriptions.IComponent.class                 = scs.Component
 facetDescriptions.IComponent.key                   = "IC"
 
-facetDescriptions.IRegistryService.name            = "IRegistryService_" .. Utils.OB_VERSION
+facetDescriptions.IRegistryService.name            = "IRegistryService_" .. Utils.IDL_VERSION
 facetDescriptions.IRegistryService.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE
 facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
 facetDescriptions.IRegistryService.key             = Utils.REGISTRY_SERVICE_KEY
 
-facetDescriptions.IRegistryService_Prev.name            = "IRegistryService_" .. Utils.OB_PREV
+facetDescriptions.IRegistryService_Prev.name            = "IRegistryService"
 facetDescriptions.IRegistryService_Prev.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE_PREV
 facetDescriptions.IRegistryService_Prev.class           = RegistryServicePrev.RSFacet
 facetDescriptions.IRegistryService_Prev.key             = Utils.REGISTRY_SERVICE_KEY_PREV
 
-facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService_" .. Utils.OB_VERSION
+facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService_" .. Utils.IDL_VERSION
 facetDescriptions.IFaultTolerantService.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
 facetDescriptions.IFaultTolerantService.class           = RegistryService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_RS_KEY
 
-facetDescriptions.IFaultTolerantService_Prev.name            = "IFaultTolerantService_" .. Utils.OB_PREV
-facetDescriptions.IFaultTolerantService_Prev.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE_PREV
-facetDescriptions.IFaultTolerantService_Prev.class           = RegistryServicePrev.FaultToleranceFacet
-facetDescriptions.IFaultTolerantService_Prev.key             = Utils.FAULT_TOLERANT_RS_KEY_PREV
-
-facetDescriptions.IManagement.name            = "IManagement_" .. Utils.OB_VERSION
+facetDescriptions.IManagement.name            = "IManagement_" .. Utils.IDL_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
 facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_RS_KEY

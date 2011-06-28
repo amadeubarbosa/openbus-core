@@ -28,7 +28,7 @@ local oop = require "loop.simple"
 ---
 module "core.services.session.SessionServiceComponent"
 
-local UnathorizedFacets = "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+local UnathorizedFacets = "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
     "/registry_service/UnathorizedFacets:1.0"
 
 SessionServiceComponent = oop.class({}, scs.Component)
@@ -182,7 +182,7 @@ function SessionServiceComponent:shutdown()
                   orb,
                             self.context.IComponent,
                             "AccessControlServiceReceptacle",
-                            "IAccessControlService_" .. Utils.OB_VERSION,
+                            "IAccessControlService_" .. Utils.IDL_VERSION,
                             Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if not status or not acsFacet then
       -- erro ja foi logado, só retorna

@@ -20,10 +20,10 @@ function loadidls(self)
     io.stderr:write("A variavel IDLPATH_DIR nao foi definida.\n")
     os.exit(1)
   end
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/registry_service.idl")
   orb:loadidl("interface IHello_vft { };")
 end
 
@@ -112,7 +112,7 @@ Suite = {
        acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
        local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
        local rsIComp1 = orb:narrow(conns[1].objref, Utils.COMPONENT_INTERFACE)
-       local rsFacet1 = rsIComp1:getFacetByName("IRegistryService_" .. Utils.OB_VERSION)
+       local rsFacet1 = rsIComp1:getFacetByName("IRegistryService_" .. Utils.IDL_VERSION)
        rsFacet1 = orb:narrow(rsFacet1, Utils.REGISTRY_SERVICE_INTERFACE)
        rsFacet1 = orb:newproxy(rsFacet1, "protected")
        --cadastra oferta na primeira réplica
@@ -132,7 +132,7 @@ Suite = {
                 local rsIComp = orb:narrow(conns[connId].objref,
                     Utils.COMPONENT_INTERFACE)
                 local rsFacet = rsIComp:getFacetByName("IRegistryService_"..
-                    Utils.OB_VERSION)
+                    Utils.IDL_VERSION)
                 rsFacet = orb:narrow(rsFacet, Utils.REGISTRY_SERVICE_INTERFACE)
 
                 local offers = rsFacet:find({"IHello_vft"})
@@ -151,7 +151,7 @@ Suite = {
                 local rsIComp = orb:narrow(conns[connId].objref,
                     Utils.COMPONENT_INTERFACE)
                 local rsFacet = rsIComp:getFacetByName(
-                    "IRegistryService_".. Utils.OB_VERSION)
+                    "IRegistryService_".. Utils.IDL_VERSION)
                 rsFacet = orb:narrow(rsFacet, Utils.REGISTRY_SERVICE_INTERFACE)
 
                 local offers = rsFacet:find({"IHello_vft"})

@@ -1,12 +1,11 @@
--- $Id: 
+-- $Id:
 
 local Openbus = require "openbus.Openbus" 
 local oop = require "loop.simple"
 local Utils = require "openbus.util.Utils"
-local print = print
 
 ---
---Componente responsável pelo Serviço de Controle de Acesso na versao anterior suportada.
+--Componente responsável pelo Serviço de Controle de Acesso na versao 1.04.
 ---
 module("core.services.accesscontrol.AccessControlService_Prev")
 
@@ -71,6 +70,26 @@ function ACSFacet:removeCredentialFromObserver(observerIdentifier,
            observerIdentifier, credentialIdentifier)
 end
 
+---
+--Metodo existente apenas na API 1.04.
+---
+function ACSFacet:getRegistryService()
+  local receptacles = self.context.IReceptacles:getConnections("RegistryServiceReceptacle")
+  if #receptacles == 0 then
+    return nil
+  end
+  local ic = receptacles[1].objref
+  local rs = ic:getFacet(Utils.REGISTRY_SERVICE_INTERFACE_PREV)
+  return Openbus:getORB():narrow(rs, Utils.REGISTRY_SERVICE_INTERFACE_PREV)
+end
+
+---
+--Metodo existente apenas na API 1.04.
+---
+function ACSFacet:setRegistryService(rsComponent)
+  return false
+end
+
 --------------------------------------------------------------------------------
 -- Faceta ILeaseProvider
 --------------------------------------------------------------------------------
@@ -81,54 +100,3 @@ function LeaseProviderFacet:renewLease(credential)
   return self.context.ILeaseProvider:renewLease(credential)
 end
 
---------------------------------------------------------------------------------
--- Faceta IComponent
---------------------------------------------------------------------------------
-
-ComponentFacet = oop.class{}
-
-function ComponentFacet:startup()
-  return self.context.IComponent:startup()
-end
-
-function ComponentFacet:shutdown()
-  return self.context.IComponent:shutdown()
-end
-
-function ComponentFacet:getFacet(interface)
-  return self.context.IComponent:getFacet(interface)
-end
-
-function ComponentFacet:getFacetByName(facet)
-  return self.context.IComponent:getFacetByName(facet)
-end
-
-function ComponentFacet:getComponentId()
-  return self.context.IComponent:getComponentId()
-end
-
---------------------------------------------------------------------------------
--- Faceta IFaultTolerantService
---------------------------------------------------------------------------------
-
-FaultToleranceFacet = oop.class{}
-
-function FaultToleranceFacet:init()
-  return self.context.IFaultTolerantService:init()
-end
-
-function FaultToleranceFacet:isAlive()
-  return self.context.IFaultTolerantService:isAlive()
-end
-
-function FaultToleranceFacet:setStatus(isAlive)
-  return self.context.IFaultTolerantService:setStatus(isAlive)
-end
-
-function FaultToleranceFacet:kill()
-  return self.context.IFaultTolerantService:kill()
-end
-
-function FaultToleranceFacet:updateStatus(param)
-  return self.context.IFaultTolerantService:updateStatus(param)
-end

@@ -146,13 +146,11 @@ local AccessControlServicePrev = require "core.services.accesscontrol.AccessCont
 -- Facet Descriptions
 local facetDescriptions = {}
 facetDescriptions.IComponent                  = {}
-facetDescriptions.IComponent_Prev             = {}
 facetDescriptions.IAccessControlService       = {}
 facetDescriptions.IAccessControlService_Prev  = {}
 facetDescriptions.ILeaseProvider              = {}
 facetDescriptions.ILeaseProvider_Prev         = {}
 facetDescriptions.IFaultTolerantService       = {}
-facetDescriptions.IFaultTolerantService_Prev  = {}
 facetDescriptions.IManagement                 = {}
 facetDescriptions.IReceptacles                = {}
 
@@ -161,42 +159,32 @@ facetDescriptions.IComponent.interface_name = "IDL:scs/core/IComponent:1.0"
 facetDescriptions.IComponent.class          = scs.Component
 facetDescriptions.IComponent.key            = Utils.OPENBUS_KEY
 
-facetDescriptions.IComponent_Prev.name           = "IComponent_" .. Utils.OB_PREV
-facetDescriptions.IComponent_Prev.interface_name = "IDL:scs/core/IComponent:1.0"
-facetDescriptions.IComponent_Prev.class          = AccessControlServicePrev.ComponentFacet
-facetDescriptions.IComponent_Prev.key            = Utils.OPENBUS_KEY_PREV
-
-facetDescriptions.IAccessControlService.name            = "IAccessControlService_" .. Utils.OB_VERSION
+facetDescriptions.IAccessControlService.name            = "IAccessControlService_" .. Utils.IDL_VERSION
 facetDescriptions.IAccessControlService.interface_name  = Utils.ACCESS_CONTROL_SERVICE_INTERFACE
 facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
 facetDescriptions.IAccessControlService.key             = Utils.ACCESS_CONTROL_SERVICE_KEY
 
-facetDescriptions.IAccessControlService_Prev.name           = "IAccessControlService_" .. Utils.OB_PREV
+facetDescriptions.IAccessControlService_Prev.name           = "IAccessControlService"
 facetDescriptions.IAccessControlService_Prev.interface_name = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_PREV
 facetDescriptions.IAccessControlService_Prev.class          = AccessControlServicePrev.ACSFacet
 facetDescriptions.IAccessControlService_Prev.key            = Utils.ACCESS_CONTROL_SERVICE_KEY_PREV
 
-facetDescriptions.ILeaseProvider.name                        = "ILeaseProvider_" .. Utils.OB_VERSION
+facetDescriptions.ILeaseProvider.name                        = "ILeaseProvider_" .. Utils.IDL_VERSION
 facetDescriptions.ILeaseProvider.interface_name              = Utils.LEASE_PROVIDER_INTERFACE
 facetDescriptions.ILeaseProvider.class                       = AccessControlService.LeaseProviderFacet
 facetDescriptions.ILeaseProvider.key                         = Utils.LEASE_PROVIDER_KEY
 
-facetDescriptions.ILeaseProvider_Prev.name                  = "ILeaseProvider_" .. Utils.OB_PREV
+facetDescriptions.ILeaseProvider_Prev.name                  = "ILeaseProvider"
 facetDescriptions.ILeaseProvider_Prev.interface_name        = Utils.LEASE_PROVIDER_INTERFACE_PREV
 facetDescriptions.ILeaseProvider_Prev.class                 = AccessControlServicePrev.LeaseProviderFacet
 facetDescriptions.ILeaseProvider_Prev.key                   = Utils.LEASE_PROVIDER_KEY_PREV
 
-facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService_" .. Utils.OB_VERSION
+facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService_" .. Utils.IDL_VERSION
 facetDescriptions.IFaultTolerantService.interface_name       = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
 facetDescriptions.IFaultTolerantService.class                = AccessControlService.FaultToleranceFacet
 facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLERANT_ACS_KEY
 
-facetDescriptions.IFaultTolerantService_Prev.name                 = "IFaultTolerantService_" .. Utils.OB_PREV
-facetDescriptions.IFaultTolerantService_Prev.interface_name       = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
-facetDescriptions.IFaultTolerantService_Prev.class                = AccessControlServicePrev.FaultToleranceFacet
-facetDescriptions.IFaultTolerantService_Prev.key                  = Utils.FAULT_TOLERANT_ACS_KEY_PREV
-
-facetDescriptions.IManagement.name            = "IManagement_" .. Utils.OB_VERSION
+facetDescriptions.IManagement.name            = "IManagement_" .. Utils.IDL_VERSION
 facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
 facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
 facetDescriptions.IManagement.key             = Utils.MANAGEMENT_ACS_KEY

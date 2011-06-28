@@ -130,7 +130,7 @@ function RSFacet:addOffer(offerEntry)
   local orb = Openbus:getORB()
   local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService_" .. Utils.OB_VERSION,
+    "IAccessControlService_" .. Utils.IDL_VERSION,
     Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
   if status and acsFacet then
     acsFacet:addCredentialToObserver(self.observerId, credential.identifier)
@@ -233,7 +233,7 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
       unathorizedFacets[#unathorizedFacets+1] = facet
     end
     error(Openbus:getORB():newexcept {
-      "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+      "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
           "/registry_service/UnathorizedFacets:1.0",
       facets = unathorizedFacets,
     })
@@ -332,7 +332,7 @@ function RSFacet:unregister(identifier)
         local remoteRGSIC = remoteRGS:_component()
         remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
         local ok, remoteRGSFacet = oil.pcall(remoteRGSIC.getFacetByName,
-            remoteRGSIC, "IRegistryService_" .. Utils.OB_VERSION)
+            remoteRGSIC, "IRegistryService_" .. Utils.IDL_VERSION)
         if ok and remoteRGSFacet then
           remoteRGSFacet = orb:narrow(remoteRGSFacet,
             Utils.REGISTRY_SERVICE_INTERFACE)
@@ -406,7 +406,7 @@ function RSFacet:rawUnregister(identifier, credential)
         credential.identifier, credential.owner, credential.delegate))
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService_" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      "IAccessControlService_" .. Utils.IDL_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if status and acsFacet then
       acsFacet:removeCredentialFromObserver(self.observerId,
         credential.identifier)
@@ -443,7 +443,7 @@ function RSFacet:update(identifier, properties)
     Log:warn(format("A oferta %s não foi encontrada e, por isso, não pode ser atualizada",
         identifier))
     error(Openbus:getORB():newexcept {
-      "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+      "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
           "/registry_service/ServiceOfferNonExistent:1.0",
     })
   end
@@ -453,7 +453,7 @@ function RSFacet:update(identifier, properties)
     Log:warn(format("A oferta %s não foi registrada pela credencial {%s, %s, %s} e, por isso, não pode ser atualizada",
         identifier, credential.identifier, credential.owner, credential.delegate))
     error(Openbus:getORB():newexcept {
-      "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+      "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
           "/registry_service/ServiceOfferNonExistent:1.0",
     })
   end
@@ -1138,7 +1138,7 @@ function startup(self)
   end
 
   -- Referência à faceta de gerenciamento do ACS
-  mgm.acsmgm = acsIComp:getFacetByName("IManagement_" .. Utils.OB_VERSION)
+  mgm.acsmgm = acsIComp:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
   mgm.acsmgm = orb:narrow(mgm.acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
   mgm.acsmgm = orb:newproxy(mgm.acsmgm, "protected")
   -- Administradores dos serviços
@@ -1188,7 +1188,7 @@ function shutdown(self)
   if rs.observerId then
     local status, acsFacet =  oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService_" .. Utils.OB_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
+      "IAccessControlService_" .. Utils.IDL_VERSION, Utils.ACCESS_CONTROL_SERVICE_INTERFACE)
     if not status or not acsFacet then
       -- erro ja foi logado
       error{"IDL:SCS/ShutdownFailed:1.0"}
@@ -1218,21 +1218,21 @@ end
 
 -- Aliases
 local InvalidRegularExpressionException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InvalidRegularExpression:1.0"
+    Utils.IDL_VERSION.."/registry_service/InvalidRegularExpression:1.0"
 local InterfaceIdentifierInUseException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierInUse:1.0"
+    Utils.IDL_VERSION.."/registry_service/InterfaceIdentifierInUse:1.0"
 local InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
+    Utils.IDL_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
 local InterfaceIdentifierAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierAlreadyExists:1.0"
+    Utils.IDL_VERSION.."/registry_service/InterfaceIdentifierAlreadyExists:1.0"
 local UserNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/UserNonExistent:1.0"
+    Utils.IDL_VERSION.."/access_control_service/UserNonExistent:1.0"
 local MemberNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/MemberNonExistent:1.0"
+    Utils.IDL_VERSION.."/registry_service/MemberNonExistent:1.0"
 local SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
+    Utils.IDL_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
 local AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/AuthorizationNonExistent:1.0"
+    Utils.IDL_VERSION.."/registry_service/AuthorizationNonExistent:1.0"
 
 ManagementFacet = oop.class{}
 
@@ -1713,7 +1713,7 @@ function ManagementFacet:updateManagementStatus(command, data)
         local remoteRGSIC = remoteRGS:_component()
         remoteRGSIC = orb:narrow(remoteRGSIC, "IDL:scs/core/IComponent:1.0")
         local ok, remoteMgmFacet = oil.pcall(remoteRGSIC.getFacetByName,
-          remoteRGSIC, "IManagement_" .. Utils.OB_VERSION)
+          remoteRGSIC, "IManagement_" .. Utils.IDL_VERSION)
 
         if ok then
           remoteMgmFacet = orb:narrow(remoteMgmFacet,

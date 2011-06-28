@@ -225,10 +225,10 @@ if IDLPATH_DIR == nil then
 end
 
 function loadidls()
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_PREV.."/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/access_control_service.idl")
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/registry_service.idl")
 
   for _, idl in ipairs(IDL) do
     orb:loadidl(idl)
@@ -300,7 +300,7 @@ function Before:init()
   local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
   local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
   self.registryService = rsIComp:getFacetByName("IRegistryService_"..
-      Utils.OB_VERSION)
+      Utils.IDL_VERSION)
   self.registryService = orb:narrow(self.registryService,
       Utils.REGISTRY_SERVICE_INTERFACE)
   self.rgsProtected = orb:newproxy(self.registryService, "protected")

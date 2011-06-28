@@ -1,6 +1,7 @@
 -- $Id:
 
 local oop = require "loop.base"
+local Utils = require "openbus.util.Utils"
 
 ---
 --Sessão compartilhada pelos membros associados a uma mesma credencial na versão anterior.
@@ -35,11 +36,11 @@ end
 
 SessionEventSink = oop.class{}
 
-function SessionEventSink:push(sender, event)
-  self.context.SessionEventSink:push(sender, event)
+function SessionEventSink:push(event)
+  self.context.SessionEventSink:push(Utils.IDL_PREV, event)
 end
 
-function SessionEventSink:disconnect(sender)
-  self.context.SessionEventSink:disconnect(sender)
+function SessionEventSink:disconnect()
+  self.context.SessionEventSink:disconnect(Utils.IDL_PREV)
 end
 

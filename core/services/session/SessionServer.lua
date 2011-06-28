@@ -102,9 +102,9 @@ if not IDLPATH_DIR then
  Log:error("A variável IDLPATH_DIR não foi definida")
  return false
 end
-local idlfile = IDLPATH_DIR .. "/"..Utils.OB_VERSION.."/session_service.idl"
+local idlfile = IDLPATH_DIR .. "/"..Utils.IDL_VERSION.."/session_service.idl"
 orb:loadidlfile(idlfile)
-idlfile = IDLPATH_DIR .. "/"..Utils.OB_PREV.."/session_service.idl"
+idlfile = IDLPATH_DIR .. "/"..Utils.IDL_PREV.."/session_service.idl"
 orb:loadidlfile(idlfile)
 
 local scs = require "scs.core.base"
@@ -130,11 +130,11 @@ facetDescriptions.IComponent.name                    = "IComponent"
 facetDescriptions.IComponent.interface_name          = Utils.COMPONENT_INTERFACE
 facetDescriptions.IComponent.class                   = SessionServiceComponent.SessionServiceComponent
 
-facetDescriptions.ISessionService.name               = "ISessionService_"..Utils.OB_VERSION
+facetDescriptions.ISessionService.name               = "ISessionService_"..Utils.IDL_VERSION
 facetDescriptions.ISessionService.interface_name     = Utils.SESSION_SERVICE_INTERFACE
 facetDescriptions.ISessionService.class              = SessionService.SessionService
 
-facetDescriptions.ISessionService_Prev.name           = "ISessionService_"..Utils.OB_PREV
+facetDescriptions.ISessionService_Prev.name           = "ISessionService"
 facetDescriptions.ISessionService_Prev.interface_name = Utils.SESSION_SERVICE_INTERFACE_PREV
 facetDescriptions.ISessionService_Prev.class          = SessionServicePrev.SessionService
 

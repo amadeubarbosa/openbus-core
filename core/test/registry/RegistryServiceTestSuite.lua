@@ -293,7 +293,7 @@ Suite = {
         properties = {},
       })
       Check.assertFalse(success)
-      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
           "/registry_service/UnathorizedFacets:1.0")
       Check.assertEquals(#err.facets, 1)
     end,
@@ -392,7 +392,7 @@ Suite = {
       success, err = self.rgsProtected:update("INVALID-IDENTIFIER",
           self.Hello_v1.properties)
       Check.assertFalse(success)
-      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
           "/registry_service/ServiceOfferNonExistent:1.0")
     end,
 
@@ -417,7 +417,7 @@ Suite = {
       success, err = self.rgsProtected:update(self.registryIdentifier,
           self.Hello_v3.properties)
       Check.assertFalse(success)
-      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+      Check.assertEquals(err[1], "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
           "/registry_service/UnathorizedFacets:1.0")
     end,
   },

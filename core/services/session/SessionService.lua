@@ -55,19 +55,19 @@ facetDescriptions.ISession               = {}
 facetDescriptions.ISession_Prev          = {}
 facetDescriptions.IReceptacles           = {}
 
-facetDescriptions.SessionEventSink.name           = "SessionEventSink_"..Utils.OB_VERSION
+facetDescriptions.SessionEventSink.name           = "SessionEventSink_"..Utils.IDL_VERSION
 facetDescriptions.SessionEventSink.interface_name = Utils.SESSION_ES_INTERFACE
 facetDescriptions.SessionEventSink.class          = Session.SessionEventSink
 
-facetDescriptions.SessionEventSink_Prev.name           = "SessionEventSink_"..Utils.OB_PREV
+facetDescriptions.SessionEventSink_Prev.name           = "SessionEventSink"
 facetDescriptions.SessionEventSink_Prev.interface_name = Utils.SESSION_ES_INTERFACE_PREV
 facetDescriptions.SessionEventSink_Prev.class          = SessionPrev.SessionEventSink
 
-facetDescriptions.ISession.name                   = "ISession_"..Utils.OB_VERSION
+facetDescriptions.ISession.name                   = "ISession"..Utils.IDL_VERSION
 facetDescriptions.ISession.interface_name         = Utils.SESSION_INTERFACE
 facetDescriptions.ISession.class                  = Session.Session
 
-facetDescriptions.ISession_Prev.name             = "ISession_"..Utils.OB_PREV
+facetDescriptions.ISession_Prev.name             = "ISession"
 facetDescriptions.ISession_Prev.interface_name   = Utils.SESSION_INTERFACE_PREV
 facetDescriptions.ISession_Prev.class            = SessionPrev.Session
 
@@ -124,7 +124,7 @@ function SessionService:createSession(member)
   -- A credencial deve ser observada!
   local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
-    "IAccessControlService_" .. Utils.OB_VERSION, acsIDL)
+    "IAccessControlService_" .. Utils.IDL_VERSION, acsIDL)
   if not status or not acsFacet then
     orb:deactivate(component.ISession)
     orb:deactivate(component.IMetaInterface)
@@ -185,7 +185,7 @@ function SessionService:observe(credentialId, session)
     -- Primeira sessão da credencial, começar a observar
     local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService_" .. Utils.OB_VERSION, acsIDL)
+      "IAccessControlService_" .. Utils.IDL_VERSION, acsIDL)
     if status and acsFacet then
       acsFacet:addCredentialToObserver(self.observerId, credentialId)
     end
@@ -209,7 +209,7 @@ function SessionService:unObserve(credentialId, session)
     self.observed[credentialId] = nil
     local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
       orb, self.context.IComponent, "AccessControlServiceReceptacle",
-      "IAccessControlService_" .. Utils.OB_VERSION, acsIDL)
+      "IAccessControlService_" .. Utils.IDL_VERSION, acsIDL)
     if status and acsFacet then
       acsFacet:removeCredentialFromObserver(self.observerId, credentialId)
     end

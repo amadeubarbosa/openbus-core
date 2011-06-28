@@ -86,7 +86,7 @@ local orb = Openbus:getORB()
 local FTRegistryServiceMonitor = require "core.services.registry.FTRegistryServiceMonitor"
 local scs = require "scs.core.base"
 
-orb:loadidlfile(IDLPATH_DIR.."/"..Utils.OB_VERSION.."/fault_tolerance.idl")
+orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/fault_tolerance.idl")
 
 -----------------------------------------------------------------------------
 -- FTRegistryServiceMonitor Descriptions
@@ -112,7 +112,7 @@ facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
 facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
 facetDescriptions.IMetaInterface.class                = scs.MetaInterface
 
-facetDescriptions.IFTServiceMonitor.name              = "IFTServiceMonitor_" .. Utils.OB_VERSION
+facetDescriptions.IFTServiceMonitor.name              = "IFTServiceMonitor_" .. Utils.IDL_VERSION
 facetDescriptions.IFTServiceMonitor.interface_name    = Utils.FT_SERVICE_MONITOR_INTERFACE
 facetDescriptions.IFTServiceMonitor.class             = FTRegistryServiceMonitor.FTRSMonitorFacet
 facetDescriptions.IFTServiceMonitor.key               = FT_RS_MONITOR_KEY
