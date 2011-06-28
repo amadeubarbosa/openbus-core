@@ -408,38 +408,38 @@ end
 -- Aliases
 --
 local ACS_UserNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/UserNonExistent:1.0"
+    Utils.IDL_VERSION.."/access_control_service/UserNonExistent:1.0"
 local ACS_UserAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/UserAlreadyExists:1.0"
+    Utils.IDL_VERSION.."/access_control_service/UserAlreadyExists:1.0"
 --
 local ACS_SystemInUseException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemInUse:1.0"
+    Utils.IDL_VERSION.."/access_control_service/SystemInUse:1.0"
 local ACS_SystemNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemNonExistent:1.0"
+    Utils.IDL_VERSION.."/access_control_service/SystemNonExistent:1.0"
 local ACS_SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemAlreadyExists:1.0"
+    Utils.IDL_VERSION.."/access_control_service/SystemAlreadyExists:1.0"
 --
 local ACS_InvalidCertificateException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/InvalidCertificate:1.0"
+    Utils.IDL_VERSION.."/access_control_service/InvalidCertificate:1.0"
 local ACS_SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
+    Utils.IDL_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
 local ACS_SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/access_control_service/SystemDeploymentAlreadyExists:1.0"
+    Utils.IDL_VERSION.."/access_control_service/SystemDeploymentAlreadyExists:1.0"
 --
 local RS_InterfaceIdentifierInUseException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierInUse:1.0"
+    Utils.IDL_VERSION.."/registry_service/InterfaceIdentifierInUse:1.0"
 local RS_InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
+    Utils.IDL_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
 local RS_InterfaceIdentifierAlreadyExistsException =
-    "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+    "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
     "/registry_service/InterfaceIdentifierAlreadyExists:1.0"
 --
 local RS_MemberNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/MemberNonExistent:1.0"
+    Utils.IDL_VERSION.."/registry_service/MemberNonExistent:1.0"
 local RS_InvalidRegularExpressionException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/InvalidRegularExpression:1.0"
+    Utils.IDL_VERSION.."/registry_service/InvalidRegularExpression:1.0"
 local RS_AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/"..
-    Utils.OB_VERSION.."/registry_service/AuthorizationNonExistent:1.0"
+    Utils.IDL_VERSION.."/registry_service/AuthorizationNonExistent:1.0"
 
 -------------------------------------------------------------------------------
 -- Define os tratadores de comandos passados como argumento para a ferramenta.
@@ -1177,9 +1177,9 @@ local function connect(retry)
         return
       end
       local orb = Openbus:getORB()
-      orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.OB_VERSION..
+      orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.IDL_VERSION..
           "/registry_service.idl")
-      orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.OB_VERSION..
+      orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.IDL_VERSION..
           "/access_control_service.idl")
     end
     if Openbus:connectByLoginPassword(login, localPassword) == false then
@@ -1211,7 +1211,7 @@ function getacsmgm()
   end
   local ic = acs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
-  acsmgm = ic:getFacetByName("IManagement_" .. Utils.OB_VERSION)
+  acsmgm = ic:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
   acsmgm = orb:narrow(acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
   acsmgm = orb:newproxy(acsmgm, "protected")
   return acsmgm
@@ -1235,7 +1235,7 @@ function getrsmgm()
   end
   ic = rs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
-  rsmgm = ic:getFacetByName("IManagement_" .. Utils.OB_VERSION)
+  rsmgm = ic:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
   rsmgm = orb:narrow(rsmgm, Utils.MANAGEMENT_RS_INTERFACE)
   rsmgm = orb:newproxy(rsmgm, "protected")
   return rsmgm
