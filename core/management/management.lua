@@ -99,7 +99,7 @@ Uso: %s [opções] --login=<usuário> <comando>
 
 - Controle de Autorização
   * Conceder autorização:
-     --set-authorization=<id_membro> --grant=<interface>
+     --set-authorization=<id_membro> --grant=<interface> [--no-strict]
   * Revogar autorização:
      --set-authorization=<id_membro> --revoke=<interface>
   * Remover autorização:
@@ -229,6 +229,7 @@ local commands = {
     {n = 0, params = {}}
   };
   ["set-authorization"] = {
+    {n = 1, params={grant = 1, ["no-strict"] = 0}},
     {n = 1, params={grant = 1}},
     {n = 1, params={revoke = 1}},
   };
@@ -406,39 +407,39 @@ end
 -------------------------------------------------------------------------------
 -- Aliases
 --
-local ACS_UserDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/access_control_service/UserDoesNotExist:1.0"
+local ACS_UserNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/UserNonExistent:1.0"
 local ACS_UserAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/access_control_service/UserAlreadyExists:1.0"
+    Utils.OB_VERSION.."/access_control_service/UserAlreadyExists:1.0"
 --
 local ACS_SystemInUseException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/access_control_service/SystemInUse:1.0"
-local ACS_SystemDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/access_control_service/SystemDoesNotExist:1.0"
+    Utils.OB_VERSION.."/access_control_service/SystemInUse:1.0"
+local ACS_SystemNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemNonExistent:1.0"
 local ACS_SystemAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/access_control_service/SystemAlreadyExists:1.0"
+    Utils.OB_VERSION.."/access_control_service/SystemAlreadyExists:1.0"
 --
 local ACS_InvalidCertificateException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/access_control_service/InvalidCertificate:1.0"
-local ACS_SystemDeploymentDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/access_control_service/SystemDeploymentDoesNotExist:1.0"
+    Utils.OB_VERSION.."/access_control_service/InvalidCertificate:1.0"
+local ACS_SystemDeploymentNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentNonExistent:1.0"
 local ACS_SystemDeploymentAlreadyExistsException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/access_control_service/SystemDeploymentAlreadyExists:1.0"
+    Utils.OB_VERSION.."/access_control_service/SystemDeploymentAlreadyExists:1.0"
 --
-local RS_InterfaceInUseException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/registry_service/InterfaceInUse:1.0"
-local RS_InterfaceDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/registry_service/InterfaceDoesNotExist:1.0"
-local RS_InterfaceAlreadyExistsException =
-    "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
-    "/registry_service/InterfaceAlreadyExists:1.0"
+local RS_InterfaceIdentifierInUseException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierInUse:1.0"
+local RS_InterfaceIdentifierNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/InterfaceIdentifierNonExistent:1.0"
+local RS_InterfaceIdentifierAlreadyExistsException =
+    "IDL:tecgraf/openbus/core/"..Utils.OB_VERSION..
+    "/registry_service/InterfaceIdentifierAlreadyExists:1.0"
 --
-local RS_EntityDoesNotExistException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/registry_service/EntityDoesNotExist:1.0"
+local RS_MemberNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/MemberNonExistent:1.0"
 local RS_InvalidRegularExpressionException = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/registry_service/InvalidRegularExpression:1.0"
-local RS_AuthorizationDoesNotExist = "IDL:tecgraf/openbus/core/"..
-    Utils.IDL_VERSION.."/registry_service/AuthorizationDoesNotExist:1.0"
+    Utils.OB_VERSION.."/registry_service/InvalidRegularExpression:1.0"
+local RS_AuthorizationNonExistentException = "IDL:tecgraf/openbus/core/"..
+    Utils.OB_VERSION.."/registry_service/AuthorizationNonExistent:1.0"
 
 -------------------------------------------------------------------------------
 -- Define os tratadores de comandos passados como argumento para a ferramenta.
@@ -489,7 +490,7 @@ handlers["del-system"] = function(cmd)
     printf("[INFO] Sistema '%s' removido com sucesso", id)
   elseif err[1] == ACS_SystemInUseException then
     printf("[ERRO] Sistema '%s' em uso", id)
-  elseif err[1] == ACS_SystemDoesNotExistException then
+  elseif err[1] == ACS_SystemNonExistentException then
     printf("[ERRO] Sistema '%s' não cadastrado", id)
   else
     printf("[ERRO] Falha ao remover sistema '%s': %s", id, err[1])
@@ -518,7 +519,7 @@ handlers["list-system"] = function(cmd)
     if succ then
       systems = {system}
     else
-      if system[1] == ACS_SystemDoesNotExistException then
+      if system[1] == ACS_SystemNonExistentException then
         systems = {}
       else
         printf("[ERRO] Falha ao recuperar informações: %s", system[1])
@@ -541,7 +542,7 @@ handlers["set-system"] = function(cmd)
   local succ, err = acsmgm:setSystemDescription(id,cmd.params.description)
   if succ then
     print(string.format("[INFO] Sistema '%s' atualizado com sucesso", id))
-  elseif err[1] == ACS_SystemDoesNotExistException then
+  elseif err[1] == ACS_SystemNonExistentException then
     print(string.format("[ERRO] Sistema '%s' não cadastrado", id))
   else
     print(string.format("[ERRO] Falha ao atualizar sistema '%s': %s", id,
@@ -575,7 +576,7 @@ handlers["add-deployment"] = function(cmd)
       printf("[INFO] Implantação '%s' cadastrada com sucesso", id)
     elseif err[1] == ACS_SystemDeploymentAlreadyExistsException then
       printf("[ERRO] Implantação '%s' já cadastrada", id)
-    elseif err[1] == ACS_SystemDoesNotExistException then
+    elseif err[1] == ACS_SystemNonExistentException then
       printf("[ERRO] Sistema '%s' não cadastrado", cmd.params.system)
     elseif err[1] == ACS_InvalidCertificateException then
       printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido",
@@ -600,7 +601,7 @@ handlers["del-deployment"] = function(cmd)
   local succ, err = acsmgm:removeSystemDeployment(id)
   if succ then
     printf("[INFO] Implantação '%s' removida com sucesso", id)
-  elseif err[1] == ACS_SystemDeploymentDoesNotExistException then
+  elseif err[1] == ACS_SystemDeploymentNonExistentException then
     printf("[ERRO] Implantação '%s' não cadastrada", id)
   else
     printf("[ERRO] Falha ao remover implantação '%s': %s", id, err[1])
@@ -631,7 +632,7 @@ handlers["set-deployment"] = function(cmd)
     if succ then
       printf("[INFO] Certificado da implantação '%s' atualizado com sucesso",
         id)
-    elseif err[1] == ACS_SystemDeploymentDoesNotExistException then
+    elseif err[1] == ACS_SystemDeploymentNonExistentException then
       printf("[ERRO] Implantação '%s' não cadastrada", id)
     elseif err[1] == ACS_InvalidCertificateException then
       printf("[ERRO] Falha ao adicionar implantação '%s': certificado inválido",
@@ -646,7 +647,7 @@ handlers["set-deployment"] = function(cmd)
       cmd.params.description)
     if succ then
       printf("[INFO] Descrição da imlantação '%s' atualizada com sucesso", id)
-    elseif err[1] == ACS_SystemDeploymentDoesNotExistException then
+    elseif err[1] == ACS_SystemDeploymentNonExistentException then
       printf("[ERRO] Implantação '%s' não cadastrada", id)
     else
       printf("[ERRO] Falha ao atualizar descrição da implantação '%s': %s",
@@ -671,7 +672,7 @@ handlers["list-deployment"] = function(cmd)
     local succ, depl = acsmgm:getSystemDeployment(id)
     if succ then
       depls = { depl }
-    elseif depl[1] == ACS_SystemDeploymentDoesNotExistException then
+    elseif depl[1] == ACS_SystemDeploymentNonExistentException then
       depls = {}
     else
       printf("[ERRO] Falha ao recuperar informações: %s", depl[1])
@@ -730,7 +731,7 @@ handlers["del-user"] = function(cmd)
   local succ, err = acsmgm:removeUser(id)
   if succ then
     printf("[INFO] Usuário '%s' removido com sucesso", id)
-  elseif err[1] == ACS_UserDoesNotExistException then
+  elseif err[1] == ACS_UserNonExistentException then
     printf("[ERRO] Usuário '%s' não cadastrado", id)
   else
     printf("[ERRO] Falha ao remover usuário '%s': %s", id, err[1])
@@ -748,7 +749,7 @@ handlers["set-user"] = function(cmd)
   local succ, err = acsmgm:setUserName(id, cmd.params.name)
   if succ then
     print(string.format("[INFO] Usuário '%s' atualizado com sucesso", id))
-  elseif err[1] == ACS_UserDoesNotExistException then
+  elseif err[1] == ACS_UserNonExistentException then
     print(string.format("[ERRO] Usuário '%s' não cadastrado", id))
   else
     print(string.format("[ERRO] Falha ao atualizar usuário '%s': %s", id,
@@ -778,7 +779,7 @@ handlers["list-user"] = function(cmd)
     if succ then
       users = {user}
     else
-      if user[1] == ACS_UserDoesNotExistException then
+      if user[1] == ACS_UserNonExistentException then
         users = {}
       else
         printf("[ERRO] Falha ao recuperar informações: %s", user[1])
@@ -801,7 +802,7 @@ handlers["add-interface"] = function(cmd)
   local succ, err = rsmgm:addInterfaceIdentifier(iface)
   if succ then
     printf("[INFO] Interface '%s' cadastrada com sucesso", iface)
-  elseif err[1] == RS_InterfaceAlreadyExistsException then
+  elseif err[1] == RS_InterfaceIdentifierAlreadyExistsException then
     printf("[ERRO] Interface '%s' já cadastrada", iface)
   else
     printf("[ERRO] Falha ao cadastrar interface '%s': %s", iface, err[1])
@@ -816,12 +817,12 @@ end
 handlers["del-interface"] = function(cmd)
   local rsmgm = getrsmgm()
   local iface = cmd.params[cmd.name]
-  local succ, err = rsmgm:removeInterface(iface)
+  local succ, err = rsmgm:removeInterfaceIdentifier(iface)
   if succ then
     printf("[INFO] Interface '%s' removida com sucesso", iface)
-  elseif err[1] == RS_InterfaceInUseException then
+  elseif err[1] == RS_InterfaceIdentifierInUseException then
     printf("[ERRO] Interface '%s' em uso", iface)
-  elseif err[1] == RS_InterfaceDoesNotExistException then
+  elseif err[1] == RS_InterfaceIdentifierNonExistentException then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
   else
     printf("[ERRO] Falha ao remover interface: %s", err[1])
@@ -835,7 +836,7 @@ end
 --
 handlers["list-interface"] = function(cmd)
   local rsmgm = getrsmgm()
-  local succ, ifaces = rsmgm:getInterfaces()
+  local succ, ifaces = rsmgm:getInterfaceIdentifiers()
   if not succ then
     printf("[ERRO] Falha ao exibir interfaces: %s",ifaces[1])
     return
@@ -856,7 +857,7 @@ handlers["set-authorization"] = function(cmd)
   -- Concede uma autorização
   if cmd.params.grant then
     iface = cmd.params.grant
-    succ, err = rsmgm:grant(id, iface)
+    succ, err = rsmgm:grant(id, iface, not cmd.params["no-strict"])
     msg = string.format("[INFO] Autorização concedida a '%s': %s", id, iface)
   else
     -- Revoga autorização
@@ -866,11 +867,11 @@ handlers["set-authorization"] = function(cmd)
   end
   if succ then
     print(msg)
-  elseif err[1] == RS_EntityDoesNotExistException then
+  elseif err[1] == RS_MemberNonExistentException then
     printf("[ERRO] Membro '%s' não cadastrado", id)
-  elseif err[1] == RS_InterfaceDoesNotExistException then
+  elseif err[1] == RS_InterfaceIdentifierNonExistentException then
     printf("[ERRO] Interface '%s' não cadastrada", iface)
-  elseif err[1] == RS_AuthorizationDoesNotExist then
+  elseif err[1] == RS_AuthorizationNonExistentException then
     printf("[ERRO] Implantação '%s' não possui autorização para '%s'",
       id, iface)
   elseif err[1] == RS_InvalidRegularExpressionException then
@@ -888,11 +889,11 @@ end
 handlers["del-authorization"] = function(cmd)
   local rsmgm = getrsmgm()
   local id = cmd.params[cmd.name]
-  local succ, err = rsmgm:revoke(id)
+  local succ, err = rsmgm:removeAuthorization(id)
   if succ then
     printf("[INFO] Autorizações de '%s' removidas com sucesso",
       cmd.params[cmd.name])
-  elseif err[1] == RS_AuthorizationDoesNotExist then
+  elseif err[1] == RS_AuthorizationNonExistentException then
     printf("[ERRO] Implantação '%s' não possui autorizações", id)
   else
     printf("[ERRO] Falha ao remover autorizações: %s", err[1])
@@ -914,7 +915,7 @@ handlers["list-authorization"] = function(cmd)
     local succ, auth = rsmgm:getAuthorization(id)
     if succ then
       auths = { auth }
-    elseif auth[1] == RS_AuthorizationDoesNotExist then
+    elseif auth[1] == RS_AuthorizationNonExistentException then
       printf("[ERRO] Membro '%s' não possui autorização", id)
       return
     else
@@ -934,7 +935,7 @@ handlers["list-authorization"] = function(cmd)
     end
   else
     -- Busca todas
-    succ, auths = rsmgm:getAllEntityAuthorizations()
+    succ, auths = rsmgm:getAuthorizations()
     if not succ then
       printf("[ERRO] Falha ao recuperar informações: %s", auths[1])
       return
@@ -960,7 +961,7 @@ handlers["list-offer"] = function(cmd)
       return
     end
   else
-    succ, offers = rsmgm:getOfferedInterfacesByEntity(cmd.params[cmd.name])
+    succ, offers = rsmgm:getOfferedInterfacesByMember(cmd.params[cmd.name])
     if not succ then
       printf("[ERRO] Falha ao listar interfaces oferecidas %s: %s",
          cmd.params[cmd.name], offers[1])
@@ -979,14 +980,8 @@ end
 handlers["del-offer"] = function(cmd)
   local rsmgm = getrsmgm()
   local id = cmd.params[cmd.name]
-
-  local rgs = Openbus:getRegistryService()
-  if not rgs then
-    print("[ERRO] Serviço de Registro não está conectado.")
-    return
-  end
-  local removed = rgs:unregister(id)
-  if removed then
+  local succ, removed = rsmgm:unregister(id)
+  if succ and removed then
     print("[INFO] Oferta removida com sucesso")
   else
     printf("[ERRO] Falha ao remover oferta '%s'", id)
@@ -1117,7 +1112,8 @@ end
 --
 function Grant(auth)
   if not (type(auth) == "table" and type(auth.id) == "string" and
-    type(auth.interfaces) == "table")
+    type(auth.interfaces) == "table" and (type(auth.strict) == "nil" or
+    type(auth.strict) == "boolean"))
   then
     argerror()
   end
@@ -1125,6 +1121,9 @@ function Grant(auth)
   cmd.name = "set-authorization"
   cmd.params = {}
   cmd.params[cmd.name] = auth.id
+  if auth.strict == false then
+    cmd.params["no-strict"] = null
+  end
   for n, iface in ipairs(auth.interfaces) do
     cmd.params.grant = iface
     handlers[cmd.name](cmd)
@@ -1174,13 +1173,13 @@ local function connect(retry)
       if not initialized then
         print(string.format(
             "[ERRO] Openbus não pode ser inicializado. Verifique se existe um barramento em %s:%s",
-            tostring(acshost), tostring(acsport)))
+            acshost or "nil", acsport or "nil"))
         return
       end
       local orb = Openbus:getORB()
-      orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.IDL_VERSION..
+      orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.OB_VERSION..
           "/registry_service.idl")
-      orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.IDL_VERSION..
+      orb:loadidlfile(IDLPATH_DIR .. "/"..Utils.OB_VERSION..
           "/access_control_service.idl")
     end
     if Openbus:connectByLoginPassword(login, localPassword) == false then
@@ -1212,7 +1211,7 @@ function getacsmgm()
   end
   local ic = acs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
-  acsmgm = ic:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
+  acsmgm = ic:getFacetByName("IManagement_" .. Utils.OB_VERSION)
   acsmgm = orb:narrow(acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
   acsmgm = orb:newproxy(acsmgm, "protected")
   return acsmgm
@@ -1236,7 +1235,7 @@ function getrsmgm()
   end
   ic = rs:_component()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
-  rsmgm = ic:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
+  rsmgm = ic:getFacetByName("IManagement_" .. Utils.OB_VERSION)
   rsmgm = orb:narrow(rsmgm, Utils.MANAGEMENT_RS_INTERFACE)
   rsmgm = orb:newproxy(rsmgm, "protected")
   return rsmgm
