@@ -8,7 +8,6 @@ local string = string
 local format = string.format
 
 local oil = require "oil"
-local orb = oil.orb
 local Utils = require "openbus.util.Utils"
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
@@ -30,8 +29,6 @@ if DATA_DIR == nil then
 end
 
 local BIN_DIR = os.getenv("OPENBUS_HOME") .. "/core/bin"
-
-orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/access_control_service.idl")
 
 ---
 --Componente (membro) responsavel pelo Monitor do Servico de Controle de Acesso
@@ -62,7 +59,8 @@ end
 ---
 function FTACSMonitorFacet:getService()
   local recep =  self.context.IReceptacles
-  recep = Openbus:getORB():narrow(recep, "IDL:scs/core/IReceptacles:1.0")
+  local orb = Openbus:getORB()
+  recep = orb:narrow(recep, "IDL:scs/core/IReceptacles:1.0")
   local status, conns = oil.pcall(recep.getConnections, recep,
       "IFaultTolerantService")
   if not status then
@@ -70,7 +68,7 @@ function FTACSMonitorFacet:getService()
     return nil
   elseif conns[1] then
     local service = conns[1].objref
-    service = Openbus:getORB():narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
+    service = orb:narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
     return orb:newproxy(service, "protected")
   end
   Log:error("Nao foi possivel obter o Serviço.")
@@ -213,6 +211,9 @@ end
 --@see scs.core.IComponent#startup
 ---
 function startup(self)
+  local orb = self.context:getORB()
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/access_control_service.idl")
+
   local monitor = self.context.IFTServiceMonitor
   monitor:connect()
 
