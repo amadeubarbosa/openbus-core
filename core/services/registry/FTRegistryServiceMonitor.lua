@@ -7,12 +7,9 @@ local string = string
 local format = string.format
 local oil = require "oil"
 
-local orb = oil.orb
-
 local tostring = tostring
 local pairs = pairs
 
---local IComponent = require "scs.core.IComponent"
 local Log = require "openbus.util.Log"
 local Openbus = require "openbus.Openbus"
 local OilUtilities = require "openbus.util.OilUtilities"
@@ -38,7 +35,6 @@ end
 local BIN_DIR = os.getenv("OPENBUS_HOME") .. "/core/bin"
 
 
-orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
 ---
 --Componente responsável pelo Monitor do Serviço de Registro
 ---
@@ -57,8 +53,9 @@ FTRSMonitorFacet = oop.class{}
 --@return A faceta do Serviço de registro, ou nil caso não tenha sido definido.
 ---
 function FTRSMonitorFacet:getService()
+  local orb = Openbus:getORB()
   local recep =  self.context.IReceptacles
-  recep = Openbus:getORB():narrow(recep, "IDL:scs/core/IReceptacles:1.0")
+  recep = orb:narrow(recep, "IDL:scs/core/IReceptacles:1.0")
   local status, conns = oil.pcall(recep.getConnections, recep,
       "IFaultTolerantService")
   if not status then
@@ -67,7 +64,7 @@ function FTRSMonitorFacet:getService()
     return nil
   elseif conns[1] then
     local service = conns[1].objref
-    service = Openbus:getORB():narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
+    service = orb:narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
     return orb:newproxy(service, "protected")
   end
   Log:error("Não foi possível obter o a faceta de tolerância a falhas do serviço de registro")
@@ -122,9 +119,10 @@ end
 --Monitora o serviço de registro e cria uma nova réplica se necessário.
 ---
 function FTRSMonitorFacet:monitor()
+  local orb = Openbus:getORB()
   local timeOut = assert(loadfile(DATA_DIR .."/conf/FTTimeOutConfiguration.lua"))()
   local ftRec = self.context.IReceptacles
-  ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
+  ftRec = orb:narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
 
   while true do
     local reinit = false
@@ -190,7 +188,7 @@ function FTRSMonitorFacet:monitor()
 
         self.recConnId = nil
 
-        local ftrsService = Openbus:getORB():newproxy("corbaloc::"..self.hostAdd.. "/" ..
+        local ftrsService = orb:newproxy("corbaloc::"..self.hostAdd.. "/" ..
                                            Utils.FAULT_TOLERANT_RS_KEY,
                                            "synchronous",
                                            Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
@@ -229,6 +227,9 @@ end
 --@see scs.core.IComponent#startup
 ---
 function startup(self)
+  local orb = Openbus:getORB()
+  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
+
   local monitor = self.context.IFTServiceMonitor
   monitor:connect()
 
@@ -240,7 +241,7 @@ function startup(self)
   monitor.hostAdd = monitor.config.registryServerHostName..
       ":".. tostring(monitor.config.registryServerHostPort)
 
-  local ftrsService = Openbus:getORB():newproxy("corbaloc::"..monitor.hostAdd.. "/" ..
+  local ftrsService = orb:newproxy("corbaloc::"..monitor.hostAdd.. "/" ..
       Utils.FAULT_TOLERANT_RS_KEY,
       "synchronous",
       Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
@@ -250,7 +251,7 @@ function startup(self)
   end
 
   local ftRec = self.context.IReceptacles
-  ftRec = Openbus:getORB():narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
+  ftRec = orb:narrow(ftRec, "IDL:scs/core/IReceptacles:1.0")
 
   local connId = ftRec:connect("IFaultTolerantService",ftrsService)
   if not connId then
