@@ -1668,6 +1668,7 @@ function startup(self)
   local mgm = self.context.IManagement
   local acs = self.context.IAccessControlService
   local config = acs.config
+  local orb = Openbus:getORB()
 
   -- O ACS precisa configurar os interceptadores manualmente
   -- pois não realiza conexão.
@@ -1725,7 +1726,7 @@ function startup(self)
   else
     path = DATA_DIR .. "/" .. config.databaseDirectory
   end
-  acs.credentialDB = CredentialDB(path)
+  acs.credentialDB = CredentialDB(path, orb)
   local entriesDB = acs.credentialDB:retrieveAll()
   for _, entry in pairs(entriesDB) do
     entry.lease.lastUpdate = os.time()
@@ -1784,7 +1785,6 @@ function startup(self)
     return
   end
 
-  local orb = Openbus:getORB()
   local i = 1
   repeat
     if ftFacet.ftconfig.hosts.ACS[i] ~= ftFacet.acsReference then

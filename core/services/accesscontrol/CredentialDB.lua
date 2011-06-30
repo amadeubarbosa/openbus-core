@@ -10,7 +10,6 @@ local error = error
 
 local lfs = require "lfs"
 local oil = require "oil"
-local orb = oil.orb
 
 local FileStream = require "loop.serial.FileStream"
 
@@ -34,7 +33,7 @@ FILE_SEPARATOR = "/"
 --
 --@return O banco de dados de credenciais.
 ---
-function __init(self, databaseDirectory)
+function __init(self, databaseDirectory, orb)
   local mode = lfs.attributes(databaseDirectory, "mode")
   if not mode then
     Log:debug(format("O diretorio %s nao foi encontrado e, por isso, será criado",
@@ -49,6 +48,7 @@ function __init(self, databaseDirectory)
   return oop.rawnew(self, {
     databaseDirectory = databaseDirectory,
     credentials = {},
+    orb = orb,
   })
 end
 
@@ -74,7 +74,7 @@ function retrieveAll(self)
 
       -- caso especial para referencias a membros
       if entry.component then
-        entry.component = orb:newproxy(entry.component)
+        entry.component = self.orb:newproxy(entry.component)
       end
 
       entries[credential.identifier] = entry
@@ -162,7 +162,7 @@ function writeCredential(self, entry)
   }
   local component = entry.component
   if component then
-    stream[component] = "'"..orb:tostring(component).."'"
+    stream[component] = "'"..self.orb:tostring(component).."'"
   end
   stream:put(entry)
 
