@@ -10,7 +10,6 @@ local assert   = assert
 local loadfile = loadfile
 
 local oil = require "oil"
-local orb = oil.orb
 
 local SessionService = require "core.services.session.SessionService"
 local Openbus = require "openbus.Openbus"
@@ -40,6 +39,7 @@ SessionServiceComponent = oop.class({}, scs.Component)
 ---
 function SessionServiceComponent:startup()
   local DATA_DIR = os.getenv("OPENBUS_DATADIR")
+  local orb = Openbus:getORB()
 
   -- Verifica se é o primeiro startup
   if not self.initialized then
@@ -116,6 +116,7 @@ end
 --Procedimento após a reconexão do serviço.
 ---
 function SessionServiceComponent:expired()
+  local orb = Openbus:getORB()
   Openbus:connectByCertificate(self.context._componentId.name,
     self.privateKeyFile, self.accessControlServiceCertificateFile)
 
@@ -161,6 +162,7 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function SessionServiceComponent:shutdown()
+  local orb = Openbus:getORB()
   if not self.started then
     Log:error("O serviço de sessão já está finalizado")
     error{"IDL:SCS/ShutdownFailed:1.0"}

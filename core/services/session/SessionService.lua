@@ -2,7 +2,6 @@
 
 local oil = require "oil"
 local Openbus = require "openbus.Openbus"
-local orb = oil.orb
 
 local luuid = require "uuid"
 
@@ -110,6 +109,7 @@ function SessionService:createSession(member)
     return false, nil, self.invalidMemberIdentifier
   end
   -- Cria nova sessão
+  local orb = Openbus:getORB()
   local component = scs.newComponent(facetDescriptions, receptacleDescs,
     componentId)
   component.ISession.identifier = self:generateIdentifier()
@@ -163,6 +163,7 @@ function SessionService:credentialWasDeletedById(credentialId)
     Log:debug(format(
         "A credencial %s deixou de ser válida e sua sessão foi removida",
         credentialId))
+    local orb = Openbus:getORB()
     orb:deactivate(component.ISession)
     orb:deactivate(component.IMetaInterface)
     orb:deactivate(component.SessionEventSink)
@@ -178,6 +179,7 @@ end
 -- @param session Sessão que o membro não vai mais participar
 --
 function SessionService:observe(credentialId, session)
+  local orb = Openbus:getORB()
   local sessions = self.observed[credentialId]
   if not sessions then
     sessions = {}
@@ -209,6 +211,7 @@ end
 -- @param session Sessão que o membro não vai mais participar.
 --
 function SessionService:unObserve(credentialId, session)
+  local orb = Openbus:getORB()
   local sessions = self.observed[credentialId]
   sessions[session.identifier] = nil
   if not next(sessions) then

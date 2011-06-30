@@ -13,8 +13,6 @@ local Openbus = require "openbus.Openbus"
 local Log     = require "openbus.util.Log"
 local Utils   = require "openbus.util.Utils"
 
-local orb = oil.orb
-
 ---
 --Sessão compartilhada pelos membros associados a uma mesma credencial.
 ---
@@ -70,6 +68,7 @@ function Session:addMember(member)
       componentId.patch_version, self.identifier))
 
   -- Verifica se o membro recebe eventos
+  local orb = Openbus:getORB()
   local eventSink = member:getFacet(eventSinkInterface)
   local eventSinkPrev = member:getFacet(eventSinkInterfacePrev)
   if eventSink then
