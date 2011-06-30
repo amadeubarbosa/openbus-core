@@ -8,7 +8,6 @@ local error = error
 
 local lfs = require "lfs"
 local oil = require "oil"
-local orb = oil.orb
 
 local FileStream = require "loop.serial.FileStream"
 
@@ -32,7 +31,7 @@ FILE_SEPARATOR = "/"
 --
 --@return O banco de dados de ofertas de serviço.
 ---
-function __init(self, databaseDirectory)
+function __init(self, databaseDirectory, orb)
   local mode = lfs.attributes(databaseDirectory, "mode")
   if not mode then
     Log:info(format("O diretorio %s não foi encontrado. Criando...",
@@ -47,6 +46,7 @@ function __init(self, databaseDirectory)
   return oop.rawnew(self, {
     databaseDirectory = databaseDirectory,
     dbOffers = {},
+    orb = orb,
   })
 end
 
@@ -71,7 +71,7 @@ function retrieveAll(self)
 
       -- caso especial para referencias a membros
       local memberIOR = offerEntry.offer.member
-      offerEntry.offer.member = orb:newproxy(memberIOR, "protected", "IDL:scs/core/IComponent:1.0")
+      offerEntry.offer.member = self.orb:newproxy(memberIOR, "protected", "IDL:scs/core/IComponent:1.0")
       offerEntries[offerEntry.identifier] = offerEntry
     end
   end
@@ -157,7 +157,7 @@ function writeOffer(self, offerEntry)
   }
 
   local member =  offerEntry.offer.member
-  stream[member] = "'"..orb:tostring(member).."'"
+  stream[member] = "'"..self.orb:tostring(member).."'"
   stream:put(offerEntry)
   offerFile:close()
 

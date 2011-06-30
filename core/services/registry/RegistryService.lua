@@ -20,7 +20,6 @@ local setfenv = setfenv
 
 local luuid = require "uuid"
 local oil = require "oil"
-local orb = oil.orb
 
 local TableDB  = require "openbus.util.TableDB"
 local OffersDB = require "core.services.registry.OffersDB"
@@ -1056,6 +1055,7 @@ function startup(self)
   local rs = self.context.IRegistryService
   local config = rs.config
   self.context.IFaultTolerantService:init()
+  local orb = Openbus:getORB()
 
   -- Verifica se é o primeiro startup
   if not rs.initialized then
@@ -1079,7 +1079,7 @@ function startup(self)
     else
       databaseDirectory = DATA_DIR.."/"..config.databaseDirectory
     end
-    rs.offersDB = OffersDB(databaseDirectory)
+    rs.offersDB = OffersDB(databaseDirectory, orb)
     rs.initialized = true
   else
     Log:debug("O serviço de registro já foi inicializado anteriormente")
@@ -1114,7 +1114,6 @@ function startup(self)
         self.registryService:credentialWasDeleted(credential)
       end
   }
-  local orb = Openbus:getORB()
   rs.observer = orb:newservant(observer, "RegistryServiceCredentialObserver",
     Utils.CREDENTIAL_OBSERVER_INTERFACE)
   rs.observerId = accessControlService:addObserver(rs.observer, {})
@@ -1703,7 +1702,7 @@ function ManagementFacet:updateManagementStatus(command, data)
   repeat
     if ftFacet.ftconfig.hosts.RS[i] ~= ftFacet.rsReference then
       local ret, succ, remoteRGS = oil.pcall(Utils.fetchService,
-        Openbus:getORB(), ftFacet.ftconfig.hosts.RS[i],
+        orb, ftFacet.ftconfig.hosts.RS[i],
         Utils.REGISTRY_SERVICE_INTERFACE)
       if succ then
         --encontrou outra replica
