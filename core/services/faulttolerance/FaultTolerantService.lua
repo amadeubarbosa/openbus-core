@@ -1,6 +1,5 @@
 local os = os
 local oil = require "oil"
-local orb = oil.orb
 
 local Log = require "openbus.util.Log"
 local oop = require "loop.simple"
