@@ -8,6 +8,13 @@ local format = string.format
 
 local oil = require "oil"
 
+local ComponentContext = require "scs.core.ComponentContext"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
+local SessionServiceComponent =
+  require "core.services.session.SessionServiceComponent"
+local SessionService = require "core.services.session.SessionService"
+local SessionServicePrev = require "core.services.session.SessionService_Prev"
+
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local Audit = require "openbus.util.Audit"
@@ -33,9 +40,9 @@ local usage_msg = [[
                 .. tostring(SessionServerConfiguration.accessControlServerHostName) .. [[)
   --acs-port=<port number> : defines the ACS service port (default=]]
                 .. tostring(SessionServerConfiguration.accessControlServerHostPort) .. [[)
-  --port=<port number>     : defines the service port (default=]] 
+  --port=<port number>     : defines the service port (default=]]
                 .. tostring(SessionServerConfiguration.sessionServerHostPort) .. [[)
-  --host=<IP number>       : defines the IP number (or hostname) to use (default=]] 
+  --host=<IP number>       : defines the IP number (or hostname) to use (default=]]
                 .. tostring(SessionServerConfiguration.sessionServerHostName) .. [[)
  NOTES:
   The prefix '--' is optional in all options.
@@ -122,78 +129,41 @@ orb:loadidlfile(idlfile)
 idlfile = IDLPATH_DIR .. "/"..Utils.IDL_PREV.."/session_service.idl"
 orb:loadidlfile(idlfile)
 
-local scs = require "scs.core.base"
-local SessionServiceComponent =
-  require "core.services.session.SessionServiceComponent"
-local SessionService = require "core.services.session.SessionService"
-local SessionServicePrev = require "core.services.session.SessionService_Prev"
-local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
-
------------------------------------------------------------------------------
--- Descricoes do Componente Servico de Sessao
------------------------------------------------------------------------------
-
--- Facet Descriptions
-local facetDescriptions = {}
-facetDescriptions.IComponent            = {}
-facetDescriptions.ISessionService       = {}
-facetDescriptions.ISessionService_Prev  = {}
-facetDescriptions.ICredentialObserver   = {}
-facetDescriptions.IReceptacles          = {}
-
-facetDescriptions.IComponent.name                    = "IComponent"
-facetDescriptions.IComponent.interface_name          = Utils.COMPONENT_INTERFACE
-facetDescriptions.IComponent.class                   = SessionServiceComponent.SessionServiceComponent
-
-facetDescriptions.ISessionService.name               = "ISessionService_"..Utils.IDL_VERSION
-facetDescriptions.ISessionService.interface_name     = Utils.SESSION_SERVICE_INTERFACE
-facetDescriptions.ISessionService.class              = SessionService.SessionService
-
-facetDescriptions.ISessionService_Prev.name           = "ISessionService"
-facetDescriptions.ISessionService_Prev.interface_name = Utils.SESSION_SERVICE_INTERFACE_PREV
-facetDescriptions.ISessionService_Prev.class          = SessionServicePrev.SessionService
-
--- Nao precisa ter 2 versoes de credential observer pois e' uma comunicacao intra-barramento.
--- O barramento como um todo sempre estara na mesma versao (mais nova).
-facetDescriptions.ICredentialObserver.name           = "SessionServiceCredentialObserver"
-facetDescriptions.ICredentialObserver.interface_name = Utils.CREDENTIAL_OBSERVER_INTERFACE
-facetDescriptions.ICredentialObserver.class          = SessionService.Observer
-
-facetDescriptions.IReceptacles.name           = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE
-facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
-
--- Receptacle Descriptions
-local receptacleDescs = {}
-receptacleDescs.AccessControlServiceReceptacle = {}
-receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
-receptacleDescs.AccessControlServiceReceptacle.interface_name =  "IDL:scs/core/IComponent:1.0"
-receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = true
-
--- component id
-local componentId = {}
-componentId.name = "SessionService"
-componentId.major_version = 1
-componentId.minor_version = 0
-componentId.patch_version = 0
-componentId.platform_spec = ""
-
 function main()
   -- Aloca uma thread do OiL para o orb
   Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Sessão
-  success, res = oil.pcall(scs.newComponent, facetDescriptions, receptacleDescs,
-      componentId)
-  if not success then
-    Log:error(format(
-        "Ocorreu um erro ao criar o componente do serviço de sessão: %s",
-        tostring(res)))
-    os.exit(1)
-  end
-  res.IComponent.config = SessionServerConfiguration
-  local sessionServiceComponent = res.IComponent
-  success, res = oil.pcall(sessionServiceComponent.startup,
+  local componentId = {}
+  componentId.name = "SessionService"
+  componentId.major_version = 1
+  componentId.minor_version = 0
+  componentId.patch_version = 0
+  componentId.platform_spec = ""
+
+  local component = ComponentContext(orb, componentId)
+  component:putFacet("IComponent",
+                      Utils.COMPONENT_INTERFACE,
+                      SessionServiceComponent.SessionServiceComponent())
+  component:putFacet("ISessionService_"..Utils.IDL_VERSION,
+                      Utils.SESSION_SERVICE_INTERFACE,
+                      SessionService.SessionService())
+  component:putFacet("ISessionService",
+                      Utils.SESSION_SERVICE_INTERFACE_PREV,
+                      SessionServicePrev.SessionService())
+  -- Nao precisa ter 2 versoes de credential observer pois e' uma comunicacao intra-barramento.
+  -- O barramento como um todo sempre estara na mesma versao (mais nova).
+  component:putFacet("SessionServiceCredentialObserver",
+                      Utils.CREDENTIAL_OBSERVER_INTERFACE,
+                      SessionService.Observer())
+  component:putFacet("IReceptacles",
+                      Utils.RECEPTACLES_INTERFACE,
+                      AdaptiveReceptacle.AdaptiveReceptacleFacet())
+  component:putReceptacle("AccessControlServiceReceptacle", "IDL:scs/core/IComponent:1.0", true)
+
+  component.IComponent.config = SessionServerConfiguration
+  local sessionServiceComponent = component.IComponent
+  local success, res = oil.pcall(sessionServiceComponent.startup,
       sessionServiceComponent)
   if not success then
     Log:error(format("Ocorreu um erro ao iniciar o serviço de sessão: %s",

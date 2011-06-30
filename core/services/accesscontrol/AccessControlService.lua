@@ -36,8 +36,6 @@ local CertificateDB = require "core.services.accesscontrol.CertificateDB"
 local Log = require "openbus.util.Log"
 local Audit = require "openbus.util.Audit"
 
-local scs = require "scs.core.base"
-
 local oop = require "loop.simple"
 
 
@@ -135,7 +133,7 @@ function ACSFacet:loginByCertificate(name, answer)
       interceptedCredential.delegate == "AccessControlService" then
       local entry = self.entries[interceptedCredential.identifier]
       if not entry then
-        local ftFacet = self.context.IFaultTolerantService
+        local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
         if #ftFacet.ftconfig.hosts.ACS > 1 then
           local i = 1
           local stop = false
@@ -188,7 +186,7 @@ end
 --@see loginByCertificate
 ---
 function ACSFacet:getChallenge(name)
-  local mgm = self.context.IManagement
+  local mgm = self.context["IManagement_" .. Utils.IDL_VERSION]
   local succ, cert = oil.pcall(mgm.getSystemDeploymentCertificate, mgm, name)
   if succ then
     Log:debug(format("O certificado da entidade %s foi encontrado", name))
@@ -250,7 +248,7 @@ function ACSFacet:logout(credential)
     end
   end
 
-  local ftFacet = self.context.IFaultTolerantService
+  local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
   if not ftFacet:isFTInited() then
     return true
   end
@@ -300,7 +298,7 @@ function ACSFacet:isValid(credential)
     --troca credenciais para verificacao de permissao na faceta FT
     local intCredential = Openbus:getInterceptedCredential()
     Openbus.serverInterceptor.picurrent:setValue(Openbus:getCredential())
-    local ftFacet = self.context.IFaultTolerantService
+    local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
     local gotEntry = ftFacet:updateStatus(credential)
     --desfaz a troca
     Openbus.serverInterceptor.picurrent:setValue(intCredential)
@@ -395,7 +393,7 @@ end
 --@return a credencial caso exista, ou uma entrada vazia caso contrário.
 ---
 function ACSFacet:getEntryCredential(credential)
-  self.context.IManagement:checkPermission()
+  self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
 
   local emptyEntry = {
                 aCredential = {  identifier = "",
@@ -424,7 +422,7 @@ function ACSFacet:getEntryCredential(credential)
 end
 
 function ACSFacet:getAllEntryCredential()
-  self.context.IManagement:checkPermission()
+  self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
 
   local retEntries = {}
   local i = 0
@@ -701,7 +699,7 @@ LeaseProviderFacet = oop.class{}
 -- @return Indicador se a lease foi renovada (true ou false) e o valor do lease.
 ---
 function LeaseProviderFacet:renewLease(credential)
-  self = self.context.IAccessControlService
+  self = self.context["IAccessControlService_" .. Utils.IDL_VERSION]
   if not self:isValid(credential) then
     return false, self.invalidLease
   end
@@ -975,7 +973,7 @@ function ManagementFacet:removeSystemDeployment(id)
     end
 
     -- Invalida a credencial do membro que está sendo removido
-    local acs = self.context.IAccessControlService
+    local acs = self.context["IAccessControlService_" .. Utils.IDL_VERSION]
     acs:removeEntryById(id)
     -- Remove todas as autorizações do membro
     local succ, rs =  oil.pcall(Utils.getReplicaFacetByReceptacle,
@@ -1245,7 +1243,7 @@ function ManagementFacet:updateManagementStatus(command, data)
     return
   end
 
-  local ftFacet = self.context.IFaultTolerantService
+  local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
   if not ftFacet:isFTInited() then
     return
   end
@@ -1364,7 +1362,7 @@ function ACSReceptacleFacet:getConnections(receptacle)
 end
 
 function ACSReceptacleFacet:connect(receptacle, object)
- self.context.IManagement:checkPermission()
+ self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
  local connId = PersistentReceptacle.PersistentReceptacleFacet.connect(self,
                           receptacle,
                           object) -- calling inherited method
@@ -1404,7 +1402,7 @@ end
 -- Disconnect nao faz a desconexao de volta: [RS]--( 0--[ACS] porque nao tem a
 -- referencia para o serviço que está se desconectando
 function ACSReceptacleFacet:disconnect(connId)
-  self.context.IManagement:checkPermission()
+  self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
   -- calling inherited method
   local status = oil.pcall(PersistentReceptacle.PersistentReceptacleFacet.disconnect, self, connId)
   if status then
@@ -1422,7 +1420,7 @@ function ACSReceptacleFacet:updateConnectionState(command, data)
     return
   end
 
-  local ftFacet = self.context.IFaultTolerantService
+  local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
   if not ftFacet:isFTInited() then
     return
   end
@@ -1489,7 +1487,7 @@ function FaultToleranceFacet:init()
   setfenv(loadConfig,self)
   loadConfig()
 
-  local acs = self.context.IAccessControlService
+  local acs = self.context["IAccessControlService_" .. Utils.IDL_VERSION]
 
   local notInHostAdd = acs.config.hostName..":"
                    ..tostring(acs.config.hostPort)
@@ -1509,7 +1507,7 @@ function FaultToleranceFacet:updateStatus(params)
     --chamada remota
     input = params._anyval
     --a permissão só é verificada em chamadas remotas
-    self.context.IManagement:checkPermission()
+    self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
   end
 
   --Atualiza estado das credenciais
@@ -1540,7 +1538,7 @@ function FaultToleranceFacet:updateStatus(params)
 
         if ret and succ then
           --encontrou outra replica
-          local acsFacet = self.context.IAccessControlService
+          local acsFacet = self.context["IAccessControlService_" .. Utils.IDL_VERSION]
 
           local repEntries = acs:getAllEntryCredential()
           if # repEntries > 0 then
@@ -1620,7 +1618,7 @@ function FaultToleranceFacet:updateStatus(params)
     if entryCredential then
       if entryCredential.aCredential.identifier ~= "" then
         --ADICIONA LOCALMENTE
-        local acsFacet = self.context.IAccessControlService
+        local acsFacet = self.context["IAccessControlService_" .. Utils.IDL_VERSION]
         local addEntry = {}
         addEntry.credential = entryCredential.aCredential
         addEntry.certified = entryCredential.certified
@@ -1665,8 +1663,8 @@ end
 ---
 function startup(self)
   local path
-  local mgm = self.context.IManagement
-  local acs = self.context.IAccessControlService
+  local mgm = self.context["IManagement_".. Utils.IDL_VERSION]
+  local acs = self.context["IAccessControlService_" .. Utils.IDL_VERSION]
   local config = acs.config
   local orb = Openbus:getORB()
 
@@ -1777,7 +1775,7 @@ function startup(self)
   Log:info(format("Foram recuperados %d receptáculos para o serviço de registro",
       #recoveredConns))
 
-  local ftFacet = self.context.IFaultTolerantService
+  local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
   ftFacet:init()
 
   if # ftFacet.ftconfig.hosts.ACS <= 1 then
@@ -1880,14 +1878,12 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
-  local acs = self.context.IAccessControlService
+  local acs = self.context["IAccessControlService_" .. Utils.IDL_VERSION]
   acs.leaseProvider:stopCheck()
-  local orb = Openbus:getORB()
-  orb:deactivate(acs)
-  orb:deactivate(self.context.IManagement)
-  orb:deactivate(self.context.ILeaseProvider)
-  orb:deactivate(self.context.IFaultTolerantService)
-  orb:deactivate(self.context.IComponent)
+  local errors = self.context:deactivateComponent()
+  for k, v in pairs(errors) do
+    Log:warn(format("Não foi possível desativar a faceta %s. Erro: %s", k, tostring(v)))
+  end
   --Mata as threads de validação de credencial e de atualização do estado
   --e chama o finish que por sua vez mata o orb
   Openbus:destroy()

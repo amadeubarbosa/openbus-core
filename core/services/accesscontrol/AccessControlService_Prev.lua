@@ -1,6 +1,6 @@
 -- $Id:
 
-local Openbus = require "openbus.Openbus" 
+local Openbus = require "openbus.Openbus"
 local oop = require "loop.simple"
 local Utils = require "openbus.util.Utils"
 
@@ -16,57 +16,57 @@ module("core.services.accesscontrol.AccessControlService_Prev")
 ACSFacet = oop.class{}
 
 function ACSFacet:loginByPassword(name, password)
-  return self.context.IAccessControlService:loginByPassword(name, 
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:loginByPassword(name,
            password)
 end
 
 function ACSFacet:loginByCertificate(name, answer)
-  return self.context.IAccessControlService:loginByCertificate(name, 
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:loginByCertificate(name,
            answer)
 end
 
 function ACSFacet:getChallenge(name)
-  return self.context.IAccessControlService:getChallenge(name) 
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:getChallenge(name)
 end
 
 function ACSFacet:logout(credential)
-  return self.context.IAccessControlService:logout(credential)
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:logout(credential)
 end
 
 function ACSFacet:isValid(credential)
-  return self.context.IAccessControlService:isValid(credential)
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:isValid(credential)
 end
 
 function ACSFacet:areValid(credentials)
-  return self.context.IAccessControlService:areValid(credentials)
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:areValid(credentials)
 end
 
 function ACSFacet:addObserver(observer, credentialIdentifiers)
-  return self.context.IAccessControlService:addObserver(observer, credentialIdentifiers) 
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:addObserver(observer, credentialIdentifiers)
 end
 
 function ACSFacet:getEntryCredential(credential)
-  return self.context.IAccessControlService:getEntryCredential(credential)
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:getEntryCredential(credential)
 end
 
 function ACSFacet:getAllEntryCredential()
-  return self.context.IAccessControlService:getAllEntryCredential()
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:getAllEntryCredential()
 end
 
 
 function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifier)
-  return self.context.IAccessControlService:addCredentialToObserver(
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:addCredentialToObserver(
            observerIdentifier, credentialIdentifier)
 end
 
 function ACSFacet:removeObserver(observerIdentifier, credential)
-  return self.context.IAccessControlService:removeObserver(
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:removeObserver(
            observerIdentifier, credential)
 end
 
 function ACSFacet:removeCredentialFromObserver(observerIdentifier,
     credentialIdentifier)
-  return self.context.IAccessControlService:removeCredentialFromObserver(
+  return self.context["IAccessControlService_" .. Utils.IDL_VERSION]:removeCredentialFromObserver(
            observerIdentifier, credentialIdentifier)
 end
 
@@ -97,6 +97,6 @@ end
 LeaseProviderFacet = oop.class{}
 
 function LeaseProviderFacet:renewLease(credential)
-  return self.context.ILeaseProvider:renewLease(credential)
+  return self.context["ILeaseProvider_" .. Utils.IDL_VERSION]:renewLease(credential)
 end
 

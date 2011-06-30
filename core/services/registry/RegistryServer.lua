@@ -11,10 +11,17 @@ local string = string
 local format = string.format
 
 local oil = require "oil"
+
+local ComponentContext = require "scs.core.ComponentContext"
+
 local Openbus = require "openbus.Openbus"
 local Log = require "openbus.util.Log"
 local Audit = require "openbus.util.Audit"
 local Utils = require "openbus.util.Utils"
+
+local RegistryService = require "core.services.registry.RegistryService"
+local RegistryServicePrev = require "core.services.registry.RegistryService_Prev"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 if DATA_DIR == nil then
@@ -131,81 +138,48 @@ Openbus:enableFaultTolerance()
 
 local orb = Openbus:getORB()
 
-local scs = require "scs.core.base"
-local RegistryService = require "core.services.registry.RegistryService"
-local RegistryServicePrev = require "core.services.registry.RegistryService_Prev"
-local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
-
------------------------------------------------------------------------------
----- RegistryService Descriptions
--------------------------------------------------------------------------------
-
----- Facet Descriptions
-local facetDescriptions = {}
-facetDescriptions.IComponent                 = {}
-facetDescriptions.IRegistryService           = {}
-facetDescriptions.IRegistryService_Prev      = {}
-facetDescriptions.IManagement                = {}
-facetDescriptions.IFaultTolerantService      = {}
-facetDescriptions.IReceptacles               = {}
-
-facetDescriptions.IComponent.name                  = "IComponent"
-facetDescriptions.IComponent.interface_name        = Utils.COMPONENT_INTERFACE
-facetDescriptions.IComponent.class                 = scs.Component
-facetDescriptions.IComponent.key                   = "IC"
-
-facetDescriptions.IRegistryService.name            = "IRegistryService_" .. Utils.IDL_VERSION
-facetDescriptions.IRegistryService.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE
-facetDescriptions.IRegistryService.class           = RegistryService.RSFacet
-facetDescriptions.IRegistryService.key             = Utils.REGISTRY_SERVICE_KEY
-
-facetDescriptions.IRegistryService_Prev.name            = "IRegistryService"
-facetDescriptions.IRegistryService_Prev.interface_name  = Utils.REGISTRY_SERVICE_INTERFACE_PREV
-facetDescriptions.IRegistryService_Prev.class           = RegistryServicePrev.RSFacet
-facetDescriptions.IRegistryService_Prev.key             = Utils.REGISTRY_SERVICE_KEY_PREV
-
-facetDescriptions.IFaultTolerantService.name            = "IFaultTolerantService_" .. Utils.IDL_VERSION
-facetDescriptions.IFaultTolerantService.interface_name  = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
-facetDescriptions.IFaultTolerantService.class           = RegistryService.FaultToleranceFacet
-facetDescriptions.IFaultTolerantService.key             = Utils.FAULT_TOLERANT_RS_KEY
-
-facetDescriptions.IManagement.name            = "IManagement_" .. Utils.IDL_VERSION
-facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_RS_INTERFACE
-facetDescriptions.IManagement.class           = RegistryService.ManagementFacet
-facetDescriptions.IManagement.key             = Utils.MANAGEMENT_RS_KEY
-
-facetDescriptions.IReceptacles.name           = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE
-facetDescriptions.IReceptacles.class          = RegistryService.RGSReceptacleFacet
-
--- Receptacle Descriptions
-local receptacleDescs = {}
-receptacleDescs.AccessControlServiceReceptacle = {}
-receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
-receptacleDescs.AccessControlServiceReceptacle.interface_name = Utils.COMPONENT_INTERFACE
-receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = true
-
-
----- component id
-local componentId = {}
-componentId.name = "RegistryService"
-componentId.major_version = 1
-componentId.minor_version = 0
-componentId.patch_version = 0
-componentId.platform_spec = ""
-
 function main()
   -- Aloca uma thread do OiL para o orb
   Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Registro
-  rsInst = scs.newComponent(facetDescriptions, receptacleDescs, componentId)
+  local componentId = {}
+  componentId.name = "RegistryService"
+  componentId.major_version = 1
+  componentId.minor_version = 0
+  componentId.patch_version = 0
+  componentId.platform_spec = ""
+
+  local keys = {}
+  keys.IComponent = "IC"
+
+  rsInst = ComponentContext(orb, componentId, keys)
+  rsInst:putFacet("IRegistryService_" .. Utils.IDL_VERSION,
+                  Utils.REGISTRY_SERVICE_INTERFACE,
+                  RegistryService.RSFacet(),
+                  Utils.REGISTRY_SERVICE_KEY)
+  rsInst:putFacet("IRegistryService",
+                  Utils.REGISTRY_SERVICE_INTERFACE_PREV,
+                  RegistryServicePrev.RSFacet(),
+                  Utils.REGISTRY_SERVICE_KEY_PREV)
+  rsInst:putFacet("IFaultTolerantService_" .. Utils.IDL_VERSION,
+                  Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
+                  RegistryService.FaultToleranceFacet(),
+                  Utils.FAULT_TOLERANT_RS_KEY)
+  rsInst:putFacet("IManagement_" .. Utils.IDL_VERSION,
+                  Utils.MANAGEMENT_RS_INTERFACE,
+                  RegistryService.ManagementFacet,
+                  Utils.MANAGEMENT_RS_KEY)
+  rsInst:putFacet("IReceptacles",
+                  Utils.RECEPTACLES_INTERFACE,
+                  RegistryService.RGSReceptacleFacet())
+  rsInst:putReceptacle("AccessControlServiceReceptacle", Utils.COMPONENT_INTERFACE, true)
 
   -- Configuracoes
   rsInst.IComponent.startup = RegistryService.startup
   rsInst.IComponent.shutdown = RegistryService.shutdown
 
-  local rs = rsInst.IRegistryService
+  local rs = rsInst["IRegistryService_" .. Utils.IDL_VERSION]
   rs.config = RegistryServerConfiguration
 
   success, res = oil.pcall (rsInst.IComponent.startup, rsInst.IComponent)

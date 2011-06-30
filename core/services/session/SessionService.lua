@@ -13,7 +13,8 @@ local Utils = require "openbus.util.Utils"
 
 local oop = require "loop.base"
 
-local scs = require "scs.core.base"
+local ComponentContext = require "scs.core.ComponentContext"
+local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 local tostring = tostring
 local table    = table
@@ -22,8 +23,6 @@ local ipairs   = ipairs
 local next     = next
 
 local format = string.format
-
-local AdaptiveReceptacle = require "scs.adaptation.AdaptiveReceptacle"
 
 ---
 --Faceta que disponibiliza a funcionalidade básica do serviço de sessão.
@@ -41,45 +40,6 @@ SessionService = oop.class{
   observed = {},                -- Mapeia um membro nas sessões que ele faz parte
   invalidMemberIdentifier = "",
 }
-
------------------------------------------------------------------------------
--- Descricoes do Componente Sessao
------------------------------------------------------------------------------
-
--- Facet Descriptions
-local facetDescriptions = {}
-facetDescriptions.SessionEventSink       = {}
-facetDescriptions.SessionEventSink_Prev  = {}
-facetDescriptions.ISession               = {}
-facetDescriptions.ISession_Prev          = {}
-facetDescriptions.IReceptacles           = {}
-
-facetDescriptions.SessionEventSink.name           = "SessionEventSink_"..Utils.IDL_VERSION
-facetDescriptions.SessionEventSink.interface_name = Utils.SESSION_ES_INTERFACE
-facetDescriptions.SessionEventSink.class          = Session.SessionEventSink
-
-facetDescriptions.SessionEventSink_Prev.name           = "SessionEventSink"
-facetDescriptions.SessionEventSink_Prev.interface_name = Utils.SESSION_ES_INTERFACE_PREV
-facetDescriptions.SessionEventSink_Prev.class          = SessionPrev.SessionEventSink
-
-facetDescriptions.ISession.name                   = "ISession"..Utils.IDL_VERSION
-facetDescriptions.ISession.interface_name         = Utils.SESSION_INTERFACE
-facetDescriptions.ISession.class                  = Session.Session
-
-facetDescriptions.ISession_Prev.name             = "ISession"
-facetDescriptions.ISession_Prev.interface_name   = Utils.SESSION_INTERFACE_PREV
-facetDescriptions.ISession_Prev.class            = SessionPrev.Session
-
-facetDescriptions.IReceptacles.name           = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE
-facetDescriptions.IReceptacles.class          = AdaptiveReceptacle.AdaptiveReceptacleFacet
-
--- Receptacle Descriptions
-local receptacleDescs = {}
-receptacleDescs.AccessControlServiceReceptacle = {}
-receptacleDescs.AccessControlServiceReceptacle.name           = "AccessControlServiceReceptacle"
-receptacleDescs.AccessControlServiceReceptacle.interface_name = "IDL:scs/core/IComponent:1.0"
-receptacleDescs.AccessControlServiceReceptacle.is_multiplex   = true
 
 -- component id
 local componentId = {}
@@ -110,36 +70,51 @@ function SessionService:createSession(member)
   end
   -- Cria nova sessão
   local orb = Openbus:getORB()
-  local component = scs.newComponent(facetDescriptions, receptacleDescs,
-    componentId)
-  component.ISession.identifier = self:generateIdentifier()
-  component.ISession.credential = credential
-  component.ISession.sessionService = self
-  component.SessionEventSink.sessionService = self
+  local component = ComponentContext(orb, componentId)
+  component:putFacet("SessionEventSink_"..Utils.IDL_VERSION,
+                      Utils.SESSION_ES_INTERFACE,
+                      Session.SessionEventSink())
+  component:putFacet("SessionEventSink",
+                      Utils.SESSION_ES_INTERFACE_PREV,
+                      SessionPrev.SessionEventSink())
+  component:putFacet("ISession_"..Utils.IDL_VERSION,
+                      Utils.SESSION_INTERFACE,
+                      Session.Session())
+  component:putFacet("ISession",
+                      Utils.SESSION_INTERFACE_PREV,
+                      SessionPrev.Session())
+  component:putFacet("IReceptacles",
+                      Utils.RECEPTACLES_INTERFACE,
+                      AdaptiveReceptacle.AdaptiveReceptacleFacet())
+  component:putReceptacle("AccessControlServiceReceptacle", "IDL:scs/core/IComponent:1.0", true)
+
+  local sessionFacet = component["ISession_"..Utils.IDL_VERSION]
+  sessionFacet.identifier = self:generateIdentifier()
+  sessionFacet.credential = credential
+  sessionFacet.sessionService = self
+  component["SessionEventSink_"..Utils.IDL_VERSION].sessionService = self
   self.sessions[credential.identifier] = component
   Log:debug(format("A credencial {%s. %s, %s} criou a sessão %s",
       credential.identifier, credential.owner, credential.delegate,
-      component.ISession.identifier))
+      sessionFacet.identifier))
 
   -- A credencial deve ser observada!
   local status, acsFacet = oil.pcall(Utils.getReplicaFacetByReceptacle,
     orb, self.context.IComponent, "AccessControlServiceReceptacle",
     "IAccessControlService_" .. Utils.IDL_VERSION, acsIDL)
   if not status or not acsFacet then
-    orb:deactivate(component.ISession)
-    orb:deactivate(component.IMetaInterface)
-    orb:deactivate(component.SessionEventSink)
-    orb:deactivate(component.IComponent)
+    component:deactivateComponent()
+    component = nil
     self.sessions[credentialId] = nil
     return false, nil, self.invalidMemberIdentifier
   end
 
   if not self.observerId then
-    self.observerId = acsFacet:addObserver(self.context.ICredentialObserver, {})
+    self.observerId = acsFacet:addObserver(self.context.SessionServiceCredentialObserver, {})
   end
 
   -- Adiciona o membro à sessão
-  local memberID = component.ISession:addMember(member)
+  local memberID = sessionFacet:addMember(member)
   return true, component.IComponent, memberID
 end
 
@@ -163,11 +138,8 @@ function SessionService:credentialWasDeletedById(credentialId)
     Log:debug(format(
         "A credencial %s deixou de ser válida e sua sessão foi removida",
         credentialId))
-    local orb = Openbus:getORB()
-    orb:deactivate(component.ISession)
-    orb:deactivate(component.IMetaInterface)
-    orb:deactivate(component.SessionEventSink)
-    orb:deactivate(component.IComponent)
+    component:deactivateComponent()
+    component = nil
     self.sessions[credentialId] = nil
   end
 end
@@ -271,7 +243,7 @@ function SessionService:expired()
 
   -- Registra novamente o observador de credenciais
   self.observerId = acsFacet:addObserver(
-      self.context.ICredentialObserver, {}
+      self.context.SessionServiceCredentialObserver, {}
   )
   Log:debug(format(
       "O observador de credenciais foi recadastrado com o identificador %s",
@@ -318,5 +290,5 @@ end
 Observer = oop.class{}
 
 function Observer:credentialWasDeleted(credential)
-  self.context.ISessionService:credentialWasDeletedById(credential.identifier)
+  self.context["ISessionService_" .. Utils.IDL_VERSION]:credentialWasDeletedById(credential.identifier)
 end

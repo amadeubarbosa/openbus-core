@@ -2,6 +2,7 @@ local os = os
 local oil = require "oil"
 
 local Log = require "openbus.util.Log"
+local Utils   = require "openbus.util.Utils"
 local oop = require "loop.simple"
 
 ---
@@ -33,11 +34,11 @@ function FaultToleranceFacet:isAlive()
 end
 
 function FaultToleranceFacet:setStatus(isAlive)
-    self.context.IManagement:checkPermission()
+    self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
     self.faultDescription._isAlive = isAlive
 end
 
 function FaultToleranceFacet:kill()
-    self.context.IManagement:checkPermission()
+    self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
     self.context.IComponent:shutdown()
 end

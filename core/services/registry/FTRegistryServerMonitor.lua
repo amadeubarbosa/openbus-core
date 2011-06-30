@@ -11,8 +11,10 @@ local print = print
 local Utils = require "openbus.util.Utils"
 local Log = require "openbus.util.Log"
 local oil = require "oil"
+local ComponentContext = require "scs.core.ComponentContext"
 local Openbus = require "openbus.Openbus"
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
+local FTRegistryServiceMonitor = require "core.services.registry.FTRegistryServiceMonitor"
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
@@ -83,56 +85,7 @@ local miConfig = assert(loadfile(DATA_DIR ..
 
 local orb = Openbus:getORB()
 
-local FTRegistryServiceMonitor = require "core.services.registry.FTRegistryServiceMonitor"
-local scs = require "scs.core.base"
-
 orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/fault_tolerance.idl")
-
------------------------------------------------------------------------------
--- FTRegistryServiceMonitor Descriptions
------------------------------------------------------------------------------
-
--- Facet Descriptions
-local facetDescriptions = {}
-facetDescriptions.IComponent                     = {}
-facetDescriptions.IReceptacles                   = {}
-facetDescriptions.IMetaInterface                 = {}
-facetDescriptions.IFTServiceMonitor              = {}
-
-facetDescriptions.IComponent.name                     = "IComponent"
-facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
-facetDescriptions.IComponent.class                    = scs.Component
-facetDescriptions.IComponent.key                      = "IC"
-
-facetDescriptions.IReceptacles.name                   = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name         = "IDL:scs/core/IReceptacles:1.0"
-facetDescriptions.IReceptacles.class                  = scs.Receptacles
-
-facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
-facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
-facetDescriptions.IMetaInterface.class                = scs.MetaInterface
-
-facetDescriptions.IFTServiceMonitor.name              = "IFTServiceMonitor_" .. Utils.IDL_VERSION
-facetDescriptions.IFTServiceMonitor.interface_name    = Utils.FT_SERVICE_MONITOR_INTERFACE
-facetDescriptions.IFTServiceMonitor.class             = FTRegistryServiceMonitor.FTRSMonitorFacet
-facetDescriptions.IFTServiceMonitor.key               = FT_RS_MONITOR_KEY
-
--- Receptacle Descriptions
-local receptacleDescriptions = {}
-receptacleDescriptions.IFaultTolerantService = {}
-receptacleDescriptions.IFaultTolerantService.name           = "IFaultTolerantService"
-receptacleDescriptions.IFaultTolerantService.interface_name = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
-receptacleDescriptions.IFaultTolerantService.is_multiplex   = false
-receptacleDescriptions.IFaultTolerantService.type           = "Receptacle"
-
--- component id
-local componentId = {}
-componentId.name = "RGSMonitor"
-componentId.major_version = 1
-componentId.minor_version = 0
-componentId.patch_version = 0
-componentId.platform_spec = ""
-
 
 ---
 --Função que será executada pelo OiL em modo protegido.
@@ -155,7 +108,22 @@ function main()
   Openbus:_setClientInterceptor( clientInterceptor )
 
   -- Cria o componente responsável pelo Monitor do Serviço de Registro
-  local ftrsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+  local componentId = {}
+  componentId.name = "RGSMonitor"
+  componentId.major_version = 1
+  componentId.minor_version = 0
+  componentId.patch_version = 0
+  componentId.platform_spec = ""
+
+  local keys = {}
+  keys.IComponent = "IC"
+
+  local ftrsInst = ComponentContext(orb, componentId, keys)
+  ftrsInst:putFacet("IFTServiceMonitor_" .. Utils.IDL_VERSION,
+                    Utils.FT_SERVICE_MONITOR_INTERFACE,
+                    FTRegistryServiceMonitor.FTRSMonitorFacet(),
+                    FT_RS_MONITOR_KEY)
+  ftrsInst:putReceptacle("IFaultTolerantService", Utils.FAULT_TOLERANT_SERVICE_INTERFACE, false)
 
   -- Configurações
   ftrsInst.IComponent.startup = FTRegistryServiceMonitor.startup

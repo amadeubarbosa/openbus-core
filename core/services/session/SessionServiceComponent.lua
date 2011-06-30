@@ -18,7 +18,8 @@ local Utils = require "openbus.util.Utils"
 
 local Log = require "openbus.util.Log"
 
-local scs = require "scs.core.base"
+local Component = require "scs.core.Component"
+local ComponentContext = require "scs.core.ComponentContext"
 
 local oop = require "loop.simple"
 
@@ -30,7 +31,7 @@ module "core.services.session.SessionServiceComponent"
 local UnathorizedFacets = "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
     "/registry_service/UnathorizedFacets:1.0"
 
-SessionServiceComponent = oop.class({}, scs.Component)
+SessionServiceComponent = oop.class({}, Component)
 
 ---
 --Inicia o componente.
@@ -85,7 +86,7 @@ function SessionServiceComponent:startup()
   end
 
   -- configura faceta ISessionService
-  self.sessionService = self.context.ISessionService
+  self.sessionService = self.context["ISessionService_" .. Utils.IDL_VERSION]
 
   -- registra sua oferta de serviço junto ao Serviço de Registro
   self.serviceOffer = {
@@ -108,7 +109,7 @@ function SessionServiceComponent:startup()
     error{"IDL:SCS/StartupFailed:1.0"}
   end
   self.registryIdentifier = identifier
-  
+
   self.started = true
 end
 

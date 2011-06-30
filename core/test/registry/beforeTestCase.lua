@@ -5,8 +5,6 @@ local tostring = tostring
 require "oil"
 local orb = oil.orb
 
-local scs = require "scs.core.base"
-
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 local Utils = require "openbus.util.Utils"
@@ -32,16 +30,6 @@ local Hello_v1  = {
   receptacles = {},
   -- Descrição das facetas
   facets = {
-    IComponent = {
-      name = "IComponent",
-      interface_name = Utils.COMPONENT_INTERFACE,
-      class = scs.Component
-    },
-    IMetaInterface = {
-      name = "IMetaInterface",
-      interface_name = Utils.METAINTERFACE_INTERFACE,
-      class = scs.MetaInterface
-    },
    IHello_v1 = {
       name = "IHello_v1_"..ltime,
       interface_name = "IDL:IHello_v1_"..ltime..":1.0",
@@ -73,17 +61,6 @@ local Hello_v2  = {
   receptacles = {},
   -- Descrição das facetas
   facets = {
-    IComponent = {
-      name = "IComponent",
-      interface_name = Utils.COMPONENT_INTERFACE,
-      class = scs.Component
-    },
-
-    IMetaInterface = {
-      name = "IMetaInterface",
-      interface_name = Utils.METAINTERFACE_INTERFACE,
-      class = scs.MetaInterface
-    },
     IHello_v1 = {
       name = "IHello_v1_"..ltime,
       interface_name = "IDL:IHello_v1_"..ltime..":1.0",
@@ -121,16 +98,6 @@ local Hello_v2_2  = {
   receptacles = {},
   -- Descrição das facetas
   facets = {
-    IComponent = {
-      name = "IComponent",
-      interface_name = Utils.COMPONENT_INTERFACE,
-      class = scs.Component
-    },
-    IMetaInterface = {
-      name = "IMetaInterface",
-      interface_name = Utils.METAINTERFACE_INTERFACE,
-      class = scs.MetaInterface
-    },
     IHello_v2 = {
       name = "IHello_v2_"..ltime,
       interface_name = "IDL:IHello_v2_"..ltime..":1.0",
@@ -164,16 +131,6 @@ local Hello_v3  = {
   receptacles = {},
   -- Descrição das facetas
   facets = {
-    IComponent = {
-      name = "IComponent",
-      interface_name = Utils.COMPONENT_INTERFACE,
-      class = scs.Component
-    },
-    IMetaInterface = {
-      name = "IMetaInterface",
-      interface_name = Utils.METAINTERFACE_INTERFACE,
-      class = scs.MetaInterface
-    },
     IHello_v1 = {
       name = "IHello_v1_"..ltime,
       interface_name = "IDL:IHello_v1_"..ltime..":1.0",
@@ -320,7 +277,7 @@ function Before:beforeTestCase()
   self.deploymentId = self.systemId
   self.testKeyFile  = self.systemId .. ".key"
   self.acsCertFile  = DATA_DIR.."/certificates/AccessControlService.crt"
-  local testACSCertFile = assert(io.open(self.acsCertFile,"r"), 
+  local testACSCertFile = assert(io.open(self.acsCertFile,"r"),
                   string.format("Arquivo '%s' não encontrado.",self.acsCertFile))
   testACSCertFile:close()
 

@@ -1,6 +1,5 @@
 local print = print
 require "oil"
-local orb = oil.orb
 
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"

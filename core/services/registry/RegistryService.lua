@@ -258,7 +258,7 @@ function RSFacet:createFacetIndex(owner, allFacets)
   local facets = {}
   local invalidCount = 0
   local invalidFacets = {}
-  local mgm = self.context.IManagement
+  local mgm = self.context["IManagement_" .. Utils.IDL_VERSION]
   -- Inverte o índice para facilitar a busca
   for _, facet in ipairs(allFacets) do
     facetsByName[facet.name] = facet
@@ -303,7 +303,7 @@ function RSFacet:unregister(identifier)
        end
     end
 
-    local ftFacet = self.context.IFaultTolerantService
+    local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
     if not ftFacet:isFTInited() then
       return ret, false
     end
@@ -477,7 +477,7 @@ end
 --@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:find(facets)
-  local ftFacet = self.context.IFaultTolerantService
+  local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
 
   local params = { facets = facets, criteria = {} }
   --troca credenciais para verificacao de permissao na faceta FT
@@ -525,7 +525,7 @@ end
 --@return As ofertas de serviço que foram encontradas.
 ---
 function RSFacet:findByCriteria(facets, criteria)
-  local ftFacet = self.context.IFaultTolerantService
+  local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
 
   local params = { facets = facets, criteria = criteria}
   --troca credenciais para verificacao de permissao na faceta FT
@@ -789,7 +789,7 @@ function RGSReceptacleFacet:getConnections(receptacle)
 end
 
 function RGSReceptacleFacet:connect(receptacle, object)
- self.context.IManagement:checkPermission()
+ self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
  local connId = AdaptiveReceptacle.AdaptiveReceptacleFacet.connect(self,
                           receptacle,
                           object) -- calling inherited method
@@ -801,7 +801,7 @@ function RGSReceptacleFacet:connect(receptacle, object)
 end
 
 function RGSReceptacleFacet:disconnect(connId)
-  self.context.IManagement:checkPermission()
+  self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
   -- calling inherited method
   local status = oil.pcall(AdaptiveReceptacle.AdaptiveReceptacleFacet.disconnect, self, connId)
   if status then
@@ -821,7 +821,7 @@ function RGSReceptacleFacet:updateConnectionState(command, data)
        end
     end
 
-    local ftFacet = self.context.IFaultTolerantService
+    local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
     if not ftFacet:isFTInited() then
       return
     end
@@ -891,7 +891,7 @@ function FaultToleranceFacet:init()
   setfenv(loadConfig,self);
   loadConfig()
 
-  local rgs = self.context.IRegistryService
+  local rgs = self.context["IRegistryService_" .. Utils.IDL_VERSION]
   local notInHostAdd = rgs.config.registryServerHostName .. ":"
     .. tostring(rgs.config.registryServerHostPort)
 
@@ -913,7 +913,7 @@ function FaultToleranceFacet:updateStatus(params)
     input = params._anyval
 
     --A permissao so eh verificada em chamadas remotas
-    self.context.IManagement:checkPermission()
+    self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
   end
 
   local facets = {}
@@ -942,7 +942,7 @@ function FaultToleranceFacet:updateOffersStatus(facets, criteria)
   Log:debug(format(
       "Sincronizando a base de ofertas de serviço com as replicas exceto %s",
       self.rsReference))
-  local rgs = self.context.IRegistryService
+  local rgs = self.context["IRegistryService_" .. Utils.IDL_VERSION]
   local updated = false
   local i = 1
   local count = 0
@@ -1051,10 +1051,10 @@ end
 --@see scs.core.IComponent#startup
 ---
 function startup(self)
-  local mgm = self.context.IManagement
-  local rs = self.context.IRegistryService
+  local mgm = self.context["IManagement_" .. Utils.IDL_VERSION]
+  local rs = self.context["IRegistryService_" .. Utils.IDL_VERSION]
   local config = rs.config
-  self.context.IFaultTolerantService:init()
+  self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]:init()
   local orb = Openbus:getORB()
 
   -- Verifica se é o primeiro startup
@@ -1175,7 +1175,7 @@ end
 --@see scs.core.IComponent#shutdown
 ---
 function shutdown(self)
-  local rs = self.context.IRegistryService
+  local rs = self.context["IRegistryService_" .. Utils.IDL_VERSION]
   if not rs.started then
     Log:error("Servico ja foi finalizado.")
     error{"IDL:SCS/ShutdownFailed:1.0"}
@@ -1202,10 +1202,11 @@ function shutdown(self)
 
   Log:info("O serviço de registro foi finalizado")
 
-  orb:deactivate(rs)
-  orb:deactivate(self.context.IManagement)
-  orb:deactivate(self.context.IFaultTolerantService)
-  orb:deactivate(self.context.IComponent)
+  local errors = self.context:deactivateComponent()
+  for k, v in pairs(errors) do
+    Log:warn(format("Não foi possível desativar a faceta %s. Erro: %s", k, tostring(v)))
+  end
+
   --Mata as threads de validação de credencial e de atualização do estado
   --e chama o finish que por sua vez mata o orb
   Openbus:destroy()
@@ -1601,7 +1602,7 @@ end
 function ManagementFacet:getOfferedInterfaces()
   self:checkPermission()
   local array = {}
-  local offers = self.context.IRegistryService.offersByIdentifier
+  local offers = self.context["IRegistryService_" .. Utils.IDL_VERSION].offersByIdentifier
   for id, offer in pairs(offers) do
     local ifaces = {}
     for facet, type in pairs(offer.facets) do
@@ -1632,7 +1633,7 @@ function ManagementFacet:getOfferedInterfacesByMember(member)
   self:checkPermission()
   local array = {}
   local ifaces = {}
-  local offers = self.context.IRegistryService.offersByIdentifier
+  local offers = self.context["IRegistryService_" .. Utils.IDL_VERSION].offersByIdentifier
 
   for id, offer in pairs(offers) do
     if offer.credential.owner == member then
@@ -1661,7 +1662,7 @@ end
 --
 function ManagementFacet:unregister(id)
   self:checkPermission()
-  return self.context.IRegistryService:rawUnregister(id)
+  return self.context["IRegistryService_" .. Utils.IDL_VERSION]:rawUnregister(id)
 end
 
 
@@ -1685,7 +1686,7 @@ function ManagementFacet:updateManagementStatus(command, data)
      end
   end
 
-  local ftFacet = self.context.IFaultTolerantService
+  local ftFacet = self.context["IFaultTolerantService_" .. Utils.IDL_VERSION]
   if not ftFacet.ftConfig then
     return false
   end

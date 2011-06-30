@@ -6,6 +6,8 @@ local tostring = tostring
 local oop = require "loop.simple"
 local oil = require "oil"
 
+local Utils = require "openbus.util.Utils"
+
 local Log = require "openbus.util.Log"
 ---
 -- Código responsável pelo Serviço de Registro na versao anterior à atual do barramento.
@@ -18,9 +20,11 @@ module("core.services.registry.RegistryService_Prev")
 
 RSFacet = oop.class{}
 
+local rsFacetName = "IRegistryService_" .. Utils.IDL_VERSION
+
 function RSFacet:register(serviceOffer)
-  local status, ret = oil.pcall(self.context.IRegistryService.register,
-                                self.context.IRegistryService,
+  local status, ret = oil.pcall(self.context[rsFacetName].register,
+                                self.context[rsFacetName],
                                 serviceOffer)
   if not status then
     Log:error("Erro na execução do 'register' da versão 1.4")
@@ -31,12 +35,12 @@ function RSFacet:register(serviceOffer)
 end
 
 function RSFacet:unregister(identifier)
-  return self.context.IRegistryService:unregister(identifier)
+  return self.context[rsFacetName]:unregister(identifier)
 end
 
 function RSFacet:update(identifier, properties)
-  local status, ret = oil.pcall(self.context.IRegistryService.update,
-                                self.context.IRegistryService,
+  local status, ret = oil.pcall(self.context[rsFacetName].update,
+                                self.context[rsFacetName],
                                 identifier, properties)
   if not status then
     return false
@@ -45,7 +49,7 @@ function RSFacet:update(identifier, properties)
 end
 
 function RSFacet:find(facets)
-  return self.context.IRegistryService:find(facets)
+  return self.context[rsFacetName]:find(facets)
 end
 
 function RSFacet:findByCriteria(facets, criteria)
@@ -60,10 +64,10 @@ function RSFacet:findByCriteria(facets, criteria)
     end
   end
 
-  return self.context.IRegistryService:findByCriteria(facets, criteria)
+  return self.context[rsFacetName]:findByCriteria(facets, criteria)
 end
 
 function RSFacet:localFind(facets, criteria)
-  return self.context.IRegistryService:localFind(facets, criteria)
+  return self.context[rsFacetName]:localFind(facets, criteria)
 end
 

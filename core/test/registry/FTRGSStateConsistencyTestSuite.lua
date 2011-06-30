@@ -9,7 +9,7 @@ require "oil"
 local orb = oil.orb
 local Check = require "latt.Check"
 local Utils = require "openbus.util.Utils"
-local scs = require "scs.core.base"
+local ComponentContext = require "scs.core.ComponentContext"
 local oop = require "loop.base"
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
@@ -36,46 +36,13 @@ local afterTestCase = dofile("accesscontrol/afterTestCase.lua")
 
 -- Descrições
 
-local Hello_vft  = {
-  -- Descrição dos receptáculos
-  receptacles = {},
-  -- Descrição das facetas
-  facets = {
-    IComponent = {
-      name = "IComponent",
-      interface_name = "IDL:scs/core/IComponent:1.0",
-      class = scs.Component
-    },
-    IMetaInterface = {
-      name = "IMetaInterface",
-      interface_name = "IDL:scs/core/IMetaInterface:1.0",
-      class = scs.MetaInterface
-    },
-    IHello_vft = {
-      name = "IHello_vft",
-      interface_name = "IDL:IHello_vft:1.0",
-      class = oop.class({}),
-    },
-  },
-  -- ComponentId
-  componentId = {
-    name = "Hello_vft",
-    major_version = 1,
-    minor_version = 0,
-    patch_version = 0,
-    platform_spec = "",
-  },
-  -- Propriedades para o registro.
-  properties = {
-    {name = "type",        value = {"IHello FT"}},
-    {name = "description", value = {"IHello FT versão 1.0"}},
-    {name = "version",     value = {"1.0"}},
-    -- Teste de propriedade vazia
-    {name = "bugs",        value = {}},
-  },
+local Hello_properties = {
+  {name = "type",        value = {"IHello FT"}},
+  {name = "description", value = {"IHello FT versão 1.0"}},
+  {name = "version",     value = {"1.0"}},
+  -- Teste de propriedade vazia
+  {name = "bugs",        value = {}},
 }
-
-
 
 Suite = {
 
@@ -116,12 +83,20 @@ Suite = {
        rsFacet1 = orb:narrow(rsFacet1, Utils.REGISTRY_SERVICE_INTERFACE)
        rsFacet1 = orb:newproxy(rsFacet1, "protected")
        --cadastra oferta na primeira réplica
-       local member = scs.newComponent(Hello_vft.facets, Hello_vft.receptacles,
-        Hello_vft.componentId)
+      local componentId = {
+        name = "Hello_vft",
+        major_version = 1,
+        minor_version = 0,
+        patch_version = 0,
+        platform_spec = "",
+      }
+      local member = ComponentContext(orb, componentId)
+      member:putFacet("IHello_vft", "IDL:IHello_vft:1.0", oop.class({})())
+
        -- Identificar local propositalmente
        local success, registryIdentifier = rsFacet1:register({
         member = member.IComponent,
-        properties = Hello_vft.properties,
+        properties = Hello_properties,
        })
        Check.assertTrue(success)
        Check.assertNotNil(registryIdentifier)

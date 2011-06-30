@@ -12,7 +12,7 @@ local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 local Utils = require "openbus.util.Utils"
 
-local scs = require "scs.core.base"
+local ComponentContext = require "scs.core.ComponentContext"
 
 local Check = require "latt.Check"
 
@@ -20,25 +20,18 @@ local Check = require "latt.Check"
 local user     = "tester"
 local password = "tester"
 
-local facetDescriptions = {
-  IComponent = {
-    name = "IComponent",
-    interface_name = Utils.COMPONENT_INTERFACE,
-    class = scs.Component
-  },
-  SessionEventSink = {
-    name = "SessionEventSink",
-    interface_name = Utils.SESSION_ES_INTERFACE,
-    class = oop.class{
-      push = function(self, sender, event)
-        print("Membro "..sender.." enviou evento "..event.type..
-            " com o valor "..event.value._anyval)
-      end,
-      disconnect = function(self, sender)
-        print("Aviso de desconexão enviado pelo membro "..sender)
-      end,
-    }
-  },
+local SessionEventSink = {
+  name = "SessionEventSink",
+  interface_name = Utils.SESSION_ES_INTERFACE,
+  class = oop.class{
+    push = function(self, sender, event)
+      print("Membro "..sender.." enviou evento "..event.type..
+          " com o valor "..event.value._anyval)
+    end,
+    disconnect = function(self, sender)
+      print("Aviso de desconexão enviado pelo membro "..sender)
+    end,
+  }
 }
 
 local componentId = {
@@ -120,7 +113,8 @@ Suite = {
     end,
 
     testCreateSession = function(self)
-      local member = scs.newComponent(facetDescriptions, {}, componentId)
+      local member = ComponentContext(orb, componentId)
+      member:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local success, session, id =
         self.sessionService:createSession(member.IComponent)
       Check.assertTrue(success)
@@ -132,8 +126,10 @@ Suite = {
     end,
 
     testCreateSession_AlreadyExists = function(self)
-      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
-      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member1 = ComponentContext(orb, componentId)
+      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      local member2 = ComponentContext(orb, componentId)
+      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local success, session1, session2, id1, id2
       success, session1, id1 =
@@ -152,7 +148,8 @@ Suite = {
     end,
 
     testGetSession = function(self)
-      local member = scs.newComponent(facetDescriptions, {}, componentId)
+      local member = ComponentContext(orb, componentId)
+      member:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local success, session1, id =
         self.sessionService:createSession(member.IComponent)
       Check.assertTrue(success)
@@ -175,8 +172,10 @@ Suite = {
     end,
 
     testAddRemoveMember = function(self)
-      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
-      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member1 = ComponentContext(orb, componentId)
+      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      local member2 = ComponentContext(orb, componentId)
+      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local success, session, id1, id2
       success, session, id1 =
@@ -197,7 +196,8 @@ Suite = {
     end,
 
     testRemove_InvalidIdentifier = function(self)
-      local member = scs.newComponent(facetDescriptions, {}, componentId)
+      local member = ComponentContext(orb, componentId)
+      member:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local success, session, id =
         self.sessionService:createSession(member.IComponent)
       Check.assertTrue(success)
@@ -210,8 +210,10 @@ Suite = {
     end,
 
     testRemoveMember_Logout = function(self)
-      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
-      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member1 = ComponentContext(orb, componentId)
+      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      local member2 = ComponentContext(orb, componentId)
+      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local success, session, id1 =
         self.sessionService:createSession(member1.IComponent)
@@ -236,8 +238,10 @@ Suite = {
     end,
 
     testDestroy_Logout = function(self)
-      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
-      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member1 = ComponentContext(orb, componentId)
+      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      local member2 = ComponentContext(orb, componentId)
+      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local _, credential = self.accessControlService:loginByPassword(user,
         password)
@@ -260,9 +264,12 @@ Suite = {
     end,
 
     testEvents = function(self)
-      local member1 = scs.newComponent(facetDescriptions, {}, componentId)
-      local member2 = scs.newComponent(facetDescriptions, {}, componentId)
-      local member3 = scs.newComponent(facetDescriptions, {}, componentId)
+      local member1 = ComponentContext(orb, componentId)
+      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      local member2 = ComponentContext(orb, componentId)
+      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      local member3 = ComponentContext(orb, componentId)
+      member3:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local success, sessionComponent, id1 =
         self.sessionService:createSession(member1.IComponent)

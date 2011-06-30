@@ -230,14 +230,14 @@ packages = {
     },
   },
   { name = "scs-idl-prev",
-    url = SVNREPURL .. "/scs/branches/SCS_v1_01_2010_05_13/idl",
+    url = SVNREPURL .. "/scs/core/idl/branches/SCS_CORE_IDL_v1_02_2010_09_21",
     directory = PRODAPP .."/scs-idl-prev",
     install_files = {
       ["scs.idl"] = "idlpath/"..IDL_PREV,
     },
   },
   { name = "scs-idl",
-    url = SVNREPURL .. "/scs/core/idl/branches/SCS_CORE_IDL_v1_02_2010_09_21",
+    url = SVNREPURL .. "/scs/core/idl/trunk",
     directory = PRODAPP .."/scs-idl",
     install_files = {
       ["src/scs.idl"] = "idlpath/"..IDL_VERSION,
@@ -255,7 +255,7 @@ packages = {
     },
   },
   { name = "scsall",
-    url = SVNREPURL .. "/scs/core/lua/branches/SCS_CORE_LUA_v1_02_2010_09_21",
+    url = SVNREPURL .. "/scs/core/lua/trunk",
     directory = PRODAPP .."/scs-lua",
     build = {
       type = "tecmake",
@@ -852,7 +852,7 @@ packages = {
     },
   },
   { name = "scs-java",
-    url = SVNREPURL .. "/scs/core/java/branches/SCS_CORE_JAVA_v1_02_2010_11_08",
+    url = SVNREPURL .. "/scs/core/java/trunk",
     directory = PRODAPP .."/scs-java",
     build = {
       type = "maven",

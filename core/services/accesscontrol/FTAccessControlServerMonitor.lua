@@ -16,6 +16,8 @@ local Utils = require "openbus.util.Utils"
 local oil = require "oil"
 local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 
+local ComponentContext = require "scs.core.ComponentContext"
+
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 
 
@@ -83,54 +85,8 @@ local miConfig = assert(loadfile(DATA_DIR ..
 local orb = Openbus:getORB()
 
 local FTAccessControlServiceMonitor = require "core.services.accesscontrol.FTAccessControlServiceMonitor"
-local scs = require "scs.core.base"
 
 orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/fault_tolerance.idl")
-
------------------------------------------------------------------------------
--- FTAccessControlServiceMonitor Descriptions
------------------------------------------------------------------------------
-
--- Facet Descriptions
-local facetDescriptions = {}
-facetDescriptions.IComponent                     = {}
-facetDescriptions.IReceptacles                   = {}
-facetDescriptions.IMetaInterface                 = {}
-facetDescriptions.IFTServiceMonitor              = {}
-
-facetDescriptions.IComponent.name                     = "IComponent"
-facetDescriptions.IComponent.interface_name           = "IDL:scs/core/IComponent:1.0"
-facetDescriptions.IComponent.class                    = scs.Component
-facetDescriptions.IComponent.key                      = "IC"
-
-facetDescriptions.IReceptacles.name                   = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name         = "IDL:scs/core/IReceptacles:1.0"
-facetDescriptions.IReceptacles.class                  = scs.Receptacles
-
-facetDescriptions.IMetaInterface.name                 = "IMetaInterface"
-facetDescriptions.IMetaInterface.interface_name       = "IDL:scs/core/IMetaInterface:1.0"
-facetDescriptions.IMetaInterface.class                = scs.MetaInterface
-
-facetDescriptions.IFTServiceMonitor.name              = "IFTServiceMonitor"
-facetDescriptions.IFTServiceMonitor.interface_name    = Utils.FT_SERVICE_MONITOR_INTERFACE
-facetDescriptions.IFTServiceMonitor.class             = FTAccessControlServiceMonitor.FTACSMonitorFacet
-facetDescriptions.IFTServiceMonitor.key               = "FTACSMonitor"
-
--- Receptacle Descriptions
-local receptacleDescriptions = {}
-receptacleDescriptions.IFaultTolerantService = {}
-receptacleDescriptions.IFaultTolerantService.name           = "IFaultTolerantService"
-receptacleDescriptions.IFaultTolerantService.interface_name = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
-receptacleDescriptions.IFaultTolerantService.is_multiplex   = false
-receptacleDescriptions.IFaultTolerantService.type           = "Receptacle"
-
--- component id
-local componentId = {}
-componentId.name = "ACSMonitor"
-componentId.major_version = 1
-componentId.minor_version = 0
-componentId.patch_version = 0
-componentId.platform_spec = ""
 
 ---
 --Função que será executada pelo OiL em modo protegido.
@@ -152,7 +108,25 @@ function main()
   Openbus:_setClientInterceptor( clientInterceptor )
 
   -- Cria o componente responsável pelo Monitor do Serviço de Controle de Acesso
-  local ftacsInst = scs.newComponent(facetDescriptions, receptacleDescriptions, componentId)
+  local componentId = {}
+  componentId.name = "ACSMonitor"
+  componentId.major_version = 1
+  componentId.minor_version = 0
+  componentId.patch_version = 0
+  componentId.platform_spec = ""
+
+  local keys = {}
+  keys.IComponent = "IC"
+
+  local ftacsInst = ComponentContext(Openbus:getORB(), componentId, keys)
+  ftacsInst:putFacet("IFTServiceMonitor",
+                      Utils.FT_SERVICE_MONITOR_INTERFACE,
+                      FTAccessControlServiceMonitor.FTACSMonitorFacet(),
+                      "FTACSMonitor")
+  ftacsInst:putReceptacle("IFaultTolerantService",
+                          Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
+                          false,
+                          "Receptacle")
 
   ftacsInst.IComponent.startup = FTAccessControlServiceMonitor.startup
 

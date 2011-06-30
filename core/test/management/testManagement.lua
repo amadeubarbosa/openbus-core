@@ -9,7 +9,7 @@ local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
 local CredentialManager = require "openbus.util.CredentialManager"
 local Utils = require "openbus.util.Utils"
 
-local scs = require "scs.core.base"
+local ComponentContext = require "scs.core.ComponentContext"
 
 local Check = require "latt.Check"
 
@@ -32,7 +32,6 @@ local function init(self)
     os.exit(1)
   end
   oil.verbose:level(0)
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/scs.idl")
   orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/access_control_service.idl")
   orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
   orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/access_control_service.idl")
@@ -1405,35 +1404,21 @@ function Test7:beforeTestCase()
   ]])
   -- Dados para os testes
   local Hello  = {
-    -- Descrição dos receptáculos
-    receptacles = {},
     -- Descrição das facetas
-    facets = {
-      IComponent = {
-        name = "IComponent",
-        interface_name = "IDL:scs/core/IComponent:1.0",
-        class = scs.Component
-      },
-      IMetaInterface = {
-        name = "IMetaInterface",
-        interface_name = "IDL:scs/core/IMetaInterface:1.0",
-        class = scs.MetaInterface
-      },
-      IHello_v1 = {
-        name = "IHello_v1",
-        interface_name = "IDL:IHello_v1:1.0",
-        class = oop.class({}),
-      },
-      IHello_v2 = {
-        name = "IHello_v2",
-        interface_name = "IDL:IHello_v2:1.0",
-        class = oop.class({}),
-      },
-      IHello_v3 = {
-        name = "IHello_v3",
-        interface_name = "IDL:IHello_v3:1.0",
-        class = oop.class({}),
-      },
+    IHello_v1 = {
+      name = "IHello_v1",
+      interface_name = "IDL:IHello_v1:1.0",
+      class = oop.class({}),
+    },
+    IHello_v2 = {
+      name = "IHello_v2",
+      interface_name = "IDL:IHello_v2:1.0",
+      class = oop.class({}),
+    },
+    IHello_v3 = {
+      name = "IHello_v3",
+      interface_name = "IDL:IHello_v3:1.0",
+      class = oop.class({}),
     },
     -- ComponentId
     componentId = {
@@ -1448,8 +1433,10 @@ function Test7:beforeTestCase()
   self.user = login
   self.acsMgt:addUser(self.user, self.user)
   --
-  self.member = scs.newComponent(Hello.facets, Hello.receptacles,
-    Hello.componentId)
+  self.member = ComponentContext(orb, Hello.componentId)
+  self.member:putFacet(Hello.IHello_v1.name, Hello.IHello_v1.interface_name, Hello.IHello_v1.class())
+  self.member:putFacet(Hello.IHello_v2.name, Hello.IHello_v2.interface_name, Hello.IHello_v2.class())
+  self.member:putFacet(Hello.IHello_v3.name, Hello.IHello_v3.interface_name, Hello.IHello_v3.class())
 end
 
 function Test7:afterTestCase()

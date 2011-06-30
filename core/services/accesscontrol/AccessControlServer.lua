@@ -14,6 +14,8 @@ local Audit = require "openbus.util.Audit"
 local Utils = require "openbus.util.Utils"
 local TableDB = require "openbus.util.TableDB"
 
+local ComponentContext = require "scs.core.ComponentContext"
+
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
   Log:error("A variável IDLPATH_DIR não foi definida")
@@ -106,7 +108,6 @@ function exitServer(files, status)
   os.exit(status or 0)
 end
 
-
 local props = { host = AccessControlServerConfiguration.hostName,
   port = AccessControlServerConfiguration.hostPort}
 
@@ -141,84 +142,8 @@ Openbus:enableFaultTolerance()
 
 local orb = Openbus:getORB()
 
-local scs = require "scs.core.base"
 local AccessControlService = require "core.services.accesscontrol.AccessControlService"
 local AccessControlServicePrev = require "core.services.accesscontrol.AccessControlService_Prev"
-
------------------------------------------------------------------------------
--- AccessControlService Descriptions
------------------------------------------------------------------------------
-
--- Facet Descriptions
-local facetDescriptions = {}
-facetDescriptions.IComponent                  = {}
-facetDescriptions.IAccessControlService       = {}
-facetDescriptions.IAccessControlService_Prev  = {}
-facetDescriptions.ILeaseProvider              = {}
-facetDescriptions.ILeaseProvider_Prev         = {}
-facetDescriptions.IFaultTolerantService       = {}
-facetDescriptions.IManagement                 = {}
-facetDescriptions.IReceptacles                = {}
-
-facetDescriptions.IComponent.name           = "IComponent"
-facetDescriptions.IComponent.interface_name = "IDL:scs/core/IComponent:1.0"
-facetDescriptions.IComponent.class          = scs.Component
-facetDescriptions.IComponent.key            = Utils.OPENBUS_KEY
-
-facetDescriptions.IAccessControlService.name            = "IAccessControlService_" .. Utils.IDL_VERSION
-facetDescriptions.IAccessControlService.interface_name  = Utils.ACCESS_CONTROL_SERVICE_INTERFACE
-facetDescriptions.IAccessControlService.class           = AccessControlService.ACSFacet
-facetDescriptions.IAccessControlService.key             = Utils.ACCESS_CONTROL_SERVICE_KEY
-
-facetDescriptions.IAccessControlService_Prev.name           = "IAccessControlService"
-facetDescriptions.IAccessControlService_Prev.interface_name = Utils.ACCESS_CONTROL_SERVICE_INTERFACE_PREV
-facetDescriptions.IAccessControlService_Prev.class          = AccessControlServicePrev.ACSFacet
-facetDescriptions.IAccessControlService_Prev.key            = Utils.ACCESS_CONTROL_SERVICE_KEY_PREV
-
-facetDescriptions.ILeaseProvider.name                        = "ILeaseProvider_" .. Utils.IDL_VERSION
-facetDescriptions.ILeaseProvider.interface_name              = Utils.LEASE_PROVIDER_INTERFACE
-facetDescriptions.ILeaseProvider.class                       = AccessControlService.LeaseProviderFacet
-facetDescriptions.ILeaseProvider.key                         = Utils.LEASE_PROVIDER_KEY
-
-facetDescriptions.ILeaseProvider_Prev.name                  = "ILeaseProvider"
-facetDescriptions.ILeaseProvider_Prev.interface_name        = Utils.LEASE_PROVIDER_INTERFACE_PREV
-facetDescriptions.ILeaseProvider_Prev.class                 = AccessControlServicePrev.LeaseProviderFacet
-facetDescriptions.ILeaseProvider_Prev.key                   = Utils.LEASE_PROVIDER_KEY_PREV
-
-facetDescriptions.IFaultTolerantService.name                 = "IFaultTolerantService_" .. Utils.IDL_VERSION
-facetDescriptions.IFaultTolerantService.interface_name       = Utils.FAULT_TOLERANT_SERVICE_INTERFACE
-facetDescriptions.IFaultTolerantService.class                = AccessControlService.FaultToleranceFacet
-facetDescriptions.IFaultTolerantService.key                  = Utils.FAULT_TOLERANT_ACS_KEY
-
-facetDescriptions.IManagement.name            = "IManagement_" .. Utils.IDL_VERSION
-facetDescriptions.IManagement.interface_name  = Utils.MANAGEMENT_ACS_INTERFACE
-facetDescriptions.IManagement.class           = AccessControlService.ManagementFacet
-facetDescriptions.IManagement.key             = Utils.MANAGEMENT_ACS_KEY
-
-local acsReceptFacetRef = 
-  orb:newservant(AccessControlService.ACSReceptacleFacet(TableDB(dbfile)),"",Utils.RECEPTACLES_INTERFACE)
-
-facetDescriptions.IReceptacles.name           = "IReceptacles"
-facetDescriptions.IReceptacles.interface_name = Utils.RECEPTACLES_INTERFACE
-facetDescriptions.IReceptacles.class          = AccessControlService.ACSReceptacleFacet
-facetDescriptions.IReceptacles.facet_ref      = acsReceptFacetRef
-
-
--- Receptacle Descriptions
-local receptacleDescs = {}
-receptacleDescs.RegistryServiceReceptacle = {}
-receptacleDescs.RegistryServiceReceptacle.name           = "RegistryServiceReceptacle"
-receptacleDescs.RegistryServiceReceptacle.interface_name = Utils.COMPONENT_INTERFACE
-receptacleDescs.RegistryServiceReceptacle.is_multiplex   = true
-
-
--- component id
-local componentId = {}
-componentId.name = "AccessControlService"
-componentId.major_version = 1
-componentId.minor_version = 0
-componentId.patch_version = 0
-componentId.platform_spec = ""
 
 ---
 --Função que será executada pelo OiL em modo protegido.
@@ -228,13 +153,52 @@ function main()
   Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Controle de Acesso
-  acsInst = scs.newComponent(facetDescriptions, receptacleDescs, componentId)
+  local componentId = {}
+  componentId.name = "AccessControlService"
+  componentId.major_version = 1
+  componentId.minor_version = 0
+  componentId.patch_version = 0
+  componentId.platform_spec = ""
+
+  local keys = {}
+  keys.IComponent = Utils.OPENBUS_KEY
+
+  acsInst = ComponentContext(Openbus:getORB(), componentId, keys)
+  acsInst:putFacet("IAccessControlService_" .. Utils.IDL_VERSION,
+                    Utils.ACCESS_CONTROL_SERVICE_INTERFACE,
+                    AccessControlService.ACSFacet(),
+                    Utils.ACCESS_CONTROL_SERVICE_KEY)
+  acsInst:putFacet("IAccessControlService",
+                    Utils.ACCESS_CONTROL_SERVICE_INTERFACE_PREV,
+                    AccessControlServicePrev.ACSFacet(),
+                    Utils.ACCESS_CONTROL_SERVICE_KEY_PREV)
+  acsInst:putFacet("ILeaseProvider_" .. Utils.IDL_VERSION,
+                    Utils.LEASE_PROVIDER_INTERFACE,
+                    AccessControlService.LeaseProviderFacet(),
+                    Utils.LEASE_PROVIDER_KEY)
+  acsInst:putFacet("ILeaseProvider",
+                    Utils.LEASE_PROVIDER_INTERFACE_PREV,
+                    AccessControlServicePrev.LeaseProviderFacet(),
+                    Utils.LEASE_PROVIDER_KEY_PREV)
+  acsInst:putFacet("IFaultTolerantService_" .. Utils.IDL_VERSION,
+                    Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
+                    AccessControlService.FaultToleranceFacet(),
+                    Utils.FAULT_TOLERANT_ACS_KEY)
+  acsInst:putFacet("IManagement_" .. Utils.IDL_VERSION,
+                    Utils.MANAGEMENT_ACS_INTERFACE,
+                    AccessControlService.ManagementFacet(),
+                    Utils.MANAGEMENT_ACS_KEY)
+  acsInst:putFacet("IReceptacles",
+                    Utils.RECEPTACLES_INTERFACE,
+                    AccessControlService.ACSReceptacleFacet(TableDB(dbfile)))
+
+  acsInst:putReceptacle("RegistryServiceReceptacle", Utils.COMPONENT_INTERFACE, true)
 
   -- Configurações
   acsInst.IComponent.startup = AccessControlService.startup
   acsInst.IComponent.shutdown = AccessControlService.shutdown
 
-  local acs = acsInst.IAccessControlService
+  local acs = acsInst:getFacetByName("IAccessControlService_" .. Utils.IDL_VERSION).facet_ref
   acs.config = AccessControlServerConfiguration
   acs.entries = {}
   acs.observers = {}

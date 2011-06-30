@@ -75,14 +75,14 @@ function Session:addMember(member)
     Log:debug(format("O membro %s:%d.%d.%d receberá eventos", componentId.name,
         componentId.major_version, componentId.minor_version,
         componentId.patch_version))
-    self.context.SessionEventSink.eventSinks[info.memberId] =
+    self.context["SessionEventSink_" .. Utils.IDL_VERSION].eventSinks[info.memberId] =
       orb:narrow(eventSink, eventSinkInterface)
   else
     if eventSinkPrev then
       Log:debug(format("O membro %s:%d.%d.%d receberá eventos da versão %d",
           componentId.name, componentId.major_version, componentId.minor_version,
           componentId.patch_version, Utils.IDL_PREV))
-      self.context.SessionEventSink.eventSinksPrev[info.memberId] =
+      self.context["SessionEventSink_" .. Utils.IDL_VERSION].eventSinksPrev[info.memberId] =
         orb:narrow(eventSinkPrev, eventSinkInterfacePrev)
     else
       Log:warn(format("O membro %s:%d.%d.%d não receberá eventos",
@@ -114,8 +114,8 @@ function Session:removeMember(identifier)
       componentId.patch_version, self.identifier))
   self.sessionMembers[info.memberId] = nil
   self.membersByCredential[info.credentialId][info.memberId] = nil
-  self.context.SessionEventSink.eventSinks[info.memberId] = nil
-  self.context.SessionEventSink.eventSinksPrev[info.memberId] = nil
+  self.context["SessionEventSink_" .. Utils.IDL_VERSION].eventSinks[info.memberId] = nil
+  self.context["SessionEventSink_" .. Utils.IDL_VERSION].eventSinksPrev[info.memberId] = nil
   if not (next(self.membersByCredential[info.credentialId])) then
     self.membersByCredential[info.credentialId] = nil
     self.sessionService:unObserve(info.credentialId, self)
@@ -132,8 +132,8 @@ function Session:credentialWasDeletedById(credentialId)
   local members = self.membersByCredential[credentialId]
   for memberId in pairs(members) do
     self.sessionMembers[memberId] = nil
-    self.context.SessionEventSink.eventSinks[memberId] = nil
-    self.context.SessionEventSink.eventSinksPrev[memberId] = nil
+    self.context["SessionEventSink_" .. Utils.IDL_VERSION].eventSinks[memberId] = nil
+    self.context["SessionEventSink_" .. Utils.IDL_VERSION].eventSinksPrev[memberId] = nil
   end
   self.membersByCredential[credentialId] = nil
 end
