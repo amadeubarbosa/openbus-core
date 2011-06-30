@@ -188,6 +188,12 @@ function SessionService:observe(credentialId, session)
       "IAccessControlService_" .. Utils.IDL_VERSION, acsIDL)
     if status and acsFacet then
       acsFacet:addCredentialToObserver(self.observerId, credentialId)
+    else
+      if not status then
+        Log:error("A credencial não foi adicionada ao observador. Houve um erro ao obter a faceta do Serviço de Controle de Acesso: " .. acsFacet)
+      else
+        Log:error("A credencial não foi adicionada ao observador. O proxy para a faceta do Serviço de Controle de Acesso é inválido.")
+      end
     end
   end
   sessions[session.identifier] = session
@@ -212,6 +218,12 @@ function SessionService:unObserve(credentialId, session)
       "IAccessControlService_" .. Utils.IDL_VERSION, acsIDL)
     if status and acsFacet then
       acsFacet:removeCredentialFromObserver(self.observerId, credentialId)
+    else
+      if not status then
+        Log:error("A credencial não foi removida do observador. Houve um erro ao obter a faceta do Serviço de Controle de Acesso: " .. acsFacet)
+      else
+        Log:error("A credencial não foi removida do observador. O proxy para a faceta do Serviço de Controle de Acesso é inválido.")
+      end
     end
   end
 end
