@@ -9,7 +9,7 @@ if [ -z "${ORBIX_HOME}" ]; then
 else
   echo Setting ORBIX environment for domain sample-domain
 
-  PATH=$ORBIX_HOME/bin:$ORBIX_HOME/../../etc/bin:$PATH
+  PATH=$OPENBUS_HOME/specs/shell/orbix:$ORBIX_HOME/bin:$ORBIX_HOME/../../etc/bin:$PATH
   export PATH
 
   export IT_PRODUCT_DIR="$ORBIX_HOME/../../"
@@ -20,19 +20,17 @@ else
   #: ${CLASSPATH:=""}
   #CLASSPATH=$ORBIX_HOME/lib/asp-corba.jar:$ORBIX_HOME/../../etc/domains/sample-domain:$CLASSPATH:; export CLASSPATH
 
-  #: ${LD_LIBRARY_PATH:=""}
-  LD_LIBRARY_PATH="$ORBIX_HOME/../../shlib:$ORBIX_HOME/../../shlib/default:$LD_LIBRARY_PATH"
+  if [ "`uname -m`" == "x86_64" ];
+  then
+    LD_LIBRARY_PATH="${ORBIX_HOME}/../../shlib/lib64:${ORBIX_HOME}/../../shlib/default/lib64:$LD_LIBRARY_PATH"
+  else
+    LD_LIBRARY_PATH="${ORBIX_HOME}/../../shlib:${ORBIX_HOME}/../../shlib/default:$LD_LIBRARY_PATH"
+  fi
 
-  #: ${LD_LIBRARY_PATH_64:=""}
-  LD_LIBRARY_PATH_64="$ORBIX_HOME/../../shlib:$ORBIX_HOME/shlib/default:$LD_LIBRARY_PATH_64"
-
-  if [ "`uname -s`" == "SunOS" ]
+  if [ "`uname -s`" == "SunOS" ];
   then
     LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ORBIX_HOME/../../shlib/sparcv9:$ORBIX_HOME/../../shlib/default/sparcv9"
     LD_LIBRARY_PATH_64="$ORBIX_HOME/../../shlib/sparcv9:$ORBIX_HOME/../../shlib/default/sparcv9:$LD_LIBRARY_PATH_64"
-  else
-    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ORBIX_HOME/../../shlib/lib64:$ORBIX_HOME/../../shlib/default/lib64"
-    LD_LIBRARY_PATH_64="$ORBIX_HOME/../../shlib/lib64:$ORBIX_HOME/../../shlib/default/lib64:$LD_LIBRARY_PATH_64"
   fi
 
   export LD_LIBRARY_PATH
