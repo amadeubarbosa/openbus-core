@@ -2,32 +2,15 @@
 -- Teste para verificar se a instalação do Openbus foi concluida com sucesso
 -- $Id: testServices.lua $
 --
-require "oil"
-local orb = oil.init {flavor = "intercepted;corba;typed;cooperative;base",}
-oil.orb = orb
-
-oil.verbose:level(0)
-
-local ClientInterceptor = require "openbus.interceptors.ClientInterceptor"
-local CredentialManager = require "openbus.util.CredentialManager"
+local oil = require "oil"
+local openbus = require "openbus.Openbus"
+local format = string.format
+local Log = require "openbus.util.Log"
+local lpw     = require "lpw"
 local Utils = require "openbus.util.Utils"
 
-if #arg < 1 then
-   print("[ERRO] Parametros insuficientes, e necessario um arquivo de configuracao.")
-   os.exit(1)
-end
-
-local f, err = loadfile(arg[1])
-if not f then
-   print("[ERRO] Ao abrir o arquivo.")
-   os.exit(1)
-end
-f()
-
-local host = props.host
-local port = props.port
-local user = props.user
-local password = props.password
+oil.verbose:level(0)
+Log:level(1)
 
 local IDLPATH_DIR = os.getenv("IDLPATH_DIR")
 if IDLPATH_DIR == nil then
@@ -35,78 +18,73 @@ if IDLPATH_DIR == nil then
   os.exit(1)
 end
 
+if #arg < 2 then
+   print("[ERRO] Parâmetros insuficientes, e necessario um arquivo de configuracao.")
+   os.exit(1)
+end
+
+if arg[1]:lower():find("help") then
+  print(format("Usage: %s <host> <port>", arg[0]))
+  return
+end
+
+if not tonumber(arg[2]) then
+  print(format("[ERRO] Parâmetro '%s' deveria ser o valor da porta do barramento.", arg[2]))
+  os.exit(1)
+end
+
+local host = arg[1]
+local port = tonumber(arg[2])
+
 function run()
+  openbus:init(host, port)
+  local orb = openbus:getORB()
   orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/session_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION..
-      "/access_control_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/session_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/registry_service.idl")
-  orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV..
-      "/access_control_service.idl")
 
+  io.write("Login: ")
+  local login = io.read()
+  local password = lpw.getpass("Senha: ")
 
-  accessControlService = orb:newproxy("corbaloc::" .. 
-      host .. ":" .. port .. 
-      "/ACS", 
-      "synchronous",
-      "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
-          "/access_control_service/IAccessControlService:1.0")
-
-  -- instala o interceptador de cliente
-  local DATA_DIR = os.getenv("OPENBUS_DATADIR")
-  local config = assert(loadfile(DATA_DIR ..
-      "/conf/advanced/InterceptorsConfiguration.lua"))()
-  credentialManager = CredentialManager()
-  orb:setclientinterceptor(ClientInterceptor(config, credentialManager))
-
-
-  -- Testando se o usuário de teste está habilitado
-  success, credential = accessControlService:loginByPassword("tester", "tester")
-  if success then
-     print("[ERRO] O usuario de testes esta habilitado.")
-  end
-
-  success, credential = accessControlService:loginByPassword(user, password)
-  if not success then
-     print("[ERRO] O usuario ou a senha passada nao sao validos.")
+  local registryService = openbus:connectByLoginPassword(login, password)
+  if not registryService then
+     print("[ERRO] Não foi possível se conectar ao barramento.")
      os.exit(1)
   end
+  openbus:disconnect()
 
-  credentialManager:setValue(credential)
+  registryService = openbus:connectByLoginPassword("tester", "tester")
+  if registryService then
+    print("[WARN] O usuário de testes está habilitado.")
+  else
+    print("[INFO] O usuário de testes não está habilitado.")
+  end
 
-  local acsIComp = self.accessControlService:_component()
-  acsIComp = orb:narrow(acsIComp, "IDL:scs/core/IComponent:1.0")
-  local acsIRecept = acsIComp:getFacetByName("IReceptacles")
-  acsIRecept = orb:narrow(acsIRecept, "IDL:scs/core/IReceptacles:1.0")
-  local conns = acsIRecept:getConnections("RegistryServiceReceptacle")
-  if not conns[1] then
-     print("[ERRO] O servico de registro nao esta conectado ao barramento.")
-     os.exit(1)
-  end 
-  local rsIComp = orb:narrow(conns[1].objref, "IDL:scs/core/IComponent:1.0")
-  local registryService = rsIComp:getFacetByName("IRegistryService_" .. Utils.IDL_VERSION)
-  registryService = orb:narrow(registryService,
-    "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
-        "/registry_service/IRegistryService:1.0")
-  local serviceOffers = registryService:find({"ISessionService_" .. Utils.IDL_VERSION})
-  
+  local sessionServiceInterface = Utils.SESSION_SERVICE_INTERFACE
+  local serviceOffers = registryService:find({sessionServiceInterface})
+
   if #serviceOffers == 0 then
-    print("[ERRO] O servico de sessao nao esta conectado ao barramento.")
+    print("[ERRO] O serviço de sessão não está conectado ao barramento.")
     os.exit(1)
   end
-  local sessionServiceComponent = orb:narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
-  local sessionServiceInterface = "IDL:tecgraf/openbus/session_service/"..
-      Utils.IDL_VERSION"/ISessionService:1.0"
-  sessionService = sessionServiceComponent:getFacet(sessionServiceInterface)
+  if #serviceOffers > 1 then
+    print("[ERRO] Existe mais de um servico de sessão conectado ao barramento.")
+    os.exit(1)
+  end
+  local sessionServiceComponent =
+      orb:narrow(serviceOffers[1].member, "IDL:scs/core/IComponent:1.0")
+  local sessionServiceName = Utils.SESSION_SERVICE_FACET_NAME
+  sessionService = sessionServiceComponent:getFacetByName(sessionServiceName)
   sessionService = orb:narrow(sessionService, sessionServiceInterface)
+
+  openbus:disconnect()
+  openbus:destroy()
 end
 
 oil.main(function()
   sucess, err = oil.pcall(run)
-  if sucess then 
-    print("[INFO] Os servicos do Openbus estao funcionando perfeitamente") 
+  if sucess then
+    print("[INFO] Os serviços do Openbus estão funcionando perfeitamente")
   else
-     print(err)
+     print(tostring(err))
   end
 end)
