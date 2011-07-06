@@ -142,22 +142,20 @@ function main()
   componentId.platform_spec = ""
 
   local component = ComponentContext(orb, componentId)
-  component:putFacet("IComponent",
-                      Utils.COMPONENT_INTERFACE,
+  component:updateFacet("IComponent",
                       SessionServiceComponent.SessionServiceComponent())
-  component:putFacet("ISessionService_"..Utils.IDL_VERSION,
+  component:addFacet("ISessionService_"..Utils.IDL_VERSION,
                       Utils.SESSION_SERVICE_INTERFACE,
                       SessionService.SessionService())
-  component:putFacet("ISessionService",
+  component:addFacet("ISessionService",
                       Utils.SESSION_SERVICE_INTERFACE_PREV,
                       SessionServicePrev.SessionService())
   -- Nao precisa ter 2 versoes de credential observer pois e' uma comunicacao intra-barramento.
   -- O barramento como um todo sempre estara na mesma versao (mais nova).
-  component:putFacet("SessionServiceCredentialObserver",
+  component:addFacet("SessionServiceCredentialObserver",
                       Utils.CREDENTIAL_OBSERVER_INTERFACE,
                       SessionService.Observer())
-  component:putFacet("IReceptacles",
-                      Utils.RECEPTACLES_INTERFACE,
+  component:updateFacet("IReceptacles",
                       AdaptiveReceptacle.AdaptiveReceptacleFacet())
   component:putReceptacle("AccessControlServiceReceptacle", "IDL:scs/core/IComponent:1.0", true)
 

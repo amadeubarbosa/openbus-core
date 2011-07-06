@@ -71,20 +71,19 @@ function SessionService:createSession(member)
   -- Cria nova sessão
   local orb = Openbus:getORB()
   local component = ComponentContext(orb, componentId)
-  component:putFacet("SessionEventSink_"..Utils.IDL_VERSION,
+  component:addFacet("SessionEventSink_"..Utils.IDL_VERSION,
                       Utils.SESSION_ES_INTERFACE,
                       Session.SessionEventSink())
-  component:putFacet("SessionEventSink",
+  component:addFacet("SessionEventSink",
                       Utils.SESSION_ES_INTERFACE_PREV,
                       SessionPrev.SessionEventSink())
-  component:putFacet("ISession_"..Utils.IDL_VERSION,
+  component:addFacet("ISession_"..Utils.IDL_VERSION,
                       Utils.SESSION_INTERFACE,
                       Session.Session())
-  component:putFacet("ISession",
+  component:addFacet("ISession",
                       Utils.SESSION_INTERFACE_PREV,
                       SessionPrev.Session())
-  component:putFacet("IReceptacles",
-                      Utils.RECEPTACLES_INTERFACE,
+  component:updateFacet("IReceptacles",
                       AdaptiveReceptacle.AdaptiveReceptacleFacet())
   component:putReceptacle("AccessControlServiceReceptacle", "IDL:scs/core/IComponent:1.0", true)
 

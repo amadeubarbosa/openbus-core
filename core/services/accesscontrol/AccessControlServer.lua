@@ -164,32 +164,31 @@ function main()
   keys.IComponent = Utils.OPENBUS_KEY
 
   acsInst = ComponentContext(Openbus:getORB(), componentId, keys)
-  acsInst:putFacet("IAccessControlService_" .. Utils.IDL_VERSION,
+  acsInst:addFacet("IAccessControlService_" .. Utils.IDL_VERSION,
                     Utils.ACCESS_CONTROL_SERVICE_INTERFACE,
                     AccessControlService.ACSFacet(),
                     Utils.ACCESS_CONTROL_SERVICE_KEY)
-  acsInst:putFacet("IAccessControlService",
+  acsInst:addFacet("IAccessControlService",
                     Utils.ACCESS_CONTROL_SERVICE_INTERFACE_PREV,
                     AccessControlServicePrev.ACSFacet(),
                     Utils.ACCESS_CONTROL_SERVICE_KEY_PREV)
-  acsInst:putFacet("ILeaseProvider_" .. Utils.IDL_VERSION,
+  acsInst:addFacet("ILeaseProvider_" .. Utils.IDL_VERSION,
                     Utils.LEASE_PROVIDER_INTERFACE,
                     AccessControlService.LeaseProviderFacet(),
                     Utils.LEASE_PROVIDER_KEY)
-  acsInst:putFacet("ILeaseProvider",
+  acsInst:addFacet("ILeaseProvider",
                     Utils.LEASE_PROVIDER_INTERFACE_PREV,
                     AccessControlServicePrev.LeaseProviderFacet(),
                     Utils.LEASE_PROVIDER_KEY_PREV)
-  acsInst:putFacet("IFaultTolerantService_" .. Utils.IDL_VERSION,
+  acsInst:addFacet("IFaultTolerantService_" .. Utils.IDL_VERSION,
                     Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
                     AccessControlService.FaultToleranceFacet(),
                     Utils.FAULT_TOLERANT_ACS_KEY)
-  acsInst:putFacet("IManagement_" .. Utils.IDL_VERSION,
+  acsInst:addFacet("IManagement_" .. Utils.IDL_VERSION,
                     Utils.MANAGEMENT_ACS_INTERFACE,
                     AccessControlService.ManagementFacet(),
                     Utils.MANAGEMENT_ACS_KEY)
-  acsInst:putFacet("IReceptacles",
-                    Utils.RECEPTACLES_INTERFACE,
+  acsInst:updateFacet("IReceptacles",
                     AccessControlService.ACSReceptacleFacet(TableDB(dbfile)))
 
   acsInst:putReceptacle("RegistryServiceReceptacle", Utils.COMPONENT_INTERFACE, true)

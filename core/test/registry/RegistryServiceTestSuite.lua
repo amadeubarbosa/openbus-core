@@ -72,10 +72,10 @@ Suite = {
 
     testRegister = function(self)
       local member = ComponentContext(orb, self.Hello_v2.componentId)
-      member:putFacet(self.Hello_v2.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v2.facets.IHello_v1.name,
                       self.Hello_v2.facets.IHello_v1.interface_name,
                       self.Hello_v2.facets.IHello_v1.class())
-      member:putFacet(self.Hello_v2.facets.IHello_v2.name,
+      member:addFacet(self.Hello_v2.facets.IHello_v2.name,
                       self.Hello_v2.facets.IHello_v2.interface_name,
                       self.Hello_v2.facets.IHello_v2.class())
       -- Identificar local propositalmente
@@ -97,10 +97,10 @@ Suite = {
 
     testRegister_NoMetaInterfaceFacet = function(self)
       local member = ComponentContext(orb, self.Hello_v2.componentId)
-      member:putFacet(self.Hello_v2.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v2.facets.IHello_v1.name,
                       self.Hello_v2.facets.IHello_v1.interface_name,
                       self.Hello_v2.facets.IHello_v1.class())
-      member:putFacet(self.Hello_v2.facets.IHello_v2.name,
+      member:addFacet(self.Hello_v2.facets.IHello_v2.name,
                       self.Hello_v2.facets.IHello_v2.interface_name,
                       self.Hello_v2.facets.IHello_v2.class())
       -- removendo a faceta IMetaInterface
@@ -124,7 +124,7 @@ Suite = {
     testFind_AfterLogout = function(self)
       local success, member_v1, member_v2, id_v1, id_v2
       member_v1 = ComponentContext(orb, self.Hello_v1.componentId)
-      member_v1:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member_v1:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, id_v1 = self.rgsProtected:register({
@@ -133,10 +133,10 @@ Suite = {
       })
       --
       member_v2 = ComponentContext(orb, self.Hello_v2.componentId)
-      member_v2:putFacet(self.Hello_v2.facets.IHello_v1.name,
+      member_v2:addFacet(self.Hello_v2.facets.IHello_v1.name,
                       self.Hello_v2.facets.IHello_v1.interface_name,
                       self.Hello_v2.facets.IHello_v1.class())
-      member_v2:putFacet(self.Hello_v2.facets.IHello_v2.name,
+      member_v2:addFacet(self.Hello_v2.facets.IHello_v2.name,
                       self.Hello_v2.facets.IHello_v2.interface_name,
                       self.Hello_v2.facets.IHello_v2.class())
       success, id_v2 = self.rgsProtected:register({
@@ -156,10 +156,10 @@ Suite = {
 
     testUnregister = function(self)
       local member = ComponentContext(orb, self.Hello_v2.componentId)
-      member:putFacet(self.Hello_v2.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v2.facets.IHello_v1.name,
                       self.Hello_v2.facets.IHello_v1.interface_name,
                       self.Hello_v2.facets.IHello_v1.class())
-      member:putFacet(self.Hello_v2.facets.IHello_v2.name,
+      member:addFacet(self.Hello_v2.facets.IHello_v2.name,
                       self.Hello_v2.facets.IHello_v2.interface_name,
                       self.Hello_v2.facets.IHello_v2.class())
       -- Identificar local propositalmente
@@ -191,10 +191,10 @@ Suite = {
     testRegister_SameFacetInterface = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v2_2.componentId)
-      member:putFacet(self.Hello_v2_2.facets.IHello_v2.name,
+      member:addFacet(self.Hello_v2_2.facets.IHello_v2.name,
                       self.Hello_v2_2.facets.IHello_v2.interface_name,
                       self.Hello_v2_2.facets.IHello_v2.class())
-      member:putFacet(self.Hello_v2_2.facets.IHello_v2_2.name,
+      member:addFacet(self.Hello_v2_2.facets.IHello_v2_2.name,
                       self.Hello_v2_2.facets.IHello_v2_2.interface_name,
                       self.Hello_v2_2.facets.IHello_v2_2.class())
       success , self.registryIdentifier = self.rgsProtected:register({
@@ -223,17 +223,17 @@ Suite = {
       newComponentId.major_version = 2
 
       local member = ComponentContext(orb, self.Hello_v2.componentId)
-      member:putFacet(self.Hello_v2.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v2.facets.IHello_v1.name,
                       self.Hello_v2.facets.IHello_v1.interface_name,
                       self.Hello_v2.facets.IHello_v1.class())
-      member:putFacet(self.Hello_v2.facets.IHello_v2.name,
+      member:addFacet(self.Hello_v2.facets.IHello_v2.name,
                       self.Hello_v2.facets.IHello_v2.interface_name,
                       self.Hello_v2.facets.IHello_v2.class())
       local member2 = ComponentContext(orb, newComponentId)
-      member2:putFacet(self.Hello_v2.facets.IHello_v1.name,
+      member2:addFacet(self.Hello_v2.facets.IHello_v1.name,
                       self.Hello_v2.facets.IHello_v1.interface_name,
                       self.Hello_v2.facets.IHello_v1.class())
-      member2:putFacet(self.Hello_v2.facets.IHello_v2.name,
+      member2:addFacet(self.Hello_v2.facets.IHello_v2.name,
                       self.Hello_v2.facets.IHello_v2.interface_name,
                       self.Hello_v2.facets.IHello_v2.class())
 
@@ -266,11 +266,11 @@ Suite = {
     testRegister_Replica = function(self)
       local success
       local member1 = ComponentContext(orb, self.Hello_v1.componentId)
-      member1:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member1:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       local member2 = ComponentContext(orb, self.Hello_v1.componentId)
-      member2:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member2:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
 
@@ -302,7 +302,7 @@ Suite = {
     testRegister_RegisterTwice = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
 
@@ -328,13 +328,13 @@ Suite = {
 
     testRegister_Unauthorized = function(self)
       local member = ComponentContext(orb, self.Hello_v3.componentId)
-      member:putFacet(self.Hello_v3.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v3.facets.IHello_v1.name,
                       self.Hello_v3.facets.IHello_v1.interface_name,
                       self.Hello_v3.facets.IHello_v1.class())
-      member:putFacet(self.Hello_v3.facets.IHello_v2.name,
+      member:addFacet(self.Hello_v3.facets.IHello_v2.name,
                       self.Hello_v3.facets.IHello_v2.interface_name,
                       self.Hello_v3.facets.IHello_v2.class())
-      member:putFacet(self.Hello_v3.facets.IHello_v3.name,
+      member:addFacet(self.Hello_v3.facets.IHello_v3.name,
                       self.Hello_v3.facets.IHello_v3.interface_name,
                       self.Hello_v3.facets.IHello_v3.class())
       local success, err = self.rgsProtected:register({
@@ -354,7 +354,7 @@ Suite = {
     testRegister_InternalProperties = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       -- Tenta sobrescrita de propriedade definidas internamente no RS
@@ -371,7 +371,7 @@ Suite = {
     testUpdate = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.registryIdentifier = self.rgsProtected:register({
@@ -396,7 +396,7 @@ Suite = {
     testUpdate_Same = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.registryIdentifier = self.rgsProtected:register({
@@ -419,7 +419,7 @@ Suite = {
     testUpdate_InternalProperties = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.registryIdentifier = self.rgsProtected:register({
@@ -441,7 +441,7 @@ Suite = {
     testUpdate_Invalid = function(self)
       local success, err
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.registryIdentifier = self.rgsProtected:register({
@@ -459,10 +459,10 @@ Suite = {
       local success, err
       local member = ComponentContext(orb, self.Hello_v3.componentId)
       -- criando o componente sem a faceta hello v3
-      member:putFacet(self.Hello_v3.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v3.facets.IHello_v1.name,
                       self.Hello_v3.facets.IHello_v1.interface_name,
                       self.Hello_v3.facets.IHello_v1.class())
-      member:putFacet(self.Hello_v3.facets.IHello_v2.name,
+      member:addFacet(self.Hello_v3.facets.IHello_v2.name,
                       self.Hello_v3.facets.IHello_v2.interface_name,
                       self.Hello_v3.facets.IHello_v2.class())
       success, self.registryIdentifier = self.rgsProtected:register({
@@ -471,7 +471,7 @@ Suite = {
       })
       Check.assertTrue(success)
       -- incluindo a faceta hello v3
-      member:putFacet(self.Hello_v3.facets.IHello_v3.name,
+      member:addFacet(self.Hello_v3.facets.IHello_v3.name,
                       self.Hello_v3.facets.IHello_v3.interface_name,
                       self.Hello_v3.facets.IHello_v3.class())
       success, err = self.rgsProtected:update(self.registryIdentifier,
@@ -488,7 +488,7 @@ Suite = {
       -- Registra ofertas para o teste
       local success
       self.member_v1 = ComponentContext(orb, self.Hello_v1.componentId)
-      self.member_v1:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      self.member_v1:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.id_v1 = self.rgsProtected:register({
@@ -498,10 +498,10 @@ Suite = {
 
       --
       self.member_v2 = ComponentContext(orb, self.Hello_v2.componentId)
-      self.member_v2:putFacet(self.Hello_v2.facets.IHello_v1.name,
+      self.member_v2:addFacet(self.Hello_v2.facets.IHello_v1.name,
                       self.Hello_v2.facets.IHello_v1.interface_name,
                       self.Hello_v2.facets.IHello_v1.class())
-      self.member_v2:putFacet(self.Hello_v2.facets.IHello_v2.name,
+      self.member_v2:addFacet(self.Hello_v2.facets.IHello_v2.name,
                       self.Hello_v2.facets.IHello_v2.interface_name,
                       self.Hello_v2.facets.IHello_v2.class())
       success, self.id_v2 = self.rgsProtected:register({
@@ -1261,7 +1261,7 @@ Suite = {
       self.credentialManager:invalidate()
       --
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       local success, err = self.rgsProtected:register({
@@ -1275,7 +1275,7 @@ Suite = {
     testFind_NoCredential = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.registryIdentifier = self.rgsProtected:register({
@@ -1294,7 +1294,7 @@ Suite = {
     testUpdate_NoCredential = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.registryIdentifier = self.rgsProtected:register({
@@ -1314,7 +1314,7 @@ Suite = {
     testFindByCriteria_NoCredential = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.registryIdentifier = self.rgsProtected:register({
@@ -1334,7 +1334,7 @@ Suite = {
     testUnregister_NoCredential = function(self)
       local success
       local member = ComponentContext(orb, self.Hello_v1.componentId)
-      member:putFacet(self.Hello_v1.facets.IHello_v1.name,
+      member:addFacet(self.Hello_v1.facets.IHello_v1.name,
                       self.Hello_v1.facets.IHello_v1.interface_name,
                       self.Hello_v1.facets.IHello_v1.class())
       success, self.registryIdentifier = self.rgsProtected:register({

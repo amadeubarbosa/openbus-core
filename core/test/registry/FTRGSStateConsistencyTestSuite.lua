@@ -91,7 +91,7 @@ Suite = {
         platform_spec = "",
       }
       local member = ComponentContext(orb, componentId)
-      member:putFacet("IHello_vft", "IDL:IHello_vft:1.0", oop.class({})())
+      member:addFacet("IHello_vft", "IDL:IHello_vft:1.0", oop.class({})())
 
        -- Identificar local propositalmente
        local success, registryIdentifier = rsFacet1:register({

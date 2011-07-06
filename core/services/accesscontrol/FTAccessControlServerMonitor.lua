@@ -119,11 +119,11 @@ function main()
   keys.IComponent = "IC"
 
   local ftacsInst = ComponentContext(Openbus:getORB(), componentId, keys)
-  ftacsInst:putFacet("IFTServiceMonitor",
+  ftacsInst:addFacet("IFTServiceMonitor",
                       Utils.FT_SERVICE_MONITOR_INTERFACE,
                       FTAccessControlServiceMonitor.FTACSMonitorFacet(),
                       "FTACSMonitor")
-  ftacsInst:putReceptacle("IFaultTolerantService",
+  ftacsInst:addReceptacle("IFaultTolerantService",
                           Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
                           false,
                           "Receptacle")

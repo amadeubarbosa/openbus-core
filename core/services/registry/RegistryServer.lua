@@ -154,24 +154,23 @@ function main()
   keys.IComponent = "IC"
 
   rsInst = ComponentContext(orb, componentId, keys)
-  rsInst:putFacet("IRegistryService_" .. Utils.IDL_VERSION,
+  rsInst:addFacet("IRegistryService_" .. Utils.IDL_VERSION,
                   Utils.REGISTRY_SERVICE_INTERFACE,
                   RegistryService.RSFacet(),
                   Utils.REGISTRY_SERVICE_KEY)
-  rsInst:putFacet("IRegistryService",
+  rsInst:addFacet("IRegistryService",
                   Utils.REGISTRY_SERVICE_INTERFACE_PREV,
                   RegistryServicePrev.RSFacet(),
                   Utils.REGISTRY_SERVICE_KEY_PREV)
-  rsInst:putFacet("IFaultTolerantService_" .. Utils.IDL_VERSION,
+  rsInst:addFacet("IFaultTolerantService_" .. Utils.IDL_VERSION,
                   Utils.FAULT_TOLERANT_SERVICE_INTERFACE,
                   RegistryService.FaultToleranceFacet(),
                   Utils.FAULT_TOLERANT_RS_KEY)
-  rsInst:putFacet("IManagement_" .. Utils.IDL_VERSION,
+  rsInst:addFacet("IManagement_" .. Utils.IDL_VERSION,
                   Utils.MANAGEMENT_RS_INTERFACE,
                   RegistryService.ManagementFacet,
                   Utils.MANAGEMENT_RS_KEY)
-  rsInst:putFacet("IReceptacles",
-                  Utils.RECEPTACLES_INTERFACE,
+  rsInst:updateFacet("IReceptacles",
                   RegistryService.RGSReceptacleFacet())
   rsInst:putReceptacle("AccessControlServiceReceptacle", Utils.COMPONENT_INTERFACE, true)
 

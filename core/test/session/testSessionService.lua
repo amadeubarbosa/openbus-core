@@ -114,7 +114,7 @@ Suite = {
 
     testCreateSession = function(self)
       local member = ComponentContext(orb, componentId)
-      member:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local success, session, id =
         self.sessionService:createSession(member.IComponent)
       Check.assertTrue(success)
@@ -127,9 +127,9 @@ Suite = {
 
     testCreateSession_AlreadyExists = function(self)
       local member1 = ComponentContext(orb, componentId)
-      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member1:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local member2 = ComponentContext(orb, componentId)
-      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member2:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local success, session1, session2, id1, id2
       success, session1, id1 =
@@ -149,7 +149,7 @@ Suite = {
 
     testGetSession = function(self)
       local member = ComponentContext(orb, componentId)
-      member:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local success, session1, id =
         self.sessionService:createSession(member.IComponent)
       Check.assertTrue(success)
@@ -173,9 +173,9 @@ Suite = {
 
     testAddRemoveMember = function(self)
       local member1 = ComponentContext(orb, componentId)
-      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member1:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local member2 = ComponentContext(orb, componentId)
-      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member2:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local success, session, id1, id2
       success, session, id1 =
@@ -197,7 +197,7 @@ Suite = {
 
     testRemove_InvalidIdentifier = function(self)
       local member = ComponentContext(orb, componentId)
-      member:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local success, session, id =
         self.sessionService:createSession(member.IComponent)
       Check.assertTrue(success)
@@ -211,9 +211,9 @@ Suite = {
 
     testRemoveMember_Logout = function(self)
       local member1 = ComponentContext(orb, componentId)
-      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member1:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local member2 = ComponentContext(orb, componentId)
-      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member2:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local success, session, id1 =
         self.sessionService:createSession(member1.IComponent)
@@ -239,9 +239,9 @@ Suite = {
 
     testDestroy_Logout = function(self)
       local member1 = ComponentContext(orb, componentId)
-      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member1:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local member2 = ComponentContext(orb, componentId)
-      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member2:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local _, credential = self.accessControlService:loginByPassword(user,
         password)
@@ -265,11 +265,11 @@ Suite = {
 
     testEvents = function(self)
       local member1 = ComponentContext(orb, componentId)
-      member1:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member1:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local member2 = ComponentContext(orb, componentId)
-      member2:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member2:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
       local member3 = ComponentContext(orb, componentId)
-      member3:putFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
+      member3:addFacet(SessionEventSink.name, SessionEventSink.interface_name, SessionEventSink.class())
 
       local success, sessionComponent, id1 =
         self.sessionService:createSession(member1.IComponent)

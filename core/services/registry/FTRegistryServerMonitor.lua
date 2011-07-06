@@ -119,11 +119,11 @@ function main()
   keys.IComponent = "IC"
 
   local ftrsInst = ComponentContext(orb, componentId, keys)
-  ftrsInst:putFacet("IFTServiceMonitor_" .. Utils.IDL_VERSION,
+  ftrsInst:addFacet("IFTServiceMonitor_" .. Utils.IDL_VERSION,
                     Utils.FT_SERVICE_MONITOR_INTERFACE,
                     FTRegistryServiceMonitor.FTRSMonitorFacet(),
                     FT_RS_MONITOR_KEY)
-  ftrsInst:putReceptacle("IFaultTolerantService", Utils.FAULT_TOLERANT_SERVICE_INTERFACE, false)
+  ftrsInst:addReceptacle("IFaultTolerantService", Utils.FAULT_TOLERANT_SERVICE_INTERFACE, false)
 
   -- Configurações
   ftrsInst.IComponent.startup = FTRegistryServiceMonitor.startup

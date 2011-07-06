@@ -1434,9 +1434,9 @@ function Test7:beforeTestCase()
   self.acsMgt:addUser(self.user, self.user)
   --
   self.member = ComponentContext(orb, Hello.componentId)
-  self.member:putFacet(Hello.IHello_v1.name, Hello.IHello_v1.interface_name, Hello.IHello_v1.class())
-  self.member:putFacet(Hello.IHello_v2.name, Hello.IHello_v2.interface_name, Hello.IHello_v2.class())
-  self.member:putFacet(Hello.IHello_v3.name, Hello.IHello_v3.interface_name, Hello.IHello_v3.class())
+  self.member:addFacet(Hello.IHello_v1.name, Hello.IHello_v1.interface_name, Hello.IHello_v1.class())
+  self.member:addFacet(Hello.IHello_v2.name, Hello.IHello_v2.interface_name, Hello.IHello_v2.class())
+  self.member:addFacet(Hello.IHello_v3.name, Hello.IHello_v3.interface_name, Hello.IHello_v3.class())
 end
 
 function Test7:afterTestCase()
