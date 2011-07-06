@@ -85,7 +85,7 @@ function SessionService:createSession(member)
                       SessionPrev.Session())
   component:updateFacet("IReceptacles",
                       AdaptiveReceptacle.AdaptiveReceptacleFacet())
-  component:putReceptacle("AccessControlServiceReceptacle", "IDL:scs/core/IComponent:1.0", true)
+  component:addReceptacle("AccessControlServiceReceptacle", "IDL:scs/core/IComponent:1.0", true)
 
   local sessionFacet = component["ISession_"..Utils.IDL_VERSION]
   sessionFacet.identifier = self:generateIdentifier()

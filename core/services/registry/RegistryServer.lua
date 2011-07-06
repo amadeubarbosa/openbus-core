@@ -172,7 +172,7 @@ function main()
                   Utils.MANAGEMENT_RS_KEY)
   rsInst:updateFacet("IReceptacles",
                   RegistryService.RGSReceptacleFacet())
-  rsInst:putReceptacle("AccessControlServiceReceptacle", Utils.COMPONENT_INTERFACE, true)
+  rsInst:addReceptacle("AccessControlServiceReceptacle", Utils.COMPONENT_INTERFACE, true)
 
   -- Configuracoes
   rsInst.IComponent.startup = RegistryService.startup

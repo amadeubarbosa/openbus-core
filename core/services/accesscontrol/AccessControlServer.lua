@@ -191,7 +191,7 @@ function main()
   acsInst:updateFacet("IReceptacles",
                     AccessControlService.ACSReceptacleFacet(TableDB(dbfile)))
 
-  acsInst:putReceptacle("RegistryServiceReceptacle", Utils.COMPONENT_INTERFACE, true)
+  acsInst:addReceptacle("RegistryServiceReceptacle", Utils.COMPONENT_INTERFACE, true)
 
   -- Configurações
   acsInst.IComponent.startup = AccessControlService.startup

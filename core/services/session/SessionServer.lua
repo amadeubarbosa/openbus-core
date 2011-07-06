@@ -157,7 +157,7 @@ function main()
                       SessionService.Observer())
   component:updateFacet("IReceptacles",
                       AdaptiveReceptacle.AdaptiveReceptacleFacet())
-  component:putReceptacle("AccessControlServiceReceptacle", "IDL:scs/core/IComponent:1.0", true)
+  component:addReceptacle("AccessControlServiceReceptacle", "IDL:scs/core/IComponent:1.0", true)
 
   component.IComponent.config = SessionServerConfiguration
   local sessionServiceComponent = component.IComponent
