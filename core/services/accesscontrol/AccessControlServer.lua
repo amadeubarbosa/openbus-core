@@ -120,13 +120,15 @@ tests[Utils.LEASE_PROVIDER_KEY] = TestLog()
 tests[Utils.LEASE_PROVIDER_KEY_PREV] = TestLog()
 tests[Utils.FAULT_TOLERANT_ACS_KEY] = TestLog()
 
-for key, v in pairs(tests) do
-  v:level(1)
-  local logfile = assert(io.open(DATA_DIR.."/acs-performance-".. key ..".log", "w"))
-  if not logfile then
-    Log:error("O arquivo do log de desempenho ["..DATA_DIR.."/acs-performance-".. key ..".log] nao existe.\n")
-  else
-    v.viewer.output = logfile
+if acsConfig.logs.perf.level > 0 then
+  for key, v in pairs(tests) do
+    v:level(acsConfig.logs.perf.level)
+    local logfile = assert(io.open(DATA_DIR.."/acs-performance-".. key ..".log", "w"))
+    if not logfile then
+      Log:error("O arquivo do log de desempenho ["..DATA_DIR.."/acs-performance-".. key ..".log] nao existe.\n")
+    else
+      v.viewer.output = logfile
+    end
   end
 end
 iconfig.tests = tests

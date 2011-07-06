@@ -118,13 +118,15 @@ tests[Utils.REGISTRY_SERVICE_KEY] = TestLog()
 tests[Utils.REGISTRY_SERVICE_KEY_PREV] = TestLog()
 tests[Utils.FAULT_TOLERANT_RS_KEY] = TestLog()
 local logfile
-for key, v in pairs(tests) do
-  v:level(1)
-  logfile = assert(io.open(DATA_DIR.."/rgs-performance-".. key ..".log", "w"))
-  if not logfile then
-    Log:error("O arquivo do log de desempenho ["..DATA_DIR.."/rgs-performance-".. key ..".log] nao existe.\n")
-  else
-    v.viewer.output = logfile
+if rsConfig.logs.perf.level > 0 then
+  for key, v in pairs(tests) do
+    v:level(rsConfig.logs.perf.level)
+    logfile = assert(io.open(DATA_DIR.."/rgs-performance-".. key ..".log", "w"))
+    if not logfile then
+      Log:error("O arquivo do log de desempenho ["..DATA_DIR.."/rgs-performance-".. key ..".log] nao existe.\n")
+    else
+      v.viewer.output = logfile
+    end
   end
 end
 iConfig.tests = tests

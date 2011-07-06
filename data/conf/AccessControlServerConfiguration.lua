@@ -31,6 +31,9 @@ AccessControlServerConfiguration = {
       level = 1,
       file = "logs/access_control_service_audit.log",
     },
+    perf = {
+      level = 0,
+    },
     oil = {
       level = 5,
       file = "logs/access_control_service_oil.log",

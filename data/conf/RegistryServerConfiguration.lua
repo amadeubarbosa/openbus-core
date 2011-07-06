@@ -22,6 +22,9 @@ RegistryServerConfiguration = {
       level = 1,
       file = "logs/registry_service_audit.log",
     },
+    perf = {
+      level = 0,
+    },
     oil = {
       level = 5,
       file = "logs/registry_service_oil.log",
