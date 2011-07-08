@@ -58,7 +58,7 @@ local function init(self)
   self.credentialManager:setValue(self.credential)
   --
   facet = ic:getFacet(Utils.MANAGEMENT_ACS_INTERFACE)
-  self.acsMgt = orb:narrow(facet, MANAGEMENT_ACS_INTERFACE)
+  self.acsMgt = orb:narrow(facet, Utils.MANAGEMENT_ACS_INTERFACE)
   self.acsMgt = orb:newproxy(self.acsMgt, "protected")
   --
   facet = ic:getFacetByName("IReceptacles")
