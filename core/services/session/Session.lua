@@ -79,7 +79,7 @@ function Session:addMember(member)
       orb:narrow(eventSink, eventSinkInterface)
   else
     if eventSinkPrev then
-      Log:debug(format("O membro %s:%d.%d.%d receberá eventos da versão %d",
+      Log:debug(format("O membro %s:%d.%d.%d receberá eventos da versão %s",
           componentId.name, componentId.major_version, componentId.minor_version,
           componentId.patch_version, Utils.IDL_PREV))
       self.context["SessionEventSink_" .. Utils.IDL_VERSION].eventSinksPrev[info.memberId] =
