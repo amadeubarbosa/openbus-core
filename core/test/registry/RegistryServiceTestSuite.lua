@@ -80,7 +80,7 @@ Suite = {
                       self.Hello_v2.facets.IHello_v2.class())
       -- Identificar local propositalmente
       local success
-      sucess, self.registryIdentifier = self.rgsProtected:register({
+      success, self.registryIdentifier = self.rgsProtected:register({
         member = member.IComponent,
         properties = self.Hello_v2.properties,
       })
@@ -164,7 +164,7 @@ Suite = {
                       self.Hello_v2.facets.IHello_v2.class())
       -- Identificar local propositalmente
       local success
-      sucess, self.registryIdentifier = self.rgsProtected:register({
+      success, self.registryIdentifier = self.rgsProtected:register({
         member = member.IComponent,
         properties = self.Hello_v2.properties,
       })
