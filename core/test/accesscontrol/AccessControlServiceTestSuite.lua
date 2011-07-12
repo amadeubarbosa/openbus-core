@@ -164,7 +164,6 @@ Suite = {
       Check.assertTrue(self.accessControlService:isValid(self.credential))
       Check.assertFalse(self.accessControlService:isValid({identifier = "123", owner = self.login.user, delegate = "",}))
       self.accessControlService:logout(self.credential)
-      -- neste caso o proprio interceptador do serviço rejeita o request
       Check.assertFalse(self.accessControlService:isValid(self.credential))
       self.credentialManager:invalidate()
     end,
