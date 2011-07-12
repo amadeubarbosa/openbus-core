@@ -367,7 +367,7 @@ packages = {
 			["client.sh"] = "demo/eventSink/lua",
 			["server.lua"] = "demo/eventSink/lua",
 			["server.sh"] = "demo/eventSink/lua",
-			["EventSink.properties"] = "demo/hello/lua",
+			["EventSink.properties"] = "demo/eventSink/lua",
 	  },
 	},
 	-- Orbix related packages
