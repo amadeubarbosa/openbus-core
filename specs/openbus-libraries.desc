@@ -478,14 +478,8 @@ packages = {
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/scs/src/cpp",
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix" },
-    -- special compile instructions for solaris
-    SunOS510_64 = {
-      mf = { 
-        "orbix genstubs USE_NODEPEND=Yes", 
-        "orbix USE_NODEPEND=Yes"},
-    },
+      src = PRODAPP .."/scs-cpp",
+      mf = { "orbix genstubs", "orbix" },
     },
     install_files = {
       ["../lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
@@ -498,19 +492,20 @@ packages = {
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
           "idlpath/"..IDL_VERSION,
-      ["*.h"] = "incpath/scs/",
+      ["include/scs/*"] = "incpath/scs/",
     },
   },
   { name = "openbus-orbix",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
-      mf = { "orbix genstubs USE_NODEPEND=Yes", "orbix LUA51="..PRODAPP.."/lua5.1" },
+      mf = { "orbix precompile", "orbix genstubs", "orbix LUA51="..PRODAPP.."/lua5.1" },
     -- special compile instructions for solaris
     SunOS510_64 = {
       mf = { 
-        "orbix genstubs USE_NODEPEND=Yes", 
-        "orbix LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes"},
+        "orbix precompile",
+        "orbix genstubs", 
+        "orbix LUA51="..PRODAPP.."/lua5.1"},
     },
     },
     dev_files = {
