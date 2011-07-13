@@ -886,7 +886,7 @@ packages = {
       src = PRODAPP .."/sdk-java/demo/hello",
     },
     install_files = {
-      ["target/openbus-demo-hello-*.jar"] = "demo/hello",
+      ["target/openbus-sdk-demo-hello-*.jar"] = "demo/hello",
       ["target/dependency/*.jar"] = "libpath/java",
     },
     dev_files = {
