@@ -137,12 +137,17 @@ cd ${OPENBUS_HOME}/specs/management
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=session_service.mgt
 MGTSS_CODE=$?
 
-CODE=0
 if [ ${MGTSS_CODE} -ne 0 ];then
   echo "[ERRO] Falha ao executar a implantação do Serviço de Sessão"
   ShowLog "ACS" ${ACSOUTFILE} ${ACSERRFILE}
   ShowLog "RGS" ${RGSOUTFILE} ${RGSERRFILE}
-  CODE=1
+  kill -9 ${RGSPID}
+  kill -9 ${ACSPID}
+
+  rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE}
+  rm -f ${RGSOUTFILE} ${RGSERRFILE} ${RGSPIDFILE}
+
+  exit 1
 fi
 ###############################################################################
 
@@ -151,5 +156,3 @@ kill -9 ${ACSPID}
 
 rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE}
 rm -f ${RGSOUTFILE} ${RGSERRFILE} ${RGSPIDFILE}
-
-exit ${CODE}
