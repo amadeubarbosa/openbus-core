@@ -1,7 +1,7 @@
 -- $Id:
 
-local format = string.format
-local tostring = tostring
+local pairs = pairs
+local type = type
 
 local oop = require "loop.simple"
 local oil = require "oil"
