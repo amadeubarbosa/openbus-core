@@ -40,7 +40,7 @@ Before presenting the basic component-based services of which Openbus is compose
 \subsection{Leasing Mechanism}
 
 A \textit{lease} is a contract that gives its holder specified rights
-over property for a limited period of time. If the lease is not renewed before expiring, the resource may become available.
+over property for a limited period of time. If the lease is not renewed before expiring, the resource may become unavailable.
 
 Openbus uses the leasing mechanism in order to control the components access through the bus. Through the access control service, the component can get a credential associated to a lease. If the lease expires, the credential is no longer valid and the component has to get a new one. 
 
@@ -170,7 +170,7 @@ Each service offer is represented by the \textit{ServiceOffer} entity. The servi
 
 Just like explained for the Access Control Service Component, for illustrative purposes, we put the number of the Openbus release version in front of the \textit{RSFacet} names. As it is illustrated, the implementation of the \textit{IRegistryService} delegates its behavior to the new \textit{RSFacet} (the implementation of the \textit{IRegistrySevice\_v1\_05}).
 
-Finally, the Openbus has a credential observer mechanism. The Registry Service Component implements \textit{credentialWasDeleted} method of the \textit{ICredentialObserver} interface. This behavior is illustrated through the \textit{(RS)CredentialObserver} class which in fact delegates this implementation to the \textit{RSFacet} class. The \textit{EntryCredential} class has a reference to all observers of the current credential entry. The \textit{EntryCredential} also as an index map of the observers for optimizations (illustrated by the \textit{observedBy} relationship).
+Finally, the Openbus has a credential observer mechanism. The Registry Service Component implements \textit{credentialWasDeleted} method of the \textit{ICredentialObserver} interface. This behavior is illustrated through the \textit{(RS)CredentialObserver} class which in fact delegates this implementation to the \textit{RSFacet} class. The \textit{EntryCredential} class has a reference to all observers of the current credential entry. The \textit{EntryCredential} also has an index map of the observers for optimizations (illustrated by the \textit{observedBy} relationship).
 
 
 \subsection{Management Conceptual Model}
@@ -262,7 +262,7 @@ OMG. CORBA Components. OMG Document formal/04-03-01 (CORBA, v3.0.3). 2004. http:
 Microsoft. Overview of the .NET Framework 4. http://msdn.microsoft.com/en-us/library/a4t23ktk.aspx
 
 \bibitem[6]{SCS}
-The SCS Project. http://www.tecgraf.puc-rio.br/~scorrea/scs/
+The SCS Project. https://jira.tecgraf.puc-rio.br/confluence/display/SCSPUB/SCS
 
 \bibitem[7]{Interceptors}
 OMG. CORBA Interceptors. OMG Document formal/04-03-01 (CORBA, v3.0.3). 2004. http://www.omg.org
