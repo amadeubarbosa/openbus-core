@@ -93,7 +93,17 @@ fi
 cd ${OPENBUS_HOME}/specs/management
 
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=access_control_service.mgt
+MGTACS_CODE=$?
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=registry_service.mgt
+MGTRGS_CODE=$?
+
+if [ ${MGTACS_CODE} -ne 0 ] -o [ ${MGTRGS_CODE} -ne 0 ] ;then
+  kill -9 ${ACSPID}
+  echo "[ERRO] Falha ao executar a implantação do Serviço de Acesso ou do Serviço de Registro"
+  ShowLog "ACS" ${ACSOUTFILE} ${ACSERRFILE}
+  rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE}
+  exit 1
+fi
 
 ###############################################################################
 
@@ -125,7 +135,20 @@ fi
 cd ${OPENBUS_HOME}/specs/management
 
 ${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=session_service.mgt
+MGTSS_CODE=$?
 
+if [ ${MGTSS_CODE} -ne 0 ];then
+  echo "[ERRO] Falha ao executar a implantação do Serviço de Sessão"
+  ShowLog "ACS" ${ACSOUTFILE} ${ACSERRFILE}
+  ShowLog "RGS" ${RGSOUTFILE} ${RGSERRFILE}
+  kill -9 ${RGSPID}
+  kill -9 ${ACSPID}
+
+  rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE}
+  rm -f ${RGSOUTFILE} ${RGSERRFILE} ${RGSPIDFILE}
+
+  exit 1
+fi
 ###############################################################################
 
 kill -9 ${RGSPID}
