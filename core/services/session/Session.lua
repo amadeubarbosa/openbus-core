@@ -187,7 +187,7 @@ function SessionEventSink:push(sender, event)
     end
   end
   for memberId, sink in pairs(self.eventSinksPrev) do
-    local result, errorMsg = oil.pcall(sink.push, sink, sender, event)
+    local result, errorMsg = oil.pcall(sink.push, sink, event)
     if not result then
       Log:debug(format("Falha ao tentar enviar um evento do tipo %s ao membro %s (versão %s)",
           event.type, memberId, Utils.IDL_PREV), tostring(errorMsg))
