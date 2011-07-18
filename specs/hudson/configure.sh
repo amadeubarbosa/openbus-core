@@ -35,6 +35,7 @@ echo "==========================================================================
 
 cd ${OPENBUS_HOME}/data/conf
 
+## tratamento de admin, lease e verbose
 echo "AccessControlServerConfiguration.administrators = {'tester'}" >> \
   AccessControlServerConfiguration.lua
 echo "AccessControlServerConfiguration.lease = 300" >> \
@@ -46,6 +47,62 @@ echo "RegistryServerConfiguration.administrators = {'tester'}" >> \
   RegistryServerConfiguration.lua
 echo "RegistryServerConfiguration.oilVerboseLevel = 5" >> \
   RegistryServerConfiguration.lua
+
+MGT_EXTRAARGS=
+## tratamento de variações no host/porta do ACS
+if [ -n "${ACS_HOST}" ] && [ -n "${ACS_PORT}" ]; then
+  # config básica
+  echo "AccessControlServerConfiguration.hostName = '${ACS_HOST}'" >> \
+  AccessControlServerConfiguration.lua
+  echo "AccessControlServerConfiguration.hostPort = ${ACS_PORT}" >> \
+  AccessControlServerConfiguration.lua
+
+  echo "RegistryServerConfiguration.accessControlServerHostName = '${ACS_HOST}'" >> \
+  RegistryServerConfiguration.lua
+  echo "RegistryServerConfiguration.accessControlServerHostPort = ${ACS_PORT}" >> \
+  RegistryServerConfiguration.lua
+
+  echo "SessionServerConfiguration.accessControlServerHostName = '${ACS_HOST}'" >> \
+  SessionServerConfiguration.lua
+  echo "SessionServerConfiguration.accessControlServerHostPort = ${ACS_PORT}" >> \
+  SessionServerConfiguration.lua
+
+  # FT
+echo "\
+ftconfig.hosts.ACS   = { \"corbaloc::${ACS_HOST}:${ACS_PORT}/ACS_v1_05\" }
+ftconfig.hosts.ACSIC = { \"corbaloc::${ACS_HOST}:${ACS_PORT}/openbus_v1_05\" }
+ftconfig.hosts.LP    = { \"corbaloc::${ACS_HOST}:${ACS_PORT}/LP_v1_05\" }
+ftconfig.hosts.FTACS = { \"corbaloc::${ACS_HOST}:${ACS_PORT}/FTACS_v1_05\" }
+" >> ACSFaultToleranceConfiguration.lua
+
+  # management
+  MGT_EXTRAARGS="$MGT_EXTRAARGS --acs-host=${ACS_HOST} "
+  MGT_EXTRAARGS="$MGT_EXTRAARGS --acs-port=${ACS_PORT} "
+fi
+
+## tratamento de variações no host/porta do RGS
+if [ -n "${RGS_HOST}" ] && [ -n "${RGS_PORT}" ]; then
+  # config básica
+  echo "RegistryServerConfiguration.registryServerHostName = '${RGS_HOST}'" >> \
+  RegistryServerConfiguration.lua
+  echo "RegistryServerConfiguration.registryServerHostPort = ${RGS_PORT}" >> \
+  RegistryServerConfiguration.lua
+
+  # FT
+echo "\
+ftconfig.hosts.RS   = { \"corbaloc::${RGS_HOST}:${RGS_PORT}/RS_v1_05\" }
+ftconfig.hosts.FTRS = { \"corbaloc::${RGS_HOST}:${RGS_PORT}/FTRS_v1_05\" }
+" >> RSFaultToleranceConfiguration.lua
+fi
+
+## tratamento de variações no host/porta do SS
+if [ -n "${SS_HOST}" ] && [ -n "${SS_PORT}" ]; then
+  # config básica
+  echo "SessionServerConfiguration.sessionServerHostName = '${SS_HOST}'" >> \
+  SessionServerConfiguration.lua
+  echo "SessionServerConfiguration.sessionServerHostPort = ${SS_PORT}" >> \
+  SessionServerConfiguration.lua
+fi
 
 ###############################################################################
 
@@ -92,9 +149,9 @@ fi
 
 cd ${OPENBUS_HOME}/specs/management
 
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=access_control_service.mgt
+${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=access_control_service.mgt ${MGT_EXTRAARGS}
 MGTACS_CODE=$?
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=registry_service.mgt
+${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=registry_service.mgt ${MGT_EXTRAARGS}
 MGTRGS_CODE=$?
 
 if [ ${MGTACS_CODE} -ne 0 ] -o [ ${MGTRGS_CODE} -ne 0 ] ;then
@@ -134,7 +191,7 @@ fi
 
 cd ${OPENBUS_HOME}/specs/management
 
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=session_service.mgt
+${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=session_service.mgt ${MGT_EXTRAARGS}
 MGTSS_CODE=$?
 
 if [ ${MGTSS_CODE} -ne 0 ];then
