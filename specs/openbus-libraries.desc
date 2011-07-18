@@ -166,7 +166,7 @@ packages = {
     },
   },
   { name = "lualdap-1.0.1",
-    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_02_01_2011_01_07/lualdap-1.0.1",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_02_2010_09_21/lualdap-1.0.1",
     build = {
       type = "tecmake",
       src = PRODAPP .."/lualdap-1.0.1/src",
