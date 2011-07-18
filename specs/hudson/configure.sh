@@ -48,7 +48,7 @@ echo "RegistryServerConfiguration.administrators = {'tester'}" >> \
 echo "RegistryServerConfiguration.oilVerboseLevel = 5" >> \
   RegistryServerConfiguration.lua
 
-MGT_EXTRAARGS=
+MGT_EXTRAARGS="--login=tester --password=tester"
 ## tratamento de variações no host/porta do ACS
 if [ -n "${ACS_HOST}" ] && [ -n "${ACS_PORT}" ]; then
   # config básica
@@ -149,9 +149,9 @@ fi
 
 cd ${OPENBUS_HOME}/specs/management
 
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=access_control_service.mgt ${MGT_EXTRAARGS}
+${OPENBUS_HOME}/core/bin/run_management.sh --script=access_control_service.mgt ${MGT_EXTRAARGS}
 MGTACS_CODE=$?
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=registry_service.mgt ${MGT_EXTRAARGS}
+${OPENBUS_HOME}/core/bin/run_management.sh --script=registry_service.mgt ${MGT_EXTRAARGS}
 MGTRGS_CODE=$?
 
 if [ ${MGTACS_CODE} -ne 0 ] -o [ ${MGTRGS_CODE} -ne 0 ] ;then
@@ -191,7 +191,7 @@ fi
 
 cd ${OPENBUS_HOME}/specs/management
 
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester --script=session_service.mgt ${MGT_EXTRAARGS}
+${OPENBUS_HOME}/core/bin/run_management.sh --script=session_service.mgt ${MGT_EXTRAARGS}
 MGTSS_CODE=$?
 
 if [ ${MGTSS_CODE} -ne 0 ];then

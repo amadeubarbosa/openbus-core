@@ -41,6 +41,15 @@ SSSERRFILE=${WORKSPACE}/sss-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
 
 ###############################################################################
 
+MGT_EXTRAARGS="--login=tester --password=tester"
+if [ -n "${ACS_HOST}" ] && [ -n "${ACS_PORT}" ]; then
+  # management
+  MGT_EXTRAARGS="$MGT_EXTRAARGS --acs-host=${ACS_HOST} "
+  MGT_EXTRAARGS="$MGT_EXTRAARGS --acs-port=${ACS_PORT} "
+fi
+
+###############################################################################
+
 echo "Iniciando Serviço de Acesso"
 daemonize -o ${ACSOUTFILE} -e ${ACSERRFILE} -p ${ACSPIDFILE} ${OPENBUS_HOME}/core/bin/run_access_control_server.sh
 sleep 5
@@ -101,14 +110,14 @@ echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento02
 echo
 
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
-  --add-system=TesteBarramento --description=Teste
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
+${OPENBUS_HOME}/core/bin/run_management.sh ${MGT_EXTRAARGS} \
+  --add-system=TesteBarramento --description=Teste 
+${OPENBUS_HOME}/core/bin/run_management.sh ${MGT_EXTRAARGS} \
   --add-deployment=TesteBarramento --description=Teste \
   --certificate=TesteBarramento.crt --system=TesteBarramento
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
+${OPENBUS_HOME}/core/bin/run_management.sh ${MGT_EXTRAARGS} \
   --set-authorization=TesteBarramento --grant="IDL:IHello_v1:1.0" --no-strict
-${OPENBUS_HOME}/core/bin/run_management.sh --login=tester --password=tester \
+${OPENBUS_HOME}/core/bin/run_management.sh ${MGT_EXTRAARGS} \
   --set-authorization=TesteBarramento --grant="IDL:IHello_v2:1.0" --no-strict
 
 ./run_unit_test.sh management/testManagement.lua
