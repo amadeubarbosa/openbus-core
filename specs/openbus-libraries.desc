@@ -600,7 +600,38 @@ packages = {
     },
   },
   -- MICO related packages
-  { name = "scs-mico",
+  { name = "scs-micoMT",
+    url = SVNREPURL .. "/scs/core/cpp/trunk",
+    directory = PRODAPP .."/scs-cpp",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/scs-cpp",
+      mf = { 
+        "mico genstubs MULTITHREAD=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+      },
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++ MULTITHREAD=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/libscsmicoMT.*"] = "libpath/${TEC_UNAME}",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
+          "idlpath/"..IDL_VERSION,
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/libscsmicoMT.*"] = "libpath/${TEC_UNAME}",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
+          "idlpath/"..IDL_VERSION,
+      ["include/scs/*"] = "incpath/scs",
+    },
+  },
+  { name = "scs-micoST",
     url = SVNREPURL .. "/scs/core/cpp/trunk",
     directory = PRODAPP .."/scs-cpp",
     build = {
@@ -608,7 +639,7 @@ packages = {
       src = PRODAPP .."/scs-cpp",
       mf = { 
         "mico genstubs", 
-        "mico LUA51="..PRODAPP.."/lua5.1" 
+        "mico LUA51="..PRODAPP.."/lua5.1"
       },
       Darwin = {
         mf = { 
@@ -618,20 +649,54 @@ packages = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/libscsmico.*"] = "libpath/${TEC_UNAME}",
+      ["lib/${TEC_UNAME}/libscsmicoST.*"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
           "idlpath/"..IDL_VERSION,
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libscsmico.*"] = "libpath/${TEC_UNAME}",
+      ["lib/${TEC_UNAME}/libscsmicoST.*"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
           "idlpath/"..IDL_VERSION,
       ["include/scs/*"] = "incpath/scs",
     },
   },
-  { name = "openbus-mico",
+  { name = "openbus-micoMT",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp",
+      mf = { 
+        "mico genstubs MULTITHREAD=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" },
+      -- special compile instructions for solaris
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++ MULTITHREAD=Yes", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        },
+      },
+    },
+    dev_files = {
+      ["CHANGES"] = ".",
+      ["specs/shell/mico*"] = "specs/shell/",
+      ["lib/${TEC_UNAME}/libopenbusmicoMT.*"] = "libpath/${TEC_UNAME}",
+      ["*.h"] = "incpath/openbus/cpp", --include
+      ["openbus/util/*.h"] = "incpath/openbus/cpp/openbus/util/",    --include
+      ["openbus/interceptors/*.h"] = "incpath/openbus/cpp/openbus/interceptors/",    --include
+      ["stubs/mico"] = "incpath/openbus/cpp/stubs",     --include
+      [INSTALL.TOP.."/idlpath/"..IDL_PREV.."/*"] = "idlpath/"..IDL_PREV,
+      ["test/mico/acs/*.cpp"] = "test/mico/acs/",
+      ["test/mico/acs/config.mak"] = "test/mico/acs/",
+      ["test/mico/rgs/*.cpp"] = "test/mico/rgs/",
+      ["test/mico/rgs/config.mak"] = "test/mico/rgs/",
+      ["test/mico/config*"] = "test/mico/",
+      ["test/mico/runtests"] = "test/mico/",
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
+    },
+  },
+  { name = "openbus-micoST",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
@@ -649,7 +714,7 @@ packages = {
     dev_files = {
       ["CHANGES"] = ".",
       ["specs/shell/mico*"] = "specs/shell/",
-      ["lib/${TEC_UNAME}/libopenbusmico.*"] = "libpath/${TEC_UNAME}",
+      ["lib/${TEC_UNAME}/libopenbusmicoST.*"] = "libpath/${TEC_UNAME}",
       ["*.h"] = "incpath/openbus/cpp", --include
       ["openbus/util/*.h"] = "incpath/openbus/cpp/openbus/util/",    --include
       ["openbus/interceptors/*.h"] = "incpath/openbus/cpp/openbus/interceptors/",    --include
@@ -665,7 +730,47 @@ packages = {
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
-  { name = "openbus-demo-hello-mico",
+  { name = "openbus-demo-hello-micoMT",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/demo/hello/mico",
+      mf = { 
+        "server genstubs", 
+        "client LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes",
+        "server LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs ",
+          'client "LUA51='..PRODAPP..'/lua5.1 MULTITHREAD=Yes"',
+          'server "LUA51='..PRODAPP..'/lua5.1 MULTITHREAD=Yes"',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { "server genstubs USE_NODEPEND=Yes MULTITHREAD=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes MULTITHREAD=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes MULTITHREAD=Yes"}, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
+      ["../idl/hello.idl"] = "demo/hello/idl/",
+      ["../management"] = "demo/hello",
+      ["../../README"] = "demo",      
+      ["Makefile"] = "demo/hello/mico",
+      ["Makefile.win"] = "demo/hello/mico",
+      ["client.cpp"] = "demo/hello/mico",
+      ["server.cpp"] = "demo/hello/mico",
+      ["run*"] = "demo/hello/mico",
+      ["*.mak"] = "demo/hello/mico",
+      ["*config"] = "demo/hello/mico",
+      ["run*"] = "demo/hello/mico",
+      ["client"] = "demo/hello/mico",
+      ["server"] = "demo/hello/mico",
+      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
+    },
+  },
+  { name = "openbus-demo-hello-micoST",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/hello/mico",
@@ -677,8 +782,8 @@ packages = {
       SunOS510 = { 
         mf = { 
           "server genstubs ",
-          'client "LUA51='..PRODAPP..'/lua5.1 "',
-          'server "LUA51='..PRODAPP..'/lua5.1 "',
+          'client "LUA51='..PRODAPP..'/lua5.1"',
+          'server "LUA51='..PRODAPP..'/lua5.1"',
         }, 
       },
       SunOS510_64 = { 
