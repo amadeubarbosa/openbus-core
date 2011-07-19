@@ -14,7 +14,7 @@
    inkscape:version="0.47 r22583"
    width="100%"
    height="100%"
-   sodipodi:docname="openbus-ft.svg"
+   sodipodi:docname="Openbus-FT.svg"
    inkscape:export-filename="/Users/amadeu/openbus-ft.png"
    inkscape:export-xdpi="40.013428"
    inkscape:export-ydpi="40.013428">
@@ -26,7 +26,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -56,12 +56,12 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1680"
-     inkscape:window-height="1006"
+     inkscape:window-width="1280"
+     inkscape:window-height="756"
      id="namedview4"
      showgrid="false"
      inkscape:zoom="0.19684564"
-     inkscape:cx="335.41698"
+     inkscape:cx="203.33379"
      inkscape:cy="817.06105"
      inkscape:window-x="0"
      inkscape:window-y="0"
@@ -101,13 +101,6 @@
      id="path3828"
      sodipodi:nodetypes="cc" />
   <rect
-     style="fill:#ffe680;fill-opacity:1;stroke:#000000;stroke-width:2.76823831000000009;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
-     id="rect12"
-     width="1936.4138"
-     height="172.88495"
-     x="-1007.1485"
-     y="-81.649597" />
-  <rect
      style="fill:#f6ffd5;fill-opacity:1;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none"
      id="rect16"
      width="2104.7244"
@@ -124,17 +117,6 @@
      id="path2921"
      style="fill:#5f8dd3;fill-opacity:1;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
      sodipodi:type="arc" />
-  <text
-     xml:space="preserve"
-     style="font-size:80px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-     x="-45.218678"
-     y="31.457611"
-     id="text20"><tspan
-       sodipodi:role="line"
-       id="tspan22"
-       x="-45.218678"
-       y="31.457611"
-       style="font-weight:bold;-inkscape-font-specification:Bitstream Vera Sans Bold">Openbus</tspan></text>
   <text
      xml:space="preserve"
      style="font-size:80px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
@@ -176,17 +158,17 @@
        sodipodi:role="line"
        id="tspan74"
        x="-866.47278"
-       y="976.22687">Banco 1</tspan></text>
+       y="976.22687">Database 1</tspan></text>
   <text
      xml:space="preserve"
      style="font-size:58.25978851px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-     x="-526.65894"
+     x="-518.65894"
      y="976.22687"
      id="text76"><tspan
        sodipodi:role="line"
        id="tspan78"
-       x="-526.65894"
-       y="976.22687">Banco 2</tspan></text>
+       x="-518.65894"
+       y="976.22687">Database 2</tspan></text>
   <text
      id="text2923"
      y="-610.77783"
@@ -299,12 +281,11 @@
        x="-1101.6917"
        y="-879.70898">Serviço de Controle de Acesso Tolerante a Falhas</tspan></text>
   <path
-     style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;display:inline;stroke-miterlimit:4;stroke-dasharray:none"
-     d="m -586.34882,-341.19556 410.64186,259.545963"
+     style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline"
+     d="m -586.77369,-341.19556 411.17772,260.095722"
      id="path3709"
      inkscape:connector-type="polyline"
-     inkscape:connection-start="#rect16"
-     inkscape:connection-end="#rect12" />
+     inkscape:connection-start="#rect16" />
   <rect
      y="-1003.0327"
      x="65.772644"
@@ -446,9 +427,8 @@
   <path
      inkscape:connector-type="polyline"
      id="path3759"
-     d="M 552.47651,-341.19556 108.81955,-81.649597"
+     d="M 552.93554,-341.19556 108.69964,-81.099838"
      style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline"
-     inkscape:connection-end="#rect12"
      inkscape:connection-start="#rect3713" />
   <g
      id="g3784"
@@ -503,28 +483,23 @@
      id="path3826"
      d="m -542.92333,600.62586 0,128.26557"
      style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-  <g
-     id="g3794"
-     transform="translate(12.00005,-218)"
-     inkscape:connector-avoid="true">
-    <rect
-       style="fill:#aaffaa;fill-opacity:1;stroke:#000000;stroke-width:2.50768971;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
-       id="rect3773"
-       width="345.79865"
-       height="185.47784"
-       x="-871.73358"
-       y="645.14783" />
-    <text
-       xml:space="preserve"
-       style="font-size:80px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="-694.72345"
-       y="756.38525"
-       id="text3775"><tspan
-         sodipodi:role="line"
-         id="tspan3777"
-         x="-694.72345"
-         y="756.38525">App 1</tspan></text>
-  </g>
+  <rect
+     y="189.78262"
+     x="-906.87372"
+     height="442.72443"
+     width="435.40118"
+     id="rect3773"
+     style="fill:#aaffaa;fill-opacity:1;stroke:#000000;stroke-width:4.34738064;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+  <text
+     id="text3775"
+     y="321.90451"
+     x="-690.78345"
+     style="font-size:80px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+     xml:space="preserve"><tspan
+       id="tspan2909"
+       y="521.90454"
+       x="-690.78345"
+       sodipodi:role="line">App 1</tspan></text>
   <g
      id="g3810"
      transform="translate(88,-71.77842)">
@@ -628,4 +603,47 @@
        y="848.45099"
        id="tspan3848"
        style="text-align:end;text-anchor:end">SR R1 = Réplica 1 do SR</tspan></text>
+  <g
+     id="g3713"
+     transform="translate(0,-122)">
+    <path
+       id="path3710"
+       d="m 950.95512,40.579194 c -1.65358,0 -3.28428,0.08249 -4.90625,0.25 l -1936.12495,0 0,172.874996 1936.12495,0 c 1.62197,0.16752 3.25267,0.25 4.90625,0.25 35.27642,0 63.87498,-38.80519 63.87498,-86.6875 0,-47.8823 -28.59856,-86.687496 -63.87498,-86.687496 z"
+       style="fill:#ffe680;fill-opacity:1;stroke:#000000;stroke-width:2.25583792;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+    <path
+       transform="matrix(0.76201468,0,0,0.74201035,-108.10594,92.763667)"
+       d="m -1061.7456,46.49789 c 0,64.53051 -37.5284,116.84282 -83.822,116.84282 -46.2937,0 -83.822,-52.31231 -83.822,-116.84282 0,-64.530507 37.5283,-116.842819 83.822,-116.842819 46.2936,0 83.822,52.312312 83.822,116.842819 z"
+       sodipodi:ry="116.84282"
+       sodipodi:rx="83.822021"
+       sodipodi:cy="46.49789"
+       sodipodi:cx="-1145.5676"
+       id="path2922"
+       style="fill:#ffe680;fill-opacity:1;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       sodipodi:type="arc" />
+  </g>
+  <text
+     xml:space="preserve"
+     style="font-size:80px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+     x="-45.218678"
+     y="31.457611"
+     id="text20"><tspan
+       sodipodi:role="line"
+       id="tspan22"
+       x="-45.218678"
+       y="31.457611"
+       style="font-weight:bold;-inkscape-font-specification:Bitstream Vera Sans Bold">Openbus</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-size:80px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+     x="-690.6178"
+     y="477.38843"
+     id="text3740"><tspan
+       sodipodi:role="line"
+       id="tspan3742"
+       x="-677.88342"
+       y="477.38843">Database </tspan><tspan
+       sodipodi:role="line"
+       x="-690.6178"
+       y="577.38843"
+       id="tspan3744">Service</tspan></text>
 </svg>

@@ -1,11 +1,19 @@
 \documentclass[a4paper, 11pt]{article}
 \usepackage{a4}
+\usepackage{url}
+\usepackage{hyperref}
 \usepackage[latin1]{inputenc}
 \usepackage[brazil]{babel}
 \usepackage{listings}
 \usepackage{verbatim}
-\usepackage{epsf}
-\usepackage[dvips]{graphicx}
+\usepackage{graphicx}
+
+%% Removes hyperlinks borders
+\hypersetup{
+  colorlinks = true,%
+  linkcolor = blue,%
+  urlcolor = blue
+}
 
 \lstset{
   language = c++, 
@@ -15,7 +23,7 @@
 }
 
 \title{Openbus - Integrador de dados e aplicações}
-\date{27 de agosto de 2009}
+\date{\today}
 
 \begin{document}
 \maketitle
@@ -72,7 +80,7 @@ a ser possível, possibilitando um ambiente de colaboração entre as aplicações.
 O Openbus é baseado no \emph{middleware} CORBA. Seu barramento é formado por 
 componentes que podem oferecer serviços ou podem apenas consultar serviços de 
 outros componentes. Estes componentes são implementados através de um sistema 
-de componentes para CORBA chamado SCS(Sistema de Componentes de Software).
+de componentes para CORBA chamado SCS (Sistema de Componentes de Software).
 No SCS, os componentes são compostos por facetas que representam as interfaces 
 que estes componentes oferecem.
 
@@ -85,7 +93,7 @@ de dados.
 
 \begin{figure} [htb]
 \centering
-\includegraphics[width=14cm]{figs/arquitetura.eps} %height=3in, 
+\includegraphics[width=10cm]{../figuras/Openbus.png} %height=3in, 
 \caption{Arquitetura do openbus}
 \label{fig:architecture}
 \end{figure}
@@ -151,19 +159,21 @@ As plataformas suportadas são:
   \item \verb!Linux 2.6  x86  64bits GCC 4.x!
   \item \verb!Linux 2.6  x86  32bits GCC 3.x!
   \item \verb!Linux 2.6  x86  64bits GCC 3.x!
-  \item \verb!Linux 2.6  ia64 64bits GCC 3.x!
+%  \item \verb!Linux 2.6  ia64 64bits GCC 3.x!
   \item \verb!Linux 2.4  x86  32bits GCC 3.x!
   \item \verb!Linux 2.4  x86  64bits GCC 3.x!
-  \item \verb!Solaris 8  sparc!
+%  \item \verb!Solaris 8  sparc!
   \item \verb!Solaris 10 x86!
   \item \verb!Solaris 10 sparc!
 \end{itemize}
 
 \section{Onde adquirir o pacote ?}
 
-Os pacotes do Openbus podem ser adquiridos através do link:
+O link do site oficial do OpenBus é:
 
-\verb!https://jira.tecgraf.puc-rio.br/confluence/display/ESDPUB/Download.! 
+\url{http://www.tecgraf.puc-rio.br/openbus}
+
+Os pacotes do OpenBus podem ser adquiridos na \href{http://jira.tecgraf.puc-rio.br/confluence/pages/viewpage.action?pageId=25824629}{página de Download}. 
 
 Há um pacote para cada plataforma que é suportada oficialmente. O pacote 
 disponibiliza as bibliotecas referentes a cada uma das linguagens suportadas, 
