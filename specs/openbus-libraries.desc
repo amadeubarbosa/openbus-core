@@ -506,7 +506,7 @@ packages = {
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
-      mf = { "orbix precompile", "orbix genstubs", "orbix LUA51="..PRODAPP.."/lua5.1" },
+      mf = { "orbix precompile LUA51="..PRODAPP.."/lua5.1", "orbix genstubs", "orbix LUA51="..PRODAPP.."/lua5.1" },
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbusorbix.*"] = "libpath/${TEC_UNAME}",
