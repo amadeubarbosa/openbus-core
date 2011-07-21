@@ -735,13 +735,13 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/hello/mico",
       mf = { 
-        "server genstubs", 
+        "server genstubs MULTITHREAD=Yes", 
         "client LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes",
         "server LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
       },
       SunOS510 = { 
         mf = { 
-          "server genstubs ",
+          "server genstubs MULTITHREAD=Yes",
           'client "LUA51='..PRODAPP..'/lua5.1 MULTITHREAD=Yes"',
           'server "LUA51='..PRODAPP..'/lua5.1 MULTITHREAD=Yes"',
         }, 
@@ -876,23 +876,35 @@ packages = {
       ["server"] = "demo/delegate/multithread/mico",
     },
   },
-  { name = "openbus-test-mico",
+  { name = "openbus-test-micoMT",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/mico",
       mf = { 
-        "config cxxtest -C acs", 
-        "config -C acs LUA51="..PRODAPP.."/lua5.1", 
-        "config cxxtest -C rgs", 
-        "config genstubs -C rgs", 
-        "config -C rgs LUA51="..PRODAPP.."/lua5.1" 
+        "config cxxtest -C acs MULTITHREAD=Yes", 
+        "config -C acs LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes", 
+        "config cxxtest -C rgs MULTITHREAD=Yes", 
+        "config genstubs -C rgs MULTITHREAD=Yes", 
+        "config -C rgs LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
       },
-      SunOS510_64 = { 
-	    mf = { "config cxxtest -C acs USE_NODEPEND=Yes",
-               "config -C acs LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes",
-               "config cxxtest -C rgs USE_NODEPEND=Yes",
-               "config genstubs -C rgs USE_NODEPEND=Yes",
-               "config -C rgs LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", },
+    },
+    install_files = {
+      ["bin/${TEC_UNAME}/*"] = "test/mico/bin/${TEC_UNAME}",
+      ["config*"] = "test/mico/",
+      ["runtests"] = "test/mico/",
+      ["../idl/*"] = "test/idl",
+    },
+  },
+  { name = "openbus-test-micoST",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/test/mico",
+      mf = { 
+        "config cxxtest -C acs ", 
+        "config -C acs LUA51="..PRODAPP.."/lua5.1 ", 
+        "config cxxtest -C rgs ", 
+        "config genstubs -C rgs ", 
+        "config -C rgs LUA51="..PRODAPP.."/lua5.1 " 
       },
     },
     install_files = {
