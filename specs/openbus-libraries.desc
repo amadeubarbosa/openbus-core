@@ -17,6 +17,9 @@ packages = {
   { name = "idl-source",
     url = SVNREPURL .. "/openbus/idl/trunk",
     directory = PRODAPP .."/idl",
+    install_files = {
+      ["src/*.idl"] = "idlpath/"..IDL_VERSION,
+    },
   },
   { name = "idl-doc",
     build = {
@@ -32,6 +35,9 @@ packages = {
   { name = "idl-prev-source",
     url = SVNREPURL .. "/openbus/tags/OB_v1_04_07_2010_11_11/core/idl",
     directory = PRODAPP .."/idl-prev",
+    install_files = {
+      ["*.idl"] = "idlpath/"..IDL_PREV,
+    },
   },--[[
   { name = "idl-prev-doc",
     build = {
