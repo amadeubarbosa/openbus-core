@@ -320,7 +320,7 @@ case "$1" in
   esac
   ;;
   *)
-  echo "Usage: $0 {start|stop|restart|force-reload}"
+  echo "Usage: $0 {start|stop|restart|status|force-reload}"
   exit 3
   ;;
 esac
