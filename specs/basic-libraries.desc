@@ -241,7 +241,7 @@ basesoft = {
       Linux26_64 = "rm -f config.cache && ./configure --prefix="..TMPDIR.. " --disable-shared --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
       Linux = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       Darwin = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
-      SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -mt -xar -o" CFLAGS="-xO2 -DPIC -KPIC -mt -m64" CXXFLAGS="-erroff=badargtype2w -xO2 -library=stlport4 -DPIC -KPIC -mt -m64" ./configure --disable-threads  --prefix='.. TMPDIR .. ' && make && make install',
+      SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -mt -xar -o" CFLAGS="-xO2 -DPIC -KPIC -mt -m64" CXXFLAGS="-erroff=badargtype2w -xO2 -library=stlport4 -DPIC -KPIC -mt -m64" ./configure --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
       [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
