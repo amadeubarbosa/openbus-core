@@ -1,10 +1,10 @@
 #!/bin/ksh
 
+#TECMAKE
 TECTOOLS_HOME=/home/t/tecgraf/lib
 TECMAKE_HOME=$TECTOOLS_HOME/tecmake
 export TECMAKE_HOME
 
-# loading the tecmake variables
 if [ -f $TECMAKE_HOME/tec_uname.bsh ]; then
 	# workaround to bad assigns in that tec_uname file
 	ORIG_TECMAKEHOME=$TECMAKE_HOME
@@ -20,59 +20,72 @@ function die {
         exit 1
 }
 
-if [ -z "$OPENBUS_HOME" ] && [ -z "$1" ]; then
-	die "Usage: $0 OPENBUS_HOME"
-fi
-
 INSTALL=$1
-DATA=$2
 OPENBUS_HOME=${INSTALL:=/local/openbus/running}
-OPENBUS_DATADIR=${DATA:=$OPENBUS_HOME/data}
+if [ ! -d "$OPENBUS_HOME" ]; then
+	die "Usage: $0 OPENBUS_HOME OPENBUS_DATADIR"
+fi
 export OPENBUS_HOME
-export OPENBUS_DATADIR
-CRASH_DIR=$OPENBUS_DATADIR/crashes
 
+DATA=$2
+OPENBUS_DATADIR=${DATA:=$OPENBUS_HOME/data}
+if [ ! -d "$OPENBUS_DATADIR" ]; then
+	die "Usage: $0 OPENBUS_HOME OPENBUS_DATADIR"
+fi
+export OPENBUS_DATADIR
+
+
+#OPENBUS_INIT=$OPENBUS_HOME/specs/shell/openbus.init
 OPENBUS_INIT=/etc/init.d/openbus
 [ -x "$OPENBUS_INIT" ] || die "ERROR: $OPENBUS_INIT not found or execute permission missing."
+
+
 HOSTNAME=$(hostname)
-ACS_PID=$OPENBUS_DATADIR/acs.pid
-RGS_PID=$OPENBUS_DATADIR/rgs.pid
-SS_PID=$OPENBUS_DATADIR/ss.pid
+
+CRASH_DIR=$OPENBUS_DATADIR/crashes
+LOG_DIR=$OPENBUS_DATADIR/log
+LOG_ACS=$LOG_DIR/acs.log
+LOG_RGS=$LOG_DIR/rgs.log
+LOG_SS=$LOG_DIR/ss.log
+
+PID_ACS=$OPENBUS_DATADIR/acs.pid
+PID_RGS=$OPENBUS_DATADIR/rgs.pid
+PID_SS=$OPENBUS_DATADIR/ss.pid
+
+EMAIL=amadeu@tecgraf.puc-rio.br
 
 # function to check if is running actually
 is_running() {
 	# if not exist the PID files
-	if [ ! -f $ACS_PID ] || [ ! -f $RGS_PID ] || [ ! -f $SS_PID ]; then
+	if [ ! -f $PID_ACS ] || [ ! -f $PID_RGS ] || [ ! -f $PID_SS ]; then
 		return 1
 	else
 		# the PID file can be outdated, asking for them
-		ps -e |grep $(cat $ACS_PID 2>/dev/null) 1>/dev/null 2>/dev/null
+		ps -e |grep $(cat $PID_ACS 2>/dev/null) 1>/dev/null 2>/dev/null
 		acs_ret=$?
-		ps -e |grep $(cat $RGS_PID 2>/dev/null) 1>/dev/null 2>/dev/null
+		ps -e |grep $(cat $PID_RGS 2>/dev/null) 1>/dev/null 2>/dev/null
 		rgs_ret=$?
-		ps -e |grep $(cat $SS_PID 2>/dev/null) 1>/dev/null 2>/dev/null
+		ps -e |grep $(cat $PID_SS 2>/dev/null) 1>/dev/null 2>/dev/null
 		ss_ret=$?
 		# if some PID is outdated then remove that file and return false
 		running=0
 		if [ $acs_ret -gt 0 ]; then
-			echo "apaguei"
-			rm -f $ACS_PID
+			echo "Serviço de Controle de Acesso está desligado."
+			rm -f $PID_ACS
 			running=1
 		fi
 		if [ $rgs_ret -gt 0 ]; then
-			echo "apaguei"
-			rm -f $RGS_PID
+			echo "Serviço de Sessão está desligado."
+			rm -f $PID_RGS
 			running=1
 		fi
 		if [ $ss_ret -gt 0 ]; then
-			echo "apaguei"
-			rm -f $SS_PID
+			echo "Serviço de Registro está desligado."
+			rm -f $PID_SS
 			running=1
 		fi
 		return $running
 	fi
-	# no problem, all is running
-	return 0
 }
 
 # check if is running
@@ -87,26 +100,26 @@ if [ $ret -gt 0 ] ; then
 	TAG=`date +%Y%m%d-%H:%M:%S`
 	mkdir -p $CRASH_DIR
 
-	cp $OPENBUS_DATADIR/acs.log $CRASH_DIR/acs-$TAG.log
+	cp $LOG_ACS $CRASH_DIR/acs-$TAG.log
 	gzip $CRASH_DIR/acs-$TAG.log
-	cp $OPENBUS_DATADIR/rgs.log $CRASH_DIR/rgs-$TAG.log
+	cp $LOG_RGS $CRASH_DIR/rgs-$TAG.log
 	gzip $CRASH_DIR/rgs-$TAG.log
-	cp $OPENBUS_DATADIR/ss.log $CRASH_DIR/ss-$TAG.log
+	cp $LOG_SS $CRASH_DIR/ss-$TAG.log
 	gzip $CRASH_DIR/ss-$TAG.log
 	
 	$OPENBUS_INIT start
-	echo "OlÃƒÂ¡,
-Sou um notificador automÃƒtico e identifiquei que os servicos do OpenBus na
-mÃƒÂ¡quina $HOSTNAME falharam!
-Acabo de reiniciar os servicos, talvez seja importante vocÃƒÂª olhar os logs que
+	echo "Olá,
+Sou um notificador automático e identifiquei que os servicos do OpenBus na
+máquina $HOSTNAME falharam!
+Acabo de reiniciar os servicos, talvez seja importante você olhar os logs que
 foram salvos em:
   $CRASH_DIR/acs-$TAG.log
   $CRASH_DIR/rgs-$TAG.log
   $CRASH_DIR/ss-$TAG.log
 
 Atenciosamente,
-Crontab da MÃƒÂ¡quina $HOSTNAME
+Crontab da Máquina $HOSTNAME
 Autor: Amadeu Barbosa (amadeu@tecgraf.puc-rio.br)" |\
-	 mail -s "Falha e reinÃƒÂ­cio do barramento na $HOSTNAME" amadeu@tecgraf.puc-rio.br
+	 mail -s "Falha e reinício do barramento na $HOSTNAME" $EMAIL
 fi
 
