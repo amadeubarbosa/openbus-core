@@ -222,7 +222,7 @@ packages = {
       ["lua/*"] = "libpath/lua/5.1"
     },
   },
-  -- TIP: precompiler.lua precisa do loop!
+  -- FIXME: precompiler.lua precisa do loop!
   { name = "loop",
     build = {
       type = "tecmake",
@@ -371,6 +371,18 @@ packages = {
     dev_files = {
       ["lib/${TEC_UNAME}/libluaopenbus.*"] = "libpath/${TEC_UNAME}",
       ["obj/${TEC_UNAME}/openbus.h"] = "incpath/openbus/lua/",
+    },
+  },
+  -- FIXME: esse pacote deve ser removido quando concluir OPENBUS-1372
+  { name = "openbus-lua-extras",
+    url = SVNREPURL .. "/openbus/trunk/data",
+    directory = SVNDIR .. "/data", -- main source directory for PUts!
+    install_files = {
+      ["conf/config"] = "data/conf",
+      ["conf/ACSFaultToleranceConfiguration.lua"] = "data/conf",
+      ["conf/RSFaultToleranceConfiguration.lua"] = "data/conf",
+      ["conf/FTTimeOutConfiguration.lua"] = "data/conf",
+      ["conf/advanced/InterceptorsConfiguration.lua"] = "data/conf/advanced",
     },
   },
   { name = "openbus-core",
