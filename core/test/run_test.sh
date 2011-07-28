@@ -2,4 +2,4 @@
 
 PARAMS=$*
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${PARAMS}
+${OPENBUS_HOME}/bin/servicelauncher ${PARAMS}

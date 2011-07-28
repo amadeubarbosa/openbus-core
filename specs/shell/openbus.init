@@ -22,7 +22,7 @@ export OPENBUS_DATADIR
 
 DESC="OpenBus Middleware Services"
 NAME=openbus
-SCRIPT_DIR=$OPENBUS_HOME/core/bin
+SCRIPT_DIR=$OPENBUS_HOME/bin
 SCRIPT_ACS=./run_access_control_server.sh
 SCRIPT_RGS=./run_registry_server.sh
 SCRIPT_SS=./run_session_server.sh

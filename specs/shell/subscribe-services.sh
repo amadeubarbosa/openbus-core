@@ -13,7 +13,7 @@ showLog()
 run_management()
 {
   SCRIPT_PARAM="--script="$1
-  ${OPENBUS_HOME}/core/bin/run_management.sh ${LOGIN_PARAM} ${ACS_HOST_PARAM} \
+  ${OPENBUS_HOME}/bin/run_management.sh ${LOGIN_PARAM} ${ACS_HOST_PARAM} \
     ${ACS_PORT_PARAM} ${SCRIPT_PARAM} --verbose=0
 }
 
@@ -60,7 +60,7 @@ cd ${OPENBUS_HOME}/specs/management
 echo "Iniciando Serviço de Acesso"
 ACSOUTFILE=acs.out
 ACSERRFILE=acs.err
-${OPENBUS_HOME}/core/bin/run_access_control_server.sh >>${ACSOUTFILE} 2>${ACSERRFILE} &
+${OPENBUS_HOME}/bin/run_access_control_server.sh >>${ACSOUTFILE} 2>${ACSERRFILE} &
 ACSPID=$!
 sleep 5
 
@@ -78,7 +78,7 @@ run_management registry_service.mgt
 echo "Iniciando Serviço de Registro"
 RGSOUTFILE=rgs.out
 RGSERRFILE=rgs.err
-${OPENBUS_HOME}/core/bin/run_registry_server.sh >>${RGSOUTFILE} 2>${RGSERRFILE} &
+${OPENBUS_HOME}/bin/run_registry_server.sh >>${RGSOUTFILE} 2>${RGSERRFILE} &
 RGSPID=$!
 sleep 5
 

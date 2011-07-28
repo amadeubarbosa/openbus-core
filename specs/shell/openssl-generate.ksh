@@ -70,7 +70,7 @@ fi
 
 # OpenBus configurado, usar nossa instalação. Senão, usar do host.
 if [ -n "${OPENBUS_HOME}" ]; then
-  OPENSSL_CMD="${OPENBUS_HOME}/bin/${TEC_UNAME}/openssl"
+  OPENSSL_CMD="${OPENBUS_HOME}/bin/openssl"
   # Verifica se o OpenBus instalou o OpenSSL, caso contrário, mantém o padrão.
   if [ -x "${OPENSSL_CMD}" ]; then
     export OPENSSL_HOME="${OPENBUS_HOME}/openssl"

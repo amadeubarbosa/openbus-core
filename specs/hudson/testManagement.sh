@@ -51,7 +51,7 @@ fi
 ###############################################################################
 
 echo "Iniciando Serviço de Acesso"
-daemonize -o ${ACSOUTFILE} -e ${ACSERRFILE} -p ${ACSPIDFILE} ${OPENBUS_HOME}/core/bin/run_access_control_server.sh
+daemonize -o ${ACSOUTFILE} -e ${ACSERRFILE} -p ${ACSPIDFILE} ${OPENBUS_HOME}/bin/run_access_control_server.sh
 sleep 5
 ACSPID=`cat ${ACSPIDFILE}`
 
@@ -66,7 +66,7 @@ fi
 ###############################################################################
 
 echo "Iniciando Serviço de Registro"
-daemonize -o ${RGSOUTFILE} -e ${RGSERRFILE} -p ${RGSPIDFILE} ${OPENBUS_HOME}/core/bin/run_registry_server.sh
+daemonize -o ${RGSOUTFILE} -e ${RGSERRFILE} -p ${RGSPIDFILE} ${OPENBUS_HOME}/bin/run_registry_server.sh
 sleep 10
 RGSPID=`cat ${RGSPIDFILE}`
 
@@ -84,7 +84,7 @@ fi
 ###############################################################################
 
 echo "Iniciando Serviço de Sessão"
-daemonize -o ${SSSOUTFILE} -e ${SSSERRFILE} -p ${SSSPIDFILE} ${OPENBUS_HOME}/core/bin/run_session_server.sh
+daemonize -o ${SSSOUTFILE} -e ${SSSERRFILE} -p ${SSSPIDFILE} ${OPENBUS_HOME}/bin/run_session_server.sh
 sleep 10
 SSSPID=`cat ${SSSPIDFILE}`
 
@@ -110,14 +110,14 @@ echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento02
 echo
 
-${OPENBUS_HOME}/core/bin/run_management.sh ${MGT_EXTRAARGS} \
+${OPENBUS_HOME}/bin/run_management.sh ${MGT_EXTRAARGS} \
   --add-system=TesteBarramento --description=Teste 
-${OPENBUS_HOME}/core/bin/run_management.sh ${MGT_EXTRAARGS} \
+${OPENBUS_HOME}/bin/run_management.sh ${MGT_EXTRAARGS} \
   --add-deployment=TesteBarramento --description=Teste \
   --certificate=TesteBarramento.crt --system=TesteBarramento
-${OPENBUS_HOME}/core/bin/run_management.sh ${MGT_EXTRAARGS} \
+${OPENBUS_HOME}/bin/run_management.sh ${MGT_EXTRAARGS} \
   --set-authorization=TesteBarramento --grant="IDL:IHello_v1:1.0" --no-strict
-${OPENBUS_HOME}/core/bin/run_management.sh ${MGT_EXTRAARGS} \
+${OPENBUS_HOME}/bin/run_management.sh ${MGT_EXTRAARGS} \
   --set-authorization=TesteBarramento --grant="IDL:IHello_v2:1.0" --no-strict
 
 ./run_unit_test.sh management/testManagement.lua

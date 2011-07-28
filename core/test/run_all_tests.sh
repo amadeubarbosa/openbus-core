@@ -1,6 +1,6 @@
 #!/bin/ksh
 
-LATT_HOME=${OPENBUS_HOME}/libpath/lua/5.1/latt
+LATT_HOME=${OPENBUS_HOME}/lib/lua/5.1/latt
 
 ft=0
 if [ ! -z $1 ]; then
