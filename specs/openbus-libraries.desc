@@ -500,14 +500,14 @@ packages = {
       mf = { "orbix genstubs", "orbix" },
     },
     install_files = {
-      ["../lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
+      ["lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
           "idlpath/"..IDL_VERSION,
       ["shell/orbix/idl"] = "specs/shell/orbix",        
     },
     dev_files = {
-      ["../lib/${TEC_UNAME}/libscsorbix.*"] = "libpath/${TEC_UNAME}",
+      ["lib/${TEC_UNAME}/libscsorbix.*"] = "libpath/${TEC_UNAME}",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
           "idlpath/"..IDL_VERSION,
