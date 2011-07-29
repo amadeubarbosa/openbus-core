@@ -32,10 +32,10 @@ basesoft = {
       },
     },
     install_files = {
-      ["lib/liblogger.so"] = "lib",
+      ["lib/${TEC_UNAME}/liblogger.so"] = "lib",
     },
     dev_files = {
-      ["lib/liblogger.*"] = "lib",
+      ["lib/${TEC_UNAME}/liblogger.*"] = "lib",
       ["*.h"] = "include/logger",
     },
   },
