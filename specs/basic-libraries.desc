@@ -242,7 +242,7 @@ basesoft = {
     },
     dev_files = {
       [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${}/mico-2.3.13-singlethread",
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-singlethread",
       [TMPDIR .."/include/*"] = "include/mico-2.3.13-singlethread",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
