@@ -19,7 +19,7 @@ CONFIG=
 if [ -z "${OPENBUS_HOME}" ]; then
   checkOpenSSL
 else
-  OPENSSL=${OPENBUS_HOME}/bin/${TEC_UNAME}/openssl
+  OPENSSL=${OPENBUS_HOME}/bin/openssl
   CONFIG="-config ${OPENSSL_HOME}/openssl.cnf"
   # Verifica se o OpenBus instalou o OpenSSL, caso contrário, voltar o padrão.
   if ! [ -x ${OPENSSL} ]; then
