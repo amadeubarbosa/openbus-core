@@ -59,7 +59,7 @@ packages = {
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
-    url = SVNREPURL .. "/openbus/sdk/cpp/trunk",
+    url = SVNREPURL .. "/openbus/sdk/cpp/branches/OB_SDK_CPP_v1_05_04_2011_07_29",
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
