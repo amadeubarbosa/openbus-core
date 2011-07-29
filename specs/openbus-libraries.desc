@@ -498,7 +498,7 @@ packages = {
   },
    -- Orbix related packages
   { name = "scs-orbix",
-    url = SVNREPURL .. "/scs/core/cpp/trunk",
+    url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
@@ -625,7 +625,7 @@ packages = {
   },
   -- MICO related packages
   { name = "scs-micoMT",
-    url = SVNREPURL .. "/scs/core/cpp/trunk",
+    url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
@@ -656,7 +656,7 @@ packages = {
     },
   },
   { name = "scs-micoST",
-    url = SVNREPURL .. "/scs/core/cpp/trunk",
+    url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
