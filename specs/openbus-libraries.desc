@@ -507,18 +507,18 @@ packages = {
       mf = { "orbix genstubs", "orbix" },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/libscsorbix.so"] = "libpath/${TEC_UNAME}",
+      ["lib/libscsorbix.so"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
-          "idlpath/"..IDL_VERSION,
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
       ["shell/orbix/idl"] = "specs/shell/orbix",        
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libscsorbix.*"] = "libpath/${TEC_UNAME}",
+      ["lib/libscsorbix.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
-          "idlpath/"..IDL_VERSION,
-      ["include/scs/*"] = "incpath/scs/",
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+      ["include/scs/*"] = "include/scs/",
     },
   },
   { name = "openbus-orbix",
@@ -528,12 +528,12 @@ packages = {
       mf = { "orbix precompile LUA51="..PRODAPP.."/lua5.1", "orbix genstubs", "orbix LUA51="..PRODAPP.."/lua5.1" },
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libopenbusorbix.*"] = "libpath/${TEC_UNAME}",
-      ["*.h"] = "incpath/openbus/cpp", --include
-      ["openbus/util/*.h"] = "incpath/openbus/cpp/openbus/util/",    --include
-      ["openbus/interceptors/*.h"] = "incpath/openbus/cpp/openbus/interceptors/",    --include
-      ["stubs/orbix"] = "incpath/openbus/cpp/stubs",     --include
-      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/*"] = "idlpath/"..IDL_VERSION,
+      ["lib/libopenbusorbix.*"] = "lib",
+      ["*.h"] = "include/openbus/cpp", --include
+      ["openbus/util/*.h"] = "include/openbus/cpp/openbus/util/",    --include
+      ["openbus/interceptors/*.h"] = "include/openbus/cpp/openbus/interceptors/",    --include
+      ["stubs/orbix"] = "include/openbus/cpp/stubs",     --include
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
       ["test/orbix/acs/*.cpp"] = "test/orbix/acs/",
       ["test/orbix/acs/config.mak"] = "test/orbix/acs/",
       ["test/orbix/rgs/*.cpp"] = "test/orbix/rgs/",
@@ -556,7 +556,7 @@ packages = {
       },
     },
     install_files = {
-      ["bin/${TEC_UNAME}/*"] = "test/orbix/bin/${TEC_UNAME}",
+      ["bin/*"] = "test/orbix/bin",
       ["config*"] = "test/orbix/",
       ["runtests"] = "test/orbix/",
     },
@@ -581,7 +581,7 @@ packages = {
              "server LUA51="..PRODAPP.."/lua5.1" },
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/orbix/bin/${TEC_UNAME}",
+      ["bin/*"] = "demo/hello/orbix/bin",
       ["../idl/hello.idl"] = "demo/hello/idl/",
       ["../management"] = "demo/hello",
       ["../../README"] = "demo",      
@@ -609,7 +609,7 @@ packages = {
       },
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/orbix/bin/${TEC_UNAME}",
+      ["bin/*"] = "demo/delegate/singlethread/orbix/bin",
       ["../../idl/delegate.idl"] = "demo/delegate/singlethread/idl/",
       ["../../management"] = "demo/delegate/singlethread",
       ["client.cpp"] = "demo/delegate/singlethread/orbix",
@@ -643,17 +643,17 @@ packages = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/libscsmicoMT.*"] = "libpath/${TEC_UNAME}",
+      ["lib/libscsmicoMT.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
-          "idlpath/"..IDL_VERSION,
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libscsmicoMT.*"] = "libpath/${TEC_UNAME}",
+      ["lib/libscsmicoMT.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
-          "idlpath/"..IDL_VERSION,
-      ["include/scs/*"] = "incpath/scs",
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+      ["include/scs/*"] = "include/scs",
     },
   },
   { name = "scs-micoST",
@@ -674,17 +674,17 @@ packages = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/libscsmicoST.*"] = "libpath/${TEC_UNAME}",
+      ["lib/libscsmicoST.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
-          "idlpath/"..IDL_VERSION,
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libscsmicoST.*"] = "libpath/${TEC_UNAME}",
+      ["lib/libscsmicoST.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idlpath/"..IDL_VERSION.."/scs.idl"] =
-          "idlpath/"..IDL_VERSION,
-      ["include/scs/*"] = "incpath/scs",
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+      ["include/scs/*"] = "include/scs",
     },
   },
   { name = "openbus-micoMT",
@@ -705,12 +705,12 @@ packages = {
     dev_files = {
       ["CHANGES"] = ".",
       ["specs/shell/mico*"] = "specs/shell/",
-      ["lib/${TEC_UNAME}/libopenbusmicoMT.*"] = "libpath/${TEC_UNAME}",
-      ["*.h"] = "incpath/openbus/cpp", --include
-      ["openbus/util/*.h"] = "incpath/openbus/cpp/openbus/util/",    --include
-      ["openbus/interceptors/*.h"] = "incpath/openbus/cpp/openbus/interceptors/",    --include
-      ["stubs/mico"] = "incpath/openbus/cpp/stubs",     --include
-      [INSTALL.TOP.."/idlpath/"..IDL_PREV.."/*"] = "idlpath/"..IDL_PREV,
+      ["lib/libopenbusmicoMT.*"] = "lib",
+      ["*.h"] = "include/openbus/cpp", --include
+      ["openbus/util/*.h"] = "include/openbus/cpp/openbus/util/",    --include
+      ["openbus/interceptors/*.h"] = "include/openbus/cpp/openbus/interceptors/",    --include
+      ["stubs/mico"] = "include/openbus/cpp/stubs",     --include
+      [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
       ["test/mico/acs/*.cpp"] = "test/mico/acs/",
       ["test/mico/acs/config.mak"] = "test/mico/acs/",
       ["test/mico/rgs/*.cpp"] = "test/mico/rgs/",
@@ -739,12 +739,12 @@ packages = {
     dev_files = {
       ["CHANGES"] = ".",
       ["specs/shell/mico*"] = "specs/shell/",
-      ["lib/${TEC_UNAME}/libopenbusmicoST.*"] = "libpath/${TEC_UNAME}",
-      ["*.h"] = "incpath/openbus/cpp", --include
-      ["openbus/util/*.h"] = "incpath/openbus/cpp/openbus/util/",    --include
-      ["openbus/interceptors/*.h"] = "incpath/openbus/cpp/openbus/interceptors/",    --include
-      ["stubs/mico"] = "incpath/openbus/cpp/stubs",     --include
-      [INSTALL.TOP.."/idlpath/"..IDL_PREV.."/*"] = "idlpath/"..IDL_PREV,
+      ["lib/libopenbusmicoST.*"] = "lib",
+      ["*.h"] = "include/openbus/cpp", --include
+      ["openbus/util/*.h"] = "include/openbus/cpp/openbus/util/",    --include
+      ["openbus/interceptors/*.h"] = "include/openbus/cpp/openbus/interceptors/",    --include
+      ["stubs/mico"] = "include/openbus/cpp/stubs",     --include
+      [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
       ["test/mico/acs/*.cpp"] = "test/mico/acs/",
       ["test/mico/acs/config.mak"] = "test/mico/acs/",
       ["test/mico/rgs/*.cpp"] = "test/mico/rgs/",
@@ -778,7 +778,7 @@ packages = {
       }
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
+      ["bin/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
       ["../idl/hello.idl"] = "demo/hello/idl/",
       ["../management"] = "demo/hello",
       ["../../README"] = "demo",      
@@ -818,7 +818,7 @@ packages = {
       }
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
+      ["bin/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
       ["../idl/hello.idl"] = "demo/hello/idl/",
       ["../management"] = "demo/hello",
       ["../../README"] = "demo",      
@@ -853,7 +853,7 @@ packages = {
       },
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/mico/bin/${TEC_UNAME}",
+      ["bin/*"] = "demo/delegate/singlethread/mico/bin/${TEC_UNAME}",
       ["../../idl/delegate.idl"] = "demo/delegate/idl/",
       ["../../management"] = "demo/delegate",
       ["../../README"] = "demo",      
@@ -886,7 +886,7 @@ packages = {
       },
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/delegate/multithread/mico/bin/${TEC_UNAME}",
+      ["bin/*"] = "demo/delegate/multithread/mico/bin/${TEC_UNAME}",
       ["../../idl/delegate.idl"] = "demo/delegate/idl/",
       ["../../management"] = "demo/delegate",
       ["../../README"] = "demo",      
@@ -914,7 +914,7 @@ packages = {
       },
     },
     install_files = {
-      ["bin/${TEC_UNAME}/*"] = "test/mico/bin/${TEC_UNAME}",
+      ["bin/*"] = "test/mico/bin/${TEC_UNAME}",
       ["config*"] = "test/mico/",
       ["runtests"] = "test/mico/",
       ["../idl/*"] = "test/idl",
@@ -933,7 +933,7 @@ packages = {
       },
     },
     install_files = {
-      ["bin/${TEC_UNAME}/*"] = "test/mico/bin/${TEC_UNAME}",
+      ["bin/*"] = "test/mico/bin/${TEC_UNAME}",
       ["config*"] = "test/mico/",
       ["runtests"] = "test/mico/",
       ["../idl/*"] = "test/idl",
