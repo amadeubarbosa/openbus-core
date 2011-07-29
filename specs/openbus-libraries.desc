@@ -11,11 +11,11 @@ IDL_PREV="v1_04"
 packages = {
   -- package to download the sources of the oil05, scs and friend projects
   { name = "oil-source",
-    url = SVNREPURL .. "/openbus/libs/trunk/oil-0.5.0",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/oil-0.5.0",
     directory = PRODAPP .."/oil-0.5.0", 
   },
   { name = "idl-source",
-    url = SVNREPURL .. "/openbus/idl/trunk",
+    url = SVNREPURL .. "/openbus/idl/branches/OB_IDL_v1_05_2010_05_13",
     directory = PRODAPP .."/idl",
     install_files = {
       ["src/*.idl"] = "idl/openbus_"..IDL_VERSION,
@@ -51,11 +51,11 @@ packages = {
     },
   },--]]
   { name = "sdk-java-source",
-    url = SVNREPURL .. "/openbus/sdk/java/trunk",
+    url = SVNREPURL .. "/openbus/sdk/java/branches/OB_SDK_JAVA_v1_05_02_2011_07_28",
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
-    url = SVNREPURL .. "/openbus/sdk/lua/trunk",
+    url = SVNREPURL .. "/openbus/sdk/lua/branches/OB_SDK_LUA_v1_05_03_2011_07_28",
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
@@ -63,7 +63,7 @@ packages = {
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
-    url = SVNREPURL .. "/openbus/trunk",
+    url = SVNREPURL .. "/openbus/branches/OB_v1_05_03_2011_07_28",
     directory = SVNDIR, -- main source directory for PUts!
                         -- other sources have to be in PRODAPP/something
   },
@@ -79,7 +79,7 @@ packages = {
     },
   },
   { name = "lua5.1",
-    url = SVNREPURL .. "/openbus/libs/trunk/lua5.1.3",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/lua5.1.3",
     build = {
       type = "tecmake",
       src = PRODAPP .."/lua5.1/src",
@@ -108,7 +108,7 @@ packages = {
     },
   },
   { name = "tolua5.1",
-    url = SVNREPURL .. "/openbus/libs/trunk/tolua5.1",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/tolua5.1",
     build = {
       type = "tecmake",
       src = PRODAPP .."/tolua5.1/src",
@@ -123,7 +123,7 @@ packages = {
     },
   },
   { name = "luafilesystem",
-    url = SVNREPURL .. "/openbus/libs/trunk/luafilesystem-1.4.2/",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/luafilesystem-1.4.2/",
     build = {
       type = "tecmake",
       src = PRODAPP .."/luafilesystem/src",
@@ -141,7 +141,7 @@ packages = {
     },
   },
   { name = "luasocket2",
-    url = SVNREPURL .. "/openbus/libs/trunk/luasocket2",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/luasocket2",
     build = {
       type = "tecmake",
       src = PRODAPP .."/luasocket2/src",
@@ -181,7 +181,7 @@ packages = {
     },
   },
   { name = "luuid",
-    url = SVNREPURL .. "/openbus/libs/trunk/luuid",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/luuid",
     build = {
       type = "tecmake",
       src = PRODAPP .."/luuid/src",
@@ -199,7 +199,7 @@ packages = {
     },
   },
   { name = "lualdap-1.0.1",
-    url = SVNREPURL .. "/openbus/libs/trunk/lualdap-1.0.1",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/lualdap-1.0.1",
     build = {
       type = "tecmake",
       src = PRODAPP .."/lualdap-1.0.1/src",
@@ -248,7 +248,7 @@ packages = {
     },
   },
   { name = "scs-idl",
-    url = SVNREPURL .. "/scs/core/idl/trunk",
+    url = SVNREPURL .. "/scs/core/idl/branches/SCS_CORE_IDL_v1_02_2010_09_21",
     directory = PRODAPP .."/scs-idl",
     install_files = {
       ["src/scs.idl"] = "idl/openbus_"..IDL_VERSION,
@@ -266,7 +266,7 @@ packages = {
     },
   },
   { name = "scsall",
-    url = SVNREPURL .. "/scs/core/lua/trunk",
+    url = SVNREPURL .. "/scs/core/lua/branches/SCS_CORE_LUA_v1_02_02_2011_07_28",
     directory = PRODAPP .."/scs-lua",
     build = {
       type = "tecmake",
@@ -310,7 +310,7 @@ packages = {
     },
   },
   { name = "luatrace",
-    url = SVNREPURL .. "/openbus/libs/trunk/luatrace",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/luatrace",
     build = {
       type = "command",
       src = PRODAPP .."/luatrace",
@@ -330,7 +330,7 @@ packages = {
     },
   },
   { name = "lce",
-    url = SVNREPURL.."/luautils/lce/tags/v1_00_00_2011_03_01",
+    url = SVNREPURL.."/luautils/lce/branches/v1_00_2011_03_01",
     build = {
       type = "tecmake",
       src = PRODAPP.."/lce/src",
@@ -383,7 +383,7 @@ packages = {
   },
   -- FIXME: esse pacote deve ser removido quando concluir OPENBUS-1372
   { name = "openbus-lua-extras",
-    url = SVNREPURL .. "/openbus/trunk/data",
+    url = SVNREPURL .. "/openbus/branches/OB_v1_05_03_2011_07_28/data",
     directory = SVNDIR .. "/data", -- main source directory for PUts!
     install_files = {
       ["conf/config"] = "data/conf",
@@ -950,7 +950,7 @@ packages = {
     },
   },
   { name = "scs-java",
-    url = SVNREPURL .. "/scs/core/java/trunk",
+    url = SVNREPURL .. "/scs/core/java/branches/SCS_CORE_JAVA_v1_02_01_2011_07_28",
     directory = PRODAPP .."/scs-java",
     build = {
       type = "maven",

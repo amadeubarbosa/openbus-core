@@ -35,7 +35,7 @@ basesoft = {
     },
   },
   { name = "e2fsprogs-1.40.8",
-    url = SVNREPURL .. "/openbus/libs/trunk/e2fsprogs-1.40.8",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/e2fsprogs-1.40.8",
     build = {
       type = "autotools",
       test_libs = {"libuuid.*"},
@@ -159,7 +159,7 @@ basesoft = {
       },
     },
   { name = "openldap-2.4.11",
-    url = SVNREPURL .. "/openbus/libs/trunk/openldap-2.4.11",
+    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/openldap-2.4.11",
     build = {
       type = "autotools",
       test_libs = {"libldap*.*"},
