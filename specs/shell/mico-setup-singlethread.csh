@@ -7,9 +7,9 @@ set    prefix="${OPENBUS_HOME}"
 set    exec_prefix="${prefix}"
 setenv MICODIR "$exec_prefix"
 setenv MICOSHAREDDIR "$prefix"
-setenv MICOVERSION ` sed -n '/MICO_VERSION/ { y/b/./; s#^[^"]*"\([^"]*\)".*$#\1#p; }' "$MICODIR/incpath/mico-2.3.13-singlethread/${TEC_UNAME}/mico/version.h" `
-setenv MICOBIN "$MICODIR/bin/${TEC_UNAME}/mico-${MICOVERSION}-singlethread"
-setenv PATH "$MICODIR/bin/${TEC_UNAME}:$PATH"
+setenv MICOVERSION ` sed -n '/MICO_VERSION/ { y/b/./; s#^[^"]*"\([^"]*\)".*$#\1#p; }' "$MICODIR/include/mico-2.3.13-singlethread/mico/version.h" `
+setenv MICOBIN "$MICODIR/bin/mico-${MICOVERSION}-singlethread"
+setenv PATH "$MICODIR/bin:$PATH"
 
 if ( ! $?LD_LIBRARY_PATH )	setenv LD_LIBRARY_PATH ""
 if ( ! $?SHLIB_PATH )		setenv SHLIB_PATH ""
@@ -18,13 +18,13 @@ if ( ! $?MANPATH )		setenv MANPATH ""
 if ( ! $?LIBRARY_PATH )		setenv LIBRARY_PATH ""
 if ( ! $?CPLUS_INCLUDE_PATH )	setenv CPLUS_INCLUDE_PATH ""
 
-setenv LD_LIBRARY_PATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-singlethread:$LD_LIBRARY_PATH"
-setenv DYLD_LIBRARY_PATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-singlethread:$DYLD_LIBRARY_PATH"
-setenv SHLIB_PATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-singlethread:$SHLIB_PATH"
-setenv LIBPATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-singlethread:$LIBPATH"
+setenv LD_LIBRARY_PATH "$MICODIR/lib/mico-${MICOVERSION}-singlethread:$LD_LIBRARY_PATH"
+setenv DYLD_LIBRARY_PATH "$MICODIR/lib/mico-${MICOVERSION}-singlethread:$DYLD_LIBRARY_PATH"
+setenv SHLIB_PATH "$MICODIR/lib/mico-${MICOVERSION}-singlethread:$SHLIB_PATH"
+setenv LIBPATH "$MICODIR/lib/mico-${MICOVERSION}-singlethread:$LIBPATH"
 setenv MANPATH "$MICOSHAREDDIR/man:$MANPATH"
-setenv LIBRARY_PATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-singlethread:$LIBRARY_PATH"
-setenv CPLUS_INCLUDE_PATH "$MICODIR/incpath/mico-${MICOVERSION}-singlethread/${TEC_UNAME}:$CPLUS_INCLUDE_PATH"
+setenv LIBRARY_PATH "$MICODIR/lib/mico-${MICOVERSION}-singlethread:$LIBRARY_PATH"
+setenv CPLUS_INCLUDE_PATH "$MICODIR/include/mico-${MICOVERSION}-singlethread:$CPLUS_INCLUDE_PATH"
 
 unset prefix
 unset exec_prefix
