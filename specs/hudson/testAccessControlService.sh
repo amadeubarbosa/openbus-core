@@ -73,7 +73,7 @@ fi
 
 ###############################################################################
 
-cd ${OPENBUS_HOME}/core/test
+cd ${OPENBUS_HOME}/test
 cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
 
 

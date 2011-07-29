@@ -34,11 +34,11 @@ configure_action = function(answers, path, util)
   if string.upper(answers.test):find("SIM") then
     os.execute(
         "cd " .. installPath .. "/specs/management;" ..
-        "cp AccessControlService.crt ../../core/test;"
+        "cp AccessControlService.crt ../../test;"
         )
 
     os.execute(
-        "cd " .. installPath .. "/core/test/resources;" ..
+        "cd " .. installPath .. "/test/resources;" ..
         openSSLGenerate .. "TesteBarramento;" ..
         openSSLGenerate .. "TesteBarramento02;" ..
         "mv TesteBarramento*.key ../;" ..

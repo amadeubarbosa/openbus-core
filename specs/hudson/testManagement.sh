@@ -104,7 +104,7 @@ fi
 
 ###############################################################################
 
-cd ${OPENBUS_HOME}/core/test
+cd ${OPENBUS_HOME}/test
 cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento
 echo -e "\n\n\n\n\n\n\n" | ${WORKSPACE}/hudson/genkey.sh TesteBarramento02

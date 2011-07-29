@@ -71,7 +71,7 @@ fi
 
 ###############################################################################
 
-cd ${OPENBUS_HOME}/core/test
+cd ${OPENBUS_HOME}/test
 cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
 
 ./run_unit_test.sh registry/RegistryServiceTestSuite.lua

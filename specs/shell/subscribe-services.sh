@@ -19,7 +19,7 @@ run_management()
 
 run_management_test()
 {
-  cd ${OPENBUS_HOME}/core/test/resources
+  cd ${OPENBUS_HOME}/test/resources
   run_management test.mgt
   cd -
 }
