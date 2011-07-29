@@ -282,6 +282,7 @@ packages = {
     dev_files = {
       ["../lib/${TEC_UNAME}/libscsall.*"] = "lib",
       ["../obj/${TEC_UNAME}/scsall.h"] = "include/scs",
+      ["../schema"] = "schema",
     },
     symbolic_links = {
       ["libscsall.so"] = "lib/libluascs.so",
