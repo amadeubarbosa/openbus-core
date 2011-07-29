@@ -6,7 +6,7 @@ basesoft = {
     dev_files = {
       ["cxxtestgen.pl"] = "bin",
       ["cxxtestgen.py"] = "bin",
-      ["include/cxxtest"] = "incpath/cxxtest/",
+      ["include/cxxtest"] = "include/cxxtest/",
     },
   },
   { name = "logger",
@@ -27,11 +27,11 @@ basesoft = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/liblogger.so"] = "libpath/${TEC_UNAME}",
+      ["lib/liblogger.so"] = "lib",
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/liblogger.*"] = "libpath/${TEC_UNAME}",
-      ["*.h"] = "incpath/logger",
+      ["lib/liblogger.*"] = "lib",
+      ["*.h"] = "include/logger",
     },
   },
   { name = "e2fsprogs-1.40.8",
@@ -223,13 +223,13 @@ basesoft = {
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --disable-threads --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-singlethread",
+      [TMPDIR .."/lib/libmico*.so*"] = "lib/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-singlethread",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-singlethread",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13-singlethread/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/${}/mico-2.3.13-singlethread",
+      [TMPDIR .."/include/*"] = "include/mico-2.3.13-singlethread",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
@@ -244,13 +244,13 @@ basesoft = {
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-multithread",
+      [TMPDIR .."/lib/libmico*.so*"] = "lib/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-multithread",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13-multithread/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread",
+      [TMPDIR .."/include/*"] = "include/mico-2.3.13-multithread",
       [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
