@@ -18,7 +18,7 @@ packages = {
     url = SVNREPURL .. "/openbus/idl/branches/OB_IDL_v1_05_2010_05_13",
     directory = PRODAPP .."/idl",
     install_files = {
-      ["src/*.idl"] = "idl/openbus_"..IDL_VERSION,
+      ["src/*.idl"] = "idl/"..IDL_VERSION,
     },
   },
   { name = "idl-doc",
@@ -36,7 +36,7 @@ packages = {
     url = SVNREPURL .. "/openbus/tags/OB_v1_04_07_2010_11_11/core/idl",
     directory = PRODAPP .."/idl-prev",
     install_files = {
-      ["*.idl"] = "idl/openbus_"..IDL_PREV,
+      ["*.idl"] = "idl/"..IDL_PREV,
     },
   },--[[
   { name = "idl-prev-doc",
@@ -244,14 +244,14 @@ packages = {
     url = SVNREPURL .. "/scs/tags/SCS_v1_00_02_2010_04_12/idl",
     directory = PRODAPP .."/scs-idl-prev",
     install_files = {
-      ["scs.idl"] = "idl/openbus_"..IDL_PREV,
+      ["scs.idl"] = "idl/"..IDL_PREV,
     },
   },
   { name = "scs-idl",
     url = SVNREPURL .. "/scs/core/idl/branches/SCS_CORE_IDL_v1_02_2010_09_21",
     directory = PRODAPP .."/scs-idl",
     install_files = {
-      ["src/scs.idl"] = "idl/openbus_"..IDL_VERSION,
+      ["src/scs.idl"] = "idl/"..IDL_VERSION,
     },
   },
   { name = "scs-idl-doc",
