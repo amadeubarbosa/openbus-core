@@ -85,6 +85,7 @@ packages = {
       src = PRODAPP .."/lua5.1/src",
       mf = { "config" },
       Darwin = { mf = {"config", "config BUILD_DYLIB=Yes"} },
+      MacOS = { mf = {"config", "config BUILD_DYLIB=Yes"} },
       SunOS510_64 = { mf = { "config ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -113,7 +114,8 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/tolua5.1/src",
       mf = { "tolua5lib LUA51=../../lua5.1", "tolua5 LUA51=../../lua5.1" },
-    Darwin = { mf = {"tolua5lib LUA51="..PRODAPP.."/lua5.1", "tolua5lib BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1", "tolua5 LUA51="..PRODAPP.."/lua5.1"} },
+      Darwin = { mf = {"tolua5lib LUA51="..PRODAPP.."/lua5.1", "tolua5lib BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1", "tolua5 LUA51="..PRODAPP.."/lua5.1"} },
+      MacOS = { mf = {"tolua5lib LUA51="..PRODAPP.."/lua5.1", "tolua5lib BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1", "tolua5 LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "tolua5lib LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS, "tolua5 LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     dev_files = {
@@ -128,7 +130,8 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/luafilesystem/src",
       mf = { "config LUA51=../../lua5.1", },
-    Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      MacOS = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -146,7 +149,8 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/luasocket2/src",
       mf = { "config LUA51=../../lua5.1", },
-    Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      MacOS = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -163,7 +167,8 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/oil-0.5.0/src",
       mf = { "oilall LUA51=../../lua5.1", },
-    Darwin = { mf = {"oilall LUA51="..PRODAPP.."/lua5.1", "oilall BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      Darwin = { mf = {"oilall LUA51="..PRODAPP.."/lua5.1", "oilall BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      MacOS = { mf = {"oilall LUA51="..PRODAPP.."/lua5.1", "oilall BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "oilall LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -186,7 +191,8 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/luuid/src",
       mf = { "config LUA51=../../lua5.1", },
-    Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      MacOS = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -204,7 +210,8 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/lualdap-1.0.1/src",
       mf = { "config LUA51=../../lua5.1", },
-    Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      MacOS = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -272,7 +279,8 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/scs-lua/src",
       mf = { "scsall LOOP_HOME="..INSTALL.TOP.."/lib/lua/5.1 LUA51="..PRODAPP.."/lua5.1", },
-    Darwin = { mf = {"scsall LOOP_HOME="..INSTALL.TOP.."/lib/lua/5.1 LUA51="..PRODAPP.."/lua5.1", "scsall LOOP_HOME="..INSTALL.TOP.."/lib/lua/5.1 LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes"} },
+      Darwin = { mf = {"scsall LOOP_HOME="..INSTALL.TOP.."/lib/lua/5.1 LUA51="..PRODAPP.."/lua5.1", "scsall LOOP_HOME="..INSTALL.TOP.."/lib/lua/5.1 LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes"} },
+      MacOS = { mf = {"scsall LOOP_HOME="..INSTALL.TOP.."/lib/lua/5.1 LUA51="..PRODAPP.."/lua5.1", "scsall LOOP_HOME="..INSTALL.TOP.."/lib/lua/5.1 LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes"} },
       SunOS510_64 = { mf = { "scsall LOOP_HOME="..INSTALL.TOP.."/lib/lua/5.1 LUA51="..PRODAPP.."/lua5.1 "..SUNOS64_TECMAKE_FLAGS, } },
     },
     install_files = {
@@ -296,6 +304,9 @@ packages = {
       src = PRODAPP .."/scs-cppoil/src",
       mf = { "config LUA51="..PRODAPP.."/lua5.1", },
       Darwin = { mf = {
+        "config LUA51="..PRODAPP.."/lua5.1",
+        "config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes"}, },
+      MacOS = { mf = {
         "config LUA51="..PRODAPP.."/lua5.1",
         "config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=Yes"}, },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
@@ -336,7 +347,8 @@ packages = {
       type = "tecmake",
       src = PRODAPP.."/lce/src",
       mf = { "config LUA51="..PRODAPP.."/lua5.1", },
-    Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      MacOS = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -353,7 +365,8 @@ packages = {
       type = "tecmake",
       src = SVNDIR .."/lib/lpw/src",
       mf = { "config LUA51="..PRODAPP.."/lua5.1", },
-    Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
+      MacOS = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -371,6 +384,7 @@ packages = {
       src = PRODAPP .."/sdk-lua",
       mf = { "config LUA51="..PRODAPP.."/lua5.1" },
       Darwin = { mf = { "config LUA51="..PRODAPP.."/lua5.1","config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=YES" }, },
+      MacOS = { mf = { "config LUA51="..PRODAPP.."/lua5.1","config LUA51="..PRODAPP.."/lua5.1 BUILD_DYLIB=YES" }, },
       SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -641,6 +655,12 @@ packages = {
           "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
         },
       },
+      MacOS = {
+        mf = { 
+          "mico genstubs LD=g++ MULTITHREAD=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        },
+      },
     },
     install_files = {
       ["lib/libscsmicoMT.*"] = "lib",
@@ -667,6 +687,12 @@ packages = {
         "mico LUA51="..PRODAPP.."/lua5.1"
       },
       Darwin = {
+        mf = { 
+          "mico genstubs LD=g++", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+        },
+      },
+      MacOS = {
         mf = { 
           "mico genstubs LD=g++", 
           "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1" 
@@ -701,6 +727,12 @@ packages = {
           "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
         },
       },
+      MacOS = {
+        mf = { 
+          "mico genstubs LD=g++ MULTITHREAD=Yes", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        },
+      },
     },
     dev_files = {
       ["CHANGES"] = ".",
@@ -730,6 +762,12 @@ packages = {
         "mico LUA51="..PRODAPP.."/lua5.1" },
       -- special compile instructions for solaris
       Darwin = {
+        mf = { 
+          "mico genstubs LD=g++", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+        },
+      },
+      MacOS = {
         mf = { 
           "mico genstubs LD=g++", 
           "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 

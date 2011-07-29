@@ -20,6 +20,11 @@ basesoft = {
           "config BUILD_DYLIB=Yes",
         },
       },
+      MacOS = {
+        mf = {
+          "config BUILD_DYLIB=Yes",
+        },
+      },
       SunOS510 = {
         mf = {
           "config LD=CC",
@@ -40,6 +45,8 @@ basesoft = {
       type = "autotools",
       test_libs = {"libuuid.*"},
       Darwin = "./configure --prefix=".. TMPDIR ..
+               " --enable-bsd-shlibs && cd lib/uuid && make && make install",
+      MacOS = "./configure --prefix=".. TMPDIR ..
                " --enable-bsd-shlibs && cd lib/uuid && make && make install",
       Linux =  "./configure CC=gcc --prefix=".. TMPDIR ..
                " --enable-elf-shlibs && cd lib/uuid && gmake && gmake install",
@@ -70,6 +77,8 @@ basesoft = {
       type = "autotools",
       test_libs = {"libcrypto*0.9.9*"},
       Darwin = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
+               " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+      MacOS = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
       Darwin98x86 = "./config no-asm shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
@@ -121,6 +130,8 @@ basesoft = {
         test_libs = {"libcrypto*1.0.0*"},
         Darwin = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
                  " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        MacOS  = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
         Darwin98x86 = "./config no-asm shared --prefix=".. TMPDIR ..
                  " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
         Linux =  "./config shared --prefix=".. TMPDIR ..
@@ -168,6 +179,8 @@ basesoft = {
         libs = "libdb.so",
       },
       Darwin = "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
+               " && make depend && make && make install",
+      MacOS  = "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
       Linux =  "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
@@ -220,6 +233,7 @@ basesoft = {
       test_libs = {"libmico*2.3.13*"},
       Linux = "rm -f config.cache && ./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
       Darwin = "rm -f config.cache && ./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
+      MacOS = "rm -f config.cache && ./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --disable-threads --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
@@ -241,6 +255,7 @@ basesoft = {
       Linux26_64 = "rm -f config.cache && ./configure --prefix="..TMPDIR.. " --disable-shared --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
       Linux = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       Darwin = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
+      MacOS = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
