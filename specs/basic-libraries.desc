@@ -252,7 +252,7 @@ basesoft = {
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
-      Linux26_64 = "rm -f config.cache && ./configure --prefix="..TMPDIR.. " --disable-shared --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
+      Linux26_64 = "rm -f config.cache && ./configure --prefix="..TMPDIR.. " --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
       Linux = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       Darwin = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       MacOS = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
