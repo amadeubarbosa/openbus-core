@@ -771,7 +771,7 @@ packages = {
       }
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin",
+      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
       ["../idl/hello.idl"] = "demo/hello/idl/",
       ["../management"] = "demo/hello",
       ["../../README"] = "demo",      
@@ -811,7 +811,7 @@ packages = {
       }
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin",
+      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin/${TEC_UNAME}",
       ["../idl/hello.idl"] = "demo/hello/idl/",
       ["../management"] = "demo/hello",
       ["../../README"] = "demo",      
@@ -846,7 +846,7 @@ packages = {
       },
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/mico/bin",
+      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/mico/bin/${TEC_UNAME}",
       ["../../idl/delegate.idl"] = "demo/delegate/idl/",
       ["../../management"] = "demo/delegate",
       ["../../README"] = "demo",      
@@ -879,7 +879,7 @@ packages = {
       },
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/delegate/multithread/mico/bin",
+      ["bin/${TEC_UNAME}/*"] = "demo/delegate/multithread/mico/bin/${TEC_UNAME}",
       ["../../idl/delegate.idl"] = "demo/delegate/idl/",
       ["../../management"] = "demo/delegate",
       ["../../README"] = "demo",      
@@ -907,7 +907,7 @@ packages = {
       },
     },
     install_files = {
-      ["bin/${TEC_UNAME}/*"] = "test/mico/bin",
+      ["bin/${TEC_UNAME}/*"] = "test/mico/bin/${TEC_UNAME}",
       ["config*"] = "test/mico/",
       ["runtests"] = "test/mico/",
       ["../idl/*"] = "test/idl",
@@ -926,7 +926,7 @@ packages = {
       },
     },
     install_files = {
-      ["bin/${TEC_UNAME}/*"] = "test/mico/bin",
+      ["bin/${TEC_UNAME}/*"] = "test/mico/bin/${TEC_UNAME}",
       ["config*"] = "test/mico/",
       ["runtests"] = "test/mico/",
       ["../idl/*"] = "test/idl",
