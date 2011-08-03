@@ -59,7 +59,7 @@ packages = {
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
-    url = SVNREPURL .. "/openbus/sdk/cpp/branches/OB_SDK_CPP_v1_05_04_2011_07_29",
+    url = SVNREPURL .. "/openbus/sdk/cpp/tags/OB_SDK_CPP_v1_05_04_00_2011_08_03",
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
@@ -513,7 +513,7 @@ packages = {
   },
    -- Orbix related packages
   { name = "scs-orbix",
-    url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
+    url = SVNREPURL .. "/scs/core/cpp/tags/SCS_CORE_v1_02_00_00_2011_08_03",
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
@@ -640,7 +640,7 @@ packages = {
   },
   -- MICO related packages
   { name = "scs-micoMT",
-    url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
+    url = SVNREPURL .. "/scs/core/cpp/tags/SCS_CORE_v1_02_00_00_2011_08_03",
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
@@ -677,7 +677,7 @@ packages = {
     },
   },
   { name = "scs-micoST",
-    url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
+    url = SVNREPURL .. "/scs/core/cpp/tags/SCS_CORE_v1_02_00_00_2011_08_03",
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
