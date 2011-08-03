@@ -227,7 +227,7 @@ basesoft = {
     },
   },
   { name = "mico-2.3.13-singlethread",
-    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_00_2011_08_03",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_00_2011_08_03/mico-2.3.13",
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
@@ -248,7 +248,7 @@ basesoft = {
     },
   },
   { name = "mico-2.3.13-multithread",
-    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_00_2011_08_03",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_00_2011_08_03/mico-2.3.13",
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
