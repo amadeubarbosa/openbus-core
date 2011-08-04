@@ -4,8 +4,7 @@ openssl-0.9.9-dev
 mico-2.3.13-singlethread-dev
 logger-dev
 scs-idl
-scs-mico-dev
-openbus-mico-dev
-openbus-demo-hello-mico-dev
-openbus-demo-delegate-singlethread-mico-dev
-openbus-test-mico
+scs-micoST-dev
+openbus-micoST-dev
+openbus-demo-hello-micoST-dev
+openbus-test-micoST
