@@ -244,7 +244,7 @@ basesoft = {
       [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
       [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-singlethread",
       [TMPDIR .."/include/*"] = "include/mico-2.3.13-singlethread",
-      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
+      [SVNDIR.."/specs/shell/mico-setup-singlethread*"] = "specs/shell/",
     },
   },
   { name = "mico-2.3.13-multithread",
@@ -266,7 +266,7 @@ basesoft = {
       [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
       [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread",
       [TMPDIR .."/include/*"] = "include/mico-2.3.13-multithread",
-      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
+      [SVNDIR.."/specs/shell/mico-setup-multithread*"] = "specs/shell/",
     },
   },
 }
