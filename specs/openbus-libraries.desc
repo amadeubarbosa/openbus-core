@@ -736,7 +736,6 @@ packages = {
     },
     dev_files = {
       ["CHANGES"] = ".",
-      ["specs/shell/mico*"] = "specs/shell/",
       ["lib/${TEC_UNAME}/libopenbusmicoMT.*"] = "lib",
       ["*.h"] = "include/openbus/cpp", --include
       ["openbus/util/*.h"] = "include/openbus/cpp/openbus/util/",    --include
@@ -751,7 +750,6 @@ packages = {
       ["test/mico/config*"] = "test/mico/",
       ["test/mico/runtests"] = "test/mico/",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-micoST",
@@ -777,7 +775,6 @@ packages = {
     },
     dev_files = {
       ["CHANGES"] = ".",
-      ["specs/shell/mico*"] = "specs/shell/",
       ["lib/${TEC_UNAME}/libopenbusmicoST.*"] = "lib",
       ["*.h"] = "include/openbus/cpp", --include
       ["openbus/util/*.h"] = "include/openbus/cpp/openbus/util/",    --include
@@ -792,7 +789,6 @@ packages = {
       ["test/mico/config*"] = "test/mico/",
       ["test/mico/runtests"] = "test/mico/",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-demo-hello-micoMT",
@@ -832,7 +828,6 @@ packages = {
       ["run*"] = "demo/hello/mico",
       ["client"] = "demo/hello/mico",
       ["server"] = "demo/hello/mico",
-      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-demo-hello-micoST",
@@ -872,7 +867,6 @@ packages = {
       ["run*"] = "demo/hello/mico",
       ["client"] = "demo/hello/mico",
       ["server"] = "demo/hello/mico",
-      [SVNDIR.."/specs/shell/mico-setup.*"] = "specs/shell/",
     },
   },
   { name = "openbus-demo-delegate-singlethread-mico",
