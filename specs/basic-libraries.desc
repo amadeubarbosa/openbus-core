@@ -6,7 +6,7 @@ basesoft = {
     dev_files = {
       ["cxxtestgen.pl"] = "bin",
       ["cxxtestgen.py"] = "bin",
-      ["include/cxxtest"] = "incpath/cxxtest/",
+      ["include/cxxtest"] = "include/cxxtest/",
     },
   },
   { name = "logger",
@@ -20,6 +20,11 @@ basesoft = {
           "config BUILD_DYLIB=Yes",
         },
       },
+      MacOS = {
+        mf = {
+          "config BUILD_DYLIB=Yes",
+        },
+      },
       SunOS510 = {
         mf = {
           "config LD=CC",
@@ -27,11 +32,11 @@ basesoft = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/liblogger.so"] = "libpath/${TEC_UNAME}",
+      ["lib/${TEC_UNAME}/liblogger.so"] = "lib",
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/liblogger.*"] = "libpath/${TEC_UNAME}",
-      ["*.h"] = "incpath/logger",
+      ["lib/${TEC_UNAME}/liblogger.*"] = "lib",
+      ["*.h"] = "include/logger",
     },
   },
   { name = "e2fsprogs-1.40.8",
@@ -40,6 +45,8 @@ basesoft = {
       type = "autotools",
       test_libs = {"libuuid.*"},
       Darwin = "./configure --prefix=".. TMPDIR ..
+               " --enable-bsd-shlibs && cd lib/uuid && make && make install",
+      MacOS = "./configure --prefix=".. TMPDIR ..
                " --enable-bsd-shlibs && cd lib/uuid && make && make install",
       Linux =  "./configure CC=gcc --prefix=".. TMPDIR ..
                " --enable-elf-shlibs && cd lib/uuid && gmake && gmake install",
@@ -51,17 +58,17 @@ basesoft = {
                " --enable-elf-shlibs && cd lib/uuid && gmake && gmake install",
     },
     install_files = {
---      ["lib/libuuid*.dll*"] = "libpath/${TEC_UNAME}",  --dynamic windows
-      ["lib/libuuid*.so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      ["lib/libuuid*.dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
+--      ["lib/libuuid*.dll*"] = "lib",  --dynamic windows
+      ["lib/libuuid*.so*"] = "lib",   --dynamic linux,aix,sunos
+      ["lib/libuuid*.dylib*"] = "lib",--dynamic macos
     },
     dev_files = {
-      ["lib/libuuid*.a*"] = "libpath/${TEC_UNAME}",    --static linux,aix,sunos
---      ["lib/libuuid*.lib*"] = "libpath/${TEC_UNAME}",  --static windows
---      ["lib/libuuid*.dll*"] = "libpath/${TEC_UNAME}",  --dynamic windows
-      ["lib/libuuid*.so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      ["lib/libuuid*.dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
-      ["lib/uuid/uuid.h"] = "incpath/e2fsprogs-1.40.8/uuid",
+      ["lib/libuuid*.a*"] = "lib",    --static linux,aix,sunos
+--      ["lib/libuuid*.lib*"] = "lib",  --static windows
+--      ["lib/libuuid*.dll*"] = "lib",  --dynamic windows
+      ["lib/libuuid*.so*"] = "lib",   --dynamic linux,aix,sunos
+      ["lib/libuuid*.dylib*"] = "lib",--dynamic macos
+      ["lib/uuid/uuid.h"] = "include/e2fsprogs-1.40.8/uuid",
     },
   },
   { name = "openssl-0.9.9",
@@ -70,6 +77,8 @@ basesoft = {
       type = "autotools",
       test_libs = {"libcrypto*0.9.9*"},
       Darwin = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
+               " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+      MacOS = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
       Darwin98x86 = "./config no-asm shared --prefix=".. TMPDIR ..
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
@@ -87,30 +96,30 @@ basesoft = {
                " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
     },
     install_files = {
---      ["libssl*.dll*"] = "libpath/${TEC_UNAME}",      --dynamic windows
---      ["libcrypto*.dll*"] = "libpath/${TEC_UNAME}",
-      [TMPDIR .."/lib/libssl*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/libcrypto*.so*"] = "libpath/${TEC_UNAME}",
-      [TMPDIR .."/lib/libssl*.dylib*"] = "libpath/${TEC_UNAME}",    --dynamic macos
-      [TMPDIR .."/lib/libcrypto*.dylib*"] = "libpath/${TEC_UNAME}",
-      [TMPDIR .."/bin/openssl"] = "bin/${TEC_UNAME}",
-      [TMPDIR .."/bin/c_rehash"] = "bin/${TEC_UNAME}",
+--      ["libssl*.dll*"] = "lib",      --dynamic windows
+--      ["libcrypto*.dll*"] = "lib",
+      [TMPDIR .."/lib/libssl*.so*"] = "lib",       --dynamic linux,aix,sunos
+      [TMPDIR .."/lib/libcrypto*.so*"] = "lib",
+      [TMPDIR .."/lib/libssl*.dylib*"] = "lib",    --dynamic macos
+      [TMPDIR .."/lib/libcrypto*.dylib*"] = "lib",
+      [TMPDIR .."/bin/openssl"] = "bin",
+      [TMPDIR .."/bin/c_rehash"] = "bin",
       [TMPDIR .."/openssl/*"] = "openssl",
     },
     dev_files = {
-      [TMPDIR .."/include/openssl"] = "incpath/openssl-0.9.9",
-      [TMPDIR .."/lib/libssl*.a*"] = "libpath/${TEC_UNAME}",        --static linux,aix,sunos
-      [TMPDIR .."/lib/libcrypto*.a*"] = "libpath/${TEC_UNAME}",     
---      ["libssl*.lib*"] = "libpath/${TEC_UNAME}",      --static windows
---      ["libcrypto*.lib*"] = "libpath/${TEC_UNAME}",
---      ["libssl*.dll*"] = "libpath/${TEC_UNAME}",      --dynamic windows
---      ["libcrypto*.dll*"] = "libpath/${TEC_UNAME}",
-      [TMPDIR .."/lib/libssl*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/libcrypto*.so*"] = "libpath/${TEC_UNAME}",
-      [TMPDIR .."/lib/libssl*.dylib*"] = "libpath/${TEC_UNAME}",    --dynamic macos
-      [TMPDIR .."/lib/libcrypto*.dylib*"] = "libpath/${TEC_UNAME}",
-      [TMPDIR .."/bin/openssl"] = "bin/${TEC_UNAME}",
-      [TMPDIR .."/bin/c_rehash"] = "bin/${TEC_UNAME}",
+      [TMPDIR .."/include/openssl"] = "include/openssl-0.9.9",
+      [TMPDIR .."/lib/libssl*.a*"] = "lib",        --static linux,aix,sunos
+      [TMPDIR .."/lib/libcrypto*.a*"] = "lib",     
+--      ["libssl*.lib*"] = "lib",      --static windows
+--      ["libcrypto*.lib*"] = "lib",
+--      ["libssl*.dll*"] = "lib",      --dynamic windows
+--      ["libcrypto*.dll*"] = "lib",
+      [TMPDIR .."/lib/libssl*.so*"] = "lib",       --dynamic linux,aix,sunos
+      [TMPDIR .."/lib/libcrypto*.so*"] = "lib",
+      [TMPDIR .."/lib/libssl*.dylib*"] = "lib",    --dynamic macos
+      [TMPDIR .."/lib/libcrypto*.dylib*"] = "lib",
+      [TMPDIR .."/bin/openssl"] = "bin",
+      [TMPDIR .."/bin/c_rehash"] = "bin",
       [TMPDIR .."/openssl/*"] = "openssl",
     },
   },
@@ -120,6 +129,8 @@ basesoft = {
         type = "autotools",
         test_libs = {"libcrypto*1.0.0*"},
         Darwin = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
+                 " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
+        MacOS  = "./Configure darwin64-x86_64-cc no-asm shared --prefix=".. TMPDIR ..
                  " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
         Darwin98x86 = "./config no-asm shared --prefix=".. TMPDIR ..
                  " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
@@ -137,24 +148,24 @@ basesoft = {
                  " --openssldir=".. TMPDIR .."/openssl && make && make install_sw",
       },
       install_files = {
-        [TMPDIR .."/lib/libssl*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-        [TMPDIR .."/lib/libcrypto*.so*"] = "libpath/${TEC_UNAME}",
-        [TMPDIR .."/lib/libssl*.dylib*"] = "libpath/${TEC_UNAME}",    --dynamic macos
-        [TMPDIR .."/lib/libcrypto*.dylib*"] = "libpath/${TEC_UNAME}",
-        [TMPDIR .."/bin/openssl"] = "bin/${TEC_UNAME}",
-        [TMPDIR .."/bin/c_rehash"] = "bin/${TEC_UNAME}",
+        [TMPDIR .."/lib/libssl*.so*"] = "lib",       --dynamic linux,aix,sunos
+        [TMPDIR .."/lib/libcrypto*.so*"] = "lib",
+        [TMPDIR .."/lib/libssl*.dylib*"] = "lib",    --dynamic macos
+        [TMPDIR .."/lib/libcrypto*.dylib*"] = "lib",
+        [TMPDIR .."/bin/openssl"] = "bin",
+        [TMPDIR .."/bin/c_rehash"] = "bin",
         [TMPDIR .."/openssl/*"] = "openssl",
       },
       dev_files = {
-        [TMPDIR .."/include/openssl"] = "incpath/openssl-1.0.0",
-        [TMPDIR .."/lib/libssl*.a*"] = "libpath/${TEC_UNAME}",        --static linux,aix,sunos
-        [TMPDIR .."/lib/libcrypto*.a*"] = "libpath/${TEC_UNAME}",     
-        [TMPDIR .."/lib/libssl*.so*"] = "libpath/${TEC_UNAME}",       --dynamic linux,aix,sunos
-        [TMPDIR .."/lib/libcrypto*.so*"] = "libpath/${TEC_UNAME}",
-        [TMPDIR .."/lib/libssl*.dylib*"] = "libpath/${TEC_UNAME}",    --dynamic macos
-        [TMPDIR .."/lib/libcrypto*.dylib*"] = "libpath/${TEC_UNAME}",
-        [TMPDIR .."/bin/openssl"] = "bin/${TEC_UNAME}",
-        [TMPDIR .."/bin/c_rehash"] = "bin/${TEC_UNAME}",
+        [TMPDIR .."/include/openssl"] = "include/openssl-1.0.0",
+        [TMPDIR .."/lib/libssl*.a*"] = "lib",        --static linux,aix,sunos
+        [TMPDIR .."/lib/libcrypto*.a*"] = "lib",
+        [TMPDIR .."/lib/libssl*.so*"] = "lib",       --dynamic linux,aix,sunos
+        [TMPDIR .."/lib/libcrypto*.so*"] = "lib",
+        [TMPDIR .."/lib/libssl*.dylib*"] = "lib",    --dynamic macos
+        [TMPDIR .."/lib/libcrypto*.dylib*"] = "lib",
+        [TMPDIR .."/bin/openssl"] = "bin",
+        [TMPDIR .."/bin/c_rehash"] = "bin",
         [TMPDIR .."/openssl/*"] = "openssl",
       },
     },
@@ -168,6 +179,8 @@ basesoft = {
         libs = "libdb.so",
       },
       Darwin = "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
+               " && make depend && make && make install",
+      MacOS  = "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
       Linux =  "./configure --prefix=".. TMPDIR .." --disable-slapd --with-cyrus-sasl=no"..
                " && make depend && make && make install",
@@ -184,20 +197,20 @@ basesoft = {
                " && make depend && make && make install",
     },
     install_files = {
-      [TMPDIR .."/lib/libldap*.so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/libldap*.dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
-      [TMPDIR .."/lib/liblber*.so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/liblber*.dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
+      [TMPDIR .."/lib/libldap*.so*"] = "lib",   --dynamic linux,aix,sunos
+      [TMPDIR .."/lib/libldap*.dylib*"] = "lib",--dynamic macos
+      [TMPDIR .."/lib/liblber*.so*"] = "lib",   --dynamic linux,aix,sunos
+      [TMPDIR .."/lib/liblber*.dylib*"] = "lib",--dynamic macos
     },
     dev_files = {
-      [TMPDIR .."/lib/libldap*.a*"] = "libpath/${TEC_UNAME}",    --static linux,aix,sunos
-      [TMPDIR .."/lib/libldap*.so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/libldap*.dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
-      [TMPDIR .."/lib/liblber*.a*"] = "libpath/${TEC_UNAME}",    --static linux,aix,sunos
-      [TMPDIR .."/lib/liblber*.so*"] = "libpath/${TEC_UNAME}",   --dynamic linux,aix,sunos
-      [TMPDIR .."/lib/liblber*.dylib*"] = "libpath/${TEC_UNAME}",--dynamic macos
-      [TMPDIR .."/include/ldap*"] = "incpath/openldap-2.4.11",
-      [TMPDIR .."/include/lber*"] = "incpath/openldap-2.4.11",
+      [TMPDIR .."/lib/libldap*.a*"] = "lib",    --static linux,aix,sunos
+      [TMPDIR .."/lib/libldap*.so*"] = "lib",   --dynamic linux,aix,sunos
+      [TMPDIR .."/lib/libldap*.dylib*"] = "lib",--dynamic macos
+      [TMPDIR .."/lib/liblber*.a*"] = "lib",    --static linux,aix,sunos
+      [TMPDIR .."/lib/liblber*.so*"] = "lib",   --dynamic linux,aix,sunos
+      [TMPDIR .."/lib/liblber*.dylib*"] = "lib",--dynamic macos
+      [TMPDIR .."/include/ldap*"] = "include/openldap-2.4.11",
+      [TMPDIR .."/include/lber*"] = "include/openldap-2.4.11",
     },
   },
   { name = "jacorb-2.3.0",
@@ -207,9 +220,9 @@ basesoft = {
       src = PRODAPP .. "/jacorb-2.3.0"
     },
     parameters = { 
-                        ["lib/jacorb.jar"] = { groupId="org.jacorb", artifactId="jacorb",
+       ["lib/jacorb.jar"] = { groupId="org.jacorb", artifactId="jacorb",
        version="2.3.0", pomFile="jacorb-pom.xml" },
-                  ["lib/idl.jar"] = { groupId="org.jacorb", artifactId="jacorb-idl-compiler",
+       ["lib/idl.jar"] = { groupId="org.jacorb", artifactId="jacorb-idl-compiler",
        version="2.3.0", pomFile="jacorb-idl-compiler-pom.xml" },
     },
   },
@@ -220,16 +233,17 @@ basesoft = {
       test_libs = {"libmico*2.3.13*"},
       Linux = "rm -f config.cache && ./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
       Darwin = "rm -f config.cache && ./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
+      MacOS = "rm -f config.cache && ./configure --disable-threads --prefix=".. TMPDIR .. " && make && make install",
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --disable-threads --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-singlethread",
+      [TMPDIR .."/lib/libmico*.so*"] = "lib/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-singlethread",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-singlethread",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13-singlethread/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-singlethread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-singlethread",
+      [TMPDIR .."/include/*"] = "include/mico-2.3.13-singlethread",
       [SVNDIR.."/specs/shell/mico-setup-singlethread*"] = "specs/shell/",
     },
   },
@@ -238,19 +252,20 @@ basesoft = {
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
-      Linux26_64 = "rm -f config.cache && ./configure --prefix="..TMPDIR.. " --disable-shared --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
+      Linux26_64 = "rm -f config.cache && ./configure --prefix="..TMPDIR.. " --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
       Linux = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       Darwin = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
+      MacOS = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-multithread",
+      [TMPDIR .."/lib/libmico*.so*"] = "lib/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "libpath/${TEC_UNAME}/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/${TEC_UNAME}/mico-2.3.13-multithread",
-      [TMPDIR .."/include/*"] = "incpath/mico-2.3.13-multithread/${TEC_UNAME}",
+      [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread",
+      [TMPDIR .."/include/*"] = "include/mico-2.3.13-multithread",
       [SVNDIR.."/specs/shell/mico-setup-multithread*"] = "specs/shell/",
     },
   },

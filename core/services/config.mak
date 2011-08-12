@@ -1,8 +1,8 @@
 PROJNAME = OpenBUS
-APPNAME = servicelauncher
+APPNAME = servicelauncher.bin
 
-OPENBUSINC = ${OPENBUS_HOME}/incpath
-OPENBUSLIB = ${OPENBUS_HOME}/libpath/${TEC_UNAME}
+OPENBUSINC = ${OPENBUS_HOME}/include
+OPENBUSLIB = ${OPENBUS_HOME}/lib
 
 SRC = servicelauncher.c
 

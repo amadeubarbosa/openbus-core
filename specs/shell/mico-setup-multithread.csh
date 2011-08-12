@@ -7,8 +7,8 @@ set    prefix="${OPENBUS_HOME}"
 set    exec_prefix="${prefix}"
 setenv MICODIR "$exec_prefix"
 setenv MICOSHAREDDIR "$prefix"
-setenv MICOVERSION ` sed -n '/MICO_VERSION/ { y/b/./; s#^[^"]*"\([^"]*\)".*$#\1#p; }' "$MICODIR/incpath/mico-2.3.13-multithread/${TEC_UNAME}/mico/version.h" `
-setenv PATH "$MICODIR/bin/${TEC_UNAME}:$PATH"
+setenv MICOVERSION ` sed -n '/MICO_VERSION/ { y/b/./; s#^[^"]*"\([^"]*\)".*$#\1#p; }' "$MICODIR/include/mico-2.3.13-multithread/mico/version.h" `
+setenv PATH "$MICODIR/bin:$PATH"
 
 if ( ! $?LD_LIBRARY_PATH )	setenv LD_LIBRARY_PATH ""
 if ( ! $?SHLIB_PATH )		setenv SHLIB_PATH ""
@@ -17,13 +17,13 @@ if ( ! $?MANPATH )		setenv MANPATH ""
 if ( ! $?LIBRARY_PATH )		setenv LIBRARY_PATH ""
 if ( ! $?CPLUS_INCLUDE_PATH )	setenv CPLUS_INCLUDE_PATH ""
 
-setenv LD_LIBRARY_PATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-multithread:$LD_LIBRARY_PATH"
-setenv DYLD_LIBRARY_PATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-multithread:$DYLD_LIBRARY_PATH"
-setenv SHLIB_PATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-multithread:$SHLIB_PATH"
-setenv LIBPATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-multithread:$LIBPATH"
+setenv LD_LIBRARY_PATH "$MICODIR/lib/mico-${MICOVERSION}-multithread:$LD_LIBRARY_PATH"
+setenv DYLD_LIBRARY_PATH "$MICODIR/lib/mico-${MICOVERSION}-multithread:$DYLD_LIBRARY_PATH"
+setenv SHLIB_PATH "$MICODIR/lib/mico-${MICOVERSION}-multithread:$SHLIB_PATH"
+setenv LIBPATH "$MICODIR/lib/mico-${MICOVERSION}-multithread:$LIBPATH"
 setenv MANPATH "$MICOSHAREDDIR/man:$MANPATH"
-setenv LIBRARY_PATH "$MICODIR/libpath/${TEC_UNAME}/mico-${MICOVERSION}-multithread:$LIBRARY_PATH"
-setenv CPLUS_INCLUDE_PATH "$MICODIR/incpath/mico-${MICOVERSION}-multithread/${TEC_UNAME}:$CPLUS_INCLUDE_PATH"
+setenv LIBRARY_PATH "$MICODIR/lib/mico-${MICOVERSION}-multithread:$LIBRARY_PATH"
+setenv CPLUS_INCLUDE_PATH "$MICODIR/include/mico-${MICOVERSION}-multithread:$CPLUS_INCLUDE_PATH"
 
 unset prefix
 unset exec_prefix

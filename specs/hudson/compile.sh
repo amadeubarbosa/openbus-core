@@ -14,34 +14,4 @@
 cd ${WORKSPACE}/puts/lua/tools
 cp ${WORKSPACE}/hudson/toolsconf.lua .
 
-if [ "${TEC_SYSNAME}" == "Linux" ] ;then
-  EXCLUDE="\
-    scs-mico \
-    openbus-mico \
-    openbus-demo-hello-mico"
-fi
-
-if [ "${TEC_SYSNAME}" == "SunOS" ] ;then
-  EXCLUDE="\
-    jacorb-2.3.0 \
-    luatrace \
-    ftc-java \
-    scs-mico \
-    openbus-mico \
-    openbus-demo-hello-mico \
-    scs-orbix \
-    openbus-orbix \
-    openbus-orbix-doc \
-    openbus-test-orbix \
-    openbus-demo-hello-orbix  \
-    scs-java-ant \
-    scs-java \
-    openbus-java \
-    openbusidl-java \
-    openbusapi-java \
-    openbusapi-java-doc \
-    openbus-demo-hello-java \
-    openbus-demo-delegate-java"
-fi
-
-lua5.1 console.lua --config=toolsconf.lua --compile -verbose --update --force --exclude="${EXCLUDE}" "$@"
+lua5.1 console.lua --config=toolsconf.lua --compile -verbose --update --force  "$@"

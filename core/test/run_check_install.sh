@@ -19,4 +19,4 @@ echo -n "port:"
 read PORT
 
 echo Iniciando testes.
-${OPENBUS_HOME}/core/bin/servicelauncher checkInstall.lua $HOST $PORT
+${OPENBUS_HOME}/bin/servicelauncher checkInstall.lua $HOST $PORT

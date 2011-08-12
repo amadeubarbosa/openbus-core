@@ -42,7 +42,7 @@ SSSERRFILE=${WORKSPACE}/sss-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
 ###############################################################################
 
 echo "Iniciando Serviço de Controle de Acesso"
-daemonize -o ${ACSOUTFILE} -e ${ACSERRFILE} -p ${ACSPIDFILE} ${OPENBUS_HOME}/core/bin/run_access_control_server.sh
+daemonize -o ${ACSOUTFILE} -e ${ACSERRFILE} -p ${ACSPIDFILE} ${OPENBUS_HOME}/bin/run_access_control_server.sh
 sleep 5
 ACSPID=`cat ${ACSPIDFILE}`
 
@@ -57,7 +57,7 @@ fi
 ###############################################################################
 
 echo "Iniciando Serviço de Registro"
-daemonize -o ${RGSOUTFILE} -e ${RGSERRFILE} -p ${RGSPIDFILE} ${OPENBUS_HOME}/core/bin/run_registry_server.sh
+daemonize -o ${RGSOUTFILE} -e ${RGSERRFILE} -p ${RGSPIDFILE} ${OPENBUS_HOME}/bin/run_registry_server.sh
 sleep 10
 RGSPID=`cat ${RGSPIDFILE}`
 
@@ -75,7 +75,7 @@ fi
 ###############################################################################
 
 echo "Iniciando Serviço de Sessão"
-daemonize -o ${SSSOUTFILE} -e ${SSSERRFILE} -p ${SSSPIDFILE} ${OPENBUS_HOME}/core/bin/run_session_server.sh
+daemonize -o ${SSSOUTFILE} -e ${SSSERRFILE} -p ${SSSPIDFILE} ${OPENBUS_HOME}/bin/run_session_server.sh
 sleep 10
 SSSPID=`cat ${SSSPIDFILE}`
 
@@ -95,7 +95,7 @@ fi
 
 ###############################################################################
 
-cd ${OPENBUS_HOME}/core/test
+cd ${OPENBUS_HOME}/test
 ./run_unit_test.sh session/testSessionService.lua
 CODE=$?
 

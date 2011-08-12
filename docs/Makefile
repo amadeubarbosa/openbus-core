@@ -1,2 +1,2 @@
 doc:
-	@(mkdir -p lua; cd ..; luadoc --nofiles -d docs/lua `find core/services -name '*.lua'`)
+	@(mkdir -p lua; cd ..; luadoc --nofiles -d doc `find core/services -name '*.lua'`)

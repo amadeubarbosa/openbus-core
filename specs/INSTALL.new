@@ -30,7 +30,7 @@ Desenvolvedor: Tecgraf / PUC-Rio
   
 4. Pronto! Agora basta usar o OpenBUS:
 
-cd ${OPENBUS_HOME}/core/bin
+cd ${OPENBUS_HOME}/bin
 ./run_access_control_server.sh      # lançamento do Serviço de Acesso
 ./run_registry_server.sh            # lançamento do Serviço de Registro
 ./run_session_server.sh             # lançamento do Serviço de Sessão

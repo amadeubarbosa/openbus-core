@@ -5,4 +5,4 @@ if [ -z "${OPENBUS_HOME}" ] ; then
   exit 1
 fi
 
-exec ${OPENBUS_HOME}/core/bin/servicelauncher ${OPENBUS_HOME}/core/management/management.lua "$@"
+exec ${OPENBUS_HOME}/bin/servicelauncher ${OPENBUS_HOME}/src/lua/openbus/core/management/management.lua "$@"

@@ -129,9 +129,9 @@ cp ${OPENBUS_HOME}/data/certificates/*.crt ${OPENBUS_HOME}/specs/management
 ACSPIDFILE=${WORKSPACE}/acs.pid
 ACSOUTFILE=${WORKSPACE}/acs-job-${BUILD_NUMBER}-date-${BUILD_ID}.out
 ACSERRFILE=${WORKSPACE}/acs-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
-ACSBIN=${OPENBUS_HOME}/core/bin/run_access_control_server.sh
+ACSBIN=${OPENBUS_HOME}/bin/run_access_control_server.sh
 
-cd ${OPENBUS_HOME}/core/bin
+cd ${OPENBUS_HOME}/bin
 
 echo "Iniciando Serviço de Acesso"
 daemonize -o ${ACSOUTFILE} -e ${ACSERRFILE} -p ${ACSPIDFILE} ${ACSBIN}
@@ -149,9 +149,9 @@ fi
 
 cd ${OPENBUS_HOME}/specs/management
 
-${OPENBUS_HOME}/core/bin/run_management.sh --script=access_control_service.mgt ${MGT_EXTRAARGS}
+${OPENBUS_HOME}/bin/run_management.sh --script=access_control_service.mgt ${MGT_EXTRAARGS}
 MGTACS_CODE=$?
-${OPENBUS_HOME}/core/bin/run_management.sh --script=registry_service.mgt ${MGT_EXTRAARGS}
+${OPENBUS_HOME}/bin/run_management.sh --script=registry_service.mgt ${MGT_EXTRAARGS}
 MGTRGS_CODE=$?
 
 if [ ${MGTACS_CODE} -ne 0 ] -o [ ${MGTRGS_CODE} -ne 0 ] ;then
@@ -167,9 +167,9 @@ fi
 RGSPIDFILE=${WORKSPACE}/rgs.pid
 RGSOUTFILE=${WORKSPACE}/rgs-job-${BUILD_NUMBER}-date-${BUILD_ID}.out
 RGSERRFILE=${WORKSPACE}/rgs-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
-RGSBIN=${OPENBUS_HOME}/core/bin/run_registry_server.sh
+RGSBIN=${OPENBUS_HOME}/bin/run_registry_server.sh
 
-cd ${OPENBUS_HOME}/core/bin
+cd ${OPENBUS_HOME}/bin
 
 echo "Iniciando Serviço de Registro"
 daemonize -o ${RGSOUTFILE} -e ${RGSERRFILE} -p ${RGSPIDFILE} ${RGSBIN}
@@ -191,7 +191,7 @@ fi
 
 cd ${OPENBUS_HOME}/specs/management
 
-${OPENBUS_HOME}/core/bin/run_management.sh --script=session_service.mgt ${MGT_EXTRAARGS}
+${OPENBUS_HOME}/bin/run_management.sh --script=session_service.mgt ${MGT_EXTRAARGS}
 MGTSS_CODE=$?
 
 if [ ${MGTSS_CODE} -ne 0 ];then

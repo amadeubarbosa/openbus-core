@@ -5,4 +5,4 @@ if [ -z "${OPENBUS_HOME}" ] ; then
   exit 1
 fi
 
-${OPENBUS_HOME}/core/bin/servicelauncher ${OPENBUS_HOME}/core/services/accesscontrol/FTAccessControlServerMonitor.lua "$@"
+${OPENBUS_HOME}/bin/servicelauncher ${OPENBUS_HOME}/src/lua/openbus/core/services/accesscontrol/FTAccessControlServerMonitor.lua "$@"

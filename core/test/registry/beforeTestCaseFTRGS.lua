@@ -48,7 +48,7 @@ return function (self)
 
       os.execute(OPENBUS_HOME.."/specs/shell/openssl-generate.ksh -n " .. self.systemId .. " -c "..OPENBUS_HOME.."/openssl/openssl.cnf <TesteBarramentoCertificado_input.txt  2> genkey-err.txt >genkeyT.txt ")
 
-      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. self.acsHostName ..
+      os.execute(OPENBUS_HOME.."/bin/run_management.sh --acs-host=" .. self.acsHostName ..
                                                                         " --acs-port=" .. self.acsHostPort  ..
                                                                         " --login=tester" ..
                                                                         " --password=tester" ..
@@ -56,7 +56,7 @@ return function (self)
                                                                         " --description=Teste_do_OpenBus" ..
                                                                         " 2>> management-err.txt >>management.txt ")
 
-      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. self.acsHostName ..
+      os.execute(OPENBUS_HOME.."/bin/run_management.sh --acs-host=" .. self.acsHostName ..
                                                                         " --acs-port=" .. self.acsHostPort..
                                                                         " --login=tester" ..
                                                                         " --password=tester" ..
@@ -66,7 +66,7 @@ return function (self)
                                                                         " --certificate="..self.systemId..".crt"..
                                                                         " 2>> management-err.txt >>management.txt ")
 
-      os.execute(OPENBUS_HOME.."/core/bin/run_management.sh --acs-host=" .. self.acsHostName ..
+      os.execute(OPENBUS_HOME.."/bin/run_management.sh --acs-host=" .. self.acsHostName ..
                                                                         " --acs-port=" .. self.acsHostPort ..
                                                                         " --login=tester" ..
                                                                         " --password=tester" ..

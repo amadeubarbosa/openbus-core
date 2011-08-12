@@ -1,17 +1,17 @@
 PROJNAME= OpenBus
-APPNAME= rgs
+APPNAME= rgs.bin
 
 LUABIN= ${LUA51}/bin/${TEC_UNAME}/lua5.1
-LUAPATH = '${OPENBUS_HOME}/libpath/lua/5.1/?.lua;../../?.lua;'
+LUAPATH = '${OPENBUS_HOME}/lib/lua/5.1/?.lua;${OPENBUS_HOME}/src/lua/openbus/?.lua;../../?.lua;'
 
-OPENBUSLIB= ${OPENBUS_HOME}/libpath/${TEC_UNAME} 
-OPENBUSINC= ${OPENBUS_HOME}/incpath
+OPENBUSLIB= ${OPENBUS_HOME}/lib
+OPENBUSINC= ${OPENBUS_HOME}/include
 
-PRECMP_DIR= ../obj/rgs/${TEC_UNAME}
-PRECMP_LUA= ${OPENBUS_HOME}/libpath/lua/5.1/precompiler.lua
+PRECMP_DIR= ../obj/$(APPNAME)/${TEC_UNAME}
+PRECMP_LUA= ${OPENBUS_HOME}/lib/lua/5.1/precompiler.lua
 PRECMP_FLAGS= -p REGISTRY_SERVER -o rgs -l ${LUAPATH} -d ${PRECMP_DIR} -n
 
-PRELOAD_LUA= ${OPENBUS_HOME}/libpath/lua/5.1/preloader.lua
+PRELOAD_LUA= ${OPENBUS_HOME}/lib/lua/5.1/preloader.lua
 PRELOAD_FLAGS= -p REGISTRY_SERVER -o rgspreloaded -d ${PRECMP_DIR}
 
 RGS_MODULES=$(addprefix core.services.registry.,\
