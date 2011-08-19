@@ -122,6 +122,8 @@ Uso: %s [opções] --login=<usuário> <comando>
 - Script
   * Executa script Lua com um lote de comandos:
      --script=<arquivo>
+  * Desfaz a execução de um script Lua com um lote de comandos:
+    --undo-script=<arquivo>
 -------------------------------------------------------------------------------
 ]]
 
@@ -251,6 +253,9 @@ local commands = {
     {n = 1, params = {}},
   };
   ["script"] = {
+    {n = 1, params = {}},
+  };
+  ["undo-script"] = {
     {n = 1, params = {}},
   };
 }
@@ -400,8 +405,206 @@ end
 --
 -- @param id Identificador
 -- @return true se ele possui um formato válido, false caso contrário
+--
 local function validId(id)
   return (string.match(id, "^[_a-zA-Z0-9]+$") ~= nil)
+end
+
+-------------------------------------------------------------------------------
+-- Funções auxiliares para os comandos de script
+
+-- Tabela de ações contidas no arquivo de script
+local scripts = {}
+
+---
+-- Reseta a tabela de ações lidas do arquivo de script
+--
+local function resetScripts()
+  scripts = {}
+  scripts.User = {}
+  scripts.System = {}
+  scripts.SystemDeployment = {}
+  scripts.Interface = {}
+  scripts.Grant = {}
+  scripts.Revoke = {}
+end
+
+---
+-- Lê o arquivo de script e preenche a tabela 'scripts' com os comandos lidos.
+--
+-- @return Retorna true se leu o arquivo se erros e false caso contrário.
+--
+local function readScriptFile(cmd)
+  resetScripts()
+  local f, err, str, func, succ
+  f, err = io.open(cmd.params[cmd.name])
+  if not f then
+    printf("[ERRO] Falha ao abrir arquivo: %s", err)
+    return false
+  end
+  str, err = f:read("*a")
+  f:close()
+  if not str then
+    printf("[ERRO] Falha ao ler conteúdo do arquivo: %s", err)
+    return false
+  end
+  func, err = loadstring(str)
+  if not func then
+    printf("[ERRO] Falha ao carregar script: %s", err)
+    return false
+  end
+  succ, err = oil.pcall(func)
+  if not succ then
+    printf("[ERRO] Falha ao executar o script: %s", tostring(err))
+    return false
+  end
+  return true
+end
+
+---
+-- Cadastra um usuário
+--
+-- @param user Tabela com os campos 'id' e 'name'
+--
+local function doUser(user)
+  local cmd = {}
+  cmd.name = "add-user"
+  cmd.params = {}
+  cmd.params[cmd.name] = user.id
+  cmd.params.name = user.name
+  handlers[cmd.name](cmd)
+end
+
+---
+-- Descadastra um usuário
+--
+-- @param user Tabela com o campo 'id'
+--
+local function undoUser(user)
+  local cmd = {}
+  cmd.name = "del-user"
+  cmd.params = {}
+  cmd.params[cmd.name] = user.id
+  handlers[cmd.name](cmd)
+end
+
+---
+-- Cadastra um sistema
+--
+-- @param system Tabela com os campos 'id' e 'description'
+--
+local function doSystem(system)
+  local cmd = {}
+  cmd.name = "add-system"
+  cmd.params = {}
+  cmd.params[cmd.name] = system.id
+  cmd.params.description = system.description
+  handlers[cmd.name](cmd)
+end
+
+---
+-- Descadastra um sistema
+--
+-- @param system Tabela com os campos 'id'
+--
+local function undoSystem(system)
+  local cmd = {}
+  cmd.name = "del-system"
+  cmd.params = {}
+  cmd.params[cmd.name] = system.id
+  handlers[cmd.name](cmd)
+end
+
+---
+-- Cadastra uma implantação.
+--
+-- @param depl Tabela com os campos 'id', 'systemId' e 'description'
+--
+local function doSystemDeployment(depl)
+  local cmd = {}
+  cmd.name = "add-deployment"
+  cmd.params = {}
+  cmd.params[cmd.name] = depl.id
+  cmd.params.system = depl.system
+  cmd.params.description = depl.description
+  cmd.params.certificate = depl.certificate
+  handlers[cmd.name](cmd)
+end
+
+---
+-- Descadastra uma implantação.
+--
+-- @param depl Tabela com o campo 'id'
+--
+local function undoSystemDeployment(depl)
+  local cmd = {}
+  cmd.name = "del-deployment"
+  cmd.params = {}
+  cmd.params[cmd.name] = depl.id
+  handlers[cmd.name](cmd)
+end
+
+---
+-- Cadastra uma interface.
+--
+-- @param iface Tabela com um campo 'id' contendo o repID da interface.
+--
+local function doInterface(iface)
+  local cmd = {}
+  cmd.name = "add-interface"
+  cmd.params = {}
+  cmd.params[cmd.name] = iface.id
+  handlers[cmd.name](cmd)
+end
+
+---
+-- Descadastra uma interface.
+--
+-- @param iface Tabela com um campo 'id' contendo o repID da interface.
+--
+local function undoInterface(iface)
+  local cmd = {}
+  cmd.name = "del-interface"
+  cmd.params = {}
+  cmd.params[cmd.name] = iface.id
+  handlers[cmd.name](cmd)
+end
+
+---
+-- Concede a autorização para um conjunto de interfaces.
+--
+-- @param auth Tabela com o os campos 'id', identificador do membro,
+-- e 'interfaces', array de repID de interfaces para autorizar.
+--
+local function doGrant(auth)
+  local cmd = {}
+  cmd.name = "set-authorization"
+  cmd.params = {}
+  cmd.params[cmd.name] = auth.id
+  if auth.strict == false then
+    cmd.params["no-strict"] = null
+  end
+  for n, iface in ipairs(auth.interfaces) do
+    cmd.params.grant = iface
+    handlers[cmd.name](cmd)
+  end
+end
+
+---
+-- Revoga autorização de um conjunto de interfaces.
+--
+-- @param auth Tabela com os campos 'id', identificador do membro,
+-- e 'interfaces', array de repID de interfaces para revogar.
+--
+local function doRevoke(auth)
+  local cmd = {}
+  cmd.name = "set-authorization"
+  cmd.params = {}
+  cmd.params[cmd.name] = auth.id
+  for n, iface in ipairs(auth.interfaces) do
+    cmd.params.revoke = iface
+    handlers[cmd.name](cmd)
+  end
 end
 
 -------------------------------------------------------------------------------
@@ -994,28 +1197,60 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["script"] = function(cmd)
-  local f, err, str, func, succ
-  f, err = io.open(cmd.params[cmd.name])
-  if not f then
-    printf("[ERRO] Falha ao abrir arquivo: %s", err)
-    return
-  end
-  str, err = f:read("*a")
-  f:close()
-  if not str then
-    printf("[ERRO] Falha ao ler conteúdo do arquivo: %s", err)
-    return
-  end
-  func, err = loadstring(str)
-  if not func then
-    printf("[ERRO] Falha ao carregar script: %s", err)
-    return
-  end
-  succ, err = oil.pcall(func)
+  local succ = readScriptFile(cmd)
   if not succ then
-    printf("[ERRO] Falha ao executar o script: %s", tostring(err))
+    return
+  end
+  for _,v in ipairs(scripts.User) do
+    doUser(v)
+  end
+  for _,v in ipairs(scripts.System) do
+    doSystem(v)
+  end
+  for _,v in ipairs(scripts.SystemDeployment) do
+    doSystemDeployment(v)
+  end
+  for _,v in ipairs(scripts.Interface) do
+    doInterface(v)
+  end
+  for _,v in ipairs(scripts.Grant) do
+    doGrant(v)
+  end
+  for _,v in ipairs(scripts.Revoke) do
+    doRevoke(v)
   end
 end
+
+---
+-- Carrega e desfaz um script Lua para lote de comandos
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["undo-script"] = function(cmd)
+  local succ = readScriptFile(cmd)
+  if not succ then
+    return
+  end
+  for _,v in ipairs(scripts.Revoke) do
+    doGrant(v)
+  end
+  for _,v in ipairs(scripts.Grant) do
+    doRevoke(v)
+  end
+  for _,v in ipairs(scripts.Interface) do
+    undoInterface(v)
+  end
+  for _,v in ipairs(scripts.SystemDeployment) do
+    undoSystemDeployment(v)
+  end
+  for _,v in ipairs(scripts.System) do
+    undoSystem(v)
+  end
+  for _,v in ipairs(scripts.User) do
+    undoUser(v)
+  end
+end
+
 -------------------------------------------------------------------------------
 -- Funções exportadas para o script Lua carregado pelo comando 'script'
 
@@ -1029,9 +1264,9 @@ local function argerror()
 end
 
 ---
--- Cadastra um usuário
+-- Valida o comando de script 'User' e insera na tabela 'scripts'
 --
--- @param system Tabela com os campos 'id' e 'name'
+-- @param user Tabela com os campos 'id' e 'name'
 --
 function User(user)
   if not (type(user) == "table" and type(user.id) == "string" and
@@ -1039,16 +1274,11 @@ function User(user)
   then
     argerror()
   end
-  local cmd = {}
-  cmd.name = "add-user"
-  cmd.params = {}
-  cmd.params[cmd.name] = user.id
-  cmd.params.name = user.name
-  handlers[cmd.name](cmd)
+  table.insert(scripts.User, user)
 end
 
 ---
--- Cadastra um sistema
+-- Valida o comando de script 'System' e insera na tabela 'scripts'
 --
 -- @param system Tabela com os campos 'id' e 'description'
 --
@@ -1058,16 +1288,11 @@ function System(system)
   then
     argerror()
   end
-  local cmd = {}
-  cmd.name = "add-system"
-  cmd.params = {}
-  cmd.params[cmd.name] = system.id
-  cmd.params.description = system.description
-  handlers[cmd.name](cmd)
+  table.insert(scripts.System, system)
 end
 
 ---
--- Cadastra uma implantação.
+-- Valida o comando de script 'SystemDeployment' e insera na tabela 'scripts'
 --
 -- @param depl Tabela com os campos 'id', 'systemId' e 'description'
 --
@@ -1078,18 +1303,11 @@ function SystemDeployment(depl)
   then
     argerror()
   end
-  local cmd = {}
-  cmd.name = "add-deployment"
-  cmd.params = {}
-  cmd.params[cmd.name] = depl.id
-  cmd.params.system = depl.system
-  cmd.params.description = depl.description
-  cmd.params.certificate = depl.certificate
-  handlers[cmd.name](cmd)
+  table.insert(scripts.SystemDeployment, depl)
 end
 
 ---
--- Cadastra uma interface.
+-- Valida o comando de script 'Interface' e insera na tabela 'scripts'
 --
 -- @param iface Tabela com um campo 'id' contendo o repID da interface.
 --
@@ -1097,15 +1315,11 @@ function Interface(iface)
   if not (type(iface) == "table" and type(iface.id) == "string") then
     argerror()
   end
-  local cmd = {}
-  cmd.name = "add-interface"
-  cmd.params = {}
-  cmd.params[cmd.name] = iface.id
-  handlers[cmd.name](cmd)
+  table.insert(scripts.Interface, iface)
 end
 
 ---
--- Concede a autorização para um conjunto de interfaces.
+-- Valida o comando de script 'Grant' e insera na tabela 'scripts'
 --
 -- @param auth Tabela com o os campos 'id', identificador do membro,
 -- e 'interfaces', array de repID de interfaces para autorizar.
@@ -1117,21 +1331,11 @@ function Grant(auth)
   then
     argerror()
   end
-  local cmd = {}
-  cmd.name = "set-authorization"
-  cmd.params = {}
-  cmd.params[cmd.name] = auth.id
-  if auth.strict == false then
-    cmd.params["no-strict"] = null
-  end
-  for n, iface in ipairs(auth.interfaces) do
-    cmd.params.grant = iface
-    handlers[cmd.name](cmd)
-  end
+  table.insert(scripts.Grant, auth)
 end
 
 ---
--- Revoga autorização de um conjunto de interfaces.
+-- Valida o comando de script 'Revoke' e insera na tabela 'scripts'
 --
 -- @param auth Tabela com os campos 'id', identificador do membro,
 -- e 'interfaces', array de repID de interfaces para revogar.
@@ -1142,14 +1346,7 @@ function Revoke(auth)
   then
     argerror()
   end
-  local cmd = {}
-  cmd.name = "set-authorization"
-  cmd.params = {}
-  cmd.params[cmd.name] = auth.id
-  for n, iface in ipairs(auth.interfaces) do
-    cmd.params.revoke = iface
-    handlers[cmd.name](cmd)
-  end
+  table.insert(scripts.Revoke, auth)
 end
 
 -------------------------------------------------------------------------------
