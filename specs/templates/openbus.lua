@@ -1,6 +1,10 @@
 -- WARNING: this file will be included on installer.lua and some variables
 -- like CONFIG, ERROR are filled there!
 -- All global variables in this file, will become global in installer.lua too!
+
+local platforms = require "tools.platforms"
+local commands = platforms[TEC_SYSNAME]
+
 Types = {}
 Types.vector = {}
 setmetatable(Types.vector,{
@@ -194,7 +198,7 @@ configure_action = function(answers, path, util)
       generateCorbalocString(answers.hostName,answers.hostPort,"openbus_v1_05")
   ftACS.ftconfig.hosts.LP =
       generateCorbalocString(answers.hostName,answers.hostPort,"LP_v1_05")
-      
+
   ftACS.ftconfig.hosts.FTACS =
       generateCorbalocString(answers.hostName,answers.hostPort,"FTACS_v1_05")
 
@@ -224,6 +228,10 @@ configure_action = function(answers, path, util)
       "ftconfig")
   util.serialize_table(ftRSConfFile,ftRS.ftconfig,
       "ftconfig")
+
+  commands.exec(commands.cmd.mkdir .. path .. "/data/credentials")
+  commands.exec(commands.cmd.mkdir .. path .. "/data/offers")
+
   return true
 end
 
