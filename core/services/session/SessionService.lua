@@ -32,6 +32,12 @@ module "core.services.session.SessionService"
 local acsIDL = Utils.ACCESS_CONTROL_SERVICE_INTERFACE
 
 --------------------------------------------------------------------------------
+-- Aliases
+
+local StartupFailedException = "IDL:scs/core/StartupFailed:1.0"
+
+
+--------------------------------------------------------------------------------
 -- Faceta ISessionService
 --------------------------------------------------------------------------------
 
@@ -271,6 +277,7 @@ end
 ---
 function SessionService:startup()
   local acsIComp = Openbus:getACSIComponent()
+  local orb = Openbus:Orb()
   local success, conId =
     oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
               "AccessControlServiceReceptacle", acsIComp)
@@ -278,7 +285,7 @@ function SessionService:startup()
     Log:error(
         "Ocorreu um erro ao conectar com o serviço de controle de acesso: ",
         conId)
-    error{"IDL:SCS/StartupFailed:1.0"}
+    error(orb:newexcept{StartupFailedException})
  end
 end
 
