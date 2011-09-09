@@ -23,6 +23,10 @@ local ComponentContext = require "scs.core.ComponentContext"
 
 local oop = require "loop.simple"
 
+--------------------------------------------------------------------------------
+-- Aliases
+
+
 ---
 -- IComponent (membro) do Serviço de Sessão.
 ---
@@ -30,6 +34,8 @@ module "core.services.session.SessionServiceComponent"
 
 local UnathorizedFacets = "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
     "/registry_service/UnathorizedFacets:1.0"
+local StartupFailedException = "IDL:scs/core/StartupFailed:1.0"
+local ShutdownFailedException = "IDL:scs/core/ShutdownFailed:1.0"
 
 SessionServiceComponent = oop.class({}, Component)
 
@@ -67,7 +73,7 @@ function SessionServiceComponent:startup()
     registryService = Openbus:connectByCertificate(self.context._componentId.name,
       self.privateKeyFile, self.accessControlServiceCertificateFile)
     if not registryService then
-      error{"IDL:SCS/StartupFailed:1.0"}
+      error(orb:newexcept{StartupFailedException})
     end
     registryService = orb:newproxy(registryService, "protected")
   end
@@ -82,7 +88,7 @@ function SessionServiceComponent:startup()
               "AccessControlServiceReceptacle", acsIComp)
   if not success then
     Log:error("Falha ao conectar ao serviço de controle de acesso", conId)
-    error{"IDL:SCS/StartupFailed:1.0"}
+    error(orb:newexcept{StartupFailedException})
   end
 
   -- configura faceta ISessionService
@@ -106,7 +112,7 @@ function SessionServiceComponent:startup()
           identifier)
     end
     Openbus:disconnect()
-    error{"IDL:SCS/StartupFailed:1.0"}
+    error(orb:newexcept{StartupFailedException})
   end
   self.registryIdentifier = identifier
 
@@ -166,7 +172,7 @@ function SessionServiceComponent:shutdown()
   local orb = Openbus:getORB()
   if not self.started then
     Log:error("O serviço de sessão já está finalizado")
-    error{"IDL:SCS/ShutdownFailed:1.0"}
+    error(orb:newexcept{ShutdownFailedException})
   end
   self.started = false
 
