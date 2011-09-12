@@ -206,11 +206,11 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
   local succ, facets, memberFacets, count
   local metaInterface = member:getFacetByName("IMetaInterface")
   if not metaInterface then
-    Log:warn(format("O componente %s:%d.%d.%d da credencial {%s, %s, %s} não oferece uma faceta do tipo %s"),
+    Log:warn(format("O componente %s:%d.%d.%d da credencial {%s, %s, %s} não oferece uma faceta do tipo %s",
         properties.component_id.name, properties.component_id.major_version,
         properties.component_id.minor_version,
         properties.component_id.patch_version,credential.identifier,
-        credential.owner, credential.delegate, Utils.METAINTERFACE_INTERFACE)
+        credential.owner, credential.delegate, Utils.METAINTERFACE_INTERFACE))
     return {}
   end
 
@@ -229,6 +229,7 @@ function RSFacet:getAuthorizedFacets(member, credential, properties)
         properties.component_id.name, count))
     local unathorizedFacets = {}
     for facet in pairs(facets) do
+      Log:warn(format("%d) %s", #unathorizedFacets+1, facet))
       unathorizedFacets[#unathorizedFacets+1] = facet
     end
     error(Openbus:getORB():newexcept {
