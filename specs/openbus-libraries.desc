@@ -543,9 +543,9 @@ packages = {
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbusorbix.*"] = "lib",
-      ["*.h"] = "include/openbus/cpp", --include
-      ["openbus/util/*.h"] = "include/openbus/cpp/openbus/util/",    --include
-      ["openbus/interceptors/*.h"] = "include/openbus/cpp/openbus/interceptors/",    --include
+      ["include/*.h"] = "include/openbus/cpp", --include
+      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
       ["stubs/orbix"] = "include/openbus/cpp/stubs",     --include
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
       ["test/orbix/acs/*.cpp"] = "test/orbix/acs/",
