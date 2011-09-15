@@ -1,0 +1,23 @@
+local _G = require "_G"
+local assert = _G.assert
+local select = _G.select
+
+local luaidl = require "luaidl"
+local parse = luaidl.parse
+
+local Compiler = require "oil.corba.idl.Compiler"
+local options = Compiler().defaults
+
+local function addAllTo(list, ...)
+	for i = 1, select("#", ...) do
+		list[#list+1] = select(i, ...)
+	end
+end
+
+local idlspec = [[
+#include "access_control.idl"
+#include "offer_registry.idl"
+]]
+
+options.incpath = {"idl"}
+return { assert(parse(idlspec, options)) }
