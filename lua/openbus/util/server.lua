@@ -1,4 +1,5 @@
 local _G = require "_G"
+local assert = _G.assert
 local error = _G.error
 local getenv = _G.getenv
 local ipairs = _G.ipairs
@@ -14,6 +15,7 @@ local concat = array.concat
 
 local io = require "io"
 local openfile = io.open
+local stderr = io.stderr
 
 local lce = require "lce"
 local readprivatekey = lce.key.readprivatefrompemfile
@@ -23,13 +25,9 @@ local Arguments = require "loop.compiler.Arguments"
 
 local ComponentContext = require "scs.core.ComponentContext"
 
+local msg = require "openbus.util.messages"
 local oo = require "openbus.util.oo"
 local class = oo.class
-
-local log = require "openbus.core.util.logger"
-local msg = require "openbus.core.util.messages"
-local idl = require "openbus.core.idl"
-local assert = idl.serviceAssertion
 
 
 
@@ -43,16 +41,31 @@ local function defaultAdd(list, value)
 	list[#list+1] = tostring(value)
 end
 
-function module.setuplog(logger, level, path, mode)
-	logger:level(level)
+local function report(msg)
+	stderr:write("CONFIG ERROR: ", msg, "\n")
+end
+
+function module.setuplog(log, level, path, mode)
+	log:level(level)
 	if path ~= nil and path ~= "" then
 		local file, errmsg = openfile(path, mode or "a")
 		if file == nil then
-			log:warn(msg.BadLogFile:tag{path=path,errmsg=errmsg})
+			log:misconfig(msg.BadLogFile:tag{path=path,errmsg=errmsg})
 		else
-			logger.viewer.output = file
+			log.viewer.output = file
 		end
 	end
+end
+
+function module.readfilecontents(path)
+	local result, errmsg = openfile(path, "rb")
+	if result then
+		result, errmsg = result:read("*a")
+		if result then
+			return result
+		end
+	end
+	return nil, msg.UnableToReadFileContents:tag{ path = path, errmsg = errmsg }
 end
 
 function module.readpublickey(path)
@@ -163,13 +176,13 @@ function module.ConfigArgs:configs(_, path)
 		for name, value in pairs(sandbox) do
 			local kind = type(self[name])
 			if kind == "nil" then
-				log:misconfig(msg.BadParamInConfigFile:tag{
+				report(msg.BadParamInConfigFile:tag{
 					configname = name,
 					path = path,
 				})
 				self[name] = value
 			elseif kind ~= type(value) then
-				log:misconfig(msg.BadParamTypeInConfigFile:tag{
+				report(msg.BadParamTypeInConfigFile:tag{
 					configname = name,
 					path = path,
 					expected = kind,
@@ -181,7 +194,7 @@ function module.ConfigArgs:configs(_, path)
 				for index, value in ipairs(value) do
 					local errmsg = add(list, tostring(value))
 					if errmsg ~= nil then
-						log:misconfig(msg.BadParamListInConfigFile:tag{
+						report(msg.BadParamListInConfigFile:tag{
 							configname = name,
 							index = index,
 							path = path,
@@ -193,7 +206,7 @@ function module.ConfigArgs:configs(_, path)
 			end
 		end
 	else
-		log:misconfig(msg.ConfigFileNotFound:tag{path=path})
+		report(msg.ConfigFileNotFound:tag{path=path})
 	end
 end
 

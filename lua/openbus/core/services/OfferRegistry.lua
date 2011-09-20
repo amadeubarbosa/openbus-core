@@ -16,17 +16,16 @@ local newid = uuid.new
 
 local oo = require "openbus.util.oo"
 local class = oo.class
+local sysex = require "openbus.util.sysex"
 
-local msg = require "openbus.core.util.messages"
-
-local sysex = require "openbus.core.util.sysex"
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
 local ServiceFailure = idl.throw.ServiceFailure
 local throw = idl.throw.services.offer_registry
 local types = idl.types.services.offer_registry
-local values = idl.values.services.offer_registry
+local const = idl.const.services.offer_registry
 
+local msg = require "openbus.core.services.messages"
 local OfferIndex = require "openbus.core.services.OfferIndex"
 
 
@@ -155,21 +154,25 @@ function Offer:describe()
 end
 
 function Offer:setProperties(properties)
-	local tag = assertRights(self.registry, self.entity.id)
+	local registry = self.registry
+	local tag = assertRights(registry, self.entity.id)
 	-- try to change properties (may raise expections)
 	local allprops = makePropertyList(self, properties)
 	assert(self.database:setentryfield(self.id, "properties", properties))
 	-- commit changes in memory
 	self.properties = allprops
+	local log = registry.log
 	log[tag](log, msg.UpdateOfferProperties:tag{ offer = self.id })
 end
 
 function Offer:remove()
-	local tag = assertRights(self.registry, self.entity.id)
+	local registry = self.registry
+	local tag = assertRights(registry, self.entity.id)
 	assert(self.database:removeentry(self.id))
 	assert(self.orb:deactivate(self))
 	self.registry.offers:remove(self)
 	self.entity.offers[self] = nil
+	local log = registry.log
 	log[tag](log, msg.RemoveServiceOffer:tag{ offer = self.id })
 end
 
@@ -177,11 +180,13 @@ end
 
 local OfferRegistry = {
 	__type = types.OfferRegistry,
-	__objkey = values.OfferRegistryFacet,
+	__objkey = const.OfferRegistryFacet,
 }
 
 function OfferRegistry:recoverPersistedOffers(data)
+	local log = data.offerlog
 	local access = data.access
+	self.log = log
 	self.access = access
 	self.offers = OfferIndex()
 	self.offerDB = assert(data.database:gettable("Offers"))
@@ -211,7 +216,7 @@ function OfferRegistry:recoverPersistedOffers(data)
 			})
 			entity = EntityRegistry:getEntity(entity)
 			if entity == nil then
-				throw.ServiceFailure{
+				ServiceFailure{
 					message = msg.CorruptedDatabaseDueToMissingEntity:tag{
 						entity = entry.entity,
 					}
@@ -292,7 +297,7 @@ function OfferRegistry:registerService(service_ref, properties)
 	entry.orb = access.orb
 	entry.registry = self
 	entry.database = database
-	log:request(msg.RegisterServiceOffer:tag{
+	self.log:request(msg.RegisterServiceOffer:tag{
 		offer = offer.id,
 		entity = entity.id,
 		credential = credential,
@@ -457,11 +462,12 @@ end
 
 EntityRegistry = { -- is local (see forward declaration)
 	__type = types.EntityRegistry,
-	__objkey = values.EntityRegistryFacet,
+	__objkey = const.EntityRegistryFacet,
 }
 
 function EntityRegistry:startup(data)
 	-- initialize attributes
+	self.log = data.offerlog
 	self.orb = data.access.orb
 	self.database = data.database
 	self.admins = data.admins

@@ -1,7 +1,8 @@
 local _G = require "_G"
 local setmetatable = _G.setmetatable
 
-local log = require "openbus.core.util.logger"
+local oilverbose = require "oil.verbose"
+local viewer = oilverbose.viewer
 
 local oo = require "openbus.util.oo"
 local class = oo.class
@@ -12,7 +13,7 @@ end
 
 local MissingMessage = class()
 function MissingMessage:tag(values)
-	return self:__tostring()..log.viewer:tostring(values)
+	return self:__tostring()..viewer:tostring(values)
 end
 function MissingMessage:__tostring()
 	return self.message:gsub("%u[%l%d]*", toword)

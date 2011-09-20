@@ -10,7 +10,7 @@ local concat = array.concat
 local lualdap = require "lualdap"
 local openldap = lualdap.open_simple
 
-local msg = require "openbus.core.util.messages"
+local msg = require "openbus.core.services.messages"
 
 return function(configs)
 	local servers = {}

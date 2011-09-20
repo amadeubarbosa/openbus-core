@@ -10,7 +10,7 @@ local next = _G.next
 local pairs = _G.pairs
 local pcall = _G.pcall
 
-local sysex = require "openbus.core.util.sysex"
+local sysex = require "openbus.util.sysex"
 local idl = require "openbus.core.legacy.idl"
 local throw = idl.throw.registry_service
 local types = idl.types.registry_service

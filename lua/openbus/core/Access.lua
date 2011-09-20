@@ -18,37 +18,47 @@ local time = cothread.now
 local oil = require "oil"
 local neworb = oil.init
 
+local giop = require "oil.corba.giop"
+local sysex = giop.SystemExceptionIDs
+
 local oo = require "openbus.util.oo"
 local class = oo.class
 
-local log = require "openbus.core.util.logger"
-local msg = require "openbus.core.util.messages"
+local msg = require "openbus.core.messages"
 
 local idl = require "openbus.core.idl"
 local loadidl = idl.loadto
 local LoginInfoSeq = idl.types.services.access_control.LoginInfoSeq
+
+local CredentialContextId = 0x42555300 -- "BUS\0"
+
+
+local function dummyFunc() end
+local dummyObj = setmetatable({}, {__index=function() return dummyFunc end})
 
 
 
 local function getCallers(self, contexts)
 	local callers
 	for _, context in ipairs(contexts) do
-		if context.context_id == 0x42555300 then -- "BUS\0"
+		if context.context_id == CredentialContextId then
 			local decoder = self.orb:newdecoder(context.context_data)
 			return decoder:get(self.credentialType)
 		end
 	end
-	for _, context in ipairs(contexts) do
-		if context.context_id == 1234 then
-			local decoder = self.orb:newdecoder(context.context_data)
-			local loginId = decoder:string()
-			local entity = decoder:string()
-			local originator = decoder:string()
-			local callers = {{id=loginId,entity=entity}}
-			if originator ~= "" then
-				callers[1],callers[2] = {id="???",entity=originator},callers[1]
+	if self.legacy then
+		for _, context in ipairs(contexts) do
+			if context.context_id == 1234 then
+				local decoder = self.orb:newdecoder(context.context_data)
+				local loginId = decoder:string()
+				local entity = decoder:string()
+				local originator = decoder:string()
+				local callers = {{id=loginId,entity=entity}}
+				if originator ~= "" then
+					callers[1],callers[2] = {id="???",entity=originator},callers[1]
+				end
+				return callers
 			end
-			return callers
 		end
 	end
 end
@@ -86,7 +96,10 @@ end
 
 
 
-local Access = class{ initORB = initORB }
+local Access = class{
+	initORB = initORB,
+	log = dummyObj,
+}
 
 function Access:__init()
 	self.callerChainOf = {}
@@ -153,11 +166,6 @@ function Access:setGrantedUsers(interface, operation, users)
 		end
 	end
 	accessByOp[operation] = set
-	log:config(msg.GrantedAccessToUsers:tag{
-		interface = interface,
-		operation = operation,
-		users = users,
-	})
 end
 
 function Access:getCallerChain()
@@ -188,12 +196,13 @@ end
 
 local EmptyChain = {}
 function Access:sendrequest(request)
-	if request.operation_name:find("_", 1, true) ~= 1 then -- not CORBA::Object op.
-		local loginInfo = self.loginInfo
-		if loginInfo ~= nil then
+	if request.operation_name:find("_", 1, true) ~= 1 then -- not CORBA obj op
+		local log = self.log
+		local login = self.login
+		if login ~= nil then
 			local chain = self.joinedChainOf[running()] or EmptyChain
 			local index = #chain+1
-			chain[index] = loginInfo
+			chain[index] = login
 			local encoder = self.orb:newencoder()
 			encoder:put(chain, self.credentialType)
 			chain[index] = nil
@@ -202,26 +211,14 @@ function Access:sendrequest(request)
 				context_data = encoder:getdata(),
 			}}
 			log:action(msg.InvokeWithCredential:tag{
-				operation = request.operation.absolute_name,
-				login = last.id,
-				entity = last.owner,
+				operation = request.operation.name,
+				login = login.id,
+				entity = login.entity,
 			})
 		else
 			log:action(msg.InvokeWithoutCredential:tag{
-				operation = request.operation.absolute_name,
+				operation = request.operation.name,
 			})
-		end
-	end
-end
-
-function Access:receivereply(request)
-	if request.operation_name:find("_", 1, true) ~= 1 then -- not CORBA::Object op.
-		if request.success == false then
-			if request.results[1][1] == sysex.NO_PERMISSION then
-				if self:onNoPermission() then
-					request.forward_reference = request.reference -- retry request
-				end
-			end
 		end
 	end
 end
@@ -229,11 +226,11 @@ end
 function Access:receiverequest(request)
 	if request.servant ~= nil then -- servant object does exist
 		local opName = request.operation_name
-		if opName:find("_", 1, true) ~= 1 then -- not a CORBA::Object operation
+		if opName:find("_", 1, true) ~= 1 then -- not CORBA obj op
 			local ok, callers = pcall(getCallers, self, request.service_context)
 			if ok then
+				local granted = self.grantedUsers[request.interface.repID][opName]
 				if callers ~= nil then
-					local granted = self.grantedUsers[request.interface.repID][opName]
 					local last = callers[#callers]
 					local login = self.validator:getLoginEntry(last.id)
 					if login ~= nil then
@@ -241,37 +238,47 @@ function Access:receiverequest(request)
 						or granted == Anybody
 						then
 							self.callerChainOf[running()] = callers
-							log:action(msg.GrantedCall:tag{
-								operation = request.operation.absolute_name,
+							self.log:action(msg.GrantedCall:tag{
+								operation = request.operation.name,
 								login = login.id,
 								entity = login.entity,
 							})
 							return
 						else
-							log:action(msg.DeniedCall:tag{
-								operation = request.operation.absolute_name,
+							self.log:action(msg.DeniedCall:tag{
+								operation = request.operation.name,
 								login = login.id,
 								entity = login.entity,
 							})
 						end
 					else
-						log:exception(msg.GotInvalidCaller:tag{
-							operation = request.operation.absolute_name,
+						self.log:exception(msg.GotInvalidCaller:tag{
+							operation = request.operation.name,
 							login = last.id,
 							entity = last.entity,
 						})
 					end
+				elseif granted == Anybody then
+					self.log:action(msg.GrantedCallWithoutCallerInfo:tag{
+						operation = request.operation.name,
+					})
+					return
 				else
-					log:exception(msg.MissingCallerInfo:tag{
-						operation = request.operation.absolute_name,
+					self.log:exception(msg.MissingCallerInfo:tag{
+						operation = request.operation.name,
 					})
 				end
+				self.callerChainOf[running()] = nil
 				request.success = false
-				request.results = { self.orb:newexcept{"CORBA::NO_PERMISSION"} }
+				request.results = {self.orb:newexcept{
+					"CORBA::NO_PERMISSION",
+					minor = 1,
+					completed="COMPLETED_NO",
+				}}
 			else
 				request.success = false
 				request.results = { callers }
-				log:exception(msg.UnableToDecodeCredential:tag{errmsg=callers})
+				self.log:exception(msg.UnableToDecodeCredential:tag{errmsg=callers})
 			end
 		end
 	end

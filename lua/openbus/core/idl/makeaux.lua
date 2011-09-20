@@ -3,13 +3,7 @@ local assert = _G.assert
 local error = _G.error
 local ipairs = _G.ipairs
 
-local debug = require "debug"
-local traceback = debug.traceback
-
 local Exception = require "loop.object.Exception"
-
-local log = require "openbus.core.util.logger"
-local msg = require "openbus.core.util.messages"
 
 local function makeaux(def, types, consts, excepts)
 	local name = def.name
@@ -28,9 +22,8 @@ local function makeaux(def, types, consts, excepts)
 		types[name] = repID
 		excepts[name] = function(fields)
 			if fields == nil then fields = {} end
-			fields[1] = repID
-			log:exception(traceback(msg.ServiceExceptionRaised:tag(fields)))
-			error(fields)
+			fields._repid = repID
+			error(Exception(fields))
 		end
 	elseif def._type == "const" then
 		consts[name] = def.value 

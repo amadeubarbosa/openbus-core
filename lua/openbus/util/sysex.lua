@@ -4,14 +4,13 @@ local error = _G.error
 local table = require "loop.table"
 local memoize = table.memoize
 
-local log = require "openbus.core.util.logger"
-local msg = require "openbus.core.util.messages"
+local Exception = require "loop.object.Exception"
 
 return memoize(function(name)
 	local repId = "IDL:omg.org/CORBA/"..name..":1.0"
 	return function(fields)
-		fields[1] = repId
-		log:exception(msg.CorbaExceptionRaised:tag(fields))
-		error(fields)
+		if fields == nil then fields = {} end
+		fields._repid = repId
+		error(Exception(fields))
 	end
 end)

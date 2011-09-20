@@ -11,17 +11,16 @@ local pcall = _G.pcall
 local setmetatable = _G.setmetatable
 local type = _G.type
 
-local log = require "openbus.core.util.logger"
-local msg = require "openbus.core.util.messages"
-local sysex = require "openbus.core.util.sysex"
+local sysex = require "openbus.util.sysex"
+
 local idl = require "openbus.core.legacy.idl"
 local types = idl.types.access_control_service
 local throw = idl.throw.access_control_service
-
 local newidl = require "openbus.core.idl"
 local newtypes = newidl.types.services.access_control
-local newvalues = newidl.values.services.access_control
+local newconst = newidl.const.services.access_control
 
+local msg = require "openbus.core.services.messages"
 local facets = require "openbus.core.services.AccessControl"
 
 -- Faceta IManagement --------------------------------------------------------
@@ -65,7 +64,7 @@ local function getRegistry(self)
 		log:misconfig(msg.RegistryServiceReceptacleNotConnected)
 		sysex.NO_RESOURCES{ completed = "NO" }
 	end
-	local registry = rgs:getFacetByName(newvalues.EntityRegistryFacetName)
+	local registry = rgs:getFacetByName(newconst.EntityRegistryFacetName)
 	if registry == nil then
 		log:misconfig(msg.RegistryServiceReceptacleWrongConnection)
 		sysex.NO_RESOURCES{ completed = "NO" }

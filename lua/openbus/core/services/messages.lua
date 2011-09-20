@@ -1,36 +1,10 @@
-local messages = require "openbus.util.messages"
+local msg = require "openbus.core.messages"
 
-local msg = setmetatable({}, {__index=messages})
+msg.OpenBusVersion = "2.0"
 
 -- openbus.core.bin.openbus
-msg.CopyrightNotice = "Openbus 2.0  Copyright (C) 2011 Tecgraf, PUC-Rio"
-msg.BusSuccessfullyStarted = "OpenBus 2.0 iniciado com sucesso"
-
--- openbus.core.util.server
-msg.ConfigFileNotFound = "o arquivo de configuração '$path' não foi encontrado"
-msg.BadParamInConfigFile = "o parâmetro '$configname' definido no arquivo '$path' é inválido"
-msg.BadParamTypeInConfigFile = "o parâmetro '$configname' foi definido no arquivo '$path' com um valor do tipo '$actual', mas deveria ser do tipo '$expected'"
-msg.BadParamListInConfigFile = "o parâmetro '$configname' definido no arquivo '$path' tem um valor inválido na posição $index"
-msg.BadLogFile = "não foi possível abrir o arquivo de log '$path' ($errmsg)"
-
--- openbus.core.Access
---msg.UnableToDecodeCredential = "$errmsg"
---msg.MissingCallerInfo = "$operation"
---msg.InvokeWithoutCredential = "$operation"
---msg.InvokeWithCredential = "$operation $login $entity"
---msg.GrantedCall = "$operation $login $entity"
---msg.DeniedCall = "$operation $login $entity"
---msg.GotInvalidCaller = "$operation $login $entity"
---msg.GrantedAccessToUsers = "$interface $operation $users"
-
--- openbus.core.idl.makeaux
---msg.ServiceExceptionRaised = "???"
-
--- openbus.core.idl
---msg.ServiceFailure = "$message"
-
--- openbus.core.util.sysex
---msg.CorbaExceptionRaised = "$minor $completed"
+msg.CopyrightNotice = "Openbus "..msg.OpenBusVersion.."  Copyright (C) 2011 Tecgraf, PUC-Rio"
+msg.BusSuccessfullyStarted = "OpenBus "..msg.OpenBusVersion.." iniciado com sucesso"
 
 -- openbus.core.services.AccessControl
 msg.NoPasswordValidators = "nenhum validador de senha foi especificado"
