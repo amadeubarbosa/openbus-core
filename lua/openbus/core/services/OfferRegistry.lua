@@ -303,7 +303,6 @@ function OfferRegistry:registerService(service_ref, properties)
 		facets = facets,
 		properties = properties,
 	}
-	local allprops = makePropertyList(entry, properties)
 	-- persist the new offer
 	local id = newid("new")
 	local database = self.offerDB
@@ -312,7 +311,7 @@ function OfferRegistry:registerService(service_ref, properties)
 	entry.id = id
 	entry.service_ref = service_ref
 	entry.entity = entity
-	entry.properties = allprops
+	entry.properties = makePropertyList(entry, properties)
 	entry.orb = self.access.orb
 	entry.registry = self
 	entry.database = database
