@@ -4,6 +4,7 @@ local _G = require "_G"
 local assert = _G.assert
 local ipairs = _G.ipairs
 local pairs = _G.pairs
+local rawset = _G.rawset
 
 local cothread = require "cothread"
 local time = cothread.now
@@ -16,11 +17,14 @@ local readcertificate = lce.x509.readfromderstring
 local encrypt = lce.cipher.encrypt
 local decrypt = lce.cipher.decrypt
 
+local Publisher = require "loop.object.Publisher"
+
 local Timer = require "cothread.Timer"
 
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
+local log = require "openbus.util.logger"
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
@@ -43,8 +47,7 @@ local CertificateRegistry = {
 
 -- local operations
 
-function CertificateRegistry:startup(data)
-	self.log = data.loginlog
+function CertificateRegistry:__init(data)
 	self.database = data.database
 	self.certificateDB = assert(self.database:gettable("Certificates"))
 	
@@ -67,7 +70,7 @@ end
 -- IDL operations
 
 function CertificateRegistry:registerCertificate(entity, certificate)
-	self.log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
+	log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
 	local certobj, errmsg = readcertificate(certificate)
 	if not certobj then
 		throw.InvalidCertificate{error=errmsg}
@@ -80,7 +83,7 @@ function CertificateRegistry:registerCertificate(entity, certificate)
 end
 
 function CertificateRegistry:getCertificate(entity)
-	self.log:admin(msg.RecoverEntityCertificate:tag{entity=entity})
+	log:admin(msg.RecoverEntityCertificate:tag{entity=entity})
 	local certificate, errmsg = self.certificateDB:getentry(entity)
 	if certificate == nil then
 		if errmsg ~= nil then
@@ -92,7 +95,7 @@ function CertificateRegistry:getCertificate(entity)
 end
 
 function CertificateRegistry:removeCertificate(entity)
-	self.log:admin(msg.RemoveEntityCertificate:tag{entity=entity})
+	log:admin(msg.RemoveEntityCertificate:tag{entity=entity})
 	local db = self.certificateDB
 	if db:getentry() ~= nil then
 		assert(db:removeentry(entity))
@@ -136,7 +139,7 @@ function LoginByCertificate:login(answer)
 	end
 	local login = manager.activeLogins:newLogin(entity, true)
 	renewLogin(login)
-	self.log:request(msg.LoginByCertificate:tag{
+	log:request(msg.LoginByCertificate:tag{
 		login = login.id,
 		entity = entity,
 	})
@@ -153,13 +156,14 @@ local AccessControl = {
 	
 	leaseTime = 180,
 	challengeTimeout = 180,
+	publisher = Publisher(),
 }
 
 -- local operations
 
-function AccessControl:startup(data)
+function AccessControl:__init(data)
 	local access = data.access
-	access.validator = self
+	access.LoginRegistry = self
 	access.login = SelfLogin
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")
 	access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
@@ -167,13 +171,16 @@ function AccessControl:startup(data)
 	
 	-- initialize attributes
 	self.access = access
-	self.log = data.loginlog
 	self.database = data.database
 	self.certificate = data.certificate
 	self.privateKey = data.privateKey
 	self.passwordValidators = data.validators
 	self.leaseTime = data.leaseTime
-	self.activeLogins = Logins{ database=self.database }
+	self.expirationGap = data.expirationGap
+	self.activeLogins = Logins{
+		database = self.database,
+		publisher = self.publisher,
+	}
 	self.pendingChallenges = {}
 	
 	-- renova todas as credenciais persistidas
@@ -181,13 +188,9 @@ function AccessControl:startup(data)
 		renewLogin(login)
 	end
 	
-	-- recover all observer objects (only after recovered all logins)
-	LoginRegistry:recoverPersistedObservers(data)
-	
 	-- timer de limpeza de credenciais não renovadas e desafios não respondidos
 	self.sweepTimer = Timer{ rate = self.leaseTime }
 	function self.sweepTimer.action()
-		local log = self.log
 		-- A operação 'login:remove()' pode resultar numa chamada remota de
 		-- 'observer:entityLogout(login)' e durante essa chamada é possível que
 		-- outra thread altere o 'activeLogins' o que interferiria na iteração
@@ -239,7 +242,6 @@ function AccessControl:loginByPassword(entity, password)
 		if decoded == nil then
 			throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
 		end
-		local log = self.log
 		for _, validator in ipairs(self.passwordValidators) do
 			local valid, errmsg = validator.validate(entity, decoded)
 			if valid then
@@ -274,7 +276,7 @@ function AccessControl:startLoginByCertificate(entity)
 		secret = newid("new"),
 	}
 	self.pendingChallenges[logger] = time()
-	self.log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
+	log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
 	return logger, assert(encrypt(publickey, logger.secret))
 end
 
@@ -283,7 +285,7 @@ function AccessControl:logout()
 	local id = chain[#chain].id
 	local login = self.activeLogins:getLogin(id)
 	login:remove()
-	self.log:request(msg.LogoutPerformed:tag{login=id,entity=login.entity})
+	log:request(msg.LogoutPerformed:tag{login=id,entity=login.entity})
 end
 
 function AccessControl:renew()
@@ -291,7 +293,7 @@ function AccessControl:renew()
 	local id = chain[#chain].id
 	local login = self.activeLogins:getLogin(id)
 	renewLogin(login)
-	self.log:request(msg.LoginRenewed:tag{login=id,entity=login.entity})
+	log:request(msg.LoginRenewed:tag{login=id,entity=login.entity})
 	return self.leaseTime
 end
 
@@ -374,20 +376,19 @@ LoginRegistry = {
 
 -- local operations
 
-function LoginRegistry:recoverPersistedObservers(data)
+function LoginRegistry:__init(data)
 	local access = data.access
 	local admins = data.admins
 	access:setGrantedUsers(self.__type, "getAllLogins", admins)
 	access:setGrantedUsers(self.__type, "getEntityLogins", admins)
 	access:setGrantedUsers(self.__type, "terminateLogin", admins)
 	-- initialize attributes
-	self.log = data.loginlog
 	self.access = access
-	-- set itself as the login event publisher
-	local logins = AccessControl.activeLogins
-	logins.publisher = self
+	-- register itself to receive logout notifications
+	rawset(AccessControl.publisher, self, self)
 	-- restaura servants dos observadores persistidos
 	local orb = access.orb
+	local logins = AccessControl.activeLogins
 	for id, observer in logins:iObservers() do
 		local subscription = Subscription{ id=id, logins=logins }
 		self.subscriptionOf[id] = subscription
@@ -396,7 +397,6 @@ function LoginRegistry:recoverPersistedObservers(data)
 end
 
 function LoginRegistry:loginRemoved(login, observers)
-	local log = self.log
 	local orb = self.access.orb
 	for observer in pairs(observers) do
 		local callback = observer.callback
@@ -441,7 +441,7 @@ function LoginRegistry:terminateLogin(id)
 	local login = AccessControl.activeLogins:getLogin(id)
 	if login ~= nil then
 		login:remove()
-		self.log:request(msg.LogoutForced:tag{login=id,entity=login.entity})
+		log:request(msg.LogoutForced:tag{login=id,entity=login.entity})
 		return true
 	end
 	return false
@@ -459,7 +459,7 @@ end
 
 function LoginRegistry:getValidity(ids)
 	local logins = AccessControl.activeLogins
-	local leaseTime = self.leaseTime
+	local leaseTime = AccessControl.leaseTime
 	local now = time()
 	local validity = {}
 	for index, id in ipairs(ids) do

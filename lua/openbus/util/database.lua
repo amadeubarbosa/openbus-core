@@ -28,6 +28,9 @@ local oo = require "openbus.util.oo"
 local class = oo.class
 
 
+local Serializer = Viewer{ nolabels = true }
+
+
 local function createpath(path)
 	local result, errmsg = getattribute(path, "mode")
 	if result == "directory" then
@@ -85,7 +88,7 @@ local function saveto(path, ...)
 		errmsg = "unable to create temporary file '"..temp.."' ("..errmsg..")"
 	else
 		local file = result
-		result, errmsg = file:write("return ", Viewer:tostring(...))
+		result, errmsg = file:write("return ", Serializer:tostring(...))
 		file:close()
 		if result == nil then
 			errmsg = "unable to write temporary file '"..temp.."' ("..errmsg..")"
@@ -134,7 +137,7 @@ function Table:setentryfield(key, field, value)
 	local result, errmsg = loadfrom(path)
 	if result ~= nil then
 		result[field] = value
-		result, errmsg = saveto(path, value)
+		result, errmsg = saveto(path, result)
 	end
 	return result, errmsg
 end

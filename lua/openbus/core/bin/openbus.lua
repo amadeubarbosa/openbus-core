@@ -18,7 +18,7 @@ local copy = table.copy
 local oil = require "oil"
 local oillog = require "oil.verbose"
 
-local logger = require "openbus.util.logger"
+local log = require "openbus.util.logger"
 local database = require "openbus.util.database"
 local opendb = database.open
 local server = require "openbus.util.server"
@@ -52,10 +52,8 @@ return function(...)
 		admin = {},
 		validator = {},
 	
-		loginloglevel = 3,
-		loginlogfile = "",
-		offerloglevel = 3,
-		offerlogfile = "",
+		loglevel = 3,
+		logfile = "",
 		oilloglevel = 0,
 		oillogfile = "",
 		
@@ -90,10 +88,8 @@ Options:
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
 
-  -loginloglevel <number>   nível de log gerado pelos serviços de acesso
-  -loginlogfile <path>      arquivo de log gerado pelos serviços de acesso
-  -offerloglevel <number>    nível de log gerado pelos serviços de oferta
-  -offerlogfile <path>       arquivo de log gerado pelos serviços de oferta
+  -loglevel <number>         nível de log gerado pelo barramento
+  -logfile <path>            arquivo de log gerado pelo barramento
   -oilloglevel <number>      nível de log gerado pelo OiL (debug)
   -oillogfile <path>         arquivo de log gerado pelo OiL (debug)
 
@@ -117,19 +113,15 @@ Options:
 	assert(#validators>0, msg.NoPasswordValidators)
 
 	-- setup log files
-	local loginlog = logger()
-	local offerlog = logger()
-	setuplog(loginlog, Configs.loginloglevel, Configs.loginlogfile)
-	setuplog(offerlog, Configs.offerloglevel, Configs.offerlogfile)
+	setuplog(log, Configs.loglevel, Configs.logfile)
 	setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
+
+	-- setup database access
+	
 
 	-- setup bus access
 	local orb = Access.initORB{ host=Configs.host, port=Configs.port }
-	local access = Access{
-		orb = orb,
-		log = loginlog,
-		legacy = not Configs.nolegacy,
-	}
+	local access = Access{ orb=orb, legacy=not Configs.nolegacy }
 
 	-- create SCS component
 	local facets = {}
@@ -140,22 +132,24 @@ Options:
 		objkey = const.BusObjectKey,
 		name = const.BusObjectKey,
 		facets = facets,
-		params = {
-			access = access,
-			
-			leaseTime = Configs.leasetime,
-			expirationGap = Configs.expirationgap,
-			
-			database = assert(opendb(Configs.database)),
-			certificate = assert(readfilecontents(Configs.certificate)),
-			privateKey = assert(readprivatekey(Configs.privatekey)),
-			
-			admins = Configs.admin,
-			validators = validators,
-			
-			loginlog = loginlog,
-			offerlog = offerlog,
-		},
+		init = function()
+			local params = {
+				access = access,
+				database = assert(opendb(Configs.database)),
+				certificate = assert(readfilecontents(Configs.certificate)),
+				privateKey = assert(readprivatekey(Configs.privatekey)),
+				leaseTime = Configs.leasetime,
+				expirationGap = Configs.expirationgap,
+				admins = Configs.admin,
+				validators = validators,
+			}
+			-- these object must be initialized in this order
+			facets.CertificateRegistry:__init(params)
+			facets.AccessControl:__init(params)
+			facets.LoginRegistry:__init(params)
+			facets.EntityRegistry:__init(params)
+			facets.OfferRegistry:__init(params)
+		end,
 	}
 
 	-- create legacy SCS components
@@ -182,6 +176,6 @@ Options:
 	end
 
 	-- start ORB
-	loginlog:uptime(msg.BusSuccessfullyStarted)
+	log:uptime(msg.BusSuccessfullyStarted)
 	orb:run()
 end

@@ -130,29 +130,29 @@ function module.newSCS(params)
 	end
 	
 	-- inicia o componente
-	local data = params.params
 	function component.IComponent:startup()
 		for name, obj in pairs(facets) do
 			if obj.startup ~= nil then
-				obj:startup(data)
+				obj:startup()
 			end
 		end
 	end
-	local trap = params.trap
+	local shutdown = params.shutdown
 	function component.IComponent:shutdown()
 		for name, obj in pairs(facets) do
 			if obj.shutdown ~= nil then
 				obj:shutdown()
 			end
 		end
-		if trap ~= nil then trap() end
+		if shutdown ~= nil then shutdown() end
 		local errors = self.context:deactivateComponent()
 		for name, error in pairs(errors) do
 			errors[#errors+1] = tostring(error)
 		end
 		assert(errors == 0, concat(errors, "\n"))
 	end
-	component.IComponent:startup()
+	local init = params.init
+	if init ~= nil then init() end
 	
 	return component
 end

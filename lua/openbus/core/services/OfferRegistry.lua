@@ -17,23 +17,28 @@ local newid = uuid.new
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
+local log = require "openbus.util.logger"
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
-local ServiceFailure = idl.throw.ServiceFailure
+local ServiceFailure = idl.throw.services.ServiceFailure
 local throw = idl.throw.services.offer_registry
 local types = idl.types.services.offer_registry
 local const = idl.const.services.offer_registry
 
 local msg = require "openbus.core.services.messages"
+local AccessControl = require "openbus.core.services.AccessControl"
+AccessControl = AccessControl.AccessControl
 local OfferIndex = require "openbus.core.services.OfferIndex"
 
 
 local function assertRights(registry, expected)
-	local rights, entity = registry.access:whoCalls()
-	if (entity ~= expected and rights ~= expected) then
+	local chain = registry.access:getCallerChain()
+	local originator = chain[1].entity
+	local caller = chain[#chain].entity
+	if (caller ~= expected and originator ~= expected) then
 		local admins = registry.admins
-		if (admins[entity] == nil and admins[rights] == nil) then
+		if (admins[caller] == nil and admins[originator] == nil) then
 			sysex.NO_PERMISSION{ completed = "NO" }
 		end
 		return "admin"
@@ -73,20 +78,20 @@ local function authorizationPattern(spec)
 	return "^IDL:"..name..":"..version.."$"
 end
 
-local function updateAuthorization(authorizations, db, spec, pattern)
+local function updateAuthorization(id, authorizations, db, spec, pattern)
 	local backup = authorizations[spec]
 	authorizations[spec] = pattern
-	local ok, ex = pcall(db.setentryfield, db, "authorizations", authorizations)
+	local ok, errmsg = db:setentryfield(id, "authorizations", authorizations)
 	if not ok then
 		authorizations[spec] = backup
-		error(ex)
+		ServiceFailure{message=errmsg}
 	end
 end
 
 local function makePropertyList(entry, service_props)
 	local props = {
-		{ name = "openbus.offer.credential", value = entry.credential },
-		{ name = "openbus.offer.owner", value = entry.entity },
+		{ name = "openbus.offer.login", value = entry.login },
+		{ name = "openbus.offer.entity", value = entry.entity.id },
 		{ name = "openbus.offer.year", value = entry.creation.year },
 		{ name = "openbus.offer.month", value = entry.creation.month },
 		{ name = "openbus.offer.day", value = entry.creation.day },
@@ -94,9 +99,9 @@ local function makePropertyList(entry, service_props)
 		{ name = "openbus.offer.minute", value = entry.creation.minute },
 		{ name = "openbus.offer.second", value = entry.creation.second },
 		{ name = "openbus.component.name", value = entry.component.name },
-		{ name = "openbus.component.version.major", value = entry.component.major_version },
-		{ name = "openbus.component.version.minor", value = entry.component.minor_version },
-		{ name = "openbus.component.version.patch", value = entry.component.patch_version },
+		{ name = "openbus.component.version.major", value = tostring(entry.component.major_version) },
+		{ name = "openbus.component.version.minor", value = tostring(entry.component.minor_version) },
+		{ name = "openbus.component.version.patch", value = tostring(entry.component.patch_version) },
 	}
 	local interfaces = {}
 	for _, facet in ipairs(entry.facets) do
@@ -161,18 +166,16 @@ function Offer:setProperties(properties)
 	assert(self.database:setentryfield(self.id, "properties", properties))
 	-- commit changes in memory
 	self.properties = allprops
-	local log = registry.log
 	log[tag](log, msg.UpdateOfferProperties:tag{ offer = self.id })
 end
 
-function Offer:remove()
+function Offer:remove(tag)
 	local registry = self.registry
-	local tag = assertRights(registry, self.entity.id)
+	local tag = tag or assertRights(registry, self.entity.id)
 	assert(self.database:removeentry(self.id))
 	assert(self.orb:deactivate(self))
-	self.registry.offers:remove(self)
+	registry.offers:remove(self)
 	self.entity.offers[self] = nil
-	local log = registry.log
 	log[tag](log, msg.RemoveServiceOffer:tag{ offer = self.id })
 end
 
@@ -183,36 +186,38 @@ local OfferRegistry = {
 	__objkey = const.OfferRegistryFacet,
 }
 
-function OfferRegistry:recoverPersistedOffers(data)
-	local log = data.offerlog
+function OfferRegistry:loginRemoved(login)
+	local set = self.offers.index["openbus.offer.login"][login.id]
+	for offer in pairs(set) do
+		log:action(msg.RemoveOfferAfterOwnerLogoff:tag{
+			offer = offer.id,
+			entity = login.entity,
+			login = login.id,
+		})
+		offer:remove("action")
+	end
+end
+
+function OfferRegistry:__init(data)
 	local access = data.access
-	self.log = log
 	self.access = access
 	self.offers = OfferIndex()
 	self.offerDB = assert(data.database:gettable("Offers"))
-	function access:onWatchedLogoff(credential, entity)
-		local set = self.offers.index["openbus.offer.credential"][credential]
-		for offer in pairs(set) do
-			log:action(msg.RemoveOfferAfterOwnerLogoff:tag{
-				offer = offer.id,
-				entity = entity,
-				credential = credential,
-			})
-			offer:remove()
-		end
-	end
+	
+	-- register itself to receive logout notifications
+	rawset(AccessControl.publisher, self, self)
 	
 	local orb = access.orb
 	local offerDB = self.offerDB
 	local toberemoved = {}
 	for id, entry in assert(offerDB:ientries()) do
 		local entity = entry.entity
-		local credential = entry.credential
-		if access:watchLogoff(entity, credential) then
+		local login = entry.login
+		if AccessControl:getLoginEntry(login) then
 			log:action(msg.RecoverPersistedOffer:tag{
-				offer = offer.id,
+				offer = id,
 				entity = entity,
-				credential = credential,
+				login = login,
 			})
 			entity = EntityRegistry:getEntity(entity)
 			if entity == nil then
@@ -234,9 +239,9 @@ function OfferRegistry:recoverPersistedOffers(data)
 			orb:newservant(Offer(entry))
 		else
 			log:action(msg.DiscardPersistedOfferAfterLogout:tag{
-				offer = offer.id,
+				offer = id,
 				entity = entity,
-				credential = credential,
+				login = login,
 			})
 			toberemoved[id] = true
 		end
@@ -246,29 +251,46 @@ function OfferRegistry:recoverPersistedOffers(data)
 	end
 end
 
+local IgnoredFacets = {
+	IComponent = true,
+	IMetaInterface = true,
+	IReceptacles = true,
+}
+
 function OfferRegistry:registerService(service_ref, properties)
 	-- collect information about the SCS component implementing the service
 	local compId = service_ref:getComponentId()
 	local meta = service_ref:getFacetByName("IMetaInterface")
-	local facets = meta == nil and {} or
-	               meta:__narrow("scs::core::IMetaInterface"):getFacets()
+	local allfacets = meta == nil and {} or
+	                  meta:__narrow("scs::core::IMetaInterface"):getFacets()
 	-- check the caller is authorized to offer such service
-	local rights, entity, credential = self.access:whoCalls()
-	entity = EntityRegistry:getEntity(entity)
+	local chain = self.access:getCallerChain()
+	local login = chain[#chain]
+	entity = EntityRegistry:getEntity(login.entity)
+	local facets = {}
 	local unauthorized = {}
-	for facet in ipairs(facets) do
-		if entity == nil or not entity:hasAuthorization(facet.interface_name) then
-			unauthorized[#unauthorized+1] = facet.name
+	for _, facet in ipairs(allfacets) do
+		local facetname = facet.name
+		local facetiface = facet.interface_name
+		if IgnoredFacets[facetname] == nil then
+			if entity~= nil and entity:hasAuthorization(facetiface) then
+				facets[#facets+1] = {
+					name = facetname,
+					interface_name = facetiface,
+				}
+			else
+				unauthorized[#unauthorized+1] = facetname
+			end
 		end
 	end
 	if #unauthorized > 0 then
-		throw.UnauthorizedFacets{ unauthorized }
+		throw.UnauthorizedFacets{ facets = unauthorized }
 	end
 	-- validate provided properties
 	local entry = {
 		service_ref = tostring(service_ref),
 		entity = entity.id,
-		credential = credential,
+		login = login.id,
 		creation = {
 			day = date("%d"),
 			month = date("%m"),
@@ -284,23 +306,20 @@ function OfferRegistry:registerService(service_ref, properties)
 	local allprops = makePropertyList(entry, properties)
 	-- persist the new offer
 	local id = newid("new")
-	local database = self.offersDB
+	local database = self.offerDB
 	assert(database:setentry(id, entry))
-	-- watch for the logoff of this credential
-	access:watchLogoff(entity.id, credential)
 	-- create object for the new offer
-	local access = self.access
 	entry.id = id
 	entry.service_ref = service_ref
 	entry.entity = entity
 	entry.properties = allprops
-	entry.orb = access.orb
+	entry.orb = self.access.orb
 	entry.registry = self
 	entry.database = database
-	self.log:request(msg.RegisterServiceOffer:tag{
-		offer = offer.id,
+	log:request(msg.RegisterServiceOffer:tag{
+		offer = id,
 		entity = entity.id,
-		credential = credential,
+		login = login.id,
 	})
 	return Offer(entry)
 end
@@ -312,6 +331,12 @@ end
 ------------------------------------------------------------------------------
 -- Faceta EntityRegistry
 ------------------------------------------------------------------------------
+
+local IgnoredFacets = {
+	IComponent = true,
+	IMetaInterface = true,
+	IReceptacles = true,
+}
 
 local Entity = class{ __type = types.RegisteredEntity }
 
@@ -356,7 +381,7 @@ end
 
 function Entity:addAuthorization(spec)
 	local pattern = authorizationPattern(spec)
-	updateAuthorization(self.authorizations, self.database, spec, pattern)
+	updateAuthorization(self.id, self.authorizations, self.database, spec, pattern)
 end
 
 function Entity:removeAuthorization(spec)
@@ -364,7 +389,7 @@ function Entity:removeAuthorization(spec)
 	if #unauthorized > 0 then
 		throw.AuthorizationInUse{ offers = unauthorized }
 	end
-	updateAuthorization(self.authorizations, self.database, spec, nil)
+	updateAuthorization(self.id, self.authorizations, self.database, spec, nil)
 end
 
 function Entity:removeAuthorizationAndOffers(spec)
@@ -372,7 +397,7 @@ function Entity:removeAuthorizationAndOffers(spec)
 	for _, offer in ipairs(unauthorized) do
 		offer:remove()
 	end
-	updateAuthorization(self.authorizations, self.database, spec, nil)
+	updateAuthorization(self.id, self.authorizations, self.database, spec, nil)
 end
 
 function Entity:removeAllAuthorizationsAndOffers()
@@ -436,16 +461,17 @@ function Category:registerEntity(id, name)
 		throw.EntityAlreadyRegistered{ existing = entity }
 	end
 	-- persist the new entity
+	local registry = self.registry
 	local categoryId = self.id
-	local database = self.registry.entityDB
+	local database = registry.entityDB
 	assert(database:setentry(id, {categoryId=categoryId, name=name}))
 	-- create object for the new entity
 	return Entity{
 		id = id,
 		name = name,
-		categoryId = categoryId,
+		category = self,
 		orb = self.orb,
-		registry = self,
+		registry = registry,
 		database = database,
 	}
 end
@@ -465,9 +491,8 @@ EntityRegistry = { -- is local (see forward declaration)
 	__objkey = const.EntityRegistryFacet,
 }
 
-function EntityRegistry:startup(data)
+function EntityRegistry:__init(data)
 	-- initialize attributes
-	self.log = data.offerlog
 	self.orb = data.access.orb
 	self.database = data.database
 	self.admins = data.admins
@@ -505,7 +530,7 @@ function EntityRegistry:startup(data)
 	local entityDB = assert(database:gettable("Entities"))
 	for id, entry in assert(entityDB:ientries()) do
 		-- check is referenced category exists
-		local category = self.categories[entry.category]
+		local category = self.categories[entry.categoryId]
 		if category == nil then
 			ServiceFailure{
 				message = msg.CorruptedDatabaseDueToMissingCategory:tag{
@@ -524,8 +549,6 @@ function EntityRegistry:startup(data)
 			database = entityDB,
 		})
 	end
-	-- recover all offer objects (only after recovered all entities)
-	OfferRegistry:recoverPersistedOffers(data)
 	
 	self.categoryDB = categoryDB
 	self.entityDB = entityDB

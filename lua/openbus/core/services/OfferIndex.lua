@@ -72,17 +72,17 @@ function OfferIndex:find(properties)
 		-- and find the which of these set has less offers.
 		local sets = {}
 		local min_sz, min = inf
-		for index = 1, count do
-			local prop = properties[index]
+		for i = 1, count do
+			local prop = properties[i]
 			local validx = rawget(index, prop.name)
 			if validx == nil then return {} end -- no offer with this property
 			local offers = rawget(validx, prop.value)
 			if offers == nil then return {} end -- no offer with this property value
-			sets[index] = offers
+			sets[i] = offers
 			local size = sizeOf[offers]
 			if size < min_sz then
 				min_sz = size
-				min = index
+				min = i
 			end
 		end
 		-- remove the smallest set from the list and place it in 'min'

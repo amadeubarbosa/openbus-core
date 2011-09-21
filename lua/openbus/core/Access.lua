@@ -21,6 +21,7 @@ local neworb = oil.init
 local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
 
+local log = require "openbus.util.logger"
 local oo = require "openbus.util.oo"
 local class = oo.class
 
@@ -31,10 +32,6 @@ local loadidl = idl.loadto
 local LoginInfoSeq = idl.types.services.access_control.LoginInfoSeq
 
 local CredentialContextId = 0x42555300 -- "BUS\0"
-
-
-local function dummyFunc() end
-local dummyObj = setmetatable({}, {__index=function() return dummyFunc end})
 
 
 
@@ -98,7 +95,6 @@ end
 
 local Access = class{
 	initORB = initORB,
-	log = dummyObj,
 }
 
 function Access:__init()
@@ -197,7 +193,6 @@ end
 local EmptyChain = {}
 function Access:sendrequest(request)
 	if request.operation_name:find("_", 1, true) ~= 1 then -- not CORBA obj op
-		local log = self.log
 		local login = self.login
 		if login ~= nil then
 			local chain = self.joinedChainOf[running()] or EmptyChain
@@ -232,39 +227,39 @@ function Access:receiverequest(request)
 				local granted = self.grantedUsers[request.interface.repID][opName]
 				if callers ~= nil then
 					local last = callers[#callers]
-					local login = self.validator:getLoginEntry(last.id)
+					local login = self.LoginRegistry:getLoginEntry(last.id)
 					if login ~= nil then
 						if (granted[login.entity] or granted[callers[1].entity])
 						or granted == Anybody
 						then
 							self.callerChainOf[running()] = callers
-							self.log:action(msg.GrantedCall:tag{
+							log:action(msg.GrantedCall:tag{
 								operation = request.operation.name,
 								login = login.id,
 								entity = login.entity,
 							})
 							return
 						else
-							self.log:action(msg.DeniedCall:tag{
+							log:action(msg.DeniedCall:tag{
 								operation = request.operation.name,
 								login = login.id,
 								entity = login.entity,
 							})
 						end
 					else
-						self.log:exception(msg.GotInvalidCaller:tag{
+						log:exception(msg.GotInvalidCaller:tag{
 							operation = request.operation.name,
 							login = last.id,
 							entity = last.entity,
 						})
 					end
 				elseif granted == Anybody then
-					self.log:action(msg.GrantedCallWithoutCallerInfo:tag{
+					log:action(msg.GrantedCallWithoutCallerInfo:tag{
 						operation = request.operation.name,
 					})
 					return
 				else
-					self.log:exception(msg.MissingCallerInfo:tag{
+					log:exception(msg.MissingCallerInfo:tag{
 						operation = request.operation.name,
 					})
 				end
@@ -278,7 +273,7 @@ function Access:receiverequest(request)
 			else
 				request.success = false
 				request.results = { callers }
-				self.log:exception(msg.UnableToDecodeCredential:tag{errmsg=callers})
+				log:exception(msg.UnableToDecodeCredential:tag{errmsg=callers})
 			end
 		end
 	end
