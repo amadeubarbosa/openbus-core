@@ -52,26 +52,26 @@ local function versionPattern(capture)
 	elseif capture:find("*", 1, true) == nil then
 		return capture
 	end
-	throw.InvalidAuthorization()
+	throw.InvalidAuthorizationSpec()
 end
 
 local function authorizationPattern(spec)
 	local name, version = spec:match("^IDL:([%w_*][%w_/*]*):([%d.*]+)$")
 	if name == nil then
-		throw.InvalidAuthorization()
+		throw.InvalidAuthorizationSpec()
 	end
 	local pos = name:find("*", 1, true)
 	if pos == #name then
 		name = name:gsub("%*$", "[%w_/]*")
 	elseif pos ~= nil then
-		throw.InvalidAuthorization()
+		throw.InvalidAuthorizationSpec()
 	end
 	if version == "*" then
 		version = "%d+%.%d+"
 	else
 		local major, minor = version:match("^([%d*]+)%.([%d*]+)$")
 		if major == nil then
-			throw.InvalidAuthorization()
+			throw.InvalidAuthorizationSpec()
 		end
 		version = versionPattern(major).."%."..versionPattern(minor)
 	end
