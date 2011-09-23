@@ -80,7 +80,7 @@ local PredefinedUserSets = {
 
 
 
-local function initORB(configs)
+local function createORB(configs)
 	if configs == nil then configs = {} end
 	if configs.tcpoptions == nil then
 		configs.tcpoptions = {reuseaddr = true}
@@ -94,7 +94,7 @@ end
 
 
 local Access = class{
-	initORB = initORB,
+	createORB = createORB,
 }
 
 function Access:__init()
@@ -140,7 +140,7 @@ function Access:__init()
 	
 	local orb = self.orb
 	if orb == nil then
-		orb = initORB()
+		orb = createORB()
 		self.orb = orb
 	end
 	self.credentialType = orb.types:lookup_id(LoginInfoSeq)
@@ -154,14 +154,7 @@ function Access:setGrantedUsers(interface, operation, users)
 		accessByOp = self.newOpAccess()
 		accessByIface[interface] = accessByOp
 	end
-	local set = PredefinedUserSets[users]
-	if set == nil then
-		set = {}
-		for _, user in ipairs(users) do
-			set[user] = true
-		end
-	end
-	accessByOp[operation] = set
+	accessByOp[operation] = PredefinedUserSets[users] or users
 end
 
 function Access:getCallerChain()

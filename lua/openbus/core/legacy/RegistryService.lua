@@ -147,11 +147,11 @@ function IManagement:getOfferedInterfaces()
 end
 
 --function IManagement:getUnauthorizedInterfaces()
---	sysex.NO_IMPLEMENT{ completed = "NO" }
+--	sysex.NO_IMPLEMENT{ completed = "COMPLETED_NO" }
 --end
 --
 --function IManagement:getUnauthorizedInterfacesByMember(member)
---	sysex.NO_IMPLEMENT{ completed = "NO" }
+--	sysex.NO_IMPLEMENT{ completed = "COMPLETED_NO" }
 --end
 
 function IManagement:unregister(id)

@@ -39,7 +39,7 @@ local function assertRights(registry, expected)
 	if (caller ~= expected and originator ~= expected) then
 		local admins = registry.admins
 		if (admins[caller] == nil and admins[originator] == nil) then
-			sysex.NO_PERMISSION{ completed = "NO" }
+			sysex.NO_PERMISSION{ minor = 1234, completed = "COMPLETED_NO" }
 		end
 		return "admin"
 	end
@@ -199,14 +199,15 @@ function OfferRegistry:loginRemoved(login)
 end
 
 function OfferRegistry:__init(data)
-	local access = data.access
-	self.access = access
+	self.access = data.access
+	self.admins = data.admins
 	self.offers = OfferIndex()
 	self.offerDB = assert(data.database:gettable("Offers"))
 	
 	-- register itself to receive logout notifications
 	rawset(AccessControl.publisher, self, self)
 	
+	local access = self.access
 	local orb = access.orb
 	local offerDB = self.offerDB
 	local toberemoved = {}
@@ -371,7 +372,9 @@ end
 
 function Entity:remove()
 	local id = self.id
-	OfferRegistry:removeAuthorizationsOf(id)
+	for offer in pairs(entity.offers) do
+		offer:remove()
+	end
 	assert(self.database:removeentry(id))
 	assert(self.orb:deactivate(self))
 	self.registry.entities[id] = nil
@@ -494,13 +497,12 @@ function EntityRegistry:__init(data)
 	-- initialize attributes
 	self.orb = data.access.orb
 	self.database = data.database
-	self.admins = data.admins
 	self.categories = {}
 	self.entities = {}
 	
 	-- setup permissions
 	local access = data.access
-	local admins = self.admins
+	local admins = data.admins
 	access:setGrantedUsers(self.__type,"createEntityCategory",admins)
 	access:setGrantedUsers(Category.__type,"remove",admins)
 	access:setGrantedUsers(Category.__type,"setName",admins)

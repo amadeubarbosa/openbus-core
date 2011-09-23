@@ -1,7 +1,7 @@
 -- $Id$
 
 local function validator(name, password)
-	if name == "tester" and password == name then
+	if name == password then
 		return true
 	end
 end

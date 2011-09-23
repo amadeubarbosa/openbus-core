@@ -54,7 +54,7 @@ end
 
 local function assertParam(cond)
 	if not cond then
-		sysex.BAD_PARAM{ completed = "NO" }
+		sysex.BAD_PARAM{ completed = "COMPLETED_NO" }
 	end
 end
 
@@ -62,12 +62,12 @@ local function getRegistry(self)
 	local rgs = self.context:getConnected("RegistryServiceReceptacle")
 	if rgs == nil then
 		log:misconfig(msg.RegistryServiceReceptacleNotConnected)
-		sysex.NO_RESOURCES{ completed = "NO" }
+		sysex.NO_RESOURCES{ completed = "COMPLETED_NO" }
 	end
 	local registry = rgs:getFacetByName(newconst.EntityRegistryFacetName)
 	if registry == nil then
 		log:misconfig(msg.RegistryServiceReceptacleWrongConnection)
-		sysex.NO_RESOURCES{ completed = "NO" }
+		sysex.NO_RESOURCES{ completed = "COMPLETED_NO" }
 	end
 end
 
@@ -229,7 +229,7 @@ function IManagement:addUser(id, name)
 	local category = entities:getEntityCategory("Users")
 	if category == nil then
 		category = entities:createEntityCategory("Users",
-		                                         "Usu·rios do Openbus 1.5")
+		                                         "Usu√°rios do Openbus 1.5")
 	end
 	category:newEntity(id, name)
 end

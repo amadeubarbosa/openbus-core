@@ -102,6 +102,12 @@ Options:
 		end
 	end
 
+	-- create a set of admin users
+	local adminUsers = {}
+	for _, admin in ipairs(Configs.admin) do
+		adminUsers[admin] = true
+	end
+	
 	-- load all password validators to be used
 	local validators = {}
 	for index, package in ipairs(Configs.validator) do
@@ -116,11 +122,8 @@ Options:
 	setuplog(log, Configs.loglevel, Configs.logfile)
 	setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
 
-	-- setup database access
-	
-
 	-- setup bus access
-	local orb = Access.initORB{ host=Configs.host, port=Configs.port }
+	local orb = Access.createORB{ host=Configs.host, port=Configs.port }
 	local access = Access{ orb=orb, legacy=not Configs.nolegacy }
 
 	-- create SCS component
@@ -140,7 +143,7 @@ Options:
 				privateKey = assert(readprivatekey(Configs.privatekey)),
 				leaseTime = Configs.leasetime,
 				expirationGap = Configs.expirationgap,
-				admins = Configs.admin,
+				admins = adminUsers,
 				validators = validators,
 			}
 			-- these object must be initialized in this order
