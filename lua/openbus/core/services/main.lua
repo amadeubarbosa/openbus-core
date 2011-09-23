@@ -72,7 +72,7 @@ return function(...)
 				stderr:write(errmsg,"\n")
 			end
 			stderr:write([[
-Usage:  ]],OPENBUS_PRONAME,[[ [options]
+Usage:  ]],OPENBUS_PROGNAME,[[ [options]
 Options:
 
   -host <address>            endereço de rede usado pelo barramento

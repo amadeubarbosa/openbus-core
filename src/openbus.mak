@@ -1,5 +1,5 @@
 PROJNAME= OpenBus
-APPNAME= openbus
+APPNAME= busservices
 
 USE_LUA51= YES
 USE_NODEPEND= YES
@@ -14,13 +14,13 @@ SRC= \
 
 SRCLUADIR= ../lua
 SRCLUA= \
-	openbus/core/bin/openbus.lua \
 	openbus/core/legacy/AccessControlService.lua \
 	openbus/core/legacy/idl.lua \
 	openbus/core/legacy/parsed.lua \
 	openbus/core/legacy/RegistryService.lua \
 	openbus/core/services/AccessControl.lua \
 	openbus/core/services/LoginDB.lua \
+	openbus/core/services/main.lua \
 	openbus/core/services/messages.lua \
 	openbus/core/services/OfferIndex.lua \
 	openbus/core/services/OfferRegistry.lua \
@@ -38,7 +38,9 @@ LIBS= \
 
 LOHPACK= coreserv.loh
 
-DEFINES= OPENBUS_PROG=\"openbus\"
+DEFINES= \
+	OPENBUS_MAIN=\"openbus.core.services.main\" \
+	OPENBUS_PROGNAME=\"$(APPNAME)\"
 
 INCLUDES+= . $(SRCLUADIR) \
 	$(OPENBUSINC)/luuid \

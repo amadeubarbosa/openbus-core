@@ -18,7 +18,7 @@
 
 static lua_State *globalL = NULL;
 
-static const char *progpath = OPENBUS_PROG;
+static const char *progpath = OPENBUS_PROGNAME;
 
 static const char *script =
 " _G.lua51_pcall = _G.pcall"
@@ -49,7 +49,7 @@ static const char *script =
 
 " local coroutine = require 'coroutine'"
 " local cothread = require 'cothread'"
-" local main = require 'openbus.core.bin."OPENBUS_PROG"'"
+" local main = require '"OPENBUS_MAIN"'"
 " return cothread.run(cothread.step(coroutine.create(main), ...))";
 
 
@@ -152,10 +152,9 @@ static int pmain (lua_State *L) {
 	globalL = L;
 	if (argv[0] && argv[0][0]) progpath = argv[0];
 	lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
-	lua_pushstring(L, OPENBUS_PROG);
-	lua_setglobal(L, "OPENBUS_PROGNAME");
-	lua_pushstring(L, progpath);
-	lua_setglobal(L, "OPENBUS_PROGPATH");
+	lua_pushstring(L, OPENBUS_MAIN); lua_setglobal(L, "OPENBUS_MAIN");
+	lua_pushstring(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
+	lua_pushstring(L, progpath); lua_setglobal(L, "OPENBUS_PROGPATH");
 	luaL_openlibs(L);  /* open libraries */
 	//luapreload_loop(L);
 	//luapreload_looplib(L);
