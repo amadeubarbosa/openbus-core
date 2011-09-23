@@ -96,11 +96,11 @@ Uso: %s [opções] --login=<usuário> <comando>
      --list-offer=<id_membro>
 
 - Controle de Logins
-  * Remove um login
+  * Remove um login:
      --del-login=<id_login>
-  * Mostrar todas interfaces ofertadas:
+  * Mostrar todos os logins:
      --list-login
-  * Mostrar todas interfaces ofertadas por um membro:
+  * Mostrar todos os logins de uma entidade:
      --list-login --entity=<id_entidade>
 
 - Script
