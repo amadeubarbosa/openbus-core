@@ -9,6 +9,9 @@ local rawset = _G.rawset
 local cothread = require "cothread"
 local time = cothread.now
 
+local math = require "math"
+local max = math.max
+
 local uuid = require "uuid"
 local newid = uuid.new
 
@@ -163,7 +166,7 @@ local AccessControl = {
 
 function AccessControl:__init(data)
 	local access = data.access
-	access.LoginRegistry = self
+	access.logins = self
 	access.login = SelfLogin
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")
 	access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
@@ -454,18 +457,19 @@ function LoginRegistry:getLoginInfo(id)
 	elseif id == SelfLogin.id then
 		return SelfLogin
 	end
-	throw.InvalidLogins{loginsIds={id}}
+	throw.InvalidLogins{loginIds={id}}
 end
 
 function LoginRegistry:getValidity(ids)
 	local logins = AccessControl.activeLogins
 	local leaseTime = AccessControl.leaseTime
+	local expirationGap = AccessControl.expirationGap
 	local now = time()
 	local validity = {}
 	for index, id in ipairs(ids) do
 		local login = logins:getLogin(id)
 		if login ~= nil then
-			validity[index] = leaseTime - (now-login.leaseRenewed)
+			validity[index] = max(expirationGap, leaseTime-(now-login.leaseRenewed))
 		elseif id == SelfLogin.id then
 			validity[index] = leaseTime
 		else

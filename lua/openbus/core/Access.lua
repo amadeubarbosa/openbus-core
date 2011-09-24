@@ -190,8 +190,9 @@ function Access:sendrequest(request)
 		if login ~= nil then
 			local chain = self.joinedChainOf[running()] or EmptyChain
 			local index = #chain+1
-			chain[index] = login
 			local encoder = self.orb:newencoder()
+			chain.n = nil
+			chain[index] = login
 			encoder:put(chain, self.credentialType)
 			chain[index] = nil
 			request.service_context = {{
@@ -220,7 +221,7 @@ function Access:receiverequest(request)
 				local granted = self.grantedUsers[request.interface.repID][opName]
 				if callers ~= nil then
 					local last = callers[#callers]
-					local login = self.LoginRegistry:getLoginEntry(last.id)
+					local login = self.logins:getLoginEntry(last.id)
 					if login ~= nil then
 						if (granted[login.entity] or granted[callers[1].entity])
 						or granted == Anybody

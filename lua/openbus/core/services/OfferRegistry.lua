@@ -372,7 +372,7 @@ end
 
 function Entity:remove()
 	local id = self.id
-	for offer in pairs(entity.offers) do
+	for offer in pairs(self.offers) do
 		offer:remove()
 	end
 	assert(self.database:removeentry(id))
@@ -449,7 +449,7 @@ function Category:remove()
 end
 
 function Category:removeAll()
-	for id, entity in self.iEntities() do
+	for id, entity in pairs(self.entities) do
 		entity:remove()
 	end
 	self:remove()
