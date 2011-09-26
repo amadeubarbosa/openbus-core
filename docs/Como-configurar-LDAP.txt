@@ -52,3 +52,4 @@ A sintaxe do arquivo é a mesma usada para descrever tabelas na linguagem Lua (h
        
    Para maiores informações sobre esse validador veja a documentação do LDAPv3LoginValidator.
 -------------------------------------------------------------------------
+$Id$
