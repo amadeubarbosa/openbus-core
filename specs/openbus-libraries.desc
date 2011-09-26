@@ -430,6 +430,7 @@ packages = {
       ["../../specs/templates"] = "specs",
       ["../test/run_check_install.sh"] = "test",
       ["../test/checkInstall.lua"] = "test",
+      ["../../docs/Como-configurar-LDAP.txt"] = "doc",
     },
     conf_files = {
       ["../../data/conf"] = "data",
