@@ -13,7 +13,7 @@ INCLUDES += . \
             ${OPENBUSINC}/luuid \
             ${OPENBUSINC}/lce \
             ${OPENBUSINC}/lpw \
-            ${OPENBUSINC}/lualdap-1.0.1 \
+            ${OPENBUSINC}/lualdap-1.1.0 \
             ${OPENBUSINC}/scs
 
 LDIR += ${OPENBUSLIB}

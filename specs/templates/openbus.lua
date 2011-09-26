@@ -35,45 +35,6 @@ __call = function(self,t,save)
 end
 })
 
-Types.ldapHosts = {
-  name = "Nome do servidor LDAP",
-  port = "Porta do servidor LDAP",
-}
-setmetatable(Types.ldapHosts,{
-__call =  function(self,t,save)
-  local count = 1
-  if not save[t.name] then save[t.name] = {} end
-  -- Repeat until an user says 'stop'
-  while (true) do
-    local tmp = {}
-    -- For all keys in self table: ask the value of 'key' printing the 'msg'
-    for key, msg in pairs(self) do
-      print(CONFIG,"Property name: ".. t.name .." index: ".. count)
-      print(CONFIG,msg)
-      if t.value and t.value then
-        io.write("[" .. tostring(t.value[key] or "").. "]> ")
-      else
-        io.write("[]> ")
-      end
-      local var = io.read("*l")
-      if (var == nil or var == "") and t.value and t.value[count] then
-        var = t.value[count][key] or ""
-      end
-      if tonumber(var) then var = tonumber(var) end
-      tmp[key] = var
-    end
-    -- Saving the table with the element of the list (ldapHosts)
-    table.insert(save[t.name],tmp)
-    -- Do you wish continue or not?
-    print(CONFIG,"Deseja informar outro elemento para a lista '" .. t.name ..
-        "'? sim ou nao?")
-    io.write("[nao]> ")
-    if not string.upper(io.read("*l")):find("SIM") then break end
-    count = count + 1
-  end
-end
-})
-
 messages = {
   { name = "hostName",
     msg = "FQDN da máquina onde o Serviço de Acesso executará",
@@ -95,18 +56,28 @@ messages = {
     type = "number",
     value = 5,
   },
-  { name = "ldapHosts",
-    msg = "Lista dos servidores LDAP com portas",
-    type = "list",
-    check = Types.ldapHosts,
-    value = { name = "segall.tecgraf.puc-rio.br", port = 389, },
-  },
-  { name = "ldapSuffixes",
-    msg = "Sufixos de busca no servidor LDAP",
+  { name = "ldapUrls",
+    msg = "URLs dos servidores LDAP (exemplo: ldaps://localhost:636, ldap://localhost:389)",
     type = "list",
     check = Types.vector,
     value = { "" },
   },
+  { name = "ldapSuffixes",
+    msg = "Sufixos UPN usados em servidores LDAP ActiveDirectory (exemplo: @tecgraf.puc-rio.br)",
+    type = "list",
+    check = Types.vector,
+    value = { "" },
+  },
+-- OpenLDAP: exemplo de template de configuração para o instalador do PUTS configurar automaticamente
+-- as informações sobre distinguished name necessárias pelo validador do OpenLDAP:
+--[[
+  { name = "ldapDNPatterns",
+    msg = "Padrões de formação do DN em servidores LDAPv3 (exemplo: cn=%U,dc=tecgraf,dc=puc-rio,dc=br)",
+    type = "list",
+    check = Types.vector,
+    value = { "" },
+  },
+]]
   { name = "administrators",
     msg = "Administradores do barramento.",
     type = "list",
@@ -126,8 +97,10 @@ configure_action = function(answers, path, util)
   assert(loadfile(acsConfFile))()
   AccessControlServerConfiguration.hostName = answers.hostName
   AccessControlServerConfiguration.hostPort = answers.hostPort
-  AccessControlServerConfiguration.ldapHosts = answers.ldapHosts
+  AccessControlServerConfiguration.ldapUrls = answers.ldapUrls
   AccessControlServerConfiguration.ldapSuffixes = answers.ldapSuffixes
+  -- OpenLDAP: mapeando a propriedade no arquivo de configuração para a variável da resposta do instalador
+  --AccessControlServerConfiguration.ldapDNPatterns = answers.ldapDNPatterns
   AccessControlServerConfiguration.administrators = answers.administrators
   AccessControlServerConfiguration.logs.service.level = answers.logLevel
   AccessControlServerConfiguration.logs.oil.level = answers.oilVerboseLevel
@@ -135,7 +108,9 @@ configure_action = function(answers, path, util)
 
   AccessControlServerConfiguration.lease = 180
   AccessControlServerConfiguration.validators = {
-      "core.services.accesscontrol.LDAPLoginPasswordValidator",
+      "core.services.accesscontrol.ActiveDirectoryLoginValidator",
+      -- OpenLDAP: adição automática do validador do OpenLDAP no arquivo de configuração gerado
+      --"core.services.accesscontrol.LDAPv3LoginValidator",
       "core.services.accesscontrol.TestLoginPasswordValidator",
   }
   AccessControlServerConfiguration.certificatesDirectory = "certificates"

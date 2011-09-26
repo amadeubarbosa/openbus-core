@@ -6,8 +6,8 @@
 AccessControlServerConfiguration = {
   hostName = "localhost",
   hostPort = 2089,
-  ldapHosts = {
-    {name = "segall.tecgraf.puc-rio.br", port = 389,},
+  ldapUrls = {
+    "ldap://segall.tecgraf.puc-rio.br:389",
   },
   ldapSuffixes = {
     "",
@@ -40,7 +40,7 @@ AccessControlServerConfiguration = {
     },
   },
   validators = {
-    "core.services.accesscontrol.LDAPLoginPasswordValidator",
+    "core.services.accesscontrol.ActiveDirectoryLoginValidator",
     "core.services.accesscontrol.TestLoginPasswordValidator",
   },
   adminMail = "root@localhost",

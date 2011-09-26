@@ -1,0 +1,54 @@
+Esse arquivo pretende documentar a estrutura do arquivo AccessControlServerConfiguration.lua.
+A sintaxe do arquivo é a mesma usada para descrever tabelas na linguagem Lua (http://www.lua.org).
+
+-------------------------------------------------------------------------
+** Configurações relacionadas a validação de usuários em servidores LDAP.
+  
+  O OpenBus tem suporte a servidores ActiveDirectory (implementação da Microsoft(tm)) e OpenLDAP.
+  O suporte ao ActiveDirectory vem HABILITADO, por padrão. Sua configuração depende das propriedades:
+  
+  "ldapUrls"
+    indica uma lista de URLs de servidores LDAP, segue o formato "<protocol>://<server>:<port>"
+    onde <protocol> pode ser "ldaps" ou "ldap". 
+    Exemplo:
+    
+    ldapUrls = { 
+      "ldaps://localhost", 
+      "ldap://otherserver.org:389",
+    }
+  
+  "ldapSuffixes"
+    indica uma lista de sufixos UPN a serem concatenados ao nome de usuário no momento da validação.
+    Exemplo:
+    
+    ldapSuffixes = {
+      "@project.mycompany.com",
+      "@alluser.mycompany.com",
+      "@mycompany.com",
+    }
+  Para ativar o uso do ActiveDirectory, você deve editar o arquivo AccessControlServerConfiguration.lua e:
+      1) Adicionar a definição da propriedade "ldapSuffixes";
+      2) Adicionar a string "core.services.accesscontrol.ActiveDirectoryLoginValidator" como um dos valores da propriedade "validators".
+
+
+  O suporte ao OpenLDAP vem DESABILITADO, por padrão. Sua configuração depende das propriedades:
+  
+  "ldapUrls"
+    mesma regra descrita acima
+    
+  "ldapDNPatterns"
+    indica uma lista de padrões de substituição para definir o "distinguished name" (DN) a usado
+    ao estabelecer a conexão LDAP. Padrões possíveis: %U.
+    Exemplo:
+    
+    ldapDNPatterns = { 
+       "cn=%U,ou=mygroups,dc=mycompany",
+       "uid=%U,ou=myteam,dc=mycompany",
+    }
+  
+   Para ativar o uso do OpenLDAP, você deve editar o arquivo AccessControlServerConfiguration.lua e:
+       1) Adicionar a definição das propriedades "ldapUrls" e "ldapDNPatterns";
+       2) Adicionar a string "core.services.accesscontrol.LDAPv3LoginValidator" como um dos valores da propriedade "validators".
+       
+   Para maiores informações sobre esse validador veja a documentação do LDAPv3LoginValidator.
+-------------------------------------------------------------------------

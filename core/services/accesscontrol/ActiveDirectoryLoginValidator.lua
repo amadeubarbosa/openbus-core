@@ -13,7 +13,7 @@ local LoginPasswordValidator =
 ---
 --Representa um validador de usuário e senha através de LDAP.
 ---
-module("core.services.accesscontrol.LDAPLoginPasswordValidator")
+module("core.services.accesscontrol.ActiveDirectoryLoginValidator")
 oop.class(_M, LoginPasswordValidator)
 
 
@@ -26,7 +26,7 @@ oop.class(_M, LoginPasswordValidator)
 ---
 function __init(self, config)
   return oop.rawnew(self, {
-    ldapHosts = config.ldapHosts,
+    ldapUrls = config.ldapUrls,
     ldapSuffixes = config.ldapSuffixes,
   })
 end
@@ -40,13 +40,22 @@ function validate(self, name, password)
         "O usuário "..name.." não foi validado porque sua senha está vazia."
   end
 
-  for _, ldapHost in ipairs(self.ldapHosts) do
+  for _, ldapUrl in ipairs(self.ldapUrls) do
     for _, ldapSuffix in ipairs(self.ldapSuffixes) do
-      local connection, err = lualdap.open_simple(
-          ldapHost.name..":"..ldapHost.port, name..ldapSuffix, password, false, 5)
+      local connection, err
+      local who = name..ldapSuffix
+      -- security enforcement
+      -- if the url indicates LDAP raw protocol, we try use LDAP+StartTLS
+      if ldapUrl:match("^ldap://") then
+        connection, err = lualdap.open_simple(ldapUrl, who, password, true, 5)
+      end
+      -- if url already indicates LDAPS or if the server rejects LDAP+StartTLS
+      if ldapUrl:match("^ldaps://") or not connection then
+        connection, err = lualdap.open_simple(ldapUrl, who, password, false, 5)
+      end
       if connection then
         Log:debug(string.format("O usuário %s foi autenticado por %s",
-            name..ldapSuffix, ldapHost.name))
+            who, ldapUrl))
         connection:close()
         return true
       end
