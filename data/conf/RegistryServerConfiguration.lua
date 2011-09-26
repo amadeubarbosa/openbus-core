@@ -1,7 +1,7 @@
 --
 -- Configuração do Serviço de Registro
 --
--- $Id: RegistryServerConfiguration.lua 88911 2009-03-05 02:26:09Z rcosme $
+-- $Id$
 --
 RegistryServerConfiguration = {
   accessControlServerHostName = "localhost",

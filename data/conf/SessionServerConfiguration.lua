@@ -1,7 +1,7 @@
 --
 -- Configuração do Serviço de Sessão
 --
--- $Id: SessionServerConfiguration.lua 81077 2008-08-07 17:41:41Z rodrigoh $
+-- $Id$
 --
 SessionServerConfiguration = {
   accessControlServerHostName = "localhost",
