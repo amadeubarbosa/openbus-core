@@ -19,7 +19,7 @@ ACS_MODULES=$(addprefix core.services.accesscontrol.,\
 	CredentialDB \
 	LoginPasswordValidator \
 	TestLoginPasswordValidator \
-	LDAPLoginPasswordValidator \
+	ActiveDirectoryLoginValidator \
 	AccessControlService \
 	AccessControlServer )
 
