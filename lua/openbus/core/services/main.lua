@@ -57,6 +57,7 @@ return function(...)
 		oilloglevel = 0,
 		oillogfile = "",
 		
+		noauthorizations = false,
 		nolegacy = false,
 	}
 
@@ -93,6 +94,7 @@ Options:
   -oilloglevel <number>      nível de log gerado pelo OiL (debug)
   -oillogfile <path>         arquivo de log gerado pelo OiL (debug)
 
+  -noauthorizations          desativa o suporte a autorizações de oferta
   -nolegacy                  desativa o suporte à versão antiga do barramento
 
   -configs <path>            arquivo de configurações adicionais do barramento
@@ -145,6 +147,7 @@ Options:
 				expirationGap = Configs.expirationgap,
 				admins = adminUsers,
 				validators = validators,
+				enforceAuth = not Configs.noauthorizations,
 			}
 			-- these object must be initialized in this order
 			facets.CertificateRegistry:__init(params)

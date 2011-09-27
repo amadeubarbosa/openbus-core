@@ -32,6 +32,9 @@ AccessControl = AccessControl.AccessControl
 local OfferIndex = require "openbus.core.services.OfferIndex"
 
 
+local OfferRegistry -- forward declaration
+local EntityRegistry -- forward declaration
+
 local function assertRights(registry, expected)
 	local chain = registry.access:getCallerChain()
 	local originator = chain[1].entity
@@ -91,7 +94,7 @@ end
 local function makePropertyList(entry, service_props)
 	local props = {
 		{ name = "openbus.offer.login", value = entry.login },
-		{ name = "openbus.offer.entity", value = entry.entity.id },
+		{ name = "openbus.offer.entity", value = entry.entity },
 		{ name = "openbus.offer.year", value = entry.creation.year },
 		{ name = "openbus.offer.month", value = entry.creation.month },
 		{ name = "openbus.offer.day", value = entry.creation.day },
@@ -120,14 +123,15 @@ local function makePropertyList(entry, service_props)
 		end
 	end
 	if #illegal > 0 then
-		throw.IllegalProperties{ properties = illegal }
+		throw.InvalidProperties{ properties = illegal }
 	end
 	return props
 end
 
 local function getUnauthorizedOffers(entity, removedspec)
 	local unauthorized = {}
-	for offer in pairs(entity.offers) do
+	local offers = OfferRegistry.offers.index["openbus.offer.entity"][entity.id]
+	for offer in pairs(offers) do
 		for facet in ipairs(offer.facets) do
 			if not entity:hasAuthorization(facet.interface_name, removedspec) then
 				unauthorized[#unauthorized+1] = offer
@@ -141,17 +145,12 @@ end
 -- Faceta OfferRegistry
 ------------------------------------------------------------------------------
 
-local EntityRegistry -- forward declaration
-
-
-
 local Offer = class{ __type = types.ServiceOffer }
 	
 function Offer:__init()
 	self.ref = self -- IDL struct attribute (see operation 'describe')
 	self.__objkey = "Offer:"..self.id -- for the ORB
 	self.registry.offers:add(self)
-	self.entity.offers[self] = true
 end
 
 function Offer:describe()
@@ -160,7 +159,7 @@ end
 
 function Offer:setProperties(properties)
 	local registry = self.registry
-	local tag = assertRights(registry, self.entity.id)
+	local tag = assertRights(registry, self.entity)
 	-- try to change properties (may raise expections)
 	local allprops = makePropertyList(self, properties)
 	assert(self.database:setentryfield(self.id, "properties", properties))
@@ -171,17 +170,16 @@ end
 
 function Offer:remove(tag)
 	local registry = self.registry
-	local tag = tag or assertRights(registry, self.entity.id)
+	local tag = tag or assertRights(registry, self.entity)
 	assert(self.database:removeentry(self.id))
 	assert(self.orb:deactivate(self))
 	registry.offers:remove(self)
-	self.entity.offers[self] = nil
 	log[tag](log, msg.RemoveServiceOffer:tag{ offer = self.id })
 end
 
 
 
-local OfferRegistry = {
+OfferRegistry = {
 	__type = types.OfferRegistry,
 	__objkey = const.OfferRegistryFacet,
 }
@@ -201,6 +199,7 @@ end
 function OfferRegistry:__init(data)
 	self.access = data.access
 	self.admins = data.admins
+	self.enforceAuth = data.enforceAuth
 	self.offers = OfferIndex()
 	self.offerDB = assert(data.database:gettable("Offers"))
 	
@@ -220,11 +219,10 @@ function OfferRegistry:__init(data)
 				entity = entity,
 				login = login,
 			})
-			entity = EntityRegistry:getEntity(entity)
-			if entity == nil then
+			if self.enforceAuth and EntityRegistry:getEntity(entity) == nil then
 				ServiceFailure{
 					message = msg.CorruptedDatabaseDueToMissingEntity:tag{
-						entity = entry.entity,
+						entity = entity,
 					}
 				}
 			end
@@ -232,7 +230,6 @@ function OfferRegistry:__init(data)
 			local service_ref = orb:newproxy(entry.service_ref, nil, types.OfferedService)
 			entry.id = id
 			entry.service_ref = service_ref
-			entry.entity = entity
 			entry.properties = makePropertyList(entry, entry.properties)
 			entry.orb = orb
 			entry.registry = self
@@ -262,35 +259,41 @@ function OfferRegistry:registerService(service_ref, properties)
 	-- collect information about the SCS component implementing the service
 	local compId = service_ref:getComponentId()
 	local meta = service_ref:getFacetByName("IMetaInterface")
-	local allfacets = meta == nil and {} or
-	                  meta:__narrow("scs::core::IMetaInterface"):getFacets()
-	-- check the caller is authorized to offer such service
-	local chain = self.access:getCallerChain()
-	local login = chain[#chain]
-	entity = EntityRegistry:getEntity(login.entity)
+	if meta == nil then
+		throw.InvalidService()
+	end
+	local allfacets = meta:__narrow("scs::core::IMetaInterface"):getFacets()
 	local facets = {}
-	local unauthorized = {}
 	for _, facet in ipairs(allfacets) do
 		local facetname = facet.name
-		local facetiface = facet.interface_name
 		if IgnoredFacets[facetname] == nil then
-			if entity~= nil and entity:hasAuthorization(facetiface) then
-				facets[#facets+1] = {
-					name = facetname,
-					interface_name = facetiface,
-				}
-			else
-				unauthorized[#unauthorized+1] = facetname
-			end
+			facets[#facets+1] = {
+				name = facetname,
+				interface_name = facet.interface_name,
+			}
 		end
 	end
-	if #unauthorized > 0 then
-		throw.UnauthorizedFacets{ facets = unauthorized }
+	-- get information about the caller
+	local chain = self.access:getCallerChain()
+	local login = chain[#chain]
+	local entityId = login.entity
+	-- check the caller is authorized to offer such service
+	if self.enforceAuth then
+		local entity = EntityRegistry:getEntity(entityId)
+		local unauthorized = {}
+		for _, facet in ipairs(facets) do
+			if entity==nil or not entity:hasAuthorization(facet.interface_name) then
+				unauthorized[#unauthorized+1] = facet.name
+			end
+		end
+		if #unauthorized > 0 then
+			throw.UnauthorizedFacets{ facets = unauthorized }
+		end
 	end
 	-- validate provided properties
 	local entry = {
 		service_ref = tostring(service_ref),
-		entity = entity.id,
+		entity = entityId,
 		login = login.id,
 		creation = {
 			day = date("%d"),
@@ -311,14 +314,13 @@ function OfferRegistry:registerService(service_ref, properties)
 	-- create object for the new offer
 	entry.id = id
 	entry.service_ref = service_ref
-	entry.entity = entity
 	entry.properties = makePropertyList(entry, properties)
 	entry.orb = self.access.orb
 	entry.registry = self
 	entry.database = database
 	log:request(msg.RegisterServiceOffer:tag{
 		offer = id,
-		entity = entity.id,
+		entity = entityId,
 		login = login.id,
 	})
 	return Offer(entry)
@@ -326,6 +328,16 @@ end
 
 function OfferRegistry:findServices(properties)
 	return self.offers:find(properties)
+end
+
+function OfferRegistry:getServices()
+	local result = {}
+	for _, offers in pairs(self.offers.index["openbus.offer.login"]) do
+		for offer in pairs(offers) do
+			result[#result+1] = offer
+		end
+	end
+	return result
 end
 
 ------------------------------------------------------------------------------
@@ -343,7 +355,6 @@ local Entity = class{ __type = types.RegisteredEntity }
 function Entity:__init()
 	local id = self.id
 	self.authorizations = self.authorizations or {}
-	self.offers = {}
 	self.ref = self -- IDL struct attribute (see operation 'describe')
 	self.__objkey = "Entity:"..id -- for the ORB
 	self.registry.entities[id] = self
@@ -372,8 +383,11 @@ end
 
 function Entity:remove()
 	local id = self.id
-	for offer in pairs(self.offers) do
-		offer:remove()
+	if self.registry.enforceAuth then
+		local offers = OfferRegistry.offers.index["openbus.offer.entity"][id]
+		for offer in pairs(offers) do
+			offer:remove()
+		end
 	end
 	assert(self.database:removeentry(id))
 	assert(self.orb:deactivate(self))
@@ -387,17 +401,21 @@ function Entity:addAuthorization(spec)
 end
 
 function Entity:removeAuthorization(spec)
-	local unauthorized = getUnauthorizedOffers(self, spec)
-	if #unauthorized > 0 then
-		throw.AuthorizationInUse{ offers = unauthorized }
+	if self.registry.enforceAuth then
+		local unauthorized = getUnauthorizedOffers(self, spec)
+		if #unauthorized > 0 then
+			throw.AuthorizationInUse{ offers = unauthorized }
+		end
 	end
 	updateAuthorization(self.id, self.authorizations, self.database, spec, nil)
 end
 
 function Entity:removeAuthorizationAndOffers(spec)
-	local unauthorized = getUnauthorizedOffers(self, spec)
-	for _, offer in ipairs(unauthorized) do
-		offer:remove()
+	if self.registry.enforceAuth then
+		local unauthorized = getUnauthorizedOffers(self, spec)
+		for _, offer in ipairs(unauthorized) do
+			offer:remove()
+		end
 	end
 	updateAuthorization(self.id, self.authorizations, self.database, spec, nil)
 end
@@ -497,6 +515,7 @@ function EntityRegistry:__init(data)
 	-- initialize attributes
 	self.orb = data.access.orb
 	self.database = data.database
+	self.enforceAuth = data.enforceAuth
 	self.categories = {}
 	self.entities = {}
 	
