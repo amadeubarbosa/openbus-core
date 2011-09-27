@@ -940,20 +940,18 @@ packages = {
   { name = "openbus-test-micoMT",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/test/mico",
+      src = PRODAPP .."/sdk-cpp/test/mico/tests",
       mf = { 
-        "config cxxtest -C acs MULTITHREAD=Yes", 
-        "config -C acs LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes", 
-        "config cxxtest -C rgs MULTITHREAD=Yes", 
-        "config genstubs -C rgs MULTITHREAD=Yes", 
-        "config -C rgs LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", 
+        "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", 
+        "21", "22",
       },
     },
     install_files = {
-      ["bin/${TEC_UNAME}/*"] = "test/mico/bin",
-      ["config*"] = "test/mico/",
-      ["runtests"] = "test/mico/",
-      ["../idl/*"] = "test/idl",
+      ["../tests"] = "test/mico/",
+      ["../runtests"] = "test/mico/",
+      ["../config*"] = "test/mico/",
+      ["../../idl/*"] = "test/idl",
     },
   },
   { name = "openbus-test-micoST",
