@@ -12,6 +12,7 @@ local oil = require "oil"
 local FileStream = require "loop.serial.FileStream"
 
 local Log = require "openbus.util.Log"
+local Utils = require "openbus.util.Utils"
 
 local oop = require "loop.base"
 
@@ -71,7 +72,7 @@ function retrieveAll(self)
 
       -- caso especial para referencias a membros
       local memberIOR = offerEntry.offer.member
-      offerEntry.offer.member = self.orb:newproxy(memberIOR, "protected", "IDL:scs/core/IComponent:1.0")
+      offerEntry.offer.member = self.orb:newproxy(memberIOR, "protected", Utils.COMPONENT_INTERFACE)
       offerEntries[offerEntry.identifier] = offerEntry
     end
   end

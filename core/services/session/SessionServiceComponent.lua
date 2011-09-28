@@ -75,7 +75,7 @@ function SessionServiceComponent:startup()
     if not registryService then
       error(orb:newexcept{StartupFailedException})
     end
-    registryService = orb:newproxy(registryService, "protected")
+    registryService = orb:newproxy(registryService, "protected", Utils.REGISTRY_SERVICE_INTERFACE)
   end
 
   -- Cadastra callback para LeaseExpired
@@ -145,7 +145,7 @@ function SessionServiceComponent:expired()
     Log:error("O serviço de registro não foi encontrado")
     return
   end
-  registryService = orb:newproxy(registryService, "protected")
+  registryService = orb:newproxy(registryService, "protected", Utils.REGISTRY_SERVICE_INTERFACE)
 
   success, self.registryIdentifier = registryService:register(self.serviceOffer)
   if not success then

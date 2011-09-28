@@ -260,7 +260,8 @@ function Before:init()
       Utils.IDL_VERSION)
   self.registryService = orb:narrow(self.registryService,
       Utils.REGISTRY_SERVICE_INTERFACE)
-  self.rgsProtected = orb:newproxy(self.registryService, "protected")
+  self.rgsProtected = orb:newproxy(self.registryService, "protected",
+      Utils.REGISTRY_SERVICE_INTERFACE)
   self.registryIdentifier = nil
 end
 
