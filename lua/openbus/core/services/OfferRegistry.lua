@@ -49,44 +49,20 @@ local function assertRights(registry, expected)
 	return "request"
 end
 
-local function versionPattern(capture)
-	if capture == "*" then
-		return "%d+"
-	elseif capture:find("*", 1, true) == nil then
-		return capture
-	end
-	throw.InvalidAuthorizationSpec()
-end
-
-local function authorizationPattern(spec)
-	local name, version = spec:match("^IDL:([%w_*][%w_/*]*):([%d.*]+)$")
+local function ifaceId2Key(ifaceId)
+	local name, version = ifaceId:match("^IDL:(.-):(%d+%.%d+)$")
 	if name == nil then
-		throw.InvalidAuthorizationSpec()
+		throw.InvalidInterface{ ifaceId = ifaceId }
 	end
-	local pos = name:find("*", 1, true)
-	if pos == #name then
-		name = name:gsub("%*$", "[%w_/]*")
-	elseif pos ~= nil then
-		throw.InvalidAuthorizationSpec()
-	end
-	if version == "*" then
-		version = "%d+%.%d+"
-	else
-		local major, minor = version:match("^([%d*]+)%.([%d*]+)$")
-		if major == nil then
-			throw.InvalidAuthorizationSpec()
-		end
-		version = versionPattern(major).."%."..versionPattern(minor)
-	end
-	return "^IDL:"..name..":"..version.."$"
+	return name:gsub("/", ".").."-"..version
 end
 
-local function updateAuthorization(id, authorizations, db, spec, pattern)
-	local backup = authorizations[spec]
-	authorizations[spec] = pattern
-	local ok, errmsg = db:setentryfield(id, "authorizations", authorizations)
+local function updateAuthorization(db, id, set, spec, value)
+	local backup = set[spec]
+	set[spec] = value
+	local ok, errmsg = db:setentryfield(id, "authorized", set)
 	if not ok then
-		authorizations[spec] = backup
+		set[spec] = backup
 		ServiceFailure{message=errmsg}
 	end
 end
@@ -128,19 +104,6 @@ local function makePropertyList(entry, service_props)
 	return props
 end
 
-local function getUnauthorizedOffers(entity, removedspec)
-	local unauthorized = {}
-	local offers = OfferRegistry.offers.index["openbus.offer.entity"][entity.id]
-	for offer in pairs(offers) do
-		for facet in ipairs(offer.facets) do
-			if not entity:hasAuthorization(facet.interface_name, removedspec) then
-				unauthorized[#unauthorized+1] = offer
-			end
-		end
-	end
-	return unauthorized
-end
-
 ------------------------------------------------------------------------------
 -- Faceta OfferRegistry
 ------------------------------------------------------------------------------
@@ -179,7 +142,7 @@ end
 
 
 
-OfferRegistry = {
+OfferRegistry = { -- is local (see forward declaration)
 	__type = types.OfferRegistry,
 	__objkey = const.OfferRegistryFacet,
 }
@@ -282,7 +245,7 @@ function OfferRegistry:registerService(service_ref, properties)
 		local entity = EntityRegistry:getEntity(entityId)
 		local unauthorized = {}
 		for _, facet in ipairs(facets) do
-			if entity==nil or not entity:hasAuthorization(facet.interface_name) then
+			if entity==nil or entity.authorized[facet.interface_name]==nil then
 				unauthorized[#unauthorized+1] = facet.name
 			end
 		end
@@ -341,6 +304,74 @@ function OfferRegistry:getServices()
 end
 
 ------------------------------------------------------------------------------
+-- Faceta InterfaceRegistry
+------------------------------------------------------------------------------
+
+local InterfaceRegistry = {
+	__type = types.InterfaceRegistry,
+	__objkey = const.InterfaceRegistryFacet,
+	interfaces = {},
+}
+
+function InterfaceRegistry:__init(data)
+	-- initialize attributes
+	self.database = data.database
+	
+	-- setup permissions
+	local access = data.access
+	local admins = data.admins
+	access:setGrantedUsers(self.__type,"registerInterface",admins)
+	access:setGrantedUsers(self.__type,"removeInterface",admins)
+	
+	-- recover all registered interfaces
+	local database = self.database
+	local interfaces = self.interfaces
+	local interfaceDB = assert(database:gettable("Interfaces"))
+	for _, ifaceId in assert(interfaceDB:ientries()) do
+		interfaces[ifaceId] = {}
+	end
+	self.interfaceDB = interfaceDB
+end
+
+function InterfaceRegistry:registerInterface(ifaceId)
+	local interfaces = self.interfaces
+	local entities = interfaces[ifaceId]
+	if entities == nil then
+		self.interfaceDB:setentry(ifaceId2Key(ifaceId), ifaceId)
+		interfaces[ifaceId] = {}
+		return true
+	end
+	return false
+end
+
+function InterfaceRegistry:removeInterface(ifaceId)
+	local interfaces = self.interfaces
+	local entities = interfaces[ifaceId]
+	if entities ~= nil then
+		if next(entities) ~= nil then
+			local list = {}
+			for entity in pairs(entities) do
+				list[#list+1] = entity
+			end
+			throw.InterfaceInUse{ entities = list }
+		end
+		self.interfaceDB:removeentry(ifaceId2Key(ifaceId))
+		interfaces[ifaceId] = nil
+		return true
+	end
+	return false
+end
+
+function InterfaceRegistry:getInterfaces()
+	local list = {}
+	for ifaceId in pairs(self.interfaces) do
+		list[#list+1] = ifaceId
+	end
+	return list
+end
+
+
+------------------------------------------------------------------------------
 -- Faceta EntityRegistry
 ------------------------------------------------------------------------------
 
@@ -354,22 +385,11 @@ local Entity = class{ __type = types.RegisteredEntity }
 
 function Entity:__init()
 	local id = self.id
-	self.authorizations = self.authorizations or {}
+	self.authorized = self.authorized or {}
 	self.ref = self -- IDL struct attribute (see operation 'describe')
 	self.__objkey = "Entity:"..id -- for the ORB
 	self.registry.entities[id] = self
 	self.category.entities[id] = self
-end
-
-function Entity:hasAuthorization(interface, ignored)
-	for spec, pattern in pairs(self.authorizations) do
-		if spec ~= ignored then
-			if interface:match(pattern) then
-				return true
-			end
-		end
-	end
-	return false
 end
 
 function Entity:describe()
@@ -391,44 +411,64 @@ function Entity:remove()
 	end
 	assert(self.database:removeentry(id))
 	assert(self.orb:deactivate(self))
+	local interfaces = InterfaceRegistry.interfaces
+	for ifaceId in pairs(self.authorized) do
+		interfaces[ifaceId][self] = nil
+	end
 	self.registry.entities[id] = nil
 	self.category.entities[id] = nil
 end
 
-function Entity:addAuthorization(spec)
-	local pattern = authorizationPattern(spec)
-	updateAuthorization(self.id, self.authorizations, self.database, spec, pattern)
+function Entity:grantInterface(ifaceId)
+	-- check if interface is registered
+	local entities = InterfaceRegistry.interfaces[ifaceId]
+	if entities == nil then
+		throw.InvalidInterface{ ifaceId = ifaceId }
+	end
+	-- grant interface
+	local authorized = self.authorized
+	if authorized[ifaceId] == nil then
+		updateAuthorization(self.database, self.id, authorized, ifaceId, true)
+		entities[self] = true
+		return true
+	end
+	return false
 end
 
-function Entity:removeAuthorization(spec)
+function Entity:revokeInterface(ifaceId)
+	-- check if interface is implemented by an offer
 	if self.registry.enforceAuth then
-		local unauthorized = getUnauthorizedOffers(self, spec)
+		local unauthorized = {}
+		local offers = OfferRegistry.offers.index["openbus.offer.entity"][self.id]
+		for offer in pairs(offers) do
+			for facet in ipairs(offer.facets) do
+				if facet.interface_name == ifaceId then
+					unauthorized[#unauthorized+1] = offer
+				end
+			end
+		end
 		if #unauthorized > 0 then
 			throw.AuthorizationInUse{ offers = unauthorized }
 		end
 	end
-	updateAuthorization(self.id, self.authorizations, self.database, spec, nil)
-end
-
-function Entity:removeAuthorizationAndOffers(spec)
-	if self.registry.enforceAuth then
-		local unauthorized = getUnauthorizedOffers(self, spec)
-		for _, offer in ipairs(unauthorized) do
-			offer:remove()
-		end
+	-- check if interface is registered
+	local entities = InterfaceRegistry.interfaces[ifaceId]
+	if entities == nil then
+		throw.InvalidInterface{ ifaceId = ifaceId }
 	end
-	updateAuthorization(self.id, self.authorizations, self.database, spec, nil)
-end
-
-function Entity:removeAllAuthorizationsAndOffers()
-	for spec in pairs(self.authorizations) do
-		self:removeAuthorizationAndOffers(spec)
+	-- revoke interface
+	local authorized = self.authorized
+	if authorized[ifaceId] == true then
+		updateAuthorization(self.database, self.id, authorized, ifaceId, nil)
+		entities[self] = nil
+		return true
 	end
+	return false
 end
 
-function Entity:getAuthorizationSpecs()
+function Entity:getGrantedInterfaces()
 	local list = {}
-	for spec in pairs(self.authorizations) do
+	for spec in pairs(self.authorized) do
 		list[#list+1] = spec
 	end
 	return list
@@ -530,8 +570,6 @@ function EntityRegistry:__init(data)
 	access:setGrantedUsers(Entity.__type,"setName",admins)
 	access:setGrantedUsers(Entity.__type,"addAuthorization",admins)
 	access:setGrantedUsers(Entity.__type,"removeAuthorization",admins)
-	access:setGrantedUsers(Entity.__type,"removeAuthorizationAndOffers",admins)
-	access:setGrantedUsers(Entity.__type,"removeAllAuthorizationAndOffers",admins)
 	
 	local orb = self.orb
 	local database = self.database
@@ -549,7 +587,7 @@ function EntityRegistry:__init(data)
 	-- recover all entity objects
 	local entityDB = assert(database:gettable("Entities"))
 	for id, entry in assert(entityDB:ientries()) do
-		-- check is referenced category exists
+		-- check if referenced category exists
 		local category = self.categories[entry.categoryId]
 		if category == nil then
 			ServiceFailure{
@@ -558,12 +596,23 @@ function EntityRegistry:__init(data)
 				},
 			}
 		end
+		-- check if authorized interfaces exist
+		local interfaces = InterfaceRegistry.interfaces
+		for ifaceId in pairs(entry.authorized) do
+			if interfaces[ifaceId] == nil then
+				ServiceFailure{
+					message = msg.CorruptedDatabaseDueToMissingInterface:tag{
+						interface = ifaceId,
+					},
+				}
+			end
+		end
 		-- create object
 		orb:newservant(Entity{
 			id = id,
 			name = entry.name,
 			category = category,
-			authorizations = entry.authorizations,
+			authorized = entry.authorized,
 			orb = orb,
 			registry = self,
 			database = entityDB,
@@ -621,7 +670,7 @@ end
 function EntityRegistry:getAuthorizedEntities()
 	local entities = {}
 	for id, entity in pairs(self.entities) do
-		if next(entity.authorizations) ~= nil then
+		if next(entity.authorized) ~= nil then
 			entities[#entities+1] = entity
 		end
 	end
@@ -631,15 +680,11 @@ end
 function EntityRegistry:getEntitiesByAuthorizedInterfaces(interfaces)
 	local entities = {}
 	for id, entity in pairs(self.entities) do
-		local exclude
 		for _, interface in ipairs(interfaces) do
-			if not entity:hasAuthorization(interface) then
-				exclude = true
+			if entity.authorized[interface] then
+				entities[#entities+1] = entity
 				break
 			end
-		end
-		if not exclude then
-			entities[#entities+1] = entity
 		end
 	end
 	return entities
@@ -648,6 +693,7 @@ end
 
 
 return {
+	InterfaceRegistry = InterfaceRegistry,
 	EntityRegistry = EntityRegistry,
 	OfferRegistry = OfferRegistry,
 }

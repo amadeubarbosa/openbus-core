@@ -153,6 +153,7 @@ Options:
 			facets.CertificateRegistry:__init(params)
 			facets.AccessControl:__init(params)
 			facets.LoginRegistry:__init(params)
+			facets.InterfaceRegistry:__init(params)
 			facets.EntityRegistry:__init(params)
 			facets.OfferRegistry:__init(params)
 		end,

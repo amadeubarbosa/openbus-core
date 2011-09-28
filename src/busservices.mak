@@ -75,4 +75,4 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
 endif
 
 openbus/core/legacy/parsed.lua: $(IDL)
-	$(LUABIN) ${OIL_HOME}/lua/idl2lua.lua -o $(SRCLUADIR)/$@ $^
+	$(LUABIN) ${OIL_HOME}/lua/idl2lua.lua -I $(OPENBUSIDL) -o $(SRCLUADIR)/$@ $^

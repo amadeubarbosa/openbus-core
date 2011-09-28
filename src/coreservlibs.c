@@ -21,7 +21,6 @@ void luapreload_extralibraries(lua_State *L)
 	luaL_findtable(L, LUA_GLOBALSINDEX, "package.preload", 1);
 	lua_pushcfunction(L,luaopen_uuid);lua_setfield(L,-2,"uuid");
 	lua_pushcfunction(L,luaopen_lce);lua_setfield(L,-2,"lce");
-	lua_pushcfunction(L,luaopen_lpw);lua_setfield(L,-2,"lpw");
 	lua_pushcfunction(L,luaopen_lfs);lua_setfield(L,-2,"lfs");
 	lua_pushcfunction(L,luaopen_lualdap);lua_setfield(L,-2,"lualdap");
 	//lua_pushcfunction(L,luaopen_struct);lua_setfield(L,-2,"struct");
