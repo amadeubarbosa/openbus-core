@@ -5,7 +5,7 @@ local luaidl = require "luaidl"
 local parse = luaidl.parse
 
 local idlspec = [[
-#include "fault_tolerance_service.idl"
+#include "fault_tolerance.idl"
 #include "access_control_service.idl"
 #include "registry_service.idl"
 ]]
