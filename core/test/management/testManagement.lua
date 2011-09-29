@@ -59,7 +59,7 @@ local function init(self)
   --
   facet = ic:getFacet(Utils.MANAGEMENT_ACS_INTERFACE)
   self.acsMgt = orb:narrow(facet, Utils.MANAGEMENT_ACS_INTERFACE)
-  self.acsMgt = orb:newproxy(self.acsMgt, "protected")
+  self.acsMgt = orb:newproxy(self.acsMgt, "protected", Utils.MANAGEMENT_ACS_INTERFACE)
   --
   facet = ic:getFacetByName("IReceptacles")
   facet = orb:narrow(facet, "IDL:scs/core/IReceptacles:1.0")
@@ -67,11 +67,11 @@ local function init(self)
   ic = orb:narrow(conns[1].objref, Utils.COMPONENT_INTERFACE)
   facet = ic:getFacet(Utils.REGISTRY_SERVICE_INTERFACE)
   self.rs = orb:narrow(facet, Utils.REGISTRY_SERVICE_INTERFACE)
-  self.rs = orb:newproxy(self.rs, "protected")
+  self.rs = orb:newproxy(self.rs, "protected", Utils.REGISTRY_SERVICE_INTERFACE)
   --
   facet = ic:getFacet(Utils.MANAGEMENT_RS_INTERFACE)
   self.rsMgt = orb:narrow(facet, Utils.MANAGEMENT_RS_INTERFACE)
-  self.rsMgt = orb:newproxy(self.rsMgt, "protected")
+  self.rsMgt = orb:newproxy(self.rsMgt, "protected", Utils.MANAGEMENT_RS_INTERFACE)
 end
 
 -------------------------------------------------------------------------------

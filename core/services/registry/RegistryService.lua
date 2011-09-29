@@ -1140,7 +1140,7 @@ function startup(self)
   -- Referência à faceta de gerenciamento do ACS
   mgm.acsmgm = acsIComp:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
   mgm.acsmgm = orb:narrow(mgm.acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
-  mgm.acsmgm = orb:newproxy(mgm.acsmgm, "protected")
+  mgm.acsmgm = orb:newproxy(mgm.acsmgm, "protected", Utils.MANAGEMENT_ACS_INTERFACE)
   -- Administradores dos serviços
   mgm.admins = {}
   for _, name in ipairs(config.administrators) do

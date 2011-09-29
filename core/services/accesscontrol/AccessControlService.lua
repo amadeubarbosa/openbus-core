@@ -984,7 +984,7 @@ function ManagementFacet:removeSystemDeployment(id)
       Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
       local orb = Openbus:getORB()
-      rs = orb:newproxy(rs, "protected")
+      rs = orb:newproxy(rs, "protected", Utils.MANAGEMENT_RS_INTERFACE)
       rs:removeAuthorization(id)
     end
   end
@@ -1171,7 +1171,7 @@ function ManagementFacet:removeUser(id)
                             Utils.MANAGEMENT_RS_INTERFACE)
     if succ and rs then
       local orb = Openbus:getORB()
-      rs = orb:newproxy(rs, "protected")
+      rs = orb:newproxy(rs, "protected", Utils.MANAGEMENT_RS_INTERFACE)
       rs:removeAuthorization(id)
     end
   end

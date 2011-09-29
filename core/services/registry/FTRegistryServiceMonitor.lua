@@ -65,7 +65,7 @@ function FTRSMonitorFacet:getService()
   elseif conns[1] then
     local service = conns[1].objref
     service = orb:narrow(service, Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
-    return orb:newproxy(service, "protected")
+    return orb:newproxy(service, "protected", Utils.FAULT_TOLERANT_SERVICE_INTERFACE)
   end
   Log:error("Não foi possível obter o a faceta de tolerância a falhas do serviço de registro")
   return nil

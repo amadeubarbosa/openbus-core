@@ -1213,7 +1213,7 @@ function getacsmgm()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   acsmgm = ic:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
   acsmgm = orb:narrow(acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
-  acsmgm = orb:newproxy(acsmgm, "protected")
+  acsmgm = orb:newproxy(acsmgm, "protected", Utils.MANAGEMENT_ACS_INTERFACE)
   return acsmgm
 end
 
@@ -1237,7 +1237,7 @@ function getrsmgm()
   ic = orb:narrow(ic, "IDL:scs/core/IComponent:1.0")
   rsmgm = ic:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
   rsmgm = orb:narrow(rsmgm, Utils.MANAGEMENT_RS_INTERFACE)
-  rsmgm = orb:newproxy(rsmgm, "protected")
+  rsmgm = orb:newproxy(rsmgm, "protected", Utils.MANAGEMENT_RS_INTERFACE)
   return rsmgm
 end
 

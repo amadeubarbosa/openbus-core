@@ -81,7 +81,7 @@ Suite = {
        local rsIComp1 = orb:narrow(conns[1].objref, Utils.COMPONENT_INTERFACE)
        local rsFacet1 = rsIComp1:getFacetByName("IRegistryService_" .. Utils.IDL_VERSION)
        rsFacet1 = orb:narrow(rsFacet1, Utils.REGISTRY_SERVICE_INTERFACE)
-       rsFacet1 = orb:newproxy(rsFacet1, "protected")
+       rsFacet1 = orb:newproxy(rsFacet1, "protected", Utils.REGISTRY_SERVICE_INTERFACE)
        --cadastra oferta na primeira réplica
       local componentId = {
         name = "Hello_vft",
