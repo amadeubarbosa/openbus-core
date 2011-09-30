@@ -55,7 +55,9 @@ Uso: %s [opções] --login=<usuário> <comando>
 
 - Controle de Entidade
   * Adicionar entidade:
-     --add-entity=<id_entidade> --category<id_categoria> --name=<nome> 
+     --add-entity=<id_entidade> --category<id_categoria> --name=<nome>
+  * Adicionar entidade com certificado:
+     --add-entity=<id_entidade> --category<id_categoria> --name=<nome> --certificate=<certificado> 
   * Alterar descrição:
      --set-entity=<id_entidade> --name=<nome>
   * Remover entidade:
@@ -67,6 +69,12 @@ Uso: %s [opções] --login=<usuário> <comando>
   * Mostrar entidades de uma categoria:
      --list-entity --category=<id_categoria>
 
+- Controle de Certificado
+  * Adiciona certificado da entidade:
+    --add-certificate=<id_entidade> --certificate=<certificado>
+  * Remover certificado da entidade:
+    --del-certificate=<id_entidade>
+     
 - Controle de Interface
   * Adicionar interface:
      --add-interface=<interface>
@@ -77,23 +85,25 @@ Uso: %s [opções] --login=<usuário> <comando>
 
 - Controle de Autorização
   * Conceder autorização:
-     --set-authorization=<id_membro> --grant=<interface>
+     --set-authorization=<id_entidade> --grant=<interface>
   * Revogar autorização:
-     --set-authorization=<id_membro> --revoke=<interface>
+     --set-authorization=<id_entidade> --revoke=<interface>
   * Mostrar todas as autorizações:
      --list-authorization
-  * Mostrar autorizações do membro:
-     --list-authorization=<id_membro>
+  * Mostrar autorizações da entidade:
+     --list-authorization=<id_entidade>
   * Mostrar todas autorizações contendo as interfaces:
      --list-authorization --interface="<iface1> <iface2> ... <ifaceN>"
 
 - Controle de Ofertas no Serviço de Registro
-  * Remover oferta:
-     --del-offer=<id_oferta>
+  * Remover oferta (lista e aguarda a entrada de um índice para remover a oferta):
+    --del-offer
+  * Remover oferta da entidade (lista e aguarda a entrada de um índice para remover a oferta):
+    --del-offer --entity=<id_entidade>
   * Mostrar todas interfaces ofertadas:
      --list-offer
-  * Mostrar todas interfaces ofertadas por um membro:
-     --list-offer=<id_membro>
+  * Mostrar todas interfaces ofertadas por uma entidade:
+     --list-offer=<id_entidade>
 
 - Controle de Logins
   * Remove um login:
@@ -176,7 +186,8 @@ local commands = {
     {n = 1, params = {}},
   };
   ["add-entity"] = {
-    {n = 1, params = {category = 1, name = 1}}
+    {n = 1, params = {category = 1, name = 1}},
+    {n = 1, params = {category = 1, name = 1, certificate = 1}}
   };
   ["del-entity"] = {
     {n = 1, params = {}}
@@ -188,6 +199,12 @@ local commands = {
     {n = 0, params = {category = 1}},
     {n = 0, params = {}},
     {n = 1, params = {}},
+  };
+  ["add-certificate"] = {
+    {n = 1, params = {certificate = 1}}
+   };
+  ["del-certificate"] = {
+    {n = 1, params = {}}
   };
   ["add-interface"] = {
     {n = 1, params = {}}
@@ -219,13 +236,12 @@ local commands = {
     {n = 0, params = {}},
   };
   ["list-offer"] = {
-    {n = 0, params = {broken = 0}},
-    {n = 1, params = {broken = 0}},
     {n = 0, params = {}},
     {n = 1, params = {}},
   };
   ["del-offer"] = {
-    {n = 1, params = {}},
+    {n = 0, params = {}},
+    {n = 0, params = {entity = 1}},
   };
   ["script"] = {
     {n = 1, params = {}},
@@ -396,6 +412,7 @@ end
 --
 handlers["help"] = function(cmd)
   printf(help, program)
+  return true
 end
 
 ---
@@ -407,12 +424,14 @@ handlers["add-category"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   if validId(id) then
-    conn.EntityRegistry:createEntityCategory(id, cmd.params.name)
+    conn.entities:createEntityCategory(id, cmd.params.name)
   else
     printf("[ERRO] Falha ao adicionar sistema '%s': " ..
            "identificador inválido", id)
+    return false
   end
   print(string.format("[INFO] Categoria '%s' cadastrada com sucesso", id))
+  return true
 end
 
 ---
@@ -423,9 +442,10 @@ end
 handlers["del-category"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local category = conn.EntityRegistry:getEntityCategory(id)
+  local category = conn.entities:getEntityCategory(id)
   category:remove()
   print(string.format("[INFO] Categoria '%s' removida com sucesso", id))
+  return true
 end
 
 ---
@@ -436,9 +456,10 @@ end
 handlers["set-category"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local category = conn.EntityRegistry:getEntityCategory(cmd.params[cmd.name])
+  local category = conn.entities:getEntityCategory(cmd.params[cmd.name])
   category:setName(cmd.params.name)
   print(string.format("[INFO] Categoria '%s' atualizada com sucesso", id))
+  return true
 end
 
 ---
@@ -451,13 +472,14 @@ handlers["list-category"] = function(cmd)
   local conn = connect()
   -- Busca todas
   if cmd.params[cmd.name] == null then
-    categories = conn.EntityRegistry:getEntityCategories()
+    categories = conn.entities:getEntityCategories()
   else
     -- Busca uma categoria específica
-    local category = conn.EntityRegistry:getEntityCategory(cmd.params[cmd.name])
+    local category = conn.entities:getEntityCategory(cmd.params[cmd.name])
     categories = {category:describe()}
   end
   printer.showCategory(categories)
+  return true
 end
 
 ---
@@ -471,11 +493,29 @@ handlers["add-entity"] = function(cmd)
   if not validId(id) then
     printf("[ERRO] Falha ao adicionar implantação '%s': " ..
            "identificador inválido", id)
-    return
+    return false
   end
-  local category = conn.EntityRegistry:getEntityCategory(cmd.params.category)
+
+  local category = conn.entities:getEntityCategory(cmd.params.category)
   category:registerEntity(id, cmd.params.name)
   printf("[INFO] Entidade '%s' cadastrada com sucesso", id)
+
+  local certificate = cmd.params[cmd.params.certificate]
+  if certificate ~= null then
+    local f = io.open(certificate)
+    if not f then
+      print("[ERRO] Não foi possível localizar arquivo de certificado")
+      return false
+    end
+    local cert = f:read("*a")
+    if not cert then
+      print("[ERRO] Não foi possível ler o certificado")
+      return false
+    end
+    conn.certificates:registerCertificate(id, cert)
+    printf("[INFO] Certificado da entidade '%s' cadastrada com sucesso", id)
+  end
+  return true
 end
 
 ---
@@ -486,9 +526,10 @@ end
 handlers["del-entity"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local entity = conn.EntityRegistry:getEntity(id)
+  local entity = conn.entities:getEntity(id)
   entity:remove()
   printf("[INFO] Entidade '%s' removida com sucesso", id)
+  return true
 end
 
 ---
@@ -499,9 +540,10 @@ end
 handlers["set-entity"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local entity = conn.EntityRegistry:getEntity(id)
+  local entity = conn.entities:getEntity(id)
   entity:setName(cmd.params.name)
   printf("[INFO] Entidade '%s' atualizada com sucesso", id)
+  return true
 end
 
 ---
@@ -518,20 +560,63 @@ handlers["list-entity"] = function(cmd)
     -- TODO: possivelmente, a verficacao category == null é um bug
     if not category or category == null then
       -- Busca todos
-      entities = conn.EntityRegistry:getEntities()
+      entities = conn.entities:getEntities()
     else
       -- Filtra por categoria
-      local category = conn.EntityRegistry:getEntityCategory(category)
+      local category = conn.entities:getEntityCategory(category)
       entities = category:getEntities()
     end
   else
     -- Busca apenas uma implantação
-    local entity = conn.EntityRegistry:getEntity(id)
+    local entity = conn.entities:getEntity(id)
     if entity ~= nil then 
       entities = {entity:describe()}
     end
   end
   printer.showEntity(entities)
+  return true
+end
+
+---
+-- Adiciona um certificado.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["add-certificate"] = function(cmd)
+  local conn = connect()
+  local id = cmd.params[cmd.name]
+  if not validId(id) then
+    printf("[ERRO] Falha ao adicionar implantação '%s': " ..
+           "identificador inválido", id)
+    return false
+  end
+  
+  local certificate = cmd.params[cmd.params.certificate]
+  local f = io.open(certificate)
+  if not f then
+    print("[ERRO] Não foi possível localizar arquivo de certificado")
+    return false
+  end
+  local cert = f:read("*a")
+  if not cert then
+    print("[ERRO] Não foi possível ler o certificado")
+    return false
+  end
+  conn.certificates:registerCertificate(id, cert)
+  printf("[INFO] Certificado da entidade '%s' cadastrada com sucesso", id)
+end
+
+---
+-- REmove um certificado.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["del-certificate"] = function(cmd)
+  local conn = connect()
+  local id = cmd.params[cmd.name]
+  conn.certificates:removeCertificate(id)
+  printf("[INFO] Certificado da entidade '%s' cadastrada com sucesso", id)
+  return true
 end
 
 ---
@@ -540,7 +625,11 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["add-interface"] = function(cmd)
-  print("NOT IMPLEMENTED!")
+  local conn = connect()
+  local id = cmd.params[cmd.name]
+  conn.interfaces:registerInterface(id)
+  printf("Interface '%s' cadastrada com sucesso.", id)
+  return true
 end
 
 ---
@@ -549,7 +638,11 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["del-interface"] = function(cmd)
-  print("NOT IMPLEMENTED!")
+  local conn = connect()
+  local id = cmd.params[cmd.name]
+  conn.interfaces:removeInterface(id)
+  printf("Interface '%s' removida com sucesso.", id)
+  return true
 end
 
 ---
@@ -558,7 +651,10 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-interface"] = function(cmd)
-  print("NOT IMPLEMENTED!")
+  local conn = connect()
+  local interfaces = conn.interfaces:getInterfaces()
+  printer.showInterface(interfaces)
+  return true
 end
 
 ---
@@ -569,19 +665,20 @@ end
 handlers["set-authorization"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local entity = conn.EntityRegistry:getEntity(id)
+  local entity = conn.entities:getEntity(id)
   local interface
   if cmd.params.grant then
     -- Concede uma autorização
     interface = cmd.params.grant
-    entity:addAuthorization(interface)
+    entity:grantInterface(interface)
     printf("[INFO] Autorização concedida a '%s': %s", id, interface)
   else
     -- Revoga autorização
     interface = cmd.params.revoke
-    entity:removeAuthorization(interface)
+    entity:revokeInterface(interface)
    printf("[INFO] Autorização revogada de '%s': %s", id, interface)
   end
+  return true
 end
 
 ---
@@ -596,11 +693,11 @@ handlers["list-authorization"] = function(cmd)
   if id == null then
     if not cmd.params.interface or cmd.params.interface == null then
       -- Busca todas
-      local ents = conn.EntityRegistry:getAuthorizedEntities()
+      local ents = conn.entities:getAuthorizedEntities()
       for _, entitydesc in ipairs(ents) do 
         local authorization = {}
         authorization.id = entitydesc.id
-        authorization.interfaces = entitydesc.ref:getAuthorizationSpecs()
+        authorization.interfaces = entitydesc.ref:getGrantedInterfaces()
         table.insert(auths, authorization)
       end
     else
@@ -609,7 +706,7 @@ handlers["list-authorization"] = function(cmd)
       for iface in string.gmatch(cmd.params.interface, "%S+") do
         ifaces[#ifaces+1] = iface
       end
-      local ents = conn.EntityRegistry:getEntitiesByAuthorizedInterfaces(ifaces)
+      local ents = conn.entities:getEntitiesByAuthorizedInterfaces(ifaces)
       for _, entitydesc in ipairs(ents) do 
         local authorization = {}
         authorization.id = entitydesc.id
@@ -619,13 +716,14 @@ handlers["list-authorization"] = function(cmd)
     end
   else
     -- Busca por entidade
-    local entity = conn.EntityRegistry:getEntity(id)
+    local entity = conn.entities:getEntity(id)
     local authorization = {}
     authorization.id = id
-    authorization.interfaces = entity:getAuthorizationSpecs()
+    authorization.interfaces = entity:getGrantedInterfaces()
     table.insert(auths, authorization)
   end
   printer.showAuthorization(auths)
+  return true
 end
 
 ---
@@ -637,8 +735,9 @@ handlers["del-login"] = function(cmd)
   local logins
   local conn = connect()
   local id = cmd.params[cmd.name]
-  conn.LoginRegistry:terminateLogin(id)
+  conn.logins:terminateLogin(id)
   printf("[INFO] Login '%s' removido com sucesso.", id)
+  return true
 end
 
 ---
@@ -651,10 +750,10 @@ handlers["list-login"] = function(cmd)
   local conn = connect()
   if not cmd.params.entity or cmd.params.entity == null then
     -- Busca todos
-    logins = conn.LoginRegistry:getAllLogins()
+    logins = conn.logins:getAllLogins()
   else
     -- Filtra por entidade
-    logins = conn.LoginRegistry:getEntityLogins(cmd.params.entity)
+    logins = conn.logins:getEntityLogins(cmd.params.entity)
   end
   -- remove o próprio login da lista
   local index
@@ -667,6 +766,7 @@ handlers["list-login"] = function(cmd)
     table.remove(logins, index)
   end
   printer.showLogin(logins)
+  return true
 end
 
 ---
@@ -675,7 +775,18 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-offer"] = function(cmd)
-  print("NOT IMPLEMENTED!")
+  local offers
+  local conn = connect()
+  local id = cmd.params[cmd.name]
+  if id == null then 
+    -- Lista todos
+    offers = conn.offers:getServices()
+  else
+    -- Filtra por entidade
+    offers = conn.offers:findServices({{name="openbus.offer.entity",value=id}})
+  end
+  printer.showOffer(offers)
+  return true
 end
 
 ---
@@ -684,7 +795,23 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["del-offer"] = function(cmd)
-  print("NOT IMPLEMENTED!")
+  local conn = connect()
+  offers = conn.offers:getServices()
+  local descs = printer.showOffer(offers)
+  print("Informe o índice da oferta que deseja remover:")
+  local id = tonumber(io.read())
+  if id ~= nil and descs[id] ~= nil then
+    for key, value in pairs (descs[id]) do
+      if key == "id" and value == id then
+        descs[id].offer:remove()
+      end
+    end
+  else
+    printf("[ERRO] Índice de oferta inválido: '%d'", id)
+    return false
+  end
+  printf("[INFO] Oferta '%d' removida com sucesso.", id)
+  return true
 end
 
 ---
@@ -694,6 +821,7 @@ end
 --
 handlers["script"] = function(cmd)
   print("NOT IMPLEMENTED!")
+  return true
 end
 
 ---
@@ -703,6 +831,7 @@ end
 --
 handlers["undo-script"] = function(cmd)
   print("NOT IMPLEMENTED!")
+  return true
 end
 
 -------------------------------------------------------------------------------
@@ -741,44 +870,51 @@ end
 -- Faz o parser da linha de comando.
 -- Verifica se houve erro e já despacha o comando de ajuda para evitar
 -- a conexão com os serviços do barramento
-local command, msg = parse{...}
-if not command then
-  print("[ERRO] " .. msg)
-  print("[HINT] --help")
-  os.exit(1)
-elseif command.name == "help" then
-  handlers.help(command)
-  os.exit(1)
-elseif not command.params.login then
-  print("[ERRO] Usuário não informado")
-  os.exit(1)
-end
-
--- Recupera os valores globais
-login    = command.params.login
-password = command.params.password
-host  = command.params["host"]
-port  = tonumber(command.params["port"])
-
-oil.verbose:level(tonumber(command.params.oilVerbose))
-log:level(tonumber(command.params.verbose))
-
----
--- Função principal responsável por despachar o comando.
---
-local function main()
-  local f = handlers[command.name]
-  if f then
-    f(command)
+return function(...)
+  local command, msg = parse{...}
+  if not command then
+    print("[ERRO] " .. msg)
+    print("[HINT] --help")
+    os.exit(1)
+  elseif command.name == "help" then
+    handlers.help(command)
+    os.exit(1)
+  elseif not command.params.login then
+    print("[ERRO] Usuário não informado")
+    os.exit(1)
   end
+
+  -- Recupera os valores globais
+  login    = command.params.login
+  password = command.params.password
+  host  = command.params["host"]
+  port  = tonumber(command.params["port"])
+
+  oil.verbose:level(tonumber(command.params.oilVerbose))
+  log:level(tonumber(command.params.verbose))
+
+  ---
+  -- Função principal responsável por despachar o comando.
   --
-  if connection ~= nil and connection:isLoggedIn() then
-    connection:logout()
-    connection = nil
+  local function main()
+    local f = handlers[command.name]
+    local returned
+    if f then
+      returned = f(command)
+    end
+    --
+    if connection ~= nil and connection:isLoggedIn() then
+      connection:logout()
+      connection = nil
+    end
+    if returned then
+      os.exit()
+    else
+      os.exit(1)
+    end
   end
-  os.exit()
-end
 
-oil.main(function()
-  print(pcall(main))
-end)
+  oil.main(function()
+    print(pcall(main))
+  end)
+end

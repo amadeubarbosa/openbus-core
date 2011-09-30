@@ -251,28 +251,57 @@ end
 -- @param offers Estrutura definida na IDL.
 ---
 function module.showOffer(offers)
-  local titles = { "", "ID OFERTA", "ID MEMBRO", "INTERFACES"}
+  local titles = { "", "ID ENTIDADE", "INTERFACES", "DATA", "HORA"}
   if #offers == 0 then
     showEmptyTable(titles)
     return
   end
 
-  table.sort(offers, function(a, b)
-    return lower(a.member) < lower(b.member)
-  end)
-
+  local tableList = {}
   local offerList = {}
   for i, offer in ipairs(offers) do
-    table.sort(offer.interfaces, function(a, b)
+    local desc = {}
+    desc.offer = offer.ref
+    desc.interfaces = {}
+    for j, prop in ipairs(offer.properties) do
+      if prop.name == "openbus.offer.entity" then
+        desc.entity = prop.value
+      elseif prop.name == "openbus.component.interface" then
+        table.insert(desc.interfaces, prop.value)
+      elseif prop.name == "openbus.offer.year" then
+        desc.year = prop.value
+      elseif prop.name == "openbus.offer.month" then
+        desc.month = prop.value
+      elseif prop.name == "openbus.offer.day" then
+        desc.day = prop.value
+      elseif prop.name == "openbus.offer.hour" then
+        desc.hour = prop.value
+      elseif prop.name == "openbus.offer.minute" then
+        desc.minute = prop.value
+      elseif prop.name == "openbus.offer.second" then
+        desc.second = prop.value
+      end
+    end
+    table.sort(desc.interfaces, function(a, b)
       return lower(a) < lower(b)
     end)
-
-    table.insert(offerList, { {string.format("%.3d", i)}, {offer.id},
-        {offer.member}, offer.interfaces })
+    table.insert(offerList, desc)
   end
-  local sizes = adjustColumnWidth(titles, offerList)
-
-  printTable(titles, offerList, sizes)
+  
+  table.sort(offerList, function(a, b)
+    return lower(a.entity) < lower(b.entity)
+  end)
+  for i, desc in ipairs(offerList) do
+    desc.id = i
+    table.insert(tableList, { {string.format("%.3d", i)}, {desc.entity},
+        desc.interfaces, {string.format("%.2d/%.2d/%d", desc.day, desc.month,
+        desc.year)}, {string.format("%.2d:%.2d:%.2d", desc.hour, desc.minute,
+        desc.second)} })
+  end
+        
+  local sizes = adjustColumnWidth(titles, tableList)
+  printTable(titles, tableList, sizes)
+  return offerList
 end
 
 ---
@@ -312,6 +341,11 @@ end
 ---
 function module.showLogin(logins)
   local titles = { "", "ID LOGIN", "ID ENTIDADE"}
+  if #logins == 0 then
+    showEmptyTable(titles)
+    return
+  end
+  
   table.sort(logins, function(a, b)
     return lower(a.entity) < lower(b.entity)
   end)
