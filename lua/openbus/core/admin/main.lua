@@ -591,7 +591,7 @@ handlers["add-certificate"] = function(cmd)
     return false
   end
   
-  local certificate = cmd.params[cmd.params.certificate]
+  local certificate = cmd.params.certificate
   local f = io.open(certificate)
   if not f then
     print("[ERRO] Não foi possível localizar arquivo de certificado")
@@ -607,7 +607,7 @@ handlers["add-certificate"] = function(cmd)
 end
 
 ---
--- REmove um certificado.
+-- Remove um certificado.
 --
 -- @param cmd Comando e seus argumentos.
 --
@@ -615,7 +615,7 @@ handlers["del-certificate"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   conn.certificates:removeCertificate(id)
-  printf("[INFO] Certificado da entidade '%s' cadastrada com sucesso", id)
+  printf("[INFO] Certificado da entidade '%s' removido com sucesso", id)
   return true
 end
 
