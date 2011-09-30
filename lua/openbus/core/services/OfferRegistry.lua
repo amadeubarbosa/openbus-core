@@ -607,13 +607,15 @@ function EntityRegistry:__init(data)
 		end
 		-- check if authorized interfaces exist
 		local interfaces = InterfaceRegistry.interfaces
-		for ifaceId in pairs(entry.authorized) do
-			if interfaces[ifaceId] == nil then
-				ServiceFailure{
-					message = msg.CorruptedDatabaseDueToMissingInterface:tag{
-						interface = ifaceId,
-					},
-				}
+		if entry.authorized then
+			for ifaceId in pairs(entry.authorized) do
+				if interfaces[ifaceId] == nil then
+					ServiceFailure{
+						message = msg.CorruptedDatabaseDueToMissingInterface:tag{
+							interface = ifaceId,
+						},
+					}
+				end
 			end
 		end
 		-- create object
