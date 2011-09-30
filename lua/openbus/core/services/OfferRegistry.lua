@@ -104,6 +104,16 @@ local function makePropertyList(entry, service_props)
 	return props
 end
 
+local function dealAuthorizationError(self, message)
+	if self.enforceAuth then
+		ServiceFailure{
+			message = message,
+		}
+	else
+		log:misconfig(message)
+	end
+end
+
 ------------------------------------------------------------------------------
 -- Faceta OfferRegistry
 ------------------------------------------------------------------------------
@@ -182,12 +192,11 @@ function OfferRegistry:__init(data)
 				entity = entity,
 				login = login,
 			})
-			if self.enforceAuth and EntityRegistry:getEntity(entity) == nil then
-				ServiceFailure{
-					message = msg.CorruptedDatabaseDueToMissingEntity:tag{
-						entity = entity,
-					}
+			if EntityRegistry:getEntity(entity) == nil then
+				message = msg.CorruptedDatabaseDueToMissingEntity:tag{
+					entity = entity,
 				}
+				dealAuthorizationError(self, message)
 			end
 			-- create object for the new offer
 			local service_ref = orb:newproxy(entry.service_ref, nil, types.OfferedService)
