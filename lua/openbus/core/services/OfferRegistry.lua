@@ -192,11 +192,12 @@ function OfferRegistry:__init(data)
 				entity = entity,
 				login = login,
 			})
-			if EntityRegistry:getEntity(entity) == nil then
-				message = msg.CorruptedDatabaseDueToMissingEntity:tag{
-					entity = entity,
+			if self.enforceAuth and EntityRegistry:getEntity(entity) == nil then
+				ServiceFailure{
+					message = msg.CorruptedDatabaseDueToMissingEntity:tag{
+						entity = entity,
+					}
 				}
-				dealAuthorizationError(self, message)
 			end
 			-- create object for the new offer
 			local service_ref = orb:newproxy(entry.service_ref, nil, types.OfferedService)
@@ -605,21 +606,8 @@ function EntityRegistry:__init(data)
 				},
 			}
 		end
-		-- check if authorized interfaces exist
-		local interfaces = InterfaceRegistry.interfaces
-		if entry.authorized then
-			for ifaceId in pairs(entry.authorized) do
-				if interfaces[ifaceId] == nil then
-					ServiceFailure{
-						message = msg.CorruptedDatabaseDueToMissingInterface:tag{
-							interface = ifaceId,
-						},
-					}
-				end
-			end
-		end
-		-- create object
-		orb:newservant(Entity{
+		-- create the entity object
+		local entry = Entity{
 			id = id,
 			name = entry.name,
 			category = category,
@@ -627,7 +615,20 @@ function EntityRegistry:__init(data)
 			orb = orb,
 			registry = self,
 			database = entityDB,
-		})
+		}
+		-- check if authorized interfaces exist
+		local interfaces = InterfaceRegistry.interfaces
+		for ifaceId in pairs(entry.authorized) do
+			if interfaces[ifaceId] == nil then
+				ServiceFailure{
+					message = msg.CorruptedDatabaseDueToMissingInterface:tag{
+						interface = ifaceId,
+					},
+				}
+			end
+		end
+		-- create object
+		orb:newservant(entry)
 	end
 	
 	self.categoryDB = categoryDB
