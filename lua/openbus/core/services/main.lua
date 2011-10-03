@@ -30,7 +30,7 @@ local readprivatekey = server.readprivatekey
 
 local idl = require "openbus.core.idl"
 local const = idl.const
-local Access = require "openbus.core.Access"
+local Access = require "openbus.core.services.Access"
 
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
