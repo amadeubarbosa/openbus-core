@@ -1,15 +1,11 @@
-local oo = require "loop.simple"
-
-local pairs = pairs
-local ipairs = ipairs
-local select = select
-local table = table
-local string = string
-local print = print
-local table = table
-local tostring = tostring
-local type = type
-local lower = string.lower
+local _G = require "_G"
+local ipairs = _G.ipairs
+local string = _G.string
+local print = _G.print
+local table = _G.table
+local tostring = _G.tostring
+local type = _G.type
+local lower = _G.string.lower
 
 -------------------------------------------------------------------------------
 -- Constantes

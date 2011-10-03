@@ -1,13 +1,22 @@
+local _G = require "_G"
+local next  = _G.next
+local pairs = _G.pairs
+local ipairs = _G.ipairs
+local string = _G.string
+local print = _G.print
+local os = _G.os
+local io = _G.io
+local pcall = _G.pcall
+
 local lpw     = require "lpw"
 local oil     = require "oil"
 local openbus = require "openbus"
 local log     = require "openbus.util.logger"
-
 local printer = require "openbus.core.admin.print"
+local script  = require "openbus.core.admin.script"
 
 -- Alias
-local lower = string.lower
-local next  = next
+local lower = _G.string.lower
 
 -- Variáveis que são referenciadas antes de sua crição
 -- Não usar globais para não exportá-las para o comando 'script'
@@ -501,7 +510,7 @@ handlers["add-entity"] = function(cmd)
   printf("[INFO] Entidade '%s' cadastrada com sucesso", id)
 
   local certificate = cmd.params[cmd.params.certificate]
-  if certificate ~= null then
+  if certificate and certificate ~= null then
     local f = io.open(certificate)
     if not f then
       print("[ERRO] Não foi possível localizar arquivo de certificado")
@@ -628,7 +637,7 @@ handlers["add-interface"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   conn.interfaces:registerInterface(id)
-  printf("Interface '%s' cadastrada com sucesso.", id)
+  printf("[INFO] Interface '%s' cadastrada com sucesso.", id)
   return true
 end
 
@@ -641,7 +650,7 @@ handlers["del-interface"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   conn.interfaces:removeInterface(id)
-  printf("Interface '%s' removida com sucesso.", id)
+  printf("[INFO] Interface '%s' removida com sucesso.", id)
   return true
 end
 
@@ -820,8 +829,8 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["script"] = function(cmd)
-  print("NOT IMPLEMENTED!")
-  return true
+  script.setup(handlers)
+  return script.doScript(cmd)
 end
 
 ---
@@ -830,8 +839,8 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["undo-script"] = function(cmd)
-  print("NOT IMPLEMENTED!")
-  return true
+  script.setup(handlers)
+  return script.undoScript(cmd)
 end
 
 -------------------------------------------------------------------------------
