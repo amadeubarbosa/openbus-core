@@ -7,13 +7,23 @@ local print = _G.print
 local os = _G.os
 local io = _G.io
 local pcall = _G.pcall
+local error = _G.error
 
-local lpw     = require "lpw"
-local oil     = require "oil"
+local oil = require "oil"
+local oillog = require "oil.verbose"
+
+local lpw = require "lpw"
+
 local openbus = require "openbus"
-local log     = require "openbus.util.logger"
+local log = require "openbus.util.logger"
+local server = require "openbus.util.server"
+local setuplog = server.setuplog
 local printer = require "openbus.core.admin.print"
-local script  = require "openbus.core.admin.script"
+local script = require "openbus.core.admin.script"
+local msg = require "openbus.core.admin.messages"
+local idl = require "openbus.core.idl"
+local logintypes = idl.types.services.access_control
+local offertypes = idl.types.services.offer_registry
 
 -- Alias
 local lower = _G.string.lower
@@ -49,7 +59,9 @@ Uso: %s [opções] --login=<usuário> <comando>
     --port=<porta>
   * Aciona o verbose da API Openbus.
     --verbose=<level>
-
+  * Aciona o verbose do OiL.
+    --oilverbose=<level>
+    
 - Controle de Categoria
   * Adicionar categoria:
      --add-category=<id_categoria> --name=<nome>
@@ -433,13 +445,22 @@ handlers["add-category"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   if validId(id) then
-    conn.entities:createEntityCategory(id, cmd.params.name)
+    local ok, err = pcall(conn.entities.createEntityCategory, conn.entities,
+        id, cmd.params.name)
+    if not ok then
+      if err._repid == offertypes.EntityCategoryAlreadyExists then
+        printf("[ERRO] Categoria '%s' já cadastrada", id)
+      else
+        error(err)
+      end
+      return false
+    end
   else
-    printf("[ERRO] Falha ao adicionar sistema '%s': " ..
+    printf("[ERRO] Falha ao adicionar categoria '%s': " ..
            "identificador inválido", id)
     return false
   end
-  print(string.format("[INFO] Categoria '%s' cadastrada com sucesso", id))
+  printf("[INFO] Categoria '%s' cadastrada com sucesso", id)
   return true
 end
 
@@ -452,8 +473,20 @@ handlers["del-category"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   local category = conn.entities:getEntityCategory(id)
-  category:remove()
-  print(string.format("[INFO] Categoria '%s' removida com sucesso", id))
+  if not category then 
+    printf("[ERRO] Categoria '%s' não existe.", id)
+    return false
+  end
+  local ok, err = pcall(category.remove, category)
+  if not ok then
+    if err._repid == offertypes.EntityCategoryInUse then
+      printf("[ERRO] Categoria '%s' em uso.", id)
+    else
+      error(err)
+    end
+    return false
+  end
+  printf("[INFO] Categoria '%s' removida com sucesso", id)
   return true
 end
 
@@ -466,8 +499,12 @@ handlers["set-category"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   local category = conn.entities:getEntityCategory(cmd.params[cmd.name])
-  category:setName(cmd.params.name)
-  print(string.format("[INFO] Categoria '%s' atualizada com sucesso", id))
+  if not category then 
+    printf("[ERRO] Categoria '%s' não existe.", id)
+    return false
+  end
+  category:setName(cmd.params.name)  
+  printf("[INFO] Categoria '%s' atualizada com sucesso", id)
   return true
 end
 
@@ -485,6 +522,10 @@ handlers["list-category"] = function(cmd)
   else
     -- Busca uma categoria específica
     local category = conn.entities:getEntityCategory(cmd.params[cmd.name])
+    if not category then 
+      printf("[ERRO] Categoria '%s' não existe.", id)
+      return false
+    end
     categories = {category:describe()}
   end
   printer.showCategory(categories)
@@ -500,13 +541,25 @@ handlers["add-entity"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   if not validId(id) then
-    printf("[ERRO] Falha ao adicionar implantação '%s': " ..
+    printf("[ERRO] Falha ao adicionar entidade '%s': " ..
            "identificador inválido", id)
     return false
   end
 
   local category = conn.entities:getEntityCategory(cmd.params.category)
-  category:registerEntity(id, cmd.params.name)
+  if not category then 
+    printf("[ERRO] Categoria '%s' não existe.", id)
+    return false
+  end
+  local ok, err = pcall(category.registerEntity, category, id, cmd.params.name)
+  if not ok then
+    if err._repid == offertypes.EntityAlreadyRegistered then
+      printf("[ERRO] Entidade '%s' já cadastrada.", id)
+    else
+      error(err)
+    end
+    return false
+  end
   printf("[INFO] Entidade '%s' cadastrada com sucesso", id)
 
   local certificate = cmd.params[cmd.params.certificate]
@@ -521,7 +574,16 @@ handlers["add-entity"] = function(cmd)
       print("[ERRO] Não foi possível ler o certificado")
       return false
     end
-    conn.certificates:registerCertificate(id, cert)
+    ok, err = pcall(conn.certificates.registerCertificate, conn.certificates, 
+        id, cert)
+    if not ok then
+      if err._repid == logintypes.InvalidCertificate then
+        printf("[ERRO] Certificado inválido: '%s'", certificate)
+      else
+        error(err)
+      end
+      return false
+    end
     printf("[INFO] Certificado da entidade '%s' cadastrada com sucesso", id)
   end
   return true
@@ -536,6 +598,10 @@ handlers["del-entity"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   local entity = conn.entities:getEntity(id)
+  if not entity then
+    printf("[ERRO] Entidade '%s' inexistente.", id)
+    return false
+  end
   entity:remove()
   printf("[INFO] Entidade '%s' removida com sucesso", id)
   return true
@@ -550,6 +616,10 @@ handlers["set-entity"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   local entity = conn.entities:getEntity(id)
+  if not entity then
+    printf("[ERRO] Entidade '%s' não existe.", id)
+    return false
+  end
   entity:setName(cmd.params.name)
   printf("[INFO] Entidade '%s' atualizada com sucesso", id)
   return true
@@ -573,12 +643,19 @@ handlers["list-entity"] = function(cmd)
     else
       -- Filtra por categoria
       local category = conn.entities:getEntityCategory(category)
+      if not category then 
+        printf("[ERRO] Categoria '%s' não existe.", category)
+        return false
+      end
       entities = category:getEntities()
     end
   else
     -- Busca apenas uma implantação
     local entity = conn.entities:getEntity(id)
-    if entity ~= nil then 
+    if not entity then
+      printf("[ERRO] Entidade '%s' não existe.", id)
+      return false
+    else 
       entities = {entity:describe()}
     end
   end
@@ -595,7 +672,7 @@ handlers["add-certificate"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   if not validId(id) then
-    printf("[ERRO] Falha ao adicionar implantação '%s': " ..
+    printf("[ERRO] Falha ao adicionar certificado '%s': " ..
            "identificador inválido", id)
     return false
   end
@@ -611,8 +688,18 @@ handlers["add-certificate"] = function(cmd)
     print("[ERRO] Não foi possível ler o certificado")
     return false
   end
-  conn.certificates:registerCertificate(id, cert)
+  local ok, err = pcall(conn.certificates.registerCertificate,
+      conn.certificates, id, cert)
+  if not ok then
+    if err._repid == logintypes.InvalidCertificate then
+      printf("[ERRO] Certificado inválido: '%s'", certificate)
+    else
+      error(err)
+    end
+    return false
+  end
   printf("[INFO] Certificado da entidade '%s' cadastrada com sucesso", id)
+  return true
 end
 
 ---
@@ -636,7 +723,15 @@ end
 handlers["add-interface"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  conn.interfaces:registerInterface(id)
+  local ok, err = pcall(conn.interfaces.registerInterface, conn.interfaces, id)
+  if not ok then
+    if err._repid == offertypes.InvalidInterface then
+      printf("[ERRO] Interface '%s' inválida.", id)
+    else
+      error(err)
+    end
+    return false
+  end
   printf("[INFO] Interface '%s' cadastrada com sucesso.", id)
   return true
 end
@@ -649,7 +744,15 @@ end
 handlers["del-interface"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  conn.interfaces:removeInterface(id)
+  local ok, err = pcall(conn.interfaces.removeInterface, conn.interfaces, id)
+  if not ok then
+    if err._repid == offertypes.InterfaceInUse then
+      printf("[ERRO] Interface '%s' em uso.", id)
+    else
+      error(err)
+    end
+    return false
+  end
   printf("[INFO] Interface '%s' removida com sucesso.", id)
   return true
 end
@@ -675,17 +778,41 @@ handlers["set-authorization"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
   local entity = conn.entities:getEntity(id)
+  if not entity then
+    printf("[ERRO] Entidade '%s' não existe.", id)
+    return false
+  end
   local interface
+  local ok, err
   if cmd.params.grant then
     -- Concede uma autorização
     interface = cmd.params.grant
-    entity:grantInterface(interface)
+    ok, err = pcall(entity.grantInterface, entity, interface)
+    if not ok then
+      if err._repid == offertypes.InvalidInterface then
+        printf("[ERRO] Interface '%s' inválida.", interface)
+      else
+        error(err)
+      end
+      return false
+    end
     printf("[INFO] Autorização concedida a '%s': %s", id, interface)
   else
     -- Revoga autorização
     interface = cmd.params.revoke
-    entity:revokeInterface(interface)
-   printf("[INFO] Autorização revogada de '%s': %s", id, interface)
+    ok, err = pcall(entity.revokeInterface, entity, interface)
+    if not ok then
+      if err._repid == offertypes.InvalidInterface then
+        printf("[ERRO] Interface '%s' inválida.", interface)
+      elseif err._repid == offertypes.AuthorizationInUse then
+        printf("[ERRO] Autorização '%s' em uso pela entidade '%s'.", interface,
+          id)
+      else
+        error(err)
+      end
+      return false
+    end
+    printf("[INFO] Autorização revogada de '%s': %s", id, interface)
   end
   return true
 end
@@ -726,6 +853,10 @@ handlers["list-authorization"] = function(cmd)
   else
     -- Busca por entidade
     local entity = conn.entities:getEntity(id)
+    if not entity then
+      printf("[ERRO] Entidade '%s' não existe.", id)
+      return false
+    end
     local authorization = {}
     authorization.id = id
     authorization.interfaces = entity:getGrantedInterfaces()
@@ -862,10 +993,16 @@ function connect(retry)
   if not localPassword then
     localPassword = lpw.getpass("Senha: ")
   end
-  local status, err = pcall(conn.loginByPassword, conn, login, localPassword)
-  if not status then
-    print("[ERRO] Falha no Login.")
-    log:warn(err)
+  local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
+  if not ok then
+    print("[ERRO] Falha no Login!")
+    if err._repid == logintypes.AccessDenied then
+      log:failure(msg.AccessDeniedOnLogin)
+    elseif err._repid == logintypes.WrongEncoding then
+      log:failure(msg.WrongEncodedPassword)
+    else 
+      error(err)
+    end
     os.exit(1)
   end
   connection = conn
@@ -899,8 +1036,11 @@ return function(...)
   host  = command.params["host"]
   port  = tonumber(command.params["port"])
 
-  oil.verbose:level(tonumber(command.params.oilVerbose))
-  log:level(tonumber(command.params.verbose))
+  -- setup log files
+  local loglevel = tonumber(command.params.verbose) or 0
+  setuplog(log, loglevel)
+  local oillevel = tonumber(command.params.oilverbose) or 0
+  setuplog(oillog, oillevel)
 
   ---
   -- Função principal responsável por despachar o comando.
