@@ -86,6 +86,7 @@ packages = {
       mf = { "config" },
       Darwin = { mf = {"config", "config BUILD_DYLIB=Yes"} },
       MacOS = { mf = {"config", "config BUILD_DYLIB=Yes"} },
+      SunOS510 = { mf = {'config USE_NODEPEND=Yes CFLAGS=-KPIC LD=CC AR=CC STDLFLAGS+=-xar STDLFLAGS+=-o '} },
       SunOS510_64 = { mf = { "config ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
@@ -273,7 +274,7 @@ packages = {
     },
   },
   { name = "scsall",
-    url = SVNREPURL .. "/scs/core/lua/trunk",
+    url = SVNREPURL .. "/scs/core/lua/branches/SCS_CORE_LUA_v1_02_02_2011_07_28",
     directory = PRODAPP .."/scs-lua",
     build = {
       type = "tecmake",
@@ -512,6 +513,7 @@ packages = {
       ["management"] = "demo/lua/delegate",
     },
   },
+--[[
    -- Orbix related packages
   { name = "scs-orbix",
     url = SVNREPURL .. "/scs/core/cpp/trunk",
@@ -1031,6 +1033,7 @@ packages = {
       ["../../idl/*"] = "test/idl",
     },
   },
+--]]
   -- Java related packages  
   { name = "scsidl-java",
     build = {
@@ -1093,6 +1096,7 @@ packages = {
       ["target/site/apidocs"] = "doc",
     },
   },
+--]]
 --  { name = "ldap-Linux26g4",
 --    src = "/",
 --    mf = { },
