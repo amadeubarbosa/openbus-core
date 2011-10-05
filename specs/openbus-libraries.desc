@@ -513,7 +513,6 @@ packages = {
       ["management"] = "demo/lua/delegate",
     },
   },
---[[
    -- Orbix related packages
   { name = "scs-orbix",
     url = SVNREPURL .. "/scs/core/cpp/trunk",
@@ -1033,7 +1032,6 @@ packages = {
       ["../../idl/*"] = "test/idl",
     },
   },
---]]
   -- Java related packages  
   { name = "scsidl-java",
     build = {
@@ -1096,7 +1094,6 @@ packages = {
       ["target/site/apidocs"] = "doc",
     },
   },
---]]
 --  { name = "ldap-Linux26g4",
 --    src = "/",
 --    mf = { },
