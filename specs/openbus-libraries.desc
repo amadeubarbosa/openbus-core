@@ -86,7 +86,6 @@ packages = {
       mf = { "config" },
       Darwin = { mf = {"config", "config BUILD_DYLIB=Yes"} },
       MacOS = { mf = {"config", "config BUILD_DYLIB=Yes"} },
-      SunOS510 = { mf = {'config USE_NODEPEND=Yes CFLAGS=-KPIC LD=CC AR=CC STDLFLAGS+=-xar STDLFLAGS+=-o '} },
       SunOS510_64 = { mf = { "config ".. SUNOS64_TECMAKE_FLAGS } },
     },
     install_files = {
