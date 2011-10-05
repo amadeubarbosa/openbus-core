@@ -366,21 +366,38 @@ end
 ---
 function ACSFacet:addObserver(observer, credentialIdentifiers)
   local observerId = self:generateObserverIdentifier()
-
-  local observerEntry = {observer = observer, credentials = {}}
-  self.observers[observerId] = observerEntry
-
   local credential = Openbus:getInterceptedCredential()
-  self.entries[credential.identifier].observers[observerId] = true
+  local entry = self.entries[credential.identifier]
 
-  for _, credentialId in ipairs(credentialIdentifiers) do
-    local entry = self.entries[credentialId]
-    if entry then
-      entry.observedBy[observerId] = true
-      observerEntry.credentials[credentialId] = true
+  for _, credentialIdentifier in ipairs(credentialIdentifiers) do
+    if not self.entries[credentialIdentifier] then
+      Log:info(format("Erro ao adicionar credenciais ao observador da credencial {%s %s}. A credencia %s não existe. Não será adicionada nenhuma credencial ao observador.",
+          credential.identifier, credential.owner, credentialIdentifier))
+      return false
     end
   end
 
+  if not entry.observers then
+    entry.observers = {}
+    Log:debug(format("Adicionando o primeiro observador da credencial {%s %s}",
+        credential.identifier, credential.owner))
+  end
+
+  local credentials = {}
+  for _, credentialIdentifier in ipairs(credentialIdentifiers) do
+    credentials[credentialIdentifier] = true
+  end
+
+  local orb = Openbus:getORB()
+  entry.observers[observerId] = {
+      callback = observer,
+      ior = orb:tostring(observer),
+      credentials = credentials,
+  }
+  Log:info(format("Observador {%s} cadastrado na credencial {%s %s}",
+      observerId, credential.identifier, credential.owner))
+
+  self.credentialDB:update(entry)
   return observerId
 end
 
@@ -396,13 +413,13 @@ function ACSFacet:getEntryCredential(credential)
   self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
 
   local emptyEntry = {
-                aCredential = {  identifier = "",
-                                owner = "",
-                                delegate = "" },
-                certified = false,
-                observers = {},
-                observedBy = {}
-            }
+      aCredential = { identifier = "",
+                      owner = "",
+                      delegate = "" },
+      certified = false,
+      observers = {},
+      observedBy = {}
+  }
   local entry = self.entries[credential.identifier]
 
   if not entry then
@@ -413,11 +430,12 @@ function ACSFacet:getEntryCredential(credential)
   Log:debug(format("A credencial {%s, %s, %s} foi encontrada",
       entry.credential.identifier, entry.credential.owner,
       entry.credential.delegate))
-  local retEntry = {  aCredential = entry.credential,
-                      certified = entry.certified or false,
-                      observers = entry.observers or {},
-                      observedBy = entry.observedBy or {}
-                   }
+  local retEntry = {
+      aCredential = entry.credential,
+      certified = entry.certified or false,
+      observers = {},
+      observedBy = {}
+  }
   return retEntry
 end
 
@@ -428,31 +446,11 @@ function ACSFacet:getAllEntryCredential()
   local i = 0
   for _,entry in pairs(self.entries) do
     if entry.credential then
-      i = i + 1
-      retEntries[i] = {}
-      retEntries[i].aCredential = entry.credential
-      if entry.certified ~= nil then
-       retEntries[i].certified = entry.certified
-      else
-       retEntries[i].certified = false
-      end
-      local j = 1
-      retEntries[i].observers = {}
-      for observerId, flag in pairs(entry.observers) do
-        if flag then
-          retEntries[i].observers[j] = tostring(observerId)
-          j = j + 1
-        end
-      end
-      j = 1
-      retEntries[i].observedBy = {}
-      for observerId, flag in pairs(entry.observedBy) do
-        if flag then
-          retEntries[i].observedBy[j] = tostring(observerId)
-          j = j + 1
-        end
-      end
+      Log:error(format("Erro na persistência da credencial do membro. %s",
+          entry))
+      return {}
     end
+    self:getEntryCredential(entry.credential)
   end
   Log:debug("Obtendo todas as %d credenciais", i)
   return retEntries
@@ -468,45 +466,63 @@ end
 --@return true caso a credencial tenha sido adicionada, ou false caso contrário.
 ---
 function ACSFacet:addCredentialToObserver(observerIdentifier, credentialIdentifier)
-  local entry = self.entries[credentialIdentifier]
-  if not entry then
-    Log:warn("Não foi possível adicionar a credential %s ao observador %s, pois a referida credencial não existe",
-        credentialIdentifier, observerIdentifier)
+  local credential = Openbus:getInterceptedCredential()
+  local entry = self.entries[credential.identifier]
+
+  if not self.entries[credentialIdentifier] then
+    Log:info(format("Erro ao adicionar uma credencial no observador %s. A credencia %s não existe.",
+        observerIdentifier, credentialIdentifier))
     return false
   end
 
-  local observerEntry = self.observers[observerIdentifier]
-  if not observerEntry then
-    Log:warn("Não foi possível adicionar a credential %s ao observador %s, pois o referido observador não existe",
-        credentialIdentifier, observerIdentifier)
+  if not entry.observers then
+    Log:info(format("Não foi possível adicionar a credencial %s ao observador %s, pois não existe observadores na credencial { %s %s }",
+      credentialIdentifier, observerIdentifier,credential.identifier, credential.owner))
     return false
   end
 
-  entry.observedBy[observerIdentifier] = true
-  observerEntry.credentials[credentialIdentifier] = true
+  if not entry.observers[observerIdentifier] then
+    Log:info(format("Não foi possível adicionar a credencial %s ao observador %s, pois o observador não foi encontrado",
+        credentialIdentifier, observerIdentifier))
+    return false
+  end
 
+  entry.observers[observerIdentifier].credentials[credentialIdentifier] = true
+  Log:info(format("Credencial %s adicionada ao observador %s com sucesso.",
+          credentialIdentifier, observerIdentifier))
+
+  self.credentialDB:update(entry)
   return true
 end
 
 ---
---Remove um observador e retira sua credencial da lista de outros observadores.
+-- Remove um observador.
 --
 --@param observerIdentifier O identificador do observador.
 --@param credential A credencial.
 --
 --@return true caso o observador tenha sido removido, ou false caso contrário.
 ---
-function ACSFacet:removeObserver(observerIdentifier, credential)
-  local observerEntry = self.observers[observerIdentifier]
-  if not observerEntry then
+function ACSFacet:removeObserver(observerIdentifier)
+  local credential = Openbus:getInterceptedCredential()
+  local entry = self.entries[credential.identifier]
+
+  if not entry.observers then
+    Log:info(format("Erro ao remover observador. A credencial {%s %s} não possui nenhum observador",
+        credential.identifier, credencial.owner ))
     return false
   end
-  for credentialId in pairs(observerEntry.credentials) do
-    self.entries[credentialId].observedBy[observerIdentifier] = nil
+
+  if not entry.observers[observerIdentifier] then
+    Log:info(format("Erro ao remover observador. A credencial {%s %s} não possui o observador '%s'",
+        credential.identifier, credential.owner, observerIdentifier))
+    return false
   end
-  self.observers[observerIdentifier] = nil
-  credential = credential or Openbus:getInterceptedCredential()
-  self.entries[credential.identifier].observers[observerIdentifier] = nil
+
+  entry.observers[observerIdentifier] = nil
+  Log:info(format("Obeservador '%s' removido da credencial {%s %s}",
+      observerIdentifier, credential.identifier, credential.owner))
+  self.credentialDB:update(entry)
   return true
 end
 
@@ -520,16 +536,35 @@ end
 ---
 function ACSFacet:removeCredentialFromObserver(observerIdentifier,
     credentialIdentifier)
-  local observerEntry = self.observers[observerIdentifier]
-  if not observerEntry then
+
+  local credential = Openbus:getInterceptedCredential()
+  local entry = self.entries[credential.identifier]
+
+  if not entry.observers then
+    Log:info(format("Erro ao remover a credencial '%s' do observador '%s'. A credencial {%s %s} não possui nenhum observador",
+        credentialIdentifier, observerIdentifier, credential.identifier,
+        credential.owner ))
     return false
   end
-  observerEntry.credentials[credentialIdentifier] = nil
-  local entry = self.entries[credentialIdentifier]
-  if not entry then
+
+  if not entry.observers[observerIdentifier] then
+    Log:info(format("Erro ao remover a credencial '%s' do observador '%s'. A credencial {%s %s} não possui o observador '%s'",
+        credentialIdentifier, observerIdentifier, credential.identifier,
+        credential.owner, observerIdentifier))
     return false
   end
-  entry.observedBy[observerIdentifier] = nil
+
+  local observer = entry.observers[observerIdentifier]
+  if not observer.credentials[credentialIdentifier] then
+    Log:info(format("Erro ao remover a credencial '%s' do observador '%s'. O observador não observa a credencial em questão",
+        credentialIdentifier, observerIdentifier))
+    return false
+  end
+
+  observer.credentials[credentialIdentifier] = nil
+  self.credentialDB:update(entry)
+  Log:info(format("Credencial '%s' foi removida do observador '%s'.",
+      credentialIdentifier, observerIdentifier))
   return true
 end
 
@@ -637,12 +672,7 @@ end
 function ACSFacet:removeEntry(entry)
   local credential = entry.credential
   self:notifyCredentialWasDeleted(credential)
-  for observerId in pairs(self.entries[credential.identifier].observers) do
-    self:removeObserver(observerId, credential)
-  end
-  for observerId in pairs(self.entries[credential.identifier].observedBy) do
-    self:removeCredentialFromObserver(observerId, credential.identifier)
-  end
+
   self.entries[credential.identifier] = nil
   self.credentialDB:delete(entry)
 end
@@ -671,15 +701,18 @@ end
 --@param credential A credencial.
 ---
 function ACSFacet:notifyCredentialWasDeleted(credential)
-  for observerId in pairs(self.entries[credential.identifier].observedBy) do
-    local observerEntry = self.observers[observerId]
-    if observerEntry then
-      local success, err =
-        oil.pcall(observerEntry.observer.credentialWasDeleted,
-                  observerEntry.observer, credential)
-      if not success then
-        Log:warn("Erro ao notificar um observador.")
-        Log:warn(err)
+  for credentialId, entry in pairs(self.entries) do
+    for _,observer in pairs(entry.observers) do
+      if observer.credentials[credential.identifier] then
+        Log:info(format("Notificando o observador da credencial { %s %s } que a credencial { %s %s } foi removida do barramento.",
+            entry.credential.identifier, entry.credential.owner,
+            credential.identifier, credential.owner))
+        local success, err = oil.pcall(observer.callback.credentialWasDeleted,
+            observer.callback, credential)
+        if not success then
+          Log:info(format("Erro ao notificar observador da credencial { %s %s }:\n %s",
+              entry.credential.identifier, entry.credential.owner, err));
+        end
       end
     end
   end
@@ -1569,12 +1602,6 @@ function FaultToleranceFacet:updateStatus(params)
                         addEntry.observers[observerId] = true
                       end
                     end
-                    addEntry.observedBy = {}
-                    for _, observerId in pairs(repEntry.observedBy) do
-                      if type(observerId) == "string" then
-                        addEntry.observedBy[observerId] = true
-                      end
-                    end
                     acsFacet:addEntryCredential(addEntry)
                     updated = true
                     count = count + 1
@@ -1625,10 +1652,6 @@ function FaultToleranceFacet:updateStatus(params)
         addEntry.observers = {}
         for _, observerId in pairs(entryCredential.observers) do
           addEntry.observers[observerId] = true
-        end
-        addEntry.observedBy = {}
-        for _, observerId in pairs(entryCredential.observedBy) do
-          addEntry.observedBy[observerId] = true
         end
         acsFacet:addEntryCredential(addEntry)
         updated = true
