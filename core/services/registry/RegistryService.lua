@@ -39,6 +39,11 @@ local DATA_DIR = os.getenv("OPENBUS_DATADIR")
 ---
 module("core.services.registry.RegistryService")
 
+--------------------------------------------------------------------------------
+-- Aliases
+
+local StartupFailedException = "IDL:scs/core/StartupFailed:1.0"
+
 ------------------------------------------------------------------------------
 -- Faceta IRegistryService
 ------------------------------------------------------------------------------
@@ -1166,7 +1171,7 @@ function startup(self)
   if not status then
     Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
       conns[1])
-    return false
+    error(orb:newexcept{StartupFailedException})
   end
 end
 
