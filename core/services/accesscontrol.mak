@@ -48,7 +48,7 @@ INCLUDES= . \
         ${OPENBUSINC}/luafilesystem \
         ${OPENBUSINC}/luuid \
         ${OPENBUSINC}/lce \
-        ${OPENBUSINC}/lualdap-1.0.1 \
+        ${OPENBUSINC}/lualdap-1.1.0 \
         ${OPENBUSINC}/scs \
         ${OPENBUSINC}/openbus/lua
 
