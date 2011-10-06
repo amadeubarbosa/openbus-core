@@ -104,16 +104,6 @@ local function makePropertyList(entry, service_props)
 	return props
 end
 
-local function dealAuthorizationError(self, message)
-	if self.enforceAuth then
-		ServiceFailure{
-			message = message,
-		}
-	else
-		log:misconfig(message)
-	end
-end
-
 ------------------------------------------------------------------------------
 -- Faceta OfferRegistry
 ------------------------------------------------------------------------------
