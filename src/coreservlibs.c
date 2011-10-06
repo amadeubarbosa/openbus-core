@@ -5,15 +5,19 @@
 
 #include "luuid.h"
 #include "lce.h"
-#include "lpw.h"
 #include "lfs.h"
 #include "lualdap.h"
-//#include "luastruct.h"
+#include "luavararg.h"
+#include "luastruct.h"
 #include "luasocket.h"
-//#include "luaidl.h"
-//#include "oil.h"
-//#include "scs.h"
-//#include "openbus.h"
+#include "loop.h"
+#include "looplib.h"
+#include "cothread.h"
+#include "luaidl.h"
+#include "oil.h"
+#include "scs.h"
+#include "openbus.h"
+#include "coreservices.h"
 
 void luapreload_extralibraries(lua_State *L)
 {
@@ -23,13 +27,17 @@ void luapreload_extralibraries(lua_State *L)
 	lua_pushcfunction(L,luaopen_lce);lua_setfield(L,-2,"lce");
 	lua_pushcfunction(L,luaopen_lfs);lua_setfield(L,-2,"lfs");
 	lua_pushcfunction(L,luaopen_lualdap);lua_setfield(L,-2,"lualdap");
-	//lua_pushcfunction(L,luaopen_struct);lua_setfield(L,-2,"struct");
+	lua_pushcfunction(L,luaopen_vararg);lua_setfield(L,-2,"vararg");
+	lua_pushcfunction(L,luaopen_struct);lua_setfield(L,-2,"struct");
 	lua_pushcfunction(L,luaopen_socket_core);lua_setfield(L,-2,"socket.core");
 	lua_pop(L, 1);  /* pop 'package.preload' table */
 	/* preload script libraries */
-	//luapreload_luaidl(L);
-	//luapreload_oil(L);
-	//luapreload_scs(L);
-	//luapreload_openbus(L);
-	#include "coreserv.loh"
+	luapreload_loop(L);
+	luapreload_looplib(L);
+	luapreload_cothread(L);
+	luapreload_luaidl(L);
+	luapreload_oil(L);
+	luapreload_scs(L);
+	luapreload_openbus(L);
+	luapreload_coreservices(L);
 }

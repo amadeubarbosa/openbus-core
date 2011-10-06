@@ -2,7 +2,6 @@ PROJNAME= OpenBus
 APPNAME= busservices
 
 USE_LUA51= YES
-USE_NODEPEND= YES
 
 OPENBUSIDL= ${OPENBUS_HOME}/idlpath/v1_05
 OPENBUSINC= ${OPENBUS_HOME}/incpath
@@ -10,33 +9,33 @@ OPENBUSLIB= ${OPENBUS_HOME}/libpath/$(TEC_UNAME)
 
 SRC= \
 	launcher.c \
-	coreservlibs.c
+	coreservlibs.c \
+	coreservices.c
 
-SRCLUADIR= ../lua
-SRCLUA= \
+LUADIR= ../lua
+LUAPCK= $(addprefix $(LUADIR)/, \
 	openbus/core/legacy/AccessControlService.lua \
 	openbus/core/legacy/idl.lua \
 	openbus/core/legacy/parsed.lua \
 	openbus/core/legacy/RegistryService.lua \
+	openbus/core/services/Access.lua \
 	openbus/core/services/AccessControl.lua \
 	openbus/core/services/LoginDB.lua \
 	openbus/core/services/main.lua \
 	openbus/core/services/messages.lua \
 	openbus/core/services/OfferIndex.lua \
 	openbus/core/services/OfferRegistry.lua \
-	openbus/core/services/passwordvalidator/LDAP.lua
+	openbus/core/services/passwordvalidator/LDAP.lua )
 
 IDL= \
 	$(OPENBUSIDL)/access_control_service.idl \
 	$(OPENBUSIDL)/registry_service.idl \
-	$(OPENBUSIDL)/fault_tolerance_service.idl
+	$(OPENBUSIDL)/fault_tolerance.idl
 
 LIBS= \
 	dl crypto ldap \
-	luuid lce lpw lfs lualdap luastruct luasocket \
+	luuid lce lpw lfs lualdap luavararg luastruct luasocket \
 	loop looplib cothread luaidl oil scs openbus
-
-LOHPACK= coreserv.loh
 
 DEFINES= \
 	OPENBUS_MAIN=\"openbus.core.services.main\" \
@@ -48,14 +47,13 @@ INCLUDES+= . $(SRCLUADIR) \
 	$(OPENBUSINC)/lpw \
 	$(OPENBUSINC)/luafilesystem \
 	$(OPENBUSINC)/lualdap-1.0.1 \
-	$(OPENBUSINC)/luastruct \
-	$(OPENBUSINC)/luasocket2 \
-	$(OPENBUSINC)/loop \
-	$(OPENBUSINC)/looplib \
-	$(OPENBUSINC)/cothread \
-	$(OPENBUSINC)/luaidl \
-	$(OPENBUSINC)/oil \
-	$(OPENBUSINC)/scs
+	$(OPENBUSINC)/luavararg-1.1 \
+	$(OPENBUSINC)/luastruct-1.1 \
+	$(OPENBUSINC)/luasocket-2.0.2 \
+	$(OPENBUSINC)/loop-3.0 \
+	$(OPENBUSINC)/oil-0.6 \
+	$(OPENBUSINC)/scs-1.2.3 \
+	$(OPENBUSINC)/luaopenbus-2.0
 LDIR+= $(OPENBUSLIB)
 
 ifneq "$(TEC_SYSNAME)" "Darwin"
@@ -74,5 +72,13 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
 	LIBS += rt
 endif
 
-openbus/core/legacy/parsed.lua: $(IDL)
+$(LUADIR)/openbus/core/legacy/parsed.lua: $(IDL)
 	$(LUABIN) ${OIL_HOME}/lua/idl2lua.lua -I $(OPENBUSIDL) -o $(SRCLUADIR)/$@ $^
+
+coreservices.c coreservices.h: ${LOOP_HOME}/lua/preloader.lua $(LUAPCK)
+	$(LUABIN) $< -l "$(LUADIR)/?.lua" -h coreservices.h -o coreservices.c $(filter-out $<,$^)
+
+coreservlibs.c: coreservices.h
+
+debug:
+	echo "$(OPENBUSLIB)"
