@@ -141,7 +141,6 @@ Openbus:enableFaultTolerance()
 local orb = Openbus:getORB()
 
 function main()
-  -- Aloca uma thread do OiL para o orb
   Openbus:run()
 
   -- Cria o componente responsável pelo Serviço de Registro
