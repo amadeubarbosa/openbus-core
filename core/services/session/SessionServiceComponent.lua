@@ -8,6 +8,7 @@ local pairs    = pairs
 local ipairs   = ipairs
 local assert   = assert
 local loadfile = loadfile
+local format   = string.format
 
 local oil = require "oil"
 
@@ -26,6 +27,7 @@ local oop = require "loop.simple"
 --------------------------------------------------------------------------------
 -- Aliases
 
+local STARTUP_SLEEP_TIME = 5
 
 ---
 -- IComponent (membro) do Serviço de Sessão.
@@ -72,8 +74,11 @@ function SessionServiceComponent:startup()
   if not Openbus:isConnected() then
     registryService = Openbus:connectByCertificate(self.context._componentId.name,
       self.privateKeyFile, self.accessControlServiceCertificateFile)
-    if not registryService then
-      error(orb:newexcept{StartupFailedException})
+    while not registryService do
+      registryService = Openbus:getRegistryService()
+      oil.sleep(STARTUP_SLEEP_TIME)
+      Log:warn(format("Nao foi possivel encontrar o Serviço de Registro. Tentaremos localizado daqui a %d segundos. ",
+          STARTUP_SLEEP_TIME))
     end
     registryService = orb:newproxy(registryService, "protected", Utils.REGISTRY_SERVICE_INTERFACE)
   end
