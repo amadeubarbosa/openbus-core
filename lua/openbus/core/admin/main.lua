@@ -1024,7 +1024,7 @@ return function(...)
     os.exit(1)
   elseif command.name == "help" then
     handlers.help(command)
-    os.exit(1)
+    os.exit()
   elseif not command.params.login then
     print("[ERRO] Usuário não informado")
     os.exit(1)
@@ -1063,7 +1063,5 @@ return function(...)
     end
   end
 
-  oil.main(function()
-    print(pcall(main))
-  end)
+  print(pcall(main))
 end
