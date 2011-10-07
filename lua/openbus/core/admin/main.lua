@@ -1003,7 +1003,7 @@ function connect(retry)
     else 
       error(err)
     end
-    os.exit(1)
+    return 1
   end
   connection = conn
   return connection
@@ -1021,13 +1021,13 @@ return function(...)
   if not command then
     print("[ERRO] " .. msg)
     print("[HINT] --help")
-    os.exit(1)
+    return 1
   elseif command.name == "help" then
     handlers.help(command)
-    os.exit()
+    return 0
   elseif not command.params.login then
     print("[ERRO] Usuário não informado")
-    os.exit(1)
+    return 1
   end
 
   -- Recupera os valores globais
@@ -1057,11 +1057,16 @@ return function(...)
       connection = nil
     end
     if returned then
-      os.exit()
+      return 0
     else
-      os.exit(1)
+      return 1
     end
   end
 
-  print(pcall(main))
+  local ok, ret = pcall(main)
+  if not ok then
+    print(ret)
+    return 1
+  end
+  return ret
 end

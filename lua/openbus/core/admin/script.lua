@@ -1,5 +1,4 @@
 local _G = require "_G"
-local os = _G.os
 local io = _G.io
 local stderr = io.stderr
 local type = _G.type
@@ -31,8 +30,7 @@ end
 local function argerror()
   printf("[ERRO] Parâmetro inválido (linha %d)",
     debug.getinfo(3, 'l').currentline)
-  --error()
-  os.exit(1)
+  error("Arquivo de script possui falhas.")
 end
 
 -------------------------------------------------------------------------------
