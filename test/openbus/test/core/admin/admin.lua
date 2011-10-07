@@ -88,7 +88,7 @@ assert(execute("--set-authorization=ENT04","--grant=IDL:script/test:1.0"))
 assert(execute("--set-authorization=ENT04","--revoke=IDL:script/test:1.0"))
 assert(execute("--list-authorization"))
 assert(execute("--list-authorization=ENT03"))
---assert(execute("--list-authorization","--interface=IDL:script/test:1.0"))
+assert(execute("--list-authorization","--interface=IDL:script/test:1.0"))
 
 -- oferta
 assert(execute("--list-offer"))

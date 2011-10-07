@@ -846,7 +846,7 @@ handlers["list-authorization"] = function(cmd)
       for _, entitydesc in ipairs(ents) do 
         local authorization = {}
         authorization.id = entitydesc.id
-        authorization.interfaces = entitydesc.ref:getAuthorizationSpecs()
+        authorization.interfaces = entitydesc.ref:getGrantedInterfaces()
         table.insert(auths, authorization)
       end
     end
