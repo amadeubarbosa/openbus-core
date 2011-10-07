@@ -179,10 +179,29 @@ function writeCredential(self, entry)
   if component then
     stream[component] = "'"..self.orb:tostring(component).."'"
   end
-  stream:put(entry)
+
+  local localEntry = {
+    credential = entry.credential,
+    certified = entry.certified,
+    lease = entry.lease,
+    observers = {},
+    observedBy = {}
+  }
+
+  if entry.observers then
+    for observerId, observer in pairs(entry.observers) do
+      localEntry.observers =  {}
+      localEntry.observers[observerId] = {}
+      localEntry.observers[observerId].credentials = observer.credentials
+      localEntry.observers[observerId].callback = "nil"
+      localEntry.observers[observerId].ior = observer.ior
+    end
+    Log:error(localEntry.observers)
+  end
+  Log:error(localEntry)
+  stream:put(localEntry)
 
   credentialFile:close()
-
   return true
 end
 

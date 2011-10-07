@@ -443,16 +443,14 @@ function ACSFacet:getAllEntryCredential()
   self.context["IManagement_" .. Utils.IDL_VERSION]:checkPermission()
 
   local retEntries = {}
-  local i = 0
   for _,entry in pairs(self.entries) do
-    if entry.credential then
-      Log:error(format("Erro na persistência da credencial do membro. %s",
-          entry))
+    if not entry.credential then
+      Log:error("Erro na persistência da credencial do membro.")
       return {}
     end
-    self:getEntryCredential(entry.credential)
+    table.insert(retEntries, self:getEntryCredential(entry.credential))
   end
-  Log:debug("Obtendo todas as %d credenciais", i)
+  Log:debug(format("Obtendo todas as %d credenciais", #retEntries))
   return retEntries
 end
 
@@ -713,6 +711,8 @@ function ACSFacet:notifyCredentialWasDeleted(credential)
           Log:info(format("Erro ao notificar observador da credencial { %s %s }:\n %s",
               entry.credential.identifier, entry.credential.owner, err));
         end
+        observer.credentials[credential.identifier] = nil
+        self.credentialDB:update(entry)
       end
     end
   end
