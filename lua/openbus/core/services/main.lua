@@ -39,6 +39,7 @@ local OfferRegistry = require "openbus.core.services.OfferRegistry"
 return function(...)
 	-- configuration parameters parser
 	local Configs = ConfigArgs{
+		busid = "OpenBus",
 		host = "*",
 		port = 2089,
 	
@@ -140,6 +141,7 @@ Options:
 		init = function()
 			local params = {
 				access = access,
+				busid = Configs.busid,
 				database = assert(opendb(Configs.database)),
 				certificate = assert(readfilecontents(Configs.certificate)),
 				privateKey = assert(readprivatekey(Configs.privatekey)),

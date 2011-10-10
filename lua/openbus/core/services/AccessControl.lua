@@ -167,6 +167,7 @@ local AccessControl = {
 function AccessControl:__init(data)
 	local access = data.access
 	access.logins = self
+	access.busid = data.busid
 	access.login = SelfLogin
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")
 	access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
@@ -175,6 +176,7 @@ function AccessControl:__init(data)
 	-- initialize attributes
 	self.access = access
 	self.database = data.database
+	self.busid = data.busid
 	self.certificate = data.certificate
 	self.privateKey = data.privateKey
 	self.passwordValidators = data.validators
