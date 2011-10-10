@@ -15,7 +15,7 @@ local class = oo.class
 
 
 
-local function returnZero() return 0 end
+local ReturnZero = { __index = function() return 0 end }
 local function newOfferSet() return {} end
 local function newValueIndex() return memoize(newOfferSet) end
 
@@ -24,7 +24,7 @@ local function newValueIndex() return memoize(newOfferSet) end
 local OfferIndex = class()
 
 function OfferIndex:__init()
-	self.sizeOf = memoize(returnZero, "k")
+	self.sizeOf = setmetatable({}, ReturnZero)
 	self.index = memoize(newValueIndex)
 end
 
@@ -100,6 +100,15 @@ function OfferIndex:find(properties)
 		end
 	end
 	return found
+end
+
+local Empty = {}
+function OfferIndex:get(name, value)
+	local validx = rawget(self.index, name)
+	if validx ~= nil then
+		return rawget(validx, value) or Empty
+	end
+	return Empty
 end
 
 return OfferIndex

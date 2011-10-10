@@ -148,7 +148,7 @@ OfferRegistry = { -- is local (see forward declaration)
 }
 
 function OfferRegistry:loginRemoved(login)
-	local set = self.offers.index["openbus.offer.login"][login.id]
+	local set = self.offers:get("openbus.offer.login", login.id)
 	for offer in pairs(set) do
 		log:action(msg.RemoveOfferAfterOwnerLogoff:tag{
 			offer = offer.id,
@@ -404,7 +404,7 @@ end
 function Entity:remove()
 	local id = self.id
 	if self.registry.enforceAuth then
-		local offers = OfferRegistry.offers.index["openbus.offer.entity"][id]
+		local offers = OfferRegistry.offers:get("openbus.offer.entity", id)
 		for offer in pairs(offers) do
 			offer:remove()
 		end
@@ -439,7 +439,7 @@ function Entity:revokeInterface(ifaceId)
 	-- check if interface is implemented by an offer
 	if self.registry.enforceAuth then
 		local unauthorized = {}
-		local offers = OfferRegistry.offers.index["openbus.offer.entity"][self.id]
+		local offers = OfferRegistry.offers:get("openbus.offer.entity", self.id)
 		for offer in pairs(offers) do
 			for facet in ipairs(offer.facets) do
 				if facet.interface_name == ifaceId then
