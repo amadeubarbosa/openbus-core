@@ -285,7 +285,7 @@ packages = {
     },
   },
   { name = "luascs",
-    url = SVNREPURL .. "/scs/core/lua/branches/SCS_CORE_LUA_v1_02_02_2011_07_28",
+    url = SVNREPURL .. "/scs/core/lua/trunk",
     directory = PRODAPP .."/scs-lua",
     build = {
       type = "tecmake",
