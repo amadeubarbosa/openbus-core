@@ -3,6 +3,7 @@
 local io = io
 local string = string
 local format = string.format
+local pairs = pairs
 local os = os
 local tostring = tostring
 
@@ -14,6 +15,7 @@ local oil = require "oil"
 local FileStream = require "loop.serial.FileStream"
 
 local Log = require "openbus.util.Log"
+local Utils = require "openbus.util.Utils"
 
 local oop = require "loop.base"
 
@@ -24,6 +26,10 @@ module("core.services.accesscontrol.CredentialDB", oop.class)
 
 FILE_SUFFIX = ".credential"
 FILE_SEPARATOR = "/"
+
+local ICredentialObserver_Interface = "IDL:tecgraf/openbus/core/"..Utils.IDL_VERSION..
+    "/access_control_service/ICredentialObserver:1.0"
+
 
 ---
 --Cria um banco de dados de credenciais.
@@ -71,6 +77,15 @@ function retrieveAll(self)
 
       local credential = entry.credential
       self.credentials[credential.identifier] = true
+
+      for observerId, observer in pairs(entry.observers) do
+        if observer.ior then
+          observer.callback = self.orb:newproxy(observer.ior, nil, ICredentialObserver_Interface)
+        else
+          Log:error(format("Erro na persistência da credencial. A credencial { %s %s } possui observador, mas não possui IOR persistido.",
+              credential.identifier, credential.owner))
+        end
+      end
 
       -- caso especial para referencias a membros
       if entry.component then
@@ -164,10 +179,26 @@ function writeCredential(self, entry)
   if component then
     stream[component] = "'"..self.orb:tostring(component).."'"
   end
-  stream:put(entry)
 
+  local localEntry = {
+    credential = entry.credential,
+    certified = entry.certified,
+    lease = entry.lease,
+    observers = {},
+    observedBy = {}
+  }
+
+  if entry.observers then
+    for observerId, observer in pairs(entry.observers) do
+      localEntry.observers =  {}
+      localEntry.observers[observerId] = {}
+      localEntry.observers[observerId].credentials = observer.credentials
+      localEntry.observers[observerId].callback = "nil"
+      localEntry.observers[observerId].ior = observer.ior
+    end
+  end
+  stream:put(localEntry)
   credentialFile:close()
-
   return true
 end
 
