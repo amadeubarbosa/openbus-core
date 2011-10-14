@@ -196,11 +196,8 @@ function writeCredential(self, entry)
       localEntry.observers[observerId].callback = "nil"
       localEntry.observers[observerId].ior = observer.ior
     end
-    Log:error(localEntry.observers)
   end
-  Log:error(localEntry)
   stream:put(localEntry)
-
   credentialFile:close()
   return true
 end
