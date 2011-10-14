@@ -402,7 +402,7 @@ packages = {
     },
     dev_files = {
       ["../lib/${TEC_UNAME}/libluaopenbus.*"] = "lib",
-      ["openbus.h"] = "include/openbus/lua/",
+      ["../obj/${TEC_UNAME}/openbus.h"] = "include/openbus/lua/",
     },
   },
   { name = "openbus-busservices",
