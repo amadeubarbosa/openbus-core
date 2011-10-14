@@ -1,0 +1,10 @@
+licenses
+lua5.1-dev
+openssl-0.9.9-dev
+mico-2.3.13-multithread-dev
+logger-dev
+scs-idl
+scs-micoMT-dev
+openbus-micoMT-dev
+openbus-demo-hello-micoMT-dev
+openbus-test-micoMT

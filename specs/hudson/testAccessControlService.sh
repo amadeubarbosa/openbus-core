@@ -1,0 +1,98 @@
+#!/bin/ksh
+
+echo "==============================================================================="
+echo
+echo "                   TESTE DO SERVIÇO DE CONTROLE DE ACESSO                      "
+echo
+echo "==============================================================================="
+
+###############################################################################
+
+if [ -z "${WORKSPACE}" ] ;then
+  echo "[ERRO] Variável de ambiente WORKSPACE não definida"
+  exit 1
+fi 
+
+. ${WORKSPACE}/hudson/openbus.sh
+
+###############################################################################
+
+ShowLog() {
+  echo "================================ $1 Output Log ==============================="
+  cat $2
+  echo
+  echo "================================ $1 Error Log ================================"
+  cat $3
+  echo
+  echo "=============================================================================="
+}
+
+###############################################################################
+
+ACSPIDFILE=${WORKSPACE}/acs.pid
+RGSPIDFILE=${WORKSPACE}/rgs.pid
+ACSOUTFILE=${WORKSPACE}/acs-job-${BUILD_NUMBER}-date-${BUILD_ID}.out
+ACSERRFILE=${WORKSPACE}/acs-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
+RGSOUTFILE=${WORKSPACE}/rgs-job-${BUILD_NUMBER}-date-${BUILD_ID}.out
+RGSERRFILE=${WORKSPACE}/rgs-job-${BUILD_NUMBER}-date-${BUILD_ID}.err
+
+###############################################################################
+
+echo "Iniciando Serviço de Controle de Acesso"
+daemonize -o ${ACSOUTFILE} -e ${ACSERRFILE} -p ${ACSPIDFILE} ${OPENBUS_HOME}/bin/run_access_control_server.sh
+sleep 5
+ACSPID=`cat ${ACSPIDFILE}`
+
+if ! ( kill -0 ${ACSPID} 1>/dev/null 2>&1 ) ;then
+  echo "==============================================================================="
+  echo "[ERRO] Falha ao iniciar o Serviço de Controle de Acesso"
+  ShowLog "ACS" ${ACSOUTFILE} ${ACSERRFILE}
+  rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE}
+  exit 1
+fi
+
+###############################################################################
+
+###############################################################################
+
+echo "Iniciando Serviço de Registro"
+daemonize -o ${RGSOUTFILE} -e ${RGSERRFILE} -p ${RGSPIDFILE} ${OPENBUS_HOME}/bin/run_registry_server.sh
+sleep 10
+RGSPID=`cat ${RGSPIDFILE}`
+
+if ! ( kill -0 ${RGSPID} 1>/dev/null 2>&1 ) ;then
+  echo "==============================================================================="
+  echo "[ERRO] Falha ao iniciar o Serviço de Registro"
+  ShowLog "ACS" ${ACSOUTFILE} ${ACSERRFILE}
+  ShowLog "RGS" ${RGSOUTFILE} ${RGSERRFILE}
+  kill -9 ${ACSPID}
+  rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE}
+  rm -f ${RGSOUTFILE} ${RGSERRFILE} ${RGSPIDFILE}
+  exit 1
+fi
+
+###############################################################################
+
+cd ${OPENBUS_HOME}/test
+cp ${OPENBUS_HOME}/data/certificates/AccessControlService.crt .
+
+
+./run_unit_test.sh accesscontrol/AccessControlServiceTestSuite.lua
+ACSCODE=$?
+
+./run_unit_test.sh accesscontrol/ILeaseProviderTestSuite.lua
+LPCODE=$?
+
+kill -9 ${RGSPID}
+kill -9 ${ACSPID}
+
+CODE=0
+if [ ${ACSCODE} -eq 1 ] -o [ ${LPCODE} -eq 1 ] ;then
+  ShowLog "ACS" ${ACSOUTFILE} ${ACSERRFILE}
+  ShowLog "RGS" ${RGSOUTFILE} ${RGSERRFILE}
+  CODE=1
+fi
+
+rm -f ${ACSOUTFILE} ${ACSERRFILE} ${ACSPIDFILE} ${RGSOUTFILE} ${RGSERRFILE} ${RGSPIDFILE}
+
+exit ${CODE}

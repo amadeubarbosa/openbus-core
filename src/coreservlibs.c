@@ -12,7 +12,8 @@
 #include "luasocket.h"
 #include "loop.h"
 #include "looplib.h"
-#include "cothread.h"
+#include "luacothread.h"
+#include "luainspector.h"
 #include "luaidl.h"
 #include "oil.h"
 #include "scs.h"
@@ -34,7 +35,8 @@ void luapreload_extralibraries(lua_State *L)
 	/* preload script libraries */
 	luapreload_loop(L);
 	luapreload_looplib(L);
-	luapreload_cothread(L);
+	luapreload_luacothread(L);
+	luapreload_luainspector(L);
 	luapreload_luaidl(L);
 	luapreload_oil(L);
 	luapreload_scs(L);

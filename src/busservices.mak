@@ -3,9 +3,11 @@ APPNAME= busservices
 
 USE_LUA51= YES
 
-OPENBUSIDL= ${OPENBUS_HOME}/idlpath/v1_05
-OPENBUSINC= ${OPENBUS_HOME}/incpath
-OPENBUSLIB= ${OPENBUS_HOME}/libpath/$(TEC_UNAME)
+#apenas necessario pela compatilibidade com OpenBus 1.5
+#para gerar o modulo Lua openbus.core.legacy.parsed
+OPENBUSIDL= ${OPENBUS_HOME}/idl/v1_05
+OPENBUSINC= ${OPENBUS_HOME}/include
+OPENBUSLIB= ${OPENBUS_HOME}/lib
 
 SRC= \
 	launcher.c \
@@ -35,7 +37,7 @@ IDL= \
 LIBS= \
 	dl crypto ldap \
 	luuid lce lpw lfs lualdap luavararg luastruct luasocket \
-	loop looplib cothread luaidl oil scs openbus
+	loop looplib luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
 	OPENBUS_MAIN=\"openbus.core.services.main\" \
@@ -46,14 +48,14 @@ INCLUDES+= . $(SRCLUADIR) \
 	$(OPENBUSINC)/lce \
 	$(OPENBUSINC)/lpw \
 	$(OPENBUSINC)/luafilesystem \
-	$(OPENBUSINC)/lualdap-1.0.1 \
-	$(OPENBUSINC)/luavararg-1.1 \
-	$(OPENBUSINC)/luastruct-1.1 \
-	$(OPENBUSINC)/luasocket-2.0.2 \
-	$(OPENBUSINC)/loop-3.0 \
-	$(OPENBUSINC)/oil-0.6 \
-	$(OPENBUSINC)/scs-1.2.3 \
-	$(OPENBUSINC)/luaopenbus-2.0
+	$(OPENBUSINC)/lualdap-1.1.0 \
+	$(OPENBUSINC)/luavararg \
+	$(OPENBUSINC)/luastruct \
+	$(OPENBUSINC)/luasocket2 \
+	$(OPENBUSINC)/loop \
+	$(OPENBUSINC)/oil \
+	$(OPENBUSINC)/scs/lua \
+	$(OPENBUSINC)/openbus/lua
 LDIR+= $(OPENBUSLIB)
 
 ifneq "$(TEC_SYSNAME)" "Darwin"
@@ -73,10 +75,10 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
 endif
 
 $(LUADIR)/openbus/core/legacy/parsed.lua: $(IDL)
-	$(LUABIN) ${OIL_HOME}/lua/idl2lua.lua -I $(OPENBUSIDL) -o $(SRCLUADIR)/$@ $^
+	$(LUABIN) -e "package.path=[[${LOOP_HOME}/lua/?.lua]]" ${OIL_HOME}/lua/idl2lua.lua -I $(OPENBUSIDL) -o $(SRCLUADIR)/$@ $^
 
 coreservices.c coreservices.h: ${LOOP_HOME}/lua/preloader.lua $(LUAPCK)
-	$(LUABIN) $< -l "$(LUADIR)/?.lua" -h coreservices.h -o coreservices.c $(filter-out $<,$^)
+	$(LUABIN) -e "package.path=[[${LOOP_HOME}/lua/?.lua]]" $< -l "$(LUADIR)/?.lua" -h coreservices.h -o coreservices.c $(filter-out $<,$^)
 
 coreservlibs.c: coreservices.h
 

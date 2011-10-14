@@ -1,0 +1,125 @@
+#!/bin/ksh
+
+#TECMAKE
+TECTOOLS_HOME=/home/t/tecgraf/lib
+TECMAKE_HOME=$TECTOOLS_HOME/tecmake
+export TECMAKE_HOME
+
+if [ -f $TECMAKE_HOME/tec_uname.bsh ]; then
+	# workaround to bad assigns in that tec_uname file
+	ORIG_TECMAKEHOME=$TECMAKE_HOME
+	ORIG_TECTOOLSHOME=$TECTOOLS_HOME
+	. $TECMAKE_HOME/tec_uname.bsh
+	# restoring the variables to the correct values
+	TECMAKE_HOME=$ORIG_TECMAKEHOME
+	TECTOOLS_HOME=$ORIG_TECTOOLSHOME
+fi
+
+function die {
+        echo -e $@
+        exit 1
+}
+
+INSTALL=$1
+OPENBUS_HOME=${INSTALL:=/local/openbus/running}
+if [ ! -d "$OPENBUS_HOME" ]; then
+	die "Usage: $0 OPENBUS_HOME OPENBUS_DATADIR"
+fi
+export OPENBUS_HOME
+
+DATA=$2
+OPENBUS_DATADIR=${DATA:=$OPENBUS_HOME/data}
+if [ ! -d "$OPENBUS_DATADIR" ]; then
+	die "Usage: $0 OPENBUS_HOME OPENBUS_DATADIR"
+fi
+export OPENBUS_DATADIR
+
+
+#OPENBUS_INIT=$OPENBUS_HOME/specs/shell/openbus.init
+OPENBUS_INIT=/etc/init.d/openbus
+[ -x "$OPENBUS_INIT" ] || die "ERROR: $OPENBUS_INIT not found or execute permission missing."
+
+
+HOSTNAME=$(hostname)
+
+CRASH_DIR=$OPENBUS_DATADIR/crashes
+LOG_DIR=$OPENBUS_DATADIR/log
+LOG_ACS=$LOG_DIR/acs.log
+LOG_RGS=$LOG_DIR/rgs.log
+LOG_SS=$LOG_DIR/ss.log
+
+PID_ACS=$OPENBUS_DATADIR/acs.pid
+PID_RGS=$OPENBUS_DATADIR/rgs.pid
+PID_SS=$OPENBUS_DATADIR/ss.pid
+
+EMAIL=amadeu@tecgraf.puc-rio.br
+
+# function to check if is running actually
+is_running() {
+	# if not exist the PID files
+	if [ ! -f $PID_ACS ] || [ ! -f $PID_RGS ] || [ ! -f $PID_SS ]; then
+		return 1
+	else
+		# the PID file can be outdated, asking for them
+		ps -e |grep $(cat $PID_ACS 2>/dev/null) 1>/dev/null 2>/dev/null
+		acs_ret=$?
+		ps -e |grep $(cat $PID_RGS 2>/dev/null) 1>/dev/null 2>/dev/null
+		rgs_ret=$?
+		ps -e |grep $(cat $PID_SS 2>/dev/null) 1>/dev/null 2>/dev/null
+		ss_ret=$?
+		# if some PID is outdated then remove that file and return false
+		running=0
+		if [ $acs_ret -gt 0 ]; then
+			echo "Serviço de Controle de Acesso está desligado."
+			rm -f $PID_ACS
+			running=1
+		fi
+		if [ $rgs_ret -gt 0 ]; then
+			echo "Serviço de Sessão está desligado."
+			rm -f $PID_RGS
+			running=1
+		fi
+		if [ $ss_ret -gt 0 ]; then
+			echo "Serviço de Registro está desligado."
+			rm -f $PID_SS
+			running=1
+		fi
+		return $running
+	fi
+}
+
+# check if is running
+is_running
+ret=$?
+# when some error try restart
+if [ $ret -gt 0 ] ; then
+	# probably the services has crashed!
+	# it will try stop any other openbus services
+	$OPENBUS_INIT stop 
+
+	TAG=`date +%Y%m%d-%H:%M:%S`
+	mkdir -p $CRASH_DIR
+
+	cp $LOG_ACS $CRASH_DIR/acs-$TAG.log
+	gzip $CRASH_DIR/acs-$TAG.log
+	cp $LOG_RGS $CRASH_DIR/rgs-$TAG.log
+	gzip $CRASH_DIR/rgs-$TAG.log
+	cp $LOG_SS $CRASH_DIR/ss-$TAG.log
+	gzip $CRASH_DIR/ss-$TAG.log
+	
+	$OPENBUS_INIT start
+	echo "Olá,
+Sou um notificador automático e identifiquei que os servicos do OpenBus na
+máquina $HOSTNAME falharam!
+Acabo de reiniciar os servicos, talvez seja importante você olhar os logs que
+foram salvos em:
+  $CRASH_DIR/acs-$TAG.log
+  $CRASH_DIR/rgs-$TAG.log
+  $CRASH_DIR/ss-$TAG.log
+
+Atenciosamente,
+Crontab da Máquina $HOSTNAME
+Autor: Amadeu Barbosa (amadeu@tecgraf.puc-rio.br)" |\
+	 mail -s "Falha e reinício do barramento na $HOSTNAME" $EMAIL
+fi
+

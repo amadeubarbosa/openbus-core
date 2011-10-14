@@ -1,0 +1,25 @@
+-- $$id$$
+
+System {
+  id = "Access_Control_Service_Monitor",
+  description = "Monitor responsavel por controlar as replicas do Servico de Controle de Acesso.",
+}
+
+SystemDeployment {
+  id = "ACSMonitor",
+  system = "Access_Control_Service_Monitor",
+  description = "Monitor de tolerancia a falhas do Servico de Controle de Acesso.",
+  certificate = "ACSMonitor.crt"
+}
+
+System {
+  id = "Registry_Service_Monitor",
+  description = "Monitor responsavel por controlar as replicas do Servico de Registro.",
+}
+
+SystemDeployment {
+  id = "RGSMonitor",
+  system = "Registry_Service_Monitor",
+  description = "Monitor de tolerancia a falhas do Servico de Registro.",
+  certificate = "RGSMonitor.crt"
+}
