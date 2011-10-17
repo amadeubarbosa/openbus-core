@@ -97,14 +97,6 @@ public final class Openbus {
    */
   private LeaseExpiredCallback leaseExpiredCallback;
   /**
-   * Serviço de registro.
-   */
-  private IRegistryService rgs;
-  /**
-   * Serviço de sessão.
-   */
-  private ISessionService ss;
-  /**
    * Credencial recebida ao se conectar ao barramento.
    */
   private CredentialHolder credential;
@@ -161,8 +153,6 @@ public final class Openbus {
     this.requestCredentialSlot = -1;
 
     this.acs = null;
-    this.rgs = null;
-    this.ss = null;
     this.lp = null;
     this.leaseRenewer = null;
 
@@ -291,17 +281,15 @@ public final class Openbus {
    * @return O Serviço de Registro.
    */
   public IRegistryService getRegistryService() {
-    if (this.rgs == null) {
-      if (this.acs != null) {
-        try {
-          this.rgs = this.acs.getRegistryService();
-        }
-        catch (SystemException e) {
-          Log.COMMON.severe("Falha ao tentar obter o serviço de registro", e);
-        }
+    if (this.acs != null) {
+      try {
+        return this.acs.getRegistryService();
+      }
+      catch (SystemException e) {
+        Log.COMMON.severe("Falha ao tentar obter o serviço de registro", e);
       }
     }
-    return this.rgs;
+    return null;
   }
 
   /**
@@ -312,21 +300,20 @@ public final class Openbus {
    * @return O Serviço de Sessão.
    */
   public ISessionService getSessionService() {
-    if (this.ss == null && this.rgs != null) {
+    IRegistryService rgs = this.getRegistryService();
+    if (rgs != null) {
       ServiceOffer[] offers =
-        this.rgs.find(new String[] { Utils.SESSION_SERVICE_FACET_NAME });
+        rgs.find(new String[] { Utils.SESSION_SERVICE_FACET_NAME });
       if (offers.length > 0) {
         IComponent component = offers[0].member;
         Object facet = component.getFacet(ISessionServiceHelper.id());
         if (facet == null) {
           return null;
         }
-        this.ss = ISessionServiceHelper.narrow(facet);
-        return this.ss;
+        return ISessionServiceHelper.narrow(facet);
       }
-      return null;
     }
-    return this.ss;
+    return null;
   }
 
   /**
@@ -422,8 +409,7 @@ public final class Openbus {
               new OpenbusExpiredCallback());
           this.leaseRenewer.start();
           connectionState = ConnectionStates.CONNECTED;
-          this.rgs = this.acs.getRegistryService();
-          return this.rgs;
+          return this.acs.getRegistryService();
         }
         else {
           throw new ACSLoginFailureException(
@@ -486,8 +472,7 @@ public final class Openbus {
               new OpenbusExpiredCallback());
           this.leaseRenewer.start();
           connectionState = ConnectionStates.CONNECTED;
-          this.rgs = this.acs.getRegistryService();
-          return this.rgs;
+          return this.acs.getRegistryService();
         }
         else {
           throw new ACSLoginFailureException(
@@ -524,9 +509,7 @@ public final class Openbus {
       fetchACS();
     this.credential = new CredentialHolder(credential);
     if (this.acs.isValid(credential)) {
-      if (this.rgs == null)
-        this.rgs = this.acs.getRegistryService();
-      return this.rgs;
+      return this.acs.getRegistryService();
     }
     throw new InvalidCredentialException(new NO_PERMISSION(
       "Credencial inválida."));
