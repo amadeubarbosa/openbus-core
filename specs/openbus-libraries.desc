@@ -14,7 +14,7 @@ IDL_PREV="v1_05"
 local function descriptorPreloaderBasedGenerator(projname, target, projsrc, projurl, projgroup)
   assert(projname and target)
   projsrc = projsrc or PRODAPP.."/"..projname.."/src"
-  projgroup = projgroup or projname -- group all loop, looplib, luacothread in 'loop' includes
+  projgroup = projgroup or projname -- group all loop, luacothread in 'loop' includes
   local tecmake_extra_args = " LUA51="..PRODAPP.."/lua5.1 LOOP_HOME="..PRODAPP.."/loop "
   local darwin_default_spec = { 
     mf = {
@@ -205,7 +205,6 @@ packages = {
   descriptorPreloaderBasedGenerator("luainspector", "inspector", PRODAPP.."/loop/etc", nil, "loop"),
   descriptorPreloaderBasedGenerator("luacothread", "cothread", PRODAPP.."/loop/etc", nil, "loop"),
   descriptorPreloaderBasedGenerator("luatuple", "tuple", PRODAPP.."/loop/etc", nil, "loop"),
-  descriptorPreloaderBasedGenerator("looplib", "looplib", PRODAPP.."/loop/etc", nil, "loop"),
   descriptorPreloaderBasedGenerator("luastruct", "luastruct", nil, SVNREPURL .."/openbus/libs/trunk/struct-1.2"),
   descriptorPreloaderBasedGenerator("luavararg", "luavararg", nil, SVNREPURL .."/openbus/libs/trunk/vararg-1.1"),
   descriptorPreloaderBasedGenerator("luaidl", "luaidl", PRODAPP.."/oil/etc", nil, "oil"),

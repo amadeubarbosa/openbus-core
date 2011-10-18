@@ -75,10 +75,10 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
 endif
 
 $(LUADIR)/openbus/core/legacy/parsed.lua: $(IDL)
-	$(LUABIN) -e "package.path=[[${LOOP_HOME}/lua/?.lua]]" ${OIL_HOME}/lua/idl2lua.lua -I $(OPENBUSIDL) -o $(SRCLUADIR)/$@ $^
+	$(LUABIN) ${OIL_HOME}/lua/idl2lua.lua -I $(OPENBUSIDL) -o $(SRCLUADIR)/$@ $^
 
 coreservices.c coreservices.h: ${LOOP_HOME}/lua/preloader.lua $(LUAPCK)
-	$(LUABIN) -e "package.path=[[${LOOP_HOME}/lua/?.lua]]" $< -l "$(LUADIR)/?.lua" -h coreservices.h -o coreservices.c $(filter-out $<,$^)
+	$(LUABIN) $< -l "$(LUADIR)/?.lua" -h coreservices.h -o coreservices.c $(filter-out $<,$^)
 
 coreservlibs.c: coreservices.h
 
