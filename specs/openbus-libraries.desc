@@ -203,6 +203,7 @@ packages = {
   },
   descriptorPreloaderBasedGenerator("loop", "loop", PRODAPP.."/loop/etc", SVNREPURL .."/loop/trunk", "loop"),
   descriptorPreloaderBasedGenerator("luainspector", "inspector", PRODAPP.."/loop/etc", nil, "loop"),
+  descriptorPreloaderBasedGenerator("luacoroutine", "coroutine", PRODAPP.."/loop/etc", nil, "loop"),
   descriptorPreloaderBasedGenerator("luacothread", "cothread", PRODAPP.."/loop/etc", nil, "loop"),
   descriptorPreloaderBasedGenerator("luatuple", "tuple", PRODAPP.."/loop/etc", nil, "loop"),
   descriptorPreloaderBasedGenerator("luastruct", "luastruct", nil, SVNREPURL .."/openbus/libs/trunk/struct-1.2"),

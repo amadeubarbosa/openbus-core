@@ -11,7 +11,7 @@
 #include "luastruct.h"
 #include "luasocket.h"
 #include "loop.h"
-#include "looplib.h"
+#include "luacoroutine.h"
 #include "luacothread.h"
 #include "luainspector.h"
 #include "luaidl.h"
@@ -34,7 +34,7 @@ void luapreload_extralibraries(lua_State *L)
 	lua_pop(L, 1);  /* pop 'package.preload' table */
 	/* preload script libraries */
 	luapreload_loop(L);
-	luapreload_looplib(L);
+	luapreload_luacoroutine(L);
 	luapreload_luacothread(L);
 	luapreload_luainspector(L);
 	luapreload_luaidl(L);

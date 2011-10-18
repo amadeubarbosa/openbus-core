@@ -37,7 +37,7 @@ IDL= \
 LIBS= \
 	dl crypto ldap \
 	luuid lce lpw lfs lualdap luavararg luastruct luasocket \
-	loop looplib luacothread luainspector luaidl oil luascs luaopenbus
+	loop luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
 	OPENBUS_MAIN=\"openbus.core.services.main\" \
