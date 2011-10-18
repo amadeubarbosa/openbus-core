@@ -40,6 +40,13 @@ function validate(self, name, password)
         "O usuário "..name.." não foi validado porque sua senha está vazia."
   end
 
+  if not self.ldapUrls then
+    return false, "Não foi configurado nenhum servidor LDAP."
+  end
+  if not self.ldapDNPatterns then
+    return false, "Não foi configurado nenhum padrão de LDAP Distinguished Names a ser usado."
+  end
+
   for _, ldapUrl in ipairs(self.ldapUrls) do
     for _, dnPattern in ipairs(self.ldapDNPatterns) do
       local dn = dnPattern:gsub("%%U",name)

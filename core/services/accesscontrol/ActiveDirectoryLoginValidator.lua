@@ -40,6 +40,13 @@ function validate(self, name, password)
         "O usuário "..name.." não foi validado porque sua senha está vazia."
   end
 
+  if not self.ldapUrls then
+    return false, "Não foi configurado nenhum servidor LDAP."
+  end
+  if not self.ldapSuffixes then
+    return false, "Não foi configurado nenhum sufixo de domínio na autenticação LDAP."
+  end
+
   for _, ldapUrl in ipairs(self.ldapUrls) do
     for _, ldapSuffix in ipairs(self.ldapSuffixes) do
       local connection, err
