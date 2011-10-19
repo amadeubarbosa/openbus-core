@@ -77,6 +77,7 @@ return function(...)
 Usage:  ]],OPENBUS_PROGNAME,[[ [options]
 Options:
 
+  -busid <name>              identificador único do barramento
   -host <address>            endereço de rede usado pelo barramento
   -port <number>             número da porta usada pelo barramento
 
@@ -128,6 +129,7 @@ Options:
 	-- setup bus access
 	local orb = Access.createORB{ host=Configs.host, port=Configs.port }
 	local access = Access{ orb=orb, legacy=not Configs.nolegacy }
+	orb:setinterceptor(access, "corba")
 
 	-- create SCS component
 	local facets = {}
