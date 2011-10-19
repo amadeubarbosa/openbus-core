@@ -8,6 +8,9 @@ local pairs = _G.pairs
 local pcall = _G.pcall
 local tostring = _G.tostring
 
+local array = require "table"
+local concat = array.concat
+
 local os = require "os"
 local date = os.date
 
@@ -250,7 +253,10 @@ function OfferRegistry:registerService(service_ref, properties)
 			end
 		end
 		if #unauthorized > 0 then
-			throw.UnauthorizedFacets{ facets = unauthorized }
+			throw.UnauthorizedFacets{
+				entity = entityId,
+				facets = unauthorized,
+			}
 		end
 	end
 	-- validate provided properties
@@ -339,6 +345,7 @@ function InterfaceRegistry:registerInterface(ifaceId)
 	if entities == nil then
 		self.interfaceDB:setentry(ifaceId2Key(ifaceId), ifaceId)
 		interfaces[ifaceId] = {}
+		log:request(msg.RegisteredInterfaceAdded:tag{interface=ifaceId})
 		return true
 	end
 	return false
@@ -357,6 +364,7 @@ function InterfaceRegistry:removeInterface(ifaceId)
 		end
 		self.interfaceDB:removeentry(ifaceId2Key(ifaceId))
 		interfaces[ifaceId] = nil
+		log:request(msg.RegisteredInterfaceRemoved:tag{interface=ifaceId})
 		return true
 	end
 	return false
@@ -399,6 +407,7 @@ end
 function Entity:setName(name)
 	assert(self.database:setentryfield(self.id, "name", name))
 	self.name = name
+	log:request(msg.AuthorizedEntityNameChanged:tag{entity=self.id,name=name})
 end
 
 function Entity:remove()
@@ -417,6 +426,7 @@ function Entity:remove()
 	end
 	self.registry.entities[id] = nil
 	self.category.entities[id] = nil
+	log:request(msg.AuthorizedEntityRemoved:tag{entity=id})
 end
 
 function Entity:grantInterface(ifaceId)
@@ -430,6 +440,10 @@ function Entity:grantInterface(ifaceId)
 	if authorized[ifaceId] == nil then
 		updateAuthorization(self.database, self.id, authorized, ifaceId, true)
 		entities[self] = true
+		log:request(msg.GrantedInterfaceAddedForEntity:tag{
+			entity = self.id,
+			interface = ifaceId,
+		})
 		return true
 	end
 	return false
@@ -461,6 +475,10 @@ function Entity:revokeInterface(ifaceId)
 	if authorized[ifaceId] == true then
 		updateAuthorization(self.database, self.id, authorized, ifaceId, nil)
 		entities[self] = nil
+		log:request(msg.GrantedInterfaceRemovedFromEntity:tag{
+			entity = self.id,
+			interface = ifaceId,
+		})
 		return true
 	end
 	return false
@@ -494,6 +512,7 @@ end
 function Category:setName(name)
 	assert(self.database:setentry(self.id, name))
 	self.name = name
+	log:request(msg.EntityCategoryNameChanged:tag{category=self.id,name=name})
 end
 
 function Category:remove()
@@ -504,6 +523,7 @@ function Category:remove()
 	assert(self.database:removeentry(id))
 	assert(self.orb:deactivate(self))
 	self.registry.categories[id] = nil
+	log:request(msg.EntityCategoryRemoved:tag{category=id})
 end
 
 function Category:removeAll()
@@ -526,6 +546,7 @@ function Category:registerEntity(id, name)
 	local database = registry.entityDB
 	assert(database:setentry(id, {categoryId=categoryId, name=name}))
 	-- create object for the new entity
+	log:request(msg.AuthorizedEntityRegistered:tag{entity=id,name=name})
 	return Entity{
 		id = id,
 		name = name,
@@ -636,6 +657,7 @@ function EntityRegistry:createEntityCategory(id, name)
 	local database = self.categoryDB
 	assert(database:setentry(id, name))
 	-- create object for the new category
+	log:request(msg.EntityCategoryCreated:tag{category=id,name=name})
 	return Category{
 		id = id,
 		name = name,

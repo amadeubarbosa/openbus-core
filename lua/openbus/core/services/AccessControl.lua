@@ -73,7 +73,6 @@ end
 -- IDL operations
 
 function CertificateRegistry:registerCertificate(entity, certificate)
-	log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
 	local certobj, errmsg = readcertificate(certificate)
 	if not certobj then
 		throw.InvalidCertificate{error=errmsg}
@@ -82,11 +81,11 @@ function CertificateRegistry:registerCertificate(entity, certificate)
 	if not pubkey then
 		throw.InvalidCertificate{error=errmsg}
 	end
+	log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
 	assert(self.certificateDB:setentry(entity, certificate))
 end
 
 function CertificateRegistry:getCertificate(entity)
-	log:admin(msg.RecoverEntityCertificate:tag{entity=entity})
 	local certificate, errmsg = self.certificateDB:getentry(entity)
 	if certificate == nil then
 		if errmsg ~= nil then
@@ -98,9 +97,9 @@ function CertificateRegistry:getCertificate(entity)
 end
 
 function CertificateRegistry:removeCertificate(entity)
-	log:admin(msg.RemoveEntityCertificate:tag{entity=entity})
 	local db = self.certificateDB
 	if db:getentry(entity) ~= nil then
+		log:admin(msg.RemoveEntityCertificate:tag{entity=entity})
 		assert(db:removeentry(entity))
 	end
 end
@@ -142,10 +141,7 @@ function LoginByCertificate:login(answer)
 	end
 	local login = manager.activeLogins:newLogin(entity, true)
 	renewLogin(login)
-	log:request(msg.LoginByCertificate:tag{
-		login = login.id,
-		entity = entity,
-	})
+	log:request(msg.LoginByCertificate:tag{login=login.id,entity=entity})
 	return login, manager.leaseTime
 end
 
@@ -233,6 +229,7 @@ end
 
 function AccessControl:shutdown()
 	self.sweepTimer:disable()
+	log:admin(msg.AccessControlShutDown:tag{entity=process.entity})
 end
 
 function AccessControl:getLoginEntry(id)
