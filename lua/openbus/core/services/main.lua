@@ -82,7 +82,7 @@ Options:
   -port <number>             número da porta usada pelo barramento
 
   -database <path>           arquivo de dados do barramento
-  -ceritficate <path>        arquivo com certificado do barramento
+  -certificate <path>        arquivo com certificado do barramento
   -privatekey <path>         arquivo com chave privada do barramento
 
   -leasetime <seconds>       tempo de lease dos logins de acesso

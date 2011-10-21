@@ -34,19 +34,6 @@ static const char *script =
 " 	return result, errmsg"
 " end"
 
-" function string:tag(values)"
-" 	return (self:gsub("
-" 		'(%$+)([_%a][_%w]*)',"
-" 		function(prefix, field)"
-" 			local size = #prefix"
-" 			if size%2 == 1 then"
-" 				field = tostring(values[field])"
-" 			end"
-" 			return prefix:sub(1, size/2)..field"
-" 		end"
-" 	))"
-" end"
-
 " local coroutine = require 'coroutine'"
 " local cothread = require 'cothread'"
 " local main = require '"OPENBUS_MAIN"'"
@@ -156,9 +143,6 @@ static int pmain (lua_State *L) {
 	lua_pushstring(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
 	lua_pushstring(L, progpath); lua_setglobal(L, "OPENBUS_PROGPATH");
 	luaL_openlibs(L);  /* open libraries */
-	//luapreload_loop(L);
-	//luapreload_looplib(L);
-	//luapreload_cothread(L);
 	luapreload_extralibraries(L);
 	lua_gc(L, LUA_GCRESTART, 0);
 	

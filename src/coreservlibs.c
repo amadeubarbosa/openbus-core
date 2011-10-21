@@ -11,13 +11,14 @@
 #include "luastruct.h"
 #include "luasocket.h"
 #include "loop.h"
+#include "luatuple.h"
 #include "luacoroutine.h"
 #include "luacothread.h"
 #include "luainspector.h"
 #include "luaidl.h"
 #include "oil.h"
-#include "scs.h"
-#include "openbus.h"
+#include "luascs.h"
+#include "luaopenbus.h"
 #include "coreservices.h"
 
 void luapreload_extralibraries(lua_State *L)
@@ -34,12 +35,13 @@ void luapreload_extralibraries(lua_State *L)
 	lua_pop(L, 1);  /* pop 'package.preload' table */
 	/* preload script libraries */
 	luapreload_loop(L);
+	luapreload_luatuple(L);
 	luapreload_luacoroutine(L);
 	luapreload_luacothread(L);
 	luapreload_luainspector(L);
 	luapreload_luaidl(L);
 	luapreload_oil(L);
-	luapreload_scs(L);
-	luapreload_openbus(L);
+	luapreload_luascs(L);
+	luapreload_luaopenbus(L);
 	luapreload_coreservices(L);
 }
