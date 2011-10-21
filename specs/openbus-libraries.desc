@@ -405,6 +405,17 @@ packages = {
       ["../obj/${TEC_UNAME}/luaopenbus.h"] = "include/openbus/lua/",
     },
   },
+  { name = "openbus-luaconsole",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-lua/src",
+      mf = { "busconsole LUA51="..PRODAPP.."/lua5.1 OIL_HOME="..PRODAPP.."/oil LOOP_HOME="..PRODAPP.."/loop ", },
+      SunOS510_64 = { mf = { "busconsole LUA51="..PRODAPP.."/lua5.1 OIL_HOME="..PRODAPP.."/oil LOOP_HOME="..PRODAPP.."/loop ".. SUNOS64_TECMAKE_FLAGS } },
+    },
+    install_files = {
+      ["../bin/${TEC_UNAME}/busconsole"] = "bin",
+    },
+  },
   { name = "openbus-busservices",
     build = {
       type = "tecmake",
