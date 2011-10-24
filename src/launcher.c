@@ -20,13 +20,14 @@ static lua_State *globalL = NULL;
 
 static const char *progpath = OPENBUS_PROGNAME;
 
-static const char *script =
+static const char *callerchunk =
 " _G.lua51_pcall = _G.pcall"
 " _G.lua51_xpcall = _G.xpcall"
 " require 'coroutine.pcall'"
 
-" local _loadfile = loadfile"
-" function loadfile(path, mode, env)"
+" local _loadfile = _G.loadfile"
+" _G.lua51_loadfile = _loadfile"
+" function _G.loadfile(path, mode, env)"
 " 	local result, errmsg = _loadfile(path)"
 " 	if result ~= nil and env ~= nil then"
 " 		setfenv(result, env)"
@@ -35,9 +36,13 @@ static const char *script =
 " end"
 
 " local coroutine = require 'coroutine'"
+" local newthread = coroutine.create"
 " local cothread = require 'cothread'"
-" local main = require '"OPENBUS_MAIN"'"
-" return cothread.run(cothread.step(coroutine.create(main), ...))";
+" local step = cothread.step"
+" local run = cothread.run"
+" return function(f, ...)"
+" 	return run(step(newthread(f), ...))"
+" end";
 
 
 static void lstop (lua_State *L, lua_Debug *ar) {
@@ -125,7 +130,6 @@ static int getargs (lua_State *L, char **argv) {
 
 
 struct Smain {
-	int argc;
 	char **argv;
 	int status;
 };
@@ -134,22 +138,41 @@ struct Smain {
 static int pmain (lua_State *L) {
 	struct Smain *s = (struct Smain *)lua_touserdata(L, 1);
 	char **argv = s->argv;
-	int status;
-	int narg;
+	int status = 0;
 	globalL = L;
-	if (argv[0] && argv[0][0]) progpath = argv[0];
 	lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
+	luaL_openlibs(L);  /* open libraries */
+	lua_gc(L, LUA_GCRESTART, 0);
+	
+	if (argv[0] && argv[0][0]) {
+		progpath = argv[0];
+		if (argv[1] && argv[1][0] && strcmp(argv[1], "DEBUG") == 0) {
+			argv++;
+			status = luaL_dostring(L,
+				"table.insert(package.loaders, (table.remove(package.loaders, 1)))");
+		}
+	}
+	
+	/* preload libraries and global variables */
 	lua_pushstring(L, OPENBUS_MAIN); lua_setglobal(L, "OPENBUS_MAIN");
 	lua_pushstring(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
 	lua_pushstring(L, progpath); lua_setglobal(L, "OPENBUS_PROGPATH");
-	luaL_openlibs(L);  /* open libraries */
 	luapreload_extralibraries(L);
-	lua_gc(L, LUA_GCRESTART, 0);
 	
-	status = luaL_loadbuffer(L, script, strlen(script), "cothread loop");
-	narg = getargs(L, argv);  /* collect arguments */
-	if (status == 0) status = docall(L, narg);
-	else lua_pop(L, narg);      
+	/* ??? */
+	if (status == 0) {
+		/* execute main module */
+		status = luaL_dostring(L, callerchunk);
+		if (status == 0) {
+			lua_getglobal(L, "require");
+			lua_pushliteral(L, OPENBUS_MAIN);
+			status = lua_pcall(L, 1, 1, 0);
+			if (status == 0) {
+				int narg = getargs(L, argv);  /* collect arguments */
+				status = docall(L, narg+1);
+			}
+		}
+	}
 	s->status = report(L, status);
 	return 0;
 }
@@ -159,11 +182,11 @@ int main (int argc, char **argv) {
 	int status;
 	struct Smain s;
 	lua_State *L = lua_open();  /* create state */
+	(void)argc; /* not used */
 	if (L == NULL) {
 		l_message(argv[0], "cannot create Lua state: not enough memory");
 		return EXIT_FAILURE;
 	}
-	s.argc = argc;
 	s.argv = argv;
 	status = lua_cpcall(L, &pmain, &s);
 	report(L, status);
