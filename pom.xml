@@ -11,8 +11,8 @@
   <url>https://subversion.tecgraf.puc-rio.br/engdist/openbus</url>
 
   <scm>
-    <connection>scm:svn:https://subversion.tecgraf.puc-rio.br/engdist/openbus/branches/OB_v1_04_2009_08_07</connection>
-    <developerConnection>scm:svn:https://subversion.tecgraf.puc-rio.br/engdist/openbus/branches/OB_v1_04_2009_08_07</developerConnection>
+    <connection>scm:svn:https://subversion.tecgraf.puc-rio.br/engdist/openbus/tags/OB_v1_04_08_2011_10_27</connection>
+    <developerConnection>scm:svn:https://subversion.tecgraf.puc-rio.br/engdist/openbus/tags/OB_v1_04_08_2011_10_27</developerConnection>
     <url>https://subversion.tecgraf.puc-rio.br/engdist/openbus</url>
   </scm>
 
