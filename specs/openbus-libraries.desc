@@ -439,6 +439,17 @@ packages = {
       ["../test/*"] = "test",
     },
   },
+  { name = "openbus-busadmin",
+    build = {
+      type = "tecmake",
+      src = SVNDIR .."/src",
+      mf = { "busadmin LUA51="..PRODAPP.."/lua5.1 OIL_HOME="..PRODAPP.."/oil LOOP_HOME="..PRODAPP.."/loop ", },
+      SunOS510_64 = { mf = { "busadmin LUA51="..PRODAPP.."/lua5.1 OIL_HOME="..PRODAPP.."/oil LOOP_HOME="..PRODAPP.."/loop ".. SUNOS64_TECMAKE_FLAGS } },
+    },
+    install_files = {
+      ["../bin/${TEC_UNAME}/busadmin"] = "bin",
+    },
+  },
   { name = "openbus-demo-hello-lua",
     directory = PRODAPP .."/sdk-lua/demo/hello",
     dev_files = {

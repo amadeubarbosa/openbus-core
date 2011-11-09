@@ -38,7 +38,7 @@ local connection
 local handlers = {}
 
 -- Nome do script principal (usado no help)
-local program = arg[0]
+local program = OPENBUS_PROGNAME
 
 -------------------------------------------------------------------------------
 -- Constantes
