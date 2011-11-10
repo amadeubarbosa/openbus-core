@@ -165,7 +165,7 @@ static int pmain (lua_State *L) {
 		status = luaL_dostring(L, callerchunk);
 		if (status == 0) {
 			lua_getglobal(L, "require");
-			lua_pushliteral(L, OPENBUS_MAIN);
+			lua_pushstring(L, OPENBUS_MAIN);
 			status = lua_pcall(L, 1, 1, 0);
 			if (status == 0) {
 				int narg = getargs(L, argv);  /* collect arguments */

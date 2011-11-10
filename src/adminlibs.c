@@ -7,7 +7,6 @@
 #include "lce.h"
 #include "lfs.h"
 #include "lpw.h"
-#include "lualdap.h"
 #include "luavararg.h"
 #include "luastruct.h"
 #include "luasocket.h"
@@ -20,7 +19,9 @@
 #include "oil.h"
 #include "luascs.h"
 #include "luaopenbus.h"
-#include "coreservices.h"
+#include "coreadmin.h"
+
+const char const* OPENBUS_MAIN = "openbus.core.admin.main";
 
 void luapreload_extralibraries(lua_State *L)
 {
@@ -30,7 +31,6 @@ void luapreload_extralibraries(lua_State *L)
 	lua_pushcfunction(L,luaopen_lce);lua_setfield(L,-2,"lce");
 	lua_pushcfunction(L,luaopen_lfs);lua_setfield(L,-2,"lfs");
 	lua_pushcfunction(L,luaopen_lpw);lua_setfield(L,-2,"lpw");
-	lua_pushcfunction(L,luaopen_lualdap);lua_setfield(L,-2,"lualdap");
 	lua_pushcfunction(L,luaopen_vararg);lua_setfield(L,-2,"vararg");
 	lua_pushcfunction(L,luaopen_struct);lua_setfield(L,-2,"struct");
 	lua_pushcfunction(L,luaopen_socket_core);lua_setfield(L,-2,"socket.core");

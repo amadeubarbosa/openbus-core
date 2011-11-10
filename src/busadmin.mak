@@ -11,32 +11,19 @@ SRC= \
 
 LUADIR= ../lua
 LUASRC= \
-	$(LUADIR)/openbus/core/legacy/AccessControlService.lua \
-	$(LUADIR)/openbus/core/legacy/idl.lua \
-	$(LUADIR)/openbus/core/legacy/parsed.lua \
-	$(LUADIR)/openbus/core/legacy/RegistryService.lua \
 	$(LUADIR)/openbus/core/admin/main.lua \
 	$(LUADIR)/openbus/core/admin/messages.lua \
 	$(LUADIR)/openbus/core/admin/print.lua \
 	$(LUADIR)/openbus/core/admin/script.lua \
-	$(LUADIR)/openbus/core/services/Access.lua \
-	$(LUADIR)/openbus/core/services/AccessControl.lua \
-	$(LUADIR)/openbus/core/services/LoginDB.lua \
-	$(LUADIR)/openbus/core/services/main.lua \
-	$(LUADIR)/openbus/core/services/messages.lua \
-	$(LUADIR)/openbus/core/services/OfferIndex.lua \
-	$(LUADIR)/openbus/core/services/OfferRegistry.lua \
-	$(LUADIR)/openbus/core/services/passwordvalidator/LDAP.lua
 
-include ${OIL_HOME}/openbus/base.mak
+include ${LOOP_HOME}/openbus/base.mak
 
 LIBS= \
 	dl crypto ldap \
-	lua5.1 luuid lce lfs lpw lualdap luavararg luastruct luasocket \
+	lua5.1 luuid lce lfs lpw luavararg luastruct luasocket \
 	loop luatuple luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
-	OPENBUS_MAIN=\"openbus.core.admin.main\" \
 	OPENBUS_PROGNAME=\"$(APPNAME)\"
 
 INCLUDES+= . $(SRCLUADIR) \
@@ -44,7 +31,6 @@ INCLUDES+= . $(SRCLUADIR) \
 	$(OPENBUSINC)/lce \
 	$(OPENBUSINC)/lpw \
 	$(OPENBUSINC)/luafilesystem \
-	$(OPENBUSINC)/lualdap-1.1.0 \
 	$(OPENBUSINC)/luavararg \
 	$(OPENBUSINC)/luastruct \
 	$(OPENBUSINC)/luasocket2 \
@@ -77,4 +63,4 @@ $(PRELOAD_DIR)/coreadmin.c $(PRELOAD_DIR)/coreadmin.h: $(LUAPRELOADER) $(LUASRC)
 	                           -o coreadmin.c \
 	                           $(LUASRC)
 
-coreadminlibs.c: $(PRELOAD_DIR)/coreadmin.h
+adminlibs.c: $(PRELOAD_DIR)/coreadmin.h

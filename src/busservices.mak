@@ -40,13 +40,11 @@ LIBS= \
 	loop luatuple luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
-	OPENBUS_MAIN=\"openbus.core.services.main\" \
 	OPENBUS_PROGNAME=\"$(APPNAME)\"
 
 INCLUDES+= . $(SRCLUADIR) \
 	$(OPENBUSINC)/luuid \
 	$(OPENBUSINC)/lce \
-	$(OPENBUSINC)/lpw \
 	$(OPENBUSINC)/luafilesystem \
 	$(OPENBUSINC)/lualdap-1.1.0 \
 	$(OPENBUSINC)/luavararg \

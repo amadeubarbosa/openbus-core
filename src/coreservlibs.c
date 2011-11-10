@@ -21,6 +21,8 @@
 #include "luaopenbus.h"
 #include "coreservices.h"
 
+const char const* OPENBUS_MAIN = "openbus.core.services.main";
+
 void luapreload_extralibraries(lua_State *L)
 {
 	/* preload binded C libraries */
