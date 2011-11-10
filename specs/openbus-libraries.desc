@@ -425,7 +425,6 @@ packages = {
     },
     install_files = {
       ["../bin/${TEC_UNAME}/busservices"] = "bin",
-    --["../bin/${TEC_UNAME}/busadmin"] = "bin",
       ["../specs/management"] = "specs",
       ["../specs/shell"] = "specs",
       ["../specs/templates"] = "specs",
