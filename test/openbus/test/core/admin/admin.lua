@@ -5,34 +5,19 @@ local io = _G.io
 local print = _G.print
 local tostring = _G.tostring
 
-local outputfile = "output.txt"
--- redefinição de print
-_G.print = function(...)
-  local f = io.open(outputfile, "a+")
-  for i, v in ipairs(arg) do
-    if i > 1 then
-      f:write("\t")
-    end
-    f:write(tostring(v))
-  end
-  f:write("\n")
-  f:flush()
-  f:close()
-end
-
-local admin = require "openbus.core.admin.main"
-
 -------------------------------------------------------------------------------
 -- configuração do teste
-local login = "--login=admin"
-local password = "--password=admin"
+local bin = "busadmin "
+local login = "--login=admin "
+local password = "--password=admin "
 local certfile = "openbus.crt"
 local certificate = "--certificate="..certfile
 local script = "test.adm"
+local outputfile = "output.txt"
 -------------------------------------------------------------------------------
 
 local function finalize()
-  os.execute("rm -f output.txt")
+  os.execute("rm -f " ..outputfile)
 end
 
 local function showError()
@@ -44,7 +29,10 @@ local function showError()
 end
 
 local function execute(...)
-  return admin(login, password, ...) == 0, showError()
+  local command = bin..login..password
+  local params = table.concat(arg, " ")
+  local tofile = " > "..outputfile
+  return os.execute(command..params..tofile)
 end
 
 -- help

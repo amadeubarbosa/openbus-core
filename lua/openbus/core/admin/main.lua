@@ -4,7 +4,6 @@ local pairs = _G.pairs
 local ipairs = _G.ipairs
 local string = _G.string
 local print = _G.print
-local os = _G.os
 local io = _G.io
 local pcall = _G.pcall
 local error = _G.error
@@ -1066,7 +1065,6 @@ return function(...)
   local ok, ret = pcall(main)
   if not ok then
     print(ret)
-    return 1
   end
   return ret
 end
