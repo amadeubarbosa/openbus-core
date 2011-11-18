@@ -22,13 +22,10 @@ local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
 
 local Access = require "openbus.core.Access"
-local openbus = require "openbus"
-local log = require "openbus.util.logger"
 local log = require "openbus.util.logger"
 local server = require "openbus.util.server"
 local setuplog = server.setuplog
 local readprivatekey = server.readprivatekey
-local msg = require "openbus.core.services.messages"
 
 local idl = require "openbus.core.idl"
 local loginconst = idl.const.services.access_control
@@ -331,17 +328,46 @@ function ACSuite.testLoginByCertificateWrongEncoding()
   removeCertificate()
 end
 
-function ACSuite.testExpireTimeLoginByCertificate()
-  registerCertificate()
+function ACSuite.testRenew()
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  assert(attempt)
-  assert(challenge)
-  oil.sleep(40)
-  local ok, err = pcall(attempt.cancel, attempt)
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local encoded, errmsg = encrypt(buskey, dPassword)
+  assert(encoded, errmsg)
+  local login, lease = accontrol:loginByPassword(dUser, encoded)
+  assert(login)
+  assert(lease)
+  conn:setLogin(login)
+  oil.sleep(3*lease/4)
+  lease = accontrol:renew()
+  assert(lease)
+  oil.sleep(3*lease/4)
+  local ok, errmsg = pcall(accontrol.logout, accontrol)
+  assert(ok, errmsg)
+  conn:setLogin(nil)
+end
+
+function ACSuite.testExpiredLogin()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local encoded, errmsg = encrypt(buskey, dPassword)
+  assert(encoded, errmsg)
+  local login, lease = accontrol:loginByPassword(dUser, encoded)
+  assert(login)
+  assert(lease)
+  conn:setLogin(login)
+  oil.sleep(3*lease)
+  local ok, errmsg = pcall(accontrol.logout, accontrol)
   assert(not ok)
-  removeCertificate()
+  assert(errmsg._repid == sysex.NO_PERMISSION)
+  conn:setLogin(nil)
 end
 
 runSuite(ACSuite)
