@@ -1,0 +1,375 @@
+local _G = require "_G"
+local pcall = _G.pcall
+local print = _G.print
+local pairs = _G.pairs
+local ipairs = _G.ipairs
+local type = _G.type
+local pcall = _G.pcall
+local string = _G.string
+local table = _G.table
+local io = _G.io
+local os = _G.os
+
+local oil = require "oil"
+local oillog = require "oil.verbose"
+
+local lce = require "lce"
+local encrypt = lce.cipher.encrypt
+local decrypt = lce.cipher.decrypt
+local readcertificate = lce.x509.readfromderstring
+
+local giop = require "oil.corba.giop"
+local sysex = giop.SystemExceptionIDs
+
+local Access = require "openbus.core.Access"
+local openbus = require "openbus"
+local log = require "openbus.util.logger"
+local log = require "openbus.util.logger"
+local server = require "openbus.util.server"
+local setuplog = server.setuplog
+local readprivatekey = server.readprivatekey
+local msg = require "openbus.core.services.messages"
+
+local idl = require "openbus.core.idl"
+local loginconst = idl.const.services.access_control
+local logintypes = idl.types.services.access_control
+local BusObjectKey = idl.const.BusObjectKey
+
+-- Configurações --------------------------------------------------------------
+local host = "localhost"
+local port = "2089"
+local admin = "admin"
+local adminPassword = "admin"
+local dUser = "tester"
+local dPassword = "tester"
+local certificate = "teste.crt"
+local pkey = "teste.key"
+local loglevel = 5
+local oillevel = 0 
+
+-- Funções auxiliares ---------------------------------------------------------
+local function printf(str, ...)
+  print(string.format(str, ...))
+end
+
+local function testFeedback(ok, failure)
+  local fsize = #failure
+  if #failure == 0 then
+    printf("[OK] %d testes executados com sucesso!", ok)
+  else
+    printf("[ERROR] %d em %d testes falharam!", fsize, fsize + ok)
+    for i, fail in ipairs(failure) do
+      printf("%d) %s:", i, fail.name)
+      print(fail.errmsg)
+    end
+  end
+end
+
+local function runSuite(suite)
+  local ok = 0
+  local failure = {}
+  local suc, err
+  for name, test in pairs(suite) do
+    if type(test) == "function" then
+      succ, err = pcall(test)
+      if succ then 
+        ok = ok + 1
+      else
+        table.insert(failure, { name = name, errmsg = err })
+      end
+    end
+  end
+  testFeedback(ok, failure)
+end
+
+local function connectByAddress(host, port)
+  local LoginServiceNames = {
+    AccessControl = "AccessControl",
+    certificates = "CertificateRegistry",
+    logins = "LoginRegistry",
+  }
+  local conn = {}
+  local orb = Access.createORB()
+  local access = Access{ orb = orb }
+  orb.OpenBusInterceptor = access
+  orb:setinterceptor(access, "corba")
+  conn.orb = orb
+  
+  local ref = "corbaloc::"..host..":"..port.."/"..BusObjectKey
+  local bus = orb:newproxy(ref, nil, "scs::core::IComponent")
+  for field, name in pairs(LoginServiceNames) do
+    local facetname = assert(loginconst[name.."Facet"], name)
+    local typerepid = assert(logintypes[name], name)
+    conn[field] = orb:narrow(bus:getFacetByName(facetname), typerepid)
+  end
+  conn.bus = bus
+  access.busid = conn.AccessControl:_get_busid()
+
+  function conn:setLogin(login)
+    self.orb.OpenBusInterceptor.login = login
+  end
+  return conn
+end
+
+local function registerCertificate()
+  local busadmin = string.format("busadmin --host=%s --port=%s --login=%s --password=%s ", 
+      host, port, admin, adminPassword)
+  local addCertificate = string.format("--add-certificate=%s --certificate=%s",
+      dUser, certificate)
+  os.execute(busadmin..addCertificate)
+end
+
+local function removeCertificate()
+  local busadmin = string.format("busadmin --host=%s --port=%s --login=%s --password=%s ", 
+      host, port, admin, adminPassword)
+  local delCertificate = string.format("--del-certificate=%s", dUser)
+  os.execute(busadmin..delCertificate)
+end
+
+-- Inicialização --------------------------------------------------------------
+setuplog(log, loglevel)
+setuplog(oillog, oillevel)
+
+-- Testes do AccessControl ----------------------------------------------------
+
+-- -- local operations
+-- function AccessControl:__init(data)
+-- function AccessControl:shutdown()
+-- function AccessControl:getLoginEntry(id)
+-- -- IDL operations
+-- function AccessControl:loginByPassword(entity, password)
+-- function AccessControl:startLoginByCertificate(entity)
+-- function AccessControl:logout()
+-- function AccessControl:renew()
+
+local ACSuite ={} 
+function ACSuite.testLoginByPasswordAndLogout()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local encoded, errmsg = encrypt(buskey, dPassword)
+  assert(encoded, errmsg)
+  local login, lease = accontrol:loginByPassword(dUser, encoded)
+  assert(login)
+  assert(lease)
+  conn:setLogin(login)
+  accontrol:logout()
+  conn:setLogin(nil)
+end
+
+function ACSuite.testInvalidPassword()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local encoded, errmsg = encrypt(buskey, "wrong password")
+  assert(encoded, errmsg)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, encoded)
+  assert(not ok)
+  assert(errmsg._repid == logintypes.AccessDenied)
+end
+
+function ACSuite.testEmptyPassword()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, {})
+  assert(not ok)
+  assert(errmsg._repid == logintypes.WrongEncoding)
+end
+
+function ACSuite.testPasswordInvalidEncriptation()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, dPassword)
+  assert(not ok)
+  assert(errmsg._repid == logintypes.WrongEncoding)
+end
+
+function ACSuite.testLogoutLoginByPassword()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local encoded, errmsg = encrypt(buskey, dPassword)
+  assert(encoded, errmsg)
+  local login, lease = accontrol:loginByPassword(dUser, encoded)
+  assert(login)
+  assert(lease)
+  conn:setLogin(login)
+  accontrol:logout()
+  -- calling after logout
+  local ok, err = pcall(accontrol.renew, accontrol)
+  assert(not ok)
+  assert(err._repid == sysex.NO_PERMISSION)
+end
+
+function ACSuite.testLoginByCertificateAndLogout()
+  registerCertificate()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  assert(attempt)
+  assert(challenge)
+  local privatekey, errmsg = readprivatekey(pkey)
+  assert(privatekey, errmsg)
+  local secret, errmsg = decrypt(privatekey, challenge)
+  assert(secret, errmsg)
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local answer, errmsg = encrypt(buskey, secret)
+  assert(answer, errmsg)
+  local login, lease = attempt:login(answer)
+  assert(login)
+  assert(lease)
+  conn:setLogin(login)
+  accontrol:logout()
+  conn:setLogin(nil)
+  removeCertificate()
+end
+
+function ACSuite.testCancelLoginByCertificate()
+  registerCertificate()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  assert(attempt)
+  assert(challenge)
+  local ok, errmsg = pcall(attempt.cancel, attempt)
+  assert(ok, errmsg)
+  removeCertificate()
+end
+
+function ACSuite.testLogoutLoginByCertificate()
+  registerCertificate()  
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  assert(attempt)
+  assert(challenge)
+  local privatekey, errmsg = readprivatekey(pkey)
+  assert(privatekey, errmsg)
+  local secret, errmsg = decrypt(privatekey, challenge)
+  assert(secret, errmsg)
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local answer, errmsg = encrypt(buskey, secret)
+  assert(answer, errmsg)
+  local login, lease = attempt:login(answer)
+  assert(login)
+  assert(lease)
+  conn:setLogin(login)
+  accontrol:logout()
+  -- calling after logout
+  local ok, err = pcall(accontrol.renew, accontrol)
+  assert(not ok)
+  assert(err._repid == sysex.NO_PERMISSION)
+  removeCertificate()
+end
+
+function ACSuite.testLoginByCertificateWrongAnswer()
+  registerCertificate()  
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  assert(attempt)
+  assert(challenge)
+  local wrongsecret = "wrong secret"
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local answer, errmsg = encrypt(buskey, wrongsecret)
+  assert(answer, errmsg)
+  local ok, errmsg = pcall(attempt.login, attempt, answer)
+  assert(not ok)
+  assert(errmsg._repid == logintypes.AccessDenied)
+  removeCertificate()
+end
+
+function ACSuite.testLoginByCertificateNoEncoding()
+  registerCertificate()  
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  assert(attempt)
+  assert(challenge)
+  local privatekey, errmsg = readprivatekey(pkey)
+  assert(privatekey, errmsg)
+  local secret, errmsg = decrypt(privatekey, challenge)
+  assert(secret, errmsg)
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local ok, errmsg = pcall(attempt.login, attempt, secret)
+  assert(not ok)
+  assert(errmsg._repid == logintypes.WrongEncoding)
+  removeCertificate()
+end
+
+function ACSuite.testLoginByCertificateWrongEncoding()
+  registerCertificate()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  assert(attempt)
+  assert(challenge)
+  local ok, errmsg = pcall(attempt.login, attempt, challenge)
+  assert(not ok)
+  assert(errmsg._repid == logintypes.WrongEncoding)
+  removeCertificate()
+end
+
+function ACSuite.testExpireTimeLoginByCertificate()
+  registerCertificate()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  assert(attempt)
+  assert(challenge)
+  oil.sleep(40)
+  local ok, err = pcall(attempt.cancel, attempt)
+  assert(not ok)
+  removeCertificate()
+end
+
+runSuite(ACSuite)
+
+-- Testes do CertificateRegistry ----------------------------------------------
+
+-- -- local operations
+-- function CertificateRegistry:__init(data)
+-- function CertificateRegistry:getPublicKey(entity)
+-- -- IDL operations
+-- function CertificateRegistry:registerCertificate(entity, certificate)
+-- function CertificateRegistry:getCertificate(entity)
+-- function CertificateRegistry:removeCertificate(entity)
+
+-- Testes do LoginRegistry ----------------------------------------------------
+
+-- -- local operations
+-- function LoginRegistry:__init(data)
+-- function LoginRegistry:loginRemoved(login, observers)
+-- function LoginRegistry:observerRemoved(observer)
+-- -- IDL operations
+-- function LoginRegistry:getAllLogins()
+-- function LoginRegistry:getEntityLogins(entity)
+-- function LoginRegistry:terminateLogin(id)
+-- function LoginRegistry:getLoginInfo(id)
+-- function LoginRegistry:getValidity(ids)
+-- function LoginRegistry:subscribeObserver(callback)
+
+
+-- Finalização ----------------------------------------------------------------
+return 0
