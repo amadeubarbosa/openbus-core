@@ -124,7 +124,7 @@ local LoginByCertificate = class{ __type = types.LoginByCertificate }
 
 function LoginByCertificate:cancel()
 	local manager = self.manager
-	manager.orb:deactivate(self)
+	manager.access.orb:deactivate(self)
 	manager.pendingChallenges[self] = nil
 end
 
