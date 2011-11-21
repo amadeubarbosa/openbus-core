@@ -249,14 +249,14 @@ packages = {
     },
   },
   { name = "latt",
-    url = SVNREPURL.."/luautils/latt/tags/v1_00_01_2011_07_12",
+    url = SVNREPURL.."/luautils/latt/tags/v1_01_00_2011_11_17",
     build = {
       type = "tecmake",
       src = PRODAPP .."/latt",
       mf = { },
     },
     dev_files = {
-      ["lua/*"] = "lib/lua/5.1"
+      ["src/*"] = "lib/lua/5.1"
     },
   },
   { name = "scs-idl-prev",
