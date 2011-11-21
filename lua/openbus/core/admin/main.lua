@@ -64,7 +64,7 @@ Uso: %s [opções] --login=<usuário> <comando>
 - Controle de Categoria
   * Adicionar categoria:
      --add-category=<id_categoria> --name=<nome>
-  * Remover sistema:
+  * Remover categoria:
      --del-category=<id_categoria>
   * Alterar o nome descritivo da categoria:
      --set-category=<id_categoria> --name=<nome>
@@ -561,7 +561,7 @@ handlers["add-entity"] = function(cmd)
   end
   printf("[INFO] Entidade '%s' cadastrada com sucesso", id)
 
-  local certificate = cmd.params[cmd.params.certificate]
+  local certificate = cmd.params.certificate
   if certificate and certificate ~= null then
     local f = io.open(certificate)
     if not f then
@@ -583,7 +583,7 @@ handlers["add-entity"] = function(cmd)
       end
       return false
     end
-    printf("[INFO] Certificado da entidade '%s' cadastrada com sucesso", id)
+    printf("[INFO] Certificado da entidade '%s' cadastrado com sucesso", id)
   end
   return true
 end
@@ -602,6 +602,8 @@ handlers["del-entity"] = function(cmd)
     return false
   end
   entity:remove()
+  -- se tiver certificado, remove
+  conn.certificates:removeCertificate(id)
   printf("[INFO] Entidade '%s' removida com sucesso", id)
   return true
 end
