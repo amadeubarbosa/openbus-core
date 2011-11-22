@@ -702,14 +702,15 @@ function ACSFacet:notifyCredentialWasDeleted(credential)
   for credentialId, entry in pairs(self.entries) do
     for _,observer in pairs(entry.observers) do
       if observer.credentials[credential.identifier] then
-        Log:info(format("Notificando o observador da credencial { %s %s } que a credencial { %s %s } foi removida do barramento.",
+        Log:info(format("Notificando ao observador { %s %s } que a credencial { %s %s } foi removida do barramento.",
             entry.credential.identifier, entry.credential.owner,
             credential.identifier, credential.owner))
         local success, err = oil.pcall(observer.callback.credentialWasDeleted,
             observer.callback, credential)
         if not success then
-          Log:info(format("Erro ao notificar observador da credencial { %s %s }:\n %s",
-              entry.credential.identifier, entry.credential.owner, err));
+          Log:info(format("Ocorreu um erro do tipo %s ao notificar um observador da credencial { %s %s }:\n %s",
+              err[1], entry.credential.identifier, entry.credential.owner,
+              tostring(err)));
         end
         observer.credentials[credential.identifier] = nil
         self.credentialDB:update(entry)
