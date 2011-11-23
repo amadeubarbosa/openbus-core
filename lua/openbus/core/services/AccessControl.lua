@@ -101,7 +101,9 @@ function CertificateRegistry:removeCertificate(entity)
 	if db:getentry(entity) ~= nil then
 		log:admin(msg.RemoveEntityCertificate:tag{entity=entity})
 		assert(db:removeentry(entity))
+		return true
 	end
+	return false
 end
 
 ------------------------------------------------------------------------------
