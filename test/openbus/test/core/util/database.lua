@@ -1,4 +1,3 @@
-require "openbus.base"
 local Matcher = require "loop.debug.Matcher"
 local Viewer = require("loop.debug.Viewer"){linebreak=" ",identation=""}
 
@@ -15,7 +14,7 @@ local Data = {
 	},
 }
 
-local database = require "openbus.database"
+local database = require "openbus.util.database"
 
 do
 	local db = assert(database.open("test.db"))
@@ -81,9 +80,9 @@ do
 	assert(file:write("illegal Lua code") == true)
 	file:close()
 	
-	local entry = table:getentry("missing")
-	assert(type(entry) == "table")
-	assert(next(entry) == nil)
+	local entry, err = table:getentry("missing")
+	assert(entry == nil)
+	assert(err == nil)
 	
 	local entry, err = table:getentry("error")
 	assert(entry == nil)

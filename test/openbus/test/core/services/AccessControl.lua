@@ -88,7 +88,7 @@ local function connectByAddress(host, port)
   local conn = {}
   local orb = Access.createORB()
   local access = Access{ orb = orb }
-  orb.OpenBusInterceptor = access
+  --orb.OpenBusInterceptor = access
   orb:setinterceptor(access, "corba")
   conn.orb = orb
   
@@ -103,7 +103,7 @@ local function connectByAddress(host, port)
   access.busid = conn.AccessControl:_get_busid()
 
   function conn:setLogin(login)
-    self.orb.OpenBusInterceptor.login = login
+    access.login = login
   end
   return conn
 end
