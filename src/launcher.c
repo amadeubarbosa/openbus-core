@@ -18,7 +18,7 @@
 
 static lua_State *globalL = NULL;
 
-static const char *progpath = OPENBUS_PROGNAME;
+static const char *progpath = NULL;
 
 static const char *callerchunk =
 " _G.lua51_pcall = _G.pcall"
@@ -146,6 +146,7 @@ static int pmain (lua_State *L) {
 	
 	if (argv[0] && argv[0][0]) {
 		progpath = argv[0];
+		lua_pushstring(L, progpath); lua_setglobal(L, "OPENBUS_PROGPATH");
 		if (argv[1] && argv[1][0] && strcmp(argv[1], "DEBUG") == 0) {
 			argv++;
 			status = luaL_dostring(L,
@@ -156,7 +157,6 @@ static int pmain (lua_State *L) {
 	/* preload libraries and global variables */
 	lua_pushstring(L, OPENBUS_MAIN); lua_setglobal(L, "OPENBUS_MAIN");
 	lua_pushstring(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
-	lua_pushstring(L, progpath); lua_setglobal(L, "OPENBUS_PROGPATH");
 	luapreload_extralibraries(L);
 	
 	/* ??? */
