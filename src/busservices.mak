@@ -40,7 +40,7 @@ LIBS= \
 	loop luatuple luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
-	OPENBUS_PROGNAME=\"$(APPNAME)\"
+	TECMAKE_APPNAME=\"$(APPNAME)\"
 
 INCLUDES+= . $(SRCLUADIR) \
 	$(OPENBUSINC)/luuid \
