@@ -30,7 +30,7 @@ local IManagement = {
 	__objkey = "MGM_v1_05",
 }
 
-function IManagement:startup(data)
+function IManagement:__init(data)
 	local access = data.access
 	local admins = data.admins
 	-- systems
@@ -229,7 +229,7 @@ function IManagement:addUser(id, name)
 	local category = entities:getEntityCategory("Users")
 	if category == nil then
 		category = entities:createEntityCategory("Users",
-		                                         "Usu√°rios do Openbus 1.5")
+		                                         "Usu·rios do Openbus 1.5")
 	end
 	category:newEntity(id, name)
 end
@@ -265,7 +265,7 @@ local function endDelegation(access, ...)
 end
 
 for key, value in pairs(IManagement) do
-	if key ~= "startup" and type(value) == "function" then
+	if key ~= "__init" and type(value) == "function" then
 		IManagement[key] = function(self, ...)
 			local access = self.access
 			access:inheritCallerRights()
@@ -304,7 +304,7 @@ local IAccessControlService = {
 	__objkey = "ACS_v1_05",
 }
 
-function IAccessControlService:startup(data)
+function IAccessControlService:__init(data)
 	self.lastChallengeOf = setmetatable({}, { __mode = "v" })
 	local access = data.access
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")

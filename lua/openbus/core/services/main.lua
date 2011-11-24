@@ -168,20 +168,31 @@ Options:
 		local legacyIDL = require "openbus.core.legacy.idl"
 		legacyIDL.loadto(orb)
 	
+		local AccessControlService = require "openbus.core.legacy.AccessControlService"
 		local ACS = newSCS{
 			orb = orb,
-			objkey = "openbus_v1_50",
+			objkey = "openbus_v1_05",
 			name = "AccessControlService",
-			facets = require "openbus.core.legacy.AccessControlService",
+			facets = AccessControlService,
 			receptacles = {RegistryServiceReceptacle="IDL:scs/core/IComponent:1.0"},
-			params = { access = access, admins = Configs.admin },
+			init = function()
+				local params = { access = access, admins = Configs.admin }
+				-- these object must be initialized in this order
+				AccessControlService.IAccessControlService:__init(params)
+				AccessControlService.IManagement:__init(params)
+			end,
 		}
+		local RegistryService = require "openbus.core.legacy.RegistryService"
 		local RGS = newSCS{
 			orb = orb,
 			objkey = "IC",
 			name = "RegistryService",
-			facets = require "openbus.core.legacy.RegistryService",
-			params = { access = access },
+			facets = RegistryService,
+			init = function()
+				local params = { access = access }
+				-- these object must be initialized in this order
+				RegistryService.IManagement:__init(params)
+			end,
 		}
 		ACS.IReceptacles:connect("RegistryServiceReceptacle", RGS.IComponent)
 	end
