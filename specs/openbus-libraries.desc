@@ -762,12 +762,6 @@ packages = {
       ["stubs/mico"] = "include/openbus/cpp/stubs",     --include
       [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
-      ["test/mico/acs/*.cpp"] = "test/mico/acs/",
-      ["test/mico/acs/config.mak"] = "test/mico/acs/",
-      ["test/mico/rgs/*.cpp"] = "test/mico/rgs/",
-      ["test/mico/rgs/config.mak"] = "test/mico/rgs/",
-      ["test/mico/config*"] = "test/mico/",
-      ["test/mico/runtests"] = "test/mico/",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
     },
   },
@@ -801,12 +795,6 @@ packages = {
       ["stubs/mico"] = "include/openbus/cpp/stubs",     --include
       [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
-      ["test/mico/acs/*.cpp"] = "test/mico/acs/",
-      ["test/mico/acs/config.mak"] = "test/mico/acs/",
-      ["test/mico/rgs/*.cpp"] = "test/mico/rgs/",
-      ["test/mico/rgs/config.mak"] = "test/mico/rgs/",
-      ["test/mico/config*"] = "test/mico/",
-      ["test/mico/runtests"] = "test/mico/",
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
     },
   },
@@ -988,6 +976,7 @@ packages = {
     },
     install_files = {
       ["../tests"] = "test/mico/",
+      ["../util"] = "test/mico/",
       ["../runtests"] = "test/mico/",
       ["../config*"] = "test/mico/",
       ["../../idl/*"] = "test/idl",
@@ -1025,6 +1014,7 @@ packages = {
     },
     install_files = {
       ["../tests"] = "test/mico/",
+      ["../util"] = "test/mico/",
       ["../runtests"] = "test/mico/",
       ["../config*"] = "test/mico/",
       ["../../idl/*"] = "test/idl",
