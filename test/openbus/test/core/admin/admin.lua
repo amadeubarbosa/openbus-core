@@ -48,8 +48,8 @@ assert(execute("--del-category=CTG01"))
 
 -- entidade
 assert(execute("--add-entity=ENT01","--category=CTG02","--name='entidade 01'"))
-assert(execute("--add-entity=ENT02","--category=CTG02", "--name='entidade 02'",
-              certificate))
+assert(execute("--add-entity=ENT02","--category=CTG02", "--name='entidade 02'"))
+assert(execute("--add-certificate=ENT02", certificate))
 assert(execute("--add-entity=ENT03","--category=CTG02","--name='entidade 03'"))
 assert(execute("--add-entity=ENT04","--category=CTG02","--name='entidade 04'"))
 assert(execute("--list-entity"))

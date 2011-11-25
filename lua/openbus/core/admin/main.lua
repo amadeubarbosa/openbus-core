@@ -76,8 +76,6 @@ Uso: %s [opções] --login=<usuário> <comando>
 - Controle de Entidade
   * Adicionar entidade:
      --add-entity=<id_entidade> --category<id_categoria> --name=<nome>
-  * Adicionar entidade com certificado:
-     --add-entity=<id_entidade> --category<id_categoria> --name=<nome> --certificate=<certificado> 
   * Alterar descrição:
      --set-entity=<id_entidade> --name=<nome>
   * Remover entidade:
@@ -207,7 +205,6 @@ local commands = {
   };
   ["add-entity"] = {
     {n = 1, params = {category = 1, name = 1}},
-    {n = 1, params = {category = 1, name = 1, certificate = 1}}
   };
   ["del-entity"] = {
     {n = 1, params = {}}
@@ -560,31 +557,6 @@ handlers["add-entity"] = function(cmd)
     return false
   end
   printf("[INFO] Entidade '%s' cadastrada com sucesso", id)
-
-  local certificate = cmd.params.certificate
-  if certificate and certificate ~= null then
-    local f = io.open(certificate)
-    if not f then
-      print("[ERRO] Não foi possível localizar arquivo de certificado")
-      return false
-    end
-    local cert = f:read("*a")
-    if not cert then
-      print("[ERRO] Não foi possível ler o certificado")
-      return false
-    end
-    ok, err = pcall(conn.certificates.registerCertificate, conn.certificates, 
-        id, cert)
-    if not ok then
-      if err._repid == logintypes.InvalidCertificate then
-        printf("[ERRO] Certificado inválido: '%s'", certificate)
-      else
-        error(err)
-      end
-      return false
-    end
-    printf("[INFO] Certificado da entidade '%s' cadastrado com sucesso", id)
-  end
   return true
 end
 
@@ -711,9 +683,13 @@ end
 handlers["del-certificate"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  conn.certificates:removeCertificate(id)
-  printf("[INFO] Certificado da entidade '%s' removido com sucesso", id)
-  return true
+  local ret = conn.certificates:removeCertificate(id)
+  if ret then
+    printf("[INFO] Certificado da entidade '%s' removido com sucesso", id)
+  else
+    printf("[INFO] Certificado da entidade '%s' não existe", id)
+  end
+  return ret
 end
 
 ---
