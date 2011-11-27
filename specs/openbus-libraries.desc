@@ -554,7 +554,7 @@ packages = {
       ["test/orbix/rgs/*.cpp"] = "test/orbix/rgs/",
       ["test/orbix/rgs/config.mak"] = "test/orbix/rgs/",
       ["test/orbix/config*"] = "test/orbix/",
-      ["test/orbix/runtests"] = "test/orbix/",
+      ["test/orbix/runtests*"] = "test/orbix/",
       ["shell/orbix/idl"] = "specs/shell/orbix",        
     },
   },
@@ -590,7 +590,7 @@ packages = {
     },
     install_files = {
       ["../tests"] = "test/orbix/",
-      ["../runtests"] = "test/orbix/",
+      ["../runtests*"] = "test/orbix/",
       ["../config*"] = "test/orbix/",
       ["../../idl/*"] = "test/idl",
     },
@@ -978,7 +978,7 @@ packages = {
     install_files = {
       ["../tests"] = "test/mico/",
       ["../util"] = "test/mico/",
-      ["../runtests"] = "test/mico/",
+      ["../runtests*"] = "test/mico/",
       ["../config*"] = "test/mico/",
       ["../../idl/*"] = "test/idl",
     },
@@ -1016,7 +1016,7 @@ packages = {
     install_files = {
       ["../tests"] = "test/mico/",
       ["../util"] = "test/mico/",
-      ["../runtests"] = "test/mico/",
+      ["../runtests*"] = "test/mico/",
       ["../config*"] = "test/mico/",
       ["../../idl/*"] = "test/idl",
     },
