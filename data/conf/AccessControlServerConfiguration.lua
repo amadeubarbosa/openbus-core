@@ -17,7 +17,7 @@ AccessControlServerConfiguration = {
   monitorPrivateKeyFile = "certificates/ACSMonitor.key",
   accessControlServiceCertificateFile = "certificates/AccessControlService.crt",
   databaseDirectory = "credentials",
-  administrators = {"tester"},
+  administrators = {""},
   --o tempo mínimo do lease deve ser maior que 
   --o tempo máximo para o tratamento de falhas
   --vide /conf/FTTimeOutConfiguration.lua
