@@ -391,7 +391,7 @@ runSuite(ACSuite)
 -- -- IDL operations
 -- function LoginRegistry:getAllLogins()
 -- function LoginRegistry:getEntityLogins(entity)
--- function LoginRegistry:terminateLogin(id)
+-- function LoginRegistry:invalidateLogin(id)
 -- function LoginRegistry:getLoginInfo(id)
 -- function LoginRegistry:getValidity(ids)
 -- function LoginRegistry:subscribeObserver(callback)

@@ -852,7 +852,7 @@ handlers["del-login"] = function(cmd)
   local logins
   local conn = connect()
   local id = cmd.params[cmd.name]
-  conn.logins:terminateLogin(id)
+  conn.logins:invalidateLogin(id)
   printf("[INFO] Login '%s' removido com sucesso.", id)
   return true
 end

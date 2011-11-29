@@ -385,7 +385,7 @@ function LoginRegistry:__init(data)
 	local admins = data.admins
 	access:setGrantedUsers(self.__type, "getAllLogins", admins)
 	access:setGrantedUsers(self.__type, "getEntityLogins", admins)
-	access:setGrantedUsers(self.__type, "terminateLogin", admins)
+	access:setGrantedUsers(self.__type, "invalidateLogin", admins)
 	-- initialize attributes
 	self.access = access
 	-- register itself to receive logout notifications
@@ -441,7 +441,7 @@ function LoginRegistry:getEntityLogins(entity)
 	return logins
 end
 
-function LoginRegistry:terminateLogin(id)
+function LoginRegistry:invalidateLogin(id)
 	local login = AccessControl.activeLogins:getLogin(id)
 	if login ~= nil then
 		login:remove()
