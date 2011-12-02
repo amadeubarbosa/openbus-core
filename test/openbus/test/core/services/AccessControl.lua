@@ -7,19 +7,18 @@ local type = _G.type
 local pcall = _G.pcall
 local string = _G.string
 local table = _G.table
-local io = _G.io
+local assert = _G.assert
 local os = _G.os
 
 local oil = require "oil"
 local oillog = require "oil.verbose"
+local giop = require "oil.corba.giop"
+local sysex = giop.SystemExceptionIDs
 
 local lce = require "lce"
 local encrypt = lce.cipher.encrypt
 local decrypt = lce.cipher.decrypt
 local readcertificate = lce.x509.readfromderstring
-
-local giop = require "oil.corba.giop"
-local sysex = giop.SystemExceptionIDs
 
 local Access = require "openbus.core.Access"
 local log = require "openbus.util.logger"
@@ -39,10 +38,15 @@ local admin = "admin"
 local adminPassword = "admin"
 local dUser = "tester"
 local dPassword = "tester"
-local certificate = "teste.crt"
-local pkey = "teste.key"
+local certificate = "tester.crt"
+local pkey = "tester.key"
 local loglevel = 5
 local oillevel = 0 
+
+-- Variáveis Locais -----------------------------------------------------------
+local busadmin = string.format(
+    "busadmin --host=%s --port=%s --login=%s --password=%s ", 
+    host, port, admin, adminPassword)
 
 -- Funções auxiliares ---------------------------------------------------------
 local function printf(str, ...)
@@ -65,10 +69,9 @@ end
 local function runSuite(suite)
   local ok = 0
   local failure = {}
-  local suc, err
   for name, test in pairs(suite) do
     if type(test) == "function" then
-      succ, err = pcall(test)
+      local succ, err = pcall(test)
       if succ then 
         ok = ok + 1
       else
@@ -108,17 +111,35 @@ local function connectByAddress(host, port)
   return conn
 end
 
+local function loginByPassword(user, password)
+  if not user then
+    user = dUser
+  end
+  if not password then
+    password = dPassword
+  end
+  local conn = connectByAddress(host,port)
+  local accontrol = conn.AccessControl
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local encoded, errmsg = encrypt(buskey, password)
+  assert(encoded, errmsg)
+  local login, lease = accontrol:loginByPassword(user, encoded)
+  assert(login)
+  assert(lease)
+  conn:setLogin(login)
+  return conn, login
+end
+
 local function registerCertificate()
-  local busadmin = string.format("busadmin --host=%s --port=%s --login=%s --password=%s ", 
-      host, port, admin, adminPassword)
   local addCertificate = string.format("--add-certificate=%s --certificate=%s",
       dUser, certificate)
   os.execute(busadmin..addCertificate)
 end
 
 local function removeCertificate()
-  local busadmin = string.format("busadmin --host=%s --port=%s --login=%s --password=%s ", 
-      host, port, admin, adminPassword)
   local delCertificate = string.format("--del-certificate=%s", dUser)
   os.execute(busadmin..delCertificate)
 end
@@ -129,10 +150,6 @@ setuplog(oillog, oillevel)
 
 -- Testes do AccessControl ----------------------------------------------------
 
--- -- local operations
--- function AccessControl:__init(data)
--- function AccessControl:shutdown()
--- function AccessControl:getLoginEntry(id)
 -- -- IDL operations
 -- function AccessControl:loginByPassword(entity, password)
 -- function AccessControl:startLoginByCertificate(entity)
@@ -141,18 +158,8 @@ setuplog(oillog, oillevel)
 
 local ACSuite ={} 
 function ACSuite.testLoginByPasswordAndLogout()
-  local conn = connectByAddress(host, port)
+  local conn, login = loginByPassword()
   local accontrol = conn.AccessControl
-  local result, errmsg = readcertificate(accontrol:_get_certificate())
-  assert(result, errmsg)
-  local buskey, errmsg =  result:getpublickey()
-  assert(buskey, errmsg)
-  local encoded, errmsg = encrypt(buskey, dPassword)
-  assert(encoded, errmsg)
-  local login, lease = accontrol:loginByPassword(dUser, encoded)
-  assert(login)
-  assert(lease)
-  conn:setLogin(login)
   accontrol:logout()
   conn:setLogin(nil)
 end
@@ -188,18 +195,8 @@ function ACSuite.testPasswordInvalidEncriptation()
 end
 
 function ACSuite.testLogoutLoginByPassword()
-  local conn = connectByAddress(host, port)
+  local conn, login = loginByPassword()
   local accontrol = conn.AccessControl
-  local result, errmsg = readcertificate(accontrol:_get_certificate())
-  assert(result, errmsg)
-  local buskey, errmsg =  result:getpublickey()
-  assert(buskey, errmsg)
-  local encoded, errmsg = encrypt(buskey, dPassword)
-  assert(encoded, errmsg)
-  local login, lease = accontrol:loginByPassword(dUser, encoded)
-  assert(login)
-  assert(lease)
-  conn:setLogin(login)
   accontrol:logout()
   -- calling after logout
   local ok, err = pcall(accontrol.renew, accontrol)
@@ -371,31 +368,6 @@ function ACSuite.testExpiredLogin()
 end
 
 runSuite(ACSuite)
-
--- Testes do CertificateRegistry ----------------------------------------------
-
--- -- local operations
--- function CertificateRegistry:__init(data)
--- function CertificateRegistry:getPublicKey(entity)
--- -- IDL operations
--- function CertificateRegistry:registerCertificate(entity, certificate)
--- function CertificateRegistry:getCertificate(entity)
--- function CertificateRegistry:removeCertificate(entity)
-
--- Testes do LoginRegistry ----------------------------------------------------
-
--- -- local operations
--- function LoginRegistry:__init(data)
--- function LoginRegistry:loginRemoved(login, observers)
--- function LoginRegistry:observerRemoved(observer)
--- -- IDL operations
--- function LoginRegistry:getAllLogins()
--- function LoginRegistry:getEntityLogins(entity)
--- function LoginRegistry:invalidateLogin(id)
--- function LoginRegistry:getLoginInfo(id)
--- function LoginRegistry:getValidity(ids)
--- function LoginRegistry:subscribeObserver(callback)
-
 
 -- Finalização ----------------------------------------------------------------
 return 0
