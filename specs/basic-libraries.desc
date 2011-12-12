@@ -10,7 +10,7 @@ basesoft = {
     },
   },
   { name = "logger",
-    url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
+    url = SVNREPURL .. "/cpputils/logger/tags/LG_v1_01_01_2011_05_23/",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
@@ -40,7 +40,7 @@ basesoft = {
     },
   },
   { name = "e2fsprogs-1.40.8",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/e2fsprogs-1.40.8",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_01_2011_12_12/e2fsprogs-1.40.8",
     build = {
       type = "autotools",
       test_libs = {"libuuid.*"},
@@ -170,7 +170,7 @@ basesoft = {
       },
     },
   { name = "openldap-2.4.11",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/openldap-2.4.11",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_01_2011_12_12/openldap-2.4.11",
     build = {
       type = "autotools",
       test_libs = {"libldap*.*"},
@@ -227,7 +227,7 @@ basesoft = {
     },
   },
   { name = "mico-2.3.13-singlethread",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/mico-2.3.13",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_01_2011_12_12/mico-2.3.13",
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
@@ -250,7 +250,7 @@ basesoft = {
     },
   },
   { name = "mico-2.3.13-multithread",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/mico-2.3.13",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_01_2011_12_12/mico-2.3.13",
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
@@ -274,7 +274,7 @@ basesoft = {
     },
   },
   { name = "mico-2.3.13-singlethread-debug",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/mico-2.3.13",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_01_2011_12_12/mico-2.3.13",
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
@@ -298,7 +298,7 @@ basesoft = {
     },
   },
   { name = "mico-2.3.13-multithread-debug",
-    url = SVNREPURL .. "/openbus/libs/branches/OB_LIBS_v1_03_2011_07_28/mico-2.3.13",
+    url = SVNREPURL .. "/openbus/libs/tags/OB_LIBS_v1_03_01_2011_12_12/mico-2.3.13",
     build = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},

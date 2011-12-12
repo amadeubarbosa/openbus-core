@@ -15,3 +15,5 @@ latt-dev
 openbus-lua-dev
 openbus-lua-extras
 openbus-demo-hello-lua-dev
+openbus-demo-eventsink-lua-dev
+openbus-demo-delegate-lua-dev

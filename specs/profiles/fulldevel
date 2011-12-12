@@ -22,12 +22,12 @@ openbus-core
 openbus-core-conf
 openbus-core-dev
 openbus-demo-hello-lua-dev
+openbus-demo-eventsink-lua-dev
+openbus-demo-delegate-lua-dev
 openbus-lua-dev
 openbus-orbix-dev
 openbus-demo-hello-orbix-dev
 scsidl-java
 scs-java
-openbus-java
-openbusidl-java
-openbus-demo-hello-java-dev
-openbus-demo-delegate-java-dev
+openbusapi-java-dev
+openbusapi-java-doc
