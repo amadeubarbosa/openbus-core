@@ -1,14 +1,17 @@
 licenses
 e2fsprogs-1.40.8-dev
 openssl-0.9.9-dev
+lua5.1-bin
 lua5.1-dev
 luafilesystem-dev
 luasocket2-dev
 luuid-dev
 lualdap-1.0.1-dev
+oilall
 oilall-dev
 scs-idl-prev
 scs-idl
+scsall
 scsall-dev
 scsoil-dev
 scs-orbix-dev
