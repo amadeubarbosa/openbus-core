@@ -1,5 +1,6 @@
 licenses
 openssl-0.9.9-dev
+lua5.1-bin
 lua5.1-dev
 luafilesystem-dev
 luasocket2-dev
