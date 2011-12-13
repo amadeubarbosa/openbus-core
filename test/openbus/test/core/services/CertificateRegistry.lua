@@ -20,13 +20,13 @@ local logintypes = idl.types.services.access_control
 
 -- Configurações --------------------------------------------------------------
 local host = "localhost"
-local port = "2089"
+local port = 2089
 local admin = "admin"
 local adminPassword = "admin"
-local dUser = "tester"
-local dPassword = "tester"
-local certificate = "tester.crt"
-local pkey = "tester.key"
+local dUser = "user"
+local dPassword = "user"
+local certificate = "teste.crt"
+local pkey = "teste.key"
 local loglevel = 5
 local oillevel = 0 
 
@@ -34,10 +34,11 @@ local oillevel = 0
 Suite = {}
 Suite.Test1 = {}
 Suite.Test2 = {}
+Suite.Test3 = {}
 
 -- Aliases
 local NoPermissionCase = Suite.Test1
-local InvalidParamCase = Suite.Test3
+local InvalidParamCase = Suite.Test2
 local CRCase = Suite.Test3
 
 -- Funções auxiliares ---------------------------------------------------------
@@ -71,19 +72,30 @@ end
 
 function NoPermissionCase.testRegisterCertificateNoPermission(self)
   local certificates = self.conn.certificates
-  local cert = 
+  local file = io.open(certificate)
+  local cert = file:read("*a")
+  file:close()
   local ok, err = pcall(certificates.registerCertificate, certificates, "random",
-      )
-  assert(not ok)
-  assert(err._repid == sysex.NO_PERMISSION)
+      cert)
+  Check.assertTrue(not ok)
+  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
 end
 
 function NoPermissionCase.testGetCertificateNoPermission(self)
-  
+  local certificates = self.conn.certificates
+  local ok, err = pcall(certificates.getCertificate, certificates, "random")
+  Check.assertTrue(not ok)
+  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
 end
 
 function NoPermissionCase.testRemoveCertificateNoPermission(self)
-  
+  local certificates = self.conn.certificates
+  local file = io.open(certificate)
+  local cert = file:read("*a")
+  file:close()
+  local ok, err = pcall(certificates.removeCertificate, certificates, "random")
+  Check.assertTrue(not ok)
+  Check.assertEquals(sysex.NO_PERMISSION, err._repid)  
 end
 
 -------------------------------------

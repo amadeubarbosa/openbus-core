@@ -33,15 +33,22 @@ local BusObjectKey = idl.const.BusObjectKey
 
 -- Configurações --------------------------------------------------------------
 local host = "localhost"
-local port = "2089"
+local port = 2089
 local admin = "admin"
 local adminPassword = "admin"
 local dUser = "tester"
 local dPassword = "tester"
-local certificate = "tester.crt"
-local pkey = "tester.key"
+local certificate = "teste.crt"
+local pkey = "teste.key"
 local loglevel = 5
 local oillevel = 0 
+
+-- Casos de Teste -------------------------------------------------------------
+Suite = {}
+Suite.Test1 = {}
+
+-- Aliases
+local ACSuite = Suite.Test1
 
 -- Variáveis Locais -----------------------------------------------------------
 local busadmin = string.format(
@@ -49,39 +56,6 @@ local busadmin = string.format(
     host, port, admin, adminPassword)
 
 -- Funções auxiliares ---------------------------------------------------------
-local function printf(str, ...)
-  print(string.format(str, ...))
-end
-
-local function testFeedback(ok, failure)
-  local fsize = #failure
-  if #failure == 0 then
-    printf("[OK] %d testes executados com sucesso!", ok)
-  else
-    printf("[ERROR] %d em %d testes falharam!", fsize, fsize + ok)
-    for i, fail in ipairs(failure) do
-      printf("%d) %s:", i, fail.name)
-      print(fail.errmsg)
-    end
-  end
-end
-
-local function runSuite(suite)
-  local ok = 0
-  local failure = {}
-  for name, test in pairs(suite) do
-    if type(test) == "function" then
-      local succ, err = pcall(test)
-      if succ then 
-        ok = ok + 1
-      else
-        table.insert(failure, { name = name, errmsg = err })
-      end
-    end
-  end
-  testFeedback(ok, failure)
-end
-
 local function connectByAddress(host, port)
   local LoginServiceNames = {
     AccessControl = "AccessControl",
@@ -156,7 +130,6 @@ setuplog(oillog, oillevel)
 -- function AccessControl:logout()
 -- function AccessControl:renew()
 
-local ACSuite ={} 
 function ACSuite.testLoginByPasswordAndLogout()
   local conn, login = loginByPassword()
   local accontrol = conn.AccessControl
@@ -366,8 +339,3 @@ function ACSuite.testExpiredLogin()
   assert(errmsg._repid == sysex.NO_PERMISSION)
   conn:setLogin(nil)
 end
-
-runSuite(ACSuite)
-
--- Finalização ----------------------------------------------------------------
-return 0

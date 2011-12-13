@@ -17,13 +17,13 @@ local logintypes = idl.types.services.access_control
 
 -- Configurações --------------------------------------------------------------
 local host = "localhost"
-local port = "2089"
+local port = 2089
 local admin = "admin"
 local adminPassword = "admin"
 local dUser = "tester"
 local dPassword = "tester"
-local certificate = "tester.crt"
-local pkey = "tester.key"
+local certificate = "teste.crt"  
+local pkey = "teste.key"
 local loglevel = 5
 local oillevel = 0 
 
