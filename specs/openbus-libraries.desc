@@ -369,24 +369,6 @@ packages = {
       ["../lib/${TEC_UNAME}/liblce.*"] = "lib",
     },
   },
-  { name = "lpw",
-    build = {
-      type = "tecmake",
-      src = SVNDIR .."/lib/lpw/src",
-      mf = { "config LUA51="..PRODAPP.."/lua5.1", },
-      Darwin = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
-      MacOS = { mf = {"config LUA51="..PRODAPP.."/lua5.1", "config BUILD_DYLIB=Yes LUA51="..PRODAPP.."/lua5.1"} },
-      SunOS510_64 = { mf = { "config LUA51="..PRODAPP.."/lua5.1 ".. SUNOS64_TECMAKE_FLAGS } },
-    },
-    install_files = {
-      ["../lib/${TEC_UNAME}/liblpw.so"] = "lib",
-      ["../lib/${TEC_UNAME}/liblpw.dylib"] = "lib",
-    },
-    dev_files = {
-      ["lpw.h"] = "include/lpw/",
-      ["../lib/${TEC_UNAME}/liblpw.*"] = "lib",
-    },
-  },
   { name = "openbus-lua",
     build = {
       type = "tecmake",

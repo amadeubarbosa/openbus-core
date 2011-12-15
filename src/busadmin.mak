@@ -20,7 +20,7 @@ include ${LOOP_HOME}/openbus/base.mak
 
 LIBS= \
 	dl crypto ldap \
-	lua5.1 luuid lce lfs lpw luavararg luastruct luasocket \
+	lua5.1 luuid lce lfs luavararg luastruct luasocket \
 	loop luatuple luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
@@ -29,7 +29,6 @@ DEFINES= \
 INCLUDES+= . $(SRCLUADIR) \
 	$(OPENBUSINC)/luuid \
 	$(OPENBUSINC)/lce \
-	$(OPENBUSINC)/lpw \
 	$(OPENBUSINC)/luafilesystem \
 	$(OPENBUSINC)/luavararg \
 	$(OPENBUSINC)/luastruct \
