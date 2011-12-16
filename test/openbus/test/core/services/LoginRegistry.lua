@@ -18,14 +18,26 @@ local logintypes = idl.types.services.access_control
 -- Configurações --------------------------------------------------------------
 local host = "localhost"
 local port = 2089
-local admin = "admin"
-local adminPassword = "admin"
 local dUser = "tester"
 local dPassword = "tester"
 local certificate = "teste.crt"  
 local pkey = "teste.key"
 local loglevel = 5
 local oillevel = 0 
+
+local scsutils = require ("scs.core.utils")()
+local props = {}
+scsutils:readProperties(props, "test.properties")
+scsutils = nil
+
+host = props:getTagOrDefault("host", host)
+port = props:getTagOrDefault("port", port)
+dUser = props:getTagOrDefault("login", dUser)
+dPassword = props:getTagOrDefault("password", dPassword)
+certificate = props:getTagOrDefault("certificate", certificate)
+pkey = props:getTagOrDefault("privatekey", pkey)
+sdklevel = props:getTagOrDefault("sdkLogLevel", sdklevel)
+oillevel = props:getTagOrDefault("oilLogLevel", oillevel)
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -64,15 +76,26 @@ function LRCase.afterTestCase(self)
   self.logins = nil
 end
 
-function LRCase.testRegisterCertificate()
+function LRCase.testGetAllLogins()
   
 end
 
-function LRCase.testGetCertificate()
+function LRCase.testGetEntityLogins()
   
 end
 
-function LRCase.testRemoveCertificate()
+function LRCase.testTerminateLogin()
   
 end
 
+function LRCase.testGetLoginInfo()
+  
+end
+
+function LRCase.testGetValidity()
+  
+end
+
+function LRCase.testSubscribeObserver()
+  
+end

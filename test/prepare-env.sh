@@ -34,7 +34,7 @@ ADMIN_EXTRAARGS="--host=${host} --port=${port} "
 ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --login=${admimLogin} "
 ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --password=${adminPassword} "
 
-${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --add-certificate=${login} --certificate=kk${certificate}
+${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --add-certificate=${login} --certificate=${certificate}
 CODE=$?
 
 if [ ${CODE} -ne 0 ]; then

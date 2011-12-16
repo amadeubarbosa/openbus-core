@@ -34,14 +34,26 @@ local BusObjectKey = idl.const.BusObjectKey
 -- Configurações --------------------------------------------------------------
 local host = "localhost"
 local port = 2089
-local admin = "admin"
-local adminPassword = "admin"
 local dUser = "tester"
 local dPassword = "tester"
 local certificate = "teste.crt"
 local pkey = "teste.key"
-local loglevel = 5
+local sdklevel = 5
 local oillevel = 0 
+
+local scsutils = require ("scs.core.utils")()
+local props = {}
+scsutils:readProperties(props, "test.properties")
+scsutils = nil
+
+host = props:getTagOrDefault("host", host)
+port = props:getTagOrDefault("port", port)
+dUser = props:getTagOrDefault("login", dUser)
+dPassword = props:getTagOrDefault("password", dPassword)
+certificate = props:getTagOrDefault("certificate", certificate)
+pkey = props:getTagOrDefault("privatekey", pkey)
+sdklevel = props:getTagOrDefault("sdkLogLevel", sdklevel)
+oillevel = props:getTagOrDefault("oilLogLevel", oillevel)
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -49,11 +61,6 @@ Suite.Test1 = {}
 
 -- Aliases
 local ACSuite = Suite.Test1
-
--- Variáveis Locais -----------------------------------------------------------
-local busadmin = string.format(
-    "busadmin --host=%s --port=%s --login=%s --password=%s ", 
-    host, port, admin, adminPassword)
 
 -- Funções auxiliares ---------------------------------------------------------
 local function connectByAddress(host, port)
@@ -107,19 +114,8 @@ local function loginByPassword(user, password)
   return conn, login
 end
 
-local function registerCertificate()
-  local addCertificate = string.format("--add-certificate=%s --certificate=%s",
-      dUser, certificate)
-  os.execute(busadmin..addCertificate)
-end
-
-local function removeCertificate()
-  local delCertificate = string.format("--del-certificate=%s", dUser)
-  os.execute(busadmin..delCertificate)
-end
-
 -- Inicialização --------------------------------------------------------------
-setuplog(log, loglevel)
+setuplog(log, sdklevel)
 setuplog(oillog, oillevel)
 
 -- Testes do AccessControl ----------------------------------------------------
@@ -151,10 +147,48 @@ function ACSuite.testInvalidPassword()
   assert(errmsg._repid == logintypes.AccessDenied)
 end
 
+function ACSuite.testEmptyLogin()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, "", {})
+  assert(not ok)
+  assert(errmsg._repid == logintypes.WrongEncoding)
+end
+
+function ACSuite.testNilLogin()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local result, errmsg = readcertificate(accontrol:_get_certificate())
+  assert(result, errmsg)
+  local buskey, errmsg =  result:getpublickey()
+  assert(buskey, errmsg)
+  local encoded, errmsg = encrypt(buskey, "")
+  assert(encoded, errmsg)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, nil, encoded)
+  assert(not ok)
+  assert(errmsg._repid == sysex.MARSHAL)
+end
+
 function ACSuite.testEmptyPassword()
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, {})
+  assert(not ok)
+  assert(errmsg._repid == logintypes.WrongEncoding)
+end
+
+function ACSuite.testNilPassword()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, nil)
+  assert(not ok)
+  assert(errmsg._repid == sysex.MARSHAL)
+end
+
+function ACSuite.testEmptyLoginAndPassword()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, "", "")
   assert(not ok)
   assert(errmsg._repid == logintypes.WrongEncoding)
 end
@@ -178,7 +212,6 @@ function ACSuite.testLogoutLoginByPassword()
 end
 
 function ACSuite.testLoginByCertificateAndLogout()
-  registerCertificate()
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
@@ -200,11 +233,9 @@ function ACSuite.testLoginByCertificateAndLogout()
   conn:setLogin(login)
   accontrol:logout()
   conn:setLogin(nil)
-  removeCertificate()
 end
 
 function ACSuite.testCancelLoginByCertificate()
-  registerCertificate()
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
@@ -212,11 +243,9 @@ function ACSuite.testCancelLoginByCertificate()
   assert(challenge)
   local ok, errmsg = pcall(attempt.cancel, attempt)
   assert(ok, errmsg)
-  removeCertificate()
 end
 
 function ACSuite.testLogoutLoginByCertificate()
-  registerCertificate()  
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
@@ -241,11 +270,9 @@ function ACSuite.testLogoutLoginByCertificate()
   local ok, err = pcall(accontrol.renew, accontrol)
   assert(not ok)
   assert(err._repid == sysex.NO_PERMISSION)
-  removeCertificate()
 end
 
 function ACSuite.testLoginByCertificateWrongAnswer()
-  registerCertificate()  
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
@@ -261,11 +288,9 @@ function ACSuite.testLoginByCertificateWrongAnswer()
   local ok, errmsg = pcall(attempt.login, attempt, answer)
   assert(not ok)
   assert(errmsg._repid == logintypes.AccessDenied)
-  removeCertificate()
 end
 
 function ACSuite.testLoginByCertificateNoEncoding()
-  registerCertificate()  
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
@@ -282,11 +307,9 @@ function ACSuite.testLoginByCertificateNoEncoding()
   local ok, errmsg = pcall(attempt.login, attempt, secret)
   assert(not ok)
   assert(errmsg._repid == logintypes.WrongEncoding)
-  removeCertificate()
 end
 
 function ACSuite.testLoginByCertificateWrongEncoding()
-  registerCertificate()
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
@@ -295,7 +318,6 @@ function ACSuite.testLoginByCertificateWrongEncoding()
   local ok, errmsg = pcall(attempt.login, attempt, challenge)
   assert(not ok)
   assert(errmsg._repid == logintypes.WrongEncoding)
-  removeCertificate()
 end
 
 function ACSuite.testRenew()
