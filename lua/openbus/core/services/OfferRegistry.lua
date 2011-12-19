@@ -162,6 +162,10 @@ function OfferRegistry:loginRemoved(login)
 	end
 end
 
+function OfferRegistry:observerRemoved()
+	-- empty
+end
+
 function OfferRegistry:__init(data)
 	self.access = data.access
 	self.admins = data.admins

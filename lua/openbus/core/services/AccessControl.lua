@@ -388,6 +388,7 @@ function LoginRegistry:__init(data)
 	access:setGrantedUsers(self.__type, "invalidateLogin", admins)
 	-- initialize attributes
 	self.access = access
+	self.subscriptionOf = {}
 	-- register itself to receive logout notifications
 	rawset(AccessControl.publisher, self, self)
 	-- restaura servants dos observadores persistidos
