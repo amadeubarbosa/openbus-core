@@ -75,11 +75,11 @@ end
 function CertificateRegistry:registerCertificate(entity, certificate)
 	local certobj, errmsg = readcertificate(certificate)
 	if not certobj then
-		throw.InvalidCertificate{error=errmsg}
+		throw.InvalidCertificate{message=errmsg}
 	end
 	local pubkey, errmsg = certobj:getpublickey()
 	if not pubkey then
-		throw.InvalidCertificate{error=errmsg}
+		throw.InvalidCertificate{message=errmsg}
 	end
 	log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
 	assert(self.certificateDB:setentry(entity, certificate))
