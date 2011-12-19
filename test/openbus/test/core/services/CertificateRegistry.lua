@@ -15,7 +15,6 @@ local setuplog = server.setuplog
 local Check = require "latt.Check"
 
 local idl = require "openbus.core.idl"
-local loginconst = idl.const.services.access_control
 local logintypes = idl.types.services.access_control
 
 -- Configurações --------------------------------------------------------------
@@ -26,7 +25,6 @@ local adminPassword = "admin"
 local dUser = "user"
 local dPassword = "user"
 local certificate = "teste.crt"
-local pkey = "teste.key"
 local loglevel = 5
 local oillevel = 0 
 
@@ -42,7 +40,6 @@ adminPassword = props:getTagOrDefault("adminPassword", adminPassword)
 dUser = props:getTagOrDefault("login", dUser)
 dPassword = props:getTagOrDefault("password", dPassword)
 certificate = props:getTagOrDefault("certificate", certificate)
-pkey = props:getTagOrDefault("privatekey", pkey)
 sdklevel = props:getTagOrDefault("sdkLogLevel", sdklevel)
 oillevel = props:getTagOrDefault("oilLogLevel", oillevel)
 
@@ -131,16 +128,41 @@ function InvalidParamCase.afterTestCase(self)
   self.certs = nil
 end
 
-function InvalidParamCase.testRegisterCertificate(self)
-  
+function InvalidParamCase.testRegisterEmptyCertificate(self)
+  local certs = self.certs
+  local file = io.tmpfile()
+  local read = file:read("*a")
+  local ok, err = pcall(certs.registerCertificate, certs, "unknown", read)
+  Check.assertTrue(not ok)
+  print(err._repid)
+  Check.assertEquals(logintypes.InvalidCertificate, err._repid)
+  file:close()
 end
 
-function InvalidParamCase.testGetCertificate(self)
-  
+function InvalidParamCase.testRegisterInvalidCertificate(self)
+  local certs = self.certs
+  local file = io.open(certificate)
+  local read = file:read("*a")
+  read = "\n--CORRUPTED!--\n" .. read
+  local ok, err = pcall(certs.registerCertificate, certs, "unknown", read)
+  Check.assertTrue(not ok)
+  print(err._repid)
+  Check.assertEquals(logintypes.InvalidCertificate, err._repid)
+  file:close()
 end
 
-function InvalidParamCase.testRemoveCertificate(self)
-  
+function InvalidParamCase.testInvalidGetCertificate(self)
+  local certs = self.certs
+  local ok, err = pcall(certs.getCertificate, certs, "unknown")
+  Check.assertTrue(not ok)
+  Check.assertEquals(logintypes.MissingCertificate, err._repid)
+end
+
+function InvalidParamCase.testInvalidRemoveCertificate(self)
+  local certs = self.certs
+  local ok, err = pcall(certs.removeCertificate, certs, "unknown")
+  Check.assertTrue(ok)
+  Check.assertFalse(err)  
 end
 
 -------------------------------------
@@ -160,14 +182,46 @@ function CRCase.afterTestCase(self)
   self.certs = nil
 end
 
-function CRCase.testRegisterCertificate(self)
-  
+function CRCase.testRegisterRemoveCertificate(self)
+  local certs = self.certs
+  local file = io.open(certificate)
+  local read = file:read("*a")
+  local ok, err = pcall(certs.registerCertificate, certs, "test-1", read)
+  Check.assertTrue(ok)
+  file:close()
+  local ok, err = pcall(certs.removeCertificate, certs, "test-1")
+  Check.assertTrue(ok)
+  Check.assertTrue(err)
 end
 
-function CRCase.testGetCertificate(self)
-  
+function CRCase.testRegisterGetRemoveCertificate(self)
+  local certs = self.certs
+  local file = io.open(certificate)
+  local read = file:read("*a")
+  local ok, err = pcall(certs.registerCertificate, certs, "test-2", read)
+  Check.assertTrue(ok)
+  file:close()
+  local ok, err = pcall(certs.getCertificate, certs, "test-2")
+  Check.assertTrue(ok)
+  Check.assertTrue(read == err, "certificate file should be the same")
+  local ok, err = pcall(certs.removeCertificate, certs, "test-2")
+  Check.assertTrue(ok)
+  Check.assertTrue(err)  
 end
 
-function CRCase.testRemoveCertificate(self)
-  
+function CRCase.testRegisterCertificateTwice(self)
+  local certs = self.certs
+  local file = io.open(certificate)
+  local read = file:read("*a")
+  file:close()
+  local ok, err = pcall(certs.registerCertificate, certs, "test-3", read)
+  Check.assertTrue(ok)
+  local ok, err = pcall(certs.registerCertificate, certs, "test-3", read)
+  Check.assertTrue(ok)
+  local ok, err = pcall(certs.removeCertificate, certs, "test-3")
+  Check.assertTrue(ok)
+  Check.assertTrue(err)
+  local ok, err = pcall(certs.removeCertificate, certs, "test-3")
+  Check.assertTrue(ok)
+  Check.assertFalse(err)
 end
