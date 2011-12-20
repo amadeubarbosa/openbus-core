@@ -17,10 +17,6 @@ local Check = require "latt.Check"
 local idl = require "openbus.core.idl"
 local logintypes = idl.types.services.access_control
 
-local cothread = require "cothread"
-cothread.verbose:level(1)
-cothread.verbose:flag("state",true)
-
 -- Configurações --------------------------------------------------------------
 local host = "localhost"
 local port = 2089
@@ -28,10 +24,10 @@ local admin = "admin"
 local adminPassword = "admin"
 local dUser = "tester"
 local dPassword = "tester"
-local certificate = "teste.crt"  
+local certificate = "teste.crt"
 local pkey = "teste.key"
 local loglevel = 5
-local oillevel = 0 
+local oillevel = 0
 
 local scsutils = require ("scs.core.utils")()
 local props = {}
@@ -242,24 +238,25 @@ end
 
 function LRCase.testSubscribeObserver(self)
   local conn2 = openbus.connectByAddress(host, port, self.orb)
-  local login, lease = conn2:loginByPassword(dUser, dPassword)
-  local f = createEntityLogout(conn2.login.id, dUser)
-  local loginObs = { entityLogout = f }
-
-  oil.newthread(function ()
-    self.conn.orb:run()
-  end)
-  
-  local logins = self.logins
-  local ok, observer = pcall(logins.subscribeObserver, logins, loginObs)
-  Check.assertTrue(ok)
+  conn2:loginByPassword(dUser, dPassword)
+  -- subscribe login observer
+  local loginId = conn2.login.id
+  local logoutInfo
+  local loginObs = {}
+  function loginObs:entityLogout(login)
+    logoutInfo = login
+  end
+  local observer = self.logins:subscribeObserver(loginObs)
   Check.assertNotNil(observer)
-  local ok, err = pcall(observer.watchLogin, observer, conn2.login.id)
-  Check.assertTrue(ok)
-  Check.assertTrue(err)
-
-  ok, err = pcall(conn2.logout, conn2)
-  Check.assertTrue(ok)
-  oil.sleep(lease)
+  Check.assertTrue(observer:watchLogin(loginId))
+  -- start ORB to receive observer notification and logout 'conn2'
+  local orb = self.conn.orb
+  oil.newthread(orb.run, orb)
+  conn2:logout()
+  orb:shutdown()
+  -- check if observer was called properly
+  Check.assertNotNil(loginInfo)
+  Check.assertEquals(loginId, logoutInfo.id)
+  Check.assertEquals(dUser, logoutInfo.entity)
 end
 
