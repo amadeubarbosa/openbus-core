@@ -318,7 +318,7 @@ end
 -- IDL operations
 
 function Subscription:watchLogin(id)
-	local login = self.logins.activeLogins:getLogin(id)
+	local login = self.logins:getLogin(id)
 	if login ~= nil then
 		self.observer:watchLogin(login)
 		return true
@@ -327,14 +327,14 @@ function Subscription:watchLogin(id)
 end
 
 function Subscription:forgetLogin(id)
-	local login = self.logins.activeLogins:getLogin(id)
+	local login = self.logins:getLogin(id)
 	if login ~= nil then
 		self.observer:forgetLogin(login)
 	end
 end
 
 function Subscription:watchLogins(ids)
-	local logins = self.logins.activeLogins
+	local logins = self.logins
 	local missing = {}
 	for index, id in ipairs(ids) do
 		local login = logins:getLogin(id)
@@ -360,7 +360,7 @@ end
 
 function Subscription:getWatchedLogins()
 	local result = {}
-	local logins = self.logins.activeLogins
+	local logins = self.logins
 	for id in self.observer:iWatchedLoginIds() do
 		result[#result+1] = logins:getLogin(id)
 	end
