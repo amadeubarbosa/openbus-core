@@ -58,16 +58,6 @@ local LRCase = Suite.Test3
 
 -- Funções auxiliares ---------------------------------------------------------
 
--- Cria o método entityLogout do LoginObserver
-local function createEntityLogout(id, entity)
-  return function (info)
-    Check.assertNotNil(info.id)
-    Check.assertNotNil(info.entity)
-    Check.assertEquals(id, info.id)
-    Check.assertEquals(entity, info.entity)
-  end
-end
-
 -- Inicialização --------------------------------------------------------------
 setuplog(log, loglevel)
 setuplog(oillog, oillevel)
@@ -87,7 +77,6 @@ setuplog(oillog, oillevel)
 -------------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  print("NoPermissionCase.beforeTestCase")
   local conn = openbus.connectByAddress(host, port)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
@@ -124,14 +113,12 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  print("InvalidParamCase.beforeTestCase")
   local orb = openbus.createORB()
   local conn = openbus.connectByAddress(host, port, orb)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.logins = conn.logins
   self.invalidId = "invalid-login-id"
-  self.orb = orb
 end
 
 function InvalidParamCase.afterTestCase(self)
@@ -180,7 +167,7 @@ function InvalidParamCase.testGetValidityEmptyList(self)
   Check.assertEquals(0, #vals)
 end
 
-function InvalidParamCase.atestSubscribeObserver(self)
+function InvalidParamCase.testSubscribeInvalidObserver(self)
   local logins = self.logins
   local ok, observer = pcall(logins.subscribeObserver, logins, {})
   Check.assertTrue(ok)
@@ -191,11 +178,37 @@ function InvalidParamCase.atestSubscribeObserver(self)
   ok, err = pcall(observer.watchLogin, observer, self.invalidId)
   Check.assertTrue(ok)
   Check.assertFalse(err)
-  require("cothread").verbose:level(1)
+  -- start ORB to receive observer notification
+  local orb = self.conn.orb
+  oil.newthread(orb.run, orb)
   ok, err = pcall(self.conn.logout, self.conn)
   Check.assertTrue(ok)
+  orb:shutdown()
+  -- CORBA Error should happen in the BUS side and can`t be checked here.
+  -- The CORBA error is NO_PERMISSION
+  -- loggin in again so 'afterTestCase' can logout
   self.conn:loginByPassword(admin, adminPassword)
-  self.logins = conn.logins
+  self.logins = self.conn.logins
+end
+
+function InvalidParamCase.test2ConnectionSubscribeInvalidObserver(self)
+  local conn2 = openbus.connectByAddress(host, port)
+  conn2:loginByPassword(dUser, dPassword)
+  -- subscribe observer
+  local logins = self.logins
+  local ok, observer = pcall(logins.subscribeObserver, logins, {})
+  Check.assertTrue(ok)
+  Check.assertNotNil(observer)
+  local ok, err = pcall(observer.watchLogin, observer, conn2.login.id)
+  Check.assertTrue(ok)
+  Check.assertTrue(err)
+  -- start ORB to receive observer notification
+  local orb = self.conn.orb
+  oil.newthread(orb.run, orb)
+  conn2:logout()
+  orb:shutdown()
+  -- CORBA Error should happen in the BUS side and can`t be checked here.
+  -- The CORBA error is NO_IMPLEMENT
 end
 
 -------------------------------------
@@ -203,7 +216,6 @@ end
 -------------------------------------
 
 function LRCase.beforeTestCase(self)
-  print("LRCase.beforeTestCase")
   local conn = openbus.connectByAddress(host, port)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
@@ -237,7 +249,7 @@ function LRCase.testGetValidity(self)
 end
 
 function LRCase.testSubscribeObserver(self)
-  local conn2 = openbus.connectByAddress(host, port, self.orb)
+  local conn2 = openbus.connectByAddress(host, port)
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe login observer
   local loginId = conn2.login.id
@@ -255,7 +267,7 @@ function LRCase.testSubscribeObserver(self)
   conn2:logout()
   orb:shutdown()
   -- check if observer was called properly
-  Check.assertNotNil(loginInfo)
+  Check.assertNotNil(logoutInfo)
   Check.assertEquals(loginId, logoutInfo.id)
   Check.assertEquals(dUser, logoutInfo.entity)
 end
