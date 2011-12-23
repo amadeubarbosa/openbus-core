@@ -58,6 +58,15 @@ local LRCase = Suite.Test3
 
 -- Funções auxiliares ---------------------------------------------------------
 
+local function findLoginInList(list, id)
+  for k, info in ipairs(list) do
+    if info.id == id then
+      return info
+    end
+  end
+  return nil
+end
+
 -- Inicialização --------------------------------------------------------------
 setuplog(log, loglevel)
 setuplog(oillog, oillevel)
@@ -217,7 +226,7 @@ end
 
 function LRCase.beforeTestCase(self)
   local conn = openbus.connectByAddress(host, port)
-  conn:loginByPassword(dUser, dPassword)
+  conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.logins = conn.logins
 end
@@ -229,23 +238,118 @@ function LRCase.afterTestCase(self)
 end
 
 function LRCase.testGetAllLogins(self)
-  
+  local logins = self.logins
+  local list = logins:getAllLogins()
+  Check.assertTrue(#list > 0)
+  local found = findLoginInList(list, self.conn.login.id)
+  Check.assertNotNil(found)
+  Check.assertEquals(self.conn.login.id, found.id)
+  Check.assertEquals(admin, found.entity)
+end
+
+function LRCase.test2ConnectionGetAllLogins(self)
+  local logins = self.logins
+  local conn2 = openbus.connectByAddress(host, port)
+  conn2:loginByPassword(dUser, dPassword)
+  local ok, list = pcall(logins.getAllLogins, logins)
+  Check.assertTrue(ok)
+  Check.assertTrue(#list > 1)
+  local found = findLoginInList(list, self.conn.login.id)
+  Check.assertNotNil(found)
+  Check.assertEquals(self.conn.login.id, found.id)
+  Check.assertEquals(admin, found.entity)
+  found = findLoginInList(list, conn2.login.id)
+  Check.assertNotNil(found)
+  Check.assertEquals(conn2.login.id, found.id)
+  Check.assertEquals(dUser, found.entity)
+  conn2:logout()
 end
 
 function LRCase.testGetEntityLogins(self)
-  
+  local logins = self.logins
+  local list = logins:getEntityLogins(admin)
+  Check.assertTrue(#list > 0)
+  local found = findLoginInList(list, self.conn.login.id)
+  Check.assertNotNil(found)
+  Check.assertEquals(self.conn.login.id, found.id)
+  Check.assertEquals(admin, found.entity)  
 end
 
 function LRCase.testInvalidateLogin(self)
-  
+  local logins = self.logins
+  local conn2 = openbus.connectByAddress(host, port)
+  conn2:loginByPassword(dUser, dPassword)
+  -- check login
+  local info = logins:getLoginInfo(conn2.login.id)
+  Check.assertNotNil(info)
+  Check.assertEquals(conn2.login.id, info.id)
+  Check.assertEquals(dUser, info.entity)
+  -- invalidating
+  local bool = logins:invalidateLogin(conn2.login.id)
+  Check.assertTrue(bool)
+  local ok, err = pcall(logins.getLoginInfo, logins, conn2.login.id)
+  Check.assertTrue(not ok)
+  -- bug com a cache de logins!!!
+  Check.assertEquals(logintypes.InvalidLogins, err._repid)
+  Check.assertEquals(1, #err.loginIds)
+  Check.assertEquals(conn2.login.id, err.loginIds[1])
+  -- test logout of conn2
+  local ok, err = pcall(conn2.logout, conn2)
+  Check.assertTrue(not ok)
+  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
 end
 
 function LRCase.testGetLoginInfo(self)
-  
+  local logins = self.logins
+  local conn2 = openbus.connectByAddress(host, port)
+  conn2:loginByPassword(dUser, dPassword)
+  local info = logins:getLoginInfo(conn2.login.id)
+  Check.assertNotNil(info)
+  Check.assertEquals(conn2.login.id, info.id)
+  Check.assertEquals(dUser, info.entity)
+  info = conn2.logins:getLoginInfo(self.conn.login.id)
+  Check.assertNotNil(info)
+  Check.assertEquals(self.conn.login.id, info.id)
+  Check.assertEquals(admin, info.entity)
+  conn2:logout()
 end
 
 function LRCase.testGetValidity(self)
-  
+  local logins = self.logins
+  local list = { self.conn.login.id }
+  local vals = logins:getValidity(list)
+  Check.assertNotNil(vals)
+  Check.assertEquals(1, #vals)
+  local t1 = vals[1]
+  oil.sleep(1)
+  vals = logins:getValidity(list)
+  Check.assertNotNil(vals)
+  Check.assertEquals(1, #vals)
+  local t2 = vals[1]
+  -- Mais um problema com a cache provavelmente
+  Check.assertTrue(t1 > t2)
+end
+
+function LRCase.test2ConncetionsGetValidity(self)
+  local logins = self.logins
+  local conn2 = openbus.connectByAddress(host, port)
+  conn2:loginByPassword(dUser, dPassword)
+  local list = { self.conn.login.id, conn2.login.id }
+  local vals = logins:getValidity(list)
+  Check.assertNotNil(vals)
+  Check.assertEquals(2, #vals)
+  local conn1t1 = vals[1]
+  local conn2t1 = vals[2]
+  oil.sleep(1)
+  vals = logins:getValidity(list)
+  Check.assertNotNil(vals)
+  Check.assertEquals(2, #vals)
+  conn2:logout()
+  local conn1t2 = vals[1]
+  local conn2t2 = vals[2]
+  -- Mais um problema com a cache provavelmente
+  Check.assertTrue(conn1t1 > conn1t2)
+  Check.assertTrue(conn2t1 > conn2t2)
 end
 
 function LRCase.testSubscribeObserver(self)
