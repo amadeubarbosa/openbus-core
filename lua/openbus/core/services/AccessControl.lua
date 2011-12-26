@@ -471,7 +471,7 @@ function LoginRegistry:getValidity(ids)
 	for index, id in ipairs(ids) do
 		local login = logins:getLogin(id)
 		if login ~= nil then
-			validity[index] = max(expirationGap, leaseTime-(now-login.leaseRenewed))
+			validity[index] = expirationGap + leaseTime-(now-login.leaseRenewed)
 		elseif id == SelfLogin.id then
 			validity[index] = leaseTime
 		else
