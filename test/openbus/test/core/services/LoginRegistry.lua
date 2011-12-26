@@ -284,19 +284,27 @@ function LRCase.testInvalidateLogin(self)
   Check.assertNotNil(info)
   Check.assertEquals(conn2.login.id, info.id)
   Check.assertEquals(dUser, info.entity)
+  local list = { conn2.login.id }
+  local vals = logins:getValidity(list)
+  Check.assertNotNil(vals)
+  Check.assertEquals(1, #vals)
+  local validity = vals[1]  
   -- invalidating
   local bool = logins:invalidateLogin(conn2.login.id)
   Check.assertTrue(bool)
-  local ok, err = pcall(logins.getLoginInfo, logins, conn2.login.id)
+  local conn2id = conn2.login.id
+  -- sleeping validity time so the login may be removed from cache. If not, the
+  -- call to getLoginInfo will return the info from cache (won`t call the bus)
+  oil.sleep(validity)
+  local ok, err = pcall(logins.getLoginInfo, logins, conn2id)
   Check.assertTrue(not ok)
-  -- bug com a cache de logins!!!
   Check.assertEquals(logintypes.InvalidLogins, err._repid)
   Check.assertEquals(1, #err.loginIds)
-  Check.assertEquals(conn2.login.id, err.loginIds[1])
+  Check.assertEquals(conn2id, err.loginIds[1])
   -- test logout of conn2
   local ok, err = pcall(conn2.logout, conn2)
-  Check.assertTrue(not ok)
-  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
+  Check.assertTrue(ok)
+  Check.assertFalse(err)
 end
 
 function LRCase.testGetLoginInfo(self)
@@ -326,7 +334,6 @@ function LRCase.testGetValidity(self)
   Check.assertNotNil(vals)
   Check.assertEquals(1, #vals)
   local t2 = vals[1]
-  -- Mais um problema com a cache provavelmente
   Check.assertTrue(t1 > t2)
 end
 
@@ -347,7 +354,6 @@ function LRCase.test2ConncetionsGetValidity(self)
   conn2:logout()
   local conn1t2 = vals[1]
   local conn2t2 = vals[2]
-  -- Mais um problema com a cache provavelmente
   Check.assertTrue(conn1t1 > conn1t2)
   Check.assertTrue(conn2t1 > conn2t2)
 end
