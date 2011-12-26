@@ -2,6 +2,7 @@ local _G = require "_G"
 local pcall = _G.pcall
 local pcall = _G.pcall
 local string = _G.string
+local ipairs = _G.ipairs
 
 local oil = require "oil"
 local oillog = require "oil.verbose"
@@ -26,7 +27,7 @@ local dUser = "tester"
 local dPassword = "tester"
 local certificate = "teste.crt"
 local pkey = "teste.key"
-local loglevel = 5
+local sdklevel = 5
 local oillevel = 0
 
 local scsutils = require ("scs.core.utils")()
@@ -68,7 +69,7 @@ local function findLoginInList(list, id)
 end
 
 -- Inicialização --------------------------------------------------------------
-setuplog(log, loglevel)
+setuplog(log, sdklevel)
 setuplog(oillog, oillevel)
 
 -- Testes do LoginRegistry ----------------------------------------------------

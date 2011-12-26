@@ -25,7 +25,7 @@ local adminPassword = "admin"
 local dUser = "user"
 local dPassword = "user"
 local certificate = "teste.crt"
-local loglevel = 5
+local sdklevel = 5
 local oillevel = 0 
 
 local scsutils = require ("scs.core.utils")()
@@ -58,7 +58,7 @@ local CRCase = Suite.Test3
 
 
 -- Inicialização --------------------------------------------------------------
-setuplog(log, loglevel)
+setuplog(log, sdklevel)
 setuplog(oillog, oillevel)
 
 -- Testes do CertificateRegistry ----------------------------------------------
@@ -134,7 +134,6 @@ function InvalidParamCase.testRegisterEmptyCertificate(self)
   local read = file:read("*a")
   local ok, err = pcall(certs.registerCertificate, certs, "unknown", read)
   Check.assertTrue(not ok)
-  print(err._repid)
   Check.assertEquals(logintypes.InvalidCertificate, err._repid)
   file:close()
 end
@@ -146,7 +145,6 @@ function InvalidParamCase.testRegisterInvalidCertificate(self)
   read = "\n--CORRUPTED!--\n" .. read
   local ok, err = pcall(certs.registerCertificate, certs, "unknown", read)
   Check.assertTrue(not ok)
-  print(err._repid)
   Check.assertEquals(logintypes.InvalidCertificate, err._repid)
   file:close()
 end
