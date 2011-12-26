@@ -9,9 +9,6 @@ local rawset = _G.rawset
 local cothread = require "cothread"
 local time = cothread.now
 
-local math = require "math"
-local max = math.max
-
 local uuid = require "uuid"
 local newid = uuid.new
 
