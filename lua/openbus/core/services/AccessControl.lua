@@ -1,7 +1,6 @@
 -- $Id$
 
 local _G = require "_G"
-local assert = _G.assert
 local ipairs = _G.ipairs
 local pairs = _G.pairs
 local rawset = _G.rawset
@@ -12,10 +11,11 @@ local time = cothread.now
 local uuid = require "uuid"
 local newid = uuid.new
 
-local lce = require "lce"
-local readcertificate = lce.x509.readfromderstring
-local encrypt = lce.cipher.encrypt
-local decrypt = lce.cipher.decrypt
+local hash = require "lce.hash"
+local sha256 = hash.sha256
+
+local x509 = require "lce.x509"
+local decodecertificate = x509.decode
 
 local Publisher = require "loop.object.Publisher"
 
@@ -61,7 +61,7 @@ end
 function CertificateRegistry:getPublicKey(entity)
 	local certificate, errmsg = self.certificateDB:getentry(entity)
 	if certificate ~= nil then
-		return assert(assert(readcertificate(certificate)):getpublickey())
+		return assert(assert(decodecertificate(certificate)):getpubkey())
 	elseif errmsg ~= nil then
 		assert(nil, errmsg)
 	end
@@ -70,11 +70,11 @@ end
 -- IDL operations
 
 function CertificateRegistry:registerCertificate(entity, certificate)
-	local certobj, errmsg = readcertificate(certificate)
+	local certobj, errmsg = decodecertificate(certificate)
 	if not certobj then
 		throw.InvalidCertificate{message=errmsg}
 	end
-	local pubkey, errmsg = certobj:getpublickey()
+	local pubkey, errmsg = certobj:getpubkey()
 	if not pubkey then
 		throw.InvalidCertificate{message=errmsg}
 	end
@@ -127,21 +127,23 @@ function LoginByCertificate:cancel()
 	manager.pendingChallenges[self] = nil
 end
 
-function LoginByCertificate:login(answer)
+function LoginByCertificate:login(pubkey, encrypted)
 	self:cancel()
 	local manager = self.manager
 	local entity = self.entity
-	local decoded, errmsg = decrypt(manager.privateKey, answer)
-	if decoded == nil then
+	local decrypted, errmsg = manager.privateKey:decrypt(encrypted)
+	if decrypted == nil then
 		throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
 	end
-	if decoded ~= self.secret then
+	local decoder = manager.access.orb:newdecoder(decrypted)
+	local decoded = decoder:get(manager.LoginAuthenticationInfo)
+	if decoded.hash ~= sha256(pubkey) or decoded.data ~= self.secret then
 		throw.AccessDenied{entity=entity}
 	end
-	local login = manager.activeLogins:newLogin(entity, true)
+	local login = manager.activeLogins:newLogin(entity, pubkey)
 	renewLogin(login)
 	log:request(msg.LoginByCertificate:tag{login=login.id,entity=entity})
-	return login, manager.leaseTime
+	return login.id, manager.leaseTime
 end
 
 
@@ -160,6 +162,8 @@ local AccessControl = {
 -- local operations
 
 function AccessControl:__init(data)
+	SelfLogin.pubkey = data.certificate
+	
 	local access = data.access
 	access.logins = self
 	access.busid = data.busid
@@ -182,6 +186,8 @@ function AccessControl:__init(data)
 		publisher = self.publisher,
 	}
 	self.pendingChallenges = {}
+	self.LoginAuthenticationInfo =
+		assert(access.orb.types:lookup_id(types.LoginAuthenticationInfo))
 	
 	-- renova todas as credenciais persistidas
 	for id, login in self.activeLogins:iLogins() do
@@ -237,30 +243,36 @@ end
 
 -- IDL operations
 
-function AccessControl:loginByPassword(entity, password)
+function AccessControl:loginByPassword(entity, pubkey, encrypted)
 	if entity ~= SelfLogin.entity then
-		local decoded, errmsg = decrypt(self.privateKey, password)
-		if decoded == nil then
+		local decrypted, errmsg = self.privateKey:decrypt(encrypted)
+		if decrypted == nil then
 			throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
 		end
-		for _, validator in ipairs(self.passwordValidators) do
-			local valid, errmsg = validator.validate(entity, decoded)
-			if valid then
-				local login = self.activeLogins:newLogin(entity)
-				log:request(msg.LoginByPassword:tag{
-					login = login.id,
-					entity = entity,
-					validator = validator.name,
-				})
-				renewLogin(login)
-				return login, self.leaseTime
-			elseif errmsg ~= nil then
-				log:exception(msg.FailedPasswordValidation:tag{
-					entity = entity,
-					validator = validator.name,
-					errmsg = errmsg,
-				})
+		local decoder = self.access.orb:newdecoder(decrypted)
+		local decoded = decoder:get(self.LoginAuthenticationInfo)
+		if decoded.hash == sha256(pubkey) then
+			for _, validator in ipairs(self.passwordValidators) do
+				local valid, errmsg = validator.validate(entity, decoded.data)
+				if valid then
+					local login = self.activeLogins:newLogin(entity, pubkey)
+					log:request(msg.LoginByPassword:tag{
+						login = login.id,
+						entity = entity,
+						validator = validator.name,
+					})
+					renewLogin(login)
+					return login.id, self.leaseTime
+				elseif errmsg ~= nil then
+					log:exception(msg.FailedPasswordValidation:tag{
+						entity = entity,
+						validator = validator.name,
+						errmsg = errmsg,
+					})
+				end
 			end
+		else
+			log:exception(msg.WrongPublicKeyHash:tag{ entity = entity })
 		end
 	end
 	throw.AccessDenied{entity=entity}
@@ -278,7 +290,7 @@ function AccessControl:startLoginByCertificate(entity)
 	}
 	self.pendingChallenges[logger] = time()
 	log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
-	return logger, assert(encrypt(publickey, logger.secret))
+	return logger, assert(publickey:encrypt(logger.secret))
 end
 
 function AccessControl:logout()
@@ -468,7 +480,7 @@ function LoginRegistry:getValidity(ids)
 	for index, id in ipairs(ids) do
 		local login = logins:getLogin(id)
 		if login ~= nil then
-			validity[index] = expirationGap + leaseTime-(now-login.leaseRenewed)
+			validity[index] = expirationGap+leaseTime-(now-login.leaseRenewed))
 		elseif id == SelfLogin.id then
 			validity[index] = leaseTime
 		else

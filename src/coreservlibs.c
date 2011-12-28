@@ -29,8 +29,6 @@ void luapreload_extralibraries(lua_State *L)
 	/* preload binded C libraries */
 	luaL_findtable(L, LUA_GLOBALSINDEX, "package.preload", 1);
 	lua_pushcfunction(L,luaopen_uuid);lua_setfield(L,-2,"uuid");
-	lua_pushcfunction(L,luaopen_lce);lua_setfield(L,-2,"lce");
-	lua_pushcfunction(L,luaopen_lce_hash);lua_setfield(L,-2,"lce.hash");
 	lua_pushcfunction(L,luaopen_lfs);lua_setfield(L,-2,"lfs");
 	lua_pushcfunction(L,luaopen_lualdap);lua_setfield(L,-2,"lualdap");
 	lua_pushcfunction(L,luaopen_vararg);lua_setfield(L,-2,"vararg");
@@ -38,6 +36,8 @@ void luapreload_extralibraries(lua_State *L)
 	lua_pushcfunction(L,luaopen_socket_core);lua_setfield(L,-2,"socket.core");
   lua_pushcfunction(L,luaopen_string_bitwise);lua_setfield(L,-2,"string.bitwise");
 	lua_pop(L, 1);  /* pop 'package.preload' table */
+	/* preload other C libraries */
+	luapreload_lce(L);
 	/* preload script libraries */
 	luapreload_loop(L);
 	luapreload_luatuple(L);

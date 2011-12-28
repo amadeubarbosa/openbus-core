@@ -162,11 +162,12 @@ function Database:__init()
 	                                     self)))
 end
 
-function Database:newLogin(entity)
+function Database:newLogin(entity, pubkey)
 	local id = newid("time")
 	local data = {
 		id = id,
 		entity = entity,
+		pubkey = pubkey,
 	}
 	local table = self.lgnTab
 	assert(table:setentry(id, data))
