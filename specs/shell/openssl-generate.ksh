@@ -92,11 +92,16 @@ echo "Comando 'openssl' utilizado : ${OPENSSL_CMD}"
 echo "============================================================="
 
 ${OPENSSL_CMD} genrsa -out ${entityName}_openssl.key 2048 || exit 1
-${OPENSSL_CMD} pkcs8 -topk8 -in ${entityName}_openssl.key \
-    -nocrypt > ${entityName}.key || exit 1
 
-${OPENSSL_CMD} req ${sslConfig} -new -x509 -key ${entityName}.key \
-    -out ${entityName}.crt -outform DER || exit 1
+${OPENSSL_CMD} pkcs8 -topk8 -nocrypt \
+    -in ${entityName}_openssl.key \
+    -out ${entityName}.key -outform DER \
+    || exit 1
+
+${OPENSSL_CMD} req ${sslConfig} -new -x509 \
+    -key ${entityName}.key -keyform DER \
+    -out ${entityName}.crt -outform DER \
+    || exit 1
 
 rm -f ${entityName}_openssl.key
 
