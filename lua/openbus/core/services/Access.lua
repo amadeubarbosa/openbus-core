@@ -19,8 +19,9 @@ local idl = require "openbus.core.idl"
 local const = idl.const.services.access_control
 local msg = require "openbus.core.messages"
 
-local Access = require "openbus.core.Access"
-local receiveBusRequest = Access.receiverequest
+local access = require "openbus.core.Access"
+local Interceptor = access.Interceptor
+local receiveBusRequest = Interceptor.receiverequest
 
 
 
@@ -40,9 +41,9 @@ local PredefinedUserSets = {
 
 
 
-local CoreServiceAccess = class({}, Access)
+local BusInterceptor = class({}, Interceptor)
 
-function CoreServiceAccess:__init()
+function BusInterceptor:__init()
 	do
 		local forAllOps = Everybody
 		
@@ -81,7 +82,33 @@ function CoreServiceAccess:__init()
 	end
 end
 
-function CoreServiceAccess:setGrantedUsers(interface, operation, users)
+function BusInterceptor:validateChain(chain, caller)
+	if chain == nil then
+		chain = { callers = {caller} }
+	else
+		if chain.signature ~= nil then -- is not a legacy chain (OpenBus 1.5)
+			                             -- legacy chain is always created correctly
+			local signed = self.buskey:verify(sha256(chain.encoded), chain.signature)
+			if signed and chain.target == caller.id then
+				local callers = chain.callers
+				callers[#callers+1] = caller -- add caller to the chain
+			else
+				chain = nil -- invalid chain: unsigned or chain was not for the caller
+			end
+		end
+	end
+	return chain
+end
+
+function BusInterceptor:joinedChainFor(remoteid, chain)
+	local callers = { unpack(chain.callers) }
+	callers[#callers+1] = self.login
+	return self.AccessControl:encodeChain(remoteid, callers)
+end
+
+
+
+function BusInterceptor:setGrantedUsers(interface, operation, users)
 	local accessByIface = self.grantedUsers
 	local accessByOp = rawget(accessByIface, interface)
 	if accessByOp == nil then
@@ -91,16 +118,20 @@ function CoreServiceAccess:setGrantedUsers(interface, operation, users)
 	accessByOp[operation] = PredefinedUserSets[users] or users
 end
 
-function CoreServiceAccess:receiverequest(request)
+
+
+function BusInterceptor:receiverequest(request)
 	if request.servant ~= nil then -- servant object does exist
 		local opName = request.operation_name
-		if opName:find("_", 1, true) ~= 1 then -- not CORBA obj op
+		if opName:find("_", 1, true) ~= 1
+		or opName:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
 			receiveBusRequest(self, request)
 			local granted = self.grantedUsers[request.interface.repID][opName]
-			local callers = self:getCallerChain()
-			if callers ~= nil then
+			local chain = self:getCallerChain()
+			if chain ~= nil then
+				local callers = chain.callers
 				local login = callers[#callers]
-				if not granted[login.entity] and not granted[callers[1].entity] then
+				if not granted[login.entity] then
 					request.success = false
 					request.results = {self.orb:newexcept{
 						_repid = sysex.NO_PERMISSION,
@@ -138,4 +169,9 @@ function CoreServiceAccess:receiverequest(request)
 	end
 end
 
-return CoreServiceAccess
+
+
+return {
+	createORB = access.createORB,
+	Interceptor = BusInterceptor,
+}

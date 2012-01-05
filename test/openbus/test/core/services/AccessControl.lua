@@ -18,7 +18,9 @@ local sysex = giop.SystemExceptionIDs
 local x509 = require "lce.x509"
 local decodecertificate = x509.decode
 
-local Access = require "openbus.core.Access"
+local access = require "openbus.core.Access"
+local createORB = access.createORB
+local Interceptor = access.Interceptor
 local log = require "openbus.util.logger"
 local server = require "openbus.util.server"
 local setuplog = server.setuplog
@@ -69,10 +71,10 @@ local function connectByAddress(host, port)
     logins = "LoginRegistry",
   }
   local conn = {}
-  local orb = Access.createORB()
-  local access = Access{ orb = orb }
-  --orb.OpenBusInterceptor = access
-  orb:setinterceptor(access, "corba")
+  local orb = createORB()
+  local iceptor = Interceptor{ orb = orb }
+  --orb.OpenBusInterceptor = iceptor
+  orb:setinterceptor(iceptor, "corba")
   conn.orb = orb
   
   local ref = "corbaloc::"..host..":"..port.."/"..BusObjectKey
@@ -83,10 +85,10 @@ local function connectByAddress(host, port)
     conn[field] = orb:narrow(bus:getFacetByName(facetname), typerepid)
   end
   conn.bus = bus
-  access.busid = conn.AccessControl:_get_busid()
+  iceptor.busid = conn.AccessControl:_get_busid()
 
   function conn:setLogin(login)
-    access.login = login
+    iceptor.login = login
   end
   return conn
 end

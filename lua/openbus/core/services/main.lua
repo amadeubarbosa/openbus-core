@@ -30,7 +30,7 @@ local readprivatekey = server.readprivatekey
 
 local idl = require "openbus.core.idl"
 local const = idl.const
-local Access = require "openbus.core.services.Access"
+local access = require "openbus.core.services.Access"
 
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
@@ -127,9 +127,12 @@ Options:
 	setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
 
 	-- setup bus access
-	local orb = Access.createORB{ host=Configs.host, port=Configs.port }
-	local access = Access{ orb=orb, legacy=not Configs.nolegacy }
-	orb:setinterceptor(access, "corba")
+	local orb = access.createORB{ host=Configs.host, port=Configs.port }
+	local iceptor = access.Interceptor{
+		orb = orb,
+		legacy = not Configs.nolegacy,
+	}
+	orb:setinterceptor(iceptor, "corba")
 
 	-- create SCS component
 	local facets = {}
@@ -142,7 +145,7 @@ Options:
 		facets = facets,
 		init = function()
 			local params = {
-				access = access,
+				access = iceptor,
 				busid = Configs.busid,
 				database = assert(opendb(Configs.database)),
 				certificate = assert(readfilecontents(Configs.certificate)),
@@ -164,7 +167,7 @@ Options:
 	}
 
 	-- create legacy SCS components
-	if access.legacy then
+	if iceptor.legacy then
 		local legacyIDL = require "openbus.core.legacy.idl"
 		legacyIDL.loadto(orb)
 	
@@ -176,7 +179,7 @@ Options:
 			facets = AccessControlService,
 			receptacles = {RegistryServiceReceptacle="IDL:scs/core/IComponent:1.0"},
 			init = function()
-				local params = { access = access, admins = Configs.admin }
+				local params = { access = iceptor, admins = Configs.admin }
 				-- these object must be initialized in this order
 				AccessControlService.IAccessControlService:__init(params)
 				AccessControlService.IManagement:__init(params)
@@ -189,7 +192,7 @@ Options:
 			name = "RegistryService",
 			facets = RegistryService,
 			init = function()
-				local params = { access = access }
+				local params = { access = iceptor }
 				-- these object must be initialized in this order
 				RegistryService.IManagement:__init(params)
 			end,

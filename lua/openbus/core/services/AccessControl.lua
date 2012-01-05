@@ -162,12 +162,12 @@ local AccessControl = {
 -- local operations
 
 function AccessControl:__init(data)
-	SelfLogin.pubkey = data.certificate
-	
 	local access = data.access
+	access.AccessControl = self
 	access.logins = self
 	access.busid = data.busid
 	access.login = SelfLogin
+	access:setGrantedUsers(self.__type, "_get_busid", "any")
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")
 	access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
 	access:setGrantedUsers(LoginByCertificate.__type, "*", "any")
@@ -308,6 +308,27 @@ function AccessControl:renew()
 	renewLogin(login)
 	log:request(msg.LoginRenewed:tag{login=id,entity=login.entity})
 	return self.leaseTime
+end
+
+function AccessControl:encodeChain(target, callers)
+	local access = self.access
+	local types = access.types
+	local encoder = access.orb:newencoder()
+	encoder:put(target, types.Identifier)
+	encoder:put(callers, types.LoginInfoSeq)
+	local encoded = encoder:getdata()
+	return {
+		encoded = encoded,
+		signature = assert(acccess.prvkey:sign(assert(sha256(encoded)))),
+	}
+end
+
+function AccessControl:signChainFor(target, original)
+	local login = self.activeLogins:getLogin(target)
+	if login == nil then
+		sysex.NO_PERMISSION{ minor = const.InvalidLoginCode }
+	end
+	return self:encodeChain(login, self.access:getCallerChain().callers)
 end
 
 ------------------------------------------------------------------------------
@@ -464,9 +485,9 @@ end
 function LoginRegistry:getLoginInfo(id)
 	local login = AccessControl.activeLogins:getLogin(id)
 	if login ~= nil then
-		return login
+		return login, login.pubkey
 	elseif id == SelfLogin.id then
-		return SelfLogin
+		return SelfLogin, self.certificate
 	end
 	throw.InvalidLogins{loginIds={id}}
 end
