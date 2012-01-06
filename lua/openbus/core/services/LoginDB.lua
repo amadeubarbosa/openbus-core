@@ -7,6 +7,9 @@ local tostring = _G.tostring
 local uuid = require "uuid"
 local newid = uuid.new
 
+local pubkey = require "lce.pubkey"
+local decodekey = pubkey.decodepublic
+
 local oo = require "openbus.util.oo"
 local class = oo.class
 
@@ -96,6 +99,7 @@ end
 local Login = class()
  
 function Login:__init()
+	self.pubkey = decodekey(self.encodedkey)
 	self.base.logins[self.id] = self
 	if self.watchers == nil then self.watchers = {} end
 	if self.observers == nil then self.observers = {} end
@@ -162,12 +166,12 @@ function Database:__init()
 	                                     self)))
 end
 
-function Database:newLogin(entity, pubkey)
+function Database:newLogin(entity, encodedkey)
 	local id = newid("time")
 	local data = {
 		id = id,
 		entity = entity,
-		pubkey = pubkey,
+		encodedkey = encodedkey,
 	}
 	local table = self.lgnTab
 	assert(table:setentry(id, data))

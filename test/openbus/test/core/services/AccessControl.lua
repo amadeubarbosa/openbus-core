@@ -15,8 +15,8 @@ local oillog = require "oil.verbose"
 local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
 
-local x509 = require "lce.x509"
-local decodecertificate = x509.decode
+local pubkey = require "lce.pubkey"
+local decodepubkey = pubkey.decodepublic
 
 local access = require "openbus.core.Access"
 local createORB = access.createORB
@@ -102,7 +102,7 @@ local function loginByPassword(user, password)
   end
   local conn = connectByAddress(host,port)
   local accontrol = conn.AccessControl
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)
@@ -137,7 +137,7 @@ end
 function ACSuite.testInvalidPassword(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)
@@ -159,7 +159,7 @@ end
 function ACSuite.testNilLogin(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)
@@ -222,7 +222,7 @@ function ACSuite.testLoginByCertificateAndLogout(self)
   Check.assertNotNil(privatekey, errmsg)
   local secret, errmsg = privatekey:decrypt(challenge)
   Check.assertNotNil(secret, errmsg)
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)
@@ -256,7 +256,7 @@ function ACSuite.testLogoutLoginByCertificate(self)
   Check.assertNotNil(privatekey, errmsg)
   local secret, errmsg = privatekey:decrypt(challenge)
   Check.assertNotNil(secret, errmsg)
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)
@@ -280,7 +280,7 @@ function ACSuite.testLoginByCertificateWrongAnswer(self)
   Check.assertNotNil(attempt)
   Check.assertNotNil(challenge)
   local wrongsecret = "wrong secret"
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)
@@ -301,7 +301,7 @@ function ACSuite.testLoginByCertificateNoEncoding(self)
   Check.assertNotNil(privatekey, errmsg)
   local secret, errmsg = privatekey:decrypt(challenge)
   Check.assertNotNil(secret, errmsg)
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)
@@ -324,7 +324,7 @@ end
 function ACSuite.testRenew(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)
@@ -346,7 +346,7 @@ end
 function ACSuite.testExpiredLogin(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local result, errmsg = decodecertificate(accontrol:_get_certificate())
+  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
   Check.assertNotNil(result, errmsg)
   local buskey, errmsg =  result:getpubkey()
   Check.assertNotNil(buskey, errmsg)

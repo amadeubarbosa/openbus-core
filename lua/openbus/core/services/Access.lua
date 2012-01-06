@@ -126,44 +126,46 @@ function BusInterceptor:receiverequest(request)
 		if opName:find("_", 1, true) ~= 1
 		or opName:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
 			receiveBusRequest(self, request)
-			local granted = self.grantedUsers[request.interface.repID][opName]
-			local chain = self:getCallerChain()
-			if chain ~= nil then
-				local callers = chain.callers
-				local login = callers[#callers]
-				if not granted[login.entity] then
+			if request.success == nil then
+				local granted = self.grantedUsers[request.interface.repID][opName]
+				local chain = self:getCallerChain()
+				if chain ~= nil then
+					local callers = chain.callers
+					local login = callers[#callers]
+					if not granted[login.entity] then
+						request.success = false
+						request.results = {self.orb:newexcept{
+							_repid = sysex.NO_PERMISSION,
+							completed = "COMPLETED_NO",
+							minor = const.DeniedLoginCode,
+						}}
+						log:access(msg.DeniedBusCall:tag{
+							operation = request.operation.name,
+							login = login.id,
+							entity = login.entity,
+						})
+					else
+						log:access(msg.GrantedBusCall:tag{
+							operation = request.operation.name,
+							login = login.id,
+							entity = login.entity,
+						})
+					end
+				elseif granted ~= Anybody then
 					request.success = false
 					request.results = {self.orb:newexcept{
 						_repid = sysex.NO_PERMISSION,
 						completed = "COMPLETED_NO",
-						minor = const.DeniedLoginCode,
+						minor = const.InvalidLoginCode,
 					}}
-					log:access(msg.DeniedBusCall:tag{
+					log:access(msg.DeniedCallWithoutCredential:tag{
 						operation = request.operation.name,
-						login = login.id,
-						entity = login.entity,
 					})
 				else
-					log:access(msg.GrantedBusCall:tag{
+					log:access(msg.GrantedCallWithoutCredential:tag{
 						operation = request.operation.name,
-						login = login.id,
-						entity = login.entity,
 					})
 				end
-			elseif granted ~= Anybody then
-				request.success = false
-				request.results = {self.orb:newexcept{
-					_repid = sysex.NO_PERMISSION,
-					completed = "COMPLETED_NO",
-					minor = const.InvalidLoginCode,
-				}}
-				log:access(msg.DeniedCallWithoutCredential:tag{
-					operation = request.operation.name,
-				})
-			else
-				log:access(msg.GrantedCallWithoutCredential:tag{
-					operation = request.operation.name,
-				})
 			end
 		end
 	end

@@ -130,8 +130,9 @@ end
 function LoginByCertificate:login(pubkey, encrypted)
 	self:cancel()
 	local manager = self.manager
+	local access = self.access
 	local entity = self.entity
-	local decrypted, errmsg = manager.privateKey:decrypt(encrypted)
+	local decrypted, errmsg = access.prvkey:decrypt(encrypted)
 	if decrypted == nil then
 		throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
 	end
@@ -165,9 +166,10 @@ function AccessControl:__init(data)
 	local access = data.access
 	access.AccessControl = self
 	access.logins = self
-	access.busid = data.busid
 	access.login = SelfLogin
+	access.busid = data.busid
 	access:setGrantedUsers(self.__type, "_get_busid", "any")
+	access:setGrantedUsers(self.__type, "_get_buskey", "any")
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")
 	access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
 	access:setGrantedUsers(LoginByCertificate.__type, "*", "any")
@@ -176,8 +178,7 @@ function AccessControl:__init(data)
 	self.access = access
 	self.database = data.database
 	self.busid = data.busid
-	self.certificate = data.certificate
-	self.privateKey = data.privateKey
+	self.buskey = access.prvkey:encode("public")
 	self.passwordValidators = data.validators
 	self.leaseTime = data.leaseTime
 	self.expirationGap = data.expirationGap
@@ -245,7 +246,7 @@ end
 
 function AccessControl:loginByPassword(entity, pubkey, encrypted)
 	if entity ~= SelfLogin.entity then
-		local decrypted, errmsg = self.privateKey:decrypt(encrypted)
+		local decrypted, errmsg = self.access.prvkey:decrypt(encrypted)
 		if decrypted == nil then
 			throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
 		end
@@ -485,9 +486,9 @@ end
 function LoginRegistry:getLoginInfo(id)
 	local login = AccessControl.activeLogins:getLogin(id)
 	if login ~= nil then
-		return login, login.pubkey
+		return login, login.encodedkey
 	elseif id == SelfLogin.id then
-		return SelfLogin, self.certificate
+		return SelfLogin, self.buskey
 	end
 	throw.InvalidLogins{loginIds={id}}
 end
