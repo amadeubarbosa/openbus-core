@@ -39,7 +39,6 @@ local OfferRegistry = require "openbus.core.services.OfferRegistry"
 return function(...)
 	-- configuration parameters parser
 	local Configs = ConfigArgs{
-		busid = "OpenBus",
 		host = "*",
 		port = 2089,
 	
@@ -77,7 +76,6 @@ return function(...)
 Usage:  ]],OPENBUS_PROGNAME,[[ [options]
 Options:
 
-  -busid <name>              identificador único do barramento
   -host <address>            endereço de rede usado pelo barramento
   -port <number>             número da porta usada pelo barramento
 
@@ -146,7 +144,6 @@ Options:
 		init = function()
 			local params = {
 				access = iceptor,
-				busid = Configs.busid,
 				database = assert(opendb(Configs.database)),
 				certificate = assert(readfilecontents(Configs.certificate)),
 				privateKey = assert(readprivatekey(Configs.privatekey)),

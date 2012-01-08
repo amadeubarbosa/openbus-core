@@ -39,9 +39,9 @@ local OfferRegistry -- forward declaration
 local EntityRegistry -- forward declaration
 
 local function assertRights(registry, expected)
-	local chain = registry.access:getCallerChain()
-	local originator = chain[1].entity
-	local caller = chain[#chain].entity
+	local callers = registry.access:getCallerChain().callers
+	local originator = callers[1].entity
+	local caller = callers[#callers].entity
 	if (caller ~= expected and originator ~= expected) then
 		local admins = registry.admins
 		if (admins[caller] == nil and admins[originator] == nil) then
@@ -244,8 +244,8 @@ function OfferRegistry:registerService(service_ref, properties)
 		end
 	end
 	-- get information about the caller
-	local chain = self.access:getCallerChain()
-	local login = chain[#chain]
+	local callers = self.access:getCallerChain().callers
+	local login = callers[#callers]
 	local entityId = login.entity
 	-- check the caller is authorized to offer such service
 	if self.enforceAuth then

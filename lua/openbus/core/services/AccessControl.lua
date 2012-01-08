@@ -108,8 +108,8 @@ end
 ------------------------------------------------------------------------------
 
 local SelfLogin = {
-	id = newid("new"),
-	entity = idl.const.BusId,
+	id = nil,
+	entity = idl.const.BusEntity,
 	leaseRenewed = inf,
 }
 
@@ -163,11 +163,13 @@ local AccessControl = {
 -- local operations
 
 function AccessControl:__init(data)
+	local busid = newid("time")
+	SelfLogin.id = busid
 	local access = data.access
 	access.AccessControl = self
 	access.logins = self
 	access.login = SelfLogin
-	access.busid = data.busid
+	access.busid = busid
 	access:setGrantedUsers(self.__type, "_get_busid", "any")
 	access:setGrantedUsers(self.__type, "_get_buskey", "any")
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")
@@ -177,8 +179,8 @@ function AccessControl:__init(data)
 	-- initialize attributes
 	self.access = access
 	self.database = data.database
-	self.busid = data.busid
-	self.buskey = access.prvkey:encode("public")
+	self.busid = busid
+	self.buskey = assert(access.prvkey:encode("public"))
 	self.passwordValidators = data.validators
 	self.leaseTime = data.leaseTime
 	self.expirationGap = data.expirationGap
@@ -295,16 +297,16 @@ function AccessControl:startLoginByCertificate(entity)
 end
 
 function AccessControl:logout()
-	local chain = self.access:getCallerChain()
-	local id = chain[#chain].id
+	local callers = self.access:getCallerChain().callers
+	local id = callers[#callers].id
 	local login = self.activeLogins:getLogin(id)
 	login:remove()
 	log:request(msg.LogoutPerformed:tag{login=id,entity=login.entity})
 end
 
 function AccessControl:renew()
-	local chain = self.access:getCallerChain()
-	local id = chain[#chain].id
+	local callers = self.access:getCallerChain().callers
+	local id = callers[#callers].id
 	local login = self.activeLogins:getLogin(id)
 	renewLogin(login)
 	log:request(msg.LoginRenewed:tag{login=id,entity=login.entity})
@@ -313,23 +315,20 @@ end
 
 function AccessControl:encodeChain(target, callers)
 	local access = self.access
-	local types = access.types
 	local encoder = access.orb:newencoder()
-	encoder:put(target, types.Identifier)
-	encoder:put(callers, types.LoginInfoSeq)
+	encoder:put({target=target,callers=callers}, access.types.CallChain)
 	local encoded = encoder:getdata()
 	return {
 		encoded = encoded,
-		signature = assert(acccess.prvkey:sign(assert(sha256(encoded)))),
+		signature = assert(access.prvkey:sign(assert(sha256(encoded)))),
 	}
 end
 
-function AccessControl:signChainFor(target, original)
-	local login = self.activeLogins:getLogin(target)
-	if login == nil then
+function AccessControl:signChainFor(target)
+	if self.activeLogins:getLogin(target) == nil then
 		sysex.NO_PERMISSION{ minor = const.InvalidLoginCode }
 	end
-	return self:encodeChain(login, self.access:getCallerChain().callers)
+	return self:encodeChain(target, self.access:getCallerChain().callers)
 end
 
 ------------------------------------------------------------------------------
@@ -488,7 +487,7 @@ function LoginRegistry:getLoginInfo(id)
 	if login ~= nil then
 		return login, login.encodedkey
 	elseif id == SelfLogin.id then
-		return SelfLogin, self.buskey
+		return SelfLogin, AccessControl.buskey
 	end
 	throw.InvalidLogins{loginIds={id}}
 end
@@ -514,8 +513,8 @@ end
 
 function LoginRegistry:subscribeObserver(callback)
 	local logins = AccessControl.activeLogins
-	local chain = self.access:getCallerChain()
-	local login = logins:getLogin(chain[#chain].id)
+	local callers = self.access:getCallerChain().callers
+	local login = logins:getLogin(callers[#callers].id)
 	local observer = login:newObserver(callback)
 	local subscription = Subscription{ id=observer.id, logins=logins }
 	self.subscriptionOf[observer.id] = subscription
