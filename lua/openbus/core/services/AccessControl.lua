@@ -13,7 +13,8 @@ local newid = uuid.new
 
 local hash = require "lce.hash"
 local sha256 = hash.sha256
-
+local pubkey = require "lce.pubkey"
+local decodepublickey = pubkey.decodepublic
 local x509 = require "lce.x509"
 local decodecertificate = x509.decode
 
@@ -166,10 +167,12 @@ function AccessControl:__init(data)
 	local busid = newid("time")
 	SelfLogin.id = busid
 	local access = data.access
+	local encodedkey = assert(access.prvkey:encode("public"))
 	access.AccessControl = self
 	access.logins = self
 	access.login = SelfLogin
 	access.busid = busid
+	access.buskey = decodepublickey(encodedkey)
 	access:setGrantedUsers(self.__type, "_get_busid", "any")
 	access:setGrantedUsers(self.__type, "_get_buskey", "any")
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")
@@ -180,7 +183,7 @@ function AccessControl:__init(data)
 	self.access = access
 	self.database = data.database
 	self.busid = busid
-	self.buskey = assert(access.prvkey:encode("public"))
+	self.buskey = encodedkey
 	self.passwordValidators = data.validators
 	self.leaseTime = data.leaseTime
 	self.expirationGap = data.expirationGap

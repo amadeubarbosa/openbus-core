@@ -8,6 +8,9 @@ local rawset = _G.rawset
 local cothread = require "cothread"
 local running = cothread.running
 
+local hash = require "lce.hash"
+local sha256 = hash.sha256
+
 local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
 
