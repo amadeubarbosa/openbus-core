@@ -37,7 +37,7 @@ scsutils = nil
 
 host = props:getTagOrDefault("host", host)
 port = props:getTagOrDefault("port", port)
-admin = props:getTagOrDefault("admin", admin)
+admin = props:getTagOrDefault("adminLogin", admin)
 adminPassword = props:getTagOrDefault("adminPassword", adminPassword)
 dUser = props:getTagOrDefault("login", dUser)
 dPassword = props:getTagOrDefault("password", dPassword)

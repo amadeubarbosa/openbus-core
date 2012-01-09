@@ -4,27 +4,44 @@ local os = _G.os
 local io = _G.io
 local print = _G.print
 local tostring = _G.tostring
+local assert = _G.assert
 
 -------------------------------------------------------------------------------
 -- configuração do teste
-local bin = "busadmin "
-local login = "--login=admin "
-local password = "--password=admin "
-local certfile = "openbus.crt"
-local certificate = "--certificate="..certfile
-local script = "test.adm"
+local host = "localhost"
+local port = 2089
+local admin = "admin"
+local adminPassword = "admin"
+local certfile = "teste.crt"
+local script = "teste.adm"
 local outputfile = "output.txt"
+
+local scsutils = require ("scs.core.utils")()
+local props = {}
+scsutils:readProperties(props, "test.properties")
+scsutils = nil
+
+host = props:getTagOrDefault("host", host)
+port = props:getTagOrDefault("port", port)
+admin = props:getTagOrDefault("adminLogin", admin)
+adminPassword = props:getTagOrDefault("adminPassword", adminPassword)
+certfile = props:getTagOrDefault("certificate", certfile)
+script = props:getTagOrDefault("script", script)
+
+local bin = "busadmin "
+local login = "--login="..admin.." "
+local password = "--password="..adminPassword.." "
+local certificate = "--certificate="..certfile
 -------------------------------------------------------------------------------
 
 local function finalize()
   os.execute("rm -f " ..outputfile)
 end
 
-local function showError()
+local function readOutput()
   local f = io.open(outputfile)
   local err = f:read("*a")
   f:close()
-  finalize()
   return err
 end
 
@@ -32,7 +49,15 @@ local function execute(...)
   local command = bin..login..password
   local params = table.concat(arg, " ")
   local tofile = " > "..outputfile
-  return os.execute(command..params..tofile)
+  os.execute(command..params..tofile)
+  local output = readOutput()
+  local failed = output:find("[ERRO]",1,true)
+  if not failed then
+    return true
+  else
+    finalize()
+    return false, output
+  end
 end
 
 -- help

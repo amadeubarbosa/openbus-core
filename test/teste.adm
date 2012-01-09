@@ -1,0 +1,26 @@
+Category {
+  id = "TEST_Category",
+  name = "Categoria gerada pelo script",
+}
+
+Entity {
+  id = "TEST_Entity",
+  category = "TEST_Category",
+  name = "Entidade gerada pelo script",
+}
+
+Certificate {
+  id = "TEST_Entity",
+  certificate = "teste.crt",
+}
+
+Interface {
+  id = "IDL:script/Test:1.0"
+}
+
+Grant {
+  id = "TEST_Entity",
+  interfaces = {
+    "IDL:script/Test:1.0",
+  }
+}
