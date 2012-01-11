@@ -131,9 +131,8 @@ end
 function LoginByCertificate:login(pubkey, encrypted)
 	self:cancel()
 	local manager = self.manager
-	local access = self.access
 	local entity = self.entity
-	local decrypted, errmsg = access.prvkey:decrypt(encrypted)
+	local decrypted, errmsg = manager.access.prvkey:decrypt(encrypted)
 	if decrypted == nil then
 		throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
 	end
