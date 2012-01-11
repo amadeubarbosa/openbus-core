@@ -126,6 +126,19 @@ local function loginByPassword(entity, password)
   return conn, login, lease
 end
 
+local function startLoginByCertificate()
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  Check.assertNotNil(attempt)
+  Check.assertNotNil(challenge)
+  local privatekey, errmsg = readprivatekey(pkey)
+  Check.assertNotNil(privatekey, errmsg)
+  local secret, errmsg = privatekey:decrypt(challenge)
+  Check.assertNotNil(secret, errmsg)
+  return conn, attempt, secret
+end
+
 -- Inicialização --------------------------------------------------------------
 setuplog(log, sdklevel)
 setuplog(oillog, oillevel)
@@ -281,15 +294,8 @@ function ACSuite.testLogoutLoginByPassword(self)
 end
 
 function ACSuite.testLoginByCertificateAndLogout(self)
-  local conn = connectByAddress(host, port)
+  local conn, attempt, secret = startLoginByCertificate()
   local accontrol = conn.AccessControl
-  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  Check.assertNotNil(attempt)
-  Check.assertNotNil(challenge)
-  local privatekey, errmsg = readprivatekey(pkey)
-  Check.assertNotNil(privatekey, errmsg)
-  local secret, errmsg = privatekey:decrypt(challenge)
-  Check.assertNotNil(secret, errmsg)
   local pubkey = conn.access.prvkey:encode("public")
   Check.assertNotNil(pubkey)
   local idltype = conn.LoginAuthenticationInfo
@@ -309,21 +315,15 @@ function ACSuite.testLoginByCertificateAndLogout(self)
 end
 
 function ACSuite.testCancelLoginByCertificate(self)
-  local conn = connectByAddress(host, port)
+  local conn, attempt, secret = startLoginByCertificate()
   local accontrol = conn.AccessControl
-  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  Check.assertNotNil(attempt)
-  Check.assertNotNil(challenge)
   local ok, errmsg = pcall(attempt.cancel, attempt)
   Check.assertTrue(ok, errmsg)
 end
 
 function ACSuite.testLogoutLoginByCertificate(self)
-  local conn = connectByAddress(host, port)
+  local conn, attempt, secret = startLoginByCertificate()
   local accontrol = conn.AccessControl
-  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  local privatekey, errmsg = readprivatekey(pkey)
-  local secret, errmsg = privatekey:decrypt(challenge)
   local pubkey = conn.access.prvkey:encode("public")
   local idltype = conn.LoginAuthenticationInfo
   local encoder = conn.orb:newencoder()
@@ -344,9 +344,8 @@ function ACSuite.testLogoutLoginByCertificate(self)
 end
 
 function ACSuite.testLoginByCertificateWrongAnswer(self)
-  local conn = connectByAddress(host, port)
+  local conn, attempt, secret = startLoginByCertificate()
   local accontrol = conn.AccessControl
-  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
   local pubkey = conn.access.prvkey:encode("public")
   local idltype = conn.LoginAuthenticationInfo
   local encoder = conn.orb:newencoder()
@@ -359,11 +358,8 @@ function ACSuite.testLoginByCertificateWrongAnswer(self)
 end
 
 function ACSuite.testLoginByCertificateNilPubkey(self)
-  local conn = connectByAddress(host, port)
+  local conn, attempt, secret = startLoginByCertificate()
   local accontrol = conn.AccessControl
-  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  local privatekey, errmsg = readprivatekey(pkey)
-  local secret, errmsg = privatekey:decrypt(challenge)
   local pubkey = conn.access.prvkey:encode("public")
   local idltype = conn.LoginAuthenticationInfo
   local encoder = conn.orb:newencoder()
@@ -375,11 +371,8 @@ function ACSuite.testLoginByCertificateNilPubkey(self)
 end
 
 function ACSuite.testLoginByCertificateNoEncoding(self)
-  local conn = connectByAddress(host, port)
+  local conn, attempt, secret = startLoginByCertificate()
   local accontrol = conn.AccessControl
-  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  local privatekey, errmsg = readprivatekey(pkey)
-  local secret, errmsg = privatekey:decrypt(challenge)
   local pubkey = conn.access.prvkey:encode("public")
   local idltype = conn.LoginAuthenticationInfo
   local encoder = conn.orb:newencoder()
@@ -391,11 +384,8 @@ function ACSuite.testLoginByCertificateNoEncoding(self)
 end
 
 function ACSuite.testLoginByCertificateWrongEncoding(self)
-  local conn = connectByAddress(host, port)
+  local conn, attempt, secret = startLoginByCertificate()
   local accontrol = conn.AccessControl
-  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  local privatekey, errmsg = readprivatekey(pkey)
-  local secret, errmsg = privatekey:decrypt(challenge)
   local pubkey = conn.access.prvkey:encode("public")
   local idltype = conn.LoginAuthenticationInfo
   local encoder = conn.orb:newencoder()
