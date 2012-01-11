@@ -18,6 +18,10 @@ local sysex = giop.SystemExceptionIDs
 local pubkey = require "lce.pubkey"
 local decodepubkey = pubkey.decodepublic
 
+local hash = require "lce.hash"
+local sha256 = hash.sha256
+
+local openbus = require "openbus"
 local access = require "openbus.core.Access"
 local createORB = access.createORB
 local Interceptor = access.Interceptor
@@ -76,7 +80,11 @@ local function connectByAddress(host, port)
   --orb.OpenBusInterceptor = iceptor
   orb:setinterceptor(iceptor, "corba")
   conn.orb = orb
-  
+  conn.access = iceptor
+  -- retrieve IDL definitions for login
+  conn.LoginAuthenticationInfo =
+    assert(orb.types:lookup_id(logintypes.LoginAuthenticationInfo))
+
   local ref = "corbaloc::"..host..":"..port.."/"..BusObjectKey
   local bus = orb:newproxy(ref, nil, "scs::core::IComponent")
   for field, name in pairs(LoginServiceNames) do
@@ -86,6 +94,7 @@ local function connectByAddress(host, port)
   end
   conn.bus = bus
   iceptor.busid = conn.AccessControl:_get_busid()
+  conn.buskey = assert(decodepubkey(conn.AccessControl:_get_buskey()))
 
   function conn:setLogin(login)
     iceptor.login = login
@@ -93,26 +102,28 @@ local function connectByAddress(host, port)
   return conn
 end
 
-local function loginByPassword(user, password)
-  if not user then
-    user = dUser
+local function loginByPassword(entity, password)
+  if not entity then
+    entity = dUser
   end
   if not password then
     password = dPassword
   end
   local conn = connectByAddress(host,port)
   local accontrol = conn.AccessControl
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local encoded, errmsg = buskey:encrypt(password)
-  Check.assertNotNil(encoded, errmsg)
-  local login, lease = accontrol:loginByPassword(user, encoded)
-  Check.assertNotNil(login)
-  Check.assertNotNil(lease)
+  local pubkey = conn.access.prvkey:encode("public")
+  Check.assertNotNil(pubkey)
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=password,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  Check.assertNotNil(encoded)
+  local encrypted = conn.buskey:encrypt(encoded)
+  Check.assertNotNil(encrypted)
+  local id, lease = accontrol:loginByPassword(entity, pubkey, encrypted)
+  local login = {id=id, entity=entity, pubkey=pubkey}
   conn:setLogin(login)
-  return conn, login
+  return conn, login, lease
 end
 
 -- Inicialização --------------------------------------------------------------
@@ -137,13 +148,14 @@ end
 function ACSuite.testInvalidPassword(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local encoded, errmsg = buskey:encrypt("wrong password")
-  Check.assertNotNil(encoded, errmsg)
-  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, encoded)
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data="wrong password",hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted = conn.buskey:encrypt(encoded)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol,
+    dUser, pubkey, encrypted)
   Check.assertTrue(not ok)
   Check.assertEquals(logintypes.AccessDenied, errmsg._repid)
 end
@@ -151,21 +163,29 @@ end
 function ACSuite.testEmptyLogin(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, "", {})
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data="",hash=sha256("")}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted = conn.buskey:encrypt(encoded)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, "", pubkey, 
+    encrypted)
   Check.assertTrue(not ok)
-  Check.assertEquals(logintypes.WrongEncoding, errmsg._repid)
+  Check.assertEquals(logintypes.AccessDenied, errmsg._repid)
 end
 
 function ACSuite.testNilLogin(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local encoded, errmsg = buskey:encrypt("")
-  Check.assertNotNil(encoded, errmsg)
-  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, nil, encoded)
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data="",hash=sha256("")}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted = conn.buskey:encrypt(encoded)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, nil, pubkey, 
+    encrypted)
   Check.assertTrue(not ok)
   Check.assertEquals(sysex.MARSHAL, errmsg._repid)
 end
@@ -173,15 +193,50 @@ end
 function ACSuite.testEmptyPassword(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, {})
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data="",hash=sha256("")}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted = conn.buskey:encrypt(encoded)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, pubkey, encrypted)
   Check.assertTrue(not ok)
-  Check.assertEquals(logintypes.WrongEncoding, errmsg._repid)
+  Check.assertEquals(logintypes.AccessDenied, errmsg._repid)
 end
 
 function ACSuite.testNilPassword(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, nil)
+  local pubkey = conn.access.prvkey:encode("public")
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, pubkey, nil)
+  Check.assertTrue(not ok)
+  Check.assertEquals(sysex.MARSHAL, errmsg._repid)
+end
+
+function ACSuite.testEmptyPubKey(self)
+  local conn = connectByAddress(host,port)
+  local accontrol = conn.AccessControl
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=dPassword,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted = conn.buskey:encrypt(encoded)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, "", encrypted)
+  Check.assertTrue(not ok)
+  Check.assertEquals(logintypes.AccessDenied, errmsg._repid)
+end
+
+function ACSuite.testNilPubKey(self)
+  local conn = connectByAddress(host,port)
+  local accontrol = conn.AccessControl
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=dPassword,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted = conn.buskey:encrypt(encoded)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, nil, encrypted)
   Check.assertTrue(not ok)
   Check.assertEquals(sysex.MARSHAL, errmsg._repid)
 end
@@ -189,15 +244,28 @@ end
 function ACSuite.testEmptyLoginAndPassword(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
-  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, "", "")
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data="",hash=sha256("")}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted = conn.buskey:encrypt(encoded)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, "", pubkey, encrypted)
   Check.assertTrue(not ok)
-  Check.assertEquals(logintypes.WrongEncoding, errmsg._repid)
+  Check.assertEquals(logintypes.AccessDenied, errmsg._repid)
 end
 
 function ACSuite.testPasswordInvalidEncriptation(self)
-  local conn = connectByAddress(host, port)
+  local conn = connectByAddress(host,port)
   local accontrol = conn.AccessControl
-  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, dPassword)
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=dPassword,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local publickey = decodepubkey(pubkey)
+  local encrypted = publickey:encrypt(encoded)
+  local ok, errmsg = pcall(accontrol.loginByPassword, accontrol, dUser, pubkey, encrypted)
   Check.assertTrue(not ok)
   Check.assertEquals(logintypes.WrongEncoding, errmsg._repid)
 end
@@ -222,15 +290,19 @@ function ACSuite.testLoginByCertificateAndLogout(self)
   Check.assertNotNil(privatekey, errmsg)
   local secret, errmsg = privatekey:decrypt(challenge)
   Check.assertNotNil(secret, errmsg)
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local answer, errmsg = buskey:encrypt(secret)
-  Check.assertNotNil(answer, errmsg)
-  local login, lease = attempt:login(answer)
-  Check.assertNotNil(login)
+  local pubkey = conn.access.prvkey:encode("public")
+  Check.assertNotNil(pubkey)
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=secret,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  Check.assertNotNil(encoded)
+  local encrypted, errmsg = conn.buskey:encrypt(encoded)
+  Check.assertNotNil(encrypted, errmsg)
+  local id, lease = attempt:login(pubkey, encrypted)
+  Check.assertNotNil(id)
   Check.assertNotNil(lease)
+  local login = {id=id, entity=entity, pubkey=pubkey}
   conn:setLogin(login)
   accontrol:logout()
   conn:setLogin(nil)
@@ -250,23 +322,21 @@ function ACSuite.testLogoutLoginByCertificate(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  Check.assertNotNil(attempt)
-  Check.assertNotNil(challenge)
   local privatekey, errmsg = readprivatekey(pkey)
-  Check.assertNotNil(privatekey, errmsg)
   local secret, errmsg = privatekey:decrypt(challenge)
-  Check.assertNotNil(secret, errmsg)
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local answer, errmsg = buskey:encrypt(secret)
-  Check.assertNotNil(answer, errmsg)
-  local login, lease = attempt:login(answer)
-  Check.assertNotNil(login)
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=secret,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted, errmsg = conn.buskey:encrypt(encoded)
+  local id, lease = attempt:login(pubkey, encrypted)
+  Check.assertNotNil(id)
   Check.assertNotNil(lease)
+  local login = {id=id, entity=entity, pubkey=pubkey}
   conn:setLogin(login)
   accontrol:logout()
+  conn:setLogin(nil)
   -- calling after logout
   local ok, errmsg = pcall(accontrol.renew, accontrol)
   Check.assertTrue(not ok)
@@ -277,64 +347,73 @@ function ACSuite.testLoginByCertificateWrongAnswer(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  Check.assertNotNil(attempt)
-  Check.assertNotNil(challenge)
-  local wrongsecret = "wrong secret"
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local answer, errmsg = buskey:encrypt(wrongsecret)
-  Check.assertNotNil(answer, errmsg)
-  local ok, errmsg = pcall(attempt.login, attempt, answer)
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data="wrong secret",hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local encrypted, errmsg = conn.buskey:encrypt(encoded)
+  local ok, errmsg = pcall(attempt.login, attempt, pubkey, encrypted)
   Check.assertTrue(not ok)
   Check.assertEquals(logintypes.AccessDenied, errmsg._repid)
+end
+
+function ACSuite.testLoginByCertificateNilPubkey(self)
+  local conn = connectByAddress(host, port)
+  local accontrol = conn.AccessControl
+  local attempt, challenge = accontrol:startLoginByCertificate(dUser)
+  local privatekey, errmsg = readprivatekey(pkey)
+  local secret, errmsg = privatekey:decrypt(challenge)
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=secret,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local ok, errmsg = pcall(attempt.login, attempt, nil, encrypted)
+  Check.assertTrue(not ok)
+  Check.assertEquals(sysex.MARSHAL, errmsg._repid)
 end
 
 function ACSuite.testLoginByCertificateNoEncoding(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  Check.assertNotNil(attempt)
-  Check.assertNotNil(challenge)
   local privatekey, errmsg = readprivatekey(pkey)
-  Check.assertNotNil(privatekey, errmsg)
   local secret, errmsg = privatekey:decrypt(challenge)
-  Check.assertNotNil(secret, errmsg)
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local ok, errmsg = pcall(attempt.login, attempt, secret)
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=secret,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local ok, errmsg = pcall(attempt.login, attempt, pubkey, encoded)
   Check.assertTrue(not ok)
-  Check.assertEquals(logintypes.WrongEncoding, errmsg._repid)
+  Check.assertEquals(sysex.MARSHAL, errmsg._repid)
 end
 
 function ACSuite.testLoginByCertificateWrongEncoding(self)
   local conn = connectByAddress(host, port)
   local accontrol = conn.AccessControl
   local attempt, challenge = accontrol:startLoginByCertificate(dUser)
-  Check.assertNotNil(attempt)
-  Check.assertNotNil(challenge)
-  local ok, errmsg = pcall(attempt.login, attempt, challenge)
+  local privatekey, errmsg = readprivatekey(pkey)
+  local secret, errmsg = privatekey:decrypt(challenge)
+  local pubkey = conn.access.prvkey:encode("public")
+  local idltype = conn.LoginAuthenticationInfo
+  local encoder = conn.orb:newencoder()
+  encoder:put({data=secret,hash=sha256(pubkey)}, idltype)
+  local encoded = encoder:getdata()
+  local publickey = decodepubkey(pubkey)
+  local encrypted = publickey:encrypt(encoded)
+  local ok, errmsg = pcall(attempt.login, attempt, pubkey, encrypted)
   Check.assertTrue(not ok)
   Check.assertEquals(logintypes.WrongEncoding, errmsg._repid)
 end
 
 function ACSuite.testRenew(self)
-  local conn = connectByAddress(host, port)
-  local accontrol = conn.AccessControl
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local encoded, errmsg = buskey:encrypt(dPassword)
-  Check.assertNotNil(encoded, errmsg)
-  local login, lease = accontrol:loginByPassword(dUser, encoded)
+  local conn, login, lease = loginByPassword()
   Check.assertNotNil(login)
   Check.assertNotNil(lease)
-  conn:setLogin(login)
   oil.sleep(3*lease/4)
+  local accontrol = conn.AccessControl
   lease = accontrol:renew()
   Check.assertNotNil(lease)
   oil.sleep(3*lease/4)
@@ -344,19 +423,11 @@ function ACSuite.testRenew(self)
 end
 
 function ACSuite.testExpiredLogin(self)
-  local conn = connectByAddress(host, port)
-  local accontrol = conn.AccessControl
-  local result, errmsg = decodepubkey(accontrol:_get_pubkey())
-  Check.assertNotNil(result, errmsg)
-  local buskey, errmsg =  result:getpubkey()
-  Check.assertNotNil(buskey, errmsg)
-  local encoded, errmsg = buskey:encrypt(dPassword)
-  Check.assertNotNil(encoded, errmsg)
-  local login, lease = accontrol:loginByPassword(dUser, encoded)
+  local conn, login, lease = loginByPassword()
   Check.assertNotNil(login)
   Check.assertNotNil(lease)
-  conn:setLogin(login)
   oil.sleep(3*lease)
+  local accontrol = conn.AccessControl
   local ok, errmsg = pcall(accontrol.logout, accontrol)
   Check.assertTrue(not ok)
   Check.assertEquals(sysex.NO_PERMISSION, errmsg._repid)
