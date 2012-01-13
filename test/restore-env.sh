@@ -16,7 +16,7 @@ if [ -z "${port}" ]; then
   port=2089
 fi
 if [ -z "${adminLogin}" ]; then
-  admimLogin="admin"
+  adminLogin="admin"
 fi
 if [ -z "${adminPassword}" ]; then
   adminPassword="admin"
@@ -28,7 +28,7 @@ fi
 ###############################################################################
 
 ADMIN_EXTRAARGS="--host=${host} --port=${port} "
-ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --login=${admimLogin} "
+ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --login=${adminLogin} "
 ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --password=${adminPassword} "
 
 ${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --del-certificate=${login}
