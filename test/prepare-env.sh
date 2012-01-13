@@ -31,7 +31,7 @@ fi
 ###############################################################################
 
 ADMIN_EXTRAARGS="--host=${host} --port=${port} "
-ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --login=${admimLogin} "
+ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --login=${adminLogin} "
 ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --password=${adminPassword} "
 
 ${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --add-certificate=${login} --certificate=${certificate}
