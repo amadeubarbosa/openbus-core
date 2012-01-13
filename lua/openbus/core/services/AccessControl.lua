@@ -130,13 +130,14 @@ end
 
 function LoginByCertificate:login(pubkey, encrypted)
 	self:cancel()
-	local manager = self.manager
 	local entity = self.entity
-	local decrypted, errmsg = manager.access.prvkey:decrypt(encrypted)
+	local manager = self.manager
+	local access = manager.access
+	local decrypted, errmsg = access.prvkey:decrypt(encrypted)
 	if decrypted == nil then
 		throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
 	end
-	local decoder = manager.access.orb:newdecoder(decrypted)
+	local decoder = access.orb:newdecoder(decrypted)
 	local decoded = decoder:get(manager.LoginAuthenticationInfo)
 	if decoded.hash ~= sha256(pubkey) or decoded.data ~= self.secret then
 		throw.AccessDenied{entity=entity}
