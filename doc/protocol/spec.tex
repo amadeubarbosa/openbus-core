@@ -1,0 +1,422 @@
+%
+%  OpenBus 2.0 Access Protocol
+%
+%  Created by Renato Maia on 2012-01-18.
+%  Copyright (c) 2012 Tecgraf/PUC-Rio. All rights reserved.
+%
+\documentclass[]{article}
+
+% Use utf-8 encoding for foreign characters
+\usepackage[utf8]{inputenc}
+
+% Setup for fullpage use
+\usepackage{fullpage}
+
+% Uncomment some of the following if you use the features
+%
+% Running Headers and footers
+%\usepackage{fancyhdr}
+
+% Multipart figures
+%\usepackage{subfigure}
+
+% More symbols
+%\usepackage{amsmath}
+%\usepackage{amssymb}
+%\usepackage{latexsym}
+
+% Surround parts of graphics with box
+\usepackage{boxedminipage}
+
+% Package for including code in the document
+\usepackage{mwlabinputs2}
+
+% If you want to generate a toc for each chapter (use with book)
+\usepackage{minitoc}
+
+% This is now the recommended way for checking for PDFLaTeX:
+\usepackage{ifpdf}
+
+\newcommand{\term}[1]{\textit{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+%\newif\ifpdf
+%\ifx\pdfoutput\undefined
+%\pdffalse % we are not running PDFLaTeX
+%\else
+%\pdfoutput=1 % we are running PDFLaTeX
+%\pdftrue
+%\fi
+
+\ifpdf
+\usepackage[pdftex]{graphicx}
+\else
+\usepackage{graphicx}
+\fi
+\title{Protocolo de Acesso do OpenBus 2.0}
+\author{Renato Maia}
+
+\date{2012-01-18}
+
+\begin{document}
+
+\ifpdf
+\DeclareGraphicsExtensions{.pdf, .jpg, .tif}
+\else
+\DeclareGraphicsExtensions{.eps, .jpg}
+\fi
+
+\maketitle
+
+
+\section{Introdução}
+
+O protocolo de acesso do OpenBus 2.0 é o conjunto de regras para realização de chamadas CORBA através de um barramento OpenBus que foi introduzido na versão 2.0 do OpenBus.
+O principal objetivo desse protocolo é garantir um nível adequado de segurança das chamadas que permita assegurar a identidade da entidade que iniciou cada chamada realizada através do barramento.
+Para tanto, o acesso ao barramento só é possível através de um login, que nada mais é que um acesso autenticado em nome de uma entidade.
+Cada entidade que acessa o barramento é identificada através de um nome único, denominado identificador de entidade.
+
+As chamadas através do barramento só podem ser realizadas através de um login de acesso autenticado.
+Isso permite que as aplicações que recebem chamadas através de um barramento OpenBus possam aceitar ou rejeitar chamadas de acordo com a identidade da entidade do iniciador da chamada, assim como permitir a implementação de mecanismos de auditoria de utilização das aplicações e serviços integrados ao barramento.
+
+O propósito deste documento é apresentar o protocolo de acesso do OpenBus 2.0 que permite a assegurar a identidade das entidades que iniciam chamadas, de forma que o protocolo possa ser implementado em diferentes linguagens.
+Todo o protocolo de acesso do OpenBus 2.0 é baseado na arquitetura CORBA, através do uso de interceptadores de chamada (\term{CORBA Portable Interceptors}) para introduzir informações adicionais nas mensagens GIOP (\term{General Inter-ORB Protocol}) que implementam as chamadas remotas de CORBA.
+
+\section{Chaves de Acesso} % (fold)
+\label{sec:chaves_de_acesso}
+
+Toda autenticação dos iniciadores das chamadas no barramento é feita através da troca de dados encriptados usando o algoritmo de chave pública RSA.
+As chaves RSA utilizadas para acesso ao barramento devem ter tamanho de 2048 bits (256 bytes).
+Chamaremos essas chaves RSA de \term{chaves de acesso}.
+Para acessar o barramento, é necessário criar um par dessas chaves, sendo uma pública e outra privada.
+A chave privada deve ser mantida secreta.
+A posse da chave privada de acesso permite assumir a identidade de qualquer entidade autenticada no barramento usando a chave pública correspondente.
+
+As chaves públicas de acesso são transmitidas entre os diferentes processos que acessam o barramento como uma sequência de bytes.
+Para tanto as chaves públicas devem ser codificadas usando o formato \term{SubjectPublicKeyInfo} definido pelo padrão X.509, usando a codificação DER (\term{Distinguished Encoding Rules}).
+
+Recomenda-se que cada processo que acesse um barramento OpenBus utilize um único par de chaves de acesso exclusivo, evitando assim a geração excessiva de chaves. Contudo, é possível utilizar diferentes pares de chave de acesso, um para cada autenticação de uma entidade no barramento.
+
+% section chaves_de_acesso (end)
+
+\section{Processo de Login} % (fold)
+\label{sec:processo_de_login}
+
+O processo de login consiste basicamente na autenticação de uma entidade através de algum método oferecido pelo OpenBus, no registro de uma chave pública de acesso, e na geração de identificador de login que é usado para identificar aquela autenticação da entidade junto ao barramento.
+
+O login é feito através da \term{Faceta de Controle de Acesso} fornecida pelo \code{::scs::core::IComponent} do barramento.
+O nome da faceta é dado pela seguinte constante:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::AccessControlFacet
+const string AccessControlFacet = "AccessControl_2_00";
+\end{samplecode}
+
+A \term{Faceta de Controle de Acesso} implementa a seguinte interface:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::AccessControl
+interface AccessControl;
+\end{samplecode}
+
+Há basicamente dois tipos de autenticação disponíveis para o processo de login, que serão descritos nas seções seguintes.
+
+\subsection{Login por Senha} % (fold)
+\label{sub:login_por_senha}
+
+O login por senha é realizado através da operação \code{loginByPassword}, onde é fornecido o identificador da entidade a ser autenticada (\code{entity}), a chave pública de acesso (\code{pubkey}) e um bloco de dados encriptados com a chave pública do barramento (disponível através do atributo \code{buskey} da \term{Faceta de Controle de Acesso}) usados na autenticação (\code{encrypted}).
+
+No caso do login por senha, os dados desse bloco encriptado é a seguinte estrutura codificada em CDR (encapsulado):
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::LoginAuthenticationInfo
+struct LoginAuthenticationInfo {
+	HashValue hash; // Hash da chave publica a ser associada ao login.
+	OctetSeq data;  // Dado para autenticacao.
+};
+\end{samplecode}
+
+\begin{description}
+	\item[Campo \code{hash}] contém o hash SHA-256 do parâmetro \code{pubkey}.
+	\item[Campo \code{data}] contém a senha de autenticação.
+\end{description}
+
+Como resultado de um login por senha bem sucedido a operação \code{loginByPassword} devolve o identificador do login e o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação.
+
+% subsection login_por_senha (end)
+
+\subsection{Login por Certificado} % (fold)
+\label{sub:login_por_certificado}
+
+Uma segunda forma de autenticação junto ao barramento é através de certificados de autenticação registrados no barramento.
+Nesse caso, para efetuar a autenticação é necessário ter a chave privada correspondente ao certificado registrado.
+
+O login por certificado é feito em duas etapas.
+Inicialmente, é necessário chamar a operação \code{startLoginByCertificate} onde é fornecido o identificador da entidade sendo autenticada.
+Como resultado, é devolvido um objeto para a conclusão do processo de login e um desafio, que consiste de um valor secreto gerado pelo barramento e encriptado com a chave pública do certificado registrado no barramento.
+
+Para concluir o processo de login por certificado é necessário chamar a operação \code{login} do objeto devolvido na etapa anterior, fornecendo uma chave pública de acesso (\code{pubkey}) e um bloco de dados encriptados um bloco de dados encriptados com a chave pública do barramento (disponível através do atributo \code{buskey} da \term{Faceta de Controle de Acesso}) usados na autenticação (\code{encrypted}).
+
+No caso do login por certificado, os dados desse bloco encriptado é estrutura \code{LoginAuthenticationInfo} codificada em CDR (encapsulado), onde os campos devem ser preenchidos da seguinte forma:
+
+\begin{description}
+	\item[Campo \code{hash}] contém o hash SHA-256 do parâmetro \code{pubkey}.
+	\item[Campo \code{data}] contém o valor secreto, obtido pela desencriptação usando a chave privada correspondente ao certificado registrado no barramento do desafio (\code{challenge}) fornecido pela chamada da operação \code{startLoginByCertificate} da etapa anterior.
+\end{description}
+
+Similarmente à autenticação por senha, como resultado de um login por certificado bem sucedido, a operação \code{LoginByRegistry::login} devolve o identificador do login e o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação.
+
+% subsection login_por_certificado (end)
+
+% section processo_de_login (end)
+
+\section{Credenciais de Chamada} % (fold)
+\label{sec:credenciais_de_chamada}
+
+Uma credencial no OpenBus é um dado associado às chamadas feitas através do barramento que assegura a identidade da entidade de autenticação de quem iniciou a chamada.
+A credencial pode ser dividida em duas partes: a identificação da entidade de quem iniciou aquela chamada; e a identificação de todas as entidades que iniciaram cada chamada da cadeia de chamadas aninhadas onde esta chamada está inclusa.
+À primeira parte da credencial daremos o nome de \term{personalidade} e à segunda parte de \term{cadeia de chamada}.
+
+As credenciais do OpenBus são transmitidas como um \term{service context} das mensagens GIOP de \term{Request} que indicam uma chamada remota, usando o  \term{context ID} definido pela constante abaixo:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: credential.idl
+// Name: ::tecgraf::openbus::core::v2_00::credential::CredentialContextId
+const unsigned long CredentialContextId = 0x42555300; // 1112888064 == "BUS\0"
+\end{samplecode}
+
+\subsection{Personalidade} % (fold)
+\label{sub:personalidade}
+
+O conteúdo do \term{service context} da credencial consiste de dois bytes indicando a versão maior e versão menor do protocolo OpenBus (no caso da versão deste documento são os valores 2 e 0, respectivamente).
+Em seguida desses dois bytes deve vir uma codificação CDR da estrutura abaixo:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: credential.idl
+// Name: tecgraf::openbus::core::v2_00::credential::CredentialData
+struct CredentialData {
+	Identifier bus;       // bus UUID
+	Identifier login;     // caller UUID
+	unsigned long ticket; // monotonically increasing counter
+	HashValue hash;       // SHA-256 hash
+	services::access_control::SignedCallChain chain;
+};
+\end{samplecode}
+
+\begin{description}
+
+	\item[Campo \code{bus}] é o identificador do barramento onde o iniciador da chamada foi autenticado.
+O identificador do barramento é obtido através do atributo \code{busid} da \term{Faceta de Controle de Acesso} do barramento.
+
+	\item[Campo \code{login}] é o identificador de login do iniciador da chamada, que é obtido ao final do processo de login descrito na seção \ref{sec:processo_de_login}.
+
+	\item[Campo \code{ticket}] é um contador monotônico crescente.
+	Cada credencial gerada com um mesmo segredo (ver campo \code{hash}) deve possuir um valor de \code{ticket} diferente, para impedir a reutilização de credenciais geradas.
+	Idealmente, o valor do ticket deve ser incrementado de uma em uma unidade a cada geração de uma credencial, evitando que o lado que autentica as credenciais deva utilizar muita memória para lembrar de todos os tickets utilizados ou não utilizados.
+	O lado da autenticação da credencial é livre para recusar credenciais com qualquer ticket, mesmo que estes nunca tenham sido utilizados em chamadas anteriores.
+
+	\item[Campo \code{hash}] é o hash SHA-256 de um conjunto de dados que contém um segredo que só é conhecido pelas duas partes envolvidas nessa comunicação (quem inicia a chamada e a quem ela está endereçada).
+	A seção \ref{sub:obtencao_do_segredo} descreve o processo de obtenção do segredo.
+	Esse hash é recalculado pelo lado que autentica a credencial para verificar sua autenticidade.
+	O conjunto de dados usado para o cálculo do hash consiste de uma sequência de bytes formada da seguinte maneira:
+
+\begin{itemize}
+	\item Um byte indicando a versão maior do protocolo (valor 2 neste caso);
+	\item Um byte indicando a versão menor do protocolo (valor 0 neste caso);
+	\item Uma sequência de 16 bytes que representa o segredo;
+	\item 4 bytes em \term{little endian} com o valor do campo \code{ticket} da credencial;
+	\item 4 bytes em \term{little endian} com o valor do campo \code{request\_id} da mensagem GIOP ao qual a credencial está assocada.
+	Esse valor fornecido pelo interceptador de chamadas CORBA;
+	\item Uma sequência de bytes da chave do objeto CORBA (object key) sendo chamado.
+	Esse valor fornecido pelo interceptador de chamadas CORBA;
+	\item Uma sequência de bytes dos caracteres do nome da operação sendo chamada.
+	Esse valor fornecido pelo interceptador de chamadas CORBA;
+\end{itemize}
+
+	\item[Campo \code{chain}] é a identificação da cadeia de chamadas aninhadas ao qual a chamada correspondente a essa credencial pertence.
+	A seção \ref{sub:cadeia_de_chamadas} descreve a geração e validação de cadeias de chamada.
+
+\end{description}
+
+\subsubsection{Validação da Personalidade} % (fold)
+\label{sub:validacao_da_personalidade}
+
+Ao receber uma chamada com uma credencial, é necessário validar a autenticidade dessa credencial.
+Caso a credencial indique um identificador de barramento (campo \code{bus}) desconhecido, a chamada deve ser recusada com a exceção de sistema \code{CORBA::NO\_PERMISSION} com \code{COMPLETED\_NO} e o \term{minor code} dado pela seguinte constante:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::UnknownBusCode
+const unsigned long UnknownBusCode = 0x42555308; // 1112888072 "BUS\8"
+\end{samplecode}
+
+Em seguida, é necessário verificar se o login informado é válido no barramento indicado.
+Isso é feito através da operação \code{getValidity} da \term{Faceta de Registro de Logins} do barramento.
+O nome desta faceta é dado pela seguinte constante:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::LoginRegistryFacet
+const string LoginRegistryFacet = "LoginRegistry_2_00";
+\end{samplecode}
+
+Caso o login informado não seja mais válido, a chamada deve ser recusada com a exceção de sistema \code{CORBA::NO\_PERMISSION} com \code{COMPLETED\_NO} e \term{minor code} dado pela seguinte constante:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidLoginCode
+const unsigned long InvalidLoginCode = 0x42555301; // 1112888065 "BUS\1"
+\end{samplecode}
+
+Caso o login do iniciador da chamada for válido, é necessário recuperar o último segredo compartilhado com aquele login e utilizá-lo para recalcular o hash e comparar com o hash fornecido na credencial para averiguar a validade da credencial.
+
+Caso não haja nenhum segredo conhecido com o iniciador da chamada, então a credencial deve ser considerada da mesma forma que uma credencial cujo campo \code{hash} não corresponde ao valor esperado, como será descrito posteriormente nesta seção.
+
+Note que a ausência de um segredo conhecido pode ser tanto porque é a primeira chamada proveniente do login informado na credencial ou porque o segredo compartilhado foi descartado por alguma política de gerência de memória.
+
+Caso haja um segredo compartilhado com o iniciador da chamada ainda conhecido, o hash da credencial deve ser recalculado como descrito anteriormente e comparado com o hash fornecido na credencial.
+Caso os valores de hash não sejam iguais, a credencial é considerada inválida e a chamada é recusada com a exceção de sistema \code{CORBA::NO\_PERMISSION} com \code{COMPLETED\_NO} e o \term{minor code} definido pela seguinte constante:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidCredentialCode
+const unsigned long InvalidCredentialCode = 0x42555306; // 1112888070 = "BUS\6"
+\end{samplecode}
+
+Adicionalmente, essa resposta da chamada deve vir juntamente com um \term{service context} com o \term{context ID} definido pela mesma constante \code{CredentialContextId} usada pelo \term{service context} contendo a credencial das chamadas enviadas.
+Similarmente ao \term{service context} enviado nas chamadas, os dois primeiros bytes indicam a versão maior e menor do protocolo OpenBus em uso.
+No caso deste documento, esses valores são os números 2 e 0, respectivamente.
+Em seguida, a seguinte estrutura deve ser codificada em CDR:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: credential.idl
+// Name: tecgraf::openbus::core::v2_00::credential::CredentialReset
+struct CredentialReset {
+	Identifier login;         // callee UUID
+	EncryptedBlock challenge; // encrypted 16-byte random value (the secret)
+};
+\end{samplecode}
+
+\begin{description}
+	\item[Campo \code{login}] contém o identificador de login que recebeu a chamada.
+	\item[Campo \code{challenge}] contém um segredo encriptado com a chave pública de acesso associada ao login que iniciou a chamada.
+	A obtenção da chave pública associada a qualquer login válido pode ser obtida através da operação \code{getLoginInfo} da \term{Faceta de Registro de Logins} do barramento.
+	O segredo gerado deve ser uma sequência de 16 bytes gerado aleatoriamente.
+\end{description}
+
+Idealmente, o mesmo segredo gerado para um dado login que inicia uma chamada deve ser reenviado sempre que uma credencial inválida proveniente daquele login for recebida, pois isso evita a necessidade de armazenar, validar e gerenciar múltiplos segredos para um mesmo login.
+
+% subsubsection validacao_da_personalidade (end)
+
+\subsubsection{Obtenção do Segredo} % (fold)
+\label{sub:obtencao_do_segredo}
+
+Para obter o segredo para geração de uma credencial para uma chamada, é necessário fazer uma chamada com uma credencial inválida.
+Para tanto recomenda-se gerar uma credencial cujo valor do campo \code{ticket} é zero, o campo \code{hash} é uma sequência de zeros e o campo \code{chain} é uma cadeia de chamada nula (veja seção \ref{sub:cadeias_para_o_barramento} sobre como gerar uma cadeia nula).
+Neste caso, a credencial gerada será inválida, portanto o resultado deverá ser a exceção de sistema \code{CORBA::NO\_PERMISSION} juntamente com um \term{service context} informando o segredo a ser utilizado, conforme descrito acima.
+
+% subsubsection obtencao_do_segredo (end)
+
+% subsection personalidade (end)
+
+\subsection{Cadeia de Chamadas} % (fold)
+\label{sub:cadeia_de_chamadas}
+
+A identificação da cadeia de chamadas é feita através de um dado assinado pelo barramento (com a chave privada do barramento).
+Esse dado deve estar presente em todas as credenciais através do campo \code{chain}, que contém uma estrutura do seguinte tipo:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: tecgraf::openbus::core::v2_00::services::access:control::SignedCallChain
+struct SignedCallChain {
+	EncryptedBlock signature; // Hash de 'encoded' assinado pelo barramento.
+	OctetSeq encoded;         // estrutura 'CallChain' codificada usando CDR.
+};
+\end{samplecode}
+
+\begin{description}
+	\item[Campo \code{signature}] contém uma assinatura com a chave privada do barraemento do hash SHA-256 do campo \code{encoded}.
+	
+	\item[Campo \code{encoded}] contém a seguinte estrutura codificada em CDR:
+	\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: tecgraf::openbus::core::v2_00::services::access:control::CallChain
+struct CallChain {
+	Identifier target;    // Identificador do login a quem a cadeia se destina.
+	LoginInfoSeq callers; // Informacoes de login das entidades da cadeia.
+};
+	\end{samplecode}
+	
+	\item[Campo \code{target}] contém o identificador do login a quem a cadeia está destinada.
+	Ou seja, esse campo contém o mesmo identificador fornecido pelo campo \code{login} da estrutura \code{CredentialReset} descrito na seção \ref{sub:validacao_da_personalidade} que informa o login do objeto ao qual a chamada se destina.
+	Esse campo \code{target} da cadeia garante que a cadeia só possa ser utilizada (fazer novas chamadas dentro daquela cadeia) por quem detiver o login ao qual ela foi enviada.
+	
+	\item[Campo \code{callers}] contém uma sequência de informações sobre os vários logins que iniciaram cada chamada dentro desta cadeia de chamadas aninhadas.
+\end{description}
+
+\subsubsection{Validação da Cadeia} % (fold)
+\label{sub:validacao_da_cadeia}
+
+É responsabilidade de quem recebe uma credencial de verificar a integridade da cadeia de chamada fornecida.
+Para que a cadeia de chamada seja válida, as seguintes condições devem ser válidas:
+
+\begin{itemize}
+		\item O campo \code{SignedCallChain::signature} deve conter uma assinatura válida do campo \code{SignedCallChain::encoded} a ser autenticada com a chave pública do barramento.
+	\item O campo \code{CallChain::target} deve ser o login de quem recebe a chamada.
+	\item O último item da sequência \code{CallChain::callers} deve indicar as informações do login de quem iniciou a chamada.
+\end{itemize}
+
+Se qualquer uma dessas condições não for válida, quem recebe a chamada deve recusar a chamada devolvendo a exceção de sistema \code{CORBA::NO\_PERMISSON} com \code{COMPLETED\_NO} e o \term{minor code} definido pela seguinte constante:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidCredentialCode
+const unsigned long InvalidChainCode = 0x42555307; // 1112888071 = "BUS\7"
+\end{samplecode}
+
+% subsubsection validacao_da_cadeia (end)
+
+\subsubsection{Cadeias para o Barramento} % (fold)
+\label{sub:cadeias_para_o_barramento}
+
+Muitas chamadas para operações das facetas fornecidas pelo barramento são feitas usando credenciais de chamada como especificadas neste documento.
+Contudo, as cadeias de chamada enviadas nas credenciais em chamadas ao barramento são diferente das cadeias enviadas em outras chamadas.
+
+A identificação de que o objeto CORBA sendo chamado reside no barramento é feita comparando o campo \code{CredentialReset::login} com o identificador do barramento, que é obtido através do atributo \code{busid} da \term{Faceta de Controle de Acesso} do barramento.
+
+Nas chamadas para o barramento, que são feitas fora de qualquer cadeia de chamada obtida previamente pelo iniciador da chamada, a cadeia a ser enviada na credencial é uma cadeia nula, que consiste da estrutura \code{SignedCallChain} em que o campo \code{signed} é uma sequência de zeros e o campo \code{encoded} é uma sequência vazia.
+
+Nas chamadas para o barramento que são feitas dentro de uma cadeia de chamada obtida previamente pelo iniciador da chamada, a cadeia a ser enviada na credencial é a mesma cadeia originalmente obtida pelo iniciador, inalterada.
+Ou seja, não é necessário gerar uma nova cadeia para enviar ao barramento, como é necessário nas credenciais para outros destinos como será visto na seção \ref{sub:geracao_de_cadeia}.
+
+% subsubsection cadeias_para_o_barramento (end)
+
+\subsubsection{Geração de Cadeia} % (fold)
+\label{sub:geracao_de_cadeia}
+
+Ao gerar uma credencial para uma chamada remota, é necessário gerar uma cadeia assinada pelo barramento para cada login de destino.
+Isso é feito através da operação \code{signChainFor} da \term{Faceta de Controle de Acesso} do barramento.
+A operação \code{signChainFor} deve ser chamada com uma credencial gerada usando as regras descritas neste documento.
+Em particular, a credencial da chamada de \code{signChainFor} deve conter no campo \code{chain} a cadeia original a partir da qual a nova cadeia será gerada.
+Ou seja, é como se a chamada de \code{signChainFor} é feita como uma chamada aninhada da cadeia de chamadas original.
+Nesse sentido, para gerar uma cadeia nova que não seja uma extensão de outra cadeia previamente recebida, é necessário enviar uma cadeina nuna na credencial da chamada de \code{signChainFor}, o que está em conformidade com a regra para geração de cadeias para o barramento, uma vez que a operação \code{signChainFor} é do barramento.
+
+Como resultado da operação \code{signChainFor} é devolvida uma nova cadeia que terá uma entrada adicional na sequência do campo \code{CallChain::callers} com informações do login de quem chamou a operação \code{signChainFor}.
+Adicionalmente, o campo \code{CallChain::target} conterá o identificador de login fornecido pelo parâmetro \code{target} da chamada de \code{signChainFor}.
+
+Note que dessa forma é possível se adicionar a cadeias recebidas (processo denominado \term{join}), assim como gerar tais cadeias para quaisquer destinos para o qual seja necessário enviar credenciais.
+Esse processo é ilustrado na seção seguinte.
+
+% subsubsection geracao_de_cadeia (end)
+
+% subsection cadeia_de_chamadas (end)
+
+% section credenciais_de_chamada (end)
+
+%\bibliographystyle{plain}
+%\bibliography{}
+
+\end{document}
