@@ -241,8 +241,6 @@ O identificador do barramento é obtido através do atributo \code{busid} da \term
 	\item 4 bytes em \term{little endian} com o valor do campo \code{ticket} da credencial;
 	\item 4 bytes em \term{little endian} com o valor do campo \code{request\_id} da mensagem GIOP ao qual a credencial está assocada.
 	Esse valor é fornecido pelo interceptador de chamadas CORBA;
-	\item Uma sequência de bytes da chave do objeto CORBA (object key) sendo chamado.
-	Esse valor fornecido pelo interceptador de chamadas CORBA;
 	\item Uma sequência de bytes dos caracteres do nome da operação sendo chamada.
 	Esse valor fornecido pelo interceptador de chamadas CORBA;
 \end{itemize}
