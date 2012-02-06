@@ -7,7 +7,7 @@
 \documentclass[]{article}
 
 % Use utf-8 encoding for foreign characters
-\usepackage[utf8]{inputenc}
+\usepackage[latin1]{inputenc}
 
 % Setup for fullpage use
 \usepackage{fullpage}
@@ -198,8 +198,7 @@ const unsigned long CredentialContextId = 0x42555300; // 1112888064 == "BUS\0"
 \subsection{Personalidade} % (fold)
 \label{sub:personalidade}
 
-O conteúdo do \term{service context} da credencial consiste de dois bytes indicando a versão maior e versão menor do protocolo OpenBus (no caso da versão deste documento são os valores 2 e 0, respectivamente).
-Em seguida desses dois bytes deve vir uma codificação CDR (encapsulado) da estrutura abaixo:
+O conteúdo do \term{service context} da credencial consiste da codificação CDR (encapsulado) da estrutura abaixo:
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: credential.idl
@@ -304,9 +303,7 @@ const unsigned long InvalidCredentialCode = 0x42555306; // 1112888070 = "BUS\6"
 \end{samplecode}
 
 Adicionalmente, essa resposta da chamada deve vir juntamente com um \term{service context} com o \term{context ID} definido pela mesma constante \code{CredentialContextId} usada pelo \term{service context} contendo a credencial das chamadas enviadas.
-Similarmente ao \term{service context} enviado nas chamadas, os dois primeiros bytes indicam a versão maior e menor do protocolo OpenBus em uso.
-No caso deste documento, esses valores são os números 2 e 0, respectivamente.
-Em seguida, a seguinte estrutura deve ser codificada em CDR (encapsulado):
+Os dados do \term{service context} consitem da seguinte estrutura deve codificada em CDR (encapsulado):
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: credential.idl
