@@ -226,6 +226,9 @@ local IgnoredFacets = {
 }
 
 function OfferRegistry:registerService(service_ref, properties)
+	if service_ref == nil then
+		throw.InvalidService()
+	end
 	-- collect information about the SCS component implementing the service
 	local compId = service_ref:getComponentId()
 	local meta = service_ref:getFacetByName("IMetaInterface")
