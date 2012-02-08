@@ -27,6 +27,12 @@ fi
 if [ -z "${certificate}" ]; then
   certificate="teste.crt"
 fi
+if [ -z "${category}" ]; then
+  category="OpenBusTest"
+fi
+if [ -z "${entity}" ]; then
+  entity="TestEntity"
+fi
 
 ###############################################################################
 
@@ -35,10 +41,8 @@ ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --login=${adminLogin} "
 ADMIN_EXTRAARGS="${ADMIN_EXTRAARGS} --password=${adminPassword} "
 
 ${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --add-certificate=${login} --certificate=${certificate}
-CODE=$?
 
-if [ ${CODE} -ne 0 ]; then
-  echo "[ERRO] Falha ao configurar o ambiente de teste."
-  exit 1
-fi
-
+${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --add-interface="IDL:Ping:1.0"
+${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --add-category=${category} --name="OpenBus Test Entities"
+${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --add-entity=${entity} --category=${category} --name="entity used in OpenBus demo"
+${OPENBUS_HOME}/bin/busadmin ${ADMIN_EXTRAARGS} --set-authorization=${entity} --grant="IDL:Ping:1.0"
