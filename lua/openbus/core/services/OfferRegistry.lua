@@ -130,7 +130,10 @@ function Offer:setProperties(properties)
 	local allprops = makePropertyList(self, properties)
 	assert(self.database:setentryfield(self.id, "properties", properties))
 	-- commit changes in memory
+	local offers = registry.offers
+	offers:remove(self)
 	self.properties = allprops
+	offers:add(self)
 	log[tag](log, msg.UpdateOfferProperties:tag{ offer = self.id })
 end
 
@@ -283,6 +286,7 @@ function OfferRegistry:registerService(service_ref, properties)
 		facets = facets,
 		properties = properties,
 	}
+	local allprops = makePropertyList(entry, properties)
 	-- persist the new offer
 	local id = newid("new")
 	local database = self.offerDB
@@ -290,7 +294,7 @@ function OfferRegistry:registerService(service_ref, properties)
 	-- create object for the new offer
 	entry.id = id
 	entry.service_ref = service_ref
-	entry.properties = makePropertyList(entry, properties)
+	entry.properties = allprops
 	entry.orb = self.access.orb
 	entry.registry = self
 	entry.database = database
