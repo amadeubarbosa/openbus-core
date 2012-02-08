@@ -328,7 +328,7 @@ end
 
 function ServiceOfferCase.testInvalidProperties(self)
   local invalidProps = {
-    { name="openbus.reserved.name", value="should failed"},
+    { name="openbus.reserved.name", value="should fail"},
   }
   local ok, err = pcall(self.serviceOffer.setProperties, self.serviceOffer, 
     invalidProps)
@@ -336,14 +336,6 @@ function ServiceOfferCase.testInvalidProperties(self)
   Check.assertEquals(offertypes.InvalidProperties, err._repid)
   Check.assertTrue(isContained(invalidProps, err.properties))
   Check.assertTrue(isContained(err.properties, invalidProps))
-end
-
-function ServiceOfferCase.testInvalidPropertiesType(self)
-  local invalidProps = { name="n1", name2="n2", value="v1", value2="v2" }
-  local ok, err = pcall(self.serviceOffer.setProperties, self.serviceOffer, 
-    invalidProps)
-  Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidProperties, err._repid)
 end
 
 function ServiceOfferCase.testRemoveProperties(self)
