@@ -2,6 +2,7 @@ local _G = require "_G"
 local io = _G.io
 local pcall = _G.pcall
 local pcall = _G.pcall
+local table = _G.table
 local string = _G.string
 local ipairs = _G.ipairs
 
@@ -397,6 +398,41 @@ function ORCase.testRegisterRemove(self)
   self.serviceOffer = nil
 end
 
+function ORCase.testRegisterTwoOffers(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  local lastpos = #offerProps + 1
+  offerProps[lastpos] = {name="specific", value="1st offer"}
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  offerProps[lastpos] = {name="specific", value="2nd offer"}
+  local otherOffer = self.offers:registerService(comp, offerProps)
+  
+  local services = self.offers:findServices(offerProps)
+  Check.assertEquals(1, #services)
+  offerProps[lastpos] = nil
+  services = self.offers:findServices(offerProps)
+  Check.assertEquals(2, #services)
+  otherOffer:remove()
+  services = self.offers:findServices(offerProps)
+  Check.assertEquals(1, #services)
+  self.serviceOffer:remove()
+  services = self.offers:findServices(offerProps)
+  Check.assertEquals(0, #services)
+  self.serviceOffer = nil
+end
+
+function ORCase.testRemoveTwice(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  tOffer:remove()
+  self.serviceOffer = nil
+  local ok, err = pcall(tOffer.remove, tOffer)
+  Check.assertTrue(not ok)
+  Check.assertEquals(sysex.OBJECT_NOT_EXIST, err._repid)
+end
+
 function ORCase.testFindBySingleProperty(self)
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
@@ -406,3 +442,18 @@ function ORCase.testFindBySingleProperty(self)
     Check.assertEquals(1, #services)
   end
 end
+
+function ORCase.testGetServices(self)
+  local services = self.offers:getServices()
+  local preSize = #services
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  services = self.offers:getServices()
+  Check.assertEquals(preSize + 1, #services)
+  self.serviceOffer:remove()
+  self.serviceOffer = nil
+  services = self.offers:getServices()
+  Check.assertEquals(preSize, #services)
+end
+
