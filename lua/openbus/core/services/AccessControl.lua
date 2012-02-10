@@ -120,15 +120,15 @@ end
 
 
 
-local LoginByCertificate = class{ __type = types.LoginByCertificate }
+local LoginProcess = class{ __type = types.LoginProcess }
 
-function LoginByCertificate:cancel()
+function LoginProcess:cancel()
 	local manager = self.manager
 	manager.access.orb:deactivate(self)
 	manager.pendingChallenges[self] = nil
 end
 
-function LoginByCertificate:login(pubkey, encrypted)
+function LoginProcess:login(pubkey, encrypted)
 	self:cancel()
 	local entity = self.entity
 	local manager = self.manager
@@ -144,7 +144,7 @@ function LoginByCertificate:login(pubkey, encrypted)
 	end
 	local login = manager.activeLogins:newLogin(entity, pubkey)
 	renewLogin(login)
-	log:request(msg.LoginByCertificate:tag{login=login.id,entity=entity})
+	log:request(msg.LoginProcessConcluded:tag{login=login.id,entity=entity})
 	return login.id, manager.leaseTime
 end
 
@@ -177,7 +177,7 @@ function AccessControl:__init(data)
 	access:setGrantedUsers(self.__type, "_get_buskey", "any")
 	access:setGrantedUsers(self.__type, "loginByPassword", "any")
 	access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
-	access:setGrantedUsers(LoginByCertificate.__type, "*", "any")
+	access:setGrantedUsers(LoginProcess.__type, "*", "any")
 	
 	-- initialize attributes
 	self.access = access
@@ -230,7 +230,7 @@ function AccessControl:__init(data)
 		local challengeTimeout = self.challengeTimeout
 		for process, timeCreated in pairs(self.pendingChallenges) do
 			if now-timeCreated > challengeTimeout then
-				log:action(msg.LoginByCertificateExpired:tag{entity=process.entity})
+				log:action(msg.LoginProcessExpired:tag{entity=process.entity})
 				process:cancel()
 			end
 		end
@@ -289,7 +289,7 @@ function AccessControl:startLoginByCertificate(entity)
 	if publickey == nil then
 		throw.MissingCertificate{entity=entity}
 	end
-	local logger = LoginByCertificate{
+	local logger = LoginProcess{
 		manager = self,
 		entity = entity,
 		secret = newid("new"),
@@ -297,6 +297,22 @@ function AccessControl:startLoginByCertificate(entity)
 	self.pendingChallenges[logger] = time()
 	log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
 	return logger, assert(publickey:encrypt(logger.secret))
+end
+
+function AccessControl:startLoginBySingleSignOn()
+	local callers = self.access:getCallerChain().callers
+	local login = self.activeLogins:getLogin(callers[#callers].id)
+	local logger = LoginProcess{
+		manager = self,
+		entity = login.entity,
+		secret = newid("new"),
+	}
+	self.pendingChallenges[logger] = time()
+	log:request(msg.LoginBySingleSignOnInitiated:tag{
+		login = login.id,
+		entity = login.entity,
+	})
+	return logger, assert(login.pubkey:encrypt(logger.secret))
 end
 
 function AccessControl:logout()

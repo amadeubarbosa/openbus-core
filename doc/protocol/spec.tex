@@ -163,7 +163,7 @@ O login por certificado é feito em duas etapas.
 Inicialmente, é necessário chamar a operação \code{startLoginByCertificate} onde é fornecido o identificador da entidade sendo autenticada (\code{entity}).
 Como resultado, é devolvido um objeto para a conclusão do processo de login e um desafio (\code{challenge}), que consiste de um valor secreto gerado pelo barramento e encriptado com a chave pública do certificado registrado.
 
-Para concluir o processo de login por certificado é necessário chamar a operação \code{LoginByRegistry::login} do objeto devolvido na etapa anterior, fornecendo uma chave pública de acesso (\code{pubkey}) e um bloco de dados encriptados (\code{encrypted}) com a chave pública do barramento, que é obtida através do atributo \code{buskey} desta mesma interface.
+Para concluir o processo de login por certificado é necessário chamar a operação \code{LoginProcess::login} do objeto devolvido na etapa anterior, fornecendo uma chave pública de acesso (\code{pubkey}) e um bloco de dados encriptados (\code{encrypted}) com a chave pública do barramento, que é obtida através do atributo \code{buskey} desta mesma interface.
 
 No caso do login por certificado, os dados desse bloco encriptado é estrutura \code{LoginAuthenticationInfo} codificada em CDR (encapsulado), onde os campos devem ser preenchidos da seguinte forma:
 
@@ -172,9 +172,32 @@ No caso do login por certificado, os dados desse bloco encriptado é estrutura \c
 	\item[Campo \code{data}] contém o valor secreto, obtido pela desencriptação usando a chave privada correspondente ao certificado registrado no barramento do desafio (\code{challenge}) fornecido pela chamada da operação \code{startLoginByCertificate} da etapa anterior.
 \end{description}
 
-Similarmente à autenticação por senha, como resultado de um login por certificado bem sucedido, a operação \code{LoginByRegistry::login} devolve o identificador do login e o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação.
+Similarmente à autenticação por senha, como resultado de um login por certificado bem sucedido, a operação \code{LoginProcess::login} devolve o identificador do login e o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação.
 
 % subsection login_por_certificado (end)
+
+\subsection{Login por \term{Single Sign-On}} % (fold)
+\label{sub:login_por_singlesignon}
+
+Uma terceira forma de autenticação junto ao barramento é através do processo denominado \term{Single Sign-On}, em que uma entidade já logada permite que outra possa se logar usando a mesma autenticação original.
+Nesse caso, para efetuar a autenticação é necessário primeiramente obter um desafio do barramento usando um login previamente estabelecido.
+
+O login por \term{Single Sign-On} é feito em duas etapas.
+Inicialmente, é necessário chamar a operação \code{startLoginBySingleSignOn} usando um login estabelecido.
+Como resultado, é devolvido um objeto para a conclusão do processo de login e um desafio (\code{challenge}), que consiste de um valor secreto gerado pelo barramento e encriptado com a chave pública de acesso do login estabelecido.
+
+Para concluir o processo de login por \term{Single Sign-On} é necessário chamar a operação \code{LoginProcess::login} do objeto devolvido na etapa anterior, fornecendo uma chave pública de acesso (\code{pubkey}) e um bloco de dados encriptados (\code{encrypted}) com a chave pública do barramento, que é obtida através do atributo \code{buskey} desta mesma interface.
+
+No caso do login por \term{Single Sign-On}, os dados desse bloco encriptado é estrutura \code{LoginAuthenticationInfo} codificada em CDR (encapsulado), onde os campos devem ser preenchidos da seguinte forma:
+
+\begin{description}
+	\item[Campo \code{hash}] contém o hash SHA-256 do parâmetro \code{pubkey}.
+	\item[Campo \code{data}] contém o valor secreto, obtido pela desencriptação usando a chave privada de acesso do login que iniciou o processo de login por \term{Single Sign-On} do desafio (\code{challenge}) fornecido pela chamada da operação \code{startLoginBySingleSignOn} da etapa anterior.
+\end{description}
+
+Similarmente à autenticação por certificado, como resultado de um login por \term{Single Sign-On} bem sucedido, a operação \code{LoginProcess::login} devolve o identificador do login e o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação.
+
+% subsection login_por_singlesignon (end)
 
 % section processo_de_login (end)
 
