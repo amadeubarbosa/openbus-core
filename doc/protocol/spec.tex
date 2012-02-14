@@ -56,7 +56,7 @@
 \title{Protocolo de Acesso do OpenBus 2.0}
 \author{Renato Maia}
 
-\date{2012-01-18}
+\date{\today}
 
 \begin{document}
 
@@ -126,7 +126,7 @@ A \term{Faceta de Controle de Acesso} implementa a seguinte interface:
 interface AccessControl;
 \end{samplecode}
 
-Há basicamente dois tipos de autenticação disponíveis para o processo de login, que serão descritos nas seções seguintes.
+Há basicamente três tipos de autenticação disponíveis para o processo de login, que serão descritos nas seções seguintes.
 
 \subsection{Login por Senha} % (fold)
 \label{sub:login_por_senha}
@@ -261,7 +261,7 @@ O identificador do barramento é obtido através do atributo \code{busid} da \term
 	\item Um byte indicando a versão menor do protocolo (valor 0 neste caso);
 	\item Uma sequência de 16 bytes que representa o segredo;
 	\item 4 bytes em \term{little endian} com o valor do campo \code{ticket} da credencial;
-	\item 4 bytes em \term{little endian} com o valor do campo \code{request\_id} da mensagem GIOP ao qual a credencial está assocada.
+	\item 4 bytes em \term{little endian} com o valor do campo \code{request\_id} da mensagem GIOP ao qual a credencial está associada.
 	Esse valor é fornecido pelo interceptador de chamadas CORBA;
 	\item Uma sequência de bytes dos caracteres do nome da operação sendo chamada.
 	Esse valor fornecido pelo interceptador de chamadas CORBA;
@@ -440,7 +440,7 @@ Isso é feito através da operação \code{signChainFor} da \term{Faceta de Controle
 A operação \code{signChainFor} deve ser chamada com uma credencial gerada usando as regras descritas neste documento.
 Em particular, a credencial da chamada de \code{signChainFor} deve conter no campo \code{chain} a cadeia original a partir da qual a nova cadeia será gerada.
 Ou seja, é como se a chamada de \code{signChainFor} é feita como uma chamada aninhada da cadeia de chamadas original.
-Nesse sentido, para gerar uma cadeia nova que não seja uma extensão de outra cadeia previamente recebida, é necessário enviar uma cadeina nuna na credencial da chamada de \code{signChainFor}, o que está em conformidade com a regra para geração de cadeias para o barramento, uma vez que a operação \code{signChainFor} é do barramento.
+Nesse sentido, para gerar uma cadeia nova que não seja uma extensão de outra cadeia previamente recebida, é necessário enviar uma cadeia nula na credencial da chamada de \code{signChainFor}, o que está em conformidade com a regra para geração de cadeias para o barramento, uma vez que a operação \code{signChainFor} é do barramento.
 
 Como resultado da operação \code{signChainFor} é devolvida uma nova cadeia que terá uma entrada adicional na sequência do campo \code{CallChain::callers} com informações do login de quem chamou a operação \code{signChainFor}.
 Adicionalmente, o campo \code{CallChain::target} conterá o identificador de login fornecido pelo parâmetro \code{target} da chamada de \code{signChainFor}.
