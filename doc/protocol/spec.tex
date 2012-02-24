@@ -87,7 +87,7 @@ Todo o protocolo de acesso do OpenBus 2.0 é baseado na arquitetura CORBA, fazend
 \label{sec:chaves_de_acesso}
 
 Toda validação dos acessos ao barramento é feita através da troca de dados encriptados usando o algoritmo de chave pública RSA.
-As chaves RSA utilizadas para esse acesso devem ter tamanho de 2048 bits (256 bytes).
+As chaves RSA utilizadas para esse acesso devem ter tamanho de 2048 bits~\footnote{O tamanho das chaves em bytes é dado pela constante IDL \code{::tecgraf::openbus::core::v2\_00::EncryptedBlockSize} que também indica o tamanho dos blocos encriptados com uma chave desse tamanho.}.
 Chamaremos essas chaves RSA de \term{chaves de acesso}.
 
 Para acessar o barramento, é necessário criar um par dessas chaves, sendo uma pública e outra privada.
@@ -115,7 +115,7 @@ O nome da faceta é dado pela seguinte constante:
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
 // Name: ::tecgraf::openbus::core::v2_00::services::access_control::AccessControlFacet
-const string AccessControlFacet = "AccessControl_2_00";
+const string AccessControlFacet;
 \end{samplecode}
 
 A \term{Faceta de Controle de Acesso} implementa a seguinte interface:
@@ -215,7 +215,7 @@ As credenciais do OpenBus são transmitidas como um \term{service context} das me
 \begin{samplecode}[language={[CORBA]idl}]
 // File: credential.idl
 // Name: ::tecgraf::openbus::core::v2_00::credential::CredentialContextId
-const unsigned long CredentialContextId = 0x42555300; // 1112888064 == "BUS\0"
+const unsigned long CredentialContextId;
 \end{samplecode}
 
 \subsection{Personalidade} % (fold)
@@ -257,11 +257,11 @@ O identificador do barramento é obtido através do atributo \code{busid} da \term
 	O conjunto de dados usado para o cálculo do hash consiste de uma sequência de bytes formada da seguinte maneira:
 
 \begin{itemize}
-	\item Um byte indicando a versão maior do protocolo (valor 2 neste caso);
-	\item Um byte indicando a versão menor do protocolo (valor 0 neste caso);
-	\item Uma sequência de 16 bytes que representa o segredo;
-	\item 4 bytes em \term{little endian} com o valor do campo \code{ticket} da credencial;
-	\item 4 bytes em \term{little endian} com o valor do campo \code{request\_id} da mensagem GIOP ao qual a credencial está associada.
+	\item Um byte indicando a versão maior do protocolo~\footnote{Valor dado pela constante \code{tecgraf::openbus::core::v2\_00::MajorVersion}.};
+	\item Um byte indicando a versão menor do protocolo~\footnote{Valor dado pela constante \code{tecgraf::openbus::core::v2\_00::MinorVersion}.};
+	\item Uma sequência bytes que representa o segredo (tipicamente o segredo tem 16 bytes);
+	\item 4 bytes com o valor do campo \code{ticket} da credencial (em \term{little endian});
+	\item 4 bytes com o valor do campo \code{request\_id} da mensagem GIOP ao qual a credencial está associada (em \term{little endian}).
 	Esse valor é fornecido pelo interceptador de chamadas CORBA;
 	\item Uma sequência de bytes dos caracteres do nome da operação sendo chamada.
 	Esse valor fornecido pelo interceptador de chamadas CORBA;
@@ -281,7 +281,7 @@ Caso a credencial indique um identificador de barramento (campo \code{bus}) desc
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
 // Name: ::tecgraf::openbus::core::v2_00::services::access_control::UnknownBusCode
-const unsigned long UnknownBusCode = 0x42555308; // 1112888072 "BUS\8"
+const unsigned long UnknownBusCode;
 \end{samplecode}
 
 Em seguida, é necessário verificar se o login informado é válido no barramento indicado.
@@ -291,7 +291,7 @@ O nome desta faceta é dado pela seguinte constante:
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
 // Name: ::tecgraf::openbus::core::v2_00::services::access_control::LoginRegistryFacet
-const string LoginRegistryFacet = "LoginRegistry_2_00";
+const string LoginRegistryFacet;
 \end{samplecode}
 
 A \term{Faceta de Registro de Logins} implementa a seguinte interface:
@@ -307,7 +307,7 @@ Caso o login informado não seja mais válido, a chamada deve ser recusada com a e
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
 // Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidLoginCode
-const unsigned long InvalidLoginCode = 0x42555301; // 1112888065 "BUS\1"
+const unsigned long InvalidLoginCode;
 \end{samplecode}
 
 Caso o login do iniciador da chamada for válido, é necessário recuperar o segredo compartilhado com aquele login correspondente à sessão indicada pelo campo \code{session} e utilizá-lo para recalcular o hash e comparar com o hash fornecido na credencial para averiguar a autenticidade da credencial.
@@ -322,7 +322,7 @@ Caso os valores de hash não sejam iguais, a credencial é considerada inválida e 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
 // Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidCredentialCode
-const unsigned long InvalidCredentialCode = 0x42555306; // 1112888070 = "BUS\6"
+const unsigned long InvalidCredentialCode;
 \end{samplecode}
 
 Adicionalmente, essa resposta da chamada deve vir juntamente com um \term{service context} com o \term{context ID} definido pela mesma constante \code{CredentialContextId} usada pelo \term{service context} contendo a credencial das chamadas enviadas.
@@ -412,7 +412,7 @@ Se qualquer uma dessas condições não for válida, quem recebe a chamada deve recu
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
 // Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidCredentialCode
-const unsigned long InvalidChainCode = 0x42555307; // 1112888071 = "BUS\7"
+const unsigned long InvalidChainCode;
 \end{samplecode}
 
 % subsubsection validacao_da_cadeia (end)
@@ -446,13 +446,55 @@ Como resultado da operação \code{signChainFor} é devolvida uma nova cadeia que t
 Adicionalmente, o campo \code{CallChain::target} conterá o identificador de login fornecido pelo parâmetro \code{target} da chamada de \code{signChainFor}.
 
 Note que dessa forma é possível se adicionar a cadeias recebidas (processo denominado \term{join}), assim como gerar tais cadeias para quaisquer destinos para o qual seja necessário enviar credenciais.
-Esse processo é ilustrado na seção seguinte.
 
 % subsubsection geracao_de_cadeia (end)
 
 % subsection cadeia_de_chamadas (end)
 
 % section credenciais_de_chamada (end)
+
+\appendix
+
+\section{\term{Minor Codes} do \code{CORBA::NO\_PERMISSION}} % (fold)
+\label{sec:minor_codes}
+
+A seguir são descritos todos os valores de \term{minor code} usados nas exceções de \code{CORBA::NO\_PERMISSION} lançadas  nas comunicações usando o protocolo do OpenBus 2.0.
+
+\begin{tabular}{lp{10cm}}
+
+\textbf{Nome}
+&
+\textbf{Descrição} \\
+
+\hline
+
+InvalidCredentialCode
+&
+A credencial informada na chamada é inválida.
+Juntamente com essa exceção de \code{NO\_PERMISSION} deve sempre vir um \code{CredentialReset} com informações a serem usadas na geração de uma credencial válida. \\
+
+InvalidChainCode
+&
+A cadeia de chamadas informada na chamada é inválida. \\
+
+InvalidLoginCode
+&
+O login informado não é válido.
+Isso ocorre quando o barramento informa a quem recebe a chamada que o login informado na chamada é inválido. \\
+
+UnverifiedLoginCode
+&
+Não foi possível verificar o login informado por alguma razão.
+Isso pode ocorrer quando quem recebe a chamada perde o login com o barramento ou não consegue acessar o barramento por alguma razão. \\
+
+UnknownBusCode
+&
+Identificador do barramento na credencial é desconhecido.
+Isso pode ocorrer quando quem recebe a chamada não está conectado no barramento informado. \\
+
+\end{tabular}
+
+% section minor_codes (end)
 
 %\bibliographystyle{plain}
 %\bibliography{}
