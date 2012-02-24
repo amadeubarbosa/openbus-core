@@ -9,18 +9,18 @@ msg.BusSuccessfullyStarted = "OpenBus "..msg.OpenBusVersion.." iniciado com suce
 -- openbus.core.services.AccessControl
 msg.NoPasswordValidators = "nenhum validador de senha foi especificado"
 msg.RegisterEntityCertificate = "registro de certificado de $entity"
-msg.RecoverEntityCertificate = "recupera√ß√£o certificado de $entity"
-msg.RemoveEntityCertificate = "remo√ß√£o certificado de $entity  "
+msg.RecoverEntityCertificate = "recuperaÁ„o certificado de $entity"
+msg.RemoveEntityCertificate = "remoÁ„o certificado de $entity  "
 msg.LoginByCertificate = "login por certificado de $entity (login=$login)"
 msg.LoginByPassword = "login por senha de $entity validado por $validator (login=$login)"
-msg.FailedPasswordValidation = "senha de $entity n√£o foi validada por $validator: errmsg"
-msg.LoginExpired = "expira√ß√£o de login de $entity (login=$login)"
-msg.LoginByCertificateExpired = "expira√ß√£o do processo de login por certificado de $entity"
-msg.LoginByCertificateInitiated = "inicia√ß√£o do processo de login por certificado de $entity"
+msg.FailedPasswordValidation = "senha de $entity n„o foi validada por $validator: errmsg"
+msg.LoginExpired = "expiraÁ„o de login de $entity (login=$login)"
+msg.LoginByCertificateExpired = "expiraÁ„o do processo de login por certificado de $entity"
+msg.LoginByCertificateInitiated = "iniciaÁ„o do processo de login por certificado de $entity"
 msg.LogoutPerformed = "logout de $entity (login=$login)"
-msg.LoginRenewed = "renova√ß√£o de login de $entity (login=$login)"
-msg.LoginObserverException = "falha na notifica√ß√£o de observador de login: errmsg"
-msg.LogoutForced = "encerramento for√ßado do login de $entity (login=$login)"
+msg.LoginRenewed = "renovaÁ„o de login de $entity (login=$login)"
+msg.LoginObserverException = "falha na notificaÁ„o de observador de login: $errmsg"
+msg.LogoutForced = "encerramento forÁado do login de $entity (login=$login)"
 
 -- openbus.core.services.OfferRegistry
 --msg.UpdateOfferProperties = "$offer"
@@ -31,11 +31,13 @@ msg.LogoutForced = "encerramento for√ßado do login de $entity (login=$login)"
 --msg.DiscardPersistedOfferAfterLogout = "$offer $entity $login"
 --msg.RegisterServiceOffer = "$offer $entity $login"
 --msg.CorruptedDatabaseDueToMissingCategory = "$category"
+msg.OfferRegistrationObserverException = "falha na notificaÁ„o de observador de registro de ofertas (id=$id): $errmsg"
+msg.OfferObserverException = "falha na notificaÁ„o de observador de ofertas (id=$id): $errmsg"
 
 -- openbus.core.services.passwordvalidator.LDAP
-msg.LdapBadServerSpec = "o servidor LDAP $actual √© inv√°lido (formato esperado √© '<host>:<porta>')"
+msg.LdapBadServerSpec = "o servidor LDAP $actual È inv·lido (formato esperado È '<host>:<porta>')"
 msg.LdapNoServers = "nenhum servidor LDAP configurado"
 msg.LdapAccessAttemptFailed = "\n\tlogin $user: $errmsg"
-msg.LdapAccessFailed = "usu√°rio $user: $errmsg"
+msg.LdapAccessFailed = "usu·rio $user: $errmsg"
 
 return msg

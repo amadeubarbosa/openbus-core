@@ -21,65 +21,65 @@ local function newValueIndex() return memoize(newOfferSet) end
 
 
 
-local OfferIndex = class()
+local PropertyIndex = class()
 
-function OfferIndex:__init()
+function PropertyIndex:__init()
 	self.sizeOf = setmetatable({}, ReturnZero)
 	self.index = memoize(newValueIndex)
 end
 
-function OfferIndex:add(offer)
+function PropertyIndex:add(object)
 	local index = self.index
 	local sizeOf = self.sizeOf
-	for _, prop in ipairs(offer.properties) do
-		local offers = index[prop.name][prop.value]
-		if offers[offer] == nil then
-			offers[offer] = true
-			sizeOf[offers] = sizeOf[offers]+1
+	for _, prop in ipairs(object.properties) do
+		local objects = index[prop.name][prop.value]
+		if objects[object] == nil then
+			objects[object] = true
+			sizeOf[objects] = sizeOf[objects]+1
 		end
 	end
 end
 
-function OfferIndex:remove(offer)
+function PropertyIndex:remove(object)
 	local index = self.index
 	local sizeOf = self.sizeOf
-	for _, prop in ipairs(offer.properties) do
+	for _, prop in ipairs(object.properties) do
 		local name = prop.name
 		local value = prop.value
 		local validx = index[name]
-		local offers = validx[value]
-		local size = sizeOf[offers]
+		local objects = validx[value]
+		local size = sizeOf[objects]
 		if size > 1 then
-			sizeOf[offers] = size-1
-			offers[offer] = nil
+			sizeOf[objects] = size-1
+			objects[object] = nil
 		else
-			sizeOf[offers] = nil
-			validx[value] = nil -- last offer with this property value was removed
+			sizeOf[objects] = nil
+			validx[value] = nil -- last object with this property value was removed
 			if next(validx) == nil then
-				index[name] = nil -- last offer with this property was removed
+				index[name] = nil -- last object with this property was removed
 			end
 		end
 	end
 end
 
-function OfferIndex:find(properties)
+function PropertyIndex:find(properties)
 	local found = {}
 	local count = #properties
 	if count > 0 then
 		local index = self.index
 		local sizeOf = self.sizeOf
-		-- collecting all sets of offers with any of these properties
-		-- and find the which of these set has less offers.
+		-- collecting all sets of objects with any of these properties
+		-- and find the which of these sets has less objects.
 		local sets = {}
 		local min_sz, min = inf
 		for i = 1, count do
 			local prop = properties[i]
 			local validx = rawget(index, prop.name)
-			if validx == nil then return {} end -- no offer with this property
-			local offers = rawget(validx, prop.value)
-			if offers == nil then return {} end -- no offer with this property value
-			sets[i] = offers
-			local size = sizeOf[offers]
+			if validx == nil then return {} end -- no object with this property
+			local objects = rawget(validx, prop.value)
+			if objects == nil then return {} end -- no object with this property value
+			sets[i] = objects
+			local size = sizeOf[objects]
 			if size < min_sz then
 				min_sz = size
 				min = i
@@ -87,15 +87,15 @@ function OfferIndex:find(properties)
 		end
 		-- remove the smallest set from the list and place it in 'min'
 		min, sets[min], sets[count] = sets[min], sets[count], nil
-		-- select the offers from the minimum set that are also present
+		-- select the objects from the minimum set that are also present
 		-- in the other sets (i.e. satisfy all other properties)
-		for offer in pairs(min) do
+		for object in pairs(min) do
 			local exclude
 			for index = 1, count-1 do
-				exclude = (sets[index][offer]==nil)
+				exclude = (sets[index][object]==nil)
 			end
 			if not exclude then
-				found[#found+1] = offer
+				found[#found+1] = object
 			end
 		end
 	end
@@ -103,7 +103,7 @@ function OfferIndex:find(properties)
 end
 
 local Empty = {}
-function OfferIndex:get(name, value)
+function PropertyIndex:get(name, value)
 	local validx = rawget(self.index, name)
 	if validx ~= nil then
 		return rawget(validx, value) or Empty
@@ -111,4 +111,4 @@ function OfferIndex:get(name, value)
 	return Empty
 end
 
-return OfferIndex
+return PropertyIndex

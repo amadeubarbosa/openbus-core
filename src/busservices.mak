@@ -23,7 +23,7 @@ LUASRC= \
 	$(LUADIR)/openbus/core/services/LoginDB.lua \
 	$(LUADIR)/openbus/core/services/main.lua \
 	$(LUADIR)/openbus/core/services/messages.lua \
-	$(LUADIR)/openbus/core/services/OfferIndex.lua \
+	$(LUADIR)/openbus/core/services/PropertyIndex.lua \
 	$(LUADIR)/openbus/core/services/OfferRegistry.lua \
 	$(LUADIR)/openbus/core/services/passwordvalidator/LDAP.lua
 

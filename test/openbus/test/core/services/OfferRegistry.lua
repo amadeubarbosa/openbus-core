@@ -52,12 +52,16 @@ Suite.Test1 = {}
 Suite.Test2 = {}
 Suite.Test3 = {}
 Suite.Test4 = {}
+Suite.Test5 = {}
+Suite.Test6 = {}
 
 -- Aliases
 local InvalidParamCase = Suite.Test1
 local NoAuthorizedCase = Suite.Test2
 local ServiceOfferCase = Suite.Test3
 local ORCase = Suite.Test4
+local OfferObserversCase = Suite.Test5
+local RegistryObserversCase = Suite.Test6
 
 -- Constantes -----------------------------------------------------------------
 local testCompName = "Ping test's component"
@@ -93,6 +97,28 @@ local function createPingComponent(orb)
   return component
 end
 
+local function createOfferObserver()
+  local obs = {}
+  obs.wasChanged = 0
+  obs.wasRemoved = 0
+  function obs:propertiesChanged(desc)
+    self.wasChanged = self.wasChanged + 1
+  end
+  function obs:removed(desc)
+    self.wasRemoved = self.wasRemoved + 1
+  end
+  return obs
+end
+
+local function createOfferRegistryObserver()
+  local obs = {}
+  obs.registered = 0
+  function obs:offerRegistered(desc)
+    self.registered = self.registered + 1
+  end
+  return obs
+end
+
 ---
 -- Verifica se a lista de propriedades 'one' esta contida dentro de 'other'
 ---
@@ -111,10 +137,34 @@ local function isContained(one, other)
   end
   return true
 end
-  
+
 -- Inicialização --------------------------------------------------------------
 setuplog(log, sdklevel)
 setuplog(oillog, oillevel)
+
+-- Funções de configuração de testes padrão -----------------------------------
+local function beforeTestCase(self)
+  local orb = openbus.createORB{ localrefs="proxy" }
+  local conn = openbus.connectByAddress(host, port, orb)
+  conn:loginByPassword(entity, entity)
+  self.conn = conn
+  self.offers = conn.offers
+  oil.newthread(conn.orb.run, conn.orb)
+end
+
+local function afterTestCase(self)
+  self.conn.orb:shutdown()
+  self.conn:logout()
+  self.conn = nil
+  self.offers = nil
+end
+
+local function afterEachTest(self)
+  if self.serviceOffer ~= nil then 
+    self.serviceOffer:remove()
+    self.serviceOffer = nil
+  end
+end
 
 -- Testes do OfferRegistry ----------------------------------------------
 
@@ -140,23 +190,11 @@ setuplog(oillog, oillevel)
 -- Caso de teste "INVALID PARAMETERS"
 -------------------------------------
 
-function InvalidParamCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
-  conn:loginByPassword(entity, entity)
-  self.conn = conn
-  self.offers = conn.offers
-  oil.newthread(conn.orb.run, conn.orb)
-end
+InvalidParamCase.beforeTestCase = beforeTestCase
 
 function InvalidParamCase.afterTestCase(self)
-  if self.serviceOffer ~= nil then 
-    self.serviceOffer:remove()
-    self.serviceOffer = nil
-  end
-  self.conn.orb:shutdown()
-  self.conn:logout()
-  self.conn = nil
-  self.offers = nil
+  afterEachTest(self)
+  afterTestCase(self)
 end
 
 function InvalidParamCase.testRegisterInvalidComponent(self)
@@ -238,19 +276,15 @@ end
 ---------------------------------------
 
 function NoAuthorizedCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
+  local orb = openbus.createORB{ localrefs="proxy" }
+  local conn = openbus.connectByAddress(host, port, orb)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
   self.offers = conn.offers
   oil.newthread(conn.orb.run, conn.orb)
 end
 
-function NoAuthorizedCase.afterTestCase(self)
-  self.conn.orb:shutdown()
-  self.conn:logout()
-  self.conn = nil
-  self.offers = nil
-end
+NoAuthorizedCase.afterTestCase = afterTestCase
 
 function NoAuthorizedCase.testRegisterUnauthorizedEntity(self)
   local orb = self.conn.orb
@@ -266,12 +300,8 @@ end
 --------------------------------
 
 function ServiceOfferCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
-  conn:loginByPassword(entity, entity)
-  self.conn = conn
-  self.offers = conn.offers
-  oil.newthread(conn.orb.run, conn.orb)
-  local orb = conn.orb
+  beforeTestCase(self)
+  local orb = self.conn.orb
   local context = createPingComponent(orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
@@ -279,10 +309,7 @@ end
 
 function ServiceOfferCase.afterTestCase(self)
   self.serviceOffer:remove()
-  self.conn.orb:shutdown()
-  self.conn:logout()
-  self.conn = nil
-  self.offers = nil
+  afterTestCase(self)
 end
 
 function ServiceOfferCase.afterEachTest(self)
@@ -362,34 +389,15 @@ end
 -- Caso de teste "PADRÃO" do OfferRegistry
 ------------------------------------------
 
-function ORCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
-  conn:loginByPassword(entity, entity)
-  self.conn = conn
-  self.offers = conn.offers
-  oil.newthread(conn.orb.run, conn.orb)
-end
-
-function ORCase.afterTestCase(self)
-  self.conn.orb:shutdown()
-  self.conn:logout()
-  self.conn = nil
-  self.offers = nil
-end
-
-function ORCase.afterEachTest(self)
-  if self.serviceOffer ~= nil then 
-    self.serviceOffer:remove()
-    self.serviceOffer = nil
-  end
-end
+ORCase.beforeTestCase = beforeTestCase
+ORCase.afterTestCase = afterTestCase
+ORCase.afterEachTest = afterEachTest
 
 function ORCase.testRegisterRemove(self)
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
-  Check.assertNotNil(tOffer.service_ref)
   local pingFacet = tOffer:_get_service_ref():getFacetByName("ping"):__narrow()
   Check.assertTrue(pingFacet:ping())
   tOffer:remove()
@@ -457,3 +465,231 @@ function ORCase.testGetServices(self)
   Check.assertEquals(preSize, #services)
 end
 
+------------------------------------------
+-- Caso de teste de Observação de Ofertas
+------------------------------------------
+
+OfferObserversCase.beforeTestCase = beforeTestCase
+OfferObserversCase.afterTestCase = afterTestCase
+OfferObserversCase.afterEachTest = afterEachTest
+
+function OfferObserversCase.testCookiesGeneration(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  local obs = createOfferObserver()
+  local cookie1 = tOffer:subscribe(obs)
+  Check.assertEquals(1, cookie1)
+  local cookie2 = tOffer:subscribe(obs)
+  Check.assertEquals(2, cookie2)
+  local cookie3 = tOffer:subscribe(obs)
+  Check.assertEquals(3, cookie3)
+  local ok = tOffer:unsubscribe(cookie2)
+  Check.assertTrue(ok)
+  cookie2 = 0
+  cookie2 = tOffer:subscribe(obs)
+  Check.assertEquals(2, cookie2)
+  ok = tOffer:unsubscribe(cookie1)
+  Check.assertTrue(ok)
+  ok = tOffer:unsubscribe(cookie2)
+  Check.assertTrue(ok)
+  ok = tOffer:unsubscribe(cookie3)
+  Check.assertTrue(ok)
+end
+
+function OfferObserversCase.testNotification(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  local obs = createOfferObserver()
+  local cookie = tOffer:subscribe(obs)
+  local newProps = { offerProps[1], }
+  tOffer:setProperties(newProps)
+  Check.assertEquals(1, obs.wasChanged)
+  tOffer:remove()
+  Check.assertEquals(1, obs.wasRemoved)
+  self.serviceOffer = nil
+end
+
+function OfferObserversCase.testMultipleNotification(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  local obs = createOfferObserver()
+  local cookie1 = tOffer:subscribe(obs)
+  local cookie2 = tOffer:subscribe(obs)
+  local cookie3 = tOffer:subscribe(obs)
+  local ok = tOffer:unsubscribe(cookie2)
+  tOffer:remove()
+  Check.assertEquals(2, obs.wasRemoved)
+  self.serviceOffer = nil
+end
+
+function OfferObserversCase.testSubscribe(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  local obs = createOfferObserver()
+  local cookie = tOffer:subscribe(obs)
+  local newProps = { offerProps[1], }
+  tOffer:setProperties(newProps)
+  Check.assertEquals(1, obs.wasChanged)
+  local ok = tOffer:unsubscribe(cookie)
+  Check.assertTrue(ok)
+  tOffer:remove()
+  Check.assertEquals(0, obs.wasRemoved)
+  self.serviceOffer = nil
+end
+
+function OfferObserversCase.testFailSubscription(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  local ok, err = pcall(tOffer.subscribe, tOffer, nil)
+  Check.assertTrue(not ok)
+  -- existe uma verificacao de nil para lançar BAD_PARAM. Parece ser desnecessário
+  Check.assertEquals(sysex.MARSHAL, err._repid)
+end
+
+function OfferObserversCase.testSubscribeInvalid(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  local cookie = tOffer:subscribe({})
+  local newProps = { offerProps[1], }
+  local ok, err = pcall(tOffer.setProperties, tOffer, newProps)
+  -- Erro é apenas loggado no lado do bus
+  Check.assertTrue(ok)
+  ok, err = pcall(tOffer.remove, tOffer)
+  -- Erro é apenas loggado no lado do bus
+  Check.assertTrue(ok)
+  self.serviceOffer = nil
+end
+
+function OfferObserversCase.testFailUnsubscription(self)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  local invalidCookie = -1
+  local ok = tOffer:unsubscribe(invalidCookie)
+  Check.assertTrue(not ok)
+end
+
+-----------------------------------------------------
+-- Caso de teste de Observação de Registro de Ofertas
+-----------------------------------------------------
+
+RegistryObserversCase.beforeTestCase = beforeTestCase
+RegistryObserversCase.afterTestCase = afterTestCase
+
+function RegistryObserversCase.afterEachTest(self)
+  afterEachTest(self)
+  -- se ocorreu algum erro, garantindo que os observadores foram removidos.
+  for i = 1, 3 do
+    self.offers:unsubscribeObserver(i)
+  end
+end
+
+function RegistryObserversCase.testCookiesGeneration(self)
+  local obs = createOfferRegistryObserver()
+  local cookie1 = self.offers:subscribeObserver(obs, offerProps)
+  Check.assertEquals(1, cookie1)
+  local cookie2 = self.offers:subscribeObserver(obs, offerProps)
+  Check.assertEquals(2, cookie2)
+  local cookie3 = self.offers:subscribeObserver(obs, offerProps)
+  Check.assertEquals(3, cookie3)
+  local ok = self.offers:unsubscribeObserver(cookie2)
+  Check.assertTrue(ok)
+  cookie2 = 0
+  cookie2 = self.offers:subscribeObserver(obs, offerProps)
+  Check.assertEquals(2, cookie2)
+  ok = self.offers:unsubscribeObserver(cookie1)
+  Check.assertTrue(ok)
+  ok = self.offers:unsubscribeObserver(cookie2)
+  Check.assertTrue(ok)
+  ok = self.offers:unsubscribeObserver(cookie3)
+  Check.assertTrue(ok)
+end
+
+function RegistryObserversCase.testNotification(self)
+  local obs = createOfferRegistryObserver()
+  local cookie = self.offers:subscribeObserver(obs, offerProps)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  Check.assertEquals(1, obs.registered)
+  local ok = self.offers:unsubscribeObserver(cookie)
+  Check.assertTrue(ok)  
+end
+
+function RegistryObserversCase.testMultipleNotification(self)
+  local obs = createOfferRegistryObserver()
+  local cookie1 = self.offers:subscribeObserver(obs, offerProps)
+  local cookie2 = self.offers:subscribeObserver(obs, offerProps)
+  local cookie3 = self.offers:subscribeObserver(obs, offerProps)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  Check.assertEquals(3, obs.registered)
+  self.serviceOffer:remove()
+  local ok = self.offers:unsubscribeObserver(cookie2)
+  Check.assertTrue(ok)
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  Check.assertEquals(5, obs.registered)
+  ok = self.offers:unsubscribeObserver(cookie1)
+  ok = self.offers:unsubscribeObserver(cookie3)
+end
+
+function RegistryObserversCase.testSubscribe(self)
+  local newProps = { offerProps[1], }
+  local obs = createOfferRegistryObserver()
+  local cookie = self.offers:subscribeObserver(obs, newProps)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  local tOffer = self.serviceOffer
+  Check.assertEquals(1, obs.registered)
+  tOffer:setProperties(newProps)
+  Check.assertEquals(2, obs.registered)
+  newProps = { offerProps[2], }
+  tOffer:setProperties(newProps)
+  Check.assertEquals(2, obs.registered)
+  local ok = self.offers:unsubscribeObserver(cookie)
+  Check.assertTrue(ok)  
+  tOffer:setProperties(offerProps)
+  Check.assertEquals(2, obs.registered)
+end
+
+function RegistryObserversCase.testFailSubscription(self)
+  local ok, err = pcall(self.offers.subscribeObserver, self.offers, nil, newProps)
+  Check.assertTrue(not ok)
+  -- existe uma verificacao de nil para lançar BAD_PARAM. Parece ser desnecessário
+  Check.assertEquals(sysex.MARSHAL, err._repid)
+  local obs = createOfferRegistryObserver()
+  ok, err = pcall(self.offers.subscribeObserver, self.offers, obs, nil)
+  Check.assertTrue(not ok)
+  -- existe uma verificacao de nil para lançar BAD_PARAM. Parece ser desnecessário
+  Check.assertEquals(sysex.MARSHAL, err._repid)
+end
+
+function RegistryObserversCase.testSubscribeInvalid(self)
+  local cookie = self.offers:subscribeObserver({}, offerProps)
+  local context = createPingComponent(self.conn.orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+  -- Erro é apenas loggado no lado do bus
+  self.offers:unsubscribeObserver(cookie)
+end
+
+function RegistryObserversCase.testFailUnsubscription(self)
+  local cookie = -1
+  self.offers:unsubscribeObserver(cookie)
+  Check.assertTrue(not ok)
+end

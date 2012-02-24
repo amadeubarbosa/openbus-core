@@ -464,7 +464,7 @@ function LoginRegistry:loginRemoved(login, observers)
 	end
 end
 
-function LoginRegistry:observerRemoved(observer)
+function LoginRegistry:loginObserverRemoved(observer)
 	local id = observer.id
 	local subscription = self.subscriptionOf[id]
 	self.subscriptionOf[id] = nil

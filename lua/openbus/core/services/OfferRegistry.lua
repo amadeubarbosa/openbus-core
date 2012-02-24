@@ -32,7 +32,7 @@ local const = idl.const.services.offer_registry
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 AccessControl = AccessControl.AccessControl
-local OfferIndex = require "openbus.core.services.OfferIndex"
+local PropertyIndex = require "openbus.core.services.PropertyIndex"
 
 
 local OfferRegistry -- forward declaration
@@ -117,6 +117,7 @@ function Offer:__init()
 	self.ref = self -- IDL struct attribute (see operation 'describe')
 	self.__objkey = "Offer:"..self.id -- for the ORB
 	self.registry.offers:add(self)
+	self.observers = {}
 end
 
 function Offer:describe()
@@ -135,6 +136,9 @@ function Offer:setProperties(properties)
 	self.properties = allprops
 	offers:add(self)
 	log[tag](log, msg.UpdateOfferProperties:tag{ offer = self.id })
+	self:notifyObservers("updated")
+	-- also notifies registration observers
+	self.registry:notifyObservers(self)
 end
 
 function Offer:remove(tag)
@@ -144,8 +148,45 @@ function Offer:remove(tag)
 	assert(self.orb:deactivate(self))
 	registry.offers:remove(self)
 	log[tag](log, msg.RemoveServiceOffer:tag{ offer = self.id })
+	self:notifyObservers("removed")
 end
 
+function Offer:subscribe(observer)
+  -- CHECK: necessária essa verificação? Parece que da erro de MARSHAL antes
+  if observer == nil then
+    sysex.BAD_PARAM{ completed = "COMPLETED_NO" }
+  end
+  local observers = self.observers
+  local cookie = #observers + 1
+  observers[cookie] = observer
+  return cookie
+end
+
+function Offer:unsubscribe(cookie)
+  local observers = self.observers
+  if observers[cookie] ~= nil then
+    observers[cookie] = nil
+    return true
+  end
+  return false
+end
+
+function Offer:notifyObservers(event)
+  local observers = self.observers
+  for idx, observer in pairs(self.observers) do
+    if event == "updated" then
+      local ok, errmsg = pcall(observer.propertiesChanged, observer, self)
+      if not ok then
+        log:exception(msg.OfferObserverException:tag{id=idx, errmsg=errmsg})
+      end
+    elseif event == "removed" then
+      local ok, errmsg = pcall(observer.removed, observer, self)
+      if not ok then
+        log:exception(msg.OfferObserverException:tag{id=idx, errmsg=errmsg})
+      end
+    end
+  end
+end
 
 
 OfferRegistry = { -- is local (see forward declaration)
@@ -165,7 +206,7 @@ function OfferRegistry:loginRemoved(login)
 	end
 end
 
-function OfferRegistry:observerRemoved()
+function OfferRegistry:loginObserverRemoved()
 	-- empty
 end
 
@@ -173,8 +214,10 @@ function OfferRegistry:__init(data)
 	self.access = data.access
 	self.admins = data.admins
 	self.enforceAuth = data.enforceAuth
-	self.offers = OfferIndex()
+	self.offers = PropertyIndex()
 	self.offerDB = assert(data.database:gettable("Offers"))
+	self.observers = {}
+	self.obsIndex = PropertyIndex()
 	
 	-- register itself to receive logout notifications
 	rawset(AccessControl.publisher, self, self)
@@ -303,7 +346,9 @@ function OfferRegistry:registerService(service_ref, properties)
 		entity = entityId,
 		login = login.id,
 	})
-	return Offer(entry)
+	local theOffer = Offer(entry)
+	self:notifyObservers(theOffer)
+	return theOffer
 end
 
 function OfferRegistry:findServices(properties)
@@ -318,6 +363,72 @@ function OfferRegistry:getServices()
 		end
 	end
 	return result
+end
+
+function OfferRegistry:subscribeObserver(observer, properties)
+  if observer == nil then
+    sysex.BAD_PARAM{ completed = "COMPLETED_NO" }
+  end
+  local observers = self.observers
+  local cookie = #observers + 1
+  local entry = { 
+    observer = observer,
+    properties = properties,
+    id = cookie,
+  }
+  observers[cookie] = entry
+  self.obsIndex:add(entry)
+  return cookie
+end
+
+function OfferRegistry:unsubscribeObserver(cookie)
+  local observers = self.observers
+  if observers[cookie] ~= nil then
+    local entry = observers[cookie]
+    observers[cookie] = nil
+    self.obsIndex:remove(entry)
+    return true
+  end
+  return false
+end
+
+--------------------- TODO: a ser removido ------------------------------------
+-- Utilizando esse modelo de busca enquanto não encontro uma melhor solução que
+-- faça uso do Inverted Index implementado em PropertyIndex
+---
+-- Verifica se a lista de propriedades 'one' esta contida dentro de 'other'
+---
+local function isContained(one, other)
+  for _,v1 in ipairs(one) do
+    local found = false
+    for _,v2 in ipairs(other) do
+      if v1.name == v2.name and v1.value == v2.value then
+        found = true
+        break
+      end
+    end
+    if not found then
+      return false
+    end
+  end
+  return true
+end
+-------------------------------------------------------------------------------
+
+function OfferRegistry:notifyObservers(offer)
+  local observers = self.observers
+  for i, entry in pairs(observers) do
+    if isContained(entry.properties, offer.properties) then
+      local observer = entry.observer
+      local ok, errmsg = pcall(observer.offerRegistered, observer, offer)
+      if not ok then
+        log:exception(msg.OfferRegistrationObserverException:tag{
+          id = entry.id,
+          errmsg = errmsg,
+        })
+      end
+    end
+  end
 end
 
 ------------------------------------------------------------------------------

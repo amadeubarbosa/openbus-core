@@ -92,7 +92,7 @@ function Observer:remove()
 		logins[id].watchers[self] = nil
 	end
 	base.observers[id] = nil
-	self.base.publisher:observerRemoved(self)
+	self.base.publisher:loginObserverRemoved(self)
 end
 
 
