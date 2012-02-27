@@ -145,7 +145,7 @@ function LoginProcess:login(pubkey, encrypted)
 	local login = manager.activeLogins:newLogin(entity, pubkey)
 	renewLogin(login)
 	log:request(msg.LoginProcessConcluded:tag{login=login.id,entity=entity})
-	return login.id, manager.leaseTime
+	return login, manager.leaseTime
 end
 
 
@@ -268,7 +268,7 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
 						validator = validator.name,
 					})
 					renewLogin(login)
-					return login.id, self.leaseTime
+					return login, self.leaseTime
 				elseif errmsg ~= nil then
 					log:exception(msg.FailedPasswordValidation:tag{
 						entity = entity,

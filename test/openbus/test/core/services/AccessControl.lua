@@ -120,8 +120,8 @@ local function loginByPassword(entity, password)
   Check.assertNotNil(encoded)
   local encrypted = conn.buskey:encrypt(encoded)
   Check.assertNotNil(encrypted)
-  local id, lease = accontrol:loginByPassword(entity, pubkey, encrypted)
-  local login = {id=id, entity=entity, pubkey=pubkey}
+  local login, lease = accontrol:loginByPassword(entity, pubkey, encrypted)
+  login.pubkey = pubkey
   conn:setLogin(login)
   return conn, login, lease
 end
@@ -305,10 +305,10 @@ function ACSuite.testLoginByCertificateAndLogout(self)
   Check.assertNotNil(encoded)
   local encrypted, errmsg = conn.buskey:encrypt(encoded)
   Check.assertNotNil(encrypted, errmsg)
-  local id, lease = attempt:login(pubkey, encrypted)
-  Check.assertNotNil(id)
+  local login, lease = attempt:login(pubkey, encrypted)
+  Check.assertNotNil(login)
   Check.assertNotNil(lease)
-  local login = {id=id, entity=entity, pubkey=pubkey}
+  login.pubkey = pubkey
   conn:setLogin(login)
   accontrol:logout()
   conn:setLogin(nil)
