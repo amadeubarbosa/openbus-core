@@ -149,7 +149,8 @@ struct LoginAuthenticationInfo {
 	\item[Campo \code{data}] contém a senha de autenticação.
 \end{description}
 
-Como resultado de um login por senha bem sucedido a operação \code{loginByPassword} devolve o identificador do login e o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação.
+Como resultado de um login por senha bem sucedido a operação \code{loginByPassword} devolve a estrutura \code{LoginInfo} contendo o identificador do login e o identificador da entidade autenticada.
+Adicionalmente, também é devolvido o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação através do parâmetro de saída \code{lease}.
 
 % subsection login_por_senha (end)
 
@@ -172,7 +173,8 @@ No caso do login por certificado, os dados desse bloco encriptado é estrutura \c
 	\item[Campo \code{data}] contém o valor secreto, obtido pela desencriptação usando a chave privada correspondente ao certificado registrado no barramento do desafio (\code{challenge}) fornecido pela chamada da operação \code{startLoginByCertificate} da etapa anterior.
 \end{description}
 
-Similarmente à autenticação por senha, como resultado de um login por certificado bem sucedido, a operação \code{LoginProcess::login} devolve o identificador do login e o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação.
+Similarmente à autenticação por senha, como resultado de um login por certificado bem sucedido, a operação \code{LoginProcess::login} devolve a estrutura \code{LoginInfo} contendo o identificador do login e o identificador da entidade autenticada.
+Adicionalmente, também é devolvido o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação através do parâmetro de saída \code{lease}.
 
 % subsection login_por_certificado (end)
 
@@ -195,7 +197,8 @@ No caso do login por \term{Single Sign-On}, os dados desse bloco encriptado é es
 	\item[Campo \code{data}] contém o valor secreto, obtido pela desencriptação usando a chave privada de acesso do login que iniciou o processo de login por \term{Single Sign-On} do desafio (\code{challenge}) fornecido pela chamada da operação \code{startLoginBySingleSignOn} da etapa anterior.
 \end{description}
 
-Similarmente à autenticação por certificado, como resultado de um login por \term{Single Sign-On} bem sucedido, a operação \code{LoginProcess::login} devolve o identificador do login e o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação.
+Similarmente à autenticação por certificado, como resultado de um login por \term{Single Sign-On} bem sucedido, a operação \code{LoginProcess::login} devolve a estrutura \code{LoginInfo} contendo o identificador do login e o identificador da entidade autenticada.
+Adicionalmente, também é devolvido o tempo mínimo pelo qual o login permanecerá válido sem necessidade de renovação através do parâmetro de saída \code{lease}.
 
 % subsection login_por_singlesignon (end)
 
