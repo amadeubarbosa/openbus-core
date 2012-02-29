@@ -161,7 +161,7 @@ function Database:__init()
 	                                     Login,
 	                                     self)))
 	self.obsTab = select(2, assert(pcall(readTable,
-	                                     assert(db:gettable("Observers")),
+	                                     assert(db:gettable("LoginObservers")),
 	                                     Observer,
 	                                     self)))
 end

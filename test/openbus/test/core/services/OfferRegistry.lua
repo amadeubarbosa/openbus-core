@@ -552,8 +552,7 @@ function OfferObserversCase.testFailSubscription(self)
   local tOffer = self.serviceOffer
   local ok, err = pcall(tOffer.subscribe, tOffer, nil)
   Check.assertTrue(not ok)
-  -- existe uma verificacao de nil para lançar BAD_PARAM. Parece ser desnecessário
-  Check.assertEquals(sysex.MARSHAL, err._repid)
+  Check.assertEquals(sysex.BAD_PARAM, err._repid)
 end
 
 function OfferObserversCase.testSubscribeInvalid(self)
@@ -668,14 +667,12 @@ function RegistryObserversCase.testSubscribe(self)
 end
 
 function RegistryObserversCase.testFailSubscription(self)
-  local ok, err = pcall(self.offers.subscribeObserver, self.offers, nil, newProps)
+  local ok, err = pcall(self.offers.subscribeObserver, self.offers, nil, offerProps)
   Check.assertTrue(not ok)
-  -- existe uma verificacao de nil para lançar BAD_PARAM. Parece ser desnecessário
-  Check.assertEquals(sysex.MARSHAL, err._repid)
+  Check.assertEquals(sysex.BAD_PARAM, err._repid)
   local obs = createOfferRegistryObserver()
   ok, err = pcall(self.offers.subscribeObserver, self.offers, obs, nil)
   Check.assertTrue(not ok)
-  -- existe uma verificacao de nil para lançar BAD_PARAM. Parece ser desnecessário
   Check.assertEquals(sysex.MARSHAL, err._repid)
 end
 
