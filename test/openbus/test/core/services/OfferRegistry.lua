@@ -87,11 +87,11 @@ local function createPingComponent(orb)
   local ping = getPingImpl()
   -- create service SCS component
   local component = ComponentContext(orb, {
-  	name = testCompName,
-  	major_version = 1,
-  	minor_version = 0,
-  	patch_version = 0,
-  	platform_spec = "",
+    name = testCompName,
+    major_version = 1,
+    minor_version = 0,
+    patch_version = 0,
+    platform_spec = "",
   })
   component:addFacet("ping", orb.types:lookup("Ping").repID, ping)
   return component
