@@ -37,42 +37,42 @@ local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
 
 return function(...)
-	-- configuration parameters parser
-	local Configs = ConfigArgs{
-		host = "*",
-		port = 2089,
-	
-		database = "openbus.db",
-		certificate = "openbus.crt",
-		privatekey = "openbus.key",
-	
-		leasetime = 180,
-		expirationgap = 10,
-	
-		admin = {},
-		validator = {},
-	
-		loglevel = 3,
-		logfile = "",
-		oilloglevel = 0,
-		oillogfile = "",
-		
-		noauthorizations = false,
-		nolegacy = false,
-	}
+  -- configuration parameters parser
+  local Configs = ConfigArgs{
+    host = "*",
+    port = 2089,
+  
+    database = "openbus.db",
+    certificate = "openbus.crt",
+    privatekey = "openbus.key",
+  
+    leasetime = 180,
+    expirationgap = 10,
+  
+    admin = {},
+    validator = {},
+  
+    loglevel = 3,
+    logfile = "",
+    oilloglevel = 0,
+    oillogfile = "",
+    
+    noauthorizations = false,
+    nolegacy = false,
+  }
 
-	-- parse configuration file
-	Configs:configs("configs", getenv("OPENBUS_CONFIG") or "openbus.cfg")
+  -- parse configuration file
+  Configs:configs("configs", getenv("OPENBUS_CONFIG") or "openbus.cfg")
 
-	-- parse command line parameters
-	do
-		io.write(msg.CopyrightNotice, "\n")
-		local argidx, errmsg = Configs(...)
-		if not argidx or argidx <= select("#", ...) then
-			if errmsg ~= nil then
-				stderr:write(errmsg,"\n")
-			end
-			stderr:write([[
+  -- parse command line parameters
+  do
+    io.write(msg.CopyrightNotice, "\n")
+    local argidx, errmsg = Configs(...)
+    if not argidx or argidx <= select("#", ...) then
+      if errmsg ~= nil then
+        stderr:write(errmsg,"\n")
+      end
+      stderr:write([[
 Usage:  ]],OPENBUS_PROGNAME,[[ [options]
 Options:
 
@@ -100,104 +100,104 @@ Options:
   -configs <path>            arquivo de configurações adicionais do barramento
   
 ]])
-			return 1 -- program's exit code
-		end
-	end
+      return 1 -- program's exit code
+    end
+  end
 
-	-- create a set of admin users
-	local adminUsers = {}
-	for _, admin in ipairs(Configs.admin) do
-		adminUsers[admin] = true
-	end
-	
-	-- load all password validators to be used
-	local validators = {}
-	for index, package in ipairs(Configs.validator) do
-		validators[#validators+1] = {
-			name = package,
-			validate = assert(require(package)(Configs)),
-		}
-	end
-	assert(#validators>0, msg.NoPasswordValidators)
+  -- create a set of admin users
+  local adminUsers = {}
+  for _, admin in ipairs(Configs.admin) do
+    adminUsers[admin] = true
+  end
+  
+  -- load all password validators to be used
+  local validators = {}
+  for index, package in ipairs(Configs.validator) do
+    validators[#validators+1] = {
+      name = package,
+      validate = assert(require(package)(Configs)),
+    }
+  end
+  assert(#validators>0, msg.NoPasswordValidators)
 
-	-- setup log files
-	setuplog(log, Configs.loglevel, Configs.logfile)
-	setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
+  -- setup log files
+  setuplog(log, Configs.loglevel, Configs.logfile)
+  setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
 
-	-- setup bus access
-	local orb = access.createORB{ host=Configs.host, port=Configs.port }
-	local iceptor = access.Interceptor{
-		orb = orb,
-		legacy = not Configs.nolegacy,
-	}
-	orb:setinterceptor(iceptor, "corba")
+  -- setup bus access
+  local orb = access.createORB{ host=Configs.host, port=Configs.port }
+  local iceptor = access.Interceptor{
+    orb = orb,
+    legacy = not Configs.nolegacy,
+  }
+  orb:setinterceptor(iceptor, "corba")
 
-	-- create SCS component
-	local facets = {}
-	copy(AccessControl, facets)
-	copy(OfferRegistry, facets)
-	newSCS{
-		orb = orb,
-		objkey = const.BusObjectKey,
-		name = const.BusObjectKey,
-		facets = facets,
-		init = function()
-			local params = {
-				access = iceptor,
-				database = assert(opendb(Configs.database)),
-				certificate = assert(readfilecontents(Configs.certificate)),
-				privateKey = assert(readprivatekey(Configs.privatekey)),
-				leaseTime = Configs.leasetime,
-				expirationGap = Configs.expirationgap,
-				admins = adminUsers,
-				validators = validators,
-				enforceAuth = not Configs.noauthorizations,
-			}
-			-- these object must be initialized in this order
-			facets.CertificateRegistry:__init(params)
-			facets.AccessControl:__init(params)
-			facets.LoginRegistry:__init(params)
-			facets.InterfaceRegistry:__init(params)
-			facets.EntityRegistry:__init(params)
-			facets.OfferRegistry:__init(params)
-		end,
-	}
+  -- create SCS component
+  local facets = {}
+  copy(AccessControl, facets)
+  copy(OfferRegistry, facets)
+  newSCS{
+    orb = orb,
+    objkey = const.BusObjectKey,
+    name = const.BusObjectKey,
+    facets = facets,
+    init = function()
+      local params = {
+        access = iceptor,
+        database = assert(opendb(Configs.database)),
+        certificate = assert(readfilecontents(Configs.certificate)),
+        privateKey = assert(readprivatekey(Configs.privatekey)),
+        leaseTime = Configs.leasetime,
+        expirationGap = Configs.expirationgap,
+        admins = adminUsers,
+        validators = validators,
+        enforceAuth = not Configs.noauthorizations,
+      }
+      -- these object must be initialized in this order
+      facets.CertificateRegistry:__init(params)
+      facets.AccessControl:__init(params)
+      facets.LoginRegistry:__init(params)
+      facets.InterfaceRegistry:__init(params)
+      facets.EntityRegistry:__init(params)
+      facets.OfferRegistry:__init(params)
+    end,
+  }
 
-	-- create legacy SCS components
-	if iceptor.legacy then
-		local legacyIDL = require "openbus.core.legacy.idl"
-		legacyIDL.loadto(orb)
-	
-		local AccessControlService = require "openbus.core.legacy.AccessControlService"
-		local ACS = newSCS{
-			orb = orb,
-			objkey = "openbus_v1_05",
-			name = "AccessControlService",
-			facets = AccessControlService,
-			receptacles = {RegistryServiceReceptacle="IDL:scs/core/IComponent:1.0"},
-			init = function()
-				local params = { access = iceptor, admins = Configs.admin }
-				-- these object must be initialized in this order
-				AccessControlService.IAccessControlService:__init(params)
-				AccessControlService.IManagement:__init(params)
-			end,
-		}
-		local RegistryService = require "openbus.core.legacy.RegistryService"
-		local RGS = newSCS{
-			orb = orb,
-			objkey = "IC",
-			name = "RegistryService",
-			facets = RegistryService,
-			init = function()
-				local params = { access = iceptor }
-				-- these object must be initialized in this order
-				RegistryService.IManagement:__init(params)
-			end,
-		}
-		ACS.IReceptacles:connect("RegistryServiceReceptacle", RGS.IComponent)
-	end
+  -- create legacy SCS components
+  if iceptor.legacy then
+    local legacyIDL = require "openbus.core.legacy.idl"
+    legacyIDL.loadto(orb)
+  
+    local AccessControlService = require "openbus.core.legacy.AccessControlService"
+    local ACS = newSCS{
+      orb = orb,
+      objkey = "openbus_v1_05",
+      name = "AccessControlService",
+      facets = AccessControlService,
+      receptacles = {RegistryServiceReceptacle="IDL:scs/core/IComponent:1.0"},
+      init = function()
+        local params = { access = iceptor, admins = Configs.admin }
+        -- these object must be initialized in this order
+        AccessControlService.IAccessControlService:__init(params)
+        AccessControlService.IManagement:__init(params)
+      end,
+    }
+    local RegistryService = require "openbus.core.legacy.RegistryService"
+    local RGS = newSCS{
+      orb = orb,
+      objkey = "IC",
+      name = "RegistryService",
+      facets = RegistryService,
+      init = function()
+        local params = { access = iceptor }
+        -- these object must be initialized in this order
+        RegistryService.IManagement:__init(params)
+      end,
+    }
+    ACS.IReceptacles:connect("RegistryServiceReceptacle", RGS.IComponent)
+  end
 
-	-- start ORB
-	log:uptime(msg.BusSuccessfullyStarted)
-	orb:run()
+  -- start ORB
+  log:uptime(msg.BusSuccessfullyStarted)
+  orb:run()
 end
