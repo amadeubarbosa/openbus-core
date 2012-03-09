@@ -347,6 +347,14 @@ struct CredentialReset {
 	O identificador de sessão gerado deve ser diferente de qualquer sessão de geração de credenciais ativa entre o recebedor da chamada e o iniciador da chamada.
 	\item[Campo \code{challenge}] contém um novo segredo encriptado com a chave pública de acesso associada ao login que iniciou a chamada.
 	A obtenção da chave pública associada a qualquer login válido pode ser obtida através da operação \code{getLoginInfo} da \term{Faceta de Registro de Logins} do barramento.
+	Caso a chave pública de acesso obtida não possa ser usada para codificar o segredo (ocorra um erro na encriptação devido à chave utilizada), então a chamada deve ser cancelada e uma exceção de sistema \code{CORBA::NO\_PERMISSION} com \code{COMPLETED\_NO} e o \term{minor code} definido pela seguinte constante:
+
+\begin{samplecode}[language={[CORBA]idl}]
+// File: access_control.idl
+// Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidPublicKeyCode
+const unsigned long InvalidPublicKeyCode;
+\end{samplecode}
+
 	O segredo gerado deve ser uma sequência de 16 bytes gerado aleatoriamente e potencialmente diferente de qualquer outro segredo emitido previamente.
 \end{description}
 
