@@ -5,11 +5,6 @@ if [ -z ${OPENBUS_HOME} ]; then
 	exit 1
 fi
 
-if [ -z ${TEC_UNAME} ]; then
-	echo "[ ERRO ] A variavel TEC_UNAME nao foi definida. Certifique-se de estar usando a forma Tecmake de identificar o sistema operacional."
-	exit 1
-fi
-
 OPENBUS_BIN=${OPENBUS_HOME}/bin
 
 OPENBUS_DATADIR=${OPENBUS_DATADIR:-${OPENBUS_HOME}/data}
