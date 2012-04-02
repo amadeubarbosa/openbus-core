@@ -176,10 +176,10 @@ Options:
       facets = AccessControlService,
       receptacles = {RegistryServiceReceptacle="IDL:scs/core/IComponent:1.0"},
       init = function()
-        local params = { access = iceptor, admins = Configs.admin }
-        -- these object must be initialized in this order
-        AccessControlService.IAccessControlService:__init(params)
-        AccessControlService.IManagement:__init(params)
+        AccessControlService.IAccessControlService:__init{
+          access = iceptor,
+          admins = Configs.admin,
+        }
       end,
     }
     local RegistryService = require "openbus.core.legacy.RegistryService"
@@ -188,11 +188,6 @@ Options:
       objkey = "IC",
       name = "RegistryService",
       facets = RegistryService,
-      init = function()
-        local params = { access = iceptor }
-        -- these object must be initialized in this order
-        RegistryService.IManagement:__init(params)
-      end,
     }
     ACS.IReceptacles:connect("RegistryServiceReceptacle", RGS.IComponent)
   end

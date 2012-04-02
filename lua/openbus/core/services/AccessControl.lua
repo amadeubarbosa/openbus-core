@@ -25,6 +25,7 @@ local Timer = require "cothread.Timer"
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
+local NO_PERMISSION = sysex.NO_PERMISSION
 local log = require "openbus.util.logger"
 
 local idl = require "openbus.core.idl"
@@ -345,7 +346,7 @@ end
 
 function AccessControl:signChainFor(target)
   if self.activeLogins:getLogin(target) == nil then
-    sysex.NO_PERMISSION{ minor = const.InvalidLoginCode }
+    NO_PERMISSION{ minor = const.InvalidLoginCode }
   end
   return self:encodeChain(target, self.access:getCallerChain().callers)
 end

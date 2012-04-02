@@ -23,6 +23,7 @@ local newid = uuid.new
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
+local BAD_PARAM = sysex.BAD_PARAM
 local log = require "openbus.util.logger"
 
 local idl = require "openbus.core.idl"
@@ -167,7 +168,7 @@ end
 
 function Offer:subscribe(observer)
   if observer == nil then
-    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local callers = self.registry.access:getCallerChain().callers
   local login = callers[#callers].id
@@ -477,7 +478,7 @@ end
 
 function OfferRegistry:subscribeObserver(observer, properties)
   if observer == nil then
-    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local callers = self.access:getCallerChain().callers
   local login = callers[#callers].id
