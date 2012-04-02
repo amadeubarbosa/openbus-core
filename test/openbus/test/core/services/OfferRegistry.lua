@@ -144,8 +144,8 @@ setuplog(oillog, oillevel)
 
 -- Funções de configuração de testes padrão -----------------------------------
 local function beforeTestCase(self)
-  local orb = openbus.createORB{ localrefs="proxy" }
-  local conn = openbus.connectByAddress(host, port, orb)
+  local orb = openbus.initORB{ localrefs="proxy" }
+  local conn = openbus.connect(host, port, orb)
   conn:loginByPassword(entity, entity)
   self.conn = conn
   self.offers = conn.offers
@@ -276,8 +276,8 @@ end
 ---------------------------------------
 
 function NoAuthorizedCase.beforeTestCase(self)
-  local orb = openbus.createORB{ localrefs="proxy" }
-  local conn = openbus.connectByAddress(host, port, orb)
+  local orb = openbus.initORB{ localrefs="proxy" }
+  local conn = openbus.connect(host, port, orb)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
   self.offers = conn.offers

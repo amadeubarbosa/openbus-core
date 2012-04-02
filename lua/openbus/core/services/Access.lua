@@ -177,6 +177,6 @@ end
 
 
 return {
-  createORB = access.createORB,
+  initORB = access.initORB,
   Interceptor = BusInterceptor,
 }

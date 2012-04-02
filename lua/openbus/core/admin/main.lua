@@ -965,7 +965,7 @@ function connect(retry)
     return connection
   end
   --TODO: implementar mecanismo de retry.
-  local conn = openbus.connectByAddress(host, port, nil, log)
+  local conn = openbus.connect(host, port, nil, log)
   local localPassword = password
   if not localPassword then
     localPassword = lpw.getpass("Senha: ")

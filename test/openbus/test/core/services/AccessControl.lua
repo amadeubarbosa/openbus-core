@@ -23,7 +23,7 @@ local sha256 = hash.sha256
 
 local openbus = require "openbus"
 local access = require "openbus.core.Access"
-local createORB = access.createORB
+local initORB = access.initORB
 local Interceptor = access.Interceptor
 local log = require "openbus.util.logger"
 local server = require "openbus.util.server"
@@ -75,7 +75,7 @@ local function connectByAddress(host, port)
     logins = "LoginRegistry",
   }
   local conn = {}
-  local orb = createORB()
+  local orb = initORB()
   local iceptor = Interceptor{ orb = orb }
   --orb.OpenBusInterceptor = iceptor
   orb:setinterceptor(iceptor, "corba")

@@ -87,7 +87,7 @@ setuplog(oillog, oillevel)
 -------------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
+  local conn = openbus.connect(host, port)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
 end
@@ -123,8 +123,8 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  local orb = openbus.createORB()
-  local conn = openbus.connectByAddress(host, port, orb)
+  local orb = openbus.initORB()
+  local conn = openbus.connect(host, port, orb)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.logins = conn.logins
@@ -202,7 +202,7 @@ function InvalidParamCase.testSubscribeInvalidObserver(self)
 end
 
 function InvalidParamCase.test2ConnectionSubscribeInvalidObserver(self)
-  local conn2 = openbus.connectByAddress(host, port)
+  local conn2 = openbus.connect(host, port)
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe observer
   local logins = self.logins
@@ -226,7 +226,7 @@ end
 -------------------------------------
 
 function LRCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
+  local conn = openbus.connect(host, port)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.logins = conn.logins
@@ -250,7 +250,7 @@ end
 
 function LRCase.test2ConnectionGetAllLogins(self)
   local logins = self.logins
-  local conn2 = openbus.connectByAddress(host, port)
+  local conn2 = openbus.connect(host, port)
   conn2:loginByPassword(dUser, dPassword)
   local ok, list = pcall(logins.getAllLogins, logins)
   Check.assertTrue(ok)
@@ -278,7 +278,7 @@ end
 
 function LRCase.testInvalidateLogin(self)
   local logins = self.logins
-  local conn2 = openbus.connectByAddress(host, port)
+  local conn2 = openbus.connect(host, port)
   conn2:loginByPassword(dUser, dPassword)
   -- check login
   local info = logins:getLoginInfo(conn2.login.id)
@@ -310,7 +310,7 @@ end
 
 function LRCase.testGetLoginInfo(self)
   local logins = self.logins
-  local conn2 = openbus.connectByAddress(host, port)
+  local conn2 = openbus.connect(host, port)
   conn2:loginByPassword(dUser, dPassword)
   local info = logins:getLoginInfo(conn2.login.id)
   Check.assertNotNil(info)
@@ -340,7 +340,7 @@ end
 
 function LRCase.test2ConncetionsGetValidity(self)
   local logins = self.logins
-  local conn2 = openbus.connectByAddress(host, port)
+  local conn2 = openbus.connect(host, port)
   conn2:loginByPassword(dUser, dPassword)
   local list = { self.conn.login.id, conn2.login.id }
   local vals = logins:getValidity(list)
@@ -360,7 +360,7 @@ function LRCase.test2ConncetionsGetValidity(self)
 end
 
 function LRCase.testSubscribeObserver(self)
-  local conn2 = openbus.connectByAddress(host, port)
+  local conn2 = openbus.connect(host, port)
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe login observer
   local loginId = conn2.login.id

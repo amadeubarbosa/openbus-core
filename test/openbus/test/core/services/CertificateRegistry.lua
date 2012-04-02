@@ -73,7 +73,7 @@ setuplog(oillog, oillevel)
 --------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
+  local conn = openbus.connect(host, port)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
 end
@@ -116,7 +116,7 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
+  local conn = openbus.connect(host, port)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.certs = conn.certificates
@@ -168,7 +168,7 @@ end
 -------------------------------------
 
 function CRCase.beforeTestCase(self)
-  local conn = openbus.connectByAddress(host, port)
+  local conn = openbus.connect(host, port)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.certs = conn.certificates

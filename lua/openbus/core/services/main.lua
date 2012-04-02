@@ -125,7 +125,7 @@ Options:
   setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
 
   -- setup bus access
-  local orb = access.createORB{ host=Configs.host, port=Configs.port }
+  local orb = access.initORB{ host=Configs.host, port=Configs.port }
   local iceptor = access.Interceptor{
     orb = orb,
     legacy = not Configs.nolegacy,
