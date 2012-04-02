@@ -226,6 +226,27 @@ basesoft = {
        version="2.3.0", pomFile="jacorb-idl-compiler-pom.xml" },
     },
   },
+  { name = "mico-2.3.13-singlethread-debug",
+    url = SVNREPURL .. "/openbus/libs/trunk/mico-2.3.13",
+    build = {
+      type = "autotools",
+      test_libs = {"libmico*2.3.13*"},
+      Linux = "rm -f config.cache && ./configure --disable-threads --disable-optimize --enable-debug --prefix=".. TMPDIR .. " && make && make install",
+      Darwin = "rm -f config.cache && ./configure --disable-threads --disable-optimize --enable-debug --prefix=".. TMPDIR .. " && make && make install",
+      MacOS = "rm -f config.cache && ./configure --disable-threads --disable-optimize --enable-debug --prefix=".. TMPDIR .. " && make && make install",
+      SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --disable-threads --disable-optimize --enable-debug --prefix='.. TMPDIR .. ' && make && make install',
+    },
+    install_files = {
+      [TMPDIR .."/lib/libmico*.so*"] = "lib/mico-2.3.13-singlethread-debug",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-singlethread-debug",
+    },
+    dev_files = {
+      [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-singlethread-debug",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-singlethread-debug",
+      [TMPDIR .."/include/*"] = "include/mico-2.3.13-singlethread-debug",
+      [SVNDIR.."/specs/shell/mico-setup-singlethread*"] = "specs/shell/",
+    },
+  },
   { name = "mico-2.3.13-singlethread",
     url = SVNREPURL .. "/openbus/libs/trunk/mico-2.3.13",
     build = {

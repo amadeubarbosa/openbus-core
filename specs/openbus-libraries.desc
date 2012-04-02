@@ -98,7 +98,7 @@ packages = {
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
-    url = SVNREPURL .. "/openbus/sdk/cpp/trunk",
+    url = SVNREPURL .. "/openbus/sdk/cpp/branches/openbus_v2_proto",
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
@@ -464,191 +464,45 @@ packages = {
       ["management"] = "demo/lua/delegate",
     },
   },
-   -- Orbix related packages
-  { name = "scs-orbix",
-    url = SVNREPURL .. "/scs/core/cpp/trunk",
-    directory = PRODAPP .."/scs-cpp",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/scs-cpp",
-      mf = { "orbix genstubs", "orbix" },
-    },
-    install_files = {
-      ["lib/${TEC_UNAME}/libscsorbix.so"] = "lib",
-      -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
-          "idl/"..IDL_VERSION,
-      ["shell/orbix/idl"] = "specs/shell/orbix",        
-    },
-    dev_files = {
-      ["lib/${TEC_UNAME}/libscsorbix.*"] = "lib",
-      -- to make sure that .idl files will be in the .tar.gz package
-      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
-          "idl/"..IDL_VERSION,
-      ["include/scs/*"] = "include/scs/",
-    },
-  },
-  { name = "openbus-orbix",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/sdk-cpp",
-      mf = { "orbix precompile LUA51="..PRODAPP.."/lua5.1", "orbix genstubs", "orbix LUA51="..PRODAPP.."/lua5.1" },
-    },
-    dev_files = {
-      ["lib/${TEC_UNAME}/libopenbusorbix.*"] = "lib",
-      ["include/*.h"] = "include/openbus/cpp", --include
-      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
-      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
-      ["stubs/orbix"] = "include/openbus/cpp/stubs",     --include
-      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
-      ["test/orbix/acs/*.cpp"] = "test/orbix/acs/",
-      ["test/orbix/acs/config.mak"] = "test/orbix/acs/",
-      ["test/orbix/rgs/*.cpp"] = "test/orbix/rgs/",
-      ["test/orbix/rgs/config.mak"] = "test/orbix/rgs/",
-      ["test/orbix/config*"] = "test/orbix/",
-      ["test/orbix/runtests"] = "test/orbix/",
-      ["shell/orbix/idl"] = "specs/shell/orbix",        
-    },
-  },
-  { name = "openbus-test-orbix",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/test/orbix/tests",
-      mf = { 
-        "01 genstubs", 
-        "01", 
-        "02", 
-        "03", 
-        "04", 
-        "05", 
-        "06", 
-        "07", 
-        "08", 
-        "09", 
-        "10", 
-        "11", 
-        "12", 
-        "13", 
-        "14", 
-        "15", 
-        "16", 
-        "17", 
-        "18", 
-        "19", 
-        "20", 
-        "21", 
-        "22",
-      },
-    },
-    install_files = {
-      ["../tests"] = "test/orbix/",
-      ["../runtests"] = "test/orbix/",
-      ["../config*"] = "test/orbix/",
-      ["../../idl/*"] = "test/idl",
-    },
-  },
-  { name = "openbus-orbix-doc",
-    build = {
-      type = "command",
-      src = PRODAPP .. "/sdk-cpp",
-      cmd = "doxygen",
-      arguments = "doxygen.cfg"
-    },
-    install_files = {
-      ["docs/html"] = "docs/cpp/",
-    },
-  },
-  { name = "openbus-demo-hello-orbix",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/demo/hello/orbix",
-      mf = { "server genstubs USE_NODEPEND=Yes", 
-             "client LUA51="..PRODAPP.."/lua5.1", 
-             "server LUA51="..PRODAPP.."/lua5.1" },
-    },
-    dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/orbix/bin",
-      ["../idl/hello.idl"] = "demo/hello/idl/",
-      ["../management"] = "demo/hello",
-      ["../../README"] = "demo",      
-      ["Makefile"] = "demo/hello/orbix",
-      ["client.cpp"] = "demo/hello/orbix",
-      ["server.cpp"] = "demo/hello/orbix",
-      ["run*"] = "demo/hello/orbix",
-      ["*.mak"] = "demo/hello/orbix",
-      ["*config"] = "demo/hello/orbix",
-      ["run*"] = "demo/hello/orbix",
-      ["client"] = "demo/hello/orbix",
-      ["server"] = "demo/hello/orbix",
-      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
-    },
-  },
-  { name = "openbus-demo-delegate-orbix",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/demo/delegate/singlethread/orbix",
-      mf = { 
-        "server genstubs", 
-        "client LUA51="..PRODAPP.."/lua5.1",
-        "server LUA51="..PRODAPP.."/lua5.1" 
-      },
-    },
-    dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/orbix/bin",
-      ["../../idl/delegate.idl"] = "demo/delegate/singlethread/idl/",
-      ["../../management"] = "demo/delegate/singlethread",
-      ["client.cpp"] = "demo/delegate/singlethread/orbix",
-      ["server.cpp"] = "demo/delegate/singlethread/orbix",
-      ["run*"] = "demo/delegate/singlethread/orbix",
-      ["*.mak"] = "demo/delegate/singlethread/orbix",
-      ["*config"] = "demo/delegate/singlethread/orbix",
-      ["run*"] = "demo/delegate/singlethread/orbix",
-      ["client"] = "demo/delegate/singlethread/orbix",
-      ["server"] = "demo/delegate/singlethread/orbix",
-      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
-      [SVNDIR.."/specs/shell/sample-domain_env.*"] = "specs/shell/",
-    },
-  },
   -- MICO related packages
-  { name = "scs-micoMT",
+  { name = "scs-cpp-micomultithread",
     url = SVNREPURL .. "/scs/core/cpp/trunk",
     directory = PRODAPP .."/scs-cpp",
     build = {
       type = "tecmake",
       src = PRODAPP .."/scs-cpp",
       mf = { 
-        "mico genstubs MULTITHREAD=Yes", 
-        "mico LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        "mico genstubs OPENBUS_SDK_MULTITHREAD=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes" 
       },
       Darwin = {
         mf = { 
-          "mico genstubs LD=g++ MULTITHREAD=Yes", 
-          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+          "mico genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes" 
         },
       },
       MacOS = {
         mf = { 
-          "mico genstubs LD=g++ MULTITHREAD=Yes", 
-          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+          "mico genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes" 
         },
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/libscsmicoMT.*"] = "lib",
+      ["lib/${TEC_UNAME}/libscs-micomultithread.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libscsmicoMT.*"] = "lib",
+      ["lib/${TEC_UNAME}/libscs-micomultithread.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
       ["include/scs/*"] = "include/scs",
     },
   },
-  { name = "scs-micoST",
+  { name = "scs-cpp-micosinglethread",
     url = SVNREPURL .. "/scs/core/cpp/trunk",
     directory = PRODAPP .."/scs-cpp",
     build = {
@@ -672,141 +526,120 @@ packages = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/libscsmicoST.*"] = "lib",
-      -- to make sure that .idl files will be in the .tar.gz package
+      ["lib/${TEC_UNAME}/libscs-micosinglethread.*"] = "lib",
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
+      ["stubs/mico"] = "include/scs/stubs",
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libscsmicoST.*"] = "lib",
+      ["lib/${TEC_UNAME}/libscs-micosinglethread.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
       ["include/scs/*"] = "include/scs",
     },
   },
-  { name = "openbus-micoMT",
+  { name = "openbus-sdkcpp-micomultithread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
       mf = { 
-        "mico genstubs MULTITHREAD=Yes", 
-        "mico LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" },
-      -- special compile instructions for solaris
+        "config genstubs OPENBUS_SDK_MULTITHREAD=Yes", 
+        "config  OPENBUS_SDK_MULTITHREAD=Yes" },
       Darwin = {
         mf = { 
-          "mico genstubs LD=g++ MULTITHREAD=Yes", 
-          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+          "config genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes", 
+          "config LD=g++ OPENBUS_SDK_MULTITHREAD=Yes" 
         },
       },
       MacOS = {
         mf = { 
-          "mico genstubs LD=g++ MULTITHREAD=Yes", 
-          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+          "config genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes", 
+          "config LD=g++ OPENBUS_SDK_MULTITHREAD=Yes" 
         },
       },
     },
     dev_files = {
-      ["CHANGES"] = ".",
-      ["lib/${TEC_UNAME}/libopenbusmicoMT.*"] = "lib",
+      ["lib/${TEC_UNAME}/libopenbus-micomultithread.*"] = "lib",
       ["include/*.h"] = "include/openbus/cpp", --include
-      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
       ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
-      ["stubs/mico"] = "include/openbus/cpp/stubs",     --include
+      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["stubs"] = "include/openbus/cpp",     --include
+      ["legacy/idl/*"] = "idl/legacy/openbus/cpp",     --include
       [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
-      ["test/mico/acs/*.cpp"] = "test/mico/acs/",
-      ["test/mico/acs/config.mak"] = "test/mico/acs/",
-      ["test/mico/rgs/*.cpp"] = "test/mico/rgs/",
-      ["test/mico/rgs/config.mak"] = "test/mico/rgs/",
-      ["test/mico/config*"] = "test/mico/",
-      ["test/mico/runtests"] = "test/mico/",
-      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
     },
   },
-  { name = "openbus-micoST",
+  { name = "openbus-sdkcpp-micosinglethread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
       mf = { 
-        "mico genstubs", 
-        "mico LUA51="..PRODAPP.."/lua5.1" },
-      -- special compile instructions for solaris
+        "config genstubs", 
+        "config" },
       Darwin = {
         mf = { 
-          "mico genstubs LD=g++", 
-          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+          "config genstubs LD=g++", 
+          "config LD=g++" 
         },
       },
       MacOS = {
         mf = { 
-          "mico genstubs LD=g++", 
-          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1" 
+          "config genstubs LD=g++", 
+          "config LD=g++" 
         },
       },
     },
     dev_files = {
-      ["CHANGES"] = ".",
-      ["lib/${TEC_UNAME}/libopenbusmicoST.*"] = "lib",
+      ["lib/${TEC_UNAME}/libopenbus-micosinglethread.*"] = "lib",
       ["include/*.h"] = "include/openbus/cpp", --include
-      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
       ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
-      ["stubs/mico"] = "include/openbus/cpp/stubs",     --include
+      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["stubs"] = "include/openbus/cpp",     --include
+      ["legacy/idl/*"] = "idl/legacy/openbus/cpp",     --include
       [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
-      ["test/mico/acs/*.cpp"] = "test/mico/acs/",
-      ["test/mico/acs/config.mak"] = "test/mico/acs/",
-      ["test/mico/rgs/*.cpp"] = "test/mico/rgs/",
-      ["test/mico/rgs/config.mak"] = "test/mico/rgs/",
-      ["test/mico/config*"] = "test/mico/",
-      ["test/mico/runtests"] = "test/mico/",
-      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
     },
   },
-  { name = "openbus-demo-hello-micoMT",
+  { name = "openbus-demo-hello-sdkcpp-micomultithread",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/demo/hello/mico",
+      src = PRODAPP .."/sdk-cpp/demo/hello",
       mf = { 
-        "server genstubs MULTITHREAD=Yes", 
-        "client LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes",
-        "server LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        "server genstubs OPENBUS_SDK_MULTITHREAD=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes",
+        "server LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes" 
       },
       SunOS510 = { 
         mf = { 
-          "server genstubs MULTITHREAD=Yes",
-          'client "LUA51='..PRODAPP..'/lua5.1 MULTITHREAD=Yes"',
-          'server "LUA51='..PRODAPP..'/lua5.1 MULTITHREAD=Yes"',
+          "server genstubs OPENBUS_SDK_MULTITHREAD=Yes",
+          'client "LUA51='..PRODAPP..'/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes"',
+          'server "LUA51='..PRODAPP..'/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes"',
         }, 
       },
       SunOS510_64 = { 
-        mf = { "server genstubs USE_NODEPEND=Yes MULTITHREAD=Yes", 
-               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes MULTITHREAD=Yes", 
-               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes MULTITHREAD=Yes"}, 
+        mf = { "server genstubs USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes"}, 
       }
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin",
+      ["bin/${TEC_UNAME}/*"] = "demo/hello/bin",
       ["../idl/hello.idl"] = "demo/hello/idl/",
-      ["../management"] = "demo/hello",
+      ["admin"] = "demo/hello",
       ["../../README"] = "demo",      
-      ["MakefileMT.linux"] = "demo/hello/mico",
-      ["MakefileMT.sunos"] = "demo/hello/mico",
-      ["Makefile.win"] = "demo/hello/mico",
-      ["client.cpp"] = "demo/hello/mico",
-      ["server.cpp"] = "demo/hello/mico",
-      ["run*"] = "demo/hello/mico",
-      ["*.mak"] = "demo/hello/mico",
-      ["*config"] = "demo/hello/mico",
-      ["run*"] = "demo/hello/mico",
-      ["client"] = "demo/hello/mico",
-      ["server"] = "demo/hello/mico",
+      ["src/client.cpp"] = "demo/hello/src",
+      ["src/server.cpp"] = "demo/hello/src",
+      ["*.mak"] = "demo/hello",
+      ["*config"] = "demo/hello",
+      ["client"] = "demo/hello",
+      ["server"] = "demo/hello",
     },
   },
-  { name = "openbus-demo-hello-micoST",
+  { name = "openbus-demo-hello-sdkcpp-micosinglethread",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/demo/hello/mico",
+      src = PRODAPP .."/sdk-cpp/demo/hello",
       mf = { 
         "server genstubs", 
         "client LUA51="..PRODAPP.."/lua5.1",
@@ -826,161 +659,35 @@ packages = {
       }
     },
     dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin",
-      ["../idl/hello.idl"] = "demo/hello/idl/",
-      ["../management"] = "demo/hello",
+      ["bin/${TEC_UNAME}/*"] = "demo/hello/bin",
+      ["idl"] = "demo/hello",
+      ["admin"] = "demo/hello",
       ["../../README"] = "demo",      
-      ["MakefileST.linux"] = "demo/hello/mico",
-      ["MakefileST.sunos"] = "demo/hello/mico",
-      ["Makefile.win"] = "demo/hello/mico",
-      ["client.cpp"] = "demo/hello/mico",
-      ["server.cpp"] = "demo/hello/mico",
-      ["run*"] = "demo/hello/mico",
-      ["*.mak"] = "demo/hello/mico",
-      ["*config"] = "demo/hello/mico",
-      ["run*"] = "demo/hello/mico",
-      ["client"] = "demo/hello/mico",
-      ["server"] = "demo/hello/mico",
+      ["src/client.cpp"] = "demo/hello/src",
+      ["src/server.cpp"] = "demo/hello/src",
+      ["*.mak"] = "demo/hello",
+      ["*config"] = "demo/hello",
+      ["client"] = "demo/hello",
+      ["server"] = "demo/hello",
     },
   },
-  { name = "openbus-demo-delegate-singlethread-mico",
+  { name = "openbus-sdkcpp-test-micosinglethread",
     build = {
       type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/demo/delegate/singlethread/mico",
+      src = PRODAPP .."/sdk-cpp/test/mico/singlethread/tests",
       mf = { 
-        "server genstubs", 
-        "client LUA51="..PRODAPP.."/lua5.1",
-        "server LUA51="..PRODAPP.."/lua5.1" 
-      },
-      SunOS510_64 = { 
-        mf = { 
-          "server genstubs USE_NODEPEND=Yes",
-          'client USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
-          'server USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
-        }, 
-      },
-    },
-    dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/delegate/singlethread/mico/bin",
-      ["../../idl/delegate.idl"] = "demo/delegate/idl/",
-      ["../../management"] = "demo/delegate",
-      ["../../README"] = "demo",      
-      ["Makefile"] = "demo/delegate/singlethread/mico",
-      ["client.cpp"] = "demo/delegate/singlethread/mico",
-      ["server.cpp"] = "demo/delegate/singlethread/mico",
-      ["run*"] = "demo/delegate/singlethread/mico",
-      ["*.mak"] = "demo/delegate/singlethread/mico",
-      ["*config"] = "demo/delegate/singlethread/mico",
-      ["run*"] = "demo/delegate/singlethread/mico",
-      ["client"] = "demo/delegate/singlethread/mico",
-      ["server"] = "demo/delegate/singlethread/mico",
-    },
-  },
-  { name = "openbus-demo-delegate-multithread-mico",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/demo/delegate/multithread/mico",
-      mf = { 
-        "server genstubs", 
-        "client LUA51="..PRODAPP.."/lua5.1",
-        "server LUA51="..PRODAPP.."/lua5.1" 
-      },
-      SunOS510_64 = { 
-        mf = { 
-          "server genstubs ",
-          'client USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
-          'server USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
-        }, 
-      },
-    },
-    dev_files = {
-      ["bin/${TEC_UNAME}/*"] = "demo/delegate/multithread/mico/bin",
-      ["../../idl/delegate.idl"] = "demo/delegate/idl/",
-      ["../../management"] = "demo/delegate",
-      ["../../README"] = "demo",      
-      ["Makefile"] = "demo/delegate/multithread/mico",
-      ["client.cpp"] = "demo/delegate/multithread/mico",
-      ["server.cpp"] = "demo/delegate/multithread/mico",
-      ["run*"] = "demo/delegate/multithread/mico",
-      ["*.mak"] = "demo/delegate/multithread/mico",
-      ["*config"] = "demo/delegate/multithread/mico",
-      ["run*"] = "demo/delegate/multithread/mico",
-      ["client"] = "demo/delegate/multithread/mico",
-      ["server"] = "demo/delegate/multithread/mico",
-    },
-  },
-  { name = "openbus-test-micoMT",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/test/mico/tests",
-      mf = { 
-        "01 MULTITHREAD=Yes genstubs", 
-        "01 MULTITHREAD=Yes", 
-        "02 MULTITHREAD=Yes", 
-        "03 MULTITHREAD=Yes", 
-        "04 MULTITHREAD=Yes", 
-        "05 MULTITHREAD=Yes", 
-        "06 MULTITHREAD=Yes", 
-        "07 MULTITHREAD=Yes", 
-        "08 MULTITHREAD=Yes", 
-        "09 MULTITHREAD=Yes", 
-        "10 MULTITHREAD=Yes", 
-        "11 MULTITHREAD=Yes", 
-        "12 MULTITHREAD=Yes", 
-        "13 MULTITHREAD=Yes", 
-        "14 MULTITHREAD=Yes", 
-        "15 MULTITHREAD=Yes", 
-        "16 MULTITHREAD=Yes", 
-        "17 MULTITHREAD=Yes", 
-        "18 MULTITHREAD=Yes", 
-        "19 MULTITHREAD=Yes", 
-        "20 MULTITHREAD=Yes", 
-        "21 MULTITHREAD=Yes", 
-        "22 MULTITHREAD=Yes",
-      },
-    },
-    install_files = {
-      ["../tests"] = "test/mico/",
-      ["../runtests"] = "test/mico/",
-      ["../config*"] = "test/mico/",
-      ["../../idl/*"] = "test/idl",
-    },
-  },
-  { name = "openbus-test-micoST",
-    build = {
-      type = "tecmake",
-      src = PRODAPP .."/sdk-cpp/test/mico/tests",
-      mf = { 
-        "01 genstubs", 
+        "01", 
         "01", 
         "02", 
         "03", 
         "04", 
         "05", 
-        "06", 
-        "07", 
-        "08", 
-        "09", 
-        "10", 
-        "11", 
-        "12", 
-        "13", 
-        "14", 
-        "15", 
-        "16", 
-        "17", 
-        "18", 
-        "19", 
-        "20", 
-        "21", 
-        "22",
       },
     },
     install_files = {
-      ["../tests"] = "test/mico/",
-      ["../runtests"] = "test/mico/",
-      ["../config*"] = "test/mico/",
-      ["../../idl/*"] = "test/idl",
+      ["../tests"] = "test/mico/singlethread",
+      ["../runtests*"] = "test/mico/singlethread",
+      ["../config*"] = "test/mico/singlethread",
     },
   },
   -- Java related packages  
