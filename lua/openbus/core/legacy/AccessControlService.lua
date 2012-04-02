@@ -11,6 +11,14 @@ local pcall = _G.pcall
 local setmetatable = _G.setmetatable
 local type = _G.type
 
+local cothread = require "cothread"
+local time = cothread.now
+
+local hash = require "lce.hash"
+local sha256 = hash.sha256
+
+local log = require "openbus.util.logger"
+
 local idl = require "openbus.core.legacy.idl"
 local types = idl.types.access_control_service
 local throw = idl.throw.access_control_service
@@ -38,7 +46,7 @@ function ILeaseProvider:renewLease(credential)
   local login = manager.activeLogins:getLogin(credential.identifier)
   if login ~= nil then
     login.leaseRenewed = time()
-    log:request(msg.LoginRenewed:tag{login=id,entity=login.entity})
+    log:request(msg.LoginRenewed:tag{login=login.id,entity=login.entity})
     return true, manager.leaseTime
   end
   return false, 0
@@ -63,43 +71,80 @@ end
 
 -- Login Support
 
+local NullPublicKey = "" -- fake public key for OpenBus 1.5 services
+local NullPubKeyHash = sha256(NullPublicKey)
 local NullCredential = {identifier="",owner="",delegate=""}
 local NullLeaseTime = 0
 
 function IAccessControlService:loginByPassword(id, pwrd)
   local manager = facets.AccessControl
-  local ok, login, lease = pcall(manager.loginByPassword, manager, id, pwrd)
-  if ok then
-    local credential = {
-      identifier = login.id,
-      owner = login.entity,
-      delegate = "",
-    }
-    return true, credential, lease
+  local access = manager.access
+  local encoder = access.orb:newencoder()
+  encoder:put({data=pwrd,hash=NullPubKeyHash}, manager.LoginAuthenticationInfo)
+  local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
+  if encrypted ~= nil then
+    local ok, login, lease = pcall(manager.loginByPassword, manager,
+                                   id, NullPublicKey, encrypted)
+    if ok then
+      local credential = {
+        identifier = login.id,
+        owner = login.entity,
+        delegate = "",
+      }
+      return true, credential, lease
+    else
+      log:exception(msg.UnableToPerformLoginByPassword:tag{entity=id,error=login})
+    end
+  else
+    log:exception(msg.UnableToEncryptLoginByPasswordData:tag{entity=id,error=errmsg})
   end
   return false, NullCredential, NullLeaseTime
 end
 
 function IAccessControlService:getChallenge(id)
   local manager = facets.AccessControl
-  local ok, logger, challenge = pcall(manager.startLoginByPassword,manager,id)
+  local ok, logger, challenge = pcall(manager.startLoginByCertificate, manager,
+                                      id)
   if ok then
     self.lastChallengeOf[id] = logger
     return challenge
   end
+  log:exception(msg.UnableToStartLoginByCertificate:tag{entity=id,error=logger})
   return ""
 end
 
 function IAccessControlService:loginByCertificate(id, answer)
   local logger = self.lastChallengeOf[id]
-  local ok, login, lease = pcall(logger.login, logger, answer)
-  if ok then
-    local credential = {
-      identifier = login.id,
-      owner = login.entity,
-      delegate = "",
-    }
-    return true, credential, lease
+  if logger ~= nil then
+    local manager = facets.AccessControl
+    local access = manager.access
+    local secret, errmsg = access.prvkey:decrypt(answer)
+    if secret ~= nil then
+      local encoder = access.orb:newencoder()
+      encoder:put({data=secret,hash=NullPubKeyHash},
+                  manager.LoginAuthenticationInfo)
+      local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
+      if encrypted ~= nil then
+        local ok, login, lease = pcall(logger.login, logger,
+                                       NullPublicKey, encrypted)
+        if ok then
+          local credential = {
+            identifier = login.id,
+            owner = login.entity,
+            delegate = "",
+          }
+          return true, credential, lease
+        else
+          log:exception(msg.UnableToPerformLoginByCertificate:tag{entity=id,error=login})
+        end
+      else
+        log:exception(msg.UnableToEncryptLoginByCertificateData:tag{entity=id,error=errmsg})
+      end
+    else
+      log:exception(msg.UnableDecodeAnswerToChallenge:tag{entity=id,error=errmsg})
+    end
+  else
+    log:exception(msg.NoChallengeFoundForLoginByCertificate:tag{entity=id})
   end
   return false, NullCredential, NullLeaseTime
 end
@@ -107,25 +152,33 @@ end
 function IAccessControlService:logout(credential)
   local manager = facets.AccessControl
   local login = manager:getLoginEntry(credential.identifier)
-  if login ~= nil and pcall(login.remove, login) then
-    log:request(msg.LogoutPerformed:tag{login=id,entity=login.entity})
-    return true
+  if login ~= nil then
+    local ok, errmsg = pcall(login.remove, login)
+    if ok then
+      log:request(msg.LogoutPerformed:tag{login=id,entity=login.entity})
+      return true
+    else
+      log:exception(msg.UnableToLogout:tag{login=id,entity=login.entity})
+    end
+  else
+    log:exception(msg.AttemptToLogoutInvalidLogin:tag{login=credential.identifier})
   end
   return false
 end
 
 function IAccessControlService:isValid(credential)
-  local login = facets.AccessControl:getLoginEntry(credential.identifier)
-  return (login ~= nil)
-     and (login.entity == credential.owner)
-     and (time()-login.leaseRenewed < self.leaseTime)
+  return facets.LoginRegistry:getValidity{credential.identifier}[1] > 0
 end
 
 function IAccessControlService:areValid(credentials)
   for index, credential in ipairs(credentials) do
-    credentials[index] = self:isValid(credential)
+    credentials[index] = credential.identifier
   end
-  return credentials
+  local result = facets.LoginRegistry:getValidity(credentials)
+  for index, validity in ipairs(result) do
+    result[index] = validity > 0
+  end
+  return result
 end
 
 -- Credential Observation Support

@@ -281,6 +281,8 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
     else
       log:exception(msg.WrongPublicKeyHash:tag{ entity = entity })
     end
+  else
+    log:exception(msg.RefusedLoginOfBusEntity:tag{ entity = entity })
   end
   throw.AccessDenied{entity=entity}
 end

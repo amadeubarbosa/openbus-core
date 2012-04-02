@@ -4,7 +4,7 @@
 ------------------------------------------------------------------------------
 
 local _G = require "_G"
-local assert = _G.assert
+local error = _G.error
 local ipairs = _G.ipairs
 local next = _G.next
 local pairs = _G.pairs
@@ -21,16 +21,31 @@ local newfacets = require "openbus.core.services.OfferRegistry"
 
 -- Faceta IRegistryService --------------------------------------------------------
 
+local function convertProps(props)
+  local properties = {}
+  for _, prop in ipairs(props) do
+    local name = prop.name
+    for _, value in ipairs(prop.value) do
+      properties[#properties+1] = { name = name, value = value }
+    end
+  end
+  return properties
+end
+
 local IRegistryService = {
   __type = types.IRegistryService,
   __objkey = "RS_v1_05",
+  __facet = "IRegistryService_v1_05",
 }
 
-function IRegistryService:register(service)
+function IRegistryService:register(offer)
   local registry = newfacets.OfferRegistry
-  local ok, result = pcall(registry.registerService, registry, service, {})
+  local ok, result = pcall(registry.registerService, registry,
+                           offer.member, convertProps(offer.properties))
   if ok then return result.id end
-  assert(result._repid == newtypes.UnathorizedFacets, result)
+  if result._repid ~= newtypes.UnauthorizedFacets then
+    error(result)
+  end
   throw.UnathorizedFacets{ facets = result.facets }
 end
 
@@ -46,14 +61,7 @@ function IRegistryService:update(id, newProperties)
   if offer == nil then
     throw.ServiceOfferNonExistent()
   else
-    local properties = {}
-    for _, newProp in ipairs(newProperties) do
-      local name = newProp.name
-      for _, value in ipairs(newProp.value) do
-        properties[#properties+1] = { name = name, value = value }
-      end
-    end
-    pcall(offer.setProperties, offer, properties)
+    pcall(offer.setProperties, offer, convertProps(newProperties))
   end
 end
 
@@ -65,7 +73,7 @@ function IRegistryService:findByCriteria(facets, criteria)
   local props = {}
   for _, facetname in ipairs(facets) do
     props[#props+1] = {
-      name = "openbus.component.interface",
+      name = "openbus.component.facet",
       value = facetname,
     }
   end

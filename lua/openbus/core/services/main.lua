@@ -127,6 +127,7 @@ Options:
   -- setup bus access
   local orb = access.initORB{ host=Configs.host, port=Configs.port }
   local iceptor = access.Interceptor{
+    prvkey = assert(readprivatekey(Configs.privatekey)),
     orb = orb,
     legacy = not Configs.nolegacy,
   }
@@ -146,7 +147,6 @@ Options:
         access = iceptor,
         database = assert(opendb(Configs.database)),
         certificate = assert(readfilecontents(Configs.certificate)),
-        privateKey = assert(readprivatekey(Configs.privatekey)),
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
         admins = adminUsers,
