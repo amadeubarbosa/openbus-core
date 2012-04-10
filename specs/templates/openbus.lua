@@ -3,7 +3,7 @@
 -- All global variables in this file, will become global in installer.lua too!
 
 local platforms = require "tools.platforms"
-local commands = platforms[TEC_SYSNAME]
+local commands = platforms[platforms.id.TEC_SYSNAME]
 
 Types = {}
 Types.vector = {}
