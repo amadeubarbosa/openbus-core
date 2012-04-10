@@ -91,7 +91,7 @@ function IRegistryService:findByCriteria(facets, criteria)
       end
     else
       if name == "registered_by" then
-        name = "openbus.offer.owner"
+        name = "openbus.offer.entity"
       end
       for _, value in ipairs(prop.value) do
         props[#props+1] = { name = name, value = value }
@@ -114,7 +114,7 @@ function IRegistryService:findByCriteria(facets, criteria)
       elseif name == "openbus.component.version.patch" then
         compId.patch = prop.value
       else
-        if name == "openbus.offer.owner" then
+        if name == "openbus.offer.entity" then
           name = "registered_by"
         end
         local index = name2index[name]
