@@ -250,7 +250,7 @@ function module.showOffer(offers)
   local titles = { "", "ID ENTIDADE", "INTERFACES", "DATA", "HORA"}
   if #offers == 0 then
     showEmptyTable(titles)
-    return
+    return {}
   end
 
   local tableList = {}
@@ -258,6 +258,7 @@ function module.showOffer(offers)
   for i, offer in ipairs(offers) do
     local desc = {}
     desc.offer = offer.ref
+    desc.properties = offer.properties
     desc.interfaces = {}
     for j, prop in ipairs(offer.properties) do
       if prop.name == "openbus.offer.entity" then
@@ -298,6 +299,28 @@ function module.showOffer(offers)
   local sizes = adjustColumnWidth(titles, tableList)
   printTable(titles, tableList, sizes)
   return offerList
+end
+
+---
+-- Exibe a tabela com as propriedades da oferta.
+--
+-- @param offer Estrutura definida na IDL.
+---
+function module.showOfferProps(offer)
+  local titles = { "", "PROPRIEDADE", "VALOR"}
+  if offer == nil then
+    showEmptyTable(titles)
+    return
+  end
+  
+  local tableList = {}
+  for i, prop in ipairs(offer.properties) do
+    table.insert(tableList, { {string.format("%.3d", i)}, {prop.name},
+        {prop.value}, })
+  end
+  
+  local sizes = adjustColumnWidth(titles, tableList)
+  printTable(titles, tableList, sizes)
 end
 
 ---

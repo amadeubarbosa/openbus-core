@@ -75,7 +75,7 @@ Uso: %s [opções] --login=<usuário> <comando>
 
 - Controle de Entidade
   * Adicionar entidade:
-     --add-entity=<id_entidade> --category<id_categoria> --name=<nome>
+     --add-entity=<id_entidade> --category=<id_categoria> --name=<nome>
   * Alterar descrição:
      --set-entity=<id_entidade> --name=<nome>
   * Remover entidade:
@@ -122,6 +122,10 @@ Uso: %s [opções] --login=<usuário> <comando>
      --list-offer
   * Mostrar todas interfaces ofertadas por uma entidade:
      --list-offer=<id_entidade>
+  * Mostrar as propriedades da oferta (lista e aguarda a entrada de um índice para listar propriedades da oferta):
+     --list-props
+  * Mostrar as propriedades da oferta por uma entidade (lista e aguarda a entrada de um índice para listar propriedades da oferta):
+     --list-props=<id_entidade>
 
 - Controle de Logins
   * Remove um login:
@@ -257,6 +261,10 @@ local commands = {
     {n = 1, params = {}},
   };
   ["del-offer"] = {
+    {n = 0, params = {}},
+    {n = 0, params = {entity = 1}},
+  };
+  ["list-props"] = {
     {n = 0, params = {}},
     {n = 0, params = {entity = 1}},
   };
@@ -913,8 +921,17 @@ end
 --
 handlers["del-offer"] = function(cmd)
   local conn = connect()
-  offers = conn.offers:getServices()
+  local offers
+  local id = cmd.params.entity
+  if not id or id == null then
+    offers = conn.offers:getServices()
+  else
+    offers = conn.offers:findServices({{name="openbus.offer.entity",value=id}})
+  end
   local descs = printer.showOffer(offers)
+  if #descs == 0 then
+    return true
+  end
   print("Informe o índice da oferta que deseja remover:")
   local id = tonumber(io.read())
   if id ~= nil and descs[id] ~= nil then
@@ -930,6 +947,40 @@ handlers["del-offer"] = function(cmd)
   printf("[INFO] Oferta '%d' removida com sucesso.", id)
   return true
 end
+
+---
+-- Lista as propriedades da oferta cadastrada.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["list-props"] = function(cmd)
+  local conn = connect()
+  local offers
+  local id = cmd.params[cmd.name]
+  if not id or id == null then
+    offers = conn.offers:getServices()
+  else
+    offers = conn.offers:findServices({{name="openbus.offer.entity",value=id}})
+  end
+  local descs = printer.showOffer(offers)
+  if #descs == 0 then
+    return true
+  end
+  print("Informe o índice da oferta que deseja listar as propriedades:")
+  local id = tonumber(io.read())
+  if id ~= nil and descs[id] ~= nil then
+    for key, value in pairs (descs[id]) do
+      if key == "id" and value == id then
+        printer.showOfferProps(descs[id])
+      end
+    end
+  else
+    printf("[ERRO] Índice de oferta inválido: '%d'", id)
+    return false
+  end
+  return true
+end
+
 
 ---
 -- Carrega e executa um script Lua para lote de comandos
