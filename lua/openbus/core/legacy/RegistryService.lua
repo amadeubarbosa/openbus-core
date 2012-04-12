@@ -86,7 +86,7 @@ function IRegistryService:findByCriteria(facets, criteria)
     if name == "component_id" then
       for _, value in ipairs(prop.value) do
         if value ~= "name" then
-          local name,major,minor,patch=value:match("^(.+)%.(.-)%.(.-)%.(.-)$")
+          local name,major,minor,patch=value:match("^(.+)%:(.-)%.(.-)%.(.-)$")
           props[#props+1]={name="openbus.component.name",value=name}
           props[#props+1]={name="openbus.component.version.major",value=major}
           props[#props+1]={name="openbus.component.version.minor",value=minor}
