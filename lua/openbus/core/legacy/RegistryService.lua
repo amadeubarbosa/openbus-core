@@ -42,7 +42,11 @@ function IRegistryService:register(offer)
   local registry = newfacets.OfferRegistry
   local ok, result = pcall(registry.registerService, registry,
                            offer.member, convertProps(offer.properties))
-  if ok then return result.id end
+  if ok then
+    local orb = newfacets.OfferRegistry.access.orb
+    orb:newservant(result)
+    return result.id 
+  end
   if result._repid ~= newtypes.UnauthorizedFacets then
     error(result)
   end
