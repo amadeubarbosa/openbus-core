@@ -20,6 +20,7 @@ LUASRC= \
   $(LUADIR)/openbus/core/legacy/RegistryService.lua \
   $(LUADIR)/openbus/core/services/Access.lua \
   $(LUADIR)/openbus/core/services/AccessControl.lua \
+  $(LUADIR)/openbus/core/services/callchecks.lua \
   $(LUADIR)/openbus/core/services/LoginDB.lua \
   $(LUADIR)/openbus/core/services/main.lua \
   $(LUADIR)/openbus/core/services/messages.lua \
