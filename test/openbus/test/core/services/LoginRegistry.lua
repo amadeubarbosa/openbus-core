@@ -6,8 +6,6 @@ local ipairs = _G.ipairs
 
 local oil = require "oil"
 local oillog = require "oil.verbose"
-local giop = require "oil.corba.giop"
-local sysex = giop.SystemExceptionIDs
 
 local openbus = require "openbus.multiplexed"
 local log = require "openbus.util.logger"
@@ -16,7 +14,8 @@ local setuplog = server.setuplog
 local Check = require "latt.Check"
 
 local idl = require "openbus.core.idl"
-local logintypes = idl.types.services.access_control
+local srvtypes = idl.types.services
+local logintypes = srvtypes.access_control
 
 -- Configurações --------------------------------------------------------------
 local host = "localhost"
@@ -101,21 +100,21 @@ function NoPermissionCase.testGetAllLogins(self)
   local logins = self.conn.logins
   local ok, err = pcall(logins.getAllLogins, logins)
   Check.assertTrue(not ok)
-  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
+  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testGetEntityLogins(self)
   local logins = self.conn.logins
   local ok, err = pcall(logins.getEntityLogins, logins, "entity")
   Check.assertTrue(not ok)
-  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
+  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testInvalidateLogin(self)
   local logins = self.conn.logins
   local ok, err = pcall(logins.invalidateLogin, logins, "login-id")
   Check.assertTrue(not ok)
-  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
+  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
 end
 
 -------------------------------------

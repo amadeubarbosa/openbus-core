@@ -15,7 +15,8 @@ local setuplog = server.setuplog
 local Check = require "latt.Check"
 
 local idl = require "openbus.core.idl"
-local logintypes = idl.types.services.access_control
+local srvtypes = idl.types.services
+local logintypes = srvtypes.access_control
 
 -- Configurações --------------------------------------------------------------
 local host = "localhost"
@@ -91,14 +92,14 @@ function NoPermissionCase.testRegisterCertificateNoPermission(self)
   local ok, err = pcall(certificates.registerCertificate, certificates, "random",
       cert)
   Check.assertTrue(not ok)
-  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
+  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testGetCertificateNoPermission(self)
   local certificates = self.conn.certificates
   local ok, err = pcall(certificates.getCertificate, certificates, "random")
   Check.assertTrue(not ok)
-  Check.assertEquals(sysex.NO_PERMISSION, err._repid)
+  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testRemoveCertificateNoPermission(self)
@@ -108,7 +109,7 @@ function NoPermissionCase.testRemoveCertificateNoPermission(self)
   file:close()
   local ok, err = pcall(certificates.removeCertificate, certificates, "random")
   Check.assertTrue(not ok)
-  Check.assertEquals(sysex.NO_PERMISSION, err._repid)  
+  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)  
 end
 
 -------------------------------------

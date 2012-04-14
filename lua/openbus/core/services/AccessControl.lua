@@ -25,16 +25,19 @@ local Timer = require "cothread.Timer"
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
-local NO_PERMISSION = sysex.NO_PERMISSION
 local log = require "openbus.util.logger"
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
+local srvex = idl.throw.services
 local throw = idl.throw.services.access_control
 local types = idl.types.services.access_control
 local const = idl.const.services.access_control
 
 local msg = require "openbus.core.services.messages"
+local checks = require "openbus.core.services.callchecks"
+local assertCaller = checks.assertCaller
+local assertAdmin = checks.assertAdmin
 local Logins = require "openbus.core.services.LoginDB"
 
 
@@ -50,14 +53,10 @@ local CertificateRegistry = {
 -- local operations
 
 function CertificateRegistry:__init(data)
+  self.access = data.access
+  self.admins = data.admins
   self.database = data.database
   self.certificateDB = assert(self.database:gettable("Certificates"))
-  
-  local access = data.access
-  local admins = data.admins
-  access:setGrantedUsers(self.__type, "registerCertificate", admins)
-  access:setGrantedUsers(self.__type, "getCertificate", admins)
-  access:setGrantedUsers(self.__type, "removeCertificate", admins)
 end
 
 function CertificateRegistry:getPublicKey(entity)
@@ -72,6 +71,7 @@ end
 -- IDL operations
 
 function CertificateRegistry:registerCertificate(entity, certificate)
+  assertAdmin(self)
   local certobj, errmsg = decodecertificate(certificate)
   if not certobj then
     throw.InvalidCertificate{message=errmsg}
@@ -85,10 +85,11 @@ function CertificateRegistry:registerCertificate(entity, certificate)
 end
 
 function CertificateRegistry:getCertificate(entity)
+  assertAdmin(self)
   local certificate, errmsg = self.certificateDB:getentry(entity)
   if certificate == nil then
     if errmsg ~= nil then
-      throw.ServiceFailure{message=errmsg}
+      srvex.ServiceFailure{message=errmsg}
     end
     throw.MissingCertificate{entity=entity}
   end
@@ -96,6 +97,7 @@ function CertificateRegistry:getCertificate(entity)
 end
 
 function CertificateRegistry:removeCertificate(entity)
+  assertAdmin(self)
   local db = self.certificateDB
   if db:getentry(entity) ~= nil then
     log:admin(msg.RemoveEntityCertificate:tag{entity=entity})
@@ -165,34 +167,30 @@ local AccessControl = {
 -- local operations
 
 function AccessControl:__init(data)
+  -- initialize attributes
+  self.access = data.access
+  self.database = data.database
+  self.passwordValidators = data.validators
+  self.leaseTime = data.leaseTime
+  self.expirationGap = data.expirationGap
+  self.pendingChallenges = {}
+  self.activeLogins = Logins{
+    database = self.database,
+    publisher = self.publisher,
+  }
+  
+  -- initialize access
   local busid = newid("time")
   SelfLogin.id = busid
-  local access = data.access
+  self.busid = busid
+  local access = self.access
   local encodedkey = assert(access.prvkey:encode("public"))
+  self.buskey = encodedkey
   access.AccessControl = self
   access.logins = self
   access.login = SelfLogin
   access.busid = busid
   access.buskey = decodepublickey(encodedkey)
-  access:setGrantedUsers(self.__type, "_get_busid", "any")
-  access:setGrantedUsers(self.__type, "_get_buskey", "any")
-  access:setGrantedUsers(self.__type, "loginByPassword", "any")
-  access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
-  access:setGrantedUsers(LoginProcess.__type, "*", "any")
-  
-  -- initialize attributes
-  self.access = access
-  self.database = data.database
-  self.busid = busid
-  self.buskey = encodedkey
-  self.passwordValidators = data.validators
-  self.leaseTime = data.leaseTime
-  self.expirationGap = data.expirationGap
-  self.activeLogins = Logins{
-    database = self.database,
-    publisher = self.publisher,
-  }
-  self.pendingChallenges = {}
   self.LoginAuthenticationInfo =
     assert(access.orb.types:lookup_id(types.LoginAuthenticationInfo))
   
@@ -246,6 +244,17 @@ end
 
 function AccessControl:getLoginEntry(id)
   return self.activeLogins:getLogin(id)
+end
+
+function AccessControl:encodeChain(target, callers)
+  local access = self.access
+  local encoder = access.orb:newencoder()
+  encoder:put({target=target,callers=callers}, access.types.CallChain)
+  local encoded = encoder:getdata()
+  return {
+    encoded = encoded,
+    signature = assert(access.prvkey:sign(assert(sha256(encoded)))),
+  }
 end
 
 -- IDL operations
@@ -303,8 +312,8 @@ function AccessControl:startLoginByCertificate(entity)
 end
 
 function AccessControl:startLoginBySingleSignOn()
-  local callers = self.access:getCallerChain().callers
-  local login = self.activeLogins:getLogin(callers[#callers].id)
+  local id = assertCaller(self).id
+  local login = self.activeLogins:getLogin(id)
   local logger = LoginProcess{
     manager = self,
     entity = login.entity,
@@ -319,36 +328,24 @@ function AccessControl:startLoginBySingleSignOn()
 end
 
 function AccessControl:logout()
-  local callers = self.access:getCallerChain().callers
-  local id = callers[#callers].id
+  local id = assertCaller(self).id
   local login = self.activeLogins:getLogin(id)
   login:remove()
   log:request(msg.LogoutPerformed:tag{login=id,entity=login.entity})
 end
 
 function AccessControl:renew()
-  local callers = self.access:getCallerChain().callers
-  local id = callers[#callers].id
+  local id = assertCaller(self).id
   local login = self.activeLogins:getLogin(id)
   renewLogin(login)
   log:request(msg.LoginRenewed:tag{login=id,entity=login.entity})
   return self.leaseTime
 end
 
-function AccessControl:encodeChain(target, callers)
-  local access = self.access
-  local encoder = access.orb:newencoder()
-  encoder:put({target=target,callers=callers}, access.types.CallChain)
-  local encoded = encoder:getdata()
-  return {
-    encoded = encoded,
-    signature = assert(access.prvkey:sign(assert(sha256(encoded)))),
-  }
-end
-
 function AccessControl:signChainFor(target)
+  assertCaller(self)
   if self.activeLogins:getLogin(target) == nil then
-    NO_PERMISSION{ minor = const.InvalidLoginCode }
+    sysex.NO_PERMISSION{minor=const.InvalidLoginCode,completed="COMPLETED_NO"}
   end
   return self:encodeChain(target, self.access:getCallerChain().callers)
 end
@@ -370,6 +367,7 @@ end
 -- IDL operations
 
 function Subscription:watchLogin(id)
+  assertCaller(self.registry, self.observer.entity)
   local login = self.logins:getLogin(id)
   if login ~= nil then
     self.observer:watchLogin(login)
@@ -379,6 +377,7 @@ function Subscription:watchLogin(id)
 end
 
 function Subscription:forgetLogin(id)
+  assertCaller(self.registry, self.observer.entity)
   local login = self.logins:getLogin(id)
   if login ~= nil then
     self.observer:forgetLogin(login)
@@ -386,6 +385,7 @@ function Subscription:forgetLogin(id)
 end
 
 function Subscription:watchLogins(ids)
+  assertCaller(self.registry, self.observer.entity)
   local logins = self.logins
   local missing = {}
   for index, id in ipairs(ids) do
@@ -411,6 +411,7 @@ function Subscription:forgetLogins(ids)
 end
 
 function Subscription:getWatchedLogins()
+  assertCaller(self.registry)
   local result = {}
   local logins = self.logins
   for id in self.observer:iWatchedLoginIds() do
@@ -420,6 +421,7 @@ function Subscription:getWatchedLogins()
 end
 
 function Subscription:remove()
+  assertCaller(self.registry, self.observer.entity)
   self.observer:remove()
 end
 
@@ -433,21 +435,21 @@ LoginRegistry = {
 -- local operations
 
 function LoginRegistry:__init(data)
-  local access = data.access
-  local admins = data.admins
-  access:setGrantedUsers(self.__type, "getAllLogins", admins)
-  access:setGrantedUsers(self.__type, "getEntityLogins", admins)
-  access:setGrantedUsers(self.__type, "invalidateLogin", admins)
   -- initialize attributes
-  self.access = access
+  self.access = data.access
+  self.admins = data.admins
   self.subscriptionOf = {}
   -- register itself to receive logout notifications
   rawset(AccessControl.publisher, self, self)
   -- restaura servants dos observadores persistidos
-  local orb = access.orb
+  local orb = self.access.orb
   local logins = AccessControl.activeLogins
   for id, observer in logins:iObservers() do
-    local subscription = Subscription{ id=id, logins=logins }
+    local subscription = Subscription{
+      id = id,
+      logins = logins,
+      registry = self,
+    }
     self.subscriptionOf[id] = subscription
     orb:newservant(subscription)
   end
@@ -477,6 +479,7 @@ end
 -- IDL operations
 
 function LoginRegistry:getAllLogins()
+  assertAdmin(self)
   local logins = {}
   for id, login in AccessControl.activeLogins:iLogins() do
     logins[#logins+1] = login
@@ -485,6 +488,7 @@ function LoginRegistry:getAllLogins()
 end
 
 function LoginRegistry:getEntityLogins(entity)
+  assertAdmin(self)
   local logins = {}
   for id, login in AccessControl.activeLogins:iLogins() do
     if login.entity == entity then
@@ -495,16 +499,23 @@ function LoginRegistry:getEntityLogins(entity)
 end
 
 function LoginRegistry:invalidateLogin(id)
+  local caller = assertAdmin(self)
   local login = AccessControl.activeLogins:getLogin(id)
   if login ~= nil then
     login:remove()
-    log:request(msg.LogoutForced:tag{login=id,entity=login.entity})
+    log:request(msg.LogoutForced:tag{
+      login = id,
+      entity = login.entity,
+      adminlogin = caller.id,
+      adminentity = caller.entity,
+    })
     return true
   end
   return false
 end
 
 function LoginRegistry:getLoginInfo(id)
+  assertCaller(self) --> TODO: is this really necessary?
   local login = AccessControl.activeLogins:getLogin(id)
   if login ~= nil then
     return login, login.encodedkey
@@ -515,6 +526,7 @@ function LoginRegistry:getLoginInfo(id)
 end
 
 function LoginRegistry:getValidity(ids)
+  assertCaller(self) --> TODO: is this really necessary?
   local logins = AccessControl.activeLogins
   local leaseTime = AccessControl.leaseTime
   local expirationGap = AccessControl.expirationGap
@@ -535,10 +547,14 @@ end
 
 function LoginRegistry:subscribeObserver(callback)
   local logins = AccessControl.activeLogins
-  local callers = self.access:getCallerChain().callers
-  local login = logins:getLogin(callers[#callers].id)
+  local id = assertCaller(self).id
+  local login = logins:getLogin(id)
   local observer = login:newObserver(callback)
-  local subscription = Subscription{ id=observer.id, logins=logins }
+  local subscription = Subscription{
+    id = observer.id,
+    logins = logins,
+    registry = self,
+  }
   self.subscriptionOf[observer.id] = subscription
   return subscription
 end

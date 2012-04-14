@@ -23,17 +23,19 @@ local newid = uuid.new
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
-local BAD_PARAM = sysex.BAD_PARAM
 local log = require "openbus.util.logger"
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
-local ServiceFailure = idl.throw.services.ServiceFailure
+local srvex = idl.throw.services
 local throw = idl.throw.services.offer_registry
 local types = idl.types.services.offer_registry
 local const = idl.const.services.offer_registry
 
 local msg = require "openbus.core.services.messages"
+local checks = require "openbus.core.services.callchecks"
+local assertCaller = checks.assertCaller
+local assertAdmin = checks.assertAdmin
 local AccessControl = require "openbus.core.services.AccessControl"
 AccessControl = AccessControl.AccessControl
 local PropertyIndex = require "openbus.core.services.PropertyIndex"
@@ -41,20 +43,6 @@ local PropertyIndex = require "openbus.core.services.PropertyIndex"
 
 local OfferRegistry -- forward declaration
 local EntityRegistry -- forward declaration
-
-local function assertRights(registry, expected)
-  local callers = registry.access:getCallerChain().callers
-  local originator = callers[1].entity
-  local caller = callers[#callers].entity
-  if (caller ~= expected and originator ~= expected) then
-    local admins = registry.admins
-    if (admins[caller] == nil and admins[originator] == nil) then
-      sysex.NO_PERMISSION{ minor = 1234, completed = "COMPLETED_NO" }
-    end
-    return "admin"
-  end
-  return "request"
-end
 
 local function ifaceId2Key(ifaceId)
   local name, version = ifaceId:match("^IDL:(.-):(%d+%.%d+)$")
@@ -70,7 +58,7 @@ local function updateAuthorization(db, id, set, spec, value)
   local ok, errmsg = db:setentryfield(id, "authorized", set)
   if not ok then
     set[spec] = backup
-    ServiceFailure{message=errmsg}
+    srvex.ServiceFailure{message=errmsg}
   end
 end
 
@@ -129,6 +117,17 @@ end
 
 local Offer = class{ __type = types.ServiceOffer }
   
+function Offer:notifyObservers(event)
+  local observers = self.observers
+  for idx, entry in pairs(self.observers) do
+    local observer = entry.obs_ref
+    local ok, errmsg = pcall(observer[event], observer, self)
+    if not ok then
+      log:exception(msg.OfferObserverException:tag{id=idx, errmsg=errmsg})
+    end
+  end
+end
+
 function Offer:__init()
   self.ref = self -- IDL struct attribute (see operation 'describe')
   self.__objkey = "Offer:"..self.id -- for the ORB
@@ -136,12 +135,13 @@ function Offer:__init()
 end
 
 function Offer:describe()
+  assertCaller(self.registry)
   return self
 end
 
 function Offer:setProperties(properties)
   local registry = self.registry
-  local tag = assertRights(registry, self.entity)
+  local tag = assertAdmin(registry, self.entity)
   -- try to change properties (may raise expections)
   local allprops = makePropertyList(self, properties)
   assert(self.database:setentryfield(self.id, "properties", properties))
@@ -158,7 +158,7 @@ end
 
 function Offer:remove(tag)
   local registry = self.registry
-  local tag = tag or assertRights(registry, self.entity)
+  local tag = tag or assertAdmin(registry, self.entity)
   assert(self.database:removeentry(self.id))
   assert(self.orb:deactivate(self))
   registry.offers:remove(self)
@@ -167,11 +167,11 @@ function Offer:remove(tag)
 end
 
 function Offer:subscribe(observer)
+  local registry = self.registry
+  local login = assertCaller(registry).id
   if observer == nil then
-    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
-  local callers = self.registry.access:getCallerChain().callers
-  local login = callers[#callers].id
   local observers = self.observers
   local cookie = #observers + 1
   -- try to include observer (may raise expections)
@@ -186,7 +186,7 @@ function Offer:subscribe(observer)
   -- commit changes in memory
   includeObs.obs_ref = observer
   observers[cookie] = includeObs
-  local list = self.registry.login2observer[login]
+  local list = registry.login2observer[login]
   list[#list+1] = {
     offer = self,
     observer = cookie,
@@ -195,6 +195,8 @@ function Offer:subscribe(observer)
 end
 
 function Offer:unsubscribe(cookie)
+  local registry = self.registry
+  assertCaller(registry)
   local observers = self.observers
   if observers[cookie] ~= nil then
     -- try to remove observer (may raise expections)
@@ -204,7 +206,7 @@ function Offer:unsubscribe(cookie)
     -- commit changes in memory
     local login = observers[cookie].login
     observers[cookie] = nil
-    local login2obs = self.registry.login2observer
+    local login2obs = registry.login2observer
     local list = login2obs[login]
     for idx, entry in pairs(list) do
       if entry.offer.id == self.id and entry.observer == cookie then
@@ -214,17 +216,6 @@ function Offer:unsubscribe(cookie)
     return true
   end
   return false
-end
-
-function Offer:notifyObservers(event)
-  local observers = self.observers
-  for idx, entry in pairs(self.observers) do
-    local observer = entry.obs_ref
-    local ok, errmsg = pcall(observer[event], observer, self)
-    if not ok then
-      log:exception(msg.OfferObserverException:tag{id=idx, errmsg=errmsg})
-    end
-  end
 end
 
 
@@ -268,6 +259,45 @@ end
 
 function OfferRegistry:loginObserverRemoved()
   -- empty
+end
+
+--------------------- TODO: a ser removido ------------------------------------
+-- Utilizando esse modelo de busca enquanto não encontro uma melhor solução que
+-- faça uso do Inverted Index implementado em PropertyIndex
+---
+-- Verifica se a lista de propriedades 'one' esta contida dentro de 'other'
+---
+local function isContained(one, other)
+  for _,v1 in ipairs(one) do
+    local found = false
+    for _,v2 in ipairs(other) do
+      if v1.name == v2.name and v1.value == v2.value then
+        found = true
+        break
+      end
+    end
+    if not found then
+      return false
+    end
+  end
+  return true
+end
+-------------------------------------------------------------------------------
+
+function OfferRegistry:notifyObservers(offer)
+  local observers = self.observers
+  for i, entry in pairs(observers) do
+    if isContained(entry.properties, offer.properties) then
+      local observer = entry.observer
+      local ok, errmsg = pcall(observer.offerRegistered, observer, offer)
+      if not ok then
+        log:exception(msg.OfferRegistrationObserverException:tag{
+          id = entry.id,
+          errmsg = errmsg,
+        })
+      end
+    end
+  end
 end
 
 function OfferRegistry:__init(data)
@@ -382,10 +412,13 @@ local IgnoredFacets = {
 }
 
 function OfferRegistry:registerService(service_ref, properties)
+  -- get information about the caller
+  local login = assertCaller(self)
+  local entityId = login.entity
+  -- collect information about the SCS component implementing the service
   if service_ref == nil then
     throw.InvalidService()
   end
-  -- collect information about the SCS component implementing the service
   local compId = service_ref:getComponentId()
   local meta = service_ref:getFacetByName("IMetaInterface")
   if meta == nil then
@@ -402,10 +435,6 @@ function OfferRegistry:registerService(service_ref, properties)
       }
     end
   end
-  -- get information about the caller
-  local callers = self.access:getCallerChain().callers
-  local login = callers[#callers]
-  local entityId = login.entity
   -- check the caller is authorized to offer such service
   if self.enforceAuth then
     local entity = EntityRegistry:getEntity(entityId)
@@ -463,10 +492,12 @@ function OfferRegistry:registerService(service_ref, properties)
 end
 
 function OfferRegistry:findServices(properties)
+  assertCaller(self)
   return self.offers:find(properties)
 end
 
 function OfferRegistry:getServices()
+  assertCaller(self)
   local result = {}
   for _, offers in pairs(self.offers.index["openbus.offer.login"]) do
     for offer in pairs(offers) do
@@ -477,11 +508,10 @@ function OfferRegistry:getServices()
 end
 
 function OfferRegistry:subscribeObserver(observer, properties)
+  local login = assertCaller(self).id
   if observer == nil then
-    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
-  local callers = self.access:getCallerChain().callers
-  local login = callers[#callers].id
   local observers = self.observers
   local cookie = #observers + 1
   -- try to include observer (may raise expections)
@@ -501,6 +531,7 @@ function OfferRegistry:subscribeObserver(observer, properties)
 end
 
 function OfferRegistry:unsubscribeObserver(cookie)
+  assertCaller(self)
   local observers = self.observers
   if observers[cookie] ~= nil then
     -- try to remove observer (may raise expections)
@@ -515,45 +546,6 @@ function OfferRegistry:unsubscribeObserver(cookie)
   return false
 end
 
---------------------- TODO: a ser removido ------------------------------------
--- Utilizando esse modelo de busca enquanto não encontro uma melhor solução que
--- faça uso do Inverted Index implementado em PropertyIndex
----
--- Verifica se a lista de propriedades 'one' esta contida dentro de 'other'
----
-local function isContained(one, other)
-  for _,v1 in ipairs(one) do
-    local found = false
-    for _,v2 in ipairs(other) do
-      if v1.name == v2.name and v1.value == v2.value then
-        found = true
-        break
-      end
-    end
-    if not found then
-      return false
-    end
-  end
-  return true
-end
--------------------------------------------------------------------------------
-
-function OfferRegistry:notifyObservers(offer)
-  local observers = self.observers
-  for i, entry in pairs(observers) do
-    if isContained(entry.properties, offer.properties) then
-      local observer = entry.observer
-      local ok, errmsg = pcall(observer.offerRegistered, observer, offer)
-      if not ok then
-        log:exception(msg.OfferRegistrationObserverException:tag{
-          id = entry.id,
-          errmsg = errmsg,
-        })
-      end
-    end
-  end
-end
-
 ------------------------------------------------------------------------------
 -- Faceta InterfaceRegistry
 ------------------------------------------------------------------------------
@@ -566,13 +558,9 @@ local InterfaceRegistry = {
 
 function InterfaceRegistry:__init(data)
   -- initialize attributes
+  self.access = data.access
+  self.admins = data.admins
   self.database = data.database
-  
-  -- setup permissions
-  local access = data.access
-  local admins = data.admins
-  access:setGrantedUsers(self.__type,"registerInterface",admins)
-  access:setGrantedUsers(self.__type,"removeInterface",admins)
   
   -- recover all registered interfaces
   local database = self.database
@@ -585,18 +573,20 @@ function InterfaceRegistry:__init(data)
 end
 
 function InterfaceRegistry:registerInterface(ifaceId)
+  assertAdmin(self)
   local interfaces = self.interfaces
   local entities = interfaces[ifaceId]
   if entities == nil then
     self.interfaceDB:setentry(ifaceId2Key(ifaceId), ifaceId)
     interfaces[ifaceId] = {}
-    log:request(msg.RegisteredInterfaceAdded:tag{interface=ifaceId})
+    log:admin(msg.RegisteredInterfaceAdded:tag{interface=ifaceId})
     return true
   end
   return false
 end
 
 function InterfaceRegistry:removeInterface(ifaceId)
+  assertAdmin(self)
   local interfaces = self.interfaces
   local entities = interfaces[ifaceId]
   if entities ~= nil then
@@ -609,13 +599,14 @@ function InterfaceRegistry:removeInterface(ifaceId)
     end
     self.interfaceDB:removeentry(ifaceId2Key(ifaceId))
     interfaces[ifaceId] = nil
-    log:request(msg.RegisteredInterfaceRemoved:tag{interface=ifaceId})
+    log:admin(msg.RegisteredInterfaceRemoved:tag{interface=ifaceId})
     return true
   end
   return false
 end
 
 function InterfaceRegistry:getInterfaces()
+  assertCaller(self)
   local list = {}
   for ifaceId in pairs(self.interfaces) do
     list[#list+1] = ifaceId
@@ -646,18 +637,22 @@ function Entity:__init()
 end
 
 function Entity:describe()
+  assertCaller(self.registry)
   return self
 end
 
 function Entity:setName(name)
+  assertAdmin(self.registry)
   assert(self.database:setentryfield(self.id, "name", name))
   self.name = name
-  log:request(msg.AuthorizedEntityNameChanged:tag{entity=self.id,name=name})
+  log:admin(msg.AuthorizedEntityNameChanged:tag{entity=self.id,name=name})
 end
 
 function Entity:remove()
+  local registry = self.registry
+  assertAdmin(registry)
   local id = self.id
-  if self.registry.enforceAuth then
+  if registry.enforceAuth then
     local offers = OfferRegistry.offers:get("openbus.offer.entity", id)
     for offer in pairs(offers) do
       offer:remove()
@@ -669,12 +664,13 @@ function Entity:remove()
   for ifaceId in pairs(self.authorized) do
     interfaces[ifaceId][self] = nil
   end
-  self.registry.entities[id] = nil
+  registry.entities[id] = nil
   self.category.entities[id] = nil
-  log:request(msg.AuthorizedEntityRemoved:tag{entity=id})
+  log:admin(msg.AuthorizedEntityRemoved:tag{entity=id})
 end
 
 function Entity:grantInterface(ifaceId)
+  assertAdmin(self.registry)
   -- check if interface is registered
   local entities = InterfaceRegistry.interfaces[ifaceId]
   if entities == nil then
@@ -685,7 +681,7 @@ function Entity:grantInterface(ifaceId)
   if authorized[ifaceId] == nil then
     updateAuthorization(self.database, self.id, authorized, ifaceId, true)
     entities[self] = true
-    log:request(msg.GrantedInterfaceAddedForEntity:tag{
+    log:admin(msg.GrantedInterfaceAddedForEntity:tag{
       entity = self.id,
       interface = ifaceId,
     })
@@ -695,8 +691,10 @@ function Entity:grantInterface(ifaceId)
 end
 
 function Entity:revokeInterface(ifaceId)
+  local registry = self.registry
+  assertAdmin(registry)
   -- check if interface is implemented by an offer
-  if self.registry.enforceAuth then
+  if registry.enforceAuth then
     local unauthorized = {}
     local offers = OfferRegistry.offers:get("openbus.offer.entity", self.id)
     for offer in pairs(offers) do
@@ -720,7 +718,7 @@ function Entity:revokeInterface(ifaceId)
   if authorized[ifaceId] == true then
     updateAuthorization(self.database, self.id, authorized, ifaceId, nil)
     entities[self] = nil
-    log:request(msg.GrantedInterfaceRemovedFromEntity:tag{
+    log:admin(msg.GrantedInterfaceRemovedFromEntity:tag{
       entity = self.id,
       interface = ifaceId,
     })
@@ -730,6 +728,7 @@ function Entity:revokeInterface(ifaceId)
 end
 
 function Entity:getGrantedInterfaces()
+  assertCaller(self.registry)
   local list = {}
   for spec in pairs(self.authorized) do
     list[#list+1] = spec
@@ -751,24 +750,28 @@ function Category:__init()
 end
 
 function Category:describe()
+  assertCaller(self.registry)
   return self
 end
   
 function Category:setName(name)
+  assertAdmin(self.registry)
   assert(self.database:setentry(self.id, name))
   self.name = name
-  log:request(msg.EntityCategoryNameChanged:tag{category=self.id,name=name})
+  log:admin(msg.EntityCategoryNameChanged:tag{category=self.id,name=name})
 end
 
 function Category:remove()
+  local registry = self.registry
+  assertAdmin(registry)
   if next(self.entities) ~= nil then
     throw.EntityCategoryInUse{ entities = self:getEntities() }
   end
   local id = self.id
   assert(self.database:removeentry(id))
   assert(self.orb:deactivate(self))
-  self.registry.categories[id] = nil
-  log:request(msg.EntityCategoryRemoved:tag{category=id})
+  registry.categories[id] = nil
+  log:admin(msg.EntityCategoryRemoved:tag{category=id})
 end
 
 function Category:removeAll()
@@ -779,6 +782,8 @@ function Category:removeAll()
 end
 
 function Category:registerEntity(id, name)
+  local registry = self.registry
+  assertAdmin(registry)
   local entities = self.entities
   -- check if category already exists
   local entity = entities[id]
@@ -786,12 +791,11 @@ function Category:registerEntity(id, name)
     throw.EntityAlreadyRegistered{ existing = entity }
   end
   -- persist the new entity
-  local registry = self.registry
   local categoryId = self.id
   local database = registry.entityDB
   assert(database:setentry(id, {categoryId=categoryId, name=name}))
   -- create object for the new entity
-  log:request(msg.AuthorizedEntityRegistered:tag{entity=id,name=name})
+  log:admin(msg.AuthorizedEntityRegistered:tag{entity=id,name=name})
   return Entity{
     id = id,
     name = name,
@@ -803,6 +807,7 @@ function Category:registerEntity(id, name)
 end
 
 function Category:getEntities()
+  assertCaller(self.registry)
   local entities = {}
   for id, entity in pairs(self.entities) do
     entities[#entities+1] = entity
@@ -819,23 +824,13 @@ EntityRegistry = { -- is local (see forward declaration)
 
 function EntityRegistry:__init(data)
   -- initialize attributes
+  self.access = data.access
+  self.admins = data.admins
   self.orb = data.access.orb
   self.database = data.database
   self.enforceAuth = data.enforceAuth
   self.categories = {}
   self.entities = {}
-  
-  -- setup permissions
-  local access = data.access
-  local admins = data.admins
-  access:setGrantedUsers(self.__type,"createEntityCategory",admins)
-  access:setGrantedUsers(Category.__type,"remove",admins)
-  access:setGrantedUsers(Category.__type,"setName",admins)
-  access:setGrantedUsers(Category.__type,"registerEntity",admins)
-  access:setGrantedUsers(Entity.__type,"remove",admins)
-  access:setGrantedUsers(Entity.__type,"setName",admins)
-  access:setGrantedUsers(Entity.__type,"addAuthorization",admins)
-  access:setGrantedUsers(Entity.__type,"removeAuthorization",admins)
   
   local orb = self.orb
   local database = self.database
@@ -892,6 +887,7 @@ function EntityRegistry:__init(data)
 end
 
 function EntityRegistry:createEntityCategory(id, name)
+  assertAdmin(self)
   local categories = self.categories
   -- check if category already exists
   local category = categories[id]
@@ -902,7 +898,7 @@ function EntityRegistry:createEntityCategory(id, name)
   local database = self.categoryDB
   assert(database:setentry(id, name))
   -- create object for the new category
-  log:request(msg.EntityCategoryCreated:tag{category=id,name=name})
+  log:admin(msg.EntityCategoryCreated:tag{category=id,name=name})
   return Category{
     id = id,
     name = name,
@@ -913,10 +909,12 @@ function EntityRegistry:createEntityCategory(id, name)
 end
 
 function EntityRegistry:getEntityCategory(id)
+  assertCaller(self)
   return self.categories[id]
 end
 
 function EntityRegistry:getEntityCategories()
+  assertCaller(self)
   local categories = {}
   for id, category in pairs(self.categories) do
     categories[#categories+1] = category
@@ -925,10 +923,12 @@ function EntityRegistry:getEntityCategories()
 end
 
 function EntityRegistry:getEntity(id)
+  assertCaller(self)
   return self.entities[id]
 end
 
 function EntityRegistry:getEntities()
+  assertCaller(self)
   local entities = {}
   for id, entity in pairs(self.entities) do
     entities[#entities+1] = entity
@@ -937,6 +937,7 @@ function EntityRegistry:getEntities()
 end
 
 function EntityRegistry:getAuthorizedEntities()
+  assertCaller(self)
   local entities = {}
   for id, entity in pairs(self.entities) do
     if next(entity.authorized) ~= nil then
@@ -947,6 +948,7 @@ function EntityRegistry:getAuthorizedEntities()
 end
 
 function EntityRegistry:getEntitiesByAuthorizedInterfaces(interfaces)
+  assertCaller(self)
   local entities = {}
   for id, entity in pairs(self.entities) do
     for _, interface in ipairs(interfaces) do

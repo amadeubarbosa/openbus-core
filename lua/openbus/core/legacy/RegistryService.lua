@@ -17,6 +17,8 @@ local types = idl.types.registry_service
 local newidl = require "openbus.core.idl"
 local newtypes = newidl.types.services.offer_registry
 
+local checks = require "openbus.core.services.callchecks"
+local assertCaller = checks.assertCaller
 local newfacets = require "openbus.core.services.OfferRegistry"
 
 -- Faceta IRegistryService --------------------------------------------------------
@@ -40,6 +42,7 @@ local IRegistryService = {
 
 function IRegistryService:register(offer)
   local registry = newfacets.OfferRegistry
+  assertCaller(registry)
   local ok, result = pcall(registry.registerService, registry,
                            offer.member, convertProps(offer.properties))
   if ok then
@@ -54,13 +57,17 @@ function IRegistryService:register(offer)
 end
 
 function IRegistryService:unregister(id)
-  local orb = newfacets.OfferRegistry.access.orb
+  local registry = newfacets.OfferRegistry
+  assertCaller(registry)
+  local orb = registry.access.orb
   local offer = orb.ServantManager.servants:retrieve("Offer:"..id)
   return offer ~= nil and pcall(offer.remove, offer)
 end
 
 function IRegistryService:update(id, newProperties)
-  local orb = newfacets.OfferRegistry.access.orb
+  local registry = newfacets.OfferRegistry
+  assertCaller(registry)
+  local orb = registry.access.orb
   local offer = orb.ServantManager.servants:retrieve("Offer:"..id)
   if offer == nil then
     throw.ServiceOfferNonExistent()
@@ -74,6 +81,8 @@ function IRegistryService:find(facets)
 end
 
 function IRegistryService:findByCriteria(facets, criteria)
+  local registry = newfacets.OfferRegistry
+  assertCaller(registry)
   local props = {}
   for _, facetname in ipairs(facets) do
     props[#props+1] = {
@@ -102,7 +111,7 @@ function IRegistryService:findByCriteria(facets, criteria)
       end
     end
   end
-  local offers = newfacets.OfferRegistry:findServices(props)
+  local offers = registry:findServices(props)
   for index, offer in ipairs(offers) do
     local compId = {}
     local name2index = {}
@@ -144,6 +153,7 @@ function IRegistryService:findByCriteria(facets, criteria)
 end
 
 function IRegistryService:localFind(facets, criteria)
+  assertCaller(newfacets.OfferRegistry)
   return {}
 end
 

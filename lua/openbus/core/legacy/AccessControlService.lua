@@ -27,6 +27,8 @@ local newtypes = newidl.types.services.access_control
 local newconst = newidl.const.services.access_control
 
 local msg = require "openbus.core.services.messages"
+local checks = require "openbus.core.services.callchecks"
+local assertCaller = checks.assertCaller
 local facets = require "openbus.core.services.AccessControl"
 
 -- Faceta ILeaseProvider -----------------------------------------------------
@@ -42,12 +44,13 @@ local ILeaseProvider = {
 }
 
 function ILeaseProvider:renewLease(credential)
-  local manager = facets.AccessControl
-  local login = manager.activeLogins:getLogin(credential.identifier)
+  local control = facets.AccessControl
+  assertCaller(control)
+  local login = control.activeLogins:getLogin(credential.identifier)
   if login ~= nil then
     login.leaseRenewed = time()
     log:request(msg.LoginRenewed:tag{login=login.id,entity=login.entity})
-    return true, manager.leaseTime
+    return true, control.leaseTime
   end
   return false, 0
 end
@@ -61,12 +64,6 @@ local IAccessControlService = {
 
 function IAccessControlService:__init(data)
   self.lastChallengeOf = setmetatable({}, { __mode = "v" })
-  local access = data.access
-  access:setGrantedUsers(self.__type, "loginByPassword", "any")
-  access:setGrantedUsers(self.__type, "loginByCertificate", "any")
-  access:setGrantedUsers(self.__type, "getChallenge", "any")
-  access:setGrantedUsers(self.__type, "isValid", "any")
-  access:setGrantedUsers(self.__type, "areValid", "any")
 end
 
 -- Login Support
@@ -77,13 +74,13 @@ local NullCredential = {identifier="",owner="",delegate=""}
 local NullLeaseTime = 0
 
 function IAccessControlService:loginByPassword(id, pwrd)
-  local manager = facets.AccessControl
-  local access = manager.access
+  local control = facets.AccessControl
+  local access = control.access
   local encoder = access.orb:newencoder()
-  encoder:put({data=pwrd,hash=NullPubKeyHash}, manager.LoginAuthenticationInfo)
+  encoder:put({data=pwrd,hash=NullPubKeyHash}, control.LoginAuthenticationInfo)
   local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
   if encrypted ~= nil then
-    local ok, login, lease = pcall(manager.loginByPassword, manager,
+    local ok, login, lease = pcall(control.loginByPassword, control,
                                    id, NullPublicKey, encrypted)
     if ok then
       local credential = {
@@ -102,8 +99,8 @@ function IAccessControlService:loginByPassword(id, pwrd)
 end
 
 function IAccessControlService:getChallenge(id)
-  local manager = facets.AccessControl
-  local ok, logger, challenge = pcall(manager.startLoginByCertificate, manager,
+  local control = facets.AccessControl
+  local ok, logger, challenge = pcall(control.startLoginByCertificate, control,
                                       id)
   if ok then
     self.lastChallengeOf[id] = logger
@@ -116,13 +113,13 @@ end
 function IAccessControlService:loginByCertificate(id, answer)
   local logger = self.lastChallengeOf[id]
   if logger ~= nil then
-    local manager = facets.AccessControl
-    local access = manager.access
+    local control = facets.AccessControl
+    local access = control.access
     local secret, errmsg = access.prvkey:decrypt(answer)
     if secret ~= nil then
       local encoder = access.orb:newencoder()
       encoder:put({data=secret,hash=NullPubKeyHash},
-                  manager.LoginAuthenticationInfo)
+                  control.LoginAuthenticationInfo)
       local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
       if encrypted ~= nil then
         local ok, login, lease = pcall(logger.login, logger,
@@ -150,8 +147,9 @@ function IAccessControlService:loginByCertificate(id, answer)
 end
 
 function IAccessControlService:logout(credential)
-  local manager = facets.AccessControl
-  local login = manager:getLoginEntry(credential.identifier)
+  local control = facets.AccessControl
+  assertCaller(control)
+  local login = control:getLoginEntry(credential.identifier)
   if login ~= nil then
     local ok, errmsg = pcall(login.remove, login)
     if ok then
@@ -184,23 +182,31 @@ end
 -- Credential Observation Support
 
 function IAccessControlService:addObserver(observer, credentials)
-  local subscription = facets.LoginRegistry:subscribe(observer)
+  local logins = facets.LoginRegistry
+  assertCaller(logins)
+  local subscription = logins:subscribe(observer)
   subscription:watchLogins(credentials)
   return subscription.id
 end
 
 function IAccessControlService:addCredentialToObserver(obsId, credId)
-  local subscription = facets.LoginRegistry.subscriptionOf[obsId]
+  local logins = facets.LoginRegistry
+  assertCaller(logins)
+  local subscription = logins.subscriptionOf[obsId]
   return subscription:watchLogin(credId)
 end
 
 function IAccessControlService:removeObserver(obsId)
-  local subscription = facets.LoginRegistry.subscriptionOf[obsId]
+  local logins = facets.LoginRegistry
+  assertCaller(logins)
+  local subscription = logins.subscriptionOf[obsId]
   return subscription:remove()
 end
 
 function IAccessControlService:removeCredentialFromObserver(obsId, credId)
-  local subscription = facets.LoginRegistry.subscriptionOf[obsId]
+  local logins = facets.LoginRegistry
+  assertCaller(logins)
+  local subscription = logins.subscriptionOf[obsId]
   return subscription:forgetLogin(credId)
 end
 
@@ -228,12 +234,16 @@ local function credentialEntry(credential)
 end
 
 function IAccessControlService:getEntryCredential(cred)
-  local credentials = facets.AccessControl.activeCredentials
+  local control = facets.AccessControl
+  assertCaller(control)
+  local credentials = control.activeCredentials
   return credentialEntry(credentials:getCredential(cred.id))
 end
 
 function IAccessControlService:getAllEntryCredential()
-  local credentials = facets.AccessControl.activeCredentials
+  local control = facets.AccessControl
+  assertCaller(control)
+  local credentials = control.activeCredentials
   local entries = {}
   for id, credential in credentials:iCredentials() do
     entries[#entries+1] = credentialEntry(credential)
@@ -242,32 +252,39 @@ function IAccessControlService:getAllEntryCredential()
 end
 
 -- Faceta IFaultTolerantService ----------------------------------------------
-
-local IFaultTolerantService = {
-  __type = idl.typesFT.IFaultTolerantService,
-  __objkey = "FTACS_v1_05",
-}
-
-function IFaultTolerantService:init()
-  -- intentionally blank
-end
-
-function IFaultTolerantService:isAlive()
-  return false
-end
-
-function IFaultTolerantService:setStatus(isAlive)
-  -- intentionally blank
-end
-
-function IFaultTolerantService:kill()
-  self.context.IComponent:shutdown()
-end
-
-function IFaultTolerantService:updateStatus(param)
-  return false
-end
-
+--
+--local IFaultTolerantService = {
+--  __type = idl.typesFT.IFaultTolerantService,
+--  __objkey = "FTACS_v1_05",
+--}
+--
+--function IFaultTolerantService:init()
+--  assertCaller(facets.AccessControl)
+--  -- intentionally blank
+--end
+--
+--function IFaultTolerantService:isAlive()
+--  assertCaller(facets.AccessControl)
+--  -- intentionally blank
+--  return false
+--end
+--
+--function IFaultTolerantService:setStatus(isAlive)
+--  assertCaller(facets.AccessControl)
+--  -- intentionally blank
+--end
+--
+--function IFaultTolerantService:kill()
+--  assertCaller(facets.AccessControl)
+--  self.context.IComponent:shutdown()
+--end
+--
+--function IFaultTolerantService:updateStatus(param)
+--  assertCaller(facets.AccessControl)
+--  -- intentionally blank
+--  return false
+--end
+--
 -- Exported Module -----------------------------------------------------------
 
 return {

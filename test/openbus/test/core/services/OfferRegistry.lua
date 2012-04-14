@@ -371,7 +371,6 @@ function ServiceOfferCase.testRemoveProperties(self)
   local myProps = self.serviceOffer:_get_properties()
   Check.assertFalse(isContained(offerProps, myProps))
   for i, prop in ipairs(offerProps) do
-    print(i,prop.name,prop.value)
     local services = self.offers:findServices({offerProps[i]})
     Check.assertEquals(0, #services)
   end
