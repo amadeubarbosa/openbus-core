@@ -165,18 +165,20 @@ function IAccessControlService:logout(credential)
 end
 
 function IAccessControlService:isValid(credential)
-  return facets.LoginRegistry:getValidity{credential.identifier}[1] > 0
+  local control = facets.AccessControl
+  local login = control:getLoginEntry(credential.identifier)
+  if login ~= nil then
+    return time() < login.leaseRenewed+control.leaseTime+control.expirationGap
+       and (credential.delegate == "" or login.allowLegacyDelegate)
+  end
+  return false
 end
 
 function IAccessControlService:areValid(credentials)
   for index, credential in ipairs(credentials) do
-    credentials[index] = credential.identifier
+    credentials[index] = self:isValid(credential)
   end
-  local result = facets.LoginRegistry:getValidity(credentials)
-  for index, validity in ipairs(result) do
-    result[index] = validity > 0
-  end
-  return result
+  return credentials
 end
 
 -- Credential Observation Support

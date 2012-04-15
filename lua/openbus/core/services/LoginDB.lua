@@ -166,12 +166,13 @@ function Database:__init()
                                        self)))
 end
 
-function Database:newLogin(entity, encodedkey)
+function Database:newLogin(entity, encodedkey, allowLegacyDelegate)
   local id = newid("time")
   local data = {
     id = id,
     entity = entity,
     encodedkey = encodedkey,
+    allowLegacyDelegate = allowLegacyDelegate,
   }
   local table = self.lgnTab
   assert(table:setentry(id, data))

@@ -145,7 +145,8 @@ function LoginProcess:login(pubkey, encrypted)
   if decoded.hash ~= sha256(pubkey) or decoded.data ~= self.secret then
     throw.AccessDenied{entity=entity}
   end
-  local login = manager.activeLogins:newLogin(entity, pubkey)
+  local login = manager.activeLogins:newLogin(entity, pubkey,
+                                              self.allowLegacyDelegate)
   renewLogin(login)
   log:request(msg.LoginProcessConcluded:tag{login=login.id,entity=entity})
   return login, manager.leaseTime
@@ -305,6 +306,7 @@ function AccessControl:startLoginByCertificate(entity)
     manager = self,
     entity = entity,
     secret = newid("new"),
+    allowLegacyDelegate = true,
   }
   self.pendingChallenges[logger] = time()
   log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
@@ -318,6 +320,7 @@ function AccessControl:startLoginBySingleSignOn()
     manager = self,
     entity = login.entity,
     secret = newid("new"),
+    allowLegacyDelegate = login.allowLegacyDelegate,
   }
   self.pendingChallenges[logger] = time()
   log:request(msg.LoginBySingleSignOnInitiated:tag{
