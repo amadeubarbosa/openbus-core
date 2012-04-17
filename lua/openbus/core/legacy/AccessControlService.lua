@@ -170,6 +170,9 @@ function IAccessControlService:isValid(credential)
   if login ~= nil then
     return time() < login.leaseRenewed+control.leaseTime+control.expirationGap
        and (credential.delegate == "" or login.allowLegacyDelegate)
+  elseif credential.identifier == control.busid 
+      and credential.delegate == "" then
+    return true
   end
   return false
 end
