@@ -27,8 +27,6 @@ local newtypes = newidl.types.services.access_control
 local newconst = newidl.const.services.access_control
 
 local msg = require "openbus.core.services.messages"
-local checks = require "openbus.core.services.callchecks"
-local assertCaller = checks.assertCaller
 local facets = require "openbus.core.services.AccessControl"
 
 -- Faceta ILeaseProvider -----------------------------------------------------
@@ -45,7 +43,6 @@ local ILeaseProvider = {
 
 function ILeaseProvider:renewLease(credential)
   local control = facets.AccessControl
-  assertCaller(control)
   local login = control.activeLogins:getLogin(credential.identifier)
   if login ~= nil then
     login.leaseRenewed = time()
@@ -64,6 +61,12 @@ local IAccessControlService = {
 
 function IAccessControlService:__init(data)
   self.lastChallengeOf = setmetatable({}, { __mode = "v" })
+  local access = data.access
+  access:setGrantedUsers(self.__type, "loginByPassword", "any")
+  access:setGrantedUsers(self.__type, "loginByCertificate", "any")
+  access:setGrantedUsers(self.__type, "getChallenge", "any")
+  access:setGrantedUsers(self.__type, "isValid", "any")
+  access:setGrantedUsers(self.__type, "areValid", "any")
 end
 
 -- Login Support
@@ -148,7 +151,6 @@ end
 
 function IAccessControlService:logout(credential)
   local control = facets.AccessControl
-  assertCaller(control)
   local login = control:getLoginEntry(credential.identifier)
   if login ~= nil then
     local ok, errmsg = pcall(login.remove, login)
@@ -170,9 +172,9 @@ function IAccessControlService:isValid(credential)
   if login ~= nil then
     return time() < login.leaseRenewed+control.leaseTime+control.expirationGap
        and (credential.delegate == "" or login.allowLegacyDelegate)
-  elseif credential.identifier == control.busid 
-      and credential.delegate == "" then
-    return true
+  else
+    return credential.identifier == control.busid 
+       and credential.delegate == ""
   end
   return false
 end
@@ -187,31 +189,23 @@ end
 -- Credential Observation Support
 
 function IAccessControlService:addObserver(observer, credentials)
-  local logins = facets.LoginRegistry
-  assertCaller(logins)
-  local subscription = logins:subscribe(observer)
+  local subscription = facets.LoginRegistry:subscribe(observer)
   subscription:watchLogins(credentials)
   return subscription.id
 end
 
 function IAccessControlService:addCredentialToObserver(obsId, credId)
-  local logins = facets.LoginRegistry
-  assertCaller(logins)
-  local subscription = logins.subscriptionOf[obsId]
+  local subscription = facets.LoginRegistry.subscriptionOf[obsId]
   return subscription:watchLogin(credId)
 end
 
 function IAccessControlService:removeObserver(obsId)
-  local logins = facets.LoginRegistry
-  assertCaller(logins)
-  local subscription = logins.subscriptionOf[obsId]
+  local subscription = facets.LoginRegistry.subscriptionOf[obsId]
   return subscription:remove()
 end
 
 function IAccessControlService:removeCredentialFromObserver(obsId, credId)
-  local logins = facets.LoginRegistry
-  assertCaller(logins)
-  local subscription = logins.subscriptionOf[obsId]
+  local subscription = facets.LoginRegistry.subscriptionOf[obsId]
   return subscription:forgetLogin(credId)
 end
 
@@ -239,16 +233,12 @@ local function credentialEntry(credential)
 end
 
 function IAccessControlService:getEntryCredential(cred)
-  local control = facets.AccessControl
-  assertCaller(control)
-  local credentials = control.activeCredentials
+  local credentials = facets.AccessControl.activeCredentials
   return credentialEntry(credentials:getCredential(cred.id))
 end
 
 function IAccessControlService:getAllEntryCredential()
-  local control = facets.AccessControl
-  assertCaller(control)
-  local credentials = control.activeCredentials
+  local credentials = facets.AccessControl.activeCredentials
   local entries = {}
   for id, credential in credentials:iCredentials() do
     entries[#entries+1] = credentialEntry(credential)
