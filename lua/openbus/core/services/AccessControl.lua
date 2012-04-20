@@ -203,6 +203,7 @@ function AccessControl:__init(data)
   -- renova todas as credenciais persistidas
   for id, login in self.activeLogins:iLogins() do
     renewLogin(login)
+    log:action(msg.PersistedLoginRenewed:tag{login=id,entity=login.entity})
   end
   
   -- timer de limpeza de credenciais não renovadas e desafios não respondidos
@@ -337,13 +338,13 @@ end
 function AccessControl:logout()
   local login = self.activeLogins:getLogin(getCaller(self).id)
   login:remove()
-  log:request(msg.LogoutPerformed:tag{login=id,entity=login.entity})
+  log:request(msg.LogoutPerformed:tag{login=login.id,entity=login.entity})
 end
 
 function AccessControl:renew()
   local login = self.activeLogins:getLogin(getCaller(self).id)
   renewLogin(login)
-  log:request(msg.LoginRenewed:tag{login=id,entity=login.entity})
+  log:request(msg.LoginRenewed:tag{login=login.id,entity=login.entity})
   return self.leaseTime
 end
 
@@ -542,12 +543,12 @@ function LoginRegistry:getValidity(ids)
 end
 
 function LoginRegistry:subscribeObserver(callback)
-  local id = getCaller(self).id
   local logins = AccessControl.activeLogins
-  local login = logins:getLogin(id)
+  local login = logins:getLogin(getCaller(self).id)
   local observer = login:newObserver(callback)
-  local subscription = Subscription{ id=observer.id, logins=logins }
-  self.subscriptionOf[observer.id] = subscription
+  local id = observer.id
+  local subscription = Subscription{ id=id, logins=logins }
+  self.subscriptionOf[id] = subscription
   return subscription
 end
 

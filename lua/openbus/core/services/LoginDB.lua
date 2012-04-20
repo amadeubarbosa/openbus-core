@@ -172,7 +172,7 @@ function Database:newLogin(entity, encodedkey, allowLegacyDelegate)
     id = id,
     entity = entity,
     encodedkey = encodedkey,
-    allowLegacyDelegate = allowLegacyDelegate,
+    allowLegacyDelegate = allowLegacyDelegate or false,
   }
   local table = self.lgnTab
   assert(table:setentry(id, data))

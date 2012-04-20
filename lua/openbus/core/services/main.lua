@@ -104,10 +104,15 @@ Options:
     end
   end
 
+  -- setup log files
+  setuplog(log, Configs.loglevel, Configs.logfile)
+  setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
+
   -- create a set of admin users
   local adminUsers = {}
   for _, admin in ipairs(Configs.admin) do
     adminUsers[admin] = true
+    log:config(msg.AdministrativeRightsGranted:tag{entity=admin})
   end
   
   -- load all password validators to be used
@@ -117,19 +122,15 @@ Options:
       name = package,
       validate = assert(require(package)(Configs)),
     }
+    log:config(msg.PasswordValidatorLoaded:tag{name=package})
   end
   assert(#validators>0, msg.NoPasswordValidators)
-
-  -- setup log files
-  setuplog(log, Configs.loglevel, Configs.logfile)
-  setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
 
   -- setup bus access
   local orb = access.initORB{ host=Configs.host, port=Configs.port }
   local iceptor = access.Interceptor{
     prvkey = assert(readprivatekey(Configs.privatekey)),
     orb = orb,
-    legacy = not Configs.nolegacy,
   }
   orb:setinterceptor(iceptor, "corba")
 
@@ -153,6 +154,14 @@ Options:
         validators = validators,
         enforceAuth = not Configs.noauthorizations,
       }
+      log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
+      log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
+      log:config(msg.LoadedBusCertificate:tag{path=Configs.certificate})
+      log:config(msg.SetupLoginValidityTime:tag{value=params.leaseTime})
+      log:config(msg.SetupLoginExpirationGap:tag{value=params.expirationGap})
+      if not params.enforceAuth then
+        log:config(msg.OfferAuthorizationEnfocementDisabled)
+      end
       -- these object must be initialized in this order
       facets.CertificateRegistry:__init(params)
       facets.AccessControl:__init(params)
@@ -162,13 +171,14 @@ Options:
       facets.OfferRegistry:__init(params)
     end,
   }
-
+  
   -- create legacy SCS components
-  if iceptor.legacy then
+  if not Configs.nolegacy then
     local legacyIDL = require "openbus.core.legacy.idl"
     legacyIDL.loadto(orb)
-  
+    
     local AccessControlService = require "openbus.core.legacy.AccessControlService"
+    iceptor.legacy = AccessControlService.IAccessControlService
     local ACS = newSCS{
       orb = orb,
       objkey = "openbus_v1_05",
@@ -190,6 +200,7 @@ Options:
       facets = RegistryService,
     }
     ACS.IReceptacles:connect("RegistryServiceReceptacle", RGS.IComponent)
+    log:config(msg.LegacySupportEnabled)
   end
 
   -- start ORB
