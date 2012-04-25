@@ -455,7 +455,7 @@ handlers["add-category"] = function(cmd)
       if err._repid == offertypes.EntityCategoryAlreadyExists then
         printf("[ERRO] Categoria '%s' já cadastrada", id)
       else
-        error(err)
+        printf("[ERRO] Erro inesperado ao adicionar categoria: %s", err._repid)
       end
       return false
     end
@@ -476,7 +476,11 @@ end
 handlers["del-category"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local category = conn.entities:getEntityCategory(id)
+  local ok, category = pcall(conn.entities.getEntityCategory, conn.entities, id)
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao remover categoria: %s", category._repid)
+    return false
+  end
   if not category then 
     printf("[ERRO] Categoria '%s' não existe.", id)
     return false
@@ -486,7 +490,7 @@ handlers["del-category"] = function(cmd)
     if err._repid == offertypes.EntityCategoryInUse then
       printf("[ERRO] Categoria '%s' em uso.", id)
     else
-      error(err)
+      printf("[ERRO] Erro inesperado ao remover categoria: %s", err._repid)
     end
     return false
   end
@@ -502,12 +506,20 @@ end
 handlers["set-category"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local category = conn.entities:getEntityCategory(cmd.params[cmd.name])
+  local ok, category = pcall(conn.entities.getEntityCategory, conn.entities,cmd.params[cmd.name])
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao configurar categoria: %s", category._repid)
+    return false
+  end
   if not category then 
     printf("[ERRO] Categoria '%s' não existe.", id)
     return false
   end
-  category:setName(cmd.params.name)  
+  local ok, err = category:setName(cmd.params.name)
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao configurar categoria: %s", err._repid)
+    return false
+  end
   printf("[INFO] Categoria '%s' atualizada com sucesso", id)
   return true
 end
@@ -518,19 +530,32 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-category"] = function(cmd)
-  local categories
+  local ok, categories
   local conn = connect()
   -- Busca todas
   if cmd.params[cmd.name] == null then
-    categories = conn.entities:getEntityCategories()
+    ok, categories = pcall(conn.entities.getEntityCategories, conn.entities)
+    if not ok then 
+      printf("[ERRO] Erro inesperado ao listar categorias: %s", categories._repid)
+      return false
+    end
   else
     -- Busca uma categoria específica
-    local category = conn.entities:getEntityCategory(cmd.params[cmd.name])
+    local ok, category = pcall(conn.entities.getEntityCategory, conn.entities, cmd.params[cmd.name])
+    if not ok then 
+      printf("[ERRO] Erro inesperado ao listar categorias: %s", category._repid)
+      return false
+    end
     if not category then 
       printf("[ERRO] Categoria '%s' não existe.", id)
       return false
     end
-    categories = {category:describe()}
+    local ok, description = pcall(category.describe, category)
+    if not ok then 
+      printf("[ERRO] Erro inesperado ao listar categorias: %s", description._repid)
+      return false
+    end
+    categories = {description}
   end
   printer.showCategory(categories)
   return true
@@ -550,7 +575,11 @@ handlers["add-entity"] = function(cmd)
     return false
   end
 
-  local category = conn.entities:getEntityCategory(cmd.params.category)
+  local ok, category = pcall(conn.entities.getEntityCategory, conn.entities, cmd.params.category)
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao adicionar categoria: %s", category._repid)
+    return false
+  end
   if not category then 
     printf("[ERRO] Categoria '%s' não existe.", id)
     return false
@@ -560,7 +589,7 @@ handlers["add-entity"] = function(cmd)
     if err._repid == offertypes.EntityAlreadyRegistered then
       printf("[ERRO] Entidade '%s' já cadastrada.", id)
     else
-      error(err)
+      printf("[ERRO] Erro inesperado ao adicionar categoria: %s", err._repid)
     end
     return false
   end
@@ -576,14 +605,22 @@ end
 handlers["del-entity"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local entity = conn.entities:getEntity(id)
+  local ok, entity = pcall(conn.entities.getEntity, conn.entity, id)
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao remover entidade: %s", entity._repid)
+    return false
+  end
   if not entity then
     printf("[ERRO] Entidade '%s' inexistente.", id)
     return false
   end
   entity:remove()
   -- se tiver certificado, remove
-  conn.certificates:removeCertificate(id)
+  local ok, err = pcall(conn.certificates.removeCertificate, conn.certificates, id)
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao remover entidade: %s", err._repid)
+    return false
+  end
   printf("[INFO] Entidade '%s' removida com sucesso", id)
   return true
 end
@@ -596,12 +633,20 @@ end
 handlers["set-entity"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local entity = conn.entities:getEntity(id)
+  local ok, entity = pcall(conn.entities.getEntity, conn.entities, id)
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao configurar entidade: %s", entity._repid)
+    return false
+  end
   if not entity then
     printf("[ERRO] Entidade '%s' não existe.", id)
     return false
   end
-  entity:setName(cmd.params.name)
+  local ok, err = pcall(entity.setName, entity, cmd.params.name)
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao configurar entidade: %s", err._repid)
+    return false
+  end
   printf("[INFO] Entidade '%s' atualizada com sucesso", id)
   return true
 end
@@ -612,7 +657,7 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-entity"] = function(cmd)
-  local entities
+  local entities, ok
   local conn = connect()
   local id = cmd.params[cmd.name]
   local category = cmd.params.category
@@ -620,24 +665,45 @@ handlers["list-entity"] = function(cmd)
     -- TODO: possivelmente, a verficacao category == null é um bug
     if not category or category == null then
       -- Busca todos
-      entities = conn.entities:getEntities()
+      ok, entities = pcall(conn.entities.getEntities, conn.entities)
+      if not ok then 
+        printf("[ERRO] Erro inesperado ao listar entidades: %s", entities._repid)
+        return false
+      end
     else
       -- Filtra por categoria
-      local category = conn.entities:getEntityCategory(category)
+      local ok, category = pcall(conn.entities.getEntityCategory, conn.entities, category)
+      if not ok then 
+        printf("[ERRO] Erro inesperado ao listar entidades: %s", category._repid)
+        return false
+      end
       if not category then 
         printf("[ERRO] Categoria '%s' não existe.", category)
         return false
       end
-      entities = category:getEntities()
+      ok, entities = pcall(category.getEntities, category)
+      if not ok then 
+        printf("[ERRO] Erro inesperado ao listar entidades: %s", entities._repid)
+        return false
+      end
     end
   else
     -- Busca apenas uma implantação
-    local entity = conn.entities:getEntity(id)
+    local ok, entity = pcall(conn.entities.getEntity, conn.entities, id)
+    if not ok then 
+      printf("[ERRO] Erro inesperado ao listar entidades: %s", entity._repid)
+      return false
+    end
     if not entity then
       printf("[ERRO] Entidade '%s' não existe.", id)
       return false
     else 
-      entities = {entity:describe()}
+      local ok, description = pcall(entity.describe, entity)
+      if not ok then 
+        printf("[ERRO] Erro inesperado ao listar entidades: %s", description._repid)
+        return false
+      end
+      entities = {description}
     end
   end
   printer.showEntity(entities)
@@ -675,7 +741,7 @@ handlers["add-certificate"] = function(cmd)
     if err._repid == logintypes.InvalidCertificate then
       printf("[ERRO] Certificado inválido: '%s'", certificate)
     else
-      error(err)
+      printf("[ERRO] Erro inesperado ao incluir certificado: %s", ret._repid)
     end
     return false
   end
@@ -691,7 +757,11 @@ end
 handlers["del-certificate"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local ret = conn.certificates:removeCertificate(id)
+  local ok, ret = pcall(conn.certificates.removeCertificate, conn.certificates, id)
+  if not ok then 
+    printf("[ERRO] Erro inesperado ao remover certificado: %s", ret._repid)
+    return false
+  end
   if ret then
     printf("[INFO] Certificado da entidade '%s' removido com sucesso", id)
   else
@@ -713,7 +783,7 @@ handlers["add-interface"] = function(cmd)
     if err._repid == offertypes.InvalidInterface then
       printf("[ERRO] Interface '%s' inválida.", id)
     else
-      error(err)
+      printf("[ERRO] Erro inesperado ao adicionar interface: %s", err._repid)
     end
     return false
   end
@@ -734,7 +804,7 @@ handlers["del-interface"] = function(cmd)
     if err._repid == offertypes.InterfaceInUse then
       printf("[ERRO] Interface '%s' em uso.", id)
     else
-      error(err)
+      printf("[ERRO] Erro inesperado ao remover interface: %s", err._repid)
     end
     return false
   end
@@ -749,7 +819,11 @@ end
 --
 handlers["list-interface"] = function(cmd)
   local conn = connect()
-  local interfaces = conn.interfaces:getInterfaces()
+  local ok, interfaces = pcall(conn.interfaces.getInterfaces, conn.interfaces)
+  if not ok then
+    printf("[ERRO] Erro inesperado ao listar interfaces: %s", interfaces._repid)
+    return false
+  end
   printer.showInterface(interfaces)
   return true
 end
@@ -762,13 +836,17 @@ end
 handlers["set-authorization"] = function(cmd)
   local conn = connect()
   local id = cmd.params[cmd.name]
-  local entity = conn.entities:getEntity(id)
+  local ok, entity = pcall(conn.entities.getEntity, conn.entities, id)
+  if not ok then
+    printf("[ERRO] Erro inesperado ao configurar autorizações: %s", entity._repid)
+    return false
+  end
   if not entity then
     printf("[ERRO] Entidade '%s' não existe.", id)
     return false
   end
   local interface
-  local ok, err
+  local err
   if cmd.params.grant then
     -- Concede uma autorização
     interface = cmd.params.grant
@@ -777,7 +855,7 @@ handlers["set-authorization"] = function(cmd)
       if err._repid == offertypes.InvalidInterface then
         printf("[ERRO] Interface '%s' inválida.", interface)
       else
-        error(err)
+        printf("[ERRO] Erro inesperado ao configurar autorizações: %s", err._repid)
       end
       return false
     end
@@ -793,7 +871,7 @@ handlers["set-authorization"] = function(cmd)
         printf("[ERRO] Autorização '%s' em uso pela entidade '%s'.", interface,
           id)
       else
-        error(err)
+        printf("[ERRO] Erro inesperado ao configurar autorizações: %s", err._repid)
       end
       return false
     end
@@ -814,11 +892,20 @@ handlers["list-authorization"] = function(cmd)
   if id == null then
     if not cmd.params.interface or cmd.params.interface == null then
       -- Busca todas
-      local ents = conn.entities:getAuthorizedEntities()
+      local ok, ents = pcall(conn.entities.getAuthorizedEntities, conn.entities)
+      if not ok then
+        printf("[ERRO] Erro inesperado ao listar autorizações: %s", ents._repid)
+        return false
+      end
       for _, entitydesc in ipairs(ents) do 
         local authorization = {}
         authorization.id = entitydesc.id
-        authorization.interfaces = entitydesc.ref:getGrantedInterfaces()
+        local ok, ifaces = pcall(entitydesc.ref.getGrantedInterfaces, conn.entitydesc.ref)
+        if not ok then
+          printf("[ERRO] Erro inesperado ao listar autorizações: %s", ifaces._repid)
+          return false
+        end
+        authorization.interfaces = ifaces
         table.insert(auths, authorization)
       end
     else
@@ -827,24 +914,42 @@ handlers["list-authorization"] = function(cmd)
       for iface in string.gmatch(cmd.params.interface, "%S+") do
         ifaces[#ifaces+1] = iface
       end
-      local ents = conn.entities:getEntitiesByAuthorizedInterfaces(ifaces)
+      local ok, ents = pcall(conn.entities.getEntitiesByAuthorizedInterfaces, conn.entities, ifaces)
+      if not ok then
+        printf("[ERRO] Erro inesperado ao listar autorizações: %s", ents._repid)
+        return false
+      end
       for _, entitydesc in ipairs(ents) do 
         local authorization = {}
         authorization.id = entitydesc.id
-        authorization.interfaces = entitydesc.ref:getGrantedInterfaces()
+        local ok, ifaces = pcall(entitydesc.ref.getGrantedInterfaces, conn.entitydesc.ref)
+        if not ok then
+          printf("[ERRO] Erro inesperado ao listar autorizações: %s", ifaces._repid)
+          return false
+        end
+        authorization.interfaces = ifaces
         table.insert(auths, authorization)
       end
     end
   else
     -- Busca por entidade
-    local entity = conn.entities:getEntity(id)
+    local ok, entity = pcall(conn.entities.getEntity, conn.entities, id)
+    if not ok then
+      printf("[ERRO] Erro inesperado ao listar autorizações: %s", entity._repid)
+      return false
+    end
     if not entity then
       printf("[ERRO] Entidade '%s' não existe.", id)
       return false
     end
     local authorization = {}
     authorization.id = id
-    authorization.interfaces = entity:getGrantedInterfaces()
+    local ok, ifaces = pcall(entity.getGrantedInterfaces, entity)
+    if not ok then
+      printf("[ERRO] Erro inesperado ao listar autorizações: %s", ifaces._repid)
+      return false
+    end
+    authorization.interfaces = ifaces
     table.insert(auths, authorization)
   end
   printer.showAuthorization(auths)
@@ -857,10 +962,13 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["del-login"] = function(cmd)
-  local logins
   local conn = connect()
   local id = cmd.params[cmd.name]
-  conn.logins:invalidateLogin(id)
+  local ok, err = pcall(conn.logins.invalidateLogin, conn.logins, id)
+  if not ok then
+    printf("[ERRO] Erro inesperado ao remover login: %s", err._repid)
+    return false
+  end
   printf("[INFO] Login '%s' removido com sucesso.", id)
   return true
 end
@@ -871,14 +979,22 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-login"] = function(cmd)
-  local logins
+  local ok, logins
   local conn = connect()
   if not cmd.params.entity or cmd.params.entity == null then
     -- Busca todos
-    logins = conn.logins:getAllLogins()
+    ok, logins = pcall(conn.logins.getAllLogins, conn.logins)
+    if not ok then
+      printf("[ERRO] Erro inesperado ao listar logins: %s", logins._repid)
+      return false
+    end
   else
     -- Filtra por entidade
-    logins = conn.logins:getEntityLogins(cmd.params.entity)
+    ok, logins = pcall(conn.logins.getEntityLogins, conn.logins, cmd.params.entity)
+    if not ok then
+      printf("[ERRO] Erro inesperado ao listar logins: %s", logins._repid)
+      return false
+    end
   end
   -- remove o próprio login da lista
   local index
@@ -900,15 +1016,23 @@ end
 -- @param cmd Comando e seus argumentos.
 --
 handlers["list-offer"] = function(cmd)
-  local offers
+  local offers, ok
   local conn = connect()
   local id = cmd.params[cmd.name]
   if id == null then 
     -- Lista todos
-    offers = conn.offers:getServices()
+    ok, offers = pcall(conn.offers.getServices, conn.offers)
+    if not ok then
+      printf("[ERRO] Erro inesperado ao listar ofertas: %s", offers._repid)
+      return false
+    end
   else
     -- Filtra por entidade
-    offers = conn.offers:findServices({{name="openbus.offer.entity",value=id}})
+    ok, offers = pcall(conn.offers.findServices, conn.offers, {{name="openbus.offer.entity",value=id}})
+    if not ok then
+      printf("[ERRO] Erro inesperado ao listar ofertas: %s", offers._repid)
+      return false
+    end
   end
   printer.showOffer(offers)
   return true
@@ -921,12 +1045,20 @@ end
 --
 handlers["del-offer"] = function(cmd)
   local conn = connect()
-  local offers
+  local offers, ok
   local id = cmd.params.entity
   if not id or id == null then
-    offers = conn.offers:getServices()
+    ok, offers = pcall(conn.offers.getServices, conn.offers)
+    if not ok then
+      printf("[ERRO] Erro inesperado ao remover oferta: %s", offers._repid)
+      return false
+    end
   else
-    offers = conn.offers:findServices({{name="openbus.offer.entity",value=id}})
+    ok, offers = pcall(conn.offers.findServices, conn.offers, {{name="openbus.offer.entity",value=id}})
+    if not ok then
+      printf("[ERRO] Erro inesperado ao remover oferta: %s", offers._repid)
+      return false
+    end
   end
   local descs = printer.showOffer(offers)
   if #descs == 0 then
@@ -955,12 +1087,20 @@ end
 --
 handlers["list-props"] = function(cmd)
   local conn = connect()
-  local offers
+  local ok, offers
   local id = cmd.params[cmd.name]
   if not id or id == null then
-    offers = conn.offers:getServices()
+    ok, offers = pcall(conn.offers.getServices, conn.offers)
+    if not ok then
+      printf("[ERRO] Erro inesperado ao listar propriedades: %s", offers._repid)
+      return false
+    end
   else
-    offers = conn.offers:findServices({{name="openbus.offer.entity",value=id}})
+    ok, offers = pcall(conn.offers.findServices, conn.offers, {{name="openbus.offer.entity",value=id}})
+    if not ok then
+      printf("[ERRO] Erro inesperado ao listar propriedades: %s", offers._repid)
+      return false
+    end
   end
   local descs = printer.showOffer(offers)
   if #descs == 0 then
