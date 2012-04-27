@@ -18,6 +18,8 @@ local hash = require "lce.hash"
 local sha256 = hash.sha256
 
 local log = require "openbus.util.logger"
+local oo = require "openbus.util.oo"
+local class = oo.class
 
 local idl = require "openbus.core.legacy.idl"
 local types = idl.types.access_control_service
@@ -62,11 +64,14 @@ local IAccessControlService = {
 function IAccessControlService:__init(data)
   self.lastChallengeOf = setmetatable({}, { __mode = "v" })
   local access = data.access
+  local admins = data.admins
   access:setGrantedUsers(self.__type, "loginByPassword", "any")
   access:setGrantedUsers(self.__type, "loginByCertificate", "any")
   access:setGrantedUsers(self.__type, "getChallenge", "any")
   access:setGrantedUsers(self.__type, "isValid", "any")
   access:setGrantedUsers(self.__type, "areValid", "any")
+  access:setGrantedUsers(self.__type, "getEntryCredential", admins)
+  access:setGrantedUsers(self.__type, "getAllEntryCredential", admins)
 end
 
 -- Login Support
@@ -155,11 +160,10 @@ function IAccessControlService:logout(credential)
   if login ~= nil then
     local ok, errmsg = pcall(login.remove, login)
     if ok then
-      log:request(msg.LogoutPerformed:tag{login=id,entity=login.entity})
+      log:request(msg.LogoutPerformed:tag{login=login.id,entity=login.entity})
       return true
-    else
-      log:exception(msg.UnableToLogout:tag{login=id,entity=login.entity})
     end
+    log:exception(msg.UnableToLogout:tag{login=login.id,entity=login.entity})
   else
     log:exception(msg.AttemptToLogoutInvalidLogin:tag{login=credential.identifier})
   end
@@ -188,15 +192,27 @@ end
 
 -- Credential Observation Support
 
-function IAccessControlService:addObserver(observer, credentials)
-  local subscription = facets.LoginRegistry:subscribe(observer)
-  subscription:watchLogins(credentials)
+local ObserverTranslator = class()
+
+function ObserverTranslator:entityLogout(login)
+  self.observer:credentialWasDeleted{
+    identifier = login.id,
+    owner = login.entity,
+    delegate = "",
+  }
+end
+
+
+function IAccessControlService:addObserver(observer, loginIds)
+  observer = ObserverTranslator{ observer = observer }
+  local subscription = facets.LoginRegistry:subscribeObserver(observer)
+  subscription:watchLogins(loginIds)
   return subscription.id
 end
 
-function IAccessControlService:addCredentialToObserver(obsId, credId)
+function IAccessControlService:addCredentialToObserver(obsId, loginId)
   local subscription = facets.LoginRegistry.subscriptionOf[obsId]
-  return subscription:watchLogin(credId)
+  return subscription:watchLogin(loginIds)
 end
 
 function IAccessControlService:removeObserver(obsId)
@@ -204,44 +220,56 @@ function IAccessControlService:removeObserver(obsId)
   return subscription:remove()
 end
 
-function IAccessControlService:removeCredentialFromObserver(obsId, credId)
+function IAccessControlService:removeCredentialFromObserver(obsId, loginIds)
   local subscription = facets.LoginRegistry.subscriptionOf[obsId]
-  return subscription:forgetLogin(credId)
+  return subscription:forgetLogin(loginIds)
 end
 
 -- Fault Tolerancy Support
 
-local function credentialEntry(credential)
+local emptyEntry = {
+  aCredential = {
+    identifier = "",
+    owner = "",
+    delegate = "",
+  },
+  certified = false,
+  observers = {},
+  observedBy = {}
+}
+
+local function credentialEntry(login)
+  if login == nil then return emptyEntry end
   local observers = {}
   local observedBy = {}
-  for observer in credential:iObservers() do
+  for observer in login:iObservers() do
     observer[#observer+1] = observer.id
   end
-  for observer in credential:iWatchers() do
+  for observer in login:iWatchers() do
     observedBy[#observedBy+1] = observer.id
   end
   return {
     aCredential = {
-      id = credential.id,
-      owner = credential.owner,
+      identifier = login.id,
+      owner = login.entity,
       delegate = "",
     },
-    certified = credential.certified,
+    certified = login.allowLegacyDelegate,
     observers = observers,
     observedBy = observedBy,
   }
 end
 
 function IAccessControlService:getEntryCredential(cred)
-  local credentials = facets.AccessControl.activeCredentials
-  return credentialEntry(credentials:getCredential(cred.id))
+  local logins = facets.AccessControl.activeLogins
+  return credentialEntry(logins:getLogin(cred.identifier))
 end
 
 function IAccessControlService:getAllEntryCredential()
-  local credentials = facets.AccessControl.activeCredentials
+  local logins = facets.AccessControl.activeLogins
   local entries = {}
-  for id, credential in credentials:iCredentials() do
-    entries[#entries+1] = credentialEntry(credential)
+  for id, login in logins:iLogins() do
+    entries[#entries+1] = credentialEntry(login)
   end
   return entries
 end

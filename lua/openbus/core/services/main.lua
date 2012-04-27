@@ -128,9 +128,17 @@ Options:
 
   -- setup bus access
   local orb = access.initORB{ host=Configs.host, port=Configs.port }
+  local legacy
+  if not Configs.nolegacy then
+    local legacyIDL = require "openbus.core.legacy.idl"
+    legacyIDL.loadto(orb)
+    local ACS = require "openbus.core.legacy.AccessControlService"
+    legacy = ACS.IAccessControlService
+  end
   local iceptor = access.Interceptor{
     prvkey = assert(readprivatekey(Configs.privatekey)),
     orb = orb,
+    legacy = legacy,
   }
   orb:setinterceptor(iceptor, "corba")
 
@@ -174,11 +182,7 @@ Options:
   
   -- create legacy SCS components
   if not Configs.nolegacy then
-    local legacyIDL = require "openbus.core.legacy.idl"
-    legacyIDL.loadto(orb)
-    
     local AccessControlService = require "openbus.core.legacy.AccessControlService"
-    iceptor.legacy = AccessControlService.IAccessControlService
     local ACS = newSCS{
       orb = orb,
       objkey = "openbus_v1_05",
@@ -188,7 +192,7 @@ Options:
       init = function()
         AccessControlService.IAccessControlService:__init{
           access = iceptor,
-          admins = Configs.admin,
+          admins = adminUsers,
         }
       end,
     }
