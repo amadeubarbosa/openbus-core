@@ -1,9 +1,6 @@
 PROJNAME= busservices
 APPNAME= $(PROJNAME)
 
-#apenas necessario pela compatilibidade com OpenBus 1.5
-#para gerar o modulo Lua openbus.core.legacy.parsed
-OPENBUSIDL= ${OPENBUS_HOME}/idl/v1_05
 OPENBUSINC= ${OPENBUS_HOME}/include
 OPENBUSLIB= ${OPENBUS_HOME}/lib
 
@@ -15,8 +12,6 @@ SRC= \
 LUADIR= ../lua
 LUASRC= \
   $(LUADIR)/openbus/core/legacy/AccessControlService.lua \
-  $(LUADIR)/openbus/core/legacy/idl.lua \
-  $(LUADIR)/openbus/core/legacy/parsed.lua \
   $(LUADIR)/openbus/core/legacy/RegistryService.lua \
   $(LUADIR)/openbus/core/services/Access.lua \
   $(LUADIR)/openbus/core/services/AccessControl.lua \
@@ -27,11 +22,6 @@ LUASRC= \
   $(LUADIR)/openbus/core/services/PropertyIndex.lua \
   $(LUADIR)/openbus/core/services/OfferRegistry.lua \
   $(LUADIR)/openbus/core/services/passwordvalidator/LDAP.lua
-
-IDL= \
-  $(OPENBUSIDL)/access_control_service.idl \
-  $(OPENBUSIDL)/registry_service.idl \
-  $(OPENBUSIDL)/fault_tolerance.idl
 
 include ${OIL_HOME}/openbus/base.mak
 
@@ -72,9 +62,6 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
   LFLAGS= $(CFLAGS) -xildoff
   LIBS += rt
 endif
-
-$(LUADIR)/openbus/core/legacy/parsed.lua: $(IDL2LUA) $(IDL)
-	$(OILBIN) $(IDL2LUA) -I $(OPENBUSIDL) -o $@ $(IDL)
 
 $(PRELOAD_DIR)/coreservices.c $(PRELOAD_DIR)/coreservices.h: $(LUAPRELOADER) $(LUASRC)
 	$(LOOPBIN) $(LUAPRELOADER) -l "$(LUADIR)/?.lua" \
