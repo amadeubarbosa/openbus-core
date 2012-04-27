@@ -52,7 +52,7 @@ local function assertCaller(self, owner)
   elseif self.admins[entity] ~= nil then
     logtag = "admin"
   else
-    UnauthorizedOperation()
+    srvex.UnauthorizedOperation()
   end
   return logtag
 end

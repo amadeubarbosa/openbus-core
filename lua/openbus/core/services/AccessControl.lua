@@ -423,6 +423,7 @@ end
 
 function Subscription:remove()
   self.observer:remove()
+  self.registry.access.orb:deactivate(self)
 end
 
 
@@ -450,7 +451,7 @@ function LoginRegistry:__init(data)
   local orb = access.orb
   local logins = AccessControl.activeLogins
   for id, observer in logins:iObservers() do
-    local subscription = Subscription{ id=id, logins=logins }
+    local subscription = Subscription{ id=id, logins=logins, registry=self }
     self.subscriptionOf[id] = subscription
     orb:newservant(subscription)
   end
@@ -547,7 +548,7 @@ function LoginRegistry:subscribeObserver(callback)
   local login = logins:getLogin(getCaller(self).id)
   local observer = login:newObserver(callback)
   local id = observer.id
-  local subscription = Subscription{ id=id, logins=logins }
+  local subscription = Subscription{ id=id, logins=logins, registry=self }
   self.subscriptionOf[id] = subscription
   return subscription
 end

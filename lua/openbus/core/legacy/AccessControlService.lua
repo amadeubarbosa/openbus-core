@@ -212,17 +212,35 @@ end
 
 function IAccessControlService:addCredentialToObserver(obsId, loginId)
   local subscription = facets.LoginRegistry.subscriptionOf[obsId]
-  return subscription:watchLogin(loginIds)
+  if subscription ~= nil then
+    local ok, res = pcall(subscription.watchLogin, subscription, loginId)
+    if type(res) == "table" and res._repid ~= newtypes.InvalidLogins then
+      error(res)
+    end
+    return ok and res
+  end
+  return false
 end
 
 function IAccessControlService:removeObserver(obsId)
   local subscription = facets.LoginRegistry.subscriptionOf[obsId]
-  return subscription:remove()
+  if subscription ~= nil then
+    subscription:remove()
+    return true
+  end
+  return false
 end
 
-function IAccessControlService:removeCredentialFromObserver(obsId, loginIds)
+function IAccessControlService:removeCredentialFromObserver(obsId, loginId)
   local subscription = facets.LoginRegistry.subscriptionOf[obsId]
-  return subscription:forgetLogin(loginIds)
+  if subscription ~= nil then
+    if subscription.observer.watched[loginId] == nil then
+      return false
+    end
+    subscription:forgetLogin(loginId)
+    return true
+  end
+  return false
 end
 
 -- Fault Tolerancy Support
@@ -261,14 +279,13 @@ local function credentialEntry(login)
 end
 
 function IAccessControlService:getEntryCredential(cred)
-  local logins = facets.AccessControl.activeLogins
-  return credentialEntry(logins:getLogin(cred.identifier))
+  local login = facets.AccessControl.activeLogins:getLogin(cred.identifier)
+  return credentialEntry(login)
 end
 
 function IAccessControlService:getAllEntryCredential()
-  local logins = facets.AccessControl.activeLogins
   local entries = {}
-  for id, login in logins:iLogins() do
+  for id, login in facets.AccessControl.activeLogins:iLogins() do
     entries[#entries+1] = credentialEntry(login)
   end
   return entries

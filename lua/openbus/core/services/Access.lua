@@ -80,11 +80,26 @@ function BusInterceptor:__init()
       },
     }, { __index = function() return defOpAccess end })
   end
+  
+  local orb = self.orb
+  self.NoCredentialException = orb:newexcept{
+    _repid = sysex.NO_PERMISSION,
+    completed = "COMPLETED_NO",
+    minor = const.NoCredentialCode,
+  }
+  self.LegacyNoPermissionException = orb:newexcept{
+    _repid = sysex.NO_PERMISSION,
+    completed = "COMPLETED_NO",
+    minor = 0,
+  }
+  self.UnauthorizedOperationException = orb:newexcept{
+    _repid = types.UnauthorizedOperation,
+  }
 end
 
 function BusInterceptor:validateChain(chain, caller)
   if chain == nil then
-    chain = { callers = {caller} }
+    chain = { callers = {caller}, signature = true }
   else
     if chain.signature ~= nil then -- is not a legacy chain (OpenBus 1.5)
                                    -- legacy chain is always created correctly
@@ -120,7 +135,6 @@ end
 
 
 
-local UnauthorizedOperationException = { _repid = types.UnauthorizedOperation }
 function BusInterceptor:receiverequest(request)
   if request.servant ~= nil then -- servant object does exist
     local opName = request.operation_name
@@ -135,12 +149,21 @@ function BusInterceptor:receiverequest(request)
           local login = callers[#callers]
           if not granted[login.entity] then
             request.success = false
-            request.results = {UnauthorizedOperationException}
-            log:access(msg.DeniedBusCall:tag{
-              operation = request.operation.name,
-              login = login.id,
-              entity = login.entity,
-            })
+            if chain.signature == nil then -- legacy call (OpenBus 1.5)
+              request.results = {self.LegacyNoPermissionException}
+              log:access(msg.DeniedLegacyBusCall:tag{
+                operation = request.operation.name,
+                login = login.id,
+                entity = login.entity,
+              })
+            else
+              request.results = {self.UnauthorizedOperationException}
+              log:access(msg.DeniedBusCall:tag{
+                operation = request.operation.name,
+                login = login.id,
+                entity = login.entity,
+              })
+            end
           else
             log:access(msg.GrantedBusCall:tag{
               operation = request.operation.name,
@@ -150,11 +173,7 @@ function BusInterceptor:receiverequest(request)
           end
         elseif granted ~= Anybody then
           request.success = false
-          request.results = {self.orb:newexcept{
-            _repid = sysex.NO_PERMISSION,
-            completed = "COMPLETED_NO",
-            minor = const.InvalidLoginCode,
-          }}
+          request.results = {self.NoCredentialException}
           log:access(msg.DeniedCallWithoutCredential:tag{
             operation = request.operation.name,
           })
