@@ -448,6 +448,9 @@ end
 --
 handlers["add-category"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   if validId(id) then
     local ok, err = pcall(conn.entities.createEntityCategory, conn.entities,
@@ -476,6 +479,9 @@ end
 --
 handlers["del-category"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, category = pcall(conn.entities.getEntityCategory, conn.entities, id)
   if not ok then 
@@ -506,6 +512,9 @@ end
 --
 handlers["set-category"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, category = pcall(conn.entities.getEntityCategory, conn.entities,cmd.params[cmd.name])
   if not ok then 
@@ -533,6 +542,9 @@ end
 handlers["list-category"] = function(cmd)
   local ok, categories
   local conn = connect()
+  if not conn then
+    return false
+  end
   -- Busca todas
   if cmd.params[cmd.name] == null then
     ok, categories = pcall(conn.entities.getEntityCategories, conn.entities)
@@ -569,6 +581,9 @@ end
 --
 handlers["add-entity"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   if not validId(id) then
     printf("[ERRO] Falha ao adicionar entidade '%s': " ..
@@ -605,6 +620,9 @@ end
 --
 handlers["del-entity"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, entity = pcall(conn.entities.getEntity, conn.entities, id)
   if not ok then 
@@ -633,6 +651,9 @@ end
 --
 handlers["set-entity"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, entity = pcall(conn.entities.getEntity, conn.entities, id)
   if not ok then 
@@ -660,6 +681,9 @@ end
 handlers["list-entity"] = function(cmd)
   local entities, ok
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local category = cmd.params.category
   if id == null then
@@ -718,6 +742,9 @@ end
 --
 handlers["add-certificate"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   if not validId(id) then
     printf("[ERRO] Falha ao adicionar certificado '%s': " ..
@@ -757,6 +784,9 @@ end
 --
 handlers["del-certificate"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, ret = pcall(conn.certificates.removeCertificate, conn.certificates, id)
   if not ok then 
@@ -778,6 +808,9 @@ end
 --
 handlers["add-interface"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, err = pcall(conn.interfaces.registerInterface, conn.interfaces, id)
   if not ok then
@@ -799,6 +832,9 @@ end
 --
 handlers["del-interface"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, err = pcall(conn.interfaces.removeInterface, conn.interfaces, id)
   if not ok then
@@ -820,6 +856,9 @@ end
 --
 handlers["list-interface"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local ok, interfaces = pcall(conn.interfaces.getInterfaces, conn.interfaces)
   if not ok then
     printf("[ERRO] Erro inesperado ao listar interfaces: %s", tostring(interfaces))
@@ -836,6 +875,9 @@ end
 --
 handlers["set-authorization"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, entity = pcall(conn.entities.getEntity, conn.entities, id)
   if not ok then
@@ -889,6 +931,9 @@ end
 handlers["list-authorization"] = function(cmd)
   local auths = {}
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   if id == null then
     if not cmd.params.interface or cmd.params.interface == null then
@@ -964,6 +1009,9 @@ end
 --
 handlers["del-login"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   local ok, err = pcall(conn.logins.invalidateLogin, conn.logins, id)
   if not ok then
@@ -982,6 +1030,9 @@ end
 handlers["list-login"] = function(cmd)
   local ok, logins
   local conn = connect()
+  if not conn then
+    return false
+  end
   if not cmd.params.entity or cmd.params.entity == null then
     -- Busca todos
     ok, logins = pcall(conn.logins.getAllLogins, conn.logins)
@@ -1019,6 +1070,9 @@ end
 handlers["list-offer"] = function(cmd)
   local offers, ok
   local conn = connect()
+  if not conn then
+    return false
+  end
   local id = cmd.params[cmd.name]
   if id == null then 
     -- Lista todos
@@ -1046,6 +1100,9 @@ end
 --
 handlers["del-offer"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local offers, ok
   local id = cmd.params.entity
   if not id or id == null then
@@ -1088,6 +1145,9 @@ end
 --
 handlers["list-props"] = function(cmd)
   local conn = connect()
+  if not conn then
+    return false
+  end
   local ok, offers
   local id = cmd.params[cmd.name]
   if not id or id == null then
@@ -1172,7 +1232,7 @@ function connect(retry)
     else 
       error(err)
     end
-    return 1
+    return nil
   end
   connection = conn
   return connection
