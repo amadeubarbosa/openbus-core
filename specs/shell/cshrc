@@ -10,7 +10,7 @@ setenv OPENSSL_HOME "${OPENBUS_HOME}/openssl"
 
 setenv PATH "${OPENBUS_HOME}/bin:${PATH}"
 
-set OB_CPATH="${OPENBUS_HOME}/include/cxxtest:${OPENBUS_HOME}/include/e2fsprogs-1.40.8:${OPENBUS_HOME}/include/openldap-2.4.11:${OPENBUS_HOME}/include/openssl-0.9.9"
+set OB_CPATH="${OPENBUS_HOME}/include/cxxtest:${OPENBUS_HOME}/include/e2fsprogs-1.40.8:${OPENBUS_HOME}/include/openldap-2.4.11:${OPENBUS_HOME}/include/openssl-1.0.0"
 if ($?CPATH == 0) then
   setenv CPATH "${OB_CPATH}"
 else
@@ -61,12 +61,12 @@ if ($?TEC_SYSNAME == 1) then
     
     #openbus flags first
     setenv LDFLAGS "-L${OPENBUS_HOME}/lib $LDFLAGS"
-    setenv CFLAGS "-I${OPENBUS_HOME}/include/e2fsprogs-1.40.8 -I${OPENBUS_HOME}/include/openldap-2.4.11 -I${OPENBUS_HOME}/include/openssl-0.9.9" 
+    setenv CFLAGS "-I${OPENBUS_HOME}/include/e2fsprogs-1.40.8 -I${OPENBUS_HOME}/include/openldap-2.4.11 -I${OPENBUS_HOME}/include/openssl-1.0.0" 
     #tecmake because it doesn't work with Sun make
     setenv TECMAKE_MAKE "/usr/sfw/bin/gmake"
   endif
 
 endif
 
-setenv LUA_PATH "${OPENBUS_HOME}/src/lua/?.lua;${OPENBUS_HOME}/lib/lua/5.1/?.lua;${OPENBUS_HOME}/lib/lua/5.1/?/init.lua;./?.lua;?.lua"
+setenv LUA_PATH "${OPENBUS_HOME}/lib/lua/5.1/?.lua;./?.lua"
 setenv LUA_CPATH "${OPENBUS_HOME}/lib/lib?.so;./?.so"
