@@ -525,7 +525,7 @@ handlers["set-category"] = function(cmd)
     printf("[ERRO] Categoria '%s' não existe.", id)
     return false
   end
-  local ok, err = category:setName(cmd.params.name)
+  local ok, err = pcall(category.setName, category, cmd.params.name)
   if not ok then 
     printf("[ERRO] Erro inesperado ao configurar categoria: %s", tostring(err))
     return false
