@@ -39,6 +39,7 @@ local function convert(credential)
 end
 
 local ILeaseProvider = {
+  __facet = "ILeaseProvider_v1_05",
   __type = types.ILeaseProvider,
   __objkey = "LP_v1_05",
 }
@@ -57,6 +58,7 @@ end
 -- Faceta IAccessControlService ----------------------------------------------
 
 local IAccessControlService = {
+  __facet = "IAccessControlService_v1_05",
   __type = types.IAccessControlService,
   __objkey = "ACS_v1_05",
 }
@@ -146,7 +148,7 @@ function IAccessControlService:loginByCertificate(id, answer)
         log:exception(msg.UnableToEncryptLoginByCertificateData:tag{entity=id,error=errmsg})
       end
     else
-      log:exception(msg.UnableDecodeAnswerToChallenge:tag{entity=id,error=errmsg})
+      log:exception(msg.UnableToDecodeAnswerToChallenge:tag{entity=id,error=errmsg})
     end
   else
     log:exception(msg.NoChallengeFoundForLoginByCertificate:tag{entity=id})
@@ -292,39 +294,40 @@ function IAccessControlService:getAllEntryCredential()
 end
 
 -- Faceta IFaultTolerantService ----------------------------------------------
---
---local IFaultTolerantService = {
---  __type = idl.typesFT.IFaultTolerantService,
---  __objkey = "FTACS_v1_05",
---}
---
---function IFaultTolerantService:init()
---  assertCaller(facets.AccessControl)
---  -- intentionally blank
---end
---
---function IFaultTolerantService:isAlive()
---  assertCaller(facets.AccessControl)
---  -- intentionally blank
---  return false
---end
---
---function IFaultTolerantService:setStatus(isAlive)
---  assertCaller(facets.AccessControl)
---  -- intentionally blank
---end
---
---function IFaultTolerantService:kill()
---  assertCaller(facets.AccessControl)
---  self.context.IComponent:shutdown()
---end
---
---function IFaultTolerantService:updateStatus(param)
---  assertCaller(facets.AccessControl)
---  -- intentionally blank
---  return false
---end
---
+
+local IFaultTolerantService = {
+  __facet = "IFaultTolerantService_v1_05",
+  __type = idl.typesFT.IFaultTolerantService,
+  __objkey = "FTACS_v1_05",
+}
+
+function IFaultTolerantService:init()
+  assertCaller(facets.AccessControl)
+  -- intentionally blank
+end
+
+function IFaultTolerantService:isAlive()
+  assertCaller(facets.AccessControl)
+  -- intentionally blank
+  return false
+end
+
+function IFaultTolerantService:setStatus(isAlive)
+  assertCaller(facets.AccessControl)
+  -- intentionally blank
+end
+
+function IFaultTolerantService:kill()
+  assertCaller(facets.AccessControl)
+  self.context.IComponent:shutdown()
+end
+
+function IFaultTolerantService:updateStatus(param)
+  assertCaller(facets.AccessControl)
+  -- intentionally blank
+  return false
+end
+
 -- Exported Module -----------------------------------------------------------
 
 return {
