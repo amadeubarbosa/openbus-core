@@ -26,7 +26,7 @@ local adminPassword = "admin"
 local dUser = "user"
 local dPassword = "user"
 local certificate = "teste.crt"
-local sdklevel = 5
+local sdklevel = 0
 local oillevel = 0 
 
 local scsutils = require ("scs.core.utils")()

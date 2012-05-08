@@ -43,7 +43,7 @@ local dUser = "tester"
 local dPassword = "tester"
 local certificate = "teste.crt"
 local pkey = "teste.key"
-local sdklevel = 5
+local sdklevel = 0
 local oillevel = 0 
 
 local scsutils = require ("scs.core.utils")()
