@@ -1,0 +1,178 @@
+# -*- ispell-local-dictionary: "brasileiro"; coding: utf-8-emacs-unix -*-
+#+STARTUP: overview
+#+TODO: TODO(t) UNDEFINED(n) INFRA(i) MAYBEINVALID(m) UNIMPLEMENTED(u) | DONE(d!@)
+
+* 1 initORB
+** 1.1 Com configurações específicas
+*** MAYBEINVALID 1.1.1 Com definidos interceptadores da aplicação - Teste 2.2.3 é suficiente :runfail:
+** 1.2 Antes de se conectar ou logar
+*** INFRA 1.2.1 Criar e receber chamadas de servant registrado          :run:
+*** INFRA 1.2.2 Criar e invocar um servant remoto                       :run:
+* 2 connect
+** 2.1 host+port
+*** DONE 2.1.1 Conectar num barramento acessível                        :run:
+    connect/host_port/connect_to_right_host_and_port.cpp
+
+*** DONE 2.1.2 Conectar num barramento inacessível                      :run:
+    connect/host_port/connect_to_wrong_host_and_port.cpp
+
+*** INFRA 2.1.3 Conectar num barramento que cai durante a conexão   :runfail:
+** 2.2 orb:
+*** DONE 2.2.1 ORB sendo nulo                                           :run:
+    tests/connect/orb/connect_without_orb.cpp
+
+*** 2.2.2 ORB obtido pelo initORB                                       :run:
+**** DONE 2.2.2.1 ORB sem nenhuma conexão                               :run:
+     tests/connect/orb/connect_getting_orb_with_createORB.cpp
+
+**** UNIMPLEMENTED 2.2.2.2 ORB já com uma conexão sem multiplexing  :runfail:
+**** UNIMPLEMENTED 2.2.2.3 ORB já com uma conexão com multiplexing      :run:
+*** DONE 2.2.3 ORB criado diretamente com o ORB_init                    :run:
+* 3 Connection
+** DONE 3.1 ORB
+*** DONE 3.1.1 assert(conn.orb == <ORB usando no 'connect'>)            :run:
+    connection/orb/orb_is_same.cpp
+
+** 3.2 offer
+** 3.3 busid
+*** TODO 3.3.1 assert(conn.busid == <ID do barramento referenciado no 'connect'>) :run:
+** 3.4 login
+*** UNDEFINED 3.4.1 Qual o valor de LoginInfo antes de um login         :run:
+
+    Falta definir qual deve ser esse valor
+
+*** DONE 3.4.2 Qual o valor de LoginInfo após um login                  :run:
+
+    connection/login/login_info_after_login.cpp
+
+*** UNDEFINED 3.4.3 Qual o valor LoginInfo após um logout               :run:
+
+    Falta definir qual deve ser esse valor
+
+*** UNDEFINED 3.4.4 Qual o valor (id+entity) após um close sem logout   :run:
+
+    Falta definir qual deve ser esse valor
+
+*** UNDEFINED 3.4.5 Qual o valor (id+entity) após um close com logout   :run:
+    
+    Falta definir qual deve ser esse valor
+
+*** UNDEFINED 3.4.6 Qual o valor (id+entity) após receber um NO_PERMISSION{InvalidLogin} :run:
+
+NOTE: testar Entity ID contendo caracteres UTF-8 e ISO-8859-1!
+
+
+    Falta definir qual deve ser esse valor
+
+** 3.5 loginByPassword:
+*** UNDEFINED 3.5.1 depois do 'close'                               :runfail:
+*** DONE 3.5.2 depois de algum 'loginBy*' (senha, certificado e single-signon): :runfail:
+
+    connection/loginByPassword/login_when_already_logged.cpp
+
+*** DONE 3.5.3 Entity ID e senha corretas                               :run:
+
+    connection/loginByPassword/entity_id_and_password_ok.cpp
+
+*** UNDEFINED 3.5.4 Entity ID e senha corretas, porém contendo caracteres UTF-8 e ISO-8859-1: :run:
+*** DONE 3.5.5 Entity ID ou senha incorreta                         :runfail:
+
+    connection/loginByPassword/wrong_password.cpp
+
+*** UNDEFINED 3.5.6 Entity ID e senha com charset diferente do esperado (UTF-8 vs. ISO-8859-1): :runfail:
+*** UNDEFINED 3.5.7 [NO|OK] antes de qualquer login (senha, certificado e single-signon)
+*** DONE 3.5.8 [NO|OK] depois de logout
+*** TODO 3.5.9 [NO|OK] depois de ser notificado que foi deslogado remotamente
+** 3.6 loginByCertificate:
+*** UNDEFINED 3.6.1 depois do 'close'                               :runfail:
+*** TODO 3.6.2 depois de algum 'loginBy*' (senha, certificado e single-signon): :runfail:
+*** TODO 3.6.4.1 Entity ID e privKey corretas                           :run:
+
+    connection/loginByCertificate/all_correct.cpp
+
+*** TODO 3.6.4.2 Entity ID e privKey incorreta:
+*** TODO 3.6.4.3 Entity ID com privKey corrompida:
+*** TODO 3.6.4.4 Entity ID sem certificado registrado:
+*** TODO 3.6.4.5 [NO|OK] antes de qualquer login (senha, certificado e single-signon)
+*** TODO 3.6.4.6 [NO|OK] depois de logout
+*** TODO 3.6.4.7 [NO|OK] depois de ser notificado que foi deslogado remotamente
+** 3.7 startLoginBySignOn:
+*** UNDEFINED 3.7.1 depois do 'close'                               :runfail:
+*** 3.7.2 depois de algum 'loginBy*' (senha, certificado e single-signon): :run:
+*** 3.7.3 antes de qualquer 'loginBy*' (senha, certificado e single-signon) :runfail:
+*** 3.7.4 depois de logout                                          :runfail:
+*** 3.7.5 depois de ser notificado que foi deslogado remotamente    :runfail:
+** 3.8 loginBySingleSignOn:
+*** UNDEFINED 3.8.1 depois do 'close'                               :runfail:
+*** 3.8.2 Depois de algum 'loginBy*' (senha, certificado e single-signon)  :runfail:
+*** 3.8.3 process+secret:
+**** 3.8.3.1 processo válido e segredo correto:
+**** 3.8.3.2 | processo válido e segredo incorreto:
+**** 3.8.3.3 | processo expirado:
+**** 3.8.3.4 | processo cancelado:
+**** 3.8.3.5 [NO|OK] antes de qualquer login (senha, certificado e single-signon)
+**** 3.8.3.6 [NO|OK] depois de logout
+**** 3.8.3.7 [NO|OK] depois de ser notificado que foi deslogado remotamente
+** 3.9 onInvalidLoginCallback:
+*** UNDEFINED 3.9.1 Depois do 'close'                               :runfail:
+*** 3.9.2 É chamada no 'logout|getServices()' depois do login ter expirado
+**** 3.9.2.1 Quando a callback não reloga (logout()==false | getServices()->NO_PERMISSION{InvalidLogin})  :run:
+**** 3.9.2.2 Quando a callback reloga (logout()==true | getServices()->OK) :run:
+*** 3.9.3 Não é chamada no 'logout|getServices' depois do 'logout'      :run:
+** 3.10 logout
+*** 3.10.1 Depois do 'close'                                        :runfail:
+*** 3.10.2 Depois de algum 'loginBy*' (senha, certificado e single-signon)  :run:
+*** 3.10.3 Antes de qualquer 'loginBy*' (senha, certificado e single-signon)  :runfail:
+*** 3.10.4 Depois de logout                                         :runfail:
+*** 3.10.5 Depois de ser notificado que foi deslogado remotamente       :run:
+** 3.11 getCallerChain
+*** 3.11.1 Depois do 'close'                                        :runfail:
+*** 3.11.2 Depois de algum 'loginBy*' (senha, certificado e single-signon)
+**** 3.11.2.1 Dentro de uma chamada remota com "cadeia == 1"            :run:
+**** 3.11.2.2 Dentro de uma chamada remota com "cadeia > 1"             :run:
+**** 3.11.2.3 Fora de uma chamada remota                                :run:
+*** 3.11.3 Antes de qualquer 'loginBy*' (senha, certificado e single-signon)  :run:
+*** 3.11.4 Depois de logout                                             :run:
+*** 3.11.5 Depois de ser notificado que foi deslogado remotamente       :run:
+** 3.12 joinChain
+*** 3.12.1 Depois do 'close'                                        :runfail:
+*** 3.12.2 Antes de qualquer 'loginBy*' (senha, certificado e single-signon) :runfail:
+*** 3.12.3 Depois de logout                                         :runfail:
+*** 3.12.4 Depois de ser notificado que foi deslogado remotamente   :runfail:
+*** 3.12.5 joinChain()                                                  :run:
+*** 3.12.6 joinChain(null)                                              :run:
+*** 3.12.7 joinChain(getCallerChain())                                  :run:
+*** 3.12.8 joinChain(chain) numa thread diferente                       :run:
+*** 3.12.9 joinChain(chain) | chain de um login anterior que foi deslogado  :runfail:
+*** 3.12.10 joinChain(chain) | chain de um outro login ativo
+*** 3.12.11 multiplexação por thread                                :runfail:
+*** 3.12.12 multiplexação por ORB                                   :runfail:
+** 3.13 exitChain
+*** 3.13.1 Depois do 'close'                                        :runfail:
+*** 3.13.2 Antes de qualquer 'loginBy*' (senha, certificado e single-signon)  :runail:runfail:
+*** 3.13.3 Depois de logout                                         :runfail:
+*** 3.13.4 depois de ser notificado que foi deslogado remotamente   :runfail:
+*** 3.13.5 Sair da cadeia antes de qualquer joinChain                   :run:
+*** 3.13.6 Sair da cadeia depois de um joinChain                        :run:
+*** 3.13.7 Sair da cadeia depois de um exitChain                        :run:
+** 3.14 getJoinedChain
+*** 3.14.1 Depois do 'close'                                        :runfail:
+*** 3.14.2 Antes de qualquer 'loginBy*' (senha, certificado e single-signon)  :runfail:
+*** 3.14.3 Depois de logout                                         :runfail:
+*** 3.14.4 Depois de ser notificado que foi deslogado remotamente   :runfail:
+*** 3.14.5 Depois de "relogar", todas as threads estão fora de cadeia   :run:
+*** 3.14.6 Sair da cadeia antes de qualquer joinChain                   :run:
+*** 3.14.7 Sair da cadeia depois de um joinChain                        :run:
+*** 3.14.8 Sair da cadeia depois de um exitChain                        :run:
+** 3.15 close
+*** 3.15.1 Depois do 'close'                                            :run:
+*** 3.15.2 Antes do 'close'                                             :run:
+*** 3.15.3 Depois de algum 'loginBy*' (senha, certificado e single-signon): :run:
+*** 3.15.4 Antes de qualquer 'loginBy*' (senha, certificado e single-signon) :run:
+*** 3.15.5 Depois de logout                                             :run:
+*** 3.15.6 Depois de ser notificado que foi deslogado remotamente       :run:
+* 4 ConnectionMultiplexer:
+* 5 LoginProcess
+** 5.1 cancel
+* 6 CallerChain
+
