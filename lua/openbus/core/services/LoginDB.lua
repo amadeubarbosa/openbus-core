@@ -113,10 +113,10 @@ function Login:newObserver(callback)
     id = id,
     entity = self.id,
     watched = {},
-    callback = callback,
     ior = tostring(callback),
   }
   assert(table:setentry(id, data))
+  data.callback = callback
   data.base = base
   data.table = table
   return Observer(data)
