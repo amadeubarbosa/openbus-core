@@ -264,8 +264,6 @@ O identificador do barramento é obtido através do atributo \code{busid} da \term
 	\item Um byte indicando a versão menor do protocolo~\footnote{Valor dado pela constante \code{tecgraf::openbus::core::v2\_00::MinorVersion}.};
 	\item Uma sequência bytes que representa o segredo (tipicamente o segredo tem 16 bytes);
 	\item 4 bytes com o valor do campo \code{ticket} da credencial (em \term{little endian});
-	\item 4 bytes com o valor do campo \code{request\_id} da mensagem GIOP ao qual a credencial está associada (em \term{little endian}).
-	Esse valor é fornecido pelo interceptador de chamadas CORBA;
 	\item Uma sequência de bytes dos caracteres do nome da operação sendo chamada.
 	Esse valor fornecido pelo interceptador de chamadas CORBA;
 \end{itemize}
