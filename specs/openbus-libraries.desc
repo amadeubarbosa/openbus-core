@@ -502,6 +502,43 @@ packages = {
       ["include/scs/*"] = "include/scs",
     },
   },
+  { name = "scs-cpp-micomultithread-debug",
+    url = SVNREPURL .. "/scs/core/cpp/trunk",
+    directory = PRODAPP .."/scs-cpp",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/scs-cpp",
+      mf = { 
+        "mico genstubs SCS_THREADING_ENABLED=Yes DBG=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes DBG=Yes" 
+      },
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++ SCS_THREADING_ENABLED=Yes DBG=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes DBG=Yes" 
+        },
+      },
+      MacOS = {
+        mf = { 
+          "mico genstubs LD=g++ SCS_THREADING_ENABLED=Yes DBG=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes DBG=Yes" 
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/libscs-micomultithread-debug.*"] = "lib",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/libscs-micomultithread-debug.*"] = "lib",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+      ["include/scs/*"] = "include/scs",
+    },
+  },
   { name = "scs-cpp-micosinglethread",
     url = SVNREPURL .. "/scs/core/cpp/trunk",
     directory = PRODAPP .."/scs-cpp",
@@ -539,6 +576,43 @@ packages = {
       ["include/scs/*"] = "include/scs",
     },
   },
+  { name = "scs-cpp-micosinglethread-debug",
+    url = SVNREPURL .. "/scs/core/cpp/trunk",
+    directory = PRODAPP .."/scs-cpp",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/scs-cpp",
+      mf = { 
+        "mico genstubs DBG=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 DBG=Yes"
+      },
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++ DBG=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+        },
+      },
+      MacOS = {
+        mf = { 
+          "mico genstubs LD=g++ DBG=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/libscs-micosinglethread-debug.*"] = "lib",
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+      ["stubs/mico"] = "include/scs/stubs",
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/libscs-micosinglethread-debug.*"] = "lib",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+      ["include/scs/*"] = "include/scs",
+    },
+  },
   { name = "openbus-sdkcpp-micomultithread",
     build = {
       type = "tecmake",
@@ -561,6 +635,37 @@ packages = {
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbus-micomultithread.*"] = "lib",
+      ["include/*.h"] = "include/openbus/cpp", --include
+      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
+      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["stubs"] = "include/openbus/cpp",     --include
+      ["legacy/idl/*"] = "idl/legacy/openbus/cpp",     --include
+      [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
+    },
+  },
+  { name = "openbus-sdkcpp-micomultithread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp",
+      mf = { 
+        "config genstubs OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+        "config  OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" },
+      Darwin = {
+        mf = { 
+          "config genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+          "config LD=g++ OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" 
+        },
+      },
+      MacOS = {
+        mf = { 
+          "config genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+          "config LD=g++ OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" 
+        },
+      },
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/libopenbus-micomultithread-debug.*"] = "lib",
       ["include/*.h"] = "include/openbus/cpp", --include
       ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
       ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
@@ -601,6 +706,37 @@ packages = {
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
     },
   },
+  { name = "openbus-sdkcpp-micosinglethread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp",
+      mf = { 
+        "config genstubs DBG=Yes", 
+        "config DBG=Yes" },
+      Darwin = {
+        mf = { 
+          "config genstubs LD=g++ DBG=Yes", 
+          "config LD=g++ DBG=Yes" 
+        },
+      },
+      MacOS = {
+        mf = { 
+          "config genstubs LD=g++ DBG=Yes", 
+          "config LD=g++ DBG=Yes" 
+        },
+      },
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/libopenbus-micosinglethread-debug.*"] = "lib",
+      ["include/*.h"] = "include/openbus/cpp", --include
+      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
+      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["stubs"] = "include/openbus/cpp",     --include
+      ["legacy/idl/*"] = "idl/legacy/openbus/cpp",     --include
+      [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
+    },
+  },
   { name = "openbus-interop-hello-sdkcpp-micomultithread",
     build = {
       type = "tecmake",
@@ -621,6 +757,41 @@ packages = {
         mf = { "server genstubs USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes", 
                "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes", 
                "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes"}, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "interop/hello/bin",
+      ["../idl/hello.idl"] = "interop/hello/idl/",
+      ["admin"] = "interop/hello",
+      ["../../README"] = "interop",      
+      ["src/client.cpp"] = "interop/hello/src",
+      ["src/server.cpp"] = "interop/hello/src",
+      ["*.mak"] = "interop/hello",
+      ["*config"] = "interop/hello",
+      ["client"] = "interop/hello",
+      ["server"] = "interop/hello",
+    },
+  },
+  { name = "openbus-interop-hello-sdkcpp-micomultithread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/interop/hello",
+      mf = { 
+        "server genstubs OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes",
+        "server LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" 
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes",
+          'client "LUA51='..PRODAPP..'/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes"',
+          'server "LUA51='..PRODAPP..'/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes"',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { "server genstubs USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes"}, 
       }
     },
     dev_files = {
@@ -671,6 +842,41 @@ packages = {
       ["server"] = "interop/hello",
     },
   },
+  { name = "openbus-interop-hello-sdkcpp-micosinglethread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/interop/hello",
+      mf = { 
+        "server genstubs DBG=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1 DBG=Yes",
+        "server LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs  DBG=Yes",
+          'client "LUA51='..PRODAPP..'/lua5.1 DBG=Yes"',
+          'server "LUA51='..PRODAPP..'/lua5.1 DBG=Yes"',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { "server genstubs USE_NODEPEND=Yes DBG=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes"}, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "interop/hello/bin",
+      ["idl"] = "interop/hello",
+      ["admin"] = "interop/hello",
+      ["../../README"] = "interop",      
+      ["src/client.cpp"] = "interop/hello/src",
+      ["src/server.cpp"] = "interop/hello/src",
+      ["*.mak"] = "interop/hello",
+      ["*config"] = "interop/hello",
+      ["client"] = "interop/hello",
+      ["server"] = "interop/hello",
+    },
+  },
   { name = "openbus-interop-singlesignon-sdkcpp-micomultithread",
     build = {
       type = "tecmake",
@@ -697,6 +903,32 @@ packages = {
       ["client-singlesignon"] = "interop/singlesignon",
     },
   },
+  { name = "openbus-interop-singlesignon-sdkcpp-micomultithread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/interop/singlesignon",
+      mf = { 
+        "client genstubs OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes",
+        "client-singlesignon LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" 
+      },
+      SunOS510_64 = { 
+        mf = { "client genstubs USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+               "client-singlesignon LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes"}, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "interop/singlesignon/bin",
+      ["../../README"] = "interop",      
+      ["src/client.cpp"] = "interop/singlesignon/src",
+      ["src/client-singlesignon.cpp"] = "interop/singlesignon/src",
+      ["*.mak"] = "interop/singlesignon",
+      ["*config"] = "interop/singlesignon",
+      ["client"] = "interop/singlesignon",
+      ["client-singlesignon"] = "interop/singlesignon",
+    },
+  },
   { name = "openbus-interop-singlesignon-sdkcpp-micosinglethread",
     build = {
       type = "tecmake",
@@ -710,6 +942,32 @@ packages = {
         mf = { "client genstubs USE_NODEPEND=Yes", 
                "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", 
                "client-singlesignon LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes"}, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "interop/singlesignon/bin",
+      ["../../README"] = "interop",      
+      ["src/client.cpp"] = "interop/singlesignon/src",
+      ["src/client-singlesignon.cpp"] = "interop/singlesignon/src",
+      ["*.mak"] = "interop/singlesignon",
+      ["*config"] = "interop/singlesignon",
+      ["client"] = "interop/singlesignon",
+      ["client-singlesignon"] = "interop/singlesignon",
+    },
+  },
+  { name = "openbus-interop-singlesignon-sdkcpp-micosinglethread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/interop/singlesignon",
+      mf = { 
+        "client genstubs DBG=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1 DBG=Yes",
+        "client-singlesignon LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+      },
+      SunOS510_64 = { 
+        mf = { "client genstubs USE_NODEPEND=Yes DBG=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes", 
+               "client-singlesignon LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes"},
       }
     },
     dev_files = {
@@ -800,6 +1058,42 @@ packages = {
       ["client"] = "interop/multiplexing/multithread",
     },
   },
+  { name = "openbus-interop-multiplexing-sdkcpp-micomultithread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/interop/multiplexing/multithread",
+      mf = { 
+        "server genstubs DBG=Yes", 
+        "server LUA51="..PRODAPP.."/lua5.1 DBG=Yes",
+        "client LUA51="..PRODAPP.."/lua5.1 DBG=Yes",
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs DBG=Yes",
+          'server "LUA51='..PRODAPP..'/lua5.1 DBG=Yes"',
+          'client "LUA51='..PRODAPP..'/lua5.1 DBG=Yes"',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { "server genstubs USE_NODEPEND=Yes DBG=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes",
+        },
+      },
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "interop/multiplexing/multithread/bin",
+      ["idl"] = "interop/hello/multithread",
+      ["admin"] = "interop/multiplexing/multithread",
+      ["../../README"] = "demo",      
+      ["src/server.cpp"] = "interop/multiplexing/multithread/src",
+      ["src/client.cpp"] = "interop/multiplexing/multithread/src",
+      ["*.mak"] = "interop/multiplexing/multithread",
+      ["*config"] = "interop/multiplexing/multithread",
+      ["server"] = "interop/multiplexing/multithread",
+      ["client"] = "interop/multiplexing/multithread",
+    },
+  },
   { name = "openbus-interop-multiplexing-sdkcpp-micosinglethread",
     build = {
       type = "tecmake",
@@ -820,6 +1114,42 @@ packages = {
         mf = { "server genstubs USE_NODEPEND=Yes", 
                "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes", 
                "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes",
+        },
+      },
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "interop/multiplexing/singlethread/bin",
+      ["idl"] = "interop/multiplexing/singlethread",
+      ["admin"] = "interop/multiplexing/singlethread",
+      ["../../README"] = "demo",      
+      ["src/server.cpp"] = "interop/multiplexing/singlethread/src",
+      ["src/client.cpp"] = "interop/multiplexing/singlethread/src",
+      ["*.mak"] = "interop/multiplexing/singlethread",
+      ["*config"] = "interop/multiplexing/singlethread",
+      ["server"] = "interop/multiplexing/singlethread",
+      ["client"] = "interop/multiplexing/singlethread",
+    },
+  },
+  { name = "openbus-interop-multiplexing-sdkcpp-micosinglethread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/interop/multiplexing/singlethread",
+      mf = { 
+        "server genstubs DBG=Yes", 
+        "server LUA51="..PRODAPP.."/lua5.1 DBG=Yes",
+        "client LUA51="..PRODAPP.."/lua5.1 DBG=Yes",
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs DBG=Yes",
+          'server "LUA51='..PRODAPP..'/lua5.1 DBG=Yes"',
+          'client "LUA51='..PRODAPP..'/lua5.1 DBG=Yes"',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { "server genstubs USE_NODEPEND=Yes DBG=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes",
         },
       },
     },
