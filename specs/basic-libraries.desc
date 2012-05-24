@@ -1,6 +1,38 @@
 -- Description of basic software, tipical external programs that needs to be
 -- compiled and installed with specific methods (like autotools)
 basesoft = {
+  {
+    name = "boost",
+    url = "http://ufpr.dl.sourceforge.net/project/boost/boost/1.48.0/boost_1_48_0.zip",
+    build = 
+    {
+      type = "bjam",
+      src = PRODAPP .. "/boost_1_48_0",
+      bjam_source = PRODAPP .. "/boost_1_48_0/tools/build/v2/engine",
+      boost_build_path = PRODAPP .. "/boost_1_48_0/tools/build/v2",
+      targets = {
+        "stage",
+      },
+      features = {
+      link = "static",
+      link = "shared",
+        SunOS510 =
+        {
+          toolset = "sun",
+        },
+      },
+      bjam_opts = {
+        "-d+2",
+        "--with-thread",
+      },
+    },
+    dev_files = {
+      ["boost"] = "include/boost",
+    },
+    install_files = {
+      ["stage/lib/*"] = "lib/boost",
+    },
+  },
   { name = "cxxtest",
     url = "http://www.tecgraf.puc-rio.br/~openbus/repository/cxxtest.tar.gz",
     dev_files = {
@@ -10,7 +42,7 @@ basesoft = {
     },
   },
   { name = "logger",
-    url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
+    url = SVNREPURL .. "/cpputils/logger/branches/LG_v2_00_00_2012_02_23/",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
@@ -36,7 +68,7 @@ basesoft = {
     },
     dev_files = {
       ["lib/${TEC_UNAME}/liblogger.*"] = "lib",
-      ["*.h"] = "include/logger",
+      ["include/log"] = "include/",
     },
   },
   { name = "e2fsprogs-1.40.8",
