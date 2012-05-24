@@ -75,11 +75,8 @@ end
 
 function IRegistryService:findByCriteria(facets, criteria)
   local props = {}
-  for _, facetname in ipairs(facets) do
-    props[#props+1] = {
-      name = "openbus.component.facet",
-      value = facetname,
-    }
+  for _, facetspec in ipairs(facets) do
+    facets[facetspec] = true
   end
   for _, prop in ipairs(criteria) do
     local name = prop.name
@@ -103,44 +100,52 @@ function IRegistryService:findByCriteria(facets, criteria)
     end
   end
   local offers = newfacets.OfferRegistry:findServices(props)
+  local results = {}
   for index, offer in ipairs(offers) do
-    local compId = {}
-    local name2index = {}
-    local props = {}
-    for _, prop in ipairs(offer.properties) do
-      local name = prop.name
-      if name == "openbus.component.name" then
-        compId.name = prop.value
-      elseif name == "openbus.component.version.major" then
-        compId.major = prop.value
-      elseif name == "openbus.component.version.minor" then
-        compId.minor = prop.value
-      elseif name == "openbus.component.version.patch" then
-        compId.patch = prop.value
-      else
-        if name == "openbus.offer.entity" then
-          name = "registered_by"
+    for _, facet in ipairs(offer.facets) do
+      -- only add as result the offers that either offer a facet with a name or
+      -- interface name specified in the 'facets' parameter of this opertion
+      if facets[facet.name] ~= nil or facets[facet.interface_name] ~= nil then
+        local compId = {}
+        local name2index = {}
+        local props = {}
+        for _, prop in ipairs(offer.properties) do
+          local name = prop.name
+          if name == "openbus.component.name" then
+            compId.name = prop.value
+          elseif name == "openbus.component.version.major" then
+            compId.major = prop.value
+          elseif name == "openbus.component.version.minor" then
+            compId.minor = prop.value
+          elseif name == "openbus.component.version.patch" then
+            compId.patch = prop.value
+          else
+            if name == "openbus.offer.entity" then
+              name = "registered_by"
+            end
+            local index = name2index[name]
+            if index == nil then
+              index = #props+1
+              name2index[name] = index
+              props[index] = { name = name, value = {} }
+            end
+            local value = props[index].value
+            value[#value+1] = prop.value
+          end
         end
-        local index = name2index[name]
-        if index == nil then
-          index = #props+1
-          name2index[name] = index
-          props[index] = { name = name, value = {} }
-        end
-        local value = props[index].value
-        value[#value+1] = prop.value
+        props[#props+1] = {
+          name = "component_id",
+          value = { "name", ("$name:$major.$minor.$patch"):tag(compId) }
+        }
+        results[#results+1] = {
+          member = offer.service_ref,
+          properties = props,
+        }
+        break
       end
     end
-    props[#props+1] = {
-      name = "component_id",
-      value = { "name", ("$name:$major.$minor.$patch"):tag(compId) }
-    }
-    offers[index] = {
-      member = offer.service_ref,
-      properties = props,
-    }
   end
-  return offers
+  return results
 end
 
 function IRegistryService:localFind(facets, criteria)
