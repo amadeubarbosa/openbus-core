@@ -1,7 +1,7 @@
 local msg = require "openbus.core.messages"
 
 -- openbus.core.admin.main
-msg.AccessDeniedOnLogin = "acesso negado"
-msg.WrongEncodedPassword = "senha com codificação inválida"
+msg.AccessDeniedOnLogin = "Acesso negado."
+msg.WrongEncodedPassword = "Senha com codificação inválida."
 
 return msg

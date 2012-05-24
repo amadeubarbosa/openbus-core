@@ -15,15 +15,19 @@ local oillog = require "oil.verbose"
 local lpw = require "lpw"
 
 local openbus = require "openbus"
+local access = require "openbus.core.Access"
+local neworb = access.initORB
 local log = require "openbus.util.logger"
 local server = require "openbus.util.server"
 local setuplog = server.setuplog
 local printer = require "openbus.core.admin.print"
 local script = require "openbus.core.admin.script"
-local msg = require "openbus.core.admin.messages"
+local messages = require "openbus.core.admin.messages"
 local idl = require "openbus.core.idl"
 local logintypes = idl.types.services.access_control
 local offertypes = idl.types.services.offer_registry
+local types = idl.types.services
+local BusObjectKey = idl.const.BusObjectKey
 
 -- Alias
 local lower = _G.string.lower
@@ -141,6 +145,10 @@ Uso: %s [opções] --login=<usuário> <comando>
      --script=<arquivo>
   * Desfaz a execução de um script Lua com um lote de comandos:
     --undo-script=<arquivo>
+
+- Relatório
+  * Monta um relatório sobre o estado atual do barramento:
+    --report
 -------------------------------------------------------------------------------
 ]]
 
@@ -275,6 +283,10 @@ local commands = {
   ["undo-script"] = {
     {n = 1, params = {}},
   };
+  ["report"] = {
+    {n = 0, params = {}}
+  };
+  
 }
 
 ---
@@ -1203,6 +1215,163 @@ handlers["undo-script"] = function(cmd)
   return script.undoScript(cmd)
 end
 
+---
+-- Monta um relatório sobre o estado atual do barramento
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["report"] = function(cmd)
+  local localPassword = password
+  if not localPassword then
+    localPassword = lpw.getpass("Senha: ")
+  end
+  
+  printf("RELATÓRIO DE STATUS DO BARRAMENTO (HOST:%s PORT:%d)", host, port)
+  local msg
+  local orb = neworb()
+  -- check bus
+  msg = " - Barramento (versão 2.0.x): %s"
+  local ref = "corbaloc::"..host..":"..port.."/"..BusObjectKey
+  local bus = orb:newproxy(ref, nil, "scs::core::IComponent")
+  if bus:_non_existent() then
+    printf(msg, "[INACESSÍVEL]")
+    return
+  else
+    printf(msg, "[ACESSÍVEL]")
+  end
+  bus = nil
+  ref = nil
+  -- check legacy
+  msg = " - Suporte legado (versão 1.5.x): %s"
+  local legacyref = "corbaloc::"..host..":"..port.."/openbus_v1_05"
+  local legacy = orb:newproxy(legacyref, nil, "scs::core::IComponent")
+  if legacy:_non_existent() then
+    printf(msg, "[DESABILITADO]")
+  else
+    printf(msg, "[HABILITADO]")
+  end
+  legacyref = nil
+  legacy = nil
+  orb = nil
+
+  local conn = openbus.connect(host, port, nil, log)
+  local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
+  if not ok then
+    msg = "[ERRO] Não foi possível logar no barramento! %s"
+    if err._repid == logintypes.AccessDenied then
+      printf(msg, messages.AccessDeniedOnLogin)
+    elseif err._repid == logintypes.WrongEncoding then
+      printf(msg, messages.WrongEncodedPassword)
+    else 
+      local errormsg = string.format("\n%s", error(err))
+      printf(msg, errormsg)
+    end
+    return false
+  end
+  connection = conn
+  local isadmin = false
+
+  msg = " - Logins ativos: %s"
+  local ok, logins = pcall(conn.logins.getAllLogins, conn.logins)
+  if not ok then
+    if logins._repid == types.UnauthorizedOperation then
+      -- "[ERRO] Requer permissão de ADMINISTRADOR"
+      -- não mostra nada.
+    else
+      local errormsg = string.format("[ERRO]\n%s", tostring(logins))
+      printf(msg, errormsg)
+    end
+  else
+    -- removendo o próprio login da contagem
+    printf(msg, #logins - 1)
+    isadmin = true
+  end
+  
+  msg = " - Categorias cadastradas: %s"
+  local ok, categories = pcall(conn.entities.getEntityCategories, conn.entities)
+  if not ok then 
+    local errormsg = string.format("[ERRO]\n%s", tostring(categories))
+    printf(msg, errormsg)
+  else
+    printf(msg, #categories)
+  end
+  
+  msg = " - Entidades cadastradas: %s"
+  local ok, entities = pcall(conn.entities.getEntities, conn.entities)
+  if not ok then 
+    local errormsg = string.format("[ERRO]\n%s", tostring(entities))
+    printf(msg, errormsg)
+  else
+    printf(msg, #entities)
+  end
+  
+  msg = " - Interfaces cadastradas: %s"
+  local ok, interfaces = pcall(conn.interfaces.getInterfaces, conn.interfaces)
+  if not ok then 
+    local errormsg = string.format("[ERRO]\n%s", tostring(interfaces))
+    printf(msg, errormsg)
+  else
+    printf(msg, #interfaces)
+  end
+  
+  msg = " - Autorizações concedidas: %s"
+  local ok, ents = pcall(conn.entities.getAuthorizedEntities, conn.entities)
+  if not ok then
+    local errormsg = string.format("[ERRO]\n%s", tostring(interfaces))
+    printf(msg, errormsg)
+  else
+    local authorizations = 0
+    for _, entitydesc in ipairs(ents) do 
+      local ok, ifaces = pcall(entitydesc.ref.getGrantedInterfaces, entitydesc.ref)
+      if not ok then
+        local errormsg = string.format("[ERRO]\n%s", tostring(interfaces))
+        printf(msg, errormsg)
+        break
+      else
+        authorizations = authorizations + #ifaces
+      end
+    end
+    printf(msg, authorizations)
+  end
+  
+  msg = " - Ofertas publicadas: %s"
+  local ok, offers = pcall(conn.offers.getServices, conn.offers)
+  if not ok then 
+    local errormsg = string.format("[ERRO]\n%s", tostring(offers))
+    printf(msg, errormsg)
+  else
+    printf(msg, #offers)
+  end
+
+  -- ofertas inválidas
+  if #offers > 0 then
+    local invalid = {}
+    for _, offer in ipairs(offers) do
+      if offer.service_ref:_non_existent() then
+        invalid[#invalid+1] = offer
+      end
+    end
+    if #invalid > 0 then
+      printf(" - Existe(m) '%d' Oferta(s) em estado INVÁLIDO:", #invalid)
+      printer.showOffer(invalid)
+    end
+    if #invalid > 0 and isadmin then
+      print(" > Deseja remover todas as ofertas inválidas? [s|n]")
+      local reply = string.lower(io.read())
+      if reply == "s" or reply == "sim" or reply == "y" or reply == "yes" then
+        local rem = 0
+        for _, offer in ipairs(offers) do
+          local ok, err = pcall(offer.ref.remove, offer.ref)
+          if ok then
+            rem = rem + 1
+          end
+        end
+        printf(" - Ofertas inválidas removidas: %d", rem)
+      end
+    end
+  end
+end
+
 -------------------------------------------------------------------------------
 -- Seção de conexão com o barramento e os serviços básicos
 
@@ -1224,13 +1393,14 @@ function connect(retry)
   end
   local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
   if not ok then
-    print("[ERRO] Falha no Login!")
+    local msg = "[ERRO] Falha no Login! %s"
     if err._repid == logintypes.AccessDenied then
-      log:failure(msg.AccessDeniedOnLogin)
+      printf(msg, messages.AccessDeniedOnLogin)
     elseif err._repid == logintypes.WrongEncoding then
-      log:failure(msg.WrongEncodedPassword)
+      printf(msg, messages.WrongEncodedPassword)
     else 
-      error(err)
+      local errormsg = string.format("\n%s", error(err))
+      printf(msg, errormsg)
     end
     return nil
   end
