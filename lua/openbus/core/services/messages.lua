@@ -3,7 +3,7 @@ local msg = require "openbus.core.messages"
 msg.OpenBusVersion = "2.0"
 
 -- openbus.core.bin.openbus
-msg.CopyrightNotice = "Openbus "..msg.OpenBusVersion.."  Copyright (C) 2011 Tecgraf, PUC-Rio"
+msg.CopyrightNotice = "OpenBus "..msg.OpenBusVersion.."  Copyright (C) 2011 Tecgraf, PUC-Rio"
 msg.BusSuccessfullyStarted = "OpenBus "..msg.OpenBusVersion.." iniciado com sucesso"
 
 -- openbus.core.services.AccessControl

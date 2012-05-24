@@ -87,7 +87,7 @@ else
 fi
 
 echo "============================================================="
-echo "Criando certificados para o Openbus ..."
+echo "Criando certificados para o OpenBus ..."
 echo "Comando 'openssl' utilizado : ${OPENSSL_CMD}"
 echo "============================================================="
 

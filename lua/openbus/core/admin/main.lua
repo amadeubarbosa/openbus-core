@@ -61,7 +61,7 @@ Uso: %s [opções] --login=<usuário> <comando>
     --host=<endereço>
   * Informa a porta do Barramento (padrão 2089):
     --port=<porta>
-  * Aciona o verbose da API Openbus.
+  * Aciona o verbose da API OpenBus.
     --verbose=<level>
   * Aciona o verbose do OiL.
     --oilverbose=<level>
