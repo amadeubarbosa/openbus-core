@@ -500,6 +500,7 @@ packages = {
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
       ["include/scs/*"] = "include/scs",
+      ["stubs/mico"] = "include/scs/stubs",
     },
   },
   { name = "scs-cpp-micomultithread-debug",
@@ -537,6 +538,7 @@ packages = {
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
       ["include/scs/*"] = "include/scs",
+      ["stubs/mico"] = "include/scs/stubs",
     },
   },
   { name = "scs-cpp-micosinglethread",
@@ -566,7 +568,6 @@ packages = {
       ["lib/${TEC_UNAME}/libscs-micosinglethread.*"] = "lib",
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
-      ["stubs/mico"] = "include/scs/stubs",
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libscs-micosinglethread.*"] = "lib",
@@ -574,6 +575,7 @@ packages = {
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
       ["include/scs/*"] = "include/scs",
+      ["stubs/mico"] = "include/scs/stubs",
     },
   },
   { name = "scs-cpp-micosinglethread-debug",
@@ -603,7 +605,6 @@ packages = {
       ["lib/${TEC_UNAME}/libscs-micosinglethread-debug.*"] = "lib",
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
-      ["stubs/mico"] = "include/scs/stubs",
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libscs-micosinglethread-debug.*"] = "lib",
@@ -611,6 +612,7 @@ packages = {
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
       ["include/scs/*"] = "include/scs",
+      ["stubs/mico"] = "include/scs/stubs",
     },
   },
   { name = "openbus-sdkcpp-micomultithread",
