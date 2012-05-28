@@ -2,7 +2,7 @@
 -- compiled and installed with specific methods (like autotools)
 basesoft = {
   {
-    name = "boost",
+    name = "boost_1_48_0",
     url = "http://ufpr.dl.sourceforge.net/project/boost/boost/1.48.0/boost_1_48_0.zip",
     build = 
     {
@@ -41,11 +41,11 @@ basesoft = {
       ["include/cxxtest"] = "include/cxxtest/",
     },
   },
-  { name = "logger",
+  { name = "logger-singlethread",
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v2_00_00_2012_02_23/",
     build = {
       type = "tecmake",
-      src = PRODAPP .. "/logger",
+      src = PRODAPP .. "/logger-singlethread",
       mf = { "config" },
       Darwin = {
         mf = {
@@ -55,6 +55,36 @@ basesoft = {
       MacOS = {
         mf = {
           "config BUILD_DYLIB=Yes",
+        },
+      },
+      SunOS510 = {
+        mf = {
+          "config LD=CC",
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/liblogger.so"] = "lib",
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/liblogger.*"] = "lib",
+      ["include/log"] = "include/",
+    },
+  },
+  { name = "logger-multithread",
+    url = SVNREPURL .. "/cpputils/logger/branches/LG_v2_00_00_2012_02_23/",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .. "/logger-multithread",
+      mf = { "config OPENBUS_SDK_MULTITHREAD=Yes" },
+      Darwin = {
+        mf = {
+          "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes",
+        },
+      },
+      MacOS = {
+        mf = {
+          "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes",
         },
       },
       SunOS510 = {
