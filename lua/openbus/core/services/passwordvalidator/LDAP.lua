@@ -13,35 +13,52 @@ local openldap = lualdap.open_simple
 local msg = require "openbus.core.services.messages"
 
 return function(configs)
-  local servers = {}
-  for index, server in ipairs(configs.ldap) do
-    if not server:match("^.+:%d+$") then
-      return nil, msg.LdapBadServerSpec:tag{actual=server}
-    end
-    servers[#servers+1] = server
-  end
-  if #servers == 0 then
+  -- configuration consistence checks
+  local urls = {}
+  if not configs.ldap_servers or type(configs.ldap_servers) ~= "table" or 
+    (type(configs.ldap_servers) == "table" and #configs.ldap_servers == 0) then
     return nil, msg.LdapNoServers
   end
-  local suffixes = configs.ldapsuffix
-  if suffixes == nil or #suffixes == 0 then
-    suffixes = { "" }
+  for _, url in ipairs(configs.ldap_servers) do
+    if not url:match("^ldap://") and not url:match("^ldaps://") then
+      url = "ldap://"..url
+    end
+    urls[#urls+1] = url
   end
+  local timeout = nil
+  if type(configs.ldap_timeout) == "number" then
+    timeout = configs.ldap_timeout
+  end
+  local patterns = configs.ldap_patterns or { "" }
+  if type(patterns) ~= "table" then
+    return nil, msg.LdapBadPatternSpec:tag{type=type(patterns)}
+  end
+  -- validate function to be used in runtime
   return function(name, password)
     local errmsg = {}
-    for _, server in ipairs(servers) do
-      for _, suffix in ipairs(suffixes) do
-        local conn, err = openldap(server, name..suffix, password, false, 5)
+    for _, url in ipairs(urls) do
+      for _, pattern in ipairs(patterns) do
+        local dn = pattern:gsub("%%U",name)
+        local conn, err
+        -- if the url indicates LDAP raw protocol, we try use LDAP+StartTLS
+        if url:match("^ldap://") then
+          conn, err = lualdap.open_simple(url, dn, password, true, timeout)
+        end
+        -- if url already indicates LDAPS or if the server rejects LDAP+StartTLS
+        if url:match("^ldaps://") or not conn then
+          conn, err = lualdap.open_simple(url, dn, password, false, timeout)
+        end
         if conn ~= nil then
           conn:close()
           return true
         end
         errmsg[#errmsg+1] = msg.LdapAccessAttemptFailed:tag{
-          user = name..suffix,
+          user = dn,
+          server = url,
           errmsg = tostring(err),
         }
       end
     end
-    return nil, msg.LdapAccessFailed:tag{user=name,errmsg=concat(errmsg)}
+    return nil, msg.LdapAccessFailed:tag{errmsg=concat(errmsg,"; ")}
   end
 end

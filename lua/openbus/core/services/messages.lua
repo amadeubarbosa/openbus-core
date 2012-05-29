@@ -3,7 +3,7 @@ local msg = require "openbus.core.messages"
 msg.OpenBusVersion = "2.0"
 
 -- openbus.core.bin.openbus
-msg.CopyrightNotice = "OpenBus "..msg.OpenBusVersion.."  Copyright (C) 2011 Tecgraf, PUC-Rio"
+msg.CopyrightNotice = "OpenBus "..msg.OpenBusVersion.."  Copyright (C) 2012 Tecgraf, PUC-Rio"
 msg.BusSuccessfullyStarted = "OpenBus "..msg.OpenBusVersion.." iniciado com sucesso"
 
 -- openbus.core.services.AccessControl
@@ -13,7 +13,7 @@ msg.RecoverEntityCertificate = "recuperação certificado de $entity"
 msg.RemoveEntityCertificate = "remoção certificado de $entity  "
 msg.LoginByCertificate = "login por certificado de $entity (login=$login)"
 msg.LoginByPassword = "login por senha de $entity validado por $validator (login=$login)"
-msg.FailedPasswordValidation = "senha de $entity não foi validada por $validator: errmsg"
+msg.FailedPasswordValidation = "senha de $entity não foi validada por $validator: $errmsg"
 msg.LoginExpired = "expiração de login de $entity (login=$login)"
 msg.LoginByCertificateExpired = "expiração do processo de login por certificado de $entity"
 msg.LoginByCertificateInitiated = "iniciação do processo de login por certificado de $entity"
@@ -35,9 +35,9 @@ msg.OfferRegistrationObserverException = "falha na notificação de observador de 
 msg.OfferObserverException = "falha na notificação de observador de ofertas (id=$id): $errmsg"
 
 -- openbus.core.services.passwordvalidator.LDAP
-msg.LdapBadServerSpec = "o servidor LDAP $actual é inválido (formato esperado é '<host>:<porta>')"
+msg.LdapBadPatternSpec = "nenhum padrão válido de formação de logins LDAP (formato esperado é uma lista de strings mas foi fornecido um tipo $type)"
 msg.LdapNoServers = "nenhum servidor LDAP configurado"
-msg.LdapAccessAttemptFailed = "\n\tlogin $user: $errmsg"
-msg.LdapAccessFailed = "usuário $user: $errmsg"
+msg.LdapAccessAttemptFailed = "falha na tentativa de login (user=$user,server=$server,ldaperr=$errmsg)"
+msg.LdapAccessFailed = "falha no acesso LDAP: $errmsg"
 
 return msg
