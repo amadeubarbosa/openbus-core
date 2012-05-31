@@ -463,7 +463,9 @@ function OfferRegistry:registerService(service_ref, properties)
     end
   end
   -- validate provided properties
+  local id = newid("new")
   local entry = {
+    id = id,
     service_ref = tostring(service_ref),
     entity = entityId,
     login = login.id,
@@ -482,11 +484,9 @@ function OfferRegistry:registerService(service_ref, properties)
   }
   local allprops = makePropertyList(entry, properties)
   -- persist the new offer
-  local id = newid("new")
   local database = self.offerDB
   assert(database:setentry(id, entry))
   -- create object for the new offer
-  entry.id = id
   entry.service_ref = service_ref
   entry.properties = allprops
   entry.orb = self.access.orb
