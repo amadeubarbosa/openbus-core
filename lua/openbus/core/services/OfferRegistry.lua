@@ -77,6 +77,7 @@ end
 
 local function makePropertyList(entry, service_props)
   local props = {
+    { name = "openbus.offer.id", value = entry.id },
     { name = "openbus.offer.login", value = entry.login },
     { name = "openbus.offer.entity", value = entry.entity },
     { name = "openbus.offer.year", value = entry.creation.year },
