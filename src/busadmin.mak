@@ -18,6 +18,10 @@ LUASRC= \
 
 include ${LOOP_HOME}/openbus/base.mak
 
+LIBS:= crypto \
+  lua5.1 luuid lce lfs luavararg luastruct luasocket \
+  loop luatuple luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
+
 DEFINES= \
   TECMAKE_APPNAME=\"$(APPNAME)\"
 
@@ -50,15 +54,12 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
   LIBS += rt
 endif
 
-EXTRA_SLIB= lber ssl uuid
-OPENBUS_LIBS= crypto ldap \
-  lua5.1 luuid lce lfs lualdap luavararg luastruct luasocket \
-  loop luatuple luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
-
 ifdef USE_STATIC
- SLIB= $(foreach libname, $(EXTRA_SLIB) $(OPENBUS_LIBS), $(OPENBUSLIB)/lib$(libname).a)
+ SLIB:= uuid $(LIBS)
+ SLIB:= $(foreach libname, $(SLIB), $(OPENBUSLIB)/lib$(libname).a)
+ LIBS:=
 else
- LIBS+= dl $(OPENBUS_LIBS)
+ LIBS+= dl
 endif
 
 $(PRELOAD_DIR)/coreadmin.c $(PRELOAD_DIR)/coreadmin.h: $(LUAPRELOADER) $(LUASRC)
