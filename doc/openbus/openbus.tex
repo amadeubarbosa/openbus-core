@@ -116,7 +116,7 @@ No mais, a troca de mensagens dinâmicas entre todas as aplicações passa a ser po
 
 \section{Arquitetura}\label{sec:architecture}
 
-O \openbus{} é um sistema que pode ser essencialmente divido em três partes: o barramento, os serviços núcleo, e os serviços extras. 
+O \openbus{} é um sistema que pode ser essencialmente divido em três partes: o barramento, os serviços núcleo, e os serviços extras.
 A figura~\ref{fig:architecture}, apresenta a arquitetura do \openbus{} e suas partes principais. 
 Entraremos em detalhes sobre as partes principais do \openbus{} nas subseções a seguir.
 
@@ -127,7 +127,7 @@ Entraremos em detalhes sobre as partes principais do \openbus{} nas subseções a 
 \label{fig:architecture}
 \end{figure}
 
-\subsection{Barramento}
+\subsection{Barramento}\label{subsec:barramento}
 
 O barramento serve como o meio de comunicação do sistema, sendo responsável pela validação do acesso ao sistema, e por permitir a comunicação entre os serviços e as aplicações.
 O barramento é composto por um serviço de Controle de Acesso e pelo uso do \emph{middleware} \corba{}~\cite{omg08corbaspec}, com os quais especifica um protocolo de acesso.
@@ -147,6 +147,9 @@ Por sua vez, o protocolo de acesso é o conjunto de regras para realização de cha
 O principal objetivo desse protocolo é garantir um nível adequado de segurança das chamadas que permita assegurar a identidade da entidade que iniciou cada chamada realizada através do barramento.
 Maiores informações sobre o protocolo podem ser encontradas no documento de especificação do protocolo~\cite{ob2.0protospec}.
 
+Para facilitar o trabalho de integração de serviços e aplicações no barramento, oferecemos uma biblioteca de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua}, que implementa o protocolo de acesso e exporta uma interface de programação (API). 
+A biblioteca de acesso é implementada nas linguages: C++, C\#, Java e Lua.
+
 \subsection{Serviços Núcleo}
 
 Serviços Núcleo são os serviços oferecidos pelo próprio barramento, tipicamente acessados através da API (\emph{Application Program Interface}), que é a interface de programação oferecida às aplicações que precisam acessar o barramento, seja para fazer ou receber chamadas através do barramento, ou acessar serviços oferecidos pelo barramento.
@@ -163,7 +166,7 @@ Uma propriedade da oferta corresponde a um par de nome e valor, que  Ao registra
 Toda oferta publicada no barramento possui um conjunto de propriedades geradas automaticamente, como a data do registro, a entidade que publicou a oferta, a versão do componente, entre outras.
 
 O Registro de Ofertas também disponibiliza um mecanismo de observação de publicação, atualização e remoção de ofertas.
-Maiores detalhes sobre a especificação e o uso do serviço de Registro de Ofertas podem ser encontrados nos seu manuais de uso das bibliotecas de acesso~\cite{sdk2.0.0-java,sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-lua}
+Maiores detalhes sobre a especificação e o uso do serviço de Registro de Ofertas podem ser encontrados nos seu manuais de uso das bibliotecas de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua}
 
 
 \subsection{Serviços Extras}
@@ -181,14 +184,152 @@ Esse serviço tem como principais funcionalidades:
 
 Não entraremos em maiores detalhes sobre as funcionalidades e o uso do Serviço de Colaboração neste documento. Para mais informações, consulte o manual do serviço~\cite{collaboration1.0}.
 
-\section{O \openbus{} para Administradores}
+\section{Perspectivas}
+
+Agora que já apresentamos a arquitetura e os conceitos gerais do \openbus{}, iremos falar um pouco sobre algumas características específicas do \openbus{}, que dependem do papel que o usuário tem no barramento.
+
+\subsection{\openbus{} para Administradores}
 
 %explicar o uso dos binários 'busservices' e 'busadmin'
 %busadmin
 
+% BUSSERVICES
+%Options:
+%
+%  -host <address>            endereço de rede usado pelo barramento
+%  -port <number>             número da porta usada pelo barramento
+%
+%  -database <path>           arquivo de dados do barramento
+%  -certificate <path>        arquivo com certificado do barramento
+%  -privatekey <path>         arquivo com chave privada do barramento
+%
+%  -leasetime <seconds>       tempo de lease dos logins de acesso
+%  -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
+%
+%  -admin <user>              usuário com privilégio de administração
+%  -validator <name>          nome de pacote de validação de login
+%
+%  -loglevel <number>         nível de log gerado pelo barramento
+%  -logfile <path>            arquivo de log gerado pelo barramento
+%  -oilloglevel <number>      nível de log gerado pelo OiL (debug)
+%  -oillogfile <path>         arquivo de log gerado pelo OiL (debug)
+%
+%  -noauthorizations          desativa o suporte a autorizações de oferta
+%  -nolegacy                  desativa o suporte à versão antiga do barramento
+%
+%  -configs <path>            arquivo de configurações adicionais do barramento
+%
+%Arquivo de configuração
+%    validator={"openbus.test.core.services.TesterUserValidator"}
+%    loglevel = 5 
+%    admin = {"admin"}
+%    leasetime = 10
+%
 
-\section{O \openbus{} para Gerentes do barramento}
+% BUSADMIN
+%- Opções
+%  * Informa o endereço do Barramento (padrão 127.0.0.1):
+%    --host=<endereço>
+%  * Informa a porta do Barramento (padrão 2089):
+%    --port=<porta>
+%  * Aciona o verbose da API Openbus.
+%    --verbose=<level>
+%  * Aciona o verbose do OiL.
+%    --oilverbose=<level>
 
+\subsection{\openbus{} para Gerentes do Barramento}
+
+%BUSADMIN    
+%- Controle de Categoria
+%  * Adicionar categoria:
+%     --add-category=<id_categoria> --name=<nome>
+%  * Remover categoria:
+%     --del-category=<id_categoria>
+%  * Alterar o nome descritivo da categoria:
+%     --set-category=<id_categoria> --name=<nome>
+%  * Mostrar todas as categorias:
+%     --list-category
+%  * Mostrar informações sobre uma categoria:
+%     --list-category=<id_categoria>
+%
+%- Controle de Entidade
+%  * Adicionar entidade:
+%     --add-entity=<id_entidade> --category=<id_categoria> --name=<nome>
+%  * Alterar descrição:
+%     --set-entity=<id_entidade> --name=<nome>
+%  * Remover entidade:
+%     --del-entity=<id_entidade>
+%  * Mostrar todas as entidades:
+%     --list-entity
+%  * Mostrar informações sobre uma entidade:
+%     --list-entity=<id_entidade>
+%  * Mostrar entidades de uma categoria:
+%     --list-entity --category=<id_categoria>
+%
+%- Controle de Certificado
+%  * Adiciona certificado da entidade:
+%    --add-certificate=<id_entidade> --certificate=<certificado>
+%  * Remover certificado da entidade:
+%    --del-certificate=<id_entidade>
+%     
+%- Controle de Interface
+%  * Adicionar interface:
+%     --add-interface=<interface>
+%  * Remover interface:
+%     --del-interface=<interface>
+%  * Mostrar todas interfaces:
+%     --list-interface
+%
+%- Controle de Autorização
+%  * Conceder autorização:
+%     --set-authorization=<id_entidade> --grant=<interface>
+%  * Revogar autorização:
+%     --set-authorization=<id_entidade> --revoke=<interface>
+%  * Mostrar todas as autorizações:
+%     --list-authorization
+%  * Mostrar autorizações da entidade:
+%     --list-authorization=<id_entidade>
+%  * Mostrar todas autorizações contendo as interfaces:
+%     --list-authorization --interface="<iface1> <iface2> ... <ifaceN>"
+%
+%- Controle de Ofertas no Serviço de Registro
+%  * Remover oferta (lista e aguarda a entrada de um índice para remover a oferta):
+%    --del-offer
+%  * Remover oferta da entidade (lista e aguarda a entrada de um índice para remover a oferta):
+%    --del-offer --entity=<id_entidade>
+%  * Mostrar todas interfaces ofertadas:
+%     --list-offer
+%  * Mostrar todas interfaces ofertadas por uma entidade:
+%     --list-offer=<id_entidade>
+%  * Mostrar as propriedades da oferta (lista e aguarda a entrada de um índice para listar propriedades da oferta):
+%     --list-props
+%  * Mostrar as propriedades da oferta por uma entidade (lista e aguarda a entrada de um índice para listar propriedades da oferta):
+%     --list-props=<id_entidade>
+%
+%- Controle de Logins
+%  * Remove um login:
+%     --del-login=<id_login>
+%  * Mostrar todos os logins:
+%     --list-login
+%  * Mostrar todos os logins de uma entidade:
+%     --list-login --entity=<id_entidade>
+%
+%- Script
+%  * Executa script Lua com um lote de comandos:
+%     --script=<arquivo>
+%  * Desfaz a execução de um script Lua com um lote de comandos:
+%    --undo-script=<arquivo>
+%
+%- Relatório
+%  * Monta um relatório sobre o estado atual do barramento:
+%    --report
+%
+
+\subsection{\openbus{} para Desenvolvedores}
+
+Como desenvolvedores, nos referimos aos responsáveis por implementar a integração de seus respectivos serviços e aplicações ao barramento.
+Como informando na seção~\ref{subsec:barramento}, oferecemos uma biblioteca de acesso, que implementa o protocolo e exporta uma API de programação, que oferece alguns facilitadores e auxilia a interação com o barramento.
+Para maiores informações, consulte o manual de uso da biblioteca de acesso, que é disponibilizada em C++~\cite{sdk2.0.0-cpp}, C\#~\cite{sdk2.0.0-csharp}, Java~\cite{sdk2.0.0-java} e Lua~\cite{sdk2.0.0-lua}.
 
 
 \include{glossary}
