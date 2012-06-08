@@ -41,6 +41,10 @@
 % This is now the recommended way for checking for PDFLaTeX:
 \usepackage{ifpdf}
 
+%% Redefines the label 'Listing' for ..
+\def\lstlistingname{Código}
+\codestyle{colorful}
+
 % new commands
 \newcommand{\term}[1]{\textit{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
@@ -49,6 +53,8 @@
 \newcommand{\corba}{\textsc{CORBA}}
 \newcommand{\orb}{\textsc{ORB}}
 \newcommand{\scs}{\textsc{SCS}}
+\newcommand{\lua}{\textsc{Lua}}
+\newcommand{\oil}{\textsc{OiL}}
 \newcommand{\version}{2.0.0}
 
 
@@ -162,7 +168,7 @@ Através dele é possível registrar e buscar serviços oferecidos no barramento, al
 O Registro de Ofertas é um serviço núcleo do barramento, que permite que entidades publiquem e busquem ofertas de serviços no barramento.
 Uma oferta de serviço corresponde a um cadastro no Registro de Ofertas de um conjunto de propriedades e um componente \scs{}~\cite{web:SCS}, que implementa um conjunto de interfaces que representam um dado serviço a ser utilizado através do barramento.
 
-Uma propriedade da oferta corresponde a um par de nome e valor, que  Ao registrar uma oferta de serviço no barramento, a entidade pode definir um conjunto de propriedades correspondentes à oferta, que poderão ser utilizadas como critério de filtro no momento de buscar por ofertas de serviço no Registro de Ofertas.
+Uma propriedade da oferta corresponde a um par de nome e valor, que ao registrar uma oferta de serviço no barramento, a entidade pode definir um conjunto de propriedades correspondentes à oferta, que poderão ser utilizadas como critério de filtro no momento de buscar por ofertas de serviço no Registro de Ofertas.
 Toda oferta publicada no barramento possui um conjunto de propriedades geradas automaticamente, como a data do registro, a entidade que publicou a oferta, a versão do componente, entre outras.
 
 O Registro de Ofertas também disponibiliza um mecanismo de observação de publicação, atualização e remoção de ofertas.
@@ -188,43 +194,95 @@ Não entraremos em maiores detalhes sobre as funcionalidades e o uso do Serviço d
 
 Agora que já apresentamos a arquitetura e os conceitos gerais do \openbus{}, iremos falar um pouco sobre algumas características específicas do \openbus{}, que dependem do papel que o usuário tem no barramento.
 
+O \openbus{} não traz para a sua implementação uma distinção entre administrador e gerente do barramento.
+Ambos desempenham papéis de administração.
+Porém, entendemos que nem sempre o administrador do barramento também irá gerenciar o barramento. Logo, vamos separar esses dois conceitos e apresentar os conceitos do barramento que competem a cada um desses perfis.
+
 \subsection{\openbus{} para Administradores}
 
-%explicar o uso dos binários 'busservices' e 'busadmin'
-%busadmin
+Esta seção apresenta alguns conceitos que são importantes para os administradores do barramento, onde por administradores consideramos as pessoas que possuem acesso a máquina onde o barramento será executado e são os responsáveis por levantar e parar o barramento.
 
-% BUSSERVICES
-%Options:
-%
-%  -host <address>            endereço de rede usado pelo barramento
-%  -port <number>             número da porta usada pelo barramento
-%
-%  -database <path>           arquivo de dados do barramento
-%  -certificate <path>        arquivo com certificado do barramento
-%  -privatekey <path>         arquivo com chave privada do barramento
-%
-%  -leasetime <seconds>       tempo de lease dos logins de acesso
-%  -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
-%
-%  -admin <user>              usuário com privilégio de administração
-%  -validator <name>          nome de pacote de validação de login
-%
-%  -loglevel <number>         nível de log gerado pelo barramento
-%  -logfile <path>            arquivo de log gerado pelo barramento
-%  -oilloglevel <number>      nível de log gerado pelo OiL (debug)
-%  -oillogfile <path>         arquivo de log gerado pelo OiL (debug)
-%
-%  -noauthorizations          desativa o suporte a autorizações de oferta
-%  -nolegacy                  desativa o suporte à versão antiga do barramento
-%
-%  -configs <path>            arquivo de configurações adicionais do barramento
-%
-%Arquivo de configuração
-%    validator={"openbus.test.core.services.TesterUserValidator"}
-%    loglevel = 5 
-%    admin = {"admin"}
-%    leasetime = 10
-%
+O barramento e os serviços núcleo são distribuídos em um mesmo programa, o \emph{busservice}. Logo, para disparar o barramento, basta executar o programa passando as suas configurações por linha de comando ou por arquivo de configuração.
+Se uma configuração não for explicitada, será utilizado o seu valor padrão.
+
+As opções de configuração são:
+\begin{description}
+
+  \item [host] endereço de rede usado pelo barramento.
+Valor padrão é ``*", que significa que vai ouvir em todos os IPs da máquina.
+  \item [port] número da porta usada pelo barramento.
+Valor padrão é 2089.
+
+  \item [database] arquivo de dados do barramento.
+Valor padrão é ``openbus.db".
+  \item [certificate] arquivo com certificado do barramento.
+Valor padrão é ``openbus.crt"
+  \item [privatekey] arquivo com chave privada do barramento.
+Valor padrão é ``openbus.key"
+
+  \item [leasetime] tempo em segundos de lease dos logins de acesso.
+Valor padrão é 180 segundos.
+  \item [expirationgap] tempo em segundos que os logins ficam válidos após o lease.
+Valor padrão é 10 segundos. 
+
+  \item [admin] usuário com privilégio de administração.
+Não é definido um valor padrão.
+  \item [validator] nome de pacote de validação de login.
+Não é definido um valor padrão.
+
+  \item [loglevel] nível de log gerado pelo barramento.
+O valor padrão é 3. Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
+  \item [logfile] arquivo de log gerado pelo barramento.
+Não é definido um valor padrão.
+  \item [oilloglevel] nível de log gerado pelo \oil{}~\cite{maia06oil,web:oil} (debug).
+  O valor padrão é 0. Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
+  \item [oillogfile] arquivo de log gerado pelo \oil{} (debug).
+  Não é definido um valor padrão.
+
+  \item [noauthorizations] desativa o suporte a autorizações de oferta.
+  \item [nolegacy] desativa o suporte à versão antiga do barramento.
+
+  \item [configs] arquivo de configurações adicionais do barramento.
+O valor padrão é ``openbus.cfg".
+  
+\end{description}
+
+As opções ``admin" e ``validator" podem receber mais de um valor.
+Quando essas opções são configuradas por linha de comando, basta repetir a opção o número de vezes desejadas.
+Quando são configuradas através do arquivo de configuração, é necessário informar a lista de valores desejados, no formato de uma tabela \lua{}~\cite{web:lua}.
+O código~\ref{lst:openbus.cfg} apresenta um exemplo de arquivo do configuração.
+
+\begin{samplelisting}[language=lua]{openbus.cfg}{Exemplo de arquivo de configuração.}
+validator = {"openbus.test.core.services.TesterUserValidator"}
+loglevel = 5 
+admin = {"admin1", "admin2"}
+leasetime = 30
+\end{samplelisting}
+
+Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção ``config'' por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
+O \emph{busservices} foi pensado para que as opções passadas por linha de comando tenham prioridade (sobrescrevam) sobre as opções definidas no arquivo de configuração.
+
+O barramento possui algumas características importantes e devem ser mencionadas.
+Uma delas, é que o barramento procura persistir todo o seu estado no diretório de dados (definido através da opção ``database'').
+Dessa forma, sempre que o ele é iniciado, e o mesmo já possui uma base de dados populada, esses dados serão recarregados e farão parte do estado inicial do barramento.
+
+Outra característica importante é que o barramento mantém compatibilidade com a API da versão imediatamente anterior.
+Ou seja, mesmo que a versão do barramento evolua, os clientes (serviços e aplicações) ainda conseguem acessar o barramento utilizando bibliotecas de acesso de uma versão anterior.
+O \openbus{} utiliza um esquema de versionamento com quatro números, no formato \emph{A.B.C\_D}, onde:
+
+\begin{itemize}
+  \item Campos \textbf{A} e \textbf{B} significam a versão da IDL e deve ser igual em todos os pacotes que são compatíveis: versão IDL, barramento e bibliotecas de acesso.
+  \item Campo \textbf{C} é incrementado quando ocorre alguma modificação na API interna.
+  \item Campo \textbf{D} representa uma versão apenas com correções de falhas.
+\end{itemize}
+
+Sendo assim, o barramento 2.0 permite a realização de acesso utilizando as bibliotecas de acesso de versão 1.5.x, onde \emph{x} pode assumir qualquer valor de \emph{C\_D}.
+Porém, é importante deixar claro que versão 2.0 traz muitas melhorias no quesito de segurança, e essas melhorias não serão usufruídas por clientes que acessam o barramento com versões antigas das bibliotecas de acesso.
+O barramento permite que clientes 1.5 se comuniquem com clientes 2.0, e vice-e-versa, porém essas comunicações se realizam com o mesmo nível de segurança que existia na versão 1.5 do barramento.
+
+\subsection{\openbus{} para Gerentes do Barramento}
+
+Gerentes do 
 
 % BUSADMIN
 %- Opções
@@ -236,10 +294,7 @@ Agora que já apresentamos a arquitetura e os conceitos gerais do \openbus{}, ire
 %    --verbose=<level>
 %  * Aciona o verbose do OiL.
 %    --oilverbose=<level>
-
-\subsection{\openbus{} para Gerentes do Barramento}
-
-%BUSADMIN    
+%
 %- Controle de Categoria
 %  * Adicionar categoria:
 %     --add-category=<id_categoria> --name=<nome>
