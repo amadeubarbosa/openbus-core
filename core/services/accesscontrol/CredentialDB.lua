@@ -189,8 +189,8 @@ function writeCredential(self, entry)
   }
 
   if entry.observers then
+    localEntry.observers =  {}
     for observerId, observer in pairs(entry.observers) do
-      localEntry.observers =  {}
       localEntry.observers[observerId] = {}
       localEntry.observers[observerId].credentials = observer.credentials
       localEntry.observers[observerId].callback = "nil"
