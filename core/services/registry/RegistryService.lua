@@ -1127,21 +1127,6 @@ function startup(self)
       format("O observador de credenciais foi cadastrado com o identificador %s",
       rs.observerId))
 
-  -- recupera ofertas persistidas
-  Log:info("Recuperando ofertas de serviço persistidas")
-  local offerEntriesDB = rs.offersDB:retrieveAll()
-  for _, offerEntry in pairs(offerEntriesDB) do
-    -- somente recupera ofertas de credenciais válidas
-    if accessControlService:isValid(offerEntry.credential) then
-      rs:addOffer(offerEntry)
-    else
-      Log:debug(format("A oferta %s foi descartada porque a credencial {%s, %s, %s} não é mais válida",
-          offerEntry.identifier, offerEntry.credential.identifier,
-          offerEntry.credential.owner, offerEntry.credential.delegate))
-      rs.offersDB:delete(offerEntry)
-    end
-  end
-
   -- Referência à faceta de gerenciamento do ACS
   mgm.acsmgm = acsIComp:getFacetByName("IManagement_" .. Utils.IDL_VERSION)
   mgm.acsmgm = orb:narrow(mgm.acsmgm, Utils.MANAGEMENT_ACS_INTERFACE)
@@ -1172,6 +1157,21 @@ function startup(self)
     Log:error("Falha ao conectar o serviço de Registro no receptáculo: " ..
       conns[1])
     error(orb:newexcept{StartupFailedException})
+  end
+
+  -- recupera ofertas persistidas
+  Log:info("Recuperando ofertas de serviço persistidas")
+  local offerEntriesDB = rs.offersDB:retrieveAll()
+  for _, offerEntry in pairs(offerEntriesDB) do
+    -- somente recupera ofertas de credenciais válidas
+    if accessControlService:isValid(offerEntry.credential) then
+      rs:addOffer(offerEntry)
+    else
+      Log:debug(format("A oferta %s foi descartada porque a credencial {%s, %s, %s} não é mais válida",
+          offerEntry.identifier, offerEntry.credential.identifier,
+          offerEntry.credential.owner, offerEntry.credential.delegate))
+      rs.offersDB:delete(offerEntry)
+    end
   end
 end
 
