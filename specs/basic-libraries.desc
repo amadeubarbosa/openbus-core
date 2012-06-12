@@ -43,6 +43,7 @@ basesoft = {
   },
   { name = "logger-singlethread",
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v2_00_00_2012_02_23/",
+	directory = PRODAPP.."/logger",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
@@ -67,6 +68,7 @@ basesoft = {
   },
   { name = "logger-multithread",
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v2_00_00_2012_02_23/",
+	directory = PRODAPP.."/logger",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
@@ -91,6 +93,7 @@ basesoft = {
   },
   { name = "logger-singlethread-debug",
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v2_00_00_2012_02_23/",
+	directory = PRODAPP.."/logger",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
@@ -115,6 +118,7 @@ basesoft = {
   },
   { name = "logger-multithread-debug",
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v2_00_00_2012_02_23/",
+	directory = PRODAPP.."/logger",
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
