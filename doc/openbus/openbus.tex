@@ -207,44 +207,42 @@ Se uma configuração não for explicitada, será utilizado o seu valor padrão.
 
 As opções de configuração são:
 \begin{description}
-
-  \item [host] endereço de rede usado pelo barramento.
+  \item [-host] Endereço de rede usado pelo barramento.\\
 Valor padrão é ``*", que significa que vai ouvir em todos os IPs da máquina.
-  \item [port] número da porta usada pelo barramento.
+  \item [-port] Número da porta usada pelo barramento.\\
 Valor padrão é 2089.
 
-  \item [database] arquivo de dados do barramento.
+  \item [-database] Arquivo de dados do barramento.\\
 Valor padrão é ``openbus.db".
-  \item [certificate] arquivo com certificado do barramento.
+  \item [-certificate] Arquivo com certificado do barramento.\\
 Valor padrão é ``openbus.crt"
-  \item [privatekey] arquivo com chave privada do barramento.
+  \item [-privatekey] Arquivo com chave privada do barramento.\\
 Valor padrão é ``openbus.key"
 
-  \item [leasetime] tempo em segundos de lease dos logins de acesso.
+  \item [-leasetime] Tempo em segundos de lease dos logins de acesso.\\
 Valor padrão é 180 segundos.
-  \item [expirationgap] tempo em segundos que os logins ficam válidos após o lease.
+  \item [-expirationgap] Tempo em segundos que os logins ficam válidos após o lease.\\
 Valor padrão é 10 segundos. 
 
-  \item [admin] usuário com privilégio de administração.
+  \item [-admin] Usuário com privilégio de administração.\\
 Não é definido um valor padrão.
-  \item [validator] nome de pacote de validação de login.
+  \item [-validator] Nome de pacote de validação de login.\\
 Não é definido um valor padrão.
 
-  \item [loglevel] nível de log gerado pelo barramento.
+  \item [-loglevel] Nível de log gerado pelo barramento.\\
 O valor padrão é 3. Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
-  \item [logfile] arquivo de log gerado pelo barramento.
+  \item [-logfile] Arquivo de log gerado pelo barramento.\\
 Não é definido um valor padrão.
-  \item [oilloglevel] nível de log gerado pelo \oil{}~\cite{maia06oil,web:oil} (debug).
+  \item [-oilloglevel] Nível de log gerado pelo \oil{}~\cite{maia06oil,web:oil} (debug).\\
   O valor padrão é 0. Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
-  \item [oillogfile] arquivo de log gerado pelo \oil{} (debug).
+  \item [-oillogfile] Arquivo de log gerado pelo \oil{} (debug).\\
   Não é definido um valor padrão.
 
-  \item [noauthorizations] desativa o suporte a autorizações de oferta.
-  \item [nolegacy] desativa o suporte à versão antiga do barramento.
+  \item [-noauthorizations] Desativa o suporte a autorizações de oferta.
+  \item [-nolegacy] Desativa o suporte à versão antiga do barramento.
 
-  \item [configs] arquivo de configurações adicionais do barramento.
+  \item [-configs] Arquivo de configurações adicionais do barramento.\\
 O valor padrão é ``openbus.cfg".
-  
 \end{description}
 
 As opções ``admin" e ``validator" podem receber mais de um valor.
@@ -262,9 +260,16 @@ leasetime = 30
 Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção ``config'' por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
 O \emph{busservices} foi pensado para que as opções passadas por linha de comando tenham prioridade (sobrescrevam) sobre as opções definidas no arquivo de configuração.
 
+Através da opção ``validator'' informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
+Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações como configurar o validador LDAP, consulte [VERIFICAR COM AMADEU JR.].
+% TODO: verificar com Amadeu JR.
+
+%% NOTE: comentado parte que falava sobre o validador de teste: 
+% e em \\\texttt{openbus.test.core.services.TesterUserValidator} disponibilizamos um validador para ambientes de teste, que permite acesso quando o login é igual a senha.
+
 O barramento possui algumas características importantes e devem ser mencionadas.
 Uma delas, é que o barramento procura persistir todo o seu estado no diretório de dados (definido através da opção ``database'').
-Dessa forma, sempre que o ele é iniciado, e o mesmo já possui uma base de dados populada, esses dados serão recarregados e farão parte do estado inicial do barramento.
+Dessa forma, sempre que ele é iniciado, e o mesmo já possui uma base de dados populada, esses dados serão recarregados e farão parte do estado inicial do barramento.
 
 Outra característica importante é que o barramento mantém compatibilidade com a API da versão imediatamente anterior.
 Ou seja, mesmo que a versão do barramento evolua, os clientes (serviços e aplicações) ainda conseguem acessar o barramento utilizando bibliotecas de acesso de uma versão anterior.
@@ -279,106 +284,232 @@ O \openbus{} utiliza um esquema de versionamento com quatro números, no formato 
 Sendo assim, o barramento 2.0 permite a realização de acesso utilizando as bibliotecas de acesso de versão 1.5.x, onde \emph{x} pode assumir qualquer valor de \emph{C\_D}.
 Porém, é importante deixar claro que versão 2.0 traz muitas melhorias no quesito de segurança, e essas melhorias não serão usufruídas por clientes que acessam o barramento com versões antigas das bibliotecas de acesso.
 O barramento permite que clientes 1.5 se comuniquem com clientes 2.0, e vice-e-versa, porém essas comunicações se realizam com o mesmo nível de segurança que existia na versão 1.5 do barramento.
+Esse suporte de compatibilidade com a versão anterior pode ser desabilitado através da opção ``nolegacy''.
 
 \subsection{\openbus{} para Gerentes do Barramento}
 
-Gerentes do 
+Consideramos gerentes do barramento aqueles que irão desempenhar o papel de organizar e acompanhar o que é publicado no barramento.
+Para desempenhar esse papel, disponibilizamos a ferramenta \emph{busadmin}, que permite que se realize atividades de governança (administração) sobre o barramento.
 
-% BUSADMIN
-%- Opções
-%  * Informa o endereço do Barramento (padrão 127.0.0.1):
-%    --host=<endereço>
-%  * Informa a porta do Barramento (padrão 2089):
-%    --port=<porta>
-%  * Aciona o verbose da API Openbus.
-%    --verbose=<level>
-%  * Aciona o verbose do OiL.
-%    --oilverbose=<level>
-%
-%- Controle de Categoria
-%  * Adicionar categoria:
-%     --add-category=<id_categoria> --name=<nome>
-%  * Remover categoria:
-%     --del-category=<id_categoria>
-%  * Alterar o nome descritivo da categoria:
-%     --set-category=<id_categoria> --name=<nome>
-%  * Mostrar todas as categorias:
-%     --list-category
-%  * Mostrar informações sobre uma categoria:
-%     --list-category=<id_categoria>
-%
-%- Controle de Entidade
-%  * Adicionar entidade:
-%     --add-entity=<id_entidade> --category=<id_categoria> --name=<nome>
-%  * Alterar descrição:
-%     --set-entity=<id_entidade> --name=<nome>
-%  * Remover entidade:
-%     --del-entity=<id_entidade>
-%  * Mostrar todas as entidades:
-%     --list-entity
-%  * Mostrar informações sobre uma entidade:
-%     --list-entity=<id_entidade>
-%  * Mostrar entidades de uma categoria:
-%     --list-entity --category=<id_categoria>
-%
-%- Controle de Certificado
-%  * Adiciona certificado da entidade:
-%    --add-certificate=<id_entidade> --certificate=<certificado>
-%  * Remover certificado da entidade:
-%    --del-certificate=<id_entidade>
-%     
-%- Controle de Interface
-%  * Adicionar interface:
-%     --add-interface=<interface>
-%  * Remover interface:
-%     --del-interface=<interface>
-%  * Mostrar todas interfaces:
-%     --list-interface
-%
-%- Controle de Autorização
-%  * Conceder autorização:
-%     --set-authorization=<id_entidade> --grant=<interface>
-%  * Revogar autorização:
-%     --set-authorization=<id_entidade> --revoke=<interface>
-%  * Mostrar todas as autorizações:
-%     --list-authorization
-%  * Mostrar autorizações da entidade:
-%     --list-authorization=<id_entidade>
-%  * Mostrar todas autorizações contendo as interfaces:
-%     --list-authorization --interface="<iface1> <iface2> ... <ifaceN>"
-%
-%- Controle de Ofertas no Serviço de Registro
-%  * Remover oferta (lista e aguarda a entrada de um índice para remover a oferta):
-%    --del-offer
-%  * Remover oferta da entidade (lista e aguarda a entrada de um índice para remover a oferta):
-%    --del-offer --entity=<id_entidade>
-%  * Mostrar todas interfaces ofertadas:
-%     --list-offer
-%  * Mostrar todas interfaces ofertadas por uma entidade:
-%     --list-offer=<id_entidade>
-%  * Mostrar as propriedades da oferta (lista e aguarda a entrada de um índice para listar propriedades da oferta):
-%     --list-props
-%  * Mostrar as propriedades da oferta por uma entidade (lista e aguarda a entrada de um índice para listar propriedades da oferta):
-%     --list-props=<id_entidade>
-%
-%- Controle de Logins
-%  * Remove um login:
-%     --del-login=<id_login>
-%  * Mostrar todos os logins:
-%     --list-login
-%  * Mostrar todos os logins de uma entidade:
-%     --list-login --entity=<id_entidade>
-%
-%- Script
-%  * Executa script Lua com um lote de comandos:
-%     --script=<arquivo>
-%  * Desfaz a execução de um script Lua com um lote de comandos:
-%    --undo-script=<arquivo>
-%
-%- Relatório
-%  * Monta um relatório sobre o estado atual do barramento:
-%    --report
-%
+Antes de entrar em detalhes sobre o uso e as funcionalidades do \emph{busadmin}, vamos agora apresentar alguns conceitos importantes de governança dentro do \openbus{}.
+Existem os conceitos de:
+\begin{description}
+
+  \item[Categoria] Representa uma categoria de entidades no barramento.
+  Categorias de entidade são agrupamentos usados exclusivamente para facilitar a gerência das diversas entidades cadastradas no barramento pelo administrador.
+
+  \item[Entidade] Representa uma entidade do barramento registrada.
+  Entidade é tudo aquilo que pode se logar ao barramento e usufruir dos   recursos do barramento.
+  Em particular, tanto usuários humanos como implantações de sistema são considerados entidades.
+  Entidades podem ou não ser cadastradas no serviço, mas apenas entidades cadastradas podem ser autorizadas a ofertar serviços.
+
+  \item[Certificado] Chave pública que pode ser usado para autenticar uma
+dada entidade no barramento.
+  É possível adicionar certificados para entidades não cadastradas no barramento.
+
+  \item[Interface] Definição de uma interface IDL de um serviço que pode ser ofertado no barramento.
+
+  \item[Autorização] Associação de uma interface IDL a uma entidade, indicando que processos logados como essa entidade possam oferecer serviços que implementem essa interface no Registro de Ofertas do barramento.
+
+\end{description}
+
+Para utilizar a ferramenta, deve-se executar:
+\begin{verbatim}
+busadmin [opções] --login=<usuário> <comando>
+\end{verbatim} 
+
+As opções disponíveis são:
+\begin{itemize}
+  \item \textbf{Configuração:}
+
+\begin{description}
+  \item[\texttt{--}host=\textless endereço\textgreater] Informa o endereço do Barramento.\\
+  Valor padrão é 127.0.0.1.
+
+  \item[\texttt{--}port=\textless porta\textgreater] Informa a porta do Barramento.\\
+  Valor padrão é 2089.
+
+  \item[\texttt{--}verbose=\textless nível\textgreater] Aciona o verbose da API \openbus{}.\\
+  Valor padrão é 0.
+  Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
+  
+  \item[\texttt{--}oilverbose=\textless nível\textgreater] Aciona o verbose do \oil{}.\\
+  Valor padrão é 0.
+  Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
+
+\end{description}
+
+  \item \textbf{Controle de Categoria:}
+\begin{description}
+
+  \item[\texttt{--}add-category=\textless id\textgreater \space
+        \texttt{--}name=\textless nome\textgreater] Adiciona uma categoria com o identificador e nome descritivo especificado.
+
+  \item[\texttt{--}del-category=\textless id\textgreater] Remove a categoria com o identificador especificado.
+
+  \item[\texttt{--}set-category=\textless id\textgreater \space
+        \texttt{--}name=\textless nome\textgreater] Altera o nome descritivo da categoria com o identificador especificado.
+
+  \item[\texttt{--}list-category] Mostra as informações de todas as categorias cadastradas.
+
+  \item[\texttt{--}list-category=\textless id\textgreater] Mostra informações da categoria especificada.
+
+\end{description}
+
+  \item \textbf{Controle de Entidade:}
+
+\begin{description}
+
+  \item[\texttt{--}add-entity=\textless id\textgreater \space
+        \texttt{--}category=\textless id\_categoria\textgreater \space
+        \texttt{--}name=\textless nome\textgreater] Adiciona uma entidade com o identificador, categoria e nome descritivo especificado.
+
+  \item[\texttt{--}del-entity=\textless id\textgreater] Remove a entidade com o identificador especificado.
+
+  \item[\texttt{--}set-entity=\textless id\textgreater \space
+        \texttt{--}name=\textless nome\textgreater] Altera o nome descritivo da entidade com o identificador especificado.
+
+  \item[\texttt{--}list-entity] Mostra as informações de todas as entidades cadastradas.
+
+  \item[\texttt{--}list-entity=\textless id\textgreater] Mostra informações da entidade especificada.
+
+  \item[\texttt{--}list-entity\space
+        \texttt{--}category=\textless id\_categoria\textgreater] Mostra informações das entidades pertencentes a categoria especificada.
+
+\end{description}
+
+  \item \textbf{Controle de Certificado:}
+
+\begin{description}
+
+  \item[\texttt{--}add-certificate=\textless id\_entidade\textgreater \space
+        \texttt{--}certificate=\textless certificado\textgreater] Cadastra o certificado para a entidade especificada.
+
+  \item[\texttt{--}del-certificate=\textless id\_entidade\textgreater] Remove o certificado da entidade especificada.
+
+\end{description}
+
+  \item \textbf{Controle de Interface:}
+
+\begin{description}
+
+  \item[\texttt{--}add-interface=\textless interface\textgreater] Adiciona a interface na lista de interfaces permitidas no barramento.
+
+  \item[\texttt{--}del-interface=\textless interface\textgreater] Remove a interface da lista de interfaces permitidas no barramento.
+
+  \item[\texttt{--}list-interface=\textless interface\textgreater] Mostra as interfaces permitidas no barramento.
+
+\end{description}
+
+  \item \textbf{Controle de Autorização:}
+
+\begin{description}
+
+  \item[\texttt{--}set-authorization=\textless id\_entidade\textgreater \space
+        \texttt{--}grant=\textless interface\textgreater] Autoriza a entidade a publicar a interface especificada.
+
+  \item[\texttt{--}set-authorization=\textless id\_entidade\textgreater \space
+        \texttt{--}revoke=\textless interface\textgreater] Remove a autorização da entidade de publicar a interface especificada.
+
+  \item[\texttt{--}list-authorization] Mostra todas as autorizações concedidas no barramento.
+
+  \item[\texttt{--}list-authorization=\textless id\_entidade\textgreater] Mostra todas as autorizações da entidade especificada.
+
+  \item[\texttt{--}list-authorization 
+        \texttt{--}interface=``\textless interface1\textgreater \space
+          \textless interface1\textgreater \dots 
+          \textless interfaceN\textgreater''] Mostra todas as autorizações contendo as interfaces especificadas.
+
+\end{description}
+
+  \item \textbf{Controle de Ofertas:}
+
+\begin{description}
+
+  \item[\texttt{--}del-offer] Lista todas as ofertas publicadas no barramento e aguarda a escolha de uma oferta para ser removida.
+
+  \item[\texttt{--}del-offer \texttt{--}entity=\textless id\textgreater] Lista todas as ofertas publicadas pela entidade especificada e aguarda a escolha de uma oferta para ser removida.
+
+  \item[\texttt{--}list-offer] Lista todas as ofertas publicadas no barramento.
+
+  \item[\texttt{--}list-offer=\textless id\textgreater] Lista todas as ofertas publicadas pela entidade especificada.
+
+  \item[\texttt{--}list-props] Lista todas as ofertas publicadas no barramento e aguarda a escolha de uma oferta para listar todas as suas propriedades.
+
+  \item[\texttt{--}list-props=\textless id\textgreater] Lista todas as ofertas publicadas pela entidade especificada e aguarda a escolha de uma oferta para listar todas as suas propriedades.
+
+\item \end{description}
+
+  \item \textbf{Controle de Logins:}
+
+\begin{description}
+
+  \item[\texttt{--}del-login=\textless id\textgreater] Remove o login especificado.
+
+  \item[\texttt{--}list-login] Mostra todos os logins ativos no barramento.
+
+  \item[\texttt{--}list-login \texttt{--}entity=\textless id\textgreater] Mostra todos os logins ativos da entidade especificada.
+
+\end{description}
+
+  \item \textbf{Script:}
+
+\begin{description}
+
+  \item[\texttt{--}script] Executa um script \lua{} com um lote de comandos.
+
+  \item[\texttt{--}undo-script] Desfaz a execução de um script \lua{} com um lote de comandos.
+
+\end{description}
+
+  \item \textbf{Relatório:}
+
+\begin{description}
+
+  \item[\texttt{--}report] Constrói um relatório sobre o estado atual do barramento.
+
+\end{description}
+
+\end{itemize}
+
+O formato do script \lua{} que pode ser passado para os comandos``script'' e ``undo-script'' deve seguir o formato especificado no código~\ref{lst:openbus.adm}.
+
+\begin{samplelisting}[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
+-- categoria
+Category {
+  id = "TEST_Category",
+  name = "Descrição da categoria",
+}
+-- entidade
+Entity {
+  id = "TEST_Entity",
+  category = "TEST_Category",
+  name = "Descrição da entidade",
+}
+-- certificado
+Certificate {
+  id = "TEST_Entity",
+  certificate = "teste.crt", -- path para arquivo de certificado
+}
+-- interface
+Interface {
+  id = "IDL:script/Test:1.0"
+}
+-- conceder autorização
+Grant {
+  id = "TEST_Entity",
+  interfaces = {
+    "IDL:script/Test:1.0",
+  }
+}
+-- remover autorização
+Revoke {
+  id = "TEST_Entity",
+  interfaces = {
+    "IDL:script/Test:1.0",
+  }
+}
+\end{samplelisting}
 
 \subsection{\openbus{} para Desenvolvedores}
 

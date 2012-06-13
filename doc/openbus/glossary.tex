@@ -1,11 +1,16 @@
 \section{Glossário}
 
 
+
+
+
 \subsection*{A}
 
 \begin{description}
 
 \item [API] \emph{Application Program Interface}. Interface de programação oferecida às aplicações que precisam acessar o barramento, seja para fazer ou receber chamadas através do barramento, ou acessar serviços oferecidos pelo barramento.
+
+\item[Autorização] Associação de uma interface IDL a uma entidade, indicando que processos logados como essa entidade possam oferecer serviços que implementem essa interface no Registro de Ofertas do barramento.
 
 \end{description}
 
@@ -27,6 +32,12 @@ O projeto \openbus{} oferece implementações dessa biblioteca nas linguagens Lua,
 \subsection*{C}
 
 \begin{description}
+
+\item[Categoria] Representa uma categoria de entidades no barramento.
+Categorias de entidade são agrupamentos usados exclusivamente para facilitar a gerência das diversas entidades cadastradas no barramento pelo administrador.
+
+\item[Certificado] Chave pública que pode ser usado para autenticar uma
+dada entidade no barramento.
 
 \item [Controle de Acesso] Serve como ponto de entrada do barramento, sendo responsável por autenticar, renovar e gerenciar os logins de serviços e aplicações ao barramento.
 
@@ -51,6 +62,7 @@ Entidades podem ser usuários humanos de sistemas ou mesmo instalações de serviço
 
 \item [IDL] \emph{Interface Description Language}. Linguagem de descrição de tipos e interfaces de \corba{}.
 
+\item[Interface] Definição de uma interface IDL de um serviço que pode ser ofertado no barramento.
 
 \end{description}
 
