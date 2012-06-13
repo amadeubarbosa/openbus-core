@@ -129,6 +129,15 @@ end
 -- Faceta OfferRegistry
 ------------------------------------------------------------------------------
 
+local function removeLoginObserversFromOffer(offer, login, cookie)
+  local list = offer.registry.login2observer[login]
+  for idx, entry in pairs(list) do
+    if entry.offer.id == offer.id and entry.observer == cookie then
+      list[idx] = nil
+    end
+  end
+end
+
 local Offer = class{ __type = types.ServiceOffer }
   
 function Offer:notifyObservers(event)
@@ -170,6 +179,9 @@ function Offer:setProperties(properties)
 end
 
 function Offer:remove(tag)
+  for cookie, entry in pairs(self.observers) do
+    removeLoginObserversFromOffer(self, entry.login, cookie)
+  end
   local registry = self.registry
   local tag = tag or assertCaller(registry, self.entity)
   assert(self.database:removeentry(self.id))
@@ -217,13 +229,7 @@ function Offer:unsubscribe(cookie)
     -- commit changes in memory
     local login = observers[cookie].login
     observers[cookie] = nil
-    local login2obs = self.registry.login2observer
-    local list = login2obs[login]
-    for idx, entry in pairs(list) do
-      if entry.offer.id == self.id and entry.observer == cookie then
-        list[idx] = nil
-      end
-    end
+    removeLoginObserversFromOffer(self, login, cookie)
     return true
   end
   return false
