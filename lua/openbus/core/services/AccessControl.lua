@@ -208,6 +208,7 @@ function AccessControl:__init(data)
   
   -- timer de limpeza de credenciais não renovadas e desafios não respondidos
   self.sweepTimer = Timer{ rate = self.leaseTime }
+  log.viewer.labels[self.sweepTimer.thread] = "Lease Expiration Sweeper"
   function self.sweepTimer.action()
     -- A operação 'login:remove()' pode resultar numa chamada remota de
     -- 'observer:entityLogout(login)' e durante essa chamada é possível que
@@ -349,9 +350,6 @@ function AccessControl:renew()
 end
 
 function AccessControl:signChainFor(target)
-  if self.activeLogins:getLogin(target) == nil then
-    sysex.NO_PERMISSION{minor=const.InvalidLoginCode,completed="COMPLETED_NO"}
-  end
   return self:encodeChain(target, self.access:getCallerChain().callers)
 end
 

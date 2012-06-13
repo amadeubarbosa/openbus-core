@@ -6,6 +6,9 @@ local ipairs = _G.ipairs
 local require = _G.require
 local select = _G.select
 
+local coroutine = require "coroutine"
+local running = coroutine.running
+
 local io = require "io"
 local stderr = io.stderr
 
@@ -37,6 +40,8 @@ local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
 
 return function(...)
+  log.viewer.labels[running()] = "Core Services Initialization"
+  
   -- configuration parameters parser
   local Configs = ConfigArgs{
     host = "*",
