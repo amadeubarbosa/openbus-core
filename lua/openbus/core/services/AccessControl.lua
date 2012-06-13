@@ -168,20 +168,29 @@ local AccessControl = {
 -- local operations
 
 function AccessControl:__init(data)
+  local database = data.database
+  local autosets = assert(database:gettable("AutoSetttings"))
+  local busid = autosets:getentry("BusId")
+  if busid == nil then
+    busid = newid("time")
+    assert(autosets:setentry("BusId", busid))
+    log:action(msg.AdoptingNewBusIdentifier:tag{bus=busid})
+  else
+    log:action(msg.RecoveredBusIdentifier:tag{bus=busid})
+  end
+  
   -- initialize attributes
   self.access = data.access
-  self.database = data.database
   self.passwordValidators = data.validators
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
   self.pendingChallenges = {}
   self.activeLogins = Logins{
-    database = self.database,
+    database = database,
     publisher = self.publisher,
   }
   
   -- initialize access
-  local busid = newid("time")
   SelfLogin.id = busid
   self.busid = busid
   local access = self.access
