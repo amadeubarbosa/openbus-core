@@ -33,7 +33,7 @@
 \usepackage{boxedminipage}
 
 % Package for including code in the document
-\usepackage{mwlabinputs2}
+\usepackage{../mwlabinputs2}
 
 % If you want to generate a toc for each chapter (use with book)
 \usepackage{minitoc}
@@ -94,7 +94,8 @@
 
 Este documento tem como objetivo apresentar o \openbus{} \version{} e seus conceitos principais. 
 Nesta seção introdutória apresentaremos uma definição do projeto e os motivadores para o seu uso.
-Na seção~\ref{sec:architecture} apresentamos a arquitetura ...
+Na seção~\ref{sec:architecture} apresentamos a arquitetura do sistema, e na seção~\ref{sec:perspectives} falamos um pouco mais sobre o projeto de acordo com a visão de cada tipo de usuário.
+Por fim, na seção~\ref{sec:glossary} apresentamos um glossário com os conceitos principais do projeto.
 
 \subsection{O que é ?}
 O \openbus{}~\cite{web:OPENBUS} é uma arquitetura aberta e orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}) para integrar, de forma segura, dados e aplicações heterogêneas de domínios distintos ou não.
@@ -190,7 +191,7 @@ Esse serviço tem como principais funcionalidades:
 
 Não entraremos em maiores detalhes sobre as funcionalidades e o uso do Serviço de Colaboração neste documento. Para mais informações, consulte o manual do serviço~\cite{collaboration1.0}.
 
-\section{Perspectivas}
+\section{Perspectivas}\label{sec:perspectives}
 
 Agora que já apresentamos a arquitetura e os conceitos gerais do \openbus{}, iremos falar um pouco sobre algumas características específicas do \openbus{}, que dependem do papel que o usuário tem no barramento.
 
@@ -261,7 +262,7 @@ Existem duas formas de se definir o arquivo de configuração que o programa irá u
 O \emph{busservices} foi pensado para que as opções passadas por linha de comando tenham prioridade (sobrescrevam) sobre as opções definidas no arquivo de configuração.
 
 Através da opção ``validator'' informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
-Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações como configurar o validador LDAP, consulte [VERIFICAR COM AMADEU JR.].
+Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações como configurar o validador LDAP, consulte~\cite{ob2.0ldap} [VERIFICAR COM AMADEU JR.].
 % TODO: verificar com Amadeu JR.
 
 %% NOTE: comentado parte que falava sobre o validador de teste: 
@@ -521,6 +522,6 @@ Para maiores informações, consulte o manual de uso da biblioteca de acesso, que 
 \include{glossary}
 
 \bibliographystyle{plain}
-\bibliography{references}
+\bibliography{../references}
 
 \end{document}

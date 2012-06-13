@@ -1,0 +1,153 @@
+%
+%  Documento de Instalação do OpenBus 2.0
+%
+%  Created by Hugo Roenick on 2012-05-22.
+%  Copyright (c) 2012 Tecgraf/PUC-Rio. All rights reserved.
+%
+\documentclass[]{article}
+
+% Use utf-8 encoding for foreign characters
+\usepackage[latin1]{inputenc}
+
+\usepackage[brazil]{babel}
+
+% Setup for fullpage use
+\usepackage{fullpage}
+
+% Uncomment some of the following if you use the features
+%
+% Running Headers and footers
+%\usepackage{fancyhdr}
+
+% Multipart figures
+%\usepackage{subfigure}
+
+% More symbols
+%\usepackage{amsmath}
+%\usepackage{amssymb}
+%\usepackage{latexsym}
+
+\usepackage{hyperref}
+
+% Surround parts of graphics with box
+\usepackage{boxedminipage}
+
+% Package for including code in the document
+\usepackage{../mwlabinputs2}
+
+% If you want to generate a toc for each chapter (use with book)
+\usepackage{minitoc}
+
+% This is now the recommended way for checking for PDFLaTeX:
+\usepackage{ifpdf}
+
+%% Redefines the label 'Listing' for ..
+\def\lstlistingname{Código}
+\codestyle{colorful}
+
+% new commands
+\newcommand{\term}[1]{\textit{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newcommand{\openbus}{\textsc{OpenBus}}
+\newcommand{\corba}{\textsc{CORBA}}
+\newcommand{\orb}{\textsc{ORB}}
+\newcommand{\scs}{\textsc{SCS}}
+\newcommand{\lua}{\textsc{Lua}}
+\newcommand{\oil}{\textsc{OiL}}
+\newcommand{\version}{2.0.0}
+
+
+%\newif\ifpdf
+%\ifx\pdfoutput\undefined
+%\pdffalse % we are not running PDFLaTeX
+%\else
+%\pdfoutput=1 % we are running PDFLaTeX
+%\pdftrue
+%\fi
+
+\ifpdf
+\usepackage[pdftex]{graphicx}
+\else
+\usepackage{graphicx}
+\fi
+
+\title{Manual de instalação do \openbus{} \version{}}
+\author{TecGraf}
+
+\date{\today}
+
+\begin{document}
+
+\ifpdf
+\DeclareGraphicsExtensions{.pdf, .jpg, .tif}
+\else
+\DeclareGraphicsExtensions{.eps, .jpg}
+\fi
+
+\maketitle
+
+\tableofcontents
+
+\section{Introdução}
+
+Este documento visa informar apenas o procedimento necessário para instalar um barramento \openbus{}~\cite{web:OPENBUS} da versão \version{}.
+Caso tenha interesse de entender melhor o que é um barramento \openbus{}, consulte o seu manual de referência~\cite{ob2.0core}.
+
+\section{Instalação}
+
+O primeiro para instalar o barramento deve ser descompactar o pacote do barramento da plataforma desejada.
+Os pacotes oficialmente suportados estão disponibilizados no site oficial do projeto: \url{www.tecgraf.puc-rio.br/openbus}.
+As plataformas oficialmente suportadas são:
+\begin{itemize}
+  \item SunOS510\_64
+  \item SunOS510
+  \item Linux26g4\_64
+  \item Linux26g4
+  \item Linux24g3\_64
+  \item Linux24g3
+\end{itemize}
+
+Para executar o barramento deve-se seguir o seguinte procedimento:
+
+\begin{enumerate}
+  \item Extrair o pacote. Para fins de legibilidade, vamos guardar o caminho do local da extração em uma variável de ambiente. Porém, \textbf{essa declaração não é obrigatória!}
+\begin{verbatim}  
+export OPENBUS_HOME=<local de extracao do pacote>
+\end{verbatim}
+
+  \item Configurar a variável de ambiente LD\_LIBRARY\_PATH
+\begin{verbatim}  
+export LD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${LD_LIBRARY_PATH}"
+\end{verbatim}
+
+  \item Gerar um novo par de chaves do barramento utilizando o script \emph{openssl-generate.ksh}.
+\begin{verbatim}
+cd ${OPENBUS_HOME} && ./specs/shell/openssl-generate.ksh -n <nome do par de chaves>
+\end{verbatim}  
+  
+  \item Testar se a execução do binário do barramento esta funcionando
+\begin{verbatim}  
+$OPENBUS_HOME/bin/busservices --help
+\end{verbatim}
+
+\end{enumerate}
+
+Maiores informações sobre a como utilizar a configuração do \emph{busservices} podem ser encontradas no manual de referência~\cite{ob2.0core}.
+
+\section{FAQ}
+
+\subsection{Como configurar o validador LDAP?}
+
+Informações sobre como configurar o validado LDAP do barramento podem ser encontradas em \cite{ob2.0ldap}.
+
+\subsection{Ainda estou com dúvidas. Como entro em contato?}
+
+Disponibilizamos uma lista pública de discussão com o intuito de reconhecer os usuários da nossa tecnologia, bem como receber sugestões e críticas que contribuam para a evolução do nosso projeto.
+
+Maiores informações sobre a nossa lista de discussão veja \url{http://listas.tecgraf.puc-rio.br/mailman/listinfo/openbus-users}.
+
+\bibliographystyle{plain}
+\bibliography{../references}
+
+\end{document}
