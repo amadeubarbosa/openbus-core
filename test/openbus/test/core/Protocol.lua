@@ -17,6 +17,7 @@ local initORB = oil.init
 
 local idl = require "openbus.core.idl"
 local loadIDL = idl.loadto
+local BusLogin = idl.const.BusLogin
 local EncryptedBlockSize = idl.const.EncryptedBlockSize
 local CredentialContextId = idl.const.credential.CredentialContextId
 local loginconst = idl.const.services.access_control
@@ -213,7 +214,7 @@ do -- call with invalid credential
   assert(ex.completed == "COMPLETED_NO")
   assert(ex.minor == loginconst.InvalidCredentialCode)
   reset = decodeReset(assert(module.getrepcxt(CredentialContextId)))
-  assert(reset.login == busid)
+  assert(reset.login == BusLogin)
 end
 
 do -- call with valid credential

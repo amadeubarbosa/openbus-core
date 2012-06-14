@@ -179,7 +179,7 @@ function IAccessControlService:isValid(credential)
     return time() < login.leaseRenewed+control.leaseTime+control.expirationGap
        and (credential.delegate == "" or login.allowLegacyDelegate)
   else
-    return credential.identifier == control.busid 
+    return credential.identifier == control.access.login.id 
        and credential.delegate == ""
   end
   return false

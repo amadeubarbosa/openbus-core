@@ -112,7 +112,7 @@ end
 ------------------------------------------------------------------------------
 
 local SelfLogin = {
-  id = nil,
+  id = idl.const.BusLogin,
   entity = idl.const.BusEntity,
   leaseRenewed = inf,
 }
@@ -191,7 +191,6 @@ function AccessControl:__init(data)
   }
   
   -- initialize access
-  SelfLogin.id = busid
   self.busid = busid
   local access = self.access
   local encodedkey = assert(access.prvkey:encode("public"))
