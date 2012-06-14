@@ -32,7 +32,7 @@ msg.LogoutForced = "encerramento forçado do login de $entity (login=$login)"
 --msg.RegisterServiceOffer = "$offer $entity $login"
 --msg.CorruptedDatabaseDueToMissingCategory = "$category"
 msg.OfferRegistrationObserverException = "falha na notificação de observador de registro de ofertas (id=$id): $errmsg"
-msg.OfferObserverException = "falha na notificação de observador de ofertas (id=$id): $errmsg"
+msg.OfferObserverException = "falha na notificação de observador de ofertas (cookie=$cookie): $errmsg"
 
 -- openbus.core.services.passwordvalidator.LDAP
 msg.LdapBadPatternSpec = "nenhum padrão válido de formação de logins LDAP (formato esperado é uma lista de strings mas foi fornecido um tipo $type)"

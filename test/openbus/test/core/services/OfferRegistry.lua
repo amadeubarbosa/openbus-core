@@ -478,22 +478,22 @@ function OfferObserversCase.testCookiesGeneration(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local obs = createOfferObserver()
-  local cookie1 = tOffer:subscribe(obs)
+  local cookie1 = tOffer:subscribeObserver(obs)
   Check.assertEquals(1, cookie1)
-  local cookie2 = tOffer:subscribe(obs)
+  local cookie2 = tOffer:subscribeObserver(obs)
   Check.assertEquals(2, cookie2)
-  local cookie3 = tOffer:subscribe(obs)
+  local cookie3 = tOffer:subscribeObserver(obs)
   Check.assertEquals(3, cookie3)
-  local ok = tOffer:unsubscribe(cookie2)
+  local ok = tOffer:unsubscribeObserver(cookie2)
   Check.assertTrue(ok)
   cookie2 = 0
-  cookie2 = tOffer:subscribe(obs)
+  cookie2 = tOffer:subscribeObserver(obs)
   Check.assertEquals(2, cookie2)
-  ok = tOffer:unsubscribe(cookie1)
+  ok = tOffer:unsubscribeObserver(cookie1)
   Check.assertTrue(ok)
-  ok = tOffer:unsubscribe(cookie2)
+  ok = tOffer:unsubscribeObserver(cookie2)
   Check.assertTrue(ok)
-  ok = tOffer:unsubscribe(cookie3)
+  ok = tOffer:unsubscribeObserver(cookie3)
   Check.assertTrue(ok)
 end
 
@@ -503,7 +503,7 @@ function OfferObserversCase.testNotification(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local obs = createOfferObserver()
-  local cookie = tOffer:subscribe(obs)
+  local cookie = tOffer:subscribeObserver(obs)
   local newProps = { offerProps[1], }
   tOffer:setProperties(newProps)
   Check.assertEquals(1, obs.wasChanged)
@@ -518,10 +518,10 @@ function OfferObserversCase.testMultipleNotification(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local obs = createOfferObserver()
-  local cookie1 = tOffer:subscribe(obs)
-  local cookie2 = tOffer:subscribe(obs)
-  local cookie3 = tOffer:subscribe(obs)
-  local ok = tOffer:unsubscribe(cookie2)
+  local cookie1 = tOffer:subscribeObserver(obs)
+  local cookie2 = tOffer:subscribeObserver(obs)
+  local cookie3 = tOffer:subscribeObserver(obs)
+  local ok = tOffer:unsubscribeObserver(cookie2)
   tOffer:remove()
   Check.assertEquals(2, obs.wasRemoved)
   self.serviceOffer = nil
@@ -533,11 +533,11 @@ function OfferObserversCase.testSubscribe(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local obs = createOfferObserver()
-  local cookie = tOffer:subscribe(obs)
+  local cookie = tOffer:subscribeObserver(obs)
   local newProps = { offerProps[1], }
   tOffer:setProperties(newProps)
   Check.assertEquals(1, obs.wasChanged)
-  local ok = tOffer:unsubscribe(cookie)
+  local ok = tOffer:unsubscribeObserver(cookie)
   Check.assertTrue(ok)
   tOffer:remove()
   Check.assertEquals(0, obs.wasRemoved)
@@ -549,7 +549,7 @@ function OfferObserversCase.testFailSubscription(self)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
-  local ok, err = pcall(tOffer.subscribe, tOffer, nil)
+  local ok, err = pcall(tOffer.subscribeObserver, tOffer, nil)
   Check.assertTrue(not ok)
   Check.assertEquals(sysex.BAD_PARAM, err._repid)
 end
@@ -559,7 +559,7 @@ function OfferObserversCase.testSubscribeInvalid(self)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
-  local cookie = tOffer:subscribe({})
+  local cookie = tOffer:subscribeObserver({})
   local newProps = { offerProps[1], }
   local ok, err = pcall(tOffer.setProperties, tOffer, newProps)
   -- Erro é apenas loggado no lado do bus
@@ -576,7 +576,7 @@ function OfferObserversCase.testFailUnsubscription(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local invalidCookie = -1
-  local ok = tOffer:unsubscribe(invalidCookie)
+  local ok = tOffer:unsubscribeObserver(invalidCookie)
   Check.assertTrue(not ok)
 end
 

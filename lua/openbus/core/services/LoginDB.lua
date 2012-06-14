@@ -35,12 +35,7 @@ local function setWatchedOf(self, login, new)
     watched[loginId] = new
     -- try to update saved data
     local id = self.id
-    local success, errmsg = self.table:setentry(id, {
-      id = id,
-      entity = self.entity,
-      ior = self.ior,
-      watched = watched,
-    })
+    local success, errmsg = self.table:setentryfield(id, "watched", watched)
     if success then
       -- commit the changes in memory
       login.watchers[self] = new
@@ -59,7 +54,7 @@ local Observer = class()
 function Observer:__init()
   local base = self.base
   local logins = base.logins
-  logins[self.entity].observers[self] = true
+  logins[self.login].observers[self] = true
   for id in pairs(self.watched) do
     logins[id].watchers[self] = true
   end
@@ -87,7 +82,7 @@ function Observer:remove()
   assert(self.table:removeentry(id))
   local base = self.base
   local logins = base.logins
-  logins[self.entity].observers[self] = nil
+  logins[self.login].observers[self] = nil
   for id in pairs(self.watched) do
     logins[id].watchers[self] = nil
   end
@@ -111,7 +106,7 @@ function Login:newObserver(callback)
   local id = newid("time")
   local data = {
     id = id,
-    entity = self.id,
+    login = self.id,
     watched = {},
     ior = tostring(callback),
   }
