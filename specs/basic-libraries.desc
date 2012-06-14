@@ -30,7 +30,7 @@ basesoft = {
       ["boost"] = "include/boost",
     },
     install_files = {
-      ["stage/lib/*"] = "lib/boost",
+      ["stage/lib/*"] = "lib",
     },
   },
   { name = "cxxtest",
