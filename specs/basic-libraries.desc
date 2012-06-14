@@ -47,15 +47,15 @@ basesoft = {
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
-      mf = { "config" },
+      mf = { "config USE_NODEPEND=Yes" },
       Darwin = {
-        mf = { "config BUILD_DYLIB=Yes", },
+        mf = { "config BUILD_DYLIB=Yes USE_NODEPEND=Yes", },
       },
       MacOS = {
-        mf = { "config BUILD_DYLIB=Yes", },
+        mf = { "config BUILD_DYLIB=Yes USE_NODEPEND=Yes", },
       },
       SunOS510 = {
-        mf = { "config LD=CC", },
+        mf = { "config LD=CC USE_NODEPEND=Yes", },
       },
     },
     install_files = {
@@ -72,15 +72,15 @@ basesoft = {
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
-      mf = { "config OPENBUS_SDK_MULTITHREAD=Yes" },
+      mf = { "config OPENBUS_SDK_MULTITHREAD=Yes USE_NODEPEND=Yes" },
       Darwin = {
-        mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes", },
+        mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes USE_NODEPEND=Yes", },
       },
       MacOS = {
-        mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes", },
+        mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes USE_NODEPEND=Yes", },
       },
       SunOS510 = {
-        mf = { "config LD=CC", },
+        mf = { "config LD=CC USE_NODEPEND=Yes", },
       },
     },
     install_files = {
@@ -97,15 +97,15 @@ basesoft = {
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
-      mf = { "config DBG=Yes" },
+      mf = { "config DBG=Yes USE_NODEPEND=Yes" },
       Darwin = {
-        mf = { "config BUILD_DYLIB=Yes DBG=Yes", },
+        mf = { "config BUILD_DYLIB=Yes DBG=Yes USE_NODEPEND=Yes", },
       },
       MacOS = {
-        mf = { "config BUILD_DYLIB=Yes DBG=Yes", },
+        mf = { "config BUILD_DYLIB=Yes DBG=Yes USE_NODEPEND=Yes", },
       },
       SunOS510 = {
-        mf = { "config LD=CC DBG=Yes", },
+        mf = { "config LD=CC DBG=Yes USE_NODEPEND=Yes", },
       },
     },
     install_files = {
@@ -122,15 +122,15 @@ basesoft = {
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
-      mf = { "config OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" },
+      mf = { "config OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes USE_NODEPEND=Yes" },
       Darwin = {
-        mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", },
+        mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes USE_NODEPEND=Yes", },
       },
       MacOS = {
-        mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", },
+        mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes USE_NODEPEND=Yes", },
       },
       SunOS510 = {
-        mf = { "config LD=CC DBG=Yes", },
+        mf = { "config LD=CC DBG=Yes USE_NODEPEND=Yes", },
       },
     },
     install_files = {
