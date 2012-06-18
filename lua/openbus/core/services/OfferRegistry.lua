@@ -144,7 +144,12 @@ local function callObservers(self, watched, op, ...)
       local observer = entry.observer
       local ok, errmsg = pcall(observer[op], observer, ...)
       if not ok then
-        log:exception(msg.OfferObserverException:tag{id=idx, errmsg=errmsg})
+        log:exception(msg.OfferObserverException:tag{
+          cookie = cookie,
+          owner = entry.login,
+          watched = watched.id,
+          errmsg = errmsg,
+        })
       end
     end
   end
@@ -426,13 +431,15 @@ local IgnoredFacets = {
 
 function OfferRegistry:registerService(service_ref, properties)
   if service_ref == nil then
-    throw.InvalidService()
+    throw.InvalidService{ message = msg.NullReference }
   end
   -- collect information about the SCS component implementing the service
   local compId = service_ref:getComponentId()
   local meta = service_ref:getFacetByName("IMetaInterface")
   if meta == nil then
-    throw.InvalidService()
+    throw.InvalidService{message=msg.MissingStandardFacet:tag{
+      name = "IMetaInterface",
+    }}
   end
   local allfacets = meta:__narrow("scs::core::IMetaInterface"):getFacets()
   local facets = {}
@@ -611,7 +618,7 @@ function InterfaceRegistry:removeInterface(ifaceId)
       for entity in pairs(entities) do
         list[#list+1] = entity
       end
-      throw.InterfaceInUse{ entities = list }
+      throw.InterfaceInUse{ ifaceId = ifaceId, entities = list }
     end
     self.interfaceDB:removeentry(ifaceId2Key(ifaceId))
     interfaces[ifaceId] = nil
@@ -714,7 +721,7 @@ function Entity:revokeInterface(ifaceId)
       end
     end
     if #unauthorized > 0 then
-      throw.AuthorizationInUse{ offers = unauthorized }
+      throw.AuthorizationInUse{ ifaceId = ifaceId, offers = unauthorized }
     end
   end
   -- check if interface is registered
@@ -768,10 +775,10 @@ function Category:setName(name)
 end
 
 function Category:remove()
-  if next(self.entities) ~= nil then
-    throw.EntityCategoryInUse{ entities = self:getEntities() }
-  end
   local id = self.id
+  if next(self.entities) ~= nil then
+    throw.EntityCategoryInUse{ category = id, entities = self:getEntities() }
+  end
   assert(self.database:removeentry(id))
   self.orb:deactivate(self)
   self.registry.categories[id] = nil
@@ -786,15 +793,15 @@ function Category:removeAll()
 end
 
 function Category:registerEntity(id, name)
+  local categoryId = self.id
   local entities = self.entities
   -- check if category already exists
   local entity = entities[id]
   if entity ~= nil then
-    throw.EntityAlreadyRegistered{ existing = entity }
+    throw.EntityAlreadyRegistered{ category = categoryId, existing = entity }
   end
   -- persist the new entity
   local registry = self.registry
-  local categoryId = self.id
   local database = registry.entityDB
   assert(database:setentry(id, {categoryId=categoryId, name=name}))
   -- create object for the new entity
@@ -903,7 +910,7 @@ function EntityRegistry:createEntityCategory(id, name)
   -- check if category already exists
   local category = categories[id]
   if category ~= nil then
-    throw.EntityCategoryAlreadyExists{ existing = category }
+    throw.EntityCategoryAlreadyExists{ category = id, existing = category }
   end
   -- persist the new category
   local database = self.categoryDB

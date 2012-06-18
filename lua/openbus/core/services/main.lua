@@ -39,8 +39,20 @@ local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
 
+do
+	local error = _G.error
+	local debug = require "debug"
+	local traceback = debug.traceback
+	local cothread = require "cothread"
+	function cothread.error(thread, errmsg, ...)
+		errmsg = traceback(thread, errmsg)
+		log:unexpected(errmsg)
+		error(errmsg)
+	end
+end
+
 return function(...)
-  log.viewer.labels[running()] = "Core Services Initialization"
+  log.viewer.labels[running()] = "busservices"
   
   -- configuration parameters parser
   local Configs = ConfigArgs{
@@ -112,7 +124,8 @@ Options:
   -- setup log files
   setuplog(log, Configs.loglevel, Configs.logfile)
   setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
-
+  log:version(msg.CopyrightNotice)
+  
   -- create a set of admin users
   local adminUsers = {}
   for _, admin in ipairs(Configs.admin) do
@@ -146,7 +159,7 @@ Options:
     legacy = legacy,
   }
   orb:setinterceptor(iceptor, "corba")
-
+  
   -- create SCS component
   local facets = {}
   copy(AccessControl, facets)
@@ -213,6 +226,6 @@ Options:
   end
 
   -- start ORB
-  log:uptime(msg.BusSuccessfullyStarted)
+  log:uptime(msg.CoreServicesStarted)
   orb:run()
 end

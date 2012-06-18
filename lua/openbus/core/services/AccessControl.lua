@@ -76,11 +76,11 @@ end
 function CertificateRegistry:registerCertificate(entity, certificate)
   local certobj, errmsg = decodecertificate(certificate)
   if not certobj then
-    throw.InvalidCertificate{message=errmsg}
+    throw.InvalidCertificate{entity=entity,message=errmsg}
   end
   local pubkey, errmsg = certobj:getpubkey()
   if not pubkey then
-    throw.InvalidCertificate{message=errmsg}
+    throw.InvalidCertificate{entity=entity,message=errmsg}
   end
   log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
   assert(self.certificateDB:setentry(entity, certificate))
@@ -138,7 +138,7 @@ function LoginProcess:login(pubkey, encrypted)
   local access = manager.access
   local decrypted, errmsg = access.prvkey:decrypt(encrypted)
   if decrypted == nil then
-    throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
+    throw.WrongEncoding{entity=entity,message=errmsg or "no error message"}
   end
   local decoder = access.orb:newdecoder(decrypted)
   local decoded = decoder:get(manager.LoginAuthenticationInfo)
@@ -216,7 +216,7 @@ function AccessControl:__init(data)
   
   -- timer de limpeza de credenciais não renovadas e desafios não respondidos
   self.sweepTimer = Timer{ rate = self.leaseTime }
-  log.viewer.labels[self.sweepTimer.thread] = "Lease Expiration Sweeper"
+  log.viewer.labels[self.sweepTimer.thread] = "LeaseSweeper"
   function self.sweepTimer.action()
     -- A operação 'login:remove()' pode resultar numa chamada remota de
     -- 'observer:entityLogout(login)' e durante essa chamada é possível que
@@ -279,7 +279,7 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
   if entity ~= SelfLogin.entity then
     local decrypted, errmsg = self.access.prvkey:decrypt(encrypted)
     if decrypted == nil then
-      throw.WrongEncoding{errmsg=errmsg or "no error message provided"}
+      throw.WrongEncoding{entity=entity,message=errmsg or "no error message"}
     end
     local decoder = self.access.orb:newdecoder(decrypted)
     local decoded = decoder:get(self.LoginAuthenticationInfo)
@@ -317,23 +317,25 @@ function AccessControl:startLoginByCertificate(entity)
   if publickey == nil then
     throw.MissingCertificate{entity=entity}
   end
+  local secret = newid("new")
   local logger = LoginProcess{
     manager = self,
     entity = entity,
-    secret = newid("new"),
+    secret = secret,
     allowLegacyDelegate = true,
   }
   self.pendingChallenges[logger] = time()
   log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
-  return logger, assert(publickey:encrypt(logger.secret))
+  return logger, assert(publickey:encrypt(secret))
 end
 
 function AccessControl:startLoginBySingleSignOn()
   local login = self.activeLogins:getLogin(getCaller(self).id)
+  local secret = newid("new")
   local logger = LoginProcess{
     manager = self,
     entity = login.entity,
-    secret = newid("new"),
+    secret = secret,
     allowLegacyDelegate = login.allowLegacyDelegate,
   }
   self.pendingChallenges[logger] = time()
@@ -341,7 +343,7 @@ function AccessControl:startLoginBySingleSignOn()
     login = login.id,
     entity = login.entity,
   })
-  return logger, assert(login.pubkey:encrypt(logger.secret))
+  return logger, assert(login.pubkey:encrypt(secret))
 end
 
 function AccessControl:logout()
@@ -472,7 +474,12 @@ function LoginRegistry:loginRemoved(login, observers)
     end
     local ok, errmsg = pcall(callback.entityLogout, callback, login)
     if not ok then
-      log:exception(msg.LoginObserverException:tag{errmsg=errmsg})
+      log:exception(msg.LoginObserverException:tag{
+        observer = observer.id,
+        owner = observer.login,
+        watched = login.id,
+        errmsg = errmsg,
+      })
     end
   end
 end
@@ -508,12 +515,9 @@ function LoginRegistry:invalidateLogin(id)
   local login = AccessControl.activeLogins:getLogin(id)
   if login ~= nil then
     login:remove()
-    local caller = getCaller(self)
     log:request(msg.LogoutForced:tag{
       login = id,
       entity = login.entity,
-      adminlogin = caller.id,
-      adminentity = caller.entity,
     })
     return true
   end
