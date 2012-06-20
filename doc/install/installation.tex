@@ -108,10 +108,14 @@ As plataformas oficialmente suportadas são:
   \item Linux24g3
 \end{itemize}
 
+% TODO: explicar o significado dessas plataformas. Traduzir para uma nomenclatura conhecida.
+
 Para executar o barramento deve-se seguir o seguinte procedimento:
 
 \begin{enumerate}
-  \item Extrair o pacote. Para fins de legibilidade, vamos guardar o caminho do local da extração em uma variável de ambiente. Porém, \textbf{essa declaração não é obrigatória!}
+  \item Extrair o pacote.
+  Para fins de legibilidade, vamos guardar o caminho do local da extração em uma variável de ambiente. 
+  Porém, \textbf{essa declaração não é obrigatória!}
 \begin{verbatim}  
 export OPENBUS_HOME=<local de extracao do pacote>
 \end{verbatim}
@@ -120,16 +124,20 @@ export OPENBUS_HOME=<local de extracao do pacote>
 \begin{verbatim}  
 export LD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${LD_LIBRARY_PATH}"
 \end{verbatim}
-
-  \item Gerar um novo par de chaves do barramento utilizando o script \emph{openssl-generate.ksh}.
-\begin{verbatim}
-cd ${OPENBUS_HOME} && ./specs/shell/openssl-generate.ksh -n <nome do par de chaves>
-\end{verbatim}  
   
   \item Testar se a execução do binário do barramento esta funcionando
 \begin{verbatim}  
 $OPENBUS_HOME/bin/busservices --help
 \end{verbatim}
+
+  \item Gerar um par de chaves com tamanho de 2048 bits para o barramento.
+  A chave privada (arquivo com terminação \emph{.key}) deve ser do formato PKCS8 codificada em DER, e o certificado (arquivo com terminação \emph{.crt}) deve ser do formato X.509 codificado em DER.
+  Esse par de chaves pode ser criado utilizando o script \emph{openssl-generate.ksh}.
+\begin{verbatim}
+cd ${OPENBUS_HOME} && ./specs/shell/openssl-generate.ksh -n <nome do par de chaves>
+\end{verbatim}
+
+  \item Executar o barramento passando as configurações desejadas. Como por exemplo, o par de chaves do barramento.
 
 \end{enumerate}
 
