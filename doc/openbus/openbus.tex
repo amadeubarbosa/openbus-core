@@ -354,7 +354,47 @@ Para utilizar a ferramenta, deve-se executar:
 busadmin [opções] --login=<usuário> <comando>
 \end{verbatim} 
 
-As opções disponíveis são:
+Para adicionar e remover categorias, entidades, certificados, interfaces e autorizações, aconselhamos que se defina um arquivo de script \lua{} com o formato especificado no código~\ref{lst:openbus.adm}, porque ele serve de entrada para os comandos ``script'' e ``undo-script'' da ferramenta \emph{busadmin}, que executa ou dezfaz a execução do lote de comandos especificados pelo arquivo de script.
+
+\begin{samplelisting}[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
+-- categoria
+Category {
+  id = "TEST_Category", -- identificador da categoria
+  name = "Descrição da categoria", -- descrição da categoria
+}
+-- entidade
+Entity {
+  id = "TEST_Entity", -- identificador da entidade
+  category = "TEST_Category", -- identificador da categoria
+  name = "Descrição da entidade", -- descrição da entidade
+}
+-- certificado
+Certificate {
+  id = "TEST_Entity", -- identificador da entidade
+  certificate = "teste.crt", -- path para arquivo de certificado
+}
+-- interface
+Interface {
+  id = "IDL:script/Test:1.0" -- RepID da interface
+}
+-- conceder autorização
+Grant {
+  id = "TEST_Entity", -- identificador da entidade
+  interfaces = {
+    "IDL:script/Test:1.0", -- RepID da interface autorizada
+  }
+}
+-- remover autorização
+Revoke {
+  id = "TEST_Entity", -- identificador da entidade
+  interfaces = {
+    "IDL:script/Test:1.0", -- RepID da interface com autorização revogada
+  }
+}
+\end{samplelisting}
+
+O \emph{busadmin} também permite realizar esses cadastros e descadastros manualmente, além de realizar consultas e outras atividades de gerência do barramento.
+A listagem completa dos comandos disponíveis é apresentada a seguir:
 \begin{itemize}
   \item \textbf{Configuração:}
 
@@ -507,45 +547,6 @@ As opções disponíveis são:
 \end{description}
 
 \end{itemize}
-
-O formato do script \lua{} que pode ser passado para os comandos``script'' e ``undo-script'' deve seguir o formato especificado no código~\ref{lst:openbus.adm}.
-
-\begin{samplelisting}[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
--- categoria
-Category {
-  id = "TEST_Category",
-  name = "Descrição da categoria",
-}
--- entidade
-Entity {
-  id = "TEST_Entity",
-  category = "TEST_Category",
-  name = "Descrição da entidade",
-}
--- certificado
-Certificate {
-  id = "TEST_Entity",
-  certificate = "teste.crt", -- path para arquivo de certificado
-}
--- interface
-Interface {
-  id = "IDL:script/Test:1.0"
-}
--- conceder autorização
-Grant {
-  id = "TEST_Entity",
-  interfaces = {
-    "IDL:script/Test:1.0",
-  }
-}
--- remover autorização
-Revoke {
-  id = "TEST_Entity",
-  interfaces = {
-    "IDL:script/Test:1.0",
-  }
-}
-\end{samplelisting}
 
 \subsection{\openbus{} para Desenvolvedores}
 
