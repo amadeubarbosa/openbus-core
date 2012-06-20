@@ -92,10 +92,10 @@
 
 \section{Introdução}
 
-Este documento tem como objetivo apresentar o \openbus{} \version{} e seus conceitos principais. 
+Este documento tem como objetivo apresentar o \openbus{} \version{} e seus conceitos principais.
 Nesta seção introdutória apresentaremos uma definição do projeto e os motivadores para o seu uso.
-Na seção~\ref{sec:architecture} apresentamos a arquitetura do sistema, e na seção~\ref{sec:perspectives} falamos um pouco mais sobre o projeto de acordo com a visão de cada tipo de usuário.
-Por fim, na seção~\ref{sec:glossary} apresentamos um glossário com os conceitos principais do projeto.
+Na seção~\ref{sec:architecture} apresentamos a arquitetura do sistema, e entramos um pouco mais em detalhes de como ocorre a comunicação dentro do barramento na seção~\ref{sec:communication}.
+Em seguida, na seção~\ref{sec:perspectives} falamos um pouco mais sobre o projeto de acordo com a visão de cada tipo de usuário, e, por fim, na seção~\ref{sec:glossary} apresentamos um glossário com os conceitos principais do projeto.
 
 \subsection{O que é ?}
 O \openbus{}~\cite{web:OPENBUS} é uma arquitetura aberta e orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}) para integrar, de forma segura, dados e aplicações heterogêneas de domínios distintos ou não.
@@ -190,6 +190,41 @@ Esse serviço tem como principais funcionalidades:
 \end{itemize} 
 
 Não entraremos em maiores detalhes sobre as funcionalidades e o uso do Serviço de Colaboração neste documento. Para mais informações, consulte o manual do serviço~\cite{collaboration1.0}.
+
+\section{Comunicação no \openbus{}}\label{sec:communication}
+
+Dado que o barramento serve como uma solução de integração, isso quer dizer que todas as chamadas entre serviços e aplicacões integradas serão interceptadas pelo barramento?
+A resposta é não!
+
+Vamos explicar então como ocorre a comunicação dentro do barramento, utilizando como exemplo um cenário onde temos um serviço para publicar no barramento e uma aplicação que vai utilizar o serviço publicado.
+Iremos dividir esse cenário em duas fases, explicando a sequência de interação que ocorre dentro das mesmas. 
+
+A primeira fase, ilustrada pela figura~\ref{fig:begin-comm}, corresponde ao processo de realização do login, publicação e busca do serviço publicado no barramento.
+Primeiro o serviço realiza o login no barramento, e com o sucesso no login, ele pode publicar o serviço a ser ofertado no Registro de Ofertas.
+Então a aplicação realiza também o login no barramento, e pode buscar pelo serviço no barramento, também através do Registro de Ofertas.
+Caso as propriedades especificadas na busca correspondam as especificadas no registro, a oferta é encontrada e a aplicação consegue obter uma referência para a mesma.
+
+\begin{figure} [htb!]
+\centering
+\includegraphics[width=0.5\textwidth]{./figs/comunicacao-inicio.pdf}
+\caption{Esquema demonstrando como ocorre o início de uma integração entre duas entidades através do barramento.}
+\label{fig:begin-comm}
+\end{figure}
+
+Começa então a segunda fase, ilustrada pela figura~\ref{fig:direct-comm}, que é caracterizada pela comunicação direta entre a aplicação e o serviço publicado no barramento.
+Neste cenário, a aplicação atua como o cliente, e o serviço ofertado como o servidor.
+O cliente então faz uma requisição para o servidor, e a primeira coisa que o servidor irá fazer é verificar se o cliente que faz a requisição possui um login válido.
+Se o login for válido, o servidor então pode atender a requisição.
+
+Essa descrição que apresentamos é uma visão bem simplificada do que realmente acontece, dado que o usuário que faz uso da biblioteca de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua} não precisa se preocupar com esses detalhes, pois as bibliotecas de acesso se encarregam de respeitar e implementar todo o protocolo~\cite{ob2.0protospec} necessário para que a comunicação seja segura e correta.
+Na próxima vez que o mesmo cliente falar com o mesmo servidor, o servidor não precisará necessariamente realizar uma chamada remota para o barramento, caso as informações necessárias para validar a requisição ainda estejam válidas e presentes no caches das bibliotecas.
+
+\begin{figure} [htb!]
+\centering
+\includegraphics[width=0.5\textwidth]{./figs/comunicacao-direta.pdf}
+\caption{Esquema demostrando como ocorre a comunicação entre duas entidades no barramento.}
+\label{fig:direct-comm}
+\end{figure}
 
 \section{Perspectivas}\label{sec:perspectives}
 
