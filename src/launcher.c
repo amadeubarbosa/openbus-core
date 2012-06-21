@@ -35,11 +35,28 @@ static const char *callerchunk =
 "   return result, errmsg"
 " end"
 
+" local _G = require '_G'"
+" local error = _G.error"
+" local tostring = _G.tostring"
+
 " local coroutine = require 'coroutine'"
 " local newthread = coroutine.create"
+
+" local debug = require 'debug'"
+" local traceback = debug.traceback"
+
 " local cothread = require 'cothread'"
 " local step = cothread.step"
 " local run = cothread.run"
+
+" local log = require 'openbus.util.logger'"
+
+" function cothread.error(thread, errmsg, ...)"
+"   errmsg = traceback(thread, tostring(errmsg))"
+"   log:unexpected(errmsg)"
+"   error(errmsg)"
+" end"
+
 " return function(f, ...)"
 "   return run(step(newthread(f), ...))"
 " end";

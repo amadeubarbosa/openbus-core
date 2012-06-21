@@ -39,17 +39,6 @@ local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
 
-do
-	local error = _G.error
-	local debug = require "debug"
-	local traceback = debug.traceback
-	function cothread.error(thread, errmsg, ...)
-		errmsg = traceback(thread, errmsg)
-		log:unexpected(errmsg)
-		error(errmsg)
-	end
-end
-
 return function(...)
   log.viewer.labels[running()] = "busservices"
   
