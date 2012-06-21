@@ -12,6 +12,9 @@ local min = math.min
 local coroutine = require "coroutine"
 local newthread = coroutine.create
 
+local string = require "string"
+local strrep = string.rep
+
 local cothread = require "cothread"
 local time = cothread.now
 local running = cothread.running
@@ -127,6 +130,18 @@ local function renewLogin(login)
   login.leaseRenewed = time()
 end
 
+local MaxEncryptedData = strrep("\255", idl.const.EncryptedBlockSize-11)
+local function checkkey(pubkey)
+  local result, errmsg = decodepublickey(pubkey)
+  if result == nil then
+    throw.InvalidPublicKey{message=msg.UnableToDecodeKey:tag{error=errmsg}}
+  end
+  result, errmsg = result:encrypt(MaxEncryptedData)
+  if result == nil then
+    throw.InvalidPublicKey{message=msg.UnableToEncryptWithKey:tag{error=errmsg}}
+  end
+end
+
 
 
 local LoginProcess = class{ __type = types.LoginProcess }
@@ -139,6 +154,7 @@ end
 
 function LoginProcess:login(pubkey, encrypted)
   self:cancel()
+  checkkey(pubkey)
   local entity = self.entity
   local manager = self.manager
   local access = manager.access
@@ -294,6 +310,7 @@ end
 
 function AccessControl:loginByPassword(entity, pubkey, encrypted)
   if entity ~= SelfLogin.entity then
+    checkkey(pubkey)
     local decrypted, errmsg = self.access.prvkey:decrypt(encrypted)
     if decrypted == nil then
       throw.WrongEncoding{entity=entity,message=errmsg or "no error message"}

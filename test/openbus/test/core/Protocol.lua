@@ -172,6 +172,7 @@ do -- connection to the bus
   
   prvkey = newkey(EncryptedBlockSize)
   pubkey = prvkey:encode("public")
+  shortkey = newkey(EncryptedBlockSize-1):encode("public")
   
   local file = assert(io.open(keypath, "rb"))
   crtkey = assert(decodeprvkey(assert(file:read("*a"))))
@@ -213,14 +214,17 @@ end
 do -- login with invalid access key
   local pubkey = "InvalidAccessKey"
   local encrypted = encodeLogin(buskey, password, pubkey)
-  local login, lease = ac:loginByPassword(entity, pubkey, encrypted)
-  assert(login.id:match(LoginFormat))
-  assert(login.entity == entity)
-  assert(lease > 0)
-  -- TODO: shouldn't this raise the following exception
-  --local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
-  --assert(ok == false)
-  --assert(ex._repid == logintypes.InvalidPublicKey)
+  local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+  assert(ok == false)
+  assert(ex._repid == logintypes.InvalidPublicKey)
+end
+
+do -- login with key too short
+  local pubkey = shortkey
+  local encrypted = encodeLogin(buskey, password, pubkey)
+  local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+  assert(ok == false)
+  assert(ex._repid == logintypes.InvalidPublicKey)
 end
 
 do -- login successfull
@@ -266,15 +270,19 @@ do -- login with invalid access key
   local attempt, challenge = ac:startLoginByCertificate(entity)
   local secret = assert(crtkey:decrypt(challenge))
   local encrypted = encodeLogin(buskey, secret, pubkey)
-  local login, lease = attempt:login(pubkey, encrypted)
-  assert(attempt:_non_existent())
-  assert(login.id:match(LoginFormat))
-  assert(login.entity == entity)
-  assert(lease > 0)
-  -- TODO: shouldn't this raise the following exception
-  --local ok, ex = pcall(attempt.login, attempt, pubkey, encrypted)
-  --assert(ok == false)
-  --assert(ex._repid == logintypes.InvalidPublicKey)
+  local ok, ex = pcall(attempt.login, attempt, pubkey, encrypted)
+  assert(ok == false)
+  assert(ex._repid == logintypes.InvalidPublicKey)
+end
+
+do -- login with invalid key too short
+  local pubkey = shortkey
+  local attempt, challenge = ac:startLoginByCertificate(entity)
+  local secret = assert(crtkey:decrypt(challenge))
+  local encrypted = encodeLogin(buskey, secret, pubkey)
+  local ok, ex = pcall(attempt.login, attempt, pubkey, encrypted)
+  assert(ok == false)
+  assert(ex._repid == logintypes.InvalidPublicKey)
 end
 
 do -- login successfull

@@ -96,7 +96,7 @@ end
 local Login = class()
  
 function Login:__init()
-  self.pubkey = decodekey(self.encodedkey)
+  self.pubkey = assert(decodekey(self.encodedkey))
   self.base.logins[self.id] = self
   if self.watchers == nil then self.watchers = {} end
   if self.observers == nil then self.observers = {} end
