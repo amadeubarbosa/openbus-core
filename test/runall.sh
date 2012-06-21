@@ -1,8 +1,8 @@
 #!/bin/sh
 
-CONSOLE="${OPENBUS_HOME}/bin/busconsole -d"
+CONSOLE="${OPENBUS_HOME}/bin/busconsole"
 RUNNER="${CONSOLE} ${OPENBUS_HOME}/lib/lua/5.1/latt/ConsoleTestRunner.lua"
-TESTDIR=${OPENBUS_HOME}/../svn/core/trunk/test/openbus/test/core
+TESTDIR=${OPENBUS_HOME}/test/openbus/test/core
 
 LUACASES="\
 Protocol \
