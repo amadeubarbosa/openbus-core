@@ -120,6 +120,12 @@ do -- protocol data encoding functions
     return reset
   end
 
+  function decodeChain(buskey, signed)
+    local encoded = signed.encoded
+    assert(buskey:verify(sha256(encoded), signed.signature))
+    return decodeCDR(encoded, logintypes.CallChain)
+  end
+
   function encodeLogin(buskey, data, pubkey)
     return buskey:encrypt(encodeCDR({data = data, hash = sha256(pubkey)},
                                     logintypes.LoginAuthenticationInfo))
@@ -509,8 +515,11 @@ do -- sign chain for an invalid login
     secret = reset.secret,
     chain = NullChain,
   })
-  signedChainForInvalidLogin = ac:signChainFor(logoutid)
-  -- TODO: check que signedChain
+  signed = ac:signChainFor(logoutid)
+  local chain = decodeChain(buskey, signed)
+  assert(chain.target == logoutid)
+  assert(chain.callers[1].id == loginid)
+  assert(chain.callers[1].entity == entity)
 end
 
 do -- join chain targeted for other login (an invalid one)
@@ -521,7 +530,7 @@ do -- join chain targeted for other login (an invalid one)
     session = reset.session,
     ticket = 101,
     secret = reset.secret,
-    chain = signedChainForInvalidLogin,
+    chain = signed,
   })
   local ok, ex = pcall(ac.signChainFor, ac, logoutid)
   assert(ok == false)
