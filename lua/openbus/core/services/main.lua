@@ -59,7 +59,6 @@ return function(...)
     port = 2089,
   
     database = "openbus.db",
-    certificate = "openbus.crt",
     privatekey = "openbus.key",
   
     leasetime = 180,
@@ -96,7 +95,6 @@ Options:
   -port <number>             número da porta usada pelo barramento
 
   -database <path>           arquivo de dados do barramento
-  -certificate <path>        arquivo com certificado do barramento
   -privatekey <path>         arquivo com chave privada do barramento
 
   -leasetime <seconds>       tempo de lease dos logins de acesso
@@ -178,7 +176,6 @@ Options:
       local params = {
         access = iceptor,
         database = assert(opendb(Configs.database)),
-        certificate = assert(readfilecontents(Configs.certificate)),
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
         admins = adminUsers,
@@ -187,7 +184,6 @@ Options:
       }
       log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
       log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
-      log:config(msg.LoadedBusCertificate:tag{path=Configs.certificate})
       log:config(msg.SetupLoginLeaseTime:tag{value=params.leaseTime})
       log:config(msg.SetupLoginExpirationGap:tag{value=params.expirationGap})
       if not params.enforceAuth then
