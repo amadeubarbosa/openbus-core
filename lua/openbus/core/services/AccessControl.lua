@@ -4,6 +4,7 @@ local _G = require "_G"
 local ipairs = _G.ipairs
 local pairs = _G.pairs
 local rawset = _G.rawset
+local type = _G.type
 
 local math = require "math"
 local inf = math.huge
@@ -40,6 +41,7 @@ local log = require "openbus.util.logger"
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
 local srvex = idl.throw.services
+local srvtp = idl.types.services
 local throw = idl.throw.services.access_control
 local types = idl.types.services.access_control
 local const = idl.const.services.access_control
@@ -258,7 +260,10 @@ function AccessControl:__init(data)
           login = login.id,
           entity = login.entity,
         })
-        login:remove()
+        local ok, ex = pcall(login.remove, login) -- catch I/O errors
+        if not ok and (type(ex)~="table" or ex._repid~=srvtp.ServiceFailure) then
+          error(ex)
+        end
       end
       
       -- cancela autenicação via desafio cujo tempo tenha espirado
