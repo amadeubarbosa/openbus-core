@@ -147,7 +147,7 @@ O resultado da autenticação é a criação de um login, que representa uma autentic
 Todo login possui um tempo de validade (lease), no qual permanecerá válido sem necessidade de renovação, mas deve ser renovada para que não expire. 
 Contudo, um login pode ser invalidado explicitamente por um administrador antes do tempo de lease.
 
-O \emph{middleware} \corba{} (\emph{Common Object Request Broker Architecture}) é a espeficiação de um padrão de \orb{} sobre a qual o \openbus{} é definido e implementado, e é a tecnologia adotada para provêr suporte à comunicação de objetos distribuídos em múltiplas linguagens.
+O \emph{middleware} \corba{} (\emph{Common Object Request Broker Architecture}) é a especificação de um padrão de \orb{} sobre a qual o \openbus{} é definido e implementado, e é a tecnologia adotada para prover suporte à comunicação de objetos distribuídos em múltiplas linguagens.
 O \openbus{} pode ser visto como uma extensão do padrão \corba{}.
 
 Por sua vez, o protocolo de acesso é o conjunto de regras para realização de chamadas \corba{} através de um barramento \openbus{}, que foi introduzido na versão \version{} do \openbus{}.
@@ -155,7 +155,7 @@ O principal objetivo desse protocolo é garantir um nível adequado de segurança d
 Maiores informações sobre o protocolo podem ser encontradas no documento de especificação do protocolo~\cite{ob2.0protospec}.
 
 Para facilitar o trabalho de integração de serviços e aplicações no barramento, oferecemos uma biblioteca de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua}, que implementa o protocolo de acesso e exporta uma interface de programação (API). 
-A biblioteca de acesso é implementada nas linguages: C++, C\#, Java e Lua.
+A biblioteca de acesso é implementada nas linguagens: C++, C\#, Java e Lua.
 
 \subsection{Serviços Núcleo}
 
@@ -193,11 +193,11 @@ Não entraremos em maiores detalhes sobre as funcionalidades e o uso do Serviço d
 
 \section{Comunicação no \openbus{}}\label{sec:communication}
 
-Dado que o barramento serve como uma solução de integração, isso quer dizer que todas as chamadas entre serviços e aplicacões integradas serão interceptadas pelo barramento?
+Dado que o barramento serve como uma solução de integração, isso quer dizer que todas as chamadas entre serviços e aplicações integradas serão interceptadas pelo barramento?
 A resposta é não!
 
 Vamos explicar então como ocorre a comunicação dentro do barramento, utilizando como exemplo um cenário onde temos um serviço para publicar no barramento e uma aplicação que vai utilizar o serviço publicado.
-Iremos dividir esse cenário em duas fases, explicando a sequência de interação que ocorre dentro das mesmas. 
+Iremos dividir esse cenário em duas fases, explicando a seqüência de interação que ocorre dentro das mesmas. 
 
 A primeira fase, ilustrada pela figura~\ref{fig:begin-comm}, corresponde ao processo de realização do login, publicação e busca do serviço publicado no barramento.
 Primeiro o serviço realiza o login no barramento, e com o sucesso no login, ele pode publicar o serviço a ser ofertado no Registro de Ofertas.
@@ -294,7 +294,7 @@ leasetime = 30
 \end{samplelisting}
 
 Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção ``config'' por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
-O \emph{busservices} foi pensado para que as opções passadas por linha de comando tenham prioridade (sobrescrevam) sobre as opções definidas no arquivo de configuração.
+O \emph{busservices} foi pensado para que as opções passadas por linha de comando tenham prioridade sobre as opções definidas no arquivo de configuração.
 
 Através da opção ``validator'' informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
 Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações como configurar o validador LDAP, consulte~\cite{ob2.0ldap} [VERIFICAR COM AMADEU JR.].
@@ -335,7 +335,7 @@ Existem os conceitos de:
   Categorias de entidade são agrupamentos usados exclusivamente para facilitar a gerência das diversas entidades cadastradas no barramento pelo administrador.
 
   \item[Entidade] Representa uma entidade do barramento registrada.
-  Entidade é tudo aquilo que pode se logar ao barramento e usufruir dos   recursos do barramento.
+  Entidade é tudo aquilo que pode fazer login no barramento e usufruir dos   recursos do barramento.
   Em particular, tanto usuários humanos como implantações de sistema são considerados entidades.
   Entidades podem ou não ser cadastradas no serviço, mas apenas entidades cadastradas podem ser autorizadas a ofertar serviços.
 
@@ -345,7 +345,7 @@ dada entidade no barramento.
 
   \item[Interface] Definição de uma interface IDL de um serviço que pode ser ofertado no barramento.
 
-  \item[Autorização] Associação de uma interface IDL a uma entidade, indicando que processos logados como essa entidade possam oferecer serviços que implementem essa interface no Registro de Ofertas do barramento.
+  \item[Autorização] Associação de uma interface IDL a uma entidade, indicando que processos conectados como essa entidade possam oferecer serviços que implementem essa interface no Registro de Ofertas do barramento.
 
 \end{description}
 
@@ -354,47 +354,72 @@ Para utilizar a ferramenta, deve-se executar:
 busadmin [opções] --login=<usuário> <comando>
 \end{verbatim} 
 
-Para adicionar e remover categorias, entidades, certificados, interfaces e autorizações, aconselhamos que se defina um arquivo de script \lua{} com o formato especificado no código~\ref{lst:openbus.adm}, porque ele serve de entrada para os comandos ``script'' e ``undo-script'' da ferramenta \emph{busadmin}, que executa ou dezfaz a execução do lote de comandos especificados pelo arquivo de script.
+Para adicionar e remover categorias, entidades, certificados, interfaces e autorizações, aconselhamos que se defina um arquivo de script \lua{} com o formato especificado no código~\ref{lst:openbus.adm}, porque ele serve de entrada para os comandos ``script'' e ``undo-script'' da ferramenta \emph{busadmin}, que executa ou desfaz a execução do lote de comandos especificados pelo arquivo de script.
 
 \begin{samplelisting}[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
--- categoria
+-- Definição de uma categoria
+-- * comando: Category
+-- * parâmetros:
+--   * id = identificador da categoria
+--   * name = descrição da categoria
 Category {
-  id = "TEST_Category", -- identificador da categoria
-  name = "Descrição da categoria", -- descrição da categoria
+  id = "TEST_Category",
+  name = "Descrição da categoria",
 }
--- entidade
+-- Definição de uma entidade
+-- * comando: Entity
+-- * parâmetros:
+--   * id = identificador da entidade
+--   * category = identificador da categoria que a entidade pertence
+--   * name = descrição da entidade
 Entity {
-  id = "TEST_Entity", -- identificador da entidade
-  category = "TEST_Category", -- identificador da categoria
-  name = "Descrição da entidade", -- descrição da entidade
+  id = "TEST_Entity",
+  category = "TEST_Category",
+  name = "Descrição da entidade",
 }
--- certificado
+-- Definição de um certificado
+-- * comando: Certificate
+-- * parâmetros:
+--   * id = identificador da entidade
+--   * certificate = caminho para arquivo de certificado associado a entidade
 Certificate {
-  id = "TEST_Entity", -- identificador da entidade
-  certificate = "teste.crt", -- path para arquivo de certificado
+  id = "TEST_Entity",
+  certificate = "teste.crt",
 }
--- interface
+-- Definição de uma interface
+-- * comando: Interface
+-- * parâmetros:
+--   * id = repID da interface
 Interface {
-  id = "IDL:script/Test:1.0" -- RepID da interface
+  id = "IDL:script/Test:1.0"
 }
--- conceder autorização
+-- Conceder autorização
+-- * comando: Grant
+-- * parâmetros:
+--   * id = identificador da entidade a ser autorizada
+--   * interfaces = lista de interfaces a serem autorizadas.
 Grant {
-  id = "TEST_Entity", -- identificador da entidade
+  id = "TEST_Entity",
   interfaces = {
-    "IDL:script/Test:1.0", -- RepID da interface autorizada
+    "IDL:script/Test:1.0",
   }
 }
--- remover autorização
+-- Remover autorização
+-- * comando: Revoke
+-- * parâmetros:
+--   * id = identificador da entidade
+--   * interfaces = lista de interfaces a serem desautorizadas.
 Revoke {
-  id = "TEST_Entity", -- identificador da entidade
+  id = "TEST_Entity",
   interfaces = {
-    "IDL:script/Test:1.0", -- RepID da interface com autorização revogada
+    "IDL:script/Test:1.0",
   }
 }
 \end{samplelisting}
 
 O \emph{busadmin} também permite realizar esses cadastros e descadastros manualmente, além de realizar consultas e outras atividades de gerência do barramento.
 A listagem completa dos comandos disponíveis é apresentada a seguir:
+
 \begin{itemize}
   \item \textbf{Configuração:}
 
