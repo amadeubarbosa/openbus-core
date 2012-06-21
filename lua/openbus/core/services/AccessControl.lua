@@ -45,8 +45,6 @@ local types = idl.types.services.access_control
 local const = idl.const.services.access_control
 
 local msg = require "openbus.core.services.messages"
-local checks = require "openbus.core.services.callchecks"
-local getCaller = checks.getCaller
 local Logins = require "openbus.core.services.LoginDB"
 
 
@@ -295,10 +293,10 @@ function AccessControl:getLoginEntry(id)
   return self.activeLogins:getLogin(id)
 end
 
-function AccessControl:encodeChain(target, callers)
+function AccessControl:encodeChain(chain)
   local access = self.access
   local encoder = access.orb:newencoder()
-  encoder:put({target=target,callers=callers}, access.types.CallChain)
+  encoder:put(chain, access.types.CallChain)
   local encoded = encoder:getdata()
   return {
     encoded = encoded,
@@ -364,7 +362,8 @@ function AccessControl:startLoginByCertificate(entity)
 end
 
 function AccessControl:startLoginBySingleSignOn()
-  local login = self.activeLogins:getLogin(getCaller(self).id)
+  local caller = self.access:getCallerChain().caller
+  local login = self.activeLogins:getLogin(caller.id)
   local secret = newid("new")
   local logger = LoginProcess{
     manager = self,
@@ -381,20 +380,24 @@ function AccessControl:startLoginBySingleSignOn()
 end
 
 function AccessControl:logout()
-  local login = self.activeLogins:getLogin(getCaller(self).id)
+  local caller = self.access:getCallerChain().caller
+  local login = self.activeLogins:getLogin(caller.id)
   login:remove()
   log:request(msg.LogoutPerformed:tag{login=login.id,entity=login.entity})
 end
 
 function AccessControl:renew()
-  local login = self.activeLogins:getLogin(getCaller(self).id)
+  local caller = self.access:getCallerChain().caller
+  local login = self.activeLogins:getLogin(caller.id)
   renewLogin(login)
   log:request(msg.LoginRenewed:tag{login=login.id,entity=login.entity})
   return self.leaseTime
 end
 
 function AccessControl:signChainFor(target)
-  return self:encodeChain(target, self.access:getCallerChain().callers)
+  local chain = self.access:getCallerChain()
+  chain.target = target
+  return self:encodeChain(chain)
 end
 
 ------------------------------------------------------------------------------
@@ -589,7 +592,8 @@ end
 
 function LoginRegistry:subscribeObserver(callback)
   local logins = AccessControl.activeLogins
-  local login = logins:getLogin(getCaller(self).id)
+  local caller = self.access:getCallerChain().caller
+  local login = logins:getLogin(caller.id)
   local observer = login:newObserver(callback)
   local id = observer.id
   local subscription = Subscription{ id=id, logins=logins, registry=self }

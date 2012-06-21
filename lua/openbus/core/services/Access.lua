@@ -85,14 +85,15 @@ end
 
 function BusInterceptor:validateChain(chain, caller)
   if chain == nil then
-    chain = { callers = {caller}, signature = true }
+    chain = { originators = {}, caller = caller, signature = true }
   else
     if chain.signature ~= nil then -- is not a legacy chain (OpenBus 1.5)
                                    -- legacy chain is always created correctly
       local signed = self.buskey:verify(sha256(chain.encoded), chain.signature)
       if signed and chain.target == caller.id then
-        local callers = chain.callers
-        callers[#callers+1] = caller -- add caller to the chain
+        local originators = chain.originators
+        originators[#originators+1] = chain.caller -- add last originator
+        chain.caller = caller -- add caller to the chain
       else
         chain = nil -- invalid chain: unsigned or chain was not for the caller
       end
@@ -102,9 +103,13 @@ function BusInterceptor:validateChain(chain, caller)
 end
 
 function BusInterceptor:joinedChainFor(remoteid, chain)
-  local callers = { unpack(chain.callers) }
-  callers[#callers+1] = self.login
-  return self.AccessControl:encodeChain(remoteid, callers)
+  local originators = { unpack(chain.originators) }
+  originators[#originators+1] = chain.caller
+  return self.AccessControl:encodeChain{
+    target = remoteid,
+    originators = originators,
+    caller = self.login,
+  }
 end
 
 
@@ -131,8 +136,7 @@ function BusInterceptor:receiverequest(request)
         local granted = self.grantedUsers[request.interface.repID][opName]
         local chain = self:getCallerChain()
         if chain ~= nil then
-          local callers = chain.callers
-          local login = callers[#callers]
+          local login = chain.caller
           if not granted[login.entity] then
             if chain.signature == nil then -- legacy call (OpenBus 1.5)
               setNoPermSysEx(request, 0)

@@ -393,7 +393,8 @@ struct SignedCallChain {
 // Name: tecgraf::openbus::core::v2_00::services::access:control::CallChain
 struct CallChain {
 	Identifier target;    // Identificador do login a quem a cadeia se destina.
-	LoginInfoSeq callers; // Informacoes de login das entidades da cadeia.
+  LoginInfoSeq originators; // Informações de login das entidades que realizaram as chamadas em cadeia que originam essa chamada.
+  LoginInfo caller; // Informações de login da entidades que efetivamente fez chamada atual (última da cadeia).
 };
 	\end{samplecode}
 	
@@ -401,7 +402,9 @@ struct CallChain {
 	Ou seja, esse campo contém o mesmo identificador fornecido pelo campo \code{login} da estrutura \code{CredentialReset} descrito na seção \ref{sub:validacao_da_personalidade} que informa o login do objeto ao qual a chamada se destina.
 	Esse campo \code{target} da cadeia garante que a cadeia só possa ser utilizada (fazer novas chamadas dentro daquela cadeia) por quem detiver o login ao qual ela foi enviada.
 	
-	\item[Campo \code{callers}] contém uma sequência de informações sobre os vários logins que iniciaram cada chamada dentro desta cadeia de chamadas aninhadas.
+	\item[Campo \code{originators}] contém uma sequência de informações sobre os vários logins que realizaram as chamadas em cadeia que originam essa chamada.
+	
+	\item[Campo \code{caller}] login da entidades que efetivamente fez chamada atual (última da cadeia).
 \end{description}
 
 \subsubsection{Validação da Cadeia} % (fold)
@@ -413,7 +416,7 @@ Para que a cadeia de chamada seja válida, as seguintes condições devem ser válid
 \begin{itemize}
 		\item O campo \code{SignedCallChain::signature} deve conter uma assinatura válida do campo \code{SignedCallChain::encoded} a ser autenticada com a chave pública do barramento.
 	\item O campo \code{CallChain::target} deve ser o login de quem recebe a chamada.
-	\item O último item da sequência \code{CallChain::callers} deve indicar as informações do login de quem iniciou a chamada.
+	\item O campo \code{CallChain::caller} deve indicar as informações do login de quem iniciou a chamada.
 \end{itemize}
 
 Se qualquer uma dessas condições não for válida, quem recebe a chamada deve recusar a chamada devolvendo a exceção de sistema \code{CORBA::NO\_PERMISSON} com \code{COMPLETED\_NO} e o \term{minor code} definido pela seguinte constante:
@@ -451,7 +454,7 @@ Em particular, a credencial da chamada de \code{signChainFor} deve conter no cam
 Ou seja, é como se a chamada de \code{signChainFor} é feita como uma chamada aninhada da cadeia de chamadas original.
 Nesse sentido, para gerar uma cadeia nova que não seja uma extensão de outra cadeia previamente recebida, é necessário enviar uma cadeia nula na credencial da chamada de \code{signChainFor}, o que está em conformidade com a regra para geração de cadeias para o barramento, uma vez que a operação \code{signChainFor} é do barramento.
 
-Como resultado da operação \code{signChainFor} é devolvida uma nova cadeia que terá uma entrada adicional na sequência do campo \code{CallChain::callers} com informações do login de quem chamou a operação \code{signChainFor}.
+Como resultado da operação \code{signChainFor} é devolvida uma nova cadeia em que o campo \code{CallChain::caller} da cadeia original será adicionado à sequência do campo \code{CallChain::originators} e o campo \code{CallChain::caller} conterá informações do login de quem chamou a operação \code{signChainFor}.
 Adicionalmente, o campo \code{CallChain::target} conterá o identificador de login fornecido pelo parâmetro \code{target} da chamada de \code{signChainFor}.
 
 Note que dessa forma é possível se adicionar a cadeias recebidas (processo denominado \term{join}), assim como gerar tais cadeias para quaisquer destinos para o qual seja necessário enviar credenciais.

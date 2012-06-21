@@ -35,8 +35,6 @@ local types = idl.types.services.offer_registry
 local const = idl.const.services.offer_registry
 
 local msg = require "openbus.core.services.messages"
-local checks = require "openbus.core.services.callchecks"
-local getCaller = checks.getCaller
 local AccessControl = require "openbus.core.services.AccessControl"
 AccessControl = AccessControl.AccessControl
 local PropertyIndex = require "openbus.core.services.PropertyIndex"
@@ -46,7 +44,7 @@ local OfferRegistry -- forward declaration
 local EntityRegistry -- forward declaration
 
 local function assertCaller(self, owner)
-  local caller = getCaller(self)
+  local caller = self.access:getCallerChain().caller
   local entity = caller.entity
   local logtag
   if entity == owner then
@@ -240,7 +238,7 @@ function Offer:subscribeObserver(observer)
   end
   local registry = self.registry
   local id = self.id
-  local login = getCaller(registry).id
+  local login = registry.access:getCallerChain().caller.id
   local entry = {
     login = login,
     observer = tostring(observer),
@@ -452,7 +450,7 @@ function OfferRegistry:registerService(service_ref, properties)
     end
   end
   -- get information about the caller
-  local login = getCaller(self)
+  local login = self.access:getCallerChain().caller
   local entityId = login.entity
   -- check the caller is authorized to offer such service
   if self.enforceAuth then
@@ -528,7 +526,7 @@ function OfferRegistry:subscribeObserver(observer, properties)
   if observer == nil then
     sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
-  local login = getCaller(self).id
+  local login = self.access:getCallerChain().caller.id
   local observers = self.observers
   local cookie = #observers + 1
   local entry = { 

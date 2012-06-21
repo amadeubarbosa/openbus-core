@@ -526,8 +526,8 @@ do -- sign chain for an invalid login
   signed = ac:signChainFor(logoutid)
   local chain = decodeChain(buskey, signed)
   assert(chain.target == logoutid)
-  assert(chain.callers[1].id == loginid)
-  assert(chain.callers[1].entity == entity)
+  assert(chain.caller.id == loginid)
+  assert(chain.caller.entity == entity)
 end
 
 do -- join chain targeted for other login (an invalid one)
