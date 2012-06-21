@@ -1,50 +1,33 @@
 local _G = require "_G"
-local io = _G.io
 local pcall = _G.pcall
-local pcall = _G.pcall
-local table = _G.table
-local string = _G.string
 local ipairs = _G.ipairs
 
 local oil = require "oil"
-local oillog = require "oil.verbose"
 local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
 
-local ComponentContext = require "scs.core.ComponentContext"
-
 local openbus = require "openbus"
-local log = require "openbus.util.logger"
-local server = require "openbus.util.server"
-local setuplog = server.setuplog
-local Check = require "latt.Check"
-
 local idl = require "openbus.core.idl"
 local offertypes = idl.types.services.offer_registry
 
+local ComponentContext = require "scs.core.ComponentContext"
+
+local Check = require "latt.Check"
+
 -- Configurações --------------------------------------------------------------
-local host = "localhost"
-local port = 2089
-local dUser = "user"
-local dPassword = "user"
-local entity = "TestEntity"
-local sdklevel = 0
-local oillevel = 0 
-
-local scsutils = require ("scs.core.utils")()
 local props = {}
-scsutils:readProperties(props, "test.properties")
-scsutils = nil
+require ("scs.core.utils")():readProperties(props, "test.properties")
+local host = props:getTagOrDefault("host", "localhost")
+local port = props:getTagOrDefault("port", 2089)
+local dUser = props:getTagOrDefault("login", "tester")
+local dPassword = props:getTagOrDefault("password", tester)
+local entity = props:getTagOrDefault("entity", "TestEntity")
 
-host = props:getTagOrDefault("host", host)
-port = props:getTagOrDefault("port", port)
-admin = props:getTagOrDefault("adminLogin", admin)
-adminPassword = props:getTagOrDefault("adminPassword", adminPassword)
-dUser = props:getTagOrDefault("login", dUser)
-dPassword = props:getTagOrDefault("password", dPassword)
-entity = props:getTagOrDefault("entity", entity)
-sdklevel = props:getTagOrDefault("sdkLogLevel", sdklevel)
-oillevel = props:getTagOrDefault("oilLogLevel", oillevel)
+-- Inicialização --------------------------------------------------------------
+require("openbus.util.logger"):level(props:getTagOrDefault("sdkLogLevel", 0))
+require("oil.verbose"):level(props:getTagOrDefault("oilLogLevel", 0))
+local orb = openbus.initORB{ localrefs="proxy" }
+local connections = orb.OpenBusConnectionManager
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -138,15 +121,11 @@ local function isContained(one, other)
   return true
 end
 
--- Inicialização --------------------------------------------------------------
-setuplog(log, sdklevel)
-setuplog(oillog, oillevel)
-
 -- Funções de configuração de testes padrão -----------------------------------
 local function beforeTestCase(self)
-  local orb = openbus.initORB{ localrefs="proxy" }
-  local conn = openbus.connect(host, port, orb)
-  conn:loginByPassword(entity, entity)
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
+  conn:loginByPassword(self.user or entity, self.password or entity)
   self.conn = conn
   self.offers = conn.offers
   oil.newthread(conn.orb.run, conn.orb)
@@ -155,6 +134,7 @@ end
 local function afterTestCase(self)
   self.conn.orb:shutdown()
   self.conn:logout()
+  connections:setDefaultConnection(nil)
   self.conn = nil
   self.offers = nil
 end
@@ -275,15 +255,9 @@ end
 -- Caso de teste "NO AUTHORIZED ENTITY"
 ---------------------------------------
 
-function NoAuthorizedCase.beforeTestCase(self)
-  local orb = openbus.initORB{ localrefs="proxy" }
-  local conn = openbus.connect(host, port, orb)
-  conn:loginByPassword(dUser, dPassword)
-  self.conn = conn
-  self.offers = conn.offers
-  oil.newthread(conn.orb.run, conn.orb)
-end
-
+NoAuthorizedCase.user = dUser
+NoAuthorizedCase.password = dPassword
+NoAuthorizedCase.beforeTestCase = beforeTestCase
 NoAuthorizedCase.afterTestCase = afterTestCase
 
 function NoAuthorizedCase.testRegisterUnauthorizedEntity(self)

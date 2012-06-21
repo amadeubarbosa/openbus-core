@@ -5,8 +5,19 @@ local ipairs = _G.ipairs
 local pairs = _G.pairs
 local rawset = _G.rawset
 
+local math = require "math"
+local inf = math.huge
+local min = math.min
+
+local coroutine = require "coroutine"
+local newthread = coroutine.create
+
 local cothread = require "cothread"
 local time = cothread.now
+local running = cothread.running
+local schedule = cothread.schedule
+local unschedule = cothread.unschedule
+local waituntil = cothread.defer
 
 local uuid = require "uuid"
 local newid = uuid.new
@@ -17,10 +28,6 @@ local pubkey = require "lce.pubkey"
 local decodepublickey = pubkey.decodepublic
 local x509 = require "lce.x509"
 local decodecertificate = x509.decode
-
-local Publisher = require "loop.object.Publisher"
-
-local Timer = require "cothread.Timer"
 
 local oo = require "openbus.util.oo"
 local class = oo.class
@@ -114,7 +121,6 @@ end
 local SelfLogin = {
   id = idl.const.BusLogin,
   entity = idl.const.BusEntity,
-  leaseRenewed = inf,
 }
 
 local function renewLogin(login)
@@ -161,8 +167,6 @@ local AccessControl = {
   __objkey = const.AccessControlFacet,
   
   leaseTime = 180,
-  challengeTimeout = 180,
-  publisher = Publisher(),
 }
 
 -- local operations
@@ -185,10 +189,7 @@ function AccessControl:__init(data)
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
   self.pendingChallenges = {}
-  self.activeLogins = Logins{
-    database = database,
-    publisher = self.publisher,
-  }
+  self.activeLogins = Logins{ database = database }
   
   -- initialize access
   self.busid = busid
@@ -215,46 +216,62 @@ function AccessControl:__init(data)
   end
   
   -- timer de limpeza de credenciais não renovadas e desafios não respondidos
-  self.sweepTimer = Timer{ rate = self.leaseTime }
-  log.viewer.labels[self.sweepTimer.thread] = "LeaseSweeper"
-  function self.sweepTimer.action()
-    -- A operação 'login:remove()' pode resultar numa chamada remota de
-    -- 'observer:entityLogout(login)' e durante essa chamada é possível que
-    -- outra thread altere o 'activeLogins' o que interferiria na iteração
-    -- 'activeLogins:iLogins()' de forma imprevisível. Por isso a remoção é
-    -- feita em duas etapas:
-    local now = time()
-    local expirationTime = self.leaseTime + self.expirationGap
-    -- coleta credenciais não renovadas a tempo
-    local invalidLogins = {}
-    for id, login in self.activeLogins:iLogins() do
-      if now-login.leaseRenewed > expirationTime then
-        invalidLogins[login] = true
+  schedule(newthread(function()
+    while self.sweeper do
+      local now = time()
+      local leaseTime = self.leaseTime
+      local expirationTime = leaseTime + self.expirationGap
+      local nextDeadline = now+expirationTime
+      
+      -- A operação 'login:remove()' pode resultar numa chamada remota de
+      -- 'observer:entityLogout(login)' e durante essa chamada é possível que
+      -- outra thread altere o 'activeLogins' o que interferiria na iteração
+      -- 'activeLogins:iLogins()' de forma imprevisível. Por isso a remoção é
+      -- feita em duas etapas:
+      -- 1. coleta credenciais não renovadas a tempo
+      local invalidLogins = {}
+      for id, login in self.activeLogins:iLogins() do
+        local deadline = login.leaseRenewed+expirationTime
+        if deadline > now then
+          nextDeadline = min(nextDeadline, deadline)
+        else
+          invalidLogins[login] = true
+        end
       end
-    end
-    -- remove as credenciais coletadas
-    for login in pairs(invalidLogins) do
-      login:remove()
-      log:action(msg.LoginExpired:tag{
-        login = login.id,
-        entity = login.entity,
-      })
-    end
-    
-    -- cancela autenicação via desafio cujo tempo tenha espirado
-    local challengeTimeout = self.challengeTimeout
-    for process, timeCreated in pairs(self.pendingChallenges) do
-      if now-timeCreated > challengeTimeout then
-        log:action(msg.LoginProcessExpired:tag{entity=process.entity})
-        process:cancel()
+      -- 2. remove as credenciais coletadas
+      for login in pairs(invalidLogins) do
+        log:action(msg.LoginExpired:tag{
+          login = login.id,
+          entity = login.entity,
+        })
+        login:remove()
       end
+      
+      -- cancela autenicação via desafio cujo tempo tenha espirado
+      for process, timeCreated in pairs(self.pendingChallenges) do
+        local deadline = timeCreated+leaseTime
+        if deadline > now then
+          nextDeadline = min(nextDeadline, deadline)
+        else
+          log:action(msg.LoginProcessExpired:tag{entity=process.entity})
+          process:cancel()
+        end
+      end
+      
+      self.sweeper = running()
+      waituntil(nextDeadline)
+      self.sweeper = true
     end
-  end
-  self.sweepTimer:enable()
+  end), "delay", self.leaseTime+self.expirationGap)
+  self.sweeper = true -- indicate sweeper shall run
 end
 
 function AccessControl:shutdown()
-  self.sweepTimer:disable()
+  local sweeper = self.sweeper
+  if sweeper and sweeper ~= true then -- sweeper is sleeping
+    unschedule(sweeper)
+  end
+  self.sweeper = false -- indicate no sweeper shall run anymore
   log:admin(msg.AccessControlShutDown:tag{entity=process.entity})
 end
 
@@ -454,10 +471,10 @@ function LoginRegistry:__init(data)
   access:setGrantedUsers(self.__type, "getEntityLogins", admins)
   access:setGrantedUsers(self.__type, "invalidateLogin", admins)
   -- register itself to receive logout notifications
-  rawset(AccessControl.publisher, self, self)
+  local logins = AccessControl.activeLogins
+  rawset(logins.publisher, self, self)
   -- restaura servants dos observadores persistidos
   local orb = access.orb
-  local logins = AccessControl.activeLogins
   for id, observer in logins:iObservers() do
     local subscription = Subscription{ id=id, logins=logins, registry=self }
     self.subscriptionOf[id] = subscription
@@ -515,7 +532,7 @@ function LoginRegistry:invalidateLogin(id)
   local login = AccessControl.activeLogins:getLogin(id)
   if login ~= nil then
     login:remove()
-    log:request(msg.LogoutForced:tag{
+    log:admin(msg.LogoutForced:tag{
       login = id,
       entity = login.entity,
     })

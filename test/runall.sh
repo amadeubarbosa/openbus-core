@@ -1,10 +1,13 @@
 #!/bin/sh
 
-CONSOLE=${OPENBUS_HOME}/bin/busconsole
+CONSOLE="${OPENBUS_HOME}/bin/busconsole -d"
 RUNNER="${CONSOLE} ${OPENBUS_HOME}/lib/lua/5.1/latt/ConsoleTestRunner.lua"
-TESTDIR=${OPENBUS_HOME}/test/openbus/test/core
+TESTDIR=${OPENBUS_HOME}/../svn/core/trunk/test/openbus/test/core
 
-LUACASES="Protocol"
+LUACASES="\
+Protocol \
+services/CredentialDB \
+"
 for case in ${LUACASES}; do
 	echo -n "Test '${case}' ... "
 	${CONSOLE} ${TESTDIR}/${case}.lua
@@ -12,11 +15,11 @@ for case in ${LUACASES}; do
 done
 
 LATTCASES="\
-services/AccessControl \
 services/LoginRegistry \
 services/CertificateRegistry \
 services/OfferRegistry \
-admin/admin"
+admin/admin \
+"
 #LDAPAuthentication
 for case in ${LATTCASES}; do
 	echo "LATT '${case}':"

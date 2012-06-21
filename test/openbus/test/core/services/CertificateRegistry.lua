@@ -1,48 +1,31 @@
 local _G = require "_G"
-local io = _G.io
 local pcall = _G.pcall
-local pcall = _G.pcall
-local string = _G.string
 
-local oillog = require "oil.verbose"
-local giop = require "oil.corba.giop"
-local sysex = giop.SystemExceptionIDs
+local io = require "io"
 
 local openbus = require "openbus"
-local log = require "openbus.util.logger"
-local server = require "openbus.util.server"
-local setuplog = server.setuplog
-local Check = require "latt.Check"
-
 local idl = require "openbus.core.idl"
 local srvtypes = idl.types.services
 local logintypes = srvtypes.access_control
 
+local Check = require "latt.Check"
+
 -- Configurações --------------------------------------------------------------
-local host = "localhost"
-local port = 2089
-local admin = "admin"
-local adminPassword = "admin"
-local dUser = "user"
-local dPassword = "user"
-local certificate = "teste.crt"
-local sdklevel = 0
-local oillevel = 0 
-
-local scsutils = require ("scs.core.utils")()
 local props = {}
-scsutils:readProperties(props, "test.properties")
-scsutils = nil
+require ("scs.core.utils")():readProperties(props, "test.properties")
+local host = props:getTagOrDefault("host", "localhost")
+local port = props:getTagOrDefault("port", 2089)
+local admin = props:getTagOrDefault("adminLogin", "admin")
+local adminPassword = props:getTagOrDefault("adminPassword", admin)
+local dUser = props:getTagOrDefault("login", "tester")
+local dPassword = props:getTagOrDefault("password", tester)
+local certificate = props:getTagOrDefault("certificate", "teste.crt")
 
-host = props:getTagOrDefault("host", host)
-port = props:getTagOrDefault("port", port)
-admin = props:getTagOrDefault("adminLogin", admin)
-adminPassword = props:getTagOrDefault("adminPassword", adminPassword)
-dUser = props:getTagOrDefault("login", dUser)
-dPassword = props:getTagOrDefault("password", dPassword)
-certificate = props:getTagOrDefault("certificate", certificate)
-sdklevel = props:getTagOrDefault("sdkLogLevel", sdklevel)
-oillevel = props:getTagOrDefault("oilLogLevel", oillevel)
+-- Inicialização --------------------------------------------------------------
+require("openbus.util.logger"):level(props:getTagOrDefault("sdkLogLevel", 0))
+require("oil.verbose"):level(props:getTagOrDefault("oilLogLevel", 0))
+local orb = openbus.initORB()
+local connections = orb.OpenBusConnectionManager
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -54,13 +37,6 @@ Suite.Test3 = {}
 local NoPermissionCase = Suite.Test1
 local InvalidParamCase = Suite.Test2
 local CRCase = Suite.Test3
-
--- Funções auxiliares ---------------------------------------------------------
-
-
--- Inicialização --------------------------------------------------------------
-setuplog(log, sdklevel)
-setuplog(oillog, oillevel)
 
 -- Testes do CertificateRegistry ----------------------------------------------
 
@@ -74,13 +50,15 @@ setuplog(oillog, oillevel)
 --------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = openbus.connect(host, port)
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
 end
 
 function NoPermissionCase.afterTestCase(self)
   self.conn:logout()
+  connections:setDefaultConnection(nil)
   self.conn = nil
 end
 
@@ -117,7 +95,8 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  local conn = openbus.connect(host, port)
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.certs = conn.certificates
@@ -125,6 +104,7 @@ end
 
 function InvalidParamCase.afterTestCase(self)
   self.conn:logout()
+  connections:setDefaultConnection(nil)
   self.conn = nil
   self.certs = nil
 end
@@ -169,7 +149,8 @@ end
 -------------------------------------
 
 function CRCase.beforeTestCase(self)
-  local conn = openbus.connect(host, port)
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.certs = conn.certificates
@@ -177,6 +158,7 @@ end
 
 function CRCase.afterTestCase(self)
   self.conn:logout()
+  connections:setDefaultConnection(nil)
   self.conn = nil
   self.certs = nil
 end

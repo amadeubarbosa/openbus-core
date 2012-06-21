@@ -222,7 +222,11 @@ function Offer:remove(tag)
   -- commit changes in memory
   self.orb:deactivate(self)
   registry.offers:remove(self)
-  log[tag](log, msg.RemoveServiceOffer:tag{ offer = self.id })
+  log[tag](log, msg.RemoveServiceOffer:tag{
+    offer = self.id,
+    entity = self.entity,
+    login = self.login,
+  })
   -- notify observers and unregister them from the logout callback
   callObservers(registry, self, "removed", self)
   for cookie in pairs(self.observers) do
@@ -295,11 +299,6 @@ function OfferRegistry:loginRemoved(login)
   end
   do -- offers
     for offer in pairs(self.offers:get("openbus.offer.login", login.id)) do
-      log:action(msg.RemoveOfferAfterOwnerLogoff:tag{
-        offer = offer.id,
-        entity = login.entity,
-        login = login.id,
-      })
       offer:remove("action")
     end
   end
@@ -349,7 +348,7 @@ function OfferRegistry:__init(data)
   self.offerRegObsDB = assert(data.database:gettable("OfferRegistryObservers"))
   
   -- register itself to receive logout notifications
-  rawset(AccessControl.publisher, self, self)
+  rawset(AccessControl.activeLogins.publisher, self, self)
   
   local access = self.access
   local orb = access.orb

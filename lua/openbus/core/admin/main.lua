@@ -1451,7 +1451,7 @@ return function(...)
       returned = f(command)
     end
     --
-    if connection ~= nil and connection:isLoggedIn() then
+    if connection ~= nil and connection.login ~= nil then
       connection:logout()
       connection = nil
     end

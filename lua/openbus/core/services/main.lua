@@ -6,9 +6,6 @@ local ipairs = _G.ipairs
 local require = _G.require
 local select = _G.select
 
-local coroutine = require "coroutine"
-local running = coroutine.running
-
 local io = require "io"
 local stderr = io.stderr
 
@@ -17,6 +14,9 @@ local getenv = os.getenv
 
 local table = require "loop.table"
 local copy = table.copy
+
+local cothread = require "cothread"
+local running = cothread.running
 
 local oil = require "oil"
 local oillog = require "oil.verbose"
@@ -43,7 +43,6 @@ do
 	local error = _G.error
 	local debug = require "debug"
 	local traceback = debug.traceback
-	local cothread = require "cothread"
 	function cothread.error(thread, errmsg, ...)
 		errmsg = traceback(thread, errmsg)
 		log:unexpected(errmsg)
@@ -125,6 +124,12 @@ Options:
   setuplog(log, Configs.loglevel, Configs.logfile)
   setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
   log:version(msg.CopyrightNotice)
+
+  -- validate time parameters
+  assert(Configs.leasetime > 0,
+    msg.InvalidLeaseTime:tag{value=Configs.leasetime})
+  assert(Configs.expirationgap > 0,
+    msg.InvalidExpirationGap:tag{value=Configs.expirationgap})
   
   -- create a set of admin users
   local adminUsers = {}
@@ -183,10 +188,10 @@ Options:
       log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
       log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
       log:config(msg.LoadedBusCertificate:tag{path=Configs.certificate})
-      log:config(msg.SetupLoginValidityTime:tag{value=params.leaseTime})
+      log:config(msg.SetupLoginLeaseTime:tag{value=params.leaseTime})
       log:config(msg.SetupLoginExpirationGap:tag{value=params.expirationGap})
       if not params.enforceAuth then
-        log:config(msg.OfferAuthorizationEnfocementDisabled)
+        log:config(msg.OfferAuthorizationDisabled)
       end
       -- these object must be initialized in this order
       facets.CertificateRegistry:__init(params)

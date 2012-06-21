@@ -1,9 +1,11 @@
-require "openbus.base"
+local pubkey = require "lce.pubkey"
+local newkey = pubkey.create
+
 local oo = require "openbus.util.oo"
-
-local database = require "openbus.database"
-
-local Credentials = require "core.services.accesscontrol.Credentials"
+local database = require "openbus.util.database"
+local LoginDB = require "openbus.core.services.LoginDB"
+local idl = require "openbus.core.idl"
+local EncryptedBlockSize = idl.const.EncryptedBlockSize
 
 local Observer = oo.class()
 function Observer:__tostring()
@@ -29,32 +31,34 @@ local function assertIterator(expected, ...)
   assert(next(expected) == nil)
 end
 
+local key = newkey(EncryptedBlockSize):encode("public")
+
 do
-  local creds = Credentials{
+  local logins = LoginDB{
     database = assert(database.open("test.db")),
     orb = FakeORB,
   }
   
-  local user = creds:newCredential("user")
-  local deleg = creds:newCredential("delegator", "delegatee", true)
+  local user = logins:newLogin("user", key)
+  local deleg = logins:newLogin("delegator", key, true)
   
-  local obs = user:newObserver(creds.orb:newproxy("userObs", nil, "IObserver"))
-  obs:watchCredential(deleg)
-  local selfObs = user:newObserver(creds.orb:newproxy("selfObs", nil, "IObserver"))
-  selfObs:watchCredential(user)
-  local dummyObs = user:newObserver(creds.orb:newproxy("dummyObs", nil, "IObserver"))
-  dummyObs:watchCredential(deleg)
-  dummyObs:forgetCredential(deleg)
+  local obs = user:newObserver(logins.orb:newproxy("userObs", nil, "IObserver"))
+  obs:watchLogin(deleg)
+  local selfObs = user:newObserver(logins.orb:newproxy("selfObs", nil, "IObserver"))
+  selfObs:watchLogin(user)
+  local dummyObs = user:newObserver(logins.orb:newproxy("dummyObs", nil, "IObserver"))
+  dummyObs:watchLogin(deleg)
+  dummyObs:forgetLogin(deleg)
   
   assertIterator({[selfObs] = true}, user:iWatchers())
   assertIterator({[obs] = true}, deleg:iWatchers())
-  assertIterator({[deleg.id] = true}, obs:iWatchedCredentialIds())
-  assertIterator({[user.id] = true}, selfObs:iWatchedCredentialIds())
-  for id in dummyObs:iWatchedCredentialIds() do error("failure") end
+  assertIterator({[deleg.id] = true}, obs:iWatchedLoginIds())
+  assertIterator({[user.id] = true}, selfObs:iWatchedLoginIds())
+  for id in dummyObs:iWatchedLoginIds() do error("failure") end
 end
 
 do
-  local creds = Credentials{
+  local logins = LoginDB{
     database = assert(database.open("test.db")),
     orb = FakeORB,
   }
@@ -66,37 +70,35 @@ do
     },
     delegator = {},
   }
-  for id, credential in creds:iCredentials() do
-    -- check credential
-    local owner = credential.owner
-    if owner == "delegator" then
-      assert(credential.delegate == "delegatee", "wrong stored credential")
-      assert(credential.certified == true, "wrong stored credential")
+  for id, login in logins:iLogins() do
+    -- check login
+    local entity = login.entity
+    if entity == "delegator" then
+      assert(login.allowLegacyDelegate == true, "wrong stored login")
     else
-      assert(credential.delegate == "", "wrong stored credential")
-      assert(credential.certified == nil, "wrong stored credential")
+      assert(login.allowLegacyDelegate == false, "wrong stored login")
     end
-    -- check observers owned by this credential
-    local observers = assert(Data[credential.owner], "unknown stored credential")
-    Data[credential.owner] = nil
-    for observer in credential:iObservers() do
-      local watched = assert(observers[observer.ior], "wrong credential observer")
+    -- check observers owned by this login
+    local observers = assert(Data[login.entity], "unknown stored login")
+    Data[login.entity] = nil
+    for observer in login:iObservers() do
+      local watched = assert(observers[observer.ior], "wrong login observer")
       observers[observer.ior] = nil
-      for credId in observer:iWatchedCredentialIds() do
-        local watchedCred = creds:getCredential(credId)
-        assert(watched[watchedCred.owner], "wrong watched credential")
-        watched[watchedCred.owner] = nil
+      for credId in observer:iWatchedLoginIds() do
+        local watchedCred = logins:getLogin(credId)
+        assert(watched[watchedCred.entity], "wrong watched login")
+        watched[watchedCred.entity] = nil
       end
-      assert(next(watched) == nil, "missing wached credential")
+      assert(next(watched) == nil, "missing wached login")
     end
-    assert(next(observers) == nil, "missing credential observer")
-    -- check observers watching this credential
+    assert(next(observers) == nil, "missing login observer")
+    -- check observers watching this login
     local count = 0
-    for observer in credential:iWatchers() do
-      if credential.owner == "user" then
+    for observer in login:iWatchers() do
+      if login.entity == "user" then
         assert(observer.ior == "selfObs", "wrong observation")
         count = count+1
-      elseif credential.owner == "delegator" then
+      elseif login.entity == "delegator" then
         assert(observer.ior == "userObs", "wrong observation")
         count = count+1
       else
@@ -105,16 +107,16 @@ do
     end
     assert(count == 1, "duplicated observation")
   end
-  assert(next(Data) == nil, "missing stored credential")
+  assert(next(Data) == nil, "missing stored login")
 end
 
 
 do
-  local creds = Credentials{
+  local logins = LoginDB{
     database = assert(database.open("test.db")),
     orb = FakeORB,
   }
-  local Credentials = {
+  local Logins = {
     user = true,
     delegator = true,
   }
@@ -123,37 +125,37 @@ do
     selfObs=true,
     dummyObs=true,
   }
-  for id, observer in creds:iObservers() do
-    assert(Observers[observer.ior], "unknown stored credential")
+  for id, observer in logins:iObservers() do
+    assert(Observers[observer.ior], "unknown stored login")
     Observers[observer.ior] = nil
     observer:remove()
   end
-  for id, credential in creds:iCredentials() do
-    -- check credential
-    assert(Credentials[credential.owner], "unknown stored credential")
-    Credentials[credential.owner] = nil
-    credential:remove()
-    -- check observers owned by this credential
-    for observer in credential:iObservers() do
+  for id, login in logins:iLogins() do
+    -- check login
+    assert(Logins[login.entity], "unknown stored login")
+    Logins[login.entity] = nil
+    login:remove()
+    -- check observers owned by this login
+    for observer in login:iObservers() do
       error("observer not removed")
     end
-    -- check observers watching this credential
-    for observer in credential:iWatchers() do
+    -- check observers watching this login
+    for observer in login:iWatchers() do
       error("observer not removed")
     end
   end
 end
 
 do
-  local creds = Credentials{
+  local logins = LoginDB{
     database = assert(database.open("test.db")),
     orb = FakeORB,
   }
-  for id, observer in creds:iObservers() do
+  for id, observer in logins:iObservers() do
     error("observer not removed")
   end
-  for id, credential in creds:iCredentials() do
-    error("credential not removed")
+  for id, login in logins:iLogins() do
+    error("login not removed")
   end
 end
 
@@ -162,81 +164,81 @@ local function assertEx(errmsg, ...)
   local ok, ex, v1,v2,v3 = pcall(...)
   assert(not ok)
   assert(type(ex) == "table", ex)
-  assert(ex[1] == idl.types.ServiceFailure)
+  assert(ex._repid == idl.types.services.ServiceFailure)
   assert(ex.message:find(errmsg), ex.message)
   return ex, v1,v2,v3
 end
 
 do
-  assert(lfs.rmdir("test.db/Credentials"))
-  assert(io.open("test.db/Credentials", "w")):close()
-  assertEx("'test%.db/Credentials' expected to be directory %(got file%)",
-           Credentials, {database=assert(database.open("test.db"))})
-  assert(os.remove("test.db/Credentials"))
+  assert(lfs.rmdir("test.db/Logins"))
+  assert(io.open("test.db/Logins", "w")):close()
+  assertEx("'test%.db/Logins' expected to be directory %(got file%)",
+           LoginDB, {database=assert(database.open("test.db"))})
+  assert(os.remove("test.db/Logins"))
   
-  assert(lfs.mkdir("test.db/Credentials"))
-  local file = assert(io.open("test.db/Credentials/corrupted.lua", "w"))
+  assert(lfs.mkdir("test.db/Logins"))
+  local file = assert(io.open("test.db/Logins/corrupted.lua", "w"))
   assert(file:write("illegal Lua code"))
   file:close()
-  assertEx("unable to load file 'test%.db/Credentials/corrupted.lua' %(test.db/Credentials/corrupted.lua:1: '=' expected near 'Lua'%)",
-           Credentials, {database=assert(database.open("test.db"))})
+  assertEx("unable to load file 'test%.db/Logins/corrupted.lua' %(test.db/Logins/corrupted.lua:1: '=' expected near 'Lua'%)",
+           LoginDB, {database=assert(database.open("test.db"))})
   
-  assert(os.execute("chmod 000 test.db/Credentials") == 0)
-  assertEx("cannot open test%.db/Credentials/: Permission denied",
-           Credentials, {database=assert(database.open("test.db"))})
-  assert(os.execute("chmod 755 test.db/Credentials") == 0)
-  assert(os.remove("test.db/Credentials/corrupted.lua"))
+  assert(os.execute("chmod 000 test.db/Logins") == 0)
+  assertEx("cannot open test%.db/Logins/: Permission denied",
+           LoginDB, {database=assert(database.open("test.db"))})
+  assert(os.execute("chmod 755 test.db/Logins") == 0)
+  assert(os.remove("test.db/Logins/corrupted.lua"))
 end
 
 do
-  local creds = Credentials{
+  local logins = LoginDB{
     database = assert(database.open("test.db")),
     orb = FakeORB,
   }
-  local user = assert(creds:newCredential("user"))
-  local obs = assert(user:newObserver(creds.orb:newproxy("obs", nil, "IObserver")))
+  local user = assert(logins:newLogin("user", key))
+  local obs = assert(user:newObserver(logins.orb:newproxy("obs", nil, "IObserver")))
   
-  assert(os.execute("chmod 000 test.db/Credentials") == 0)
+  assert(os.execute("chmod 000 test.db/Logins") == 0)
   
-  obs:watchCredential(user)
+  obs:watchLogin(user)
   assertIterator({[obs] = true}, user:iObservers())
-  assertIterator({[user.id] = true}, obs:iWatchedCredentialIds())
+  assertIterator({[user.id] = true}, obs:iWatchedLoginIds())
   
-  assert(os.execute("chmod 000 test.db/Observers") == 0)
+  assert(os.execute("chmod 000 test.db/LoginObservers") == 0)
   
-  assertEx("unable to replace file 'test%.db/Observers/[%x-]+.lua' %(with file /tmp/lua_%w+: Permission denied%)",
-           obs.forgetCredential, obs, user)
+  assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+.lua' %(.-: Permission denied%)",
+           obs.forgetLogin, obs, user)
   assertIterator({[obs] = true}, user:iWatchers())
-  assertIterator({[user.id] = true}, obs:iWatchedCredentialIds())
+  assertIterator({[user.id] = true}, obs:iWatchedLoginIds())
   
-  assertEx("unable to replace file 'test%.db/Credentials/[%x-]+.lua' %(with file /tmp/lua_%w+: Permission denied%)",
-           creds.newCredential, creds, "fail")
-  assertIterator({[user.id] = user}, creds:iCredentials())
+  assertEx("unable to .- file 'test%.db/Logins/[%x-]+.lua.tmp' %(.-: Permission denied%)",
+           logins.newLogin, logins, "fail")
+  assertIterator({[user.id] = user}, logins:iLogins())
   
-  assertEx("unable to remove file 'test%.db/Observers/[%x-]+.lua' %(test%.db/Observers/[%x-]+.lua: Permission denied%)",
+  assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+.lua' %(.-: Permission denied%)",
            user.remove, user)
-  assert(creds:getCredential(user.id) == user)
-  assert(creds:getObserver(obs.id) == obs)
-  assertIterator({[obs.id] = obs}, creds:iObservers())
-  assertIterator({[user.id] = user}, creds:iCredentials())
+  assert(logins:getLogin(user.id) == user)
+  assert(logins:getObserver(obs.id) == obs)
+  assertIterator({[obs.id] = obs}, logins:iObservers())
+  assertIterator({[user.id] = user}, logins:iLogins())
   assertIterator({[obs] = true}, user:iObservers())
   
-  assert(os.execute("chmod 755 test.db/Observers") == 0)
-  obs:forgetCredential(user)
+  assert(os.execute("chmod 755 test.db/LoginObservers") == 0)
+  obs:forgetLogin(user)
   for _ in user:iWatchers() do error("failure") end
-  for _ in obs:iWatchedCredentialIds() do error("failure") end
+  for _ in obs:iWatchedLoginIds() do error("failure") end
   
-  assert(os.execute("chmod 755 test.db/Credentials") == 0)
+  assert(os.execute("chmod 755 test.db/Logins") == 0)
   user:remove()
-  assert(creds:getCredential(user.id) == nil)
-  assert(creds:getObserver(obs.id) == nil)
-  for _ in creds:iObservers() do error("failure") end
-  for _ in creds:iCredentials() do error("failure") end
+  assert(logins:getLogin(user.id) == nil)
+  assert(logins:getObserver(obs.id) == nil)
+  for _ in logins:iObservers() do error("failure") end
+  for _ in logins:iLogins() do error("failure") end
 end
 
 do
   local lfs = require "lfs"
-  assert(lfs.rmdir("test.db/Credentials"))
-  assert(lfs.rmdir("test.db/Observers"))
+  assert(lfs.rmdir("test.db/Logins"))
+  assert(lfs.rmdir("test.db/LoginObservers"))
   assert(lfs.rmdir("test.db"))
 end

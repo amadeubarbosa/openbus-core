@@ -1,49 +1,31 @@
 local _G = require "_G"
 local pcall = _G.pcall
-local pcall = _G.pcall
-local string = _G.string
 local ipairs = _G.ipairs
 
 local oil = require "oil"
-local oillog = require "oil.verbose"
 
-local openbus = require "openbus.multiplexed"
-local log = require "openbus.util.logger"
-local server = require "openbus.util.server"
-local setuplog = server.setuplog
-local Check = require "latt.Check"
-
+local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local srvtypes = idl.types.services
 local logintypes = srvtypes.access_control
 
+local Check = require "latt.Check"
+
 -- Configurações --------------------------------------------------------------
-local host = "localhost"
-local port = 2089
-local admin = "admin"
-local adminPassword = "admin"
-local dUser = "tester"
-local dPassword = "tester"
-local certificate = "teste.crt"
-local pkey = "teste.key"
-local sdklevel = 0
-local oillevel = 0
-
-local scsutils = require ("scs.core.utils")()
 local props = {}
-scsutils:readProperties(props, "test.properties")
-scsutils = nil
+require ("scs.core.utils")():readProperties(props, "test.properties")
+local host = props:getTagOrDefault("host", "localhost")
+local port = props:getTagOrDefault("port", 2089)
+local admin = props:getTagOrDefault("adminLogin", "admin")
+local adminPassword = props:getTagOrDefault("adminPassword", admin)
+local dUser = props:getTagOrDefault("login", "tester")
+local dPassword = props:getTagOrDefault("password", tester)
 
-host = props:getTagOrDefault("host", host)
-port = props:getTagOrDefault("port", port)
-admin = props:getTagOrDefault("adminLogin", admin)
-adminPassword = props:getTagOrDefault("adminPassword", adminPassword)
-dUser = props:getTagOrDefault("login", dUser)
-dPassword = props:getTagOrDefault("password", dPassword)
-certificate = props:getTagOrDefault("certificate", certificate)
-pkey = props:getTagOrDefault("privatekey", pkey)
-sdklevel = props:getTagOrDefault("sdkLogLevel", sdklevel)
-oillevel = props:getTagOrDefault("oilLogLevel", oillevel)
+-- Inicialização --------------------------------------------------------------
+require("openbus.util.logger"):level(props:getTagOrDefault("sdkLogLevel", 0))
+require("oil.verbose"):level(props:getTagOrDefault("oilLogLevel", 0))
+local orb = openbus.initORB()
+local connections = orb.OpenBusConnectionManager
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -67,10 +49,6 @@ local function findLoginInList(list, id)
   return nil
 end
 
--- Inicialização --------------------------------------------------------------
-setuplog(log, sdklevel)
-setuplog(oillog, oillevel)
-
 -- Testes do LoginRegistry ----------------------------------------------------
 
 -- -- IDL operations
@@ -86,13 +64,15 @@ setuplog(oillog, oillevel)
 -------------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = openbus.connect(host, port)
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
 end
 
 function NoPermissionCase.afterTestCase(self)
   self.conn:logout()
+  connections:setDefaultConnection(nil)
   self.conn = nil
 end
 
@@ -122,8 +102,8 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  local orb = openbus.initORB()
-  local conn = openbus.connect(host, port, orb)
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.logins = conn.logins
@@ -132,6 +112,7 @@ end
 
 function InvalidParamCase.afterTestCase(self)
   self.conn:logout()
+  connections:setDefaultConnection(nil)
   self.conn = nil
   self.logins = nil
 end
@@ -201,7 +182,7 @@ function InvalidParamCase.testSubscribeInvalidObserver(self)
 end
 
 function InvalidParamCase.test2ConnectionSubscribeInvalidObserver(self)
-  local conn2 = openbus.connect(host, port)
+  local conn2 = connections:createConnection(host, port)
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe observer
   local logins = self.logins
@@ -225,7 +206,8 @@ end
 -------------------------------------
 
 function LRCase.beforeTestCase(self)
-  local conn = openbus.connect(host, port)
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
   self.logins = conn.logins
@@ -233,6 +215,7 @@ end
 
 function LRCase.afterTestCase(self)
   self.conn:logout()
+  connections:setDefaultConnection(nil)
   self.conn = nil
   self.logins = nil
 end
@@ -249,7 +232,7 @@ end
 
 function LRCase.test2ConnectionGetAllLogins(self)
   local logins = self.logins
-  local conn2 = openbus.connect(host, port)
+  local conn2 = connections:createConnection(host, port)
   conn2:loginByPassword(dUser, dPassword)
   local ok, list = pcall(logins.getAllLogins, logins)
   Check.assertTrue(ok)
@@ -277,7 +260,7 @@ end
 
 function LRCase.testInvalidateLogin(self)
   local logins = self.logins
-  local conn2 = openbus.connect(host, port)
+  local conn2 = connections:createConnection(host, port)
   conn2:loginByPassword(dUser, dPassword)
   -- check login
   local info = logins:getLoginInfo(conn2.login.id)
@@ -309,7 +292,7 @@ end
 
 function LRCase.testGetLoginInfo(self)
   local logins = self.logins
-  local conn2 = openbus.connect(host, port)
+  local conn2 = connections:createConnection(host, port)
   conn2:loginByPassword(dUser, dPassword)
   local info = logins:getLoginInfo(conn2.login.id)
   Check.assertNotNil(info)
@@ -339,7 +322,7 @@ end
 
 function LRCase.test2ConncetionsGetValidity(self)
   local logins = self.logins
-  local conn2 = openbus.connect(host, port)
+  local conn2 = connections:createConnection(host, port)
   conn2:loginByPassword(dUser, dPassword)
   local list = { self.conn.login.id, conn2.login.id }
   local vals = logins:getValidity(list)
@@ -359,7 +342,7 @@ function LRCase.test2ConncetionsGetValidity(self)
 end
 
 function LRCase.testSubscribeObserver(self)
-  local conn2 = openbus.connect(host, port)
+  local conn2 = connections:createConnection(host, port)
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe login observer
   local loginId = conn2.login.id

@@ -20,6 +20,7 @@ local const = idl.const.services.access_control
 local types = idl.types.services
 local msg = require "openbus.core.messages"
 local access = require "openbus.core.Access"
+local setNoPermSysEx = access.setNoPermSysEx
 local Interceptor = access.Interceptor
 local receiveBusRequest = Interceptor.receiverequest
 
@@ -80,21 +81,6 @@ function BusInterceptor:__init()
       },
     }, { __index = function() return defOpAccess end })
   end
-  
-  local orb = self.orb
-  self.NoCredentialException = orb:newexcept{
-    _repid = sysex.NO_PERMISSION,
-    completed = "COMPLETED_NO",
-    minor = const.NoCredentialCode,
-  }
-  self.LegacyNoPermissionException = orb:newexcept{
-    _repid = sysex.NO_PERMISSION,
-    completed = "COMPLETED_NO",
-    minor = 0,
-  }
-  self.UnauthorizedOperationException = orb:newexcept{
-    _repid = types.UnauthorizedOperation,
-  }
 end
 
 function BusInterceptor:validateChain(chain, caller)
@@ -148,37 +134,26 @@ function BusInterceptor:receiverequest(request)
           local callers = chain.callers
           local login = callers[#callers]
           if not granted[login.entity] then
-            request.success = false
             if chain.signature == nil then -- legacy call (OpenBus 1.5)
-              request.results = {self.LegacyNoPermissionException}
-              log:access(msg.DeniedLegacyBusCall:tag{
+              setNoPermSysEx(request, 0)
+              log:exception(msg.DeniedLegacyBusCall:tag{
                 operation = request.operation.name,
-                login = login.id,
+                remote = login.id,
                 entity = login.entity,
               })
             else
-              request.results = {self.UnauthorizedOperationException}
-              log:access(msg.DeniedBusCall:tag{
+              request.success = false
+              request.results = {{_repid = types.UnauthorizedOperation}}
+              log:exception(msg.DeniedBusCall:tag{
                 operation = request.operation.name,
-                login = login.id,
+                remote = login.id,
                 entity = login.entity,
               })
             end
-          else
-            log:access(msg.GrantedBusCall:tag{
-              operation = request.operation.name,
-              login = login.id,
-              entity = login.entity,
-            })
           end
         elseif granted ~= Anybody then
-          request.success = false
-          request.results = {self.NoCredentialException}
-          log:access(msg.DeniedCallWithoutCredential:tag{
-            operation = request.operation.name,
-          })
-        else
-          log:access(msg.GrantedCallWithoutCredential:tag{
+          setNoPermSysEx(request, const.NoCredentialCode)
+          log:exception(msg.DeniedOrdinaryCall:tag{
             operation = request.operation.name,
           })
         end

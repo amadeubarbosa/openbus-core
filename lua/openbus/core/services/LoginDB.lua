@@ -10,6 +10,8 @@ local newid = uuid.new
 local pubkey = require "lce.pubkey"
 local decodekey = pubkey.decodepublic
 
+local Publisher = require "loop.object.Publisher"
+
 local oo = require "openbus.util.oo"
 local class = oo.class
 
@@ -150,6 +152,7 @@ local Database = class()
 function Database:__init()
   self.logins = {}
   self.observers = {}
+  self.publisher = Publisher(self.publisher)
   local db = self.database
   self.lgnTab = select(2, assert(pcall(readTable,
                                        assert(db:gettable("Logins")),
