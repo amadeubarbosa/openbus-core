@@ -848,7 +848,6 @@ function EntityRegistry:__init(data)
   access:setGrantedUsers(Entity.__type,"setName",admins)
   access:setGrantedUsers(Entity.__type,"grantInterface",admins)
   access:setGrantedUsers(Entity.__type,"revokeInterface",admins)
-  access:setGrantedUsers(Entity.__type,"getGrantedInterfaces",admins)
   
   local orb = self.orb
   local database = self.database
