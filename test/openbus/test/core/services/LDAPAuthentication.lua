@@ -4,13 +4,13 @@ local pcall = _G.pcall
 local lualdap = require "lualdap"
 local Check = require "latt.Check"
 
--- InformaÃ§Ãµes Gerais ---------------------------------------------------------
+-- Informações Gerais ---------------------------------------------------------
 -- Esse teste foi criado para ser utilizado com servidores OpenLDAP.
--- NÃ£o experimentamos contra servidores ActiveDirectory, provavelmente o AD
+-- Não experimentamos contra servidores ActiveDirectory, provavelmente o AD
 -- envia mensagens de erro diferentes das que o servidor OpenLDAP emite. Isso
--- causarÃ¡ falha de vÃ¡rios desses testes, pois comparamos as mensagens de erro.
+-- causará falha de vários desses testes, pois comparamos as mensagens de erro.
 
--- ConfiguraÃ§Ãµes --------------------------------------------------------------
+-- Configurações --------------------------------------------------------------
 local url = "ldap://ldap-teste:389"
 local urlSSL = "ldaps://ldap-teste:636"
 local pattern = "cn=%U,ou=usuarios,dc=tecgraf,dc=puc-rio,dc=br"
@@ -23,12 +23,12 @@ local props = {}
 scsutils:readProperties(props, "test.properties")
 scsutils = nil
 
-url = props:getTagOrDefault("ldap.url", url)
-urlSSL = props:getTagOrDefault("ldap.urlSSL", urlSSL)
-pattern = props:getTagOrDefault("ldap.pattern", pattern)
-name = props:getTagOrDefault("ldap.user", name)
-password = props:getTagOrDefault("ldap.password", password)
-timeout = tonumber(props:getTagOrDefault("ldap.timeout", timeout))
+url = props:getTagOrDefault("ldapUrl", url)
+urlSSL = props:getTagOrDefault("ldapUrlSSL", urlSSL)
+pattern = props:getTagOrDefault("ldap-pattern", pattern)
+name = props:getTagOrDefault("ldapUser", name)
+password = props:getTagOrDefault("ldapPassword", password)
+timeout = tonumber(props:getTagOrDefault("ldapTimeout", timeout))
 
 local user = pattern:gsub("%%U",name)
 

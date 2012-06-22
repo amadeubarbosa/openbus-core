@@ -15,11 +15,10 @@ local oillog = require "oil.verbose"
 local lpw = require "lpw"
 
 local openbus = require "openbus"
+local log = require "openbus.util.logger"
 local access = require "openbus.core.Access"
 local neworb = access.initORB
 local log = require "openbus.util.logger"
-local server = require "openbus.util.server"
-local setuplog = server.setuplog
 local printer = require "openbus.core.admin.print"
 local script = require "openbus.core.admin.script"
 local messages = require "openbus.core.admin.messages"
@@ -37,6 +36,8 @@ local lower = _G.string.lower
 local login, password
 local host, port
 local connection
+local orb = openbus.initORB{ localrefs="proxy" }
+local connections = orb.OpenBusConnectionManager
 
 -- Guarda as funções que serão os tratadores das ações de linha de comando
 local handlers = {}
@@ -1254,7 +1255,8 @@ handlers["report"] = function(cmd)
   legacy = nil
   orb = nil
 
-  local conn = openbus.connect(host, port, nil, log)
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
   local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
   if not ok then
     msg = "[ERRO] Não foi possível logar no barramento! %s"
@@ -1385,8 +1387,9 @@ function connect(retry)
   if connection ~= nil then 
     return connection
   end
-  --TODO: implementar mecanismo de retry.
-  local conn = openbus.connect(host, port, nil, log)
+  --TODO: implementar mecanismo de retry.  
+  local conn = connections:createConnection(host, port)
+  connections:setDefaultConnection(conn)
   local localPassword = password
   if not localPassword then
     localPassword = lpw.getpass("Senha: ")
@@ -1436,11 +1439,9 @@ return function(...)
   port  = tonumber(command.params["port"])
 
   -- setup log files
-  local loglevel = tonumber(command.params.verbose) or 0
-  setuplog(log, loglevel)
-  local oillevel = tonumber(command.params.oilverbose) or 0
-  setuplog(oillog, oillevel)
-
+  log:level(tonumber(command.params.verbose) or 0)
+  oillog:level(tonumber(command.params.oilverbose) or 0)
+  
   ---
   -- Função principal responsável por despachar o comando.
   --
@@ -1453,6 +1454,7 @@ return function(...)
     --
     if connection ~= nil and connection.login ~= nil then
       connection:logout()
+      connections:setDefaultConnection(nil)
       connection = nil
     end
     if returned then
