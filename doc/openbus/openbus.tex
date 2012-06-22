@@ -169,16 +169,16 @@ Através dele é possível registrar e buscar serviços oferecidos no barramento, al
 O Registro de Ofertas é um serviço núcleo do barramento, que permite que entidades publiquem e busquem ofertas de serviços no barramento.
 Uma oferta de serviço corresponde a um cadastro no Registro de Ofertas de um conjunto de propriedades e um componente \scs{}~\cite{web:SCS}, que implementa um conjunto de interfaces que representam um dado serviço a ser utilizado através do barramento.
 
-Uma propriedade da oferta corresponde a um par de nome e valor, que ao registrar uma oferta de serviço no barramento, a entidade pode definir um conjunto de propriedades correspondentes à oferta, que poderão ser utilizadas como critério de filtro no momento de buscar por ofertas de serviço no Registro de Ofertas.
+Uma propriedade da oferta corresponde a um par de nome e valor, que, ao registrar uma oferta de serviço no barramento, a entidade pode definir um conjunto de propriedades correspondentes à oferta, que poderão ser utilizadas como critério de filtro no momento de buscar por ofertas de serviço no Registro de Ofertas.
 Toda oferta publicada no barramento possui um conjunto de propriedades geradas automaticamente, como a data do registro, a entidade que publicou a oferta, a versão do componente, entre outras.
 
 O Registro de Ofertas também disponibiliza um mecanismo de observação de publicação, atualização e remoção de ofertas.
-Maiores detalhes sobre a especificação e o uso do serviço de Registro de Ofertas podem ser encontrados nos seu manuais de uso das bibliotecas de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua}
+Maiores detalhes sobre a especificação e o uso do serviço de Registro de Ofertas podem ser encontrados nos manuais de uso das bibliotecas de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua}
 
 
 \subsection{Serviços Extras}
 
-A categoria de Serviços Extras define os serviços acrescentam funcionalidades para auxiliar a integração entre serviços e aplicações, mas que não são parte do núcleo do barramento.
+A categoria de Serviços Extras define os serviços que acrescentam funcionalidades para auxiliar a integração entre serviços e aplicações, mas que não são parte do núcleo do barramento.
 Não é obrigatória a presença desses serviços em uma instância do barramento.
 
 Nesta versão atual do \openbus{} disponibilizamos apenas um serviço extra: o Serviço de Colaboração.
@@ -189,7 +189,7 @@ Esse serviço tem como principais funcionalidades:
   \item oferecer um canal de comunicação para enviar eventos para todos os membros da sessão
 \end{itemize} 
 
-Não entraremos em maiores detalhes sobre as funcionalidades e o uso do Serviço de Colaboração neste documento. Para mais informações, consulte o manual do serviço~\cite{collaboration1.0}.
+Não entraremos em maiores detalhes sobre as funcionalidades e o uso do Serviço de Colaboração neste documento. Para mais informações, consulte o manual do próprio serviço~\cite{collaboration1.0}.
 
 \section{Comunicação no \openbus{}}\label{sec:communication}
 
@@ -201,8 +201,8 @@ Iremos dividir esse cenário em duas fases, explicando a seqüência de interação q
 
 A primeira fase, ilustrada pela figura~\ref{fig:begin-comm}, corresponde ao processo de realização do login, publicação e busca do serviço publicado no barramento.
 Primeiro o serviço realiza o login no barramento, e com o sucesso no login, ele pode publicar o serviço a ser ofertado no Registro de Ofertas.
-Então a aplicação realiza também o login no barramento, e pode buscar pelo serviço no barramento, também através do Registro de Ofertas.
-Caso as propriedades especificadas na busca correspondam as especificadas no registro, a oferta é encontrada e a aplicação consegue obter uma referência para a mesma.
+Então a aplicação realiza também o seu login no barramento, e pode buscar pelo serviço no barramento, através do Registro de Ofertas.
+Caso as propriedades especificadas na busca correspondam às propriedades da oferta, ela é retornada pela busca e com isso a aplicação consegue obter uma referência para o serviço desejado.
 
 \begin{figure} [htb!]
 \centering
@@ -213,11 +213,8 @@ Caso as propriedades especificadas na busca correspondam as especificadas no reg
 
 Começa então a segunda fase, ilustrada pela figura~\ref{fig:direct-comm}, que é caracterizada pela comunicação direta entre a aplicação e o serviço publicado no barramento.
 Neste cenário, a aplicação atua como o cliente, e o serviço ofertado como o servidor.
-O cliente então faz uma requisição para o servidor, e a primeira coisa que o servidor irá fazer é verificar se o cliente que faz a requisição possui um login válido.
+O cliente (aplicação) faz uma requisição para o servidor (serviço), e a primeira coisa que o servidor irá fazer é verificar junto ao barramento se o cliente que faz a requisição possui um login válido.
 Se o login for válido, o servidor então pode atender a requisição.
-
-Essa descrição que apresentamos é uma visão bem simplificada do que realmente acontece, dado que o usuário que faz uso da biblioteca de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua} não precisa se preocupar com esses detalhes, pois as bibliotecas de acesso se encarregam de respeitar e implementar todo o protocolo~\cite{ob2.0protospec} necessário para que a comunicação seja segura e correta.
-Na próxima vez que o mesmo cliente falar com o mesmo servidor, o servidor não precisará necessariamente realizar uma chamada remota para o barramento, caso as informações necessárias para validar a requisição ainda estejam válidas e presentes no caches das bibliotecas.
 
 \begin{figure} [htb!]
 \centering
@@ -225,6 +222,9 @@ Na próxima vez que o mesmo cliente falar com o mesmo servidor, o servidor não pr
 \caption{Esquema demostrando como ocorre a comunicação entre duas entidades no barramento.}
 \label{fig:direct-comm}
 \end{figure}
+
+Essa descrição que apresentamos da segunda fase é uma visão bem simplificada do que realmente acontece, dado que o usuário que faz uso da biblioteca de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua} não precisa se preocupar com esses detalhes, pois as bibliotecas de acesso se encarregam de respeitar e implementar todo o protocolo~\cite{ob2.0protospec} necessário para que a comunicação seja segura e correta.
+Na próxima vez que o mesmo cliente falar com o mesmo servidor, o servidor não precisará necessariamente realizar uma chamada remota para o barramento, caso as informações necessárias para validar a requisição ainda estejam válidas e presentes nos caches das bibliotecas.
 
 \section{Perspectivas}\label{sec:perspectives}
 
