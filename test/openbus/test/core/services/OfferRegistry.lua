@@ -19,6 +19,8 @@ local props = {}
 require ("scs.core.utils")():readProperties(props, "test.properties")
 local host = props:getTagOrDefault("host", "localhost")
 local port = props:getTagOrDefault("port", 2089)
+local admin = props:getTagOrDefault("adminLogin", "admin")
+local adminPassword = props:getTagOrDefault("adminPassword", admin)
 local dUser = props:getTagOrDefault("login", "tester")
 local dPassword = props:getTagOrDefault("password", tester)
 local entity = props:getTagOrDefault("entity", "TestEntity")
@@ -37,14 +39,16 @@ Suite.Test3 = {}
 Suite.Test4 = {}
 Suite.Test5 = {}
 Suite.Test6 = {}
+Suite.Test7 = {}
 
 -- Aliases
 local InvalidParamCase = Suite.Test1
 local NoAuthorizedCase = Suite.Test2
-local ServiceOfferCase = Suite.Test3
-local ORCase = Suite.Test4
-local OfferObserversCase = Suite.Test5
-local RegistryObserversCase = Suite.Test6
+local AuthorizationInUseCase = Suite.Test3
+local ServiceOfferCase = Suite.Test4
+local ORCase = Suite.Test5
+local OfferObserversCase = Suite.Test6
+local RegistryObserversCase = Suite.Test7
 
 -- Constantes -----------------------------------------------------------------
 local testCompName = "Ping test's component"
@@ -267,6 +271,40 @@ function NoAuthorizedCase.testRegisterUnauthorizedEntity(self)
   local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
   Check.assertTrue(not ok)
   Check.assertEquals(offertypes.UnauthorizedFacets, err._repid)
+end
+
+---------------------------------------
+-- Caso de teste "AuthorizationInUse"
+---------------------------------------
+
+function AuthorizationInUseCase.beforeTestCase(self)
+  beforeTestCase(self)
+  local orb = self.conn.orb
+  local context = createPingComponent(orb)
+  local comp = context.IComponent
+  self.serviceOffer = self.offers:registerService(comp, offerProps)
+end
+
+function AuthorizationInUseCase.afterTestCase(self)
+  if self.aconn then
+    self.aconn:logout()
+  end
+  self.serviceOffer:remove()
+  afterTestCase(self)
+end
+
+function AuthorizationInUseCase.testAuhtorizationInUse(self)
+  self.aconn = connections:createConnection(host,port)
+  connections:setRequester(self.aconn)
+  self.aconn:loginByPassword(admin, adminPassword)
+  local entities = self.aconn.entities
+  local theEntity = entities:getEntity(entity)
+  local ok, err = pcall(theEntity.revokeInterface, theEntity, "IDL:Ping:1.0")
+  Check.assertTrue(not ok)
+  Check.assertEquals(offertypes.AuthorizationInUse, err._repid)
+  self.aconn:logout()
+  connections:setRequester(nil)
+  self.aconn = nil
 end
 
 --------------------------------

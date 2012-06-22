@@ -711,7 +711,7 @@ function Entity:revokeInterface(ifaceId)
     local unauthorized = {}
     local offers = OfferRegistry.offers:get("openbus.offer.entity", self.id)
     for offer in pairs(offers) do
-      for facet in ipairs(offer.facets) do
+      for _, facet in ipairs(offer.facets) do
         if facet.interface_name == ifaceId then
           unauthorized[#unauthorized+1] = offer
         end

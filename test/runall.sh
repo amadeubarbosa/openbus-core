@@ -18,6 +18,7 @@ LATTCASES="\
 services/LoginRegistry \
 services/CertificateRegistry \
 services/OfferRegistry \
+services/EntityRegistry \
 admin/admin \
 "
 #LDAPAuthentication
