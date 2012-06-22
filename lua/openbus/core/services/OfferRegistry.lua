@@ -841,12 +841,14 @@ function EntityRegistry:__init(data)
   local admins = data.admins
   access:setGrantedUsers(self.__type,"createEntityCategory",admins)
   access:setGrantedUsers(Category.__type,"remove",admins)
+  access:setGrantedUsers(Category.__type,"removeAll",admins)
   access:setGrantedUsers(Category.__type,"setName",admins)
   access:setGrantedUsers(Category.__type,"registerEntity",admins)
   access:setGrantedUsers(Entity.__type,"remove",admins)
   access:setGrantedUsers(Entity.__type,"setName",admins)
-  access:setGrantedUsers(Entity.__type,"addAuthorization",admins)
-  access:setGrantedUsers(Entity.__type,"removeAuthorization",admins)
+  access:setGrantedUsers(Entity.__type,"grantInterface",admins)
+  access:setGrantedUsers(Entity.__type,"revokeInterface",admins)
+  access:setGrantedUsers(Entity.__type,"getGrantedInterfaces",admins)
   
   local orb = self.orb
   local database = self.database
