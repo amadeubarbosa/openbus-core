@@ -152,7 +152,7 @@ do -- connection to the bus
   host = props:getTagOrDefault("host", "localhost")
   port = props:getTagOrDefault("port", 2089)
   entity = props:getTagOrDefault("login", "tester")
-  password = props:getTagOrDefault("password", tester)
+  password = props:getTagOrDefault("password", entity)
   local keypath = props:getTagOrDefault("privatekey", "teste.key")
   require("oil.verbose"):level(props:getTagOrDefault("oilLogLevel", 0))
   
