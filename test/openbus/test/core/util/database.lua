@@ -96,11 +96,11 @@ do
   
   local ok, err = table:setentry("error", {"vazio"})
   assert(not ok)
-  assert(err:match("unable to replace file 'test.db/Table/error.lua' %(with file /tmp/lua_%w+: Permission denied%)"))
+  assert(err:match("unable to create temporary file 'test%.db/Table/error%.lua%.tmp' %(.-: Permission denied%)"))
   
   local ok, err = table:removeentry("error")
   assert(not ok)
-  assert(err == "unable to remove file 'test.db/Table/error.lua' (test.db/Table/error.lua: Permission denied)")
+  assert(err:match("unable to remove file 'test%.db/Table/error%.lua' %(.-: Permission denied%)"))
   
   assert(os.execute("chmod 755 test.db/Table") == 0)
   assert(os.execute("chmod 555 test.db") == 0)
