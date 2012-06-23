@@ -180,7 +180,7 @@ do
   local file = assert(io.open("test.db/Logins/corrupted.lua", "w"))
   assert(file:write("illegal Lua code"))
   file:close()
-  assertEx("unable to load file 'test%.db/Logins/corrupted.lua' %(test.db/Logins/corrupted.lua:1: '=' expected near 'Lua'%)",
+  assertEx("unable to load file 'test%.db/Logins/corrupted%.lua' %(test.db/Logins/corrupted%.lua:1: '=' expected near 'Lua'%)",
            LoginDB, {database=assert(database.open("test.db"))})
   
   assert(os.execute("chmod 000 test.db/Logins") == 0)
@@ -206,16 +206,16 @@ do
   
   assert(os.execute("chmod 000 test.db/LoginObservers") == 0)
   
-  assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+.lua' %(.-: Permission denied%)",
+  assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+%.lua' %(.-: Permission denied%)",
            obs.forgetLogin, obs, user)
   assertIterator({[obs] = true}, user:iWatchers())
   assertIterator({[user.id] = true}, obs:iWatchedLoginIds())
   
-  assertEx("unable to .- file 'test%.db/Logins/[%x-]+.lua.tmp' %(.-: Permission denied%)",
+  assertEx("unable to .- file 'test%.db/Logins/[%x-]+%.lua%.tmp' %(.-: Permission denied%)",
            logins.newLogin, logins, "fail")
   assertIterator({[user.id] = user}, logins:iLogins())
   
-  assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+.lua' %(.-: Permission denied%)",
+  assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+%.lua' %(.-: Permission denied%)",
            user.remove, user)
   assert(logins:getLogin(user.id) == user)
   assert(logins:getObserver(obs.id) == obs)
