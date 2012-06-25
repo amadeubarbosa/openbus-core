@@ -78,20 +78,19 @@ end
 
 -- Login Support
 
-local NullPublicKey = "" -- fake public key for OpenBus 1.5 services
-local NullPubKeyHash = sha256(NullPublicKey)
 local NullCredential = {identifier="",owner="",delegate=""}
 local NullLeaseTime = 0
 
 function IAccessControlService:loginByPassword(id, pwrd)
   local control = facets.AccessControl
   local access = control.access
+  local pubkey = control.buskey
   local encoder = access.orb:newencoder()
-  encoder:put({data=pwrd,hash=NullPubKeyHash}, control.LoginAuthenticationInfo)
+  encoder:put({data=pwrd,hash=sha256(pubkey)}, control.LoginAuthenticationInfo)
   local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
   if encrypted ~= nil then
     local ok, login, lease = pcall(control.loginByPassword, control,
-                                   id, NullPublicKey, encrypted)
+                                   id, control.buskey, encrypted)
     if ok then
       local credential = {
         identifier = login.id,
@@ -127,13 +126,14 @@ function IAccessControlService:loginByCertificate(id, answer)
     local access = control.access
     local secret, errmsg = access.prvkey:decrypt(answer)
     if secret ~= nil then
+      local pubkey = control.buskey
       local encoder = access.orb:newencoder()
-      encoder:put({data=secret,hash=NullPubKeyHash},
+      encoder:put({data=secret,hash=sha256(pubkey)},
                   control.LoginAuthenticationInfo)
       local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
       if encrypted ~= nil then
         local ok, login, lease = pcall(logger.login, logger,
-                                       NullPublicKey, encrypted)
+                                       pubkey, encrypted)
         if ok then
           local credential = {
             identifier = login.id,
