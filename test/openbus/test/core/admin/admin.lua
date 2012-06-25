@@ -8,25 +8,15 @@ local assert = _G.assert
 
 -------------------------------------------------------------------------------
 -- configuração do teste
-local host = "localhost"
-local port = 2089
-local admin = "admin"
-local adminPassword = "admin"
-local certfile = "teste.crt"
-local script = "teste.adm"
-local outputfile = "output.txt"
-
-local scsutils = require ("scs.core.utils")()
-local props = {}
-scsutils:readProperties(props, "test.properties")
-scsutils = nil
-
-host = props:getTagOrDefault("host", host)
-port = props:getTagOrDefault("port", port)
-admin = props:getTagOrDefault("adminLogin", admin)
-adminPassword = props:getTagOrDefault("adminPassword", adminPassword)
-certfile = props:getTagOrDefault("certificate", certfile)
-script = props:getTagOrDefault("script", script)
+bushost, busport = ...
+require "openbus.util.testcfg"
+local host = bushost
+local port = busport
+local admin = admin
+local adminPassword = admpsw
+local certfile = syscrt
+local script = admscript
+local outputfile = admoutput
 
 local bin = "busadmin "
 local login = "--login="..admin.." "

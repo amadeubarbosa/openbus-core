@@ -12,18 +12,16 @@ local logintypes = srvtypes.access_control
 local Check = require "latt.Check"
 
 -- Configurações --------------------------------------------------------------
-local props = {}
-require ("scs.core.utils")():readProperties(props, "test.properties")
-local host = props:getTagOrDefault("host", "localhost")
-local port = props:getTagOrDefault("port", 2089)
-local admin = props:getTagOrDefault("adminLogin", "admin")
-local adminPassword = props:getTagOrDefault("adminPassword", admin)
-local dUser = props:getTagOrDefault("login", "tester")
-local dPassword = props:getTagOrDefault("password", tester)
+bushost, busport = ...
+require "openbus.util.testcfg"
+local host = bushost
+local port = busport
+local admin = admin
+local adminPassword = admpsw
+local dUser = user
+local dPassword = password
 
 -- Inicialização --------------------------------------------------------------
-require("openbus.util.logger"):level(props:getTagOrDefault("sdkLogLevel", 0))
-require("oil.verbose"):level(props:getTagOrDefault("oilLogLevel", 0))
 local orb = openbus.initORB()
 local connections = orb.OpenBusConnectionManager
 

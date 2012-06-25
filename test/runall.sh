@@ -5,8 +5,8 @@ RUNNER="${CONSOLE} ${OPENBUS_HOME}/lib/lua/5.1/latt/ConsoleTestRunner.lua"
 TESTDIR=${OPENBUS_HOME}/test/openbus/test/core
 
 LUACASES="\
+services/LoginDB \
 Protocol \
-services/CredentialDB \
 "
 for case in ${LUACASES}; do
 	echo -n "Test '${case}' ... "
@@ -17,8 +17,8 @@ done
 LATTCASES="\
 services/LoginRegistry \
 services/CertificateRegistry \
-services/OfferRegistry \
 services/EntityRegistry \
+services/OfferRegistry \
 admin/admin \
 "
 #LDAPAuthentication

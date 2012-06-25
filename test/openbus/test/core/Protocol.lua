@@ -24,6 +24,9 @@ local loginconst = idl.const.services.access_control
 local logintypes = idl.types.services.access_control
 local credtypes = idl.types.credential
 
+bushost, busport = ...
+require "openbus.util.testcfg"
+
 do -- CORBA GIOP message context manipuation functions
   
   local receive = {
@@ -147,20 +150,11 @@ end
 -- test initialization ---------------------------------------------------------
 
 do -- connection to the bus
-  local props = {}
-  require ("scs.core.utils")():readProperties(props, "test.properties")
-  host = props:getTagOrDefault("host", "localhost")
-  port = props:getTagOrDefault("port", 2089)
-  entity = props:getTagOrDefault("login", "tester")
-  password = props:getTagOrDefault("password", entity)
-  local keypath = props:getTagOrDefault("privatekey", "teste.key")
-  require("oil.verbose"):level(props:getTagOrDefault("oilLogLevel", 0))
-  
   orb = initORB(orb)
   loadIDL(orb)
   
   bus = orb:newproxy(
-    "corbaloc::"..host..":"..port.."/"..idl.const.BusObjectKey,
+    "corbaloc::"..bushost..":"..busport.."/"..idl.const.BusObjectKey,
     nil, -- default proxy type
     "scs::core::IComponent")
   
@@ -174,31 +168,28 @@ do -- connection to the bus
   pubkey = prvkey:encode("public")
   shortkey = newkey(EncryptedBlockSize-1):encode("public")
   
-  local file = assert(io.open(keypath, "rb"))
-  crtkey = assert(decodeprvkey(assert(file:read("*a"))))
-  file:close()
 end
 
 -- login by password -----------------------------------------------------------
 
 do -- login using reserved entity
-  local entity = "OpenBus"
+  local user = "OpenBus"
   local encrypted = encodeLogin(buskey, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.AccessDenied)
 end
 
 do -- login with wrong password
   local encrypted = encodeLogin(buskey, "WrongPassword", pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.AccessDenied)
 end
 
 do -- login with wrong access key hash
   local encrypted = encodeLogin(buskey, password, "WrongKey")
-  local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.AccessDenied)
 end
@@ -206,7 +197,7 @@ end
 do -- login with wrong bus key
   local buskey = decodepubkey(pubkey)
   local encrypted = encodeLogin(buskey, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.WrongEncoding)
 end
@@ -214,7 +205,7 @@ end
 do -- login with invalid access key
   local pubkey = "InvalidAccessKey"
   local encrypted = encodeLogin(buskey, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.InvalidPublicKey)
 end
@@ -222,16 +213,16 @@ end
 do -- login with key too short
   local pubkey = shortkey
   local encrypted = encodeLogin(buskey, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.InvalidPublicKey)
 end
 
 do -- login successfull
   local encrypted = encodeLogin(buskey, password, pubkey)
-  local login, lease = ac:loginByPassword(entity, pubkey, encrypted)
+  local login, lease = ac:loginByPassword(user, pubkey, encrypted)
   assert(login.id:match(LoginFormat))
-  assert(login.entity == entity)
+  assert(login.entity == user)
   assert(lease > 0)
   loginid = login.id
 end
@@ -239,7 +230,7 @@ end
 -- login by certificate -----------------------------------------------------------
 
 do -- login with wrong secret
-  local attempt = ac:startLoginByCertificate(entity)
+  local attempt = ac:startLoginByCertificate(system)
   local encrypted = encodeLogin(buskey, "WrongSecret", pubkey)
   local ok, ex = pcall(attempt.login, attempt, pubkey, encrypted)
   assert(ok == false)
@@ -247,8 +238,8 @@ do -- login with wrong secret
 end
 
 do -- login with wrong access key hash
-  local attempt, challenge = ac:startLoginByCertificate(entity)
-  local secret = assert(crtkey:decrypt(challenge))
+  local attempt, challenge = ac:startLoginByCertificate(system)
+  local secret = assert(syskey:decrypt(challenge))
   local encrypted = encodeLogin(buskey, secret, "WrongKey")
   local ok, ex = pcall(attempt.login, attempt, pubkey, encrypted)
   assert(ok == false)
@@ -257,8 +248,8 @@ end
 
 do -- login with wrong bus key
   local buskey = decodepubkey(pubkey)
-  local attempt, challenge = ac:startLoginByCertificate(entity)
-  local secret = assert(crtkey:decrypt(challenge))
+  local attempt, challenge = ac:startLoginByCertificate(system)
+  local secret = assert(syskey:decrypt(challenge))
   local encrypted = encodeLogin(buskey, secret, pubkey)
   local ok, ex = pcall(attempt.login, attempt, pubkey, encrypted)
   assert(ok == false)
@@ -267,8 +258,8 @@ end
 
 do -- login with invalid access key
   local pubkey = "InvalidAccessKey"
-  local attempt, challenge = ac:startLoginByCertificate(entity)
-  local secret = assert(crtkey:decrypt(challenge))
+  local attempt, challenge = ac:startLoginByCertificate(system)
+  local secret = assert(syskey:decrypt(challenge))
   local encrypted = encodeLogin(buskey, secret, pubkey)
   local ok, ex = pcall(attempt.login, attempt, pubkey, encrypted)
   assert(ok == false)
@@ -277,8 +268,8 @@ end
 
 do -- login with invalid key too short
   local pubkey = shortkey
-  local attempt, challenge = ac:startLoginByCertificate(entity)
-  local secret = assert(crtkey:decrypt(challenge))
+  local attempt, challenge = ac:startLoginByCertificate(system)
+  local secret = assert(syskey:decrypt(challenge))
   local encrypted = encodeLogin(buskey, secret, pubkey)
   local ok, ex = pcall(attempt.login, attempt, pubkey, encrypted)
   assert(ok == false)
@@ -286,19 +277,19 @@ do -- login with invalid key too short
 end
 
 do -- login successfull
-  local attempt, challenge = ac:startLoginByCertificate(entity)
-  local secret = assert(crtkey:decrypt(challenge))
+  local attempt, challenge = ac:startLoginByCertificate(system)
+  local secret = assert(syskey:decrypt(challenge))
   local encrypted = encodeLogin(buskey, secret, pubkey)
   local login, lease = attempt:login(pubkey, encrypted)
   assert(attempt:_non_existent())
   assert(login.id:match(LoginFormat))
-  assert(login.entity == entity)
+  assert(login.entity == system)
   assert(lease > 0)
   logoutid = login.id -- this login will be invalidated by a logout
 end
 
 do -- cancel login attempt
-  local attempt = ac:startLoginByCertificate(entity)
+  local attempt = ac:startLoginByCertificate(system)
   attempt:cancel()
   assert(attempt:_non_existent())
 end
@@ -527,7 +518,7 @@ do -- sign chain for an invalid login
   local chain = decodeChain(buskey, signed)
   assert(chain.target == logoutid)
   assert(chain.caller.id == loginid)
-  assert(chain.caller.entity == entity)
+  assert(chain.caller.entity == user)
 end
 
 do -- join chain targeted for other login (an invalid one)

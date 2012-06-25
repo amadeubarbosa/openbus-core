@@ -1,0 +1,27 @@
+require "openbus.util.testcfg"
+
+Category {
+  id = category,
+  name = "OpenBus 2.0 Test Entities",
+}
+Entity {
+  id = user,
+  category = category,
+  name = "OpenBus 2.0 Test User",
+}
+Entity {
+  id = system,
+  category = category,
+  name = "OpenBus 2.0 Test System",
+}
+Certificate {
+  id = system,
+  certificate = syscrt,
+}
+Interface {
+  id = "IDL:Ping:1.0",
+}
+Grant {
+  id = system,
+  interfaces = { "IDL:Ping:1.0" },
+}

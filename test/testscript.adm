@@ -1,3 +1,5 @@
+require "openbus.util.testcfg"
+
 Category {
   id = "TEST_Category",
   name = "Categoria gerada pelo script",
@@ -11,7 +13,7 @@ Entity {
 
 Certificate {
   id = "TEST_Entity",
-  certificate = "teste.crt",
+  certificate = syscrt,
 }
 
 Interface {
