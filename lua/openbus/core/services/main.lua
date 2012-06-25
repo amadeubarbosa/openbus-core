@@ -50,7 +50,7 @@ return function(...)
     database = "openbus.db",
     privatekey = "openbus.key",
   
-    leasetime = 180,
+    leasetime = 3*60,
     expirationgap = 10,
   
     admin = {},
@@ -113,7 +113,7 @@ Options:
   log:version(msg.CopyrightNotice)
 
   -- validate time parameters
-  assert(Configs.leasetime > 0,
+  assert(Configs.leasetime > 0 and Configs.leasetime%1 == 0,
     msg.InvalidLeaseTime:tag{value=Configs.leasetime})
   assert(Configs.expirationgap > 0,
     msg.InvalidExpirationGap:tag{value=Configs.expirationgap})
