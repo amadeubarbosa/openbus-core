@@ -469,7 +469,7 @@ function OfferRegistry:registerService(service_ref, properties)
     end
   end
   -- validate provided properties
-  local id = newid("new")
+  local id = newid("time")
   local entry = {
     id = id,
     service_ref = tostring(service_ref),

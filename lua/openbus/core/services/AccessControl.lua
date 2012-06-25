@@ -354,7 +354,7 @@ function AccessControl:startLoginByCertificate(entity)
   if publickey == nil then
     throw.MissingCertificate{entity=entity}
   end
-  local secret = newid("new")
+  local secret = newid("random")
   local logger = LoginProcess{
     manager = self,
     entity = entity,
@@ -369,7 +369,7 @@ end
 function AccessControl:startLoginBySingleSignOn()
   local caller = self.access:getCallerChain().caller
   local login = self.activeLogins:getLogin(caller.id)
-  local secret = newid("new")
+  local secret = newid("random")
   local logger = LoginProcess{
     manager = self,
     entity = login.entity,
