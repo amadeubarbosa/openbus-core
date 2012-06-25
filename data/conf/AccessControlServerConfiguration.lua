@@ -21,7 +21,7 @@ AccessControlServerConfiguration = {
   --o tempo mínimo do lease deve ser maior que 
   --o tempo máximo para o tratamento de falhas
   --vide /conf/FTTimeOutConfiguration.lua
-  lease = 180,
+  lease = 1800,
   logs = {
     service = {
       level = 5,
