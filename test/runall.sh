@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 CONSOLE="${OPENBUS_HOME}/bin/busconsole"
 RUNNER="${CONSOLE} ${OPENBUS_HOME}/lib/lua/5.1/latt/ConsoleTestRunner.lua"
@@ -10,7 +10,7 @@ openbus/test/core/Protocol \
 "
 for case in ${LUACASES}; do
 	echo -n "Test '${case}' ... "
-	${CONSOLE} ${TESTDIR}/${case}.lua $@
+	${CONSOLE} ${TESTDIR}/${case}.lua $@ || exit $?
 	echo "OK"
 done
 
@@ -24,5 +24,5 @@ openbus/test/core/admin/admin \
 #openbus/test/core/services/LDAPAuthentication
 for case in ${LATTCASES}; do
 	echo "LATT '${case}':"
-	${RUNNER} ${TESTDIR}/${case}.lua
+	${RUNNER} ${TESTDIR}/${case}.lua || exit $?
 done
