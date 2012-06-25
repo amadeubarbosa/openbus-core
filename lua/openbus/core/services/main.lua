@@ -50,7 +50,7 @@ return function(...)
     database = "openbus.db",
     privatekey = "openbus.key",
   
-    leasetime = 3*60,
+    leasetime = 30*60,
     expirationgap = 10,
   
     admin = {},
