@@ -249,7 +249,7 @@ packages = {
     },
   },
   { name = "latt",
-    url = SVNREPURL.."/luautils/latt/tags/v1_01_01_2012_05_09",
+    url = SVNREPURL.."/luautils/latt/branches/v1_01_2011_11_17",
     build = {
       type = "tecmake",
       src = PRODAPP .."/latt",
