@@ -606,7 +606,7 @@ handlers["add-entity"] = function(cmd)
 
   local ok, category = pcall(conn.entities.getEntityCategory, conn.entities, cmd.params.category)
   if not ok then 
-    printf("[ERRO] Erro inesperado ao adicionar categoria: %s", tostring(category))
+    printf("[ERRO] Erro inesperado ao recuperar categoria: %s", tostring(category))
     return false
   end
   if not category then 
@@ -1026,9 +1026,13 @@ handlers["del-login"] = function(cmd)
     return false
   end
   local id = cmd.params[cmd.name]
-  local ok, err = pcall(conn.logins.invalidateLogin, conn.logins, id)
+  local ok, bool = pcall(conn.logins.invalidateLogin, conn.logins, id)
   if not ok then
-    printf("[ERRO] Erro inesperado ao remover login: %s", tostring(err))
+    printf("[ERRO] Erro inesperado ao remover login: %s", tostring(bool))
+    return false
+  end
+  if not bool then
+    printf("[ERRO] Login '%s' é inválido.", id)
     return false
   end
   printf("[INFO] Login '%s' removido com sucesso.", id)
