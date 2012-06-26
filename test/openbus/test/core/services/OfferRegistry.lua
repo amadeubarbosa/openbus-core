@@ -284,8 +284,11 @@ function AuthorizationInUseCase.beforeTestCase(self)
 end
 
 function AuthorizationInUseCase.afterTestCase(self)
-  if self.aconn then
-    self.aconn:logout()
+  local aconn = self.aconn
+  if aconn ~= nil then
+    aconn:logout()
+    connections:setRequester(nil)
+    self.aconn = nil
   end
   self.serviceOffer:remove()
   afterTestCase(self)
@@ -300,9 +303,6 @@ function AuthorizationInUseCase.testAuhtorizationInUse(self)
   local ok, err = pcall(theEntity.revokeInterface, theEntity, "IDL:Ping:1.0")
   Check.assertTrue(not ok)
   Check.assertEquals(offertypes.AuthorizationInUse, err._repid)
-  self.aconn:logout()
-  connections:setRequester(nil)
-  self.aconn = nil
 end
 
 --------------------------------

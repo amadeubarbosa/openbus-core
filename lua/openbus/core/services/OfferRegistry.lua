@@ -14,6 +14,7 @@ local concat = array.concat
 
 local os = require "os"
 local date = os.date
+local time = os.time
 
 local uuid = require "uuid"
 local newid = uuid.new
@@ -80,6 +81,7 @@ local function makePropertyList(entry, service_props)
     { name = "openbus.offer.id", value = entry.id },
     { name = "openbus.offer.login", value = entry.login },
     { name = "openbus.offer.entity", value = entry.entity },
+    { name = "openbus.offer.timestamp", value = entry.creation.timestamp },
     { name = "openbus.offer.year", value = entry.creation.year },
     { name = "openbus.offer.month", value = entry.creation.month },
     { name = "openbus.offer.day", value = entry.creation.day },
@@ -470,18 +472,20 @@ function OfferRegistry:registerService(service_ref, properties)
   end
   -- validate provided properties
   local id = newid("time")
+  local timestamp = time()
   local entry = {
     id = id,
     service_ref = tostring(service_ref),
     entity = entityId,
     login = login.id,
     creation = {
-      day = date("%d"),
-      month = date("%m"),
-      year = date("%Y"),
-      hour = date("%H"),
-      minute = date("%M"),
-      second = date("%S"),
+      timestamp = timestamp,
+      day = date("%d", timestamp),
+      month = date("%m", timestamp),
+      year = date("%Y", timestamp),
+      hour = date("%H", timestamp),
+      minute = date("%M", timestamp),
+      second = date("%S", timestamp),
     },
     component = compId,
     facets = facets,
