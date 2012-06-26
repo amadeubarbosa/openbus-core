@@ -115,6 +115,13 @@ function InvalidParamCase.afterTestCase(self)
   self.logins = nil
 end
 
+function InvalidParamCase.afterEachTest(self)
+  if self.conn2 ~= nil then
+    self.conn2:logout()
+    self.conn2 = nil
+  end
+end
+
 function InvalidParamCase.testGetEntityLogins(self)
   local logins = self.conn.logins
   local ok, infos = pcall(logins.getEntityLogins, logins, self.invalidId)
@@ -181,6 +188,7 @@ end
 
 function InvalidParamCase.test2ConnectionSubscribeInvalidObserver(self)
   local conn2 = connections:createConnection(host, port)
+  self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe observer
   local logins = self.logins
@@ -194,6 +202,7 @@ function InvalidParamCase.test2ConnectionSubscribeInvalidObserver(self)
   local orb = self.conn.orb
   oil.newthread(orb.run, orb)
   conn2:logout()
+  self.conn2 = nil
   orb:shutdown()
   -- CORBA Error should happen in the BUS side and can`t be checked here.
   -- The CORBA error is NO_IMPLEMENT
@@ -218,6 +227,13 @@ function LRCase.afterTestCase(self)
   self.logins = nil
 end
 
+function LRCase.afterEachTest(self)
+  if self.conn2 ~= nil then
+    self.conn2:logout()
+    self.conn2 = nil
+  end
+end
+
 function LRCase.testGetAllLogins(self)
   local logins = self.logins
   local list = logins:getAllLogins()
@@ -231,6 +247,7 @@ end
 function LRCase.test2ConnectionGetAllLogins(self)
   local logins = self.logins
   local conn2 = connections:createConnection(host, port)
+  self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local ok, list = pcall(logins.getAllLogins, logins)
   Check.assertTrue(ok)
@@ -243,7 +260,6 @@ function LRCase.test2ConnectionGetAllLogins(self)
   Check.assertNotNil(found)
   Check.assertEquals(conn2.login.id, found.id)
   Check.assertEquals(dUser, found.entity)
-  conn2:logout()
 end
 
 function LRCase.testGetEntityLogins(self)
@@ -259,6 +275,7 @@ end
 function LRCase.testInvalidateLogin(self)
   local logins = self.logins
   local conn2 = connections:createConnection(host, port)
+  self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- check login
   local info = logins:getLoginInfo(conn2.login.id)
@@ -286,21 +303,25 @@ function LRCase.testInvalidateLogin(self)
   local ok, err = pcall(conn2.logout, conn2)
   Check.assertTrue(ok)
   Check.assertFalse(err)
+  self.conn2 = nil
 end
 
 function LRCase.testGetLoginInfo(self)
   local logins = self.logins
   local conn2 = connections:createConnection(host, port)
+  self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local info = logins:getLoginInfo(conn2.login.id)
   Check.assertNotNil(info)
   Check.assertEquals(conn2.login.id, info.id)
   Check.assertEquals(dUser, info.entity)
-  info = conn2.logins:getLoginInfo(self.conn.login.id)
+  connections:setRequester(conn2)
+  local ok, info = pcall(conn2.logins.getLoginInfo, conn2.logins, self.conn.login.id)
+  connections:setRequester(nil)
+  Check.assertTrue(ok, info)
   Check.assertNotNil(info)
   Check.assertEquals(self.conn.login.id, info.id)
   Check.assertEquals(admin, info.entity)
-  conn2:logout()
 end
 
 function LRCase.testGetValidity(self)
@@ -315,6 +336,7 @@ end
 function LRCase.test2ConnectionsGetValidity(self)
   local logins = self.logins
   local conn2 = connections:createConnection(host, port)
+  self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local list = { self.conn.login.id, conn2.login.id }
   local vals = logins:getValidity(list)
@@ -322,11 +344,11 @@ function LRCase.test2ConnectionsGetValidity(self)
   Check.assertEquals(2, #vals)
   Check.assertTrue(vals[1] > 0)
   Check.assertTrue(vals[2] > 0)
-  conn2:logout()
 end
 
 function LRCase.testSubscribeObserver(self)
   local conn2 = connections:createConnection(host, port)
+  self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe login observer
   local loginId = conn2.login.id
@@ -342,6 +364,7 @@ function LRCase.testSubscribeObserver(self)
   local orb = self.conn.orb
   oil.newthread(orb.run, orb)
   conn2:logout()
+  self.conn2 = nil
   orb:shutdown()
   -- check if observer was called properly
   Check.assertNotNil(logoutInfo)

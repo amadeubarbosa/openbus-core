@@ -23,5 +23,5 @@ openbus/test/core/admin/admin \
 #openbus/test/core/services/LDAPAuthentication
 for case in ${LATTCASES}; do
 	echo "LATT '${case}':"
-	${RUNNER} ${case}.lua || exit $?
+	${RUNNER} ${case}.lua -verbose || exit $?
 done
