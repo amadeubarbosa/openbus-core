@@ -5,7 +5,7 @@
 -- If A depends on B then you should place B's description before than A's.
 SUNOS64_TECMAKE_FLAGS="USE_NODEPEND=Yes TEC_UNAME=SunOS510_64 BUILD_64=yes"
 
-IDL_VERSION="v2_00"
+IDL_VERSION="v2_0"
 IDL_PREV="v1_05"
 
 -- FIXME: solucao temporaria para simplificar os descritores que eram muito semelhantes

@@ -114,7 +114,7 @@ O nome da faceta é dado pela seguinte constante:
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::AccessControlFacet
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::AccessControlFacet
 const string AccessControlFacet;
 \end{samplecode}
 
@@ -122,7 +122,7 @@ A \term{Faceta de Controle de Acesso} implementa a seguinte interface:
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::AccessControl
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::AccessControl
 interface AccessControl;
 \end{samplecode}
 
@@ -137,7 +137,7 @@ No caso do login por senha, os dados desse bloco encriptado é a seguinte estrutu
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::LoginAuthenticationInfo
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::LoginAuthenticationInfo
 struct LoginAuthenticationInfo {
 	HashValue hash; // Hash da chave publica a ser associada ao login.
 	OctetSeq data;  // Dado para autenticacao.
@@ -217,7 +217,7 @@ As credenciais do OpenBus são transmitidas como um \term{service context} das me
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: credential.idl
-// Name: ::tecgraf::openbus::core::v2_00::credential::CredentialContextId
+// Name: ::tecgraf::openbus::core::v2_0::credential::CredentialContextId
 const unsigned long CredentialContextId;
 \end{samplecode}
 
@@ -228,7 +228,7 @@ O conteúdo do \term{service context} da credencial consiste da codificação CDR (
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: credential.idl
-// Name: tecgraf::openbus::core::v2_00::credential::CredentialData
+// Name: tecgraf::openbus::core::v2_0::credential::CredentialData
 struct CredentialData {
 	Identifier bus;        // bus UUID
 	Identifier login;      // caller UUID
@@ -281,7 +281,7 @@ Caso a credencial indique um identificador de barramento (campo \code{bus}) desc
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::UnknownBusCode
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::UnknownBusCode
 const unsigned long UnknownBusCode;
 \end{samplecode}
 
@@ -291,7 +291,7 @@ O nome desta faceta é dado pela seguinte constante:
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::LoginRegistryFacet
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::LoginRegistryFacet
 const string LoginRegistryFacet;
 \end{samplecode}
 
@@ -299,7 +299,7 @@ A \term{Faceta de Registro de Logins} implementa a seguinte interface:
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::LoginRegistry
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::LoginRegistry
 interface LoginRegistry;
 \end{samplecode}
 
@@ -307,7 +307,7 @@ Caso o login informado não seja mais válido, a chamada deve ser recusada com a e
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidLoginCode
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::InvalidLoginCode
 const unsigned long InvalidLoginCode;
 \end{samplecode}
 
@@ -322,7 +322,7 @@ Caso os valores de hash não sejam iguais, a credencial é considerada inválida e 
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidCredentialCode
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::InvalidCredentialCode
 const unsigned long InvalidCredentialCode;
 \end{samplecode}
 
@@ -331,7 +331,7 @@ Os dados do \term{service context} consitem da seguinte estrutura deve codificad
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: credential.idl
-// Name: tecgraf::openbus::core::v2_00::credential::CredentialReset
+// Name: tecgraf::openbus::core::v2_0::credential::CredentialReset
 struct CredentialReset {
 	Identifier login;         // callee UUID
 	unsigned long session;    // session ID
@@ -349,7 +349,7 @@ struct CredentialReset {
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidPublicKeyCode
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::InvalidPublicKeyCode
 const unsigned long InvalidPublicKeyCode;
 \end{samplecode}
 
@@ -377,7 +377,7 @@ Esse dado deve estar presente em todas as credenciais através do campo \code{cha
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: tecgraf::openbus::core::v2_00::services::access:control::SignedCallChain
+// Name: tecgraf::openbus::core::v2_0::services::access:control::SignedCallChain
 struct SignedCallChain {
 	EncryptedBlock signature; // Hash de 'encoded' assinado pelo barramento.
 	OctetSeq encoded;         // estrutura 'CallChain' codificada usando CDR.
@@ -390,7 +390,7 @@ struct SignedCallChain {
 	\item[Campo \code{encoded}] contém a seguinte estrutura codificada em CDR (encapsulado):
 	\begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: tecgraf::openbus::core::v2_00::services::access:control::CallChain
+// Name: tecgraf::openbus::core::v2_0::services::access:control::CallChain
 struct CallChain {
 	Identifier target;    // Identificador do login a quem a cadeia se destina.
   LoginInfoSeq originators; // Informações de login das entidades que realizaram as chamadas em cadeia que originam essa chamada.
@@ -423,7 +423,7 @@ Se qualquer uma dessas condições não for válida, quem recebe a chamada deve recu
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_00::services::access_control::InvalidCredentialCode
+// Name: ::tecgraf::openbus::core::v2_0::services::access_control::InvalidCredentialCode
 const unsigned long InvalidChainCode;
 \end{samplecode}
 
