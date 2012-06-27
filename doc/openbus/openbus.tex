@@ -46,6 +46,7 @@
 \codestyle{colorful}
 
 % new commands
+\newcommand{\foreign}[1]{\textit{#1}}
 \newcommand{\term}[1]{\textit{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
 
@@ -89,17 +90,39 @@
 
 \tableofcontents
 
-
 \section{Introdução}
 
+O \openbus{}~\cite{web:OPENBUS} é um projeto de um middleware para integração de sistemas computacionais heterogêneos, ou seja, desenvolvidos em diferentes linguagens de programação e plataformas computacionais.
+O OpenBus se baseia em duas tecnologias complementares para constituir uma infraestrutura básica de integração de sistemas.
+São elas:
+%
+\begin{description}
+  \item[CORBA]
+  \foreign{Common Object Requester Broker Architecture}~\cite{omg08corbaspec} é um padrão da indústria que especifica um middleware para sistemas distribuídos heterogêneos orientados a objetos.
+  CORBA é define o modelo básico de comunicação usado nas integrações de sistemas feitas com o OpenBus.
+  CORBA tem suporte para inúmeras linguagens de programação e plataformas computacionais, que nos permite integrar com o OpenBus uma grande variedade de sistemas.
+  \item[SCS]
+  \foreign{Software Component System}~\cite{???} é um modelo simples e flexível de componentes de software baseado em CORBA que permite estruturar sistemas usando uma arquitetura baseada em componentes.
+  O SCS é usado no OpenBus tanto como um modelo arquitetural básico para a infraestrutura básica oferecida como também para estruturar a forma como as intregrações são feitas.
+\end{description}
+
+Em cima dessas duas tecnologias o OpenBus introduz duas novas extensões, que basiamente definem a infraestrutura especializada para integração de sistemas computacionais:
+%
+\begin{description}
+  \item[Barramento de Integração]
+  É o conceito central do OpenBus.
+  O barramento que é o meio através do qual toda interação e comunicação entre os sistemas integrados é feita.
+  O barramento é uma extensão de CORBA com suporte a controle de acesso, que basicamente consiste na autenticação de todo sistema que acessa o barramento, assim como a identificação de forma segura da origem de toda comunicação (chamadas CORBA) feita através desse meio.
+  \item[Serviços de Apoio à Integração]
+  Juntamente ao barramento, o OpenBus também provê suporte para registro e descoberta de serviços ofertados pelos sistemas integrados, comunicação baseada em eventos, entre outras funcionalidades através de uma arquitetura orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}).
+  O objetivo desses serviços é oferecer funcionalidades básicas e essenciais que visem facilitar e agilizar o desenvolvimento da integração dos diferentes sistemas.
+\end{description}
+
+% TODO: review the summary of the text.
 Este documento tem como objetivo apresentar o \openbus{} \version{} e seus conceitos principais.
 Nesta seção introdutória apresentaremos uma definição do projeto e os motivadores para o seu uso.
 Na seção~\ref{sec:architecture} apresentamos a arquitetura do sistema, e entramos um pouco mais em detalhes de como ocorre a comunicação dentro do barramento na seção~\ref{sec:communication}.
 Em seguida, na seção~\ref{sec:perspectives} falamos um pouco mais sobre o projeto de acordo com a visão de cada tipo de usuário, e, por fim, na seção~\ref{sec:glossary} apresentamos um glossário com os conceitos principais do projeto.
-
-\subsection{O que é ?}
-O \openbus{}~\cite{web:OPENBUS} é uma arquitetura aberta e orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}) para integrar, de forma segura, dados e aplicações heterogêneas de domínios distintos ou não.
-A arquitetura é baseada em um \emph{barramento} em que os usuários se conectam para consumir ou prover serviços.
 
 \subsection{Por que utilizar o \openbus{}?}
 Quando há necessidade de integração entre aplicações, algumas soluções podem ser apresentadas conforme a complexidade do ambiente a ser integrado.
@@ -123,7 +146,7 @@ No mais, a troca de mensagens dinâmicas entre todas as aplicações passa a ser po
 
 \section{Arquitetura}\label{sec:architecture}
 
-O \openbus{} é um sistema que pode ser essencialmente divido em três partes: o barramento, os serviços núcleo, e os serviços extras.
+O \openbus{} pode ser essencialmente divido em três partes principais: o barramento, os serviços núcleo, e os serviços extras.
 A figura~\ref{fig:architecture}, apresenta a arquitetura do \openbus{} e suas partes principais. 
 Entraremos em detalhes sobre as partes principais do \openbus{} nas subseções a seguir.
 
@@ -136,8 +159,13 @@ Entraremos em detalhes sobre as partes principais do \openbus{} nas subseções a 
 
 \subsection{Barramento}\label{subsec:barramento}
 
-O barramento serve como o meio de comunicação do sistema, sendo responsável pela validação do acesso ao sistema, e por permitir a comunicação entre os serviços e as aplicações.
-O barramento é composto por um serviço de Controle de Acesso e pelo uso do \emph{middleware} \corba{}~\cite{omg08corbaspec}, com os quais especifica um protocolo de acesso.
+O barramento é o meio de comunicação entre os sistemas integrados.
+Toda comunicação feita pelos sistemas integrados através do barramento consiste de chamadas de objetos distribuídos usando o padrão CORBA.
+Contudo, ao contrário das chamadas de CORBA comuns, nas chamadas feitas através do barramento, é imposto um rigoroso controle de acesso que só permite chamadas por sistemas autenticados, assim como a identificação do sistema que originou cada chamada.
+
+% TODO: [maia] a partir daqui eu não revisei
+
+O barramento é composto por um serviço de Controle de Acesso e pelo uso do \emph{middleware} \corba{}, com os quais especifica um protocolo de acesso.
 
 O Controle de Acesso serve como ponto de entrada do barramento, sendo responsável por autenticar, renovar e gerenciar os logins de serviços e aplicações ao barramento. 
 A autenticação de login é uma verificação realizada no estabelecimento de um login que permite associá-lo a uma dada entidade.
