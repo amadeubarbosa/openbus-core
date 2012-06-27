@@ -533,8 +533,8 @@ function OfferObserversCase.testMultipleNotification(self)
   local cookie3 = tOffer:subscribeObserver(obs)
   local ok = tOffer:unsubscribeObserver(cookie2)
   tOffer:remove()
-  Check.assertEquals(2, obs.wasRemoved)
   self.serviceOffer = nil
+  Check.assertEquals(2, obs.wasRemoved)
 end
 
 function OfferObserversCase.testSubscribe(self)
