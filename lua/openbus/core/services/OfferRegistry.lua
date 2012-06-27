@@ -479,7 +479,7 @@ function OfferRegistry:registerService(service_ref, properties)
     entity = entityId,
     login = login.id,
     creation = {
-      timestamp = timestamp,
+      timestamp = tostring(timestamp),
       day = date("%d", timestamp),
       month = date("%m", timestamp),
       year = date("%Y", timestamp),
