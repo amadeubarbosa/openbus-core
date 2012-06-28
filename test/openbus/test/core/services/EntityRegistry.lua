@@ -3,6 +3,8 @@ local pcall = _G.pcall
 
 local io = require "io"
 
+local pubkey = require "lce.pubkey"
+
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local srvtypes = idl.types.services
@@ -23,6 +25,7 @@ local dPassword = password
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
 local connections = orb.OpenBusConnectionManager
+local connprops = { privatekey = pubkey.create(idl.const.EncryptedBlockSize) }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -77,12 +80,12 @@ local NoPermissionCase = Suite.Test3
 --------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
   
-  local adminConn = connections:createConnection(host, port)
+  local adminConn = connections:createConnection(host, port, connprops)
   adminConn:loginByPassword(admin, adminPassword)
   connections:setRequester(adminConn)
   local categoryId = "NoPermissionCategory"
@@ -162,7 +165,7 @@ end
 --------------------------------
 
 function Case.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
@@ -305,7 +308,7 @@ end
 --------------------------------
 
 function UpdateCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn

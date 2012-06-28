@@ -6,6 +6,8 @@ local oil = require "oil"
 local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
 
+local pubkey = require "lce.pubkey"
+
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local offertypes = idl.types.services.offer_registry
@@ -28,6 +30,7 @@ local entity = system
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB{ localrefs="proxy" }
 local connections = orb.OpenBusConnectionManager
+local connprops = { privatekey = pubkey.create(idl.const.EncryptedBlockSize) }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -125,7 +128,7 @@ end
 
 -- Funções de configuração de testes padrão -----------------------------------
 local function beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(self.user or entity, self.password or entity)
   self.conn = conn

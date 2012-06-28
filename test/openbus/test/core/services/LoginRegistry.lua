@@ -4,6 +4,8 @@ local ipairs = _G.ipairs
 
 local oil = require "oil"
 
+local pubkey = require "lce.pubkey"
+
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local srvtypes = idl.types.services
@@ -24,6 +26,7 @@ local dPassword = password
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
 local connections = orb.OpenBusConnectionManager
+local connprops = { privatekey = pubkey.create(idl.const.EncryptedBlockSize) }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -62,7 +65,7 @@ end
 -------------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
@@ -100,7 +103,7 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
@@ -187,7 +190,7 @@ function InvalidParamCase.testSubscribeInvalidObserver(self)
 end
 
 function InvalidParamCase.test2ConnectionSubscribeInvalidObserver(self)
-  local conn2 = connections:createConnection(host, port)
+  local conn2 = connections:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe observer
@@ -213,7 +216,7 @@ end
 -------------------------------------
 
 function LRCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
@@ -246,7 +249,7 @@ end
 
 function LRCase.test2ConnectionGetAllLogins(self)
   local logins = self.logins
-  local conn2 = connections:createConnection(host, port)
+  local conn2 = connections:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local ok, list = pcall(logins.getAllLogins, logins)
@@ -274,7 +277,7 @@ end
 
 function LRCase.testInvalidateLogin(self)
   local logins = self.logins
-  local conn2 = connections:createConnection(host, port)
+  local conn2 = connections:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- check login
@@ -308,7 +311,7 @@ end
 
 function LRCase.testGetLoginInfo(self)
   local logins = self.logins
-  local conn2 = connections:createConnection(host, port)
+  local conn2 = connections:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local info = logins:getLoginInfo(conn2.login.id)
@@ -335,7 +338,7 @@ end
 
 function LRCase.test2ConnectionsGetValidity(self)
   local logins = self.logins
-  local conn2 = connections:createConnection(host, port)
+  local conn2 = connections:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local list = { self.conn.login.id, conn2.login.id }
@@ -347,7 +350,7 @@ function LRCase.test2ConnectionsGetValidity(self)
 end
 
 function LRCase.testSubscribeObserver(self)
-  local conn2 = connections:createConnection(host, port)
+  local conn2 = connections:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe login observer

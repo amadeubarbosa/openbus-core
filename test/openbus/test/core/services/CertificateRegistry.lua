@@ -3,6 +3,8 @@ local pcall = _G.pcall
 
 local io = require "io"
 
+local pubkey = require "lce.pubkey"
+
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local srvtypes = idl.types.services
@@ -24,6 +26,7 @@ local certificate = syscrt
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
 local connections = orb.OpenBusConnectionManager
+local connprops = { privatekey = pubkey.create(idl.const.EncryptedBlockSize) }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -48,7 +51,7 @@ local CRCase = Suite.Test3
 --------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
@@ -90,7 +93,7 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
@@ -144,7 +147,7 @@ end
 -------------------------------------
 
 function CRCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port)
+  local conn = connections:createConnection(host, port, connprops)
   connections:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
