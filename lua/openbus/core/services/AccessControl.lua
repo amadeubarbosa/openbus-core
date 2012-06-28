@@ -366,7 +366,7 @@ function AccessControl:startLoginByCertificate(entity)
   return logger, assert(publickey:encrypt(secret))
 end
 
-function AccessControl:startLoginBySingleSignOn()
+function AccessControl:startLoginBySharedAuth()
   local caller = self.access:getCallerChain().caller
   local login = self.activeLogins:getLogin(caller.id)
   local secret = newid("random")
@@ -377,7 +377,7 @@ function AccessControl:startLoginBySingleSignOn()
     allowLegacyDelegate = login.allowLegacyDelegate,
   }
   self.pendingChallenges[logger] = time()
-  log:request(msg.LoginBySingleSignOnInitiated:tag{
+  log:request(msg.LoginBySharedAuthInitiated:tag{
     login = login.id,
     entity = login.entity,
   })
