@@ -11,24 +11,17 @@ local Check = require "latt.Check"
 -- causará falha de vários desses testes, pois comparamos as mensagens de erro.
 
 -- Configurações --------------------------------------------------------------
-local url = "ldap://ldap-teste:389"
-local urlSSL = "ldaps://ldap-teste:636"
-local pattern = "cn=%U,ou=usuarios,dc=tecgraf,dc=puc-rio,dc=br"
-local name = "teste"
-local password = "teste"
-local timeout = 5
-
 local scsutils = require ("scs.core.utils")()
 local props = {}
-scsutils:readProperties(props, "test.properties")
+scsutils:readProperties(props, os.getenv("OPENBUS_TESTCFG") or "test.properties")
 scsutils = nil
 
-url = props:getTagOrDefault("ldapUrl", url)
-urlSSL = props:getTagOrDefault("ldapUrlSSL", urlSSL)
-pattern = props:getTagOrDefault("ldap-pattern", pattern)
-name = props:getTagOrDefault("ldapUser", name)
-password = props:getTagOrDefault("ldapPassword", password)
-timeout = tonumber(props:getTagOrDefault("ldapTimeout", timeout))
+url =              props:getTagOrDefault("ldap.url.tcp",  "ldap://ldap-teste:389")
+urlSSL =           props:getTagOrDefault("ldap.url.ssl",  "ldaps://ldap-teste:636")
+pattern =          props:getTagOrDefault("ldap.pattern",  "cn=%U,ou=usuarios,dc=tecgraf,dc=puc-rio,dc=br")
+name =             props:getTagOrDefault("ldap.user",     "teste")
+password =         props:getTagOrDefault("ldap.password", "teste")
+timeout = tonumber(props:getTagOrDefault("ldap.timeout",  5))
 
 local user = pattern:gsub("%%U",name)
 
