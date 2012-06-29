@@ -102,7 +102,7 @@ São elas:
   CORBA é define o modelo básico de comunicação usado nas integrações de sistemas feitas com o OpenBus.
   CORBA tem suporte para inúmeras linguagens de programação e plataformas computacionais, que nos permite integrar com o OpenBus uma grande variedade de sistemas.
   \item[SCS]
-  \foreign{Software Component System}~\cite{???} é um modelo simples e flexível de componentes de software baseado em CORBA que permite estruturar sistemas usando uma arquitetura baseada em componentes.
+  \foreign{Software Component System}~\cite{web:SCS} é um modelo simples e flexível de componentes de software baseado em CORBA que permite estruturar sistemas usando uma arquitetura baseada em componentes.
   O SCS é usado no OpenBus tanto como um modelo arquitetural básico para a infraestrutura básica oferecida como também para estruturar a forma como as intregrações são feitas.
 \end{description}
 
@@ -323,8 +323,7 @@ Existem duas formas de se definir o arquivo de configuração que o programa irá u
 O \emph{busservices} foi pensado para que as opções passadas por linha de comando tenham prioridade sobre as opções definidas no arquivo de configuração.
 
 Através da opção ``validator'' informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
-Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações como configurar o validador LDAP, consulte~\cite{ob2.0ldap} [VERIFICAR COM AMADEU JR.].
-% TODO: verificar com Amadeu JR.
+Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações como configurar o validador LDAP, consulte~\cite{ob2.0install}.
 
 %% NOTE: comentado parte que falava sobre o validador de teste: 
 % e em \\\texttt{openbus.test.core.services.TesterUserValidator} disponibilizamos um validador para ambientes de teste, que permite acesso quando o login é igual a senha.

@@ -117,11 +117,6 @@ Para executar o barramento deve-se seguir o seguinte procedimento:
 \begin{verbatim}  
 export OPENBUS_HOME=<local de extracao do pacote>
 \end{verbatim}
-
-  \item Configurar a variável de ambiente LD\_LIBRARY\_PATH
-\begin{verbatim}  
-export LD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${LD_LIBRARY_PATH}"
-\end{verbatim}
   
   \item Testar se a execução do binário do barramento esta funcionando
 \begin{verbatim}  
@@ -132,7 +127,7 @@ $OPENBUS_HOME/bin/busservices --help
   A chave privada (arquivo com terminação \emph{.key}) deve ser do formato PKCS8 codificada em DER, e o certificado (arquivo com terminação \emph{.crt}) deve ser do formato X.509 codificado em DER.
   Esse par de chaves pode ser criado utilizando o script \emph{openssl-generate.ksh}.
 \begin{verbatim}
-cd ${OPENBUS_HOME} && ./specs/shell/openssl-generate.ksh -n <nome do par de chaves>
+cd ${OPENBUS_HOME} && ./bin/openssl-generate.ksh -n <nome do par de chaves>
 \end{verbatim}
 
   \item Executar o barramento passando as configurações desejadas. Como por exemplo, o par de chaves do barramento.
@@ -141,11 +136,33 @@ cd ${OPENBUS_HOME} && ./specs/shell/openssl-generate.ksh -n <nome do par de chav
 
 Maiores informações sobre a como utilizar a configuração do \emph{busservices} podem ser encontradas no manual de referência~\cite{ob2.0core}.
 
+\section{Configuração do validador LDAP}
+
+O validador LDAP tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seu significado e possíveis valores:
+\begin{description}
+\item[ldap\_servers] indica uma lista de URLs de servidores LDAP. Cada URL deve seguir o formato \\ \texttt{<protocol>://<server>:<port>}, onde \texttt{<protocol>} pode ser \texttt{ldaps} ou \texttt{ldap}. Exemplo:
+\begin{verbatim}
+ldap_servers = { 
+ "ldaps://server.mycompany.com",
+ "ldap://otherserver.mycompany.com:389",
+}
+\end{verbatim}
+
+\item[ldap\_patterns] indica uma lista de padrões de formação de nomes que serão usados na autenticação LDAP. Atualmente só há suporte para o padrão \texttt{\%U}, e o validador irá substituir esse padrão pelo nome do usuário fornecido no ato do login. No exemplo abaixo apresentamos dois padrões, o primeiro é útil para autenticação em servidores Microsoft Active Directory (que utilizam UPN \cite{web:upn}) e o segundo é útil para autenticação em servidores OpenLDAP (que utilizam DN \cite{web:dn,web:rfc4514}). Exemplo:
+\begin{verbatim}
+ldap_patterns = {
+  "%U@project.mycompany.com",
+  "cn=%U,ou=users,ou=groups,dc=company",
+}
+\end{verbatim}
+
+\item[ldap\_timeout] indica um tempo máximo de espera (em segundos) da resposta do servidor LDAP. Exemplo:
+\begin{verbatim}
+ldap_timeout = 10
+\end{verbatim}
+\end{description}
+
 \section{FAQ}
-
-\subsection{Como configurar o validador LDAP?}
-
-Informações sobre como configurar o validado LDAP do barramento podem ser encontradas em \cite{ob2.0ldap}.
 
 \subsection{Ainda estou com dúvidas. Como entro em contato?}
 
