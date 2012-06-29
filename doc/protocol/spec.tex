@@ -39,6 +39,8 @@
 
 \newcommand{\term}[1]{\textit{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\openbus}{\textsc{OpenBus}}
+\newcommand{\version}{2.0}
 
 %\newif\ifpdf
 %\ifx\pdfoutput\undefined
@@ -53,8 +55,8 @@
 \else
 \usepackage{graphicx}
 \fi
-\title{Protocolo de Acesso do OpenBus 2.0}
-\author{Renato Maia}
+\title{Protocolo de Acesso do \openbus{} \version{}}
+\author{Tecgraf}
 
 \date{\today}
 
@@ -71,7 +73,7 @@
 
 \section{Introdução}
 
-O protocolo de acesso do OpenBus 2.0 é o conjunto de regras para realização de chamadas CORBA através de um barramento OpenBus que foi introduzido na versão 2.0 do OpenBus.
+O protocolo de acesso do \openbus{} \version{} é o conjunto de regras para realização de chamadas CORBA através de um barramento \openbus{} que foi introduzido na versão \version{} do OpenBus.
 O principal objetivo desse protocolo é garantir um nível adequado de segurança das chamadas que permita assegurar a identidade da entidade que iniciou cada chamada realizada através do barramento.
 
 As chamadas através do barramento só podem ser realizadas através de um login de acesso autenticado em nome de uma entidade.
@@ -80,8 +82,8 @@ Cada entidade que acessa o barramento é identificada através de um nome único, d
 A identificação da entidade que inicia cada chamada permite que as aplicações que respondem às chamadas possam aceitar ou rejeitar essas chamadas de acordo com os privilégios de cada entidade, assim como permitir a implementação de mecanismos de auditoria de utilização das aplicações e serviços integrados ao barramento.
 As entidades que acessam o barramento podem ser diversas, tanto usuários humanos como sistemas computacionais.
 
-O propósito deste documento é apresentar o protocolo de acesso do OpenBus 2.0 em detalhes, de forma que o protocolo possa ser implementado em diferentes linguagens.
-Todo o protocolo de acesso do OpenBus 2.0 é baseado na arquitetura CORBA, fazendo uso particular o recurso de interceptadores de chamada (\term{CORBA Portable Interceptors}) para introduzir informações adicionais nas mensagens GIOP (\term{General Inter-ORB Protocol}) de CORBA.
+O propósito deste documento é apresentar o protocolo de acesso do \openbus{} \version{} em detalhes, de forma que o protocolo possa ser implementado em diferentes linguagens.
+Todo o protocolo de acesso do \openbus{} \version{} é baseado na arquitetura CORBA, fazendo uso particular o recurso de interceptadores de chamada (\term{CORBA Portable Interceptors}) para introduzir informações adicionais nas mensagens GIOP (\term{General Inter-ORB Protocol}) de CORBA.
 
 \section{Chaves de Acesso} % (fold)
 \label{sec:chaves_de_acesso}
@@ -97,7 +99,7 @@ A posse da chave privada de acesso permite assumir a identidade de qualquer enti
 As chaves públicas de acesso são transmitidas entre os diferentes processos que acessam o barramento como uma sequência de bytes (\code{CORBA::OctetSeq}).
 Para tanto as chaves públicas devem ser codificadas usando o formato \term{SubjectPublicKeyInfo} definido pelo padrão X.509, usando a codificação DER (\term{Distinguished Encoding Rules}).
 
-Recomenda-se que cada processo que acesse um barramento OpenBus utilize um único par exclusivo de chaves de acesso, evitando assim a geração excessiva de chaves. Contudo, é possível utilizar diferentes pares de chave de acesso, um para cada autenticação de uma entidade no barramento.
+Recomenda-se que cada processo que acesse um barramento \openbus{} utilize um único par exclusivo de chaves de acesso, evitando assim a geração excessiva de chaves. Contudo, é possível utilizar diferentes pares de chave de acesso, um para cada autenticação de uma entidade no barramento.
 
 % section chaves_de_acesso (end)
 
@@ -105,7 +107,7 @@ Recomenda-se que cada processo que acesse um barramento OpenBus utilize um único
 \label{sec:processo_de_login}
 
 O processo de login consiste basicamente em três atividades:
-a autenticação de uma entidade através de algum método oferecido pelo OpenBus;
+a autenticação de uma entidade através de algum método oferecido pelo \openbus{};
 o registro da chave pública de acesso a ser utilizada na validação do acesso;
 e a geração de identificador de login que é usado para identificar aquela autenticação da entidade junto ao barramento.
 
@@ -207,13 +209,13 @@ Adicionalmente, também é devolvido o tempo mínimo pelo qual o login permanecerá 
 \section{Credenciais de Chamada} % (fold)
 \label{sec:credenciais_de_chamada}
 
-Uma credencial no OpenBus é um dado associado às chamadas feitas através do barramento que assegura a identidade da entidade que iniciou a chamada.
+Uma credencial no \openbus{} é um dado associado às chamadas feitas através do barramento que assegura a identidade da entidade que iniciou a chamada.
 A credencial pode ser dividida em duas partes:
 a identificação da entidade de quem iniciou aquela chamada;
 e a identificação de todas as entidades que iniciaram cada chamada da cadeia de chamadas aninhadas onde esta chamada está inclusa.
 À primeira parte da credencial daremos o nome de \term{personalidade} e à segunda parte de \term{cadeia de chamada}.
 
-As credenciais do OpenBus são transmitidas como um \term{service context} das mensagens GIOP de \term{Request} que indicam uma chamada remota, usando o  \term{context ID} definido pela constante abaixo:
+As credenciais do \openbus{} são transmitidas como um \term{service context} das mensagens GIOP de \term{Request} que indicam uma chamada remota, usando o  \term{context ID} definido pela constante abaixo:
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: credential.idl
@@ -470,7 +472,7 @@ Note que dessa forma é possível se adicionar a cadeias recebidas (processo denom
 \section{\term{Minor Codes} do \code{CORBA::NO\_PERMISSION}} % (fold)
 \label{sec:minor_codes}
 
-A seguir são descritos todos os valores de \term{minor code} usados nas exceções de \code{CORBA::NO\_PERMISSION} lançadas  nas comunicações usando o protocolo do OpenBus 2.0.
+A seguir são descritos todos os valores de \term{minor code} usados nas exceções de \code{CORBA::NO\_PERMISSION} lançadas  nas comunicações usando o protocolo do \openbus{} \version{}.
 
 \begin{tabular}{lp{10cm}}
 
