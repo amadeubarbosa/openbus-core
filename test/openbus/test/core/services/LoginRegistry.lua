@@ -368,6 +368,7 @@ function LRCase.testSubscribeObserver(self)
   oil.newthread(orb.run, orb)
   conn2:logout()
   self.conn2 = nil
+  oil.sleep(.1) -- wait notification to arrive
   orb:shutdown()
   -- check if observer was called properly
   Check.assertNotNil(logoutInfo)

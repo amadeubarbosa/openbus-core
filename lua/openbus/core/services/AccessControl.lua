@@ -6,15 +6,16 @@ local pairs = _G.pairs
 local rawset = _G.rawset
 local type = _G.type
 
-local math = require "math"
-local inf = math.huge
-local min = math.min
-
 local coroutine = require "coroutine"
 local newthread = coroutine.create
 
 local string = require "string"
 local strrep = string.rep
+
+local math = require "math"
+local ceil = math.ceil
+local inf = math.huge
+local min = math.min
 
 local cothread = require "cothread"
 local time = cothread.now
@@ -22,6 +23,9 @@ local running = cothread.running
 local schedule = cothread.schedule
 local unschedule = cothread.unschedule
 local waituntil = cothread.defer
+
+local giop = require "oil.corba.giop"
+local sysex = giop.SystemExceptionIDs
 
 local uuid = require "uuid"
 local newid = uuid.new
@@ -35,7 +39,6 @@ local decodecertificate = x509.decode
 
 local oo = require "openbus.util.oo"
 local class = oo.class
-local sysex = require "openbus.util.sysex"
 local log = require "openbus.util.logger"
 
 local idl = require "openbus.core.idl"
@@ -121,13 +124,8 @@ end
 -- Faceta LoginManager
 ------------------------------------------------------------------------------
 
-local SelfLogin = {
-  id = idl.const.BusLogin,
-  entity = idl.const.BusEntity,
-}
-
-local function renewLogin(login)
-  login.leaseRenewed = time()
+local function renewLogin(self, login)
+  login.deadline = time() + self.leaseTime + self.expirationGap
 end
 
 local MaxEncryptedData = strrep("\255", idl.const.EncryptedBlockSize-11)
@@ -169,7 +167,7 @@ function LoginProcess:login(pubkey, encrypted)
   end
   local login = manager.activeLogins:newLogin(entity, pubkey,
                                               self.allowLegacyDelegate)
-  renewLogin(login)
+  renewLogin(manager, login)
   log:request(msg.LoginProcessConcluded:tag{login=login.id,entity=entity})
   return login, manager.leaseTime
 end
@@ -182,7 +180,8 @@ local AccessControl = {
   __type = types.AccessControl,
   __objkey = const.AccessControlFacet,
   
-  leaseTime = 180,
+  login = {id=idl.const.BusLogin, entity=idl.const.BusEntity},
+  pendingChallenges = {}
 }
 
 -- local operations
@@ -204,7 +203,6 @@ function AccessControl:__init(data)
   self.passwordValidators = data.validators
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
-  self.pendingChallenges = {}
   self.activeLogins = Logins{ database = database }
   
   -- initialize access
@@ -214,7 +212,7 @@ function AccessControl:__init(data)
   self.buskey = encodedkey
   access.AccessControl = self
   access.logins = self
-  access.login = SelfLogin
+  access.login = self.login
   access.busid = busid
   access.buskey = decodepublickey(encodedkey)
   access:setGrantedUsers(self.__type, "_get_busid", "any")
@@ -227,7 +225,7 @@ function AccessControl:__init(data)
   
   -- renova todas as credenciais persistidas
   for id, login in self.activeLogins:iLogins() do
-    renewLogin(login)
+    renewLogin(self, login)
     log:action(msg.PersistedLoginRenewed:tag{login=id,entity=login.entity})
   end
   
@@ -235,40 +233,26 @@ function AccessControl:__init(data)
   schedule(newthread(function()
     while self.sweeper do
       local now = time()
-      local leaseTime = self.leaseTime
-      local expirationTime = leaseTime + self.expirationGap
-      local nextDeadline = now+expirationTime
+      local nextDeadline = now + self.leaseTime + self.expirationGap
       
-      -- A operação 'login:remove()' pode resultar numa chamada remota de
-      -- 'observer:entityLogout(login)' e durante essa chamada é possível que
-      -- outra thread altere o 'activeLogins' o que interferiria na iteração
-      -- 'activeLogins:iLogins()' de forma imprevisível. Por isso a remoção é
-      -- feita em duas etapas:
-      -- 1. coleta credenciais não renovadas a tempo
-      local invalidLogins = {}
       for id, login in self.activeLogins:iLogins() do
-        local deadline = login.leaseRenewed+expirationTime
+        local deadline = login.deadline
         if deadline > now then
           nextDeadline = min(nextDeadline, deadline)
         else
-          invalidLogins[login] = true
-        end
-      end
-      -- 2. remove as credenciais coletadas
-      for login in pairs(invalidLogins) do
-        log:action(msg.LoginExpired:tag{
-          login = login.id,
-          entity = login.entity,
-        })
-        local ok, ex = pcall(login.remove, login) -- catch I/O errors
-        if not ok and (type(ex)~="table" or ex._repid~=srvtp.ServiceFailure) then
-          error(ex)
+          log:action(msg.LoginExpired:tag{
+            login = login.id,
+            entity = login.entity,
+          })
+          local ok, ex = pcall(login.remove, login) -- catch I/O errors
+          if not ok and (type(ex)~="table" or ex._repid~=srvtp.ServiceFailure) then
+            error(ex)
+          end
         end
       end
       
       -- cancela autenicação via desafio cujo tempo tenha espirado
-      for process, timeCreated in pairs(self.pendingChallenges) do
-        local deadline = timeCreated+leaseTime
+      for process, deadline in pairs(self.pendingChallenges) do
         if deadline > now then
           nextDeadline = min(nextDeadline, deadline)
         else
@@ -312,7 +296,7 @@ end
 -- IDL operations
 
 function AccessControl:loginByPassword(entity, pubkey, encrypted)
-  if entity ~= SelfLogin.entity then
+  if entity ~= self.login.entity then
     checkkey(pubkey)
     local decrypted, errmsg = self.access.prvkey:decrypt(encrypted)
     if decrypted == nil then
@@ -330,7 +314,7 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
             entity = entity,
             validator = validator.name,
           })
-          renewLogin(login)
+          renewLogin(self, login)
           return login, self.leaseTime
         elseif errmsg ~= nil then
           log:exception(msg.FailedPasswordValidation:tag{
@@ -361,7 +345,7 @@ function AccessControl:startLoginByCertificate(entity)
     secret = secret,
     allowLegacyDelegate = true,
   }
-  self.pendingChallenges[logger] = time()
+  self.pendingChallenges[logger] = time()+self.leaseTime
   log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
   return logger, assert(publickey:encrypt(secret))
 end
@@ -376,7 +360,7 @@ function AccessControl:startLoginBySharedAuth()
     secret = secret,
     allowLegacyDelegate = login.allowLegacyDelegate,
   }
-  self.pendingChallenges[logger] = time()
+  self.pendingChallenges[logger] = time()+self.leaseTime
   log:request(msg.LoginBySharedAuthInitiated:tag{
     login = login.id,
     entity = login.entity,
@@ -394,7 +378,7 @@ end
 function AccessControl:renew()
   local caller = self.access:getCallerChain().caller
   local login = self.activeLogins:getLogin(caller.id)
-  renewLogin(login)
+  renewLogin(self, login)
   log:request(msg.LoginRenewed:tag{login=login.id,entity=login.entity})
   return self.leaseTime
 end
@@ -488,7 +472,7 @@ LoginRegistry = {
 function LoginRegistry:__init(data)
   -- initialize attributes
   self.access = data.access
-  self.subscriptionOf = {}
+  self.subscriptionOf = {} -- for legacy support (OpenBus 1.5)
   
   local access = self.access
   local admins = data.admins
@@ -514,15 +498,17 @@ function LoginRegistry:loginRemoved(login, observers)
     if callback == nil then
       callback = orb:newproxy(observer.ior, nil, types.LoginObserver)
     end
-    local ok, errmsg = pcall(callback.entityLogout, callback, login)
-    if not ok then
-      log:exception(msg.LoginObserverException:tag{
-        observer = observer.id,
-        owner = observer.login,
-        watched = login.id,
-        errmsg = errmsg,
-      })
-    end
+    schedule(newthread(function()
+      local ok, errmsg = pcall(callback.entityLogout, callback, login)
+      if not ok then
+        log:exception(msg.LoginObserverException:tag{
+          observer = observer.id,
+          owner = observer.login,
+          watched = login.id,
+          errmsg = errmsg,
+        })
+      end
+    end))
   end
 end
 
@@ -570,8 +556,8 @@ function LoginRegistry:getLoginInfo(id)
   local login = AccessControl.activeLogins:getLogin(id)
   if login ~= nil then
     return login, login.encodedkey
-  elseif id == SelfLogin.id then
-    return SelfLogin, AccessControl.buskey
+  elseif id == AccessControl.login.id then
+    return AccessControl.login, AccessControl.buskey
   end
   throw.InvalidLogins{loginIds={id}}
 end
@@ -585,8 +571,19 @@ function LoginRegistry:getValidity(ids)
   for index, id in ipairs(ids) do
     local login = logins:getLogin(id)
     if login ~= nil then
-      validity[index] = expirationGap+leaseTime-(now-login.leaseRenewed)
-    elseif id == SelfLogin.id then
+      local timeleft = login.deadline-now
+      if timeleft <= 0 then
+        log:action(msg.LoginExpired:tag{
+          login = login.id,
+          entity = login.entity,
+        })
+        login:remove()
+        timeleft = 0
+      else
+        timeleft = ceil(timeleft)
+      end
+      validity[index] = timeleft
+    elseif id == AccessControl.login.id then
       validity[index] = leaseTime
     else
       validity[index] = 0
@@ -600,6 +597,7 @@ function LoginRegistry:subscribeObserver(callback)
   local caller = self.access:getCallerChain().caller
   local login = logins:getLogin(caller.id)
   local observer = login:newObserver(callback)
+  observer.callback = callback
   local id = observer.id
   local subscription = Subscription{ id=id, logins=logins, registry=self }
   self.subscriptionOf[id] = subscription

@@ -48,7 +48,7 @@ function ILeaseProvider:renewLease(credential)
   local control = facets.AccessControl
   local login = control.activeLogins:getLogin(credential.identifier)
   if login ~= nil then
-    login.leaseRenewed = time()
+    login.deadline = time()+control.leaseTime+control.expirationGap
     log:request(msg.LoginRenewed:tag{login=login.id,entity=login.entity})
     return true, control.leaseTime
   end
@@ -176,10 +176,10 @@ function IAccessControlService:isValid(credential)
   local control = facets.AccessControl
   local login = control:getLoginEntry(credential.identifier)
   if login ~= nil then
-    return time() < login.leaseRenewed+control.leaseTime+control.expirationGap
+    return time() < login.deadline
        and (credential.delegate == "" or login.allowLegacyDelegate)
   else
-    return credential.identifier == control.access.login.id 
+    return credential.identifier == control.login.id 
        and credential.delegate == ""
   end
   return false

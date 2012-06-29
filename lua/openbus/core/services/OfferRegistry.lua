@@ -9,12 +9,18 @@ local pcall = _G.pcall
 local rawget = _G.rawget
 local tostring = _G.tostring
 
+local coroutine = require "coroutine"
+local newthread = coroutine.create
+
 local array = require "table"
 local concat = array.concat
 
 local os = require "os"
 local date = os.date
 local time = os.time
+
+local cothread = require "cothread"
+local schedule = cothread.schedule
 
 local uuid = require "uuid"
 local newid = uuid.new
@@ -128,21 +134,13 @@ local function unregisterObserver(self, watched, cookie)
   return delautotab(self.observerLogins, login, watched, cookie)
 end
 
-local function callObservers(self, watched, op, ...)
+local function notifyOfferObservers(self, watched, event, offer)
   local observerLogins = self.observerLogins
-  -- during notification (remote call) some new observers may be subscribed,
-  -- so the iteration of 'pairs' will be corrupted. Therefore the notification
-  -- first collect all observers to be notified and later notify them.
-  local entries = {}
   for cookie, login in pairs(watched.observers) do
-    entries[cookie] = observerLogins[login][watched][cookie]
-  end
-  for cookie, entry in pairs(entries) do
-    -- check if observer is still subscribed, because it might have been
-    -- unsubscribed during the previous notification.
-    if getautotab(observerLogins, entry.login, watched, cookie) == entry then
-      local observer = entry.observer
-      local ok, errmsg = pcall(observer[op], observer, ...)
+    local entry = observerLogins[login][watched][cookie]
+    local observer = entry.observer
+    schedule(newthread(function()
+      local ok, errmsg = pcall(observer[event], observer, offer)
       if not ok then
         log:exception(msg.OfferObserverException:tag{
           cookie = cookie,
@@ -151,7 +149,7 @@ local function callObservers(self, watched, op, ...)
           errmsg = errmsg,
         })
       end
-    end
+    end))
   end
 end
 
@@ -210,7 +208,7 @@ function Offer:setProperties(properties)
   self.properties = allprops
   offers:add(self)
   log[tag](log, msg.UpdateOfferProperties:tag{ offer = self.id })
-  callObservers(registry, self, "propertiesChanged", self)
+  notifyOfferObservers(registry, self, "propertiesChanged", self)
   registry:notifyRegistryObservers(self)
 end
 
@@ -228,7 +226,7 @@ function Offer:remove(tag)
     login = self.login,
   })
   -- notify observers and unregister them from the logout callback
-  callObservers(registry, self, "removed", self)
+  notifyOfferObservers(registry, self, "removed", self)
   for cookie in pairs(self.observers) do
     unregisterObserver(registry, self, cookie)
   end
@@ -311,10 +309,6 @@ end
 function OfferRegistry:notifyRegistryObservers(offer)
   local offers = self.offers
   local observerLogins = self.observerLogins
-  -- during notification (remote call) some new observers may be subscribed,
-  -- so the iteration of 'pairs' will be corrupted. Therefore the notification
-  -- first collect all observers to be notified and later notify them.
-  local selected = {}
   for cookie, login in pairs(self.observers) do
     local entry = observerLogins[login][self][cookie]
     local matched
@@ -323,16 +317,16 @@ function OfferRegistry:notifyRegistryObservers(offer)
       if not matched then break end
     end
     if matched then
-      selected[cookie] = entry.observer
-    end
-  end
-  for cookie, observer in pairs(selected) do
-    local ok, errmsg = pcall(observer.offerRegistered, observer, offer)
-    if not ok then
-      log:exception(msg.OfferRegistrationObserverException:tag{
-        cookie = cookie,
-        errmsg = errmsg,
-      })
+      local observer = entry.observer
+      schedule(newthread(function()
+        local ok, errmsg = pcall(observer.offerRegistered, observer, offer)
+        if not ok then
+          log:exception(msg.OfferRegistrationObserverException:tag{
+            cookie = cookie,
+            errmsg = errmsg,
+          })
+        end
+      end))
     end
   end
 end
