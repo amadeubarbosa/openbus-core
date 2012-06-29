@@ -1,0 +1,210 @@
+#! /bin/bash
+### BEGIN INIT INFO
+# Provides:          openbus
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      S 0 1 6
+# Short-Description: OpenBus initscript
+# Description:       Manage the lifecycle of the OpenBus Middleware Services.
+### END INIT INFO
+
+# Author: Amadeu A. Barbosa Jr <amadeu@tecgraf.puc-rio.br>
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+# === CHANGE HERE !!! == Please provide your path to openbus installation
+OPENBUS_HOME=${OPENBUS_HOME:=/local/openbus/running}
+
+DESC="OpenBus Middleware Services"
+NAME=openbus
+PARAMS=
+BUSSERVICES=$OPENBUS_HOME/bin/busservices
+PID_BUSSERVICES=$OPENBUS_HOME/busservices.pid
+
+# Exit if the package is not installed
+if [ -z "$OPENBUS_HOME" ]; then
+  echo "ERROR: OPENBUS_HOME variable not defined! Aborting."
+  exit 2
+fi
+if [ ! -x "$BUSSERVICES" ]; then
+  echo "ERROR: $BUSSERVICES is not an executable! Aborting."
+  exit 2
+fi
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+[ -f /etc/default/rcS ] && . /etc/default/rcS
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+#. /lib/lsb/init-functions
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+  # Return
+  #   0 if daemon has been started
+  #   1 if daemon was already running
+  #   2 if daemon could not be started
+
+  check_pid
+  ret=$?
+  if [ "$ret" -ne 0 ]; then
+    echo "$DESC is already running (PID=$ret)"
+    return 2
+  fi
+
+  echo -n "Starting $DESC "
+  $BUSSERVICES $PARAMS > /dev/null&
+  pid=$!
+  sleep 2
+  # Checks if any signal can be sent (process exists)
+  kill -0 $pid 2>/dev/null
+  ret=$?
+  if [ "$ret" == 0 ]; then
+    echo "[ OK ]"
+    echo "$pid" > $PID_BUSSERVICES
+  else
+    echo "[ FAILED ]"
+    do_stop > /dev/null
+    return 2
+  fi
+
+  return 0
+}
+
+#
+# Check persistent pids
+#
+check_pid()
+{
+  # Check PID_BUSSERVICES
+  pid=$(cat $PID_BUSSERVICES 2>/dev/null)
+  if [ -n "$pid" ]; then
+    kill -0 $pid 2>/dev/null
+    if [ "$?" == 0 ]; then
+      return $pid
+    fi
+  fi
+
+  return 0
+}
+
+#
+# Function that shows if running or not
+#
+do_status()
+{
+  busservicespid=$(cat $PID_BUSSERVICES 2>/dev/null)
+
+  if [ -n "$busservicespid" ]; then
+    kill -0 $busservicespid 2>/dev/null
+    running=$?
+    if [ "$running" == 0 ]; then
+      echo "$DESC is running (PID=$busservicespid)" 
+    else
+      echo "$DESC is not running"
+    fi
+  else
+    echo "$DESC is not running"
+  fi 
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+  # Return
+  #   0 if daemon has been stopped
+  #   1 if daemon was already stopped
+  #   2 if daemon could not be stopped
+  #   other if a failure occurred
+
+  echo -n "Stopping $DESC "
+  pid=$(cat $PID_BUSSERVICES 2>/dev/null)
+  kill_proccess $pid
+  echo "[ OK ]"
+
+  rm -f $PID_BUSSERVICES
+  return 0
+}
+
+#
+# Function that kill the proccess
+#
+kill_proccess()
+{
+  # Return
+  #   0 if daemon has been stopped
+  #   other if a failure occurred
+
+  process=$1
+  if [ -n "$process" ]; then
+    kill -15 $process || kill -9 $process
+    ret=$?
+    if [ "$ret" == 0 ]; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+
+case "$1" in
+  start)
+  do_start
+  case "$?" in
+    0|1) exit 0 ;;
+    2) exit 1 ;;
+  esac
+  ;;
+  status)
+  do_status
+  case "$?" in
+    0|1) exit 0 ;;
+    2) exit 1 ;;
+  esac
+  ;;
+  stop)
+  do_stop
+  case "$?" in
+    0|1) exit 0 ;;
+    2) exit 1 ;;
+  esac
+  ;;
+  restart)
+  #
+  # If the "reload" option is implemented then remove the
+  # 'force-reload' alias
+  #
+  echo "Restarting $DESC"
+  do_stop
+  case "$?" in
+    0|1)
+    do_start
+    case "$?" in
+      0) exit 0 ;;
+      *) exit 1 ;; # Failed to start
+    esac
+    ;;
+    *)
+      # Failed to stop
+    exit 1
+    ;;
+  esac
+  ;;
+  *)
+  echo "Usage: $0 {start|stop|restart|status}"
+  exit 3
+  ;;
+esac
+
+:

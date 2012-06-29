@@ -1,0 +1,72 @@
+#!/bin/ksh
+
+function die {
+        echo -e $@
+        exit 1
+}
+
+INSTALL_DIR=$1
+if [ ! -d "$INSTALL_DIR" ]; then
+	die "Usage: $0 <installation path> <email>"
+fi
+
+#OPENBUS_INIT=$INSTALL_DIR/bin/bus-init
+OPENBUS_INIT=/etc/init.d/openbus
+HOSTNAME=$(hostname)
+PID_BUSSERVICES=$INSTALL_DIR/busservices.pid
+
+if [ -n "$2" ]; then
+	EMAIL=$2
+else
+	EMAIL=root@$HOSTNAME
+fi
+
+[ -x "$OPENBUS_INIT" ] || die "ERROR: $OPENBUS_INIT not found or missing execution permission."
+
+# function to check if is running actually
+is_running() {
+	# if not exist the PID files
+	if [ ! -f $PID_BUSSERVICES ]; then
+		return 1
+	else
+		# the PID file can be outdated, asking for them
+		ps -e |grep $(cat $PID_BUSSERVICES 2>/dev/null) 1>/dev/null 2>/dev/null
+		busservices_ret=$?
+		# if some PID is outdated then remove that file and return 1 (false)
+		# otherwise return 0 (true)
+		running=0
+		if [ $busservices_ret -gt 0 ]; then
+			rm -f $PID_BUSSERVICES
+			running=1
+		fi
+		
+		return $running
+	fi
+}
+
+# check if is running
+is_running
+ret=$?
+# when some error try restart
+if [ $ret -gt 0 ] ; then
+	# probably the services has crashed!
+	# it will try stop any other openbus services
+ 	export OPENBUS_HOME=$INSTALL_DIR
+	$OPENBUS_INIT stop
+
+	DATE=`date +%d/%m/%Y\ %H:%M:%S`
+
+	$OPENBUS_INIT start
+	echo "
+Essa é uma notificação automática. Não responda.
+
+Foi identificado que o serviço do barramento na máquina $HOSTNAME falhou!
+O barramento foi reiniciado automaticamente.
+Local da instalação: $OPENBUS_HOME
+Data desta verificação: $DATE
+Hostname: $HOSTNAME
+Script de inicialização: $OPENBUS_INIT
+
+Crontab da Máquina $HOSTNAME" |\
+	 mail -s "Falha e reinício do barramento na $HOSTNAME" $EMAIL
+fi
