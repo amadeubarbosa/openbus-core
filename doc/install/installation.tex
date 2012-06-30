@@ -162,7 +162,172 @@ ldap_timeout = 10
 \end{verbatim}
 \end{description}
 
+\section{Configurações opcionais para administradores do servidor}
+
+No pacote de instalação do barramento existem scripts que auxiliam algumas tarefas diárias comuns ao administrador da máquina onde o barramento está instalado. Esses scripts estão localizados na pasta \emph{bin} e são eles:
+\begin{description}
+   \item[openssl-generate.ksh] script com as pré-configurações adequadas para geração de pares de chaves pública e privada a serem usadas pelo barramento (seja no cadastro de novos serviços ou na instalação do próprio barramento).
+   \item[bus-init] script de inicialização para iniciar e parar o barramento, semelhante aos scripts do /etc/init.d em servidores Unix.
+   \item[bus-check-running] script que verifica se o barramento está executando e, caso não esteja, inicia o barramento utilizando o script \emph{bus-init}.
+\end{description}
+
+\subsection{Inicialização}
+
+Recomendamos que o administrador coloque o script \emph{bus-init} em /etc/init.d/openbus (ou outro lugar semelhante em seu sistema operacional) e faça o link simbólico apropriado para cada \textit{runlevel}. É \textbf{necessário editar o script \emph{bus-init}} para redefinir o local da instalação do barramento, de modo que o script possa encontrar o executável do \emph{busservices}. 
+
+Além disso, por padrão, este script salva um arquivo de nome \emph{busservices.pid} (contendo o PID do processo do \emph{busservices}) dentro do diretório de instalação do barramento. Caso o administrador queira, ele também pode mudar a localização desse arquivo dentro do script.
+
+Para utilizar o script \emph{bus-init} \textbf{é recomendado} que o administrador do sistema configure o barramento para utilizar um arquivo de configuração. Nesse caso o administrador \textbf{precisa} decidir onde colocar esse arquivo de configuração. Há duas formas de fazer isso utilizando o \emph{bus-init}:
+\begin{enumerate}
+   \item Criando um arquivo /etc/default/openbus e definindo a variável OPENBUS\_CONFIG. Exemplo:
+   \begin{verbatim}
+   OPENBUS_CONFIG=/etc/openbus.cfg
+   export OPENBUS_CONFIG
+   \end{verbatim}
+   \item Editando o script \emph{bus-init} e alterando a variável PARAMS com o parâmetro ``-configs'' e a localização do arquivo de configuração desejado. Exemplo:
+   \begin{verbatim}
+   PARAMS=-configs /etc/openbus.cfg
+   \end{verbatim}
+\end{enumerate} 
+
+\subsection{Monitoramento}
+
+O script \emph{bus-check-running} foi criado para ser utilizado em conjunto com o agendador de tarefas do sistema (comando \emph{cron} no Unix). Este script \textbf{aceita dois parâmetros} sendo que apenas o primeiro é obrigatório. O primeiro argumento deve indicar o local de instalação do barramento e o segundo um destinatário de email para receber as notificações de reinício do barramento (caso não seja informado, será enviado email para root@<hostname>). É importante observar que este script \textbf{depende} do script \emph{bus-init}.
+
+Além disso, caso o administrador coloque o \emph{bus-init} em outro local (que não seja /etc/init.d/openbus), \textbf{será necessário editar o script \emph{bus-check-running}} para redefinir a variável OPENBUS\_INIT. Da mesma forma, caso o administrador altere o local do arquivo \emph{busservices.pid} \textbf{também será necessário editar este script} para redefinir a variável PID\_BUSSERVICES.
+
+Um exemplo de agendamento no \emph{cron} para utilizar o \emph{bus-check-running} é dado a seguir, neste exemplo consideramos que o barramento está instalado em /opt/openbus-2.0:
+\begin{verbatim}
+*/10 * * * * /opt/openbus-2.0/bin/bus-check-running /opt/openbus-2.0
+\end{verbatim}
+
+\subsection{Rotacionamento de logs}
+
+Por padrão, o barramento imprime logs em tela. É \textbf{fortemente recomendado} configurar o barramento para salvar esses logs em arquivos conforme documentado em\cite{ob2.0core}. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
+
+O comando \textbf{logrotate} é um utilitário para simplificar a administração de arquivos de logs bem comum na maioria das instalações Linux e Solaris. O logrotate permite a rotação automática, a compressão dos logs antigos, a remoção de logs muito velhos e mesmo o envio de emails contendo os arquivos de logs.
+
+Para rotacionar os logs do barramento basta configurar o logrotate com as linhas a seguir, neste exemplo consideramos que o barramento salva o log em /var/log/openbus.log:
+\begin{verbatim}
+   /var/log/openbus.log {
+    weekly
+    compress
+    copytruncate
+    rotate 4
+   }
+\end{verbatim}
+
+Os significados das opções recomendadas acima são dados a seguir:
+\begin{enumerate}
+   \item O rotacionamento dos logs ocorre \textbf{semanalmente}.
+   \item Os logs antigos são comprimidos.
+   \item A opção \textbf{copytruncate} é necessária pois o barramento escreve continuamente no log e ocorrerá erro de escrita em disco caso os descritores de arquivos sejam alterados. Essa opção copia os arquivos de logs e depois reseta o arquivo original. É o procedimento mais seguro nesses casos.
+   \item Armazena-se até \textbf{4} volumes dos logs antigos.
+\end{enumerate}
+
+\subsubsection{Rotacionamento de logs usando o logadm (plataforma Solaris)}
+
+O \textbf{logadm} é muito parecido com o logrotate. Para a rotação dos logs, nós iremos utilizar o crontab e o logadm.
+Caso não seja o root da maquina, você deve utilizar o parâmetro -f para informar um arquivo de configuração. Esse arquivo irá conter todos os logs que você deseja rotacionar. Abaixo temos um exemplo de como configurar o logadmin para rotacionar os logs do barramento.
+
+\begin{itemize}
+   \item O agendamento do cron que faz o logadm ser executado todo dia ás 5:00AM:
+   \begin{verbatim}
+   00 05 * * * /usr/sbin/logadm -f /etc/openbus-logadm.conf
+   \end{verbatim}
+   \item No arquivo /etc/openbus-logadm.conf temos:
+   \begin{verbatim}
+   /var/log/openbus.log -C 5 -P 'Mon Jul 26 20:13:01 2010' -c -p 7d -z 0
+   \end{verbatim}
+\end{itemize}
+
+Os significados das opções recomendadas acima são dados a seguir:
+\begin{enumerate}
+   \item Os parâmetros \texttt{-C 5 -c -p 7d -z 0} que fazem com que o logadm guarde os 5 últimos logs, truncando-os e comprimindo-os no formato .gz. Essa ação será feita a cada 7 dias.
+   \item O parâmetro \texttt{-P} será adicionado pelo próprio logadm após a primeira execução, ele é responsável por controlar a próxima data que o rotacionamento ocorrerá.
+\end{enumerate}
+
 \section{FAQ}
+
+\subsection{Não lembro a sintaxe do crontab. Qual é ela mesmo?}
+
+\begin{verbatim}   
+.---------------- minuto (0 - 59)
+|  .------------- hora (0 - 23)
+|  |  .---------- dia do mês (1 - 31)
+|  |  |  .------- mês (1 - 12) 
+|  |  |  |  .---- dia da semana (0 - 6) (Domingo=0 ou 7) 
+|  |  |  |  |
+*  *  *  *  *  comando a ser executado e suas opções
+\end{verbatim}
+
+\subsection{Não lembro como editar o agendamento do cron. Como é mesmo?}
+
+Para adicionar um novo agendamento pode-se usar o arquivo global /etc/crontab (caso seja root) ou editar a tabela específica do usuário (todo usuário pode usar o cronpara rodar tarefas periódicas). O comando é:
+\begin{verbatim}
+crontab -e
+\end{verbatim}
+
+Um arquivo com os agendamentos já existentes será aberto e será possível adicionar conforme informado anteriormente. Se o arquivo está vazio é porque o usuário do sistema não tem nenhum agendamento ainda.
+
+\subsection{Onde devo salvar o arquivo de configuração do logrotate?}
+
+Na maioria das instalações Linux recentes já dispõem do diretório /etc/logrotate.d. Nesses casos, basta criar um arquivo chamado openbus (pode ser outro nome de sua preferência) e salvar as configurações acima nele.
+
+É importante que o administrador leia as páginas de manual do logrotate (man logrotate) pois podem haver diferenças na configuração para versões antigas desse utilitário. Uma das situações comum é não haver suporte ao diretório /etc/logrotate.d, nesses casos, basta adicionar as configurações acima no arquivo /etc/logrotate.conf.
+
+\subsection{Precisa ser configurada alguma permissão especial? Qual o owner e o grupo que a configuração do logrotate precisa ter?}
+
+Não é necessário nenhuma permissão especial, basta o proprietário ser root e ter leitura para qualquer usuário (pode haver plataformas onde o logrotate execute como outro usuário que não o root).
+
+\subsection{Onde os arquivos rotacionados são armazenados?}
+
+No mesmo diretório dos arquivos originais.
+
+\subsection{Preciso executar o comando ``logrotate /etc/logrotate.d/openbus''?}
+
+Não é preciso. Normalmente o logrotate é cadastrado como uma tarefa diária no cron. Mas isso não impede de que o administrador execute tal comando passando o parâmetro \-\-force para obrigar o primeiro rotacionamento. Isso é indicado principalmente logo após a configuração inicial.
+
+\subsection{Preciso configurar para o comando ``logrotate /etc/logrotate.d/openbus'' ser colocado na inicialização automática da máquina? Como saber que ele está executando?}
+
+O logrotate não é um daemon, portanto não se mantém em execução. Normalmente, o logrotate é executado através do agendamento do cron. Caso não haja cron disponível em uma dada plataforma, então nesse caso será sim importante executar o comando do logrotate na inicialização da máquina.
+
+\subsection{Como usar o logrotate SEM precisar ter acesso de administrador na máquina?}
+
+O logrotate pode ser usado por usuários desprivilegiados (aqueles que não possuem acesso de root). Contudo, é muito comum que esses usuários ainda queiram rotacionar periodicamente seus arquivos de log. Nessa situação, recomendamos que o usuário adicione regras no agendador de tarefas do Unix (cron) para que o comando do logrotate seja chamado (ao menos) diariamente.
+
+Para usuários desprivilegiados é importante usar alguns parâmetros do logrotate como o \-\-state. Esse parâmetro indica qual arquivo de estados será usado. O logrotate usa tal arquivo de estado para registrar a data da última rotação.
+
+Segue um exemplo de agendamento do cron para executar o logrotate diariamente às 12:00 horas para o barramento instalado em /opt/openbus-2.0:
+
+\begin{verbatim}
+  0 12 * * * /usr/sbin/logrotate --state /opt/openbus-2.0/logrotate.status /etc/openbus-logrotate.conf   
+\end{verbatim}
+
+É importante notar que o arquivo logrotate.status contendo o último estado da rotação foi mantido no diretório da instalação do barramento.
+
+\subsection{Como instalar o logrotate como usuário comum numa Solaris 10?}
+
+Nas plataformas Solaris a forma mais simples é baixar o pacote binário a partir do SunFreeware e usar diretamente da pasta do usuário. Um exemplo é dado a seguir:
+\begin{enumerate}
+   \item Download e extração do pacote a partir do sunfreeware:
+   \begin{verbatim}
+   wget -c ftp://ftp.sunfreeware.com/pub/freeware/sparc/10/logrotate-3.7.6-sol10-sparc-local.gz
+   gunzip logrotate-3.7.6-sol10-sparc-local.gz
+   mkdir /tmp/install
+   pkgtrans logrotate-3.7.6-sol10-sparc-local /tmp/install      
+   \end{verbatim}
+   \item Entendendo o conteúdo do pacote e copiando para uma pasta pessoal o binário principal:
+   \begin{verbatim}
+   ls -l /tmp/install/SMClogr/reloc/
+     drwxr-xr-x   3 openbus  tecgraf      512 Apr 12 15:24 doc
+     drwxr-xr-x   3 openbus  tecgraf      512 Apr 12 15:24 man
+     drwxr-xr-x   2 openbus  tecgraf      512 Apr 12 15:24 sbin
+   cp /tmp/install/SMClogr/reloc/sbin/logrotate $HOME/bin
+   \end{verbatim}
+\end{enumerate}
+
+Após esse procedimento basta ter a pasta \$HOME/bin no PATH.
 
 \subsection{Ainda estou com dúvidas. Como entro em contato?}
 
