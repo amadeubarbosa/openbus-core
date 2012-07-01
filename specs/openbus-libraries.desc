@@ -637,9 +637,7 @@ packages = {
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbus-micomultithread.*"] = "lib",
-      ["include/*.h"] = "include/openbus/cpp", --include
-      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
-      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["include/openbus"] = "include/openbus/cpp",    --include
       ["stubs"] = "include/openbus/cpp",     --include
       ["legacy/idl/*"] = "idl/legacy/openbus/cpp",     --include
       [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
@@ -668,9 +666,7 @@ packages = {
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbus-micomultithread-debug.*"] = "lib",
-      ["include/*.h"] = "include/openbus/cpp", --include
-      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
-      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["include/openbus"] = "include/openbus/cpp",    --include
       ["stubs"] = "include/openbus/cpp",     --include
       ["legacy/idl/*"] = "idl/legacy/openbus/cpp",     --include
       [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
@@ -699,9 +695,7 @@ packages = {
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbus-micosinglethread.*"] = "lib",
-      ["include/*.h"] = "include/openbus/cpp", --include
-      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
-      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["include/openbus"] = "include/openbus/cpp",    --include
       ["stubs"] = "include/openbus/cpp",     --include
       ["legacy/idl/*"] = "idl/legacy/openbus/cpp",     --include
       [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
@@ -730,9 +724,7 @@ packages = {
     },
     dev_files = {
       ["lib/${TEC_UNAME}/libopenbus-micosinglethread-debug.*"] = "lib",
-      ["include/*.h"] = "include/openbus/cpp", --include
-      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
-      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["include/openbus"] = "include/openbus/cpp",    --include
       ["stubs"] = "include/openbus/cpp",     --include
       ["legacy/idl/*"] = "idl/legacy/openbus/cpp",     --include
       [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
