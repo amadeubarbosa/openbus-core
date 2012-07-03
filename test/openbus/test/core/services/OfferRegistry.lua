@@ -62,6 +62,17 @@ local offerProps = {
 }
 
 -- Funções auxiliares ---------------------------------------------------------
+local function assertCondOrTimeout(condition,timeout)
+  if timeout == nil then timeout = 2 end
+  local deadline = oil.time()+timeout
+  while not condition() do
+    if oil.time() > deadline then
+      error("Assert failed after "..tostring(timeout).." seconds.",2)
+    end
+    oil.sleep(.1)
+  end
+end
+
 local function getPingImpl()
   local ping = {}
   function ping:ping()
@@ -519,11 +530,9 @@ function OfferObserversCase.testNotification(self)
   local cookie = tOffer:subscribeObserver(obs)
   local newProps = { offerProps[1], }
   tOffer:setProperties(newProps)
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(1, obs.wasChanged)
+  assertCondOrTimeout(function() return obs.wasChanged == 1 end)
   tOffer:remove()
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(1, obs.wasRemoved)
+  assertCondOrTimeout(function() return obs.wasRemoved == 1 end)
   self.serviceOffer = nil
 end
 
@@ -539,8 +548,7 @@ function OfferObserversCase.testMultipleNotification(self)
   local ok = tOffer:unsubscribeObserver(cookie2)
   tOffer:remove()
   self.serviceOffer = nil
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(2, obs.wasRemoved)
+  assertCondOrTimeout(function() return obs.wasRemoved == 2 end)
 end
 
 function OfferObserversCase.testSubscribe(self)
@@ -552,13 +560,11 @@ function OfferObserversCase.testSubscribe(self)
   local cookie = tOffer:subscribeObserver(obs)
   local newProps = { offerProps[1], }
   tOffer:setProperties(newProps)
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(1, obs.wasChanged)
+  assertCondOrTimeout(function() return obs.wasChanged == 1 end)
   local ok = tOffer:unsubscribeObserver(cookie)
   Check.assertTrue(ok)
   tOffer:remove()
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(0, obs.wasRemoved)
+  assertCondOrTimeout(function() return obs.wasRemoved == 0 end)
   self.serviceOffer = nil
 end
 
@@ -640,8 +646,7 @@ function RegistryObserversCase.testNotification(self)
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(1, obs.registered)
+  assertCondOrTimeout(function() return obs.registered == 1 end)
   local ok = self.offers:unsubscribeObserver(cookie)
   Check.assertTrue(ok)  
 end
@@ -654,14 +659,12 @@ function RegistryObserversCase.testMultipleNotification(self)
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(3, obs.registered)
+  assertCondOrTimeout(function() return obs.registered == 3 end)
   self.serviceOffer:remove()
   local ok = self.offers:unsubscribeObserver(cookie2)
   Check.assertTrue(ok)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(5, obs.registered)
+  assertCondOrTimeout(function() return obs.registered == 5 end)
   ok = self.offers:unsubscribeObserver(cookie1)
   ok = self.offers:unsubscribeObserver(cookie3)
 end
@@ -674,20 +677,16 @@ function RegistryObserversCase.testSubscribe(self)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(1, obs.registered)
+  assertCondOrTimeout(function() return obs.registered == 1 end)
   tOffer:setProperties(newProps)
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(2, obs.registered)
+  assertCondOrTimeout(function() return obs.registered == 2 end)
   newProps = { offerProps[2], }
   tOffer:setProperties(newProps)
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(2, obs.registered)
+  assertCondOrTimeout(function() return obs.registered == 2 end)
   local ok = self.offers:unsubscribeObserver(cookie)
   Check.assertTrue(ok)  
   tOffer:setProperties(offerProps)
-  oil.sleep(.1) -- wait notification to arrive
-  Check.assertEquals(2, obs.registered)
+  assertCondOrTimeout(function() return obs.registered == 2 end)
 end
 
 function RegistryObserversCase.testFailSubscription(self)
