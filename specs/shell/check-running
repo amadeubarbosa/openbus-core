@@ -1,20 +1,5 @@
 #!/bin/ksh
 
-#TECMAKE
-TECTOOLS_HOME=/home/t/tecgraf/lib
-TECMAKE_HOME=$TECTOOLS_HOME/tecmake
-export TECMAKE_HOME
-
-if [ -f $TECMAKE_HOME/tec_uname.bsh ]; then
-	# workaround to bad assigns in that tec_uname file
-	ORIG_TECMAKEHOME=$TECMAKE_HOME
-	ORIG_TECTOOLSHOME=$TECTOOLS_HOME
-	. $TECMAKE_HOME/tec_uname.bsh
-	# restoring the variables to the correct values
-	TECMAKE_HOME=$ORIG_TECMAKEHOME
-	TECTOOLS_HOME=$ORIG_TECTOOLSHOME
-fi
-
 function die {
         echo -e $@
         exit 1
@@ -37,8 +22,7 @@ export OPENBUS_DATADIR
 
 #OPENBUS_INIT=$OPENBUS_HOME/specs/shell/openbus.init
 OPENBUS_INIT=/etc/init.d/openbus
-[ -x "$OPENBUS_INIT" ] || die "ERROR: $OPENBUS_INIT not found or execute permission missing."
-
+[ -x "$OPENBUS_INIT" ] || die "ERROR: $OPENBUS_INIT not found or missing execution permission."
 
 HOSTNAME=$(hostname)
 
@@ -52,7 +36,7 @@ PID_ACS=$OPENBUS_DATADIR/acs.pid
 PID_RGS=$OPENBUS_DATADIR/rgs.pid
 PID_SS=$OPENBUS_DATADIR/ss.pid
 
-EMAIL=amadeu@tecgraf.puc-rio.br
+EMAIL=root@$HOSTNAME
 
 # function to check if is running actually
 is_running() {
@@ -108,18 +92,21 @@ if [ $ret -gt 0 ] ; then
 	gzip $CRASH_DIR/ss-$TAG.log
 	
 	$OPENBUS_INIT start
-	echo "Olá,
-Sou um notificador automático e identifiquei que os servicos do OpenBus na
-máquina $HOSTNAME falharam!
-Acabo de reiniciar os servicos, talvez seja importante você olhar os logs que
-foram salvos em:
+	echo "
+Essa é uma notificação automática. Não responda.
+
+Foi identificado que o serviço do barramento na máquina $HOSTNAME falhou!
+O barramento foi reiniciado automaticamente.
+Local da instalação: $OPENBUS_HOME
+Data desta verificação: $TAG
+Hostname: $HOSTNAME
+Script de inicialização: $OPENBUS_INIT
+
+Os logs com o relatório do erro foram salvos em:
   $CRASH_DIR/acs-$TAG.log
   $CRASH_DIR/rgs-$TAG.log
   $CRASH_DIR/ss-$TAG.log
 
-Atenciosamente,
-Crontab da Máquina $HOSTNAME
-Autor: Amadeu Barbosa (amadeu@tecgraf.puc-rio.br)" |\
+Crontab da Máquina $HOSTNAME" |\
 	 mail -s "Falha e reinício do barramento na $HOSTNAME" $EMAIL
 fi
-
