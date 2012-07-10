@@ -40,6 +40,16 @@ local InvalidParamCase = Suite.Test2 or {}
 local LRCase = Suite.Test3
 
 -- Funções auxiliares ---------------------------------------------------------
+local function assertCondOrTimeout(condition,timeout)
+  if timeout == nil then timeout = 2 end
+  local deadline = oil.time()+timeout
+  while not condition() do
+    if oil.time() > deadline then
+      error("Assert failed after "..tostring(timeout).." seconds.",2)
+    end
+    oil.sleep(.1)
+  end
+end
 
 local function findLoginInList(list, id)
   for k, info in ipairs(list) do
@@ -127,8 +137,7 @@ end
 
 function InvalidParamCase.testGetEntityLogins(self)
   local logins = self.conn.logins
-  local ok, infos = pcall(logins.getEntityLogins, logins, self.invalidId)
-  Check.assertTrue(ok)
+  local infos = logins:getEntityLogins(self.invalidId)
   Check.assertEquals(0, #infos)
 end
 
@@ -368,10 +377,9 @@ function LRCase.testSubscribeObserver(self)
   oil.newthread(orb.run, orb)
   conn2:logout()
   self.conn2 = nil
-  oil.sleep(.1) -- wait notification to arrive
+  -- check if observer was called properly (before a timeout)
+  assertCondOrTimeout(function() return logoutInfo ~= nil end, 1)
   orb:shutdown()
-  -- check if observer was called properly
-  Check.assertNotNil(logoutInfo)
   Check.assertEquals(loginId, logoutInfo.id)
   Check.assertEquals(dUser, logoutInfo.entity)
 end
