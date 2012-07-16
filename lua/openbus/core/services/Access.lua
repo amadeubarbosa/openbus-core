@@ -83,23 +83,21 @@ function BusInterceptor:__init()
   end
 end
 
-function BusInterceptor:validateChain(chain, caller)
+function BusInterceptor:buildChain(chain, caller)
   if chain == nil then
-    chain = { originators = {}, caller = caller, signature = true }
-  else
-    if chain.signature ~= nil then -- is not a legacy chain (OpenBus 1.5)
-                                   -- legacy chain is always created correctly
-      local signed = self.buskey:verify(sha256(chain.encoded), chain.signature)
-      if signed and chain.target == caller.id then
-        local originators = chain.originators
-        originators[#originators+1] = chain.caller -- add last originator
-        chain.caller = caller -- add caller to the chain
-      else
-        chain = nil -- invalid chain: unsigned or chain was not for the caller
-      end
-    end
+    return {
+      originators = {},
+      caller = caller,
+      signature = true,
+      target = self.login.id,
+    }
+  elseif chain.target == caller.id then
+    local originators = chain.originators
+    originators[#originators+1] = chain.caller -- add last originator
+    chain.caller = caller -- add caller to the chain
+    chain.target = self.login.id
+    return chain
   end
-  return chain
 end
 
 function BusInterceptor:joinedChainFor(remoteid, chain)
