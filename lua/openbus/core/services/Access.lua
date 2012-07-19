@@ -40,6 +40,11 @@ local PredefinedUserSets = {
   all = Everybody,
 }
 
+local function getLoginInfoFor(self, loginId)
+  return self.logins:getLoginEntry(loginId)
+      or { id = loginId, entity = "<unknown>" }
+end
+
 
 
 local BusInterceptor = class({}, Interceptor)
@@ -83,21 +88,26 @@ function BusInterceptor:__init()
   end
 end
 
-function BusInterceptor:buildChain(chain, caller)
-  if chain == nil then
-    return {
-      originators = {},
-      caller = caller,
-      signature = true,
-      target = self.login.id,
-    }
-  elseif chain.target == caller.id then
-    local originators = chain.originators
-    originators[#originators+1] = chain.caller -- add last originator
-    chain.caller = caller -- add caller to the chain
-    chain.target = self.login.id
-    return chain
+function BusInterceptor:unmarshalCredential(...)
+  local credential = Interceptor.unmarshalCredential(self, ...)
+  if credential ~= nil then
+    local chain = credential.chain
+    if chain == nil then
+      chain = {
+        signature = false,
+        originators = {},
+        caller = getLoginInfoFor(self, credential.login),
+        target = self.login.id,
+      }
+      credential.chain = chain
+    else
+      local originators = chain.originators
+      originators[#originators+1] = chain.caller -- add last originator
+      chain.caller = getLoginInfoFor(self, chain.target)
+      chain.target = self.login.id
+    end
   end
+  return credential
 end
 
 function BusInterceptor:joinedChainFor(remoteid, chain)
