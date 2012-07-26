@@ -28,7 +28,6 @@ local server = require "openbus.util.server"
 local ConfigArgs = server.ConfigArgs
 local newSCS = server.newSCS
 local setuplog = server.setuplog
-local readfilecontents = server.readfilecontents
 local readprivatekey = server.readprivatekey
 
 local idl = require "openbus.core.idl"

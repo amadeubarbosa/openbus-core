@@ -359,7 +359,7 @@ function OfferRegistry:__init(data)
           login = login,
         })
         if self.enforceAuth and EntityRegistry:getEntity(entity) == nil then
-          ServiceFailure{
+          sysex.ServiceFailure{
             message = msg.CorruptedDatabaseDueToMissingEntity:tag{
               entity = entity,
             }
