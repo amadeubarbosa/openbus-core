@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONSOLE="${OPENBUS_HOME}/bin/busconsole"
+CONSOLE="${OPENBUS_HOME}/bin/busconsole -d"
 RUNNER="${CONSOLE} ${OPENBUS_HOME}/lib/lua/5.1/latt/ConsoleTestRunner.lua"
 
 LUACASES="\

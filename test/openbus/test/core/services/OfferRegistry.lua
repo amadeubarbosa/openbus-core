@@ -30,7 +30,7 @@ local entity = system
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB{ localrefs="proxy" }
 local connections = orb.OpenBusConnectionManager
-local connprops = { privatekey = pubkey.create(idl.const.EncryptedBlockSize) }
+local connprops = { accesskey = pubkey.create(idl.const.EncryptedBlockSize) }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}

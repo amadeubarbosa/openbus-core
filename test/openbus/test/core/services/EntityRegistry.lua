@@ -25,7 +25,7 @@ local dPassword = password
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
 local connections = orb.OpenBusConnectionManager
-local connprops = { privatekey = pubkey.create(idl.const.EncryptedBlockSize) }
+local connprops = { accesskey = pubkey.create(idl.const.EncryptedBlockSize) }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}

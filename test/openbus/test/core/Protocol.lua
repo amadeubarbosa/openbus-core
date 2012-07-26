@@ -27,6 +27,8 @@ local credtypes = idl.types.credential
 bushost, busport = ...
 require "openbus.util.testcfg"
 
+syskey = assert(decodeprvkey(syskey))
+
 do -- CORBA GIOP message context manipuation functions
   
   local receive = {

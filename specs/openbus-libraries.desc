@@ -89,6 +89,12 @@ packages = {
       ["html"] = "doc/openbus_"..IDL_PREV,
     },
   },
+  { name = "sdk-idl-source",
+    url = SVNREPURL .. "/openbus/sdk/idl/trunk",
+    install_files = {
+      ["src/*.idl"] = "idl/lib",
+    }
+  },
   { name = "sdk-java-source",
     url = SVNREPURL .. "/openbus/sdk/java/branches/v2_proto",
     directory = PRODAPP .."/sdk-java",
