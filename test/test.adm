@@ -1,13 +1,8 @@
-require "openbus.util.testcfg"
+require "openbus.test.configs"
 
 Category {
   id = category,
   name = "OpenBus 2.0 Test Entities",
-}
-Entity {
-  id = user,
-  category = category,
-  name = "OpenBus 2.0 Test User",
 }
 Entity {
   id = system,

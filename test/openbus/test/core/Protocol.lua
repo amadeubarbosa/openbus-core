@@ -24,10 +24,13 @@ local loginconst = idl.const.services.access_control
 local logintypes = idl.types.services.access_control
 local credtypes = idl.types.credential
 
-bushost, busport = ...
-require "openbus.util.testcfg"
+local server = require "openbus.util.server"
+local readfrom = server.readfrom
 
-syskey = assert(decodeprvkey(syskey))
+bushost, busport = ...
+require "openbus.test.configs"
+
+syskey = assert(decodeprvkey(readfrom(syskey)))
 
 do -- CORBA GIOP message context manipuation functions
   

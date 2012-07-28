@@ -9,7 +9,7 @@ local assert = _G.assert
 -------------------------------------------------------------------------------
 -- configuração do teste
 bushost, busport = ...
-require "openbus.util.testcfg"
+require "openbus.test.configs"
 local host = bushost
 local port = busport
 local admin = admin

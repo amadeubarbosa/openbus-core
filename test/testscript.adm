@@ -1,4 +1,4 @@
-require "openbus.util.testcfg"
+require "openbus.test.configs"
 
 Category {
   id = "TEST_Category",

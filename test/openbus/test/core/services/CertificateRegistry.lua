@@ -14,7 +14,7 @@ local Check = require "latt.Check"
 
 -- Configurações --------------------------------------------------------------
 bushost, busport = ...
-require "openbus.util.testcfg"
+require "openbus.test.configs"
 local host = bushost
 local port = busport
 local admin = admin
