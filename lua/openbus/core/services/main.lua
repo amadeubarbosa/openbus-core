@@ -136,7 +136,9 @@ Options:
   assert(#validators>0, msg.NoPasswordValidators)
 
   -- setup bus access
-  local orb = access.initORB{ host=Configs.host, port=Configs.port }
+  local address = { host=Configs.host, port=Configs.port }
+  log:config(msg.ServicesListeningAddress:tag(address))
+  local orb = access.initORB(address)
   local legacy
   if not Configs.nolegacy then
     local legacyIDL = require "openbus.core.legacy.idl"
