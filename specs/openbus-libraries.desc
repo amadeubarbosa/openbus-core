@@ -15,7 +15,7 @@ packages = {
     directory = PRODAPP .."/oil-0.5.0", 
   },
   { name = "idl-source",
-    url = SVNREPURL .. "/openbus/idl/trunk",
+    url = SVNREPURL .. "/openbus/idl/branches/OB_IDL_v1_05_2010_05_13",
     directory = PRODAPP .."/idl",
     install_files = {
       ["src/*.idl"] = "idl/"..IDL_VERSION,
@@ -55,7 +55,7 @@ packages = {
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
-    url = SVNREPURL .. "/openbus/sdk/lua/trunk",
+    url = SVNREPURL .. "/openbus/sdk/lua/branches/OB_SDK_LUA_v1_05_04_2012_07_31",
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
@@ -63,7 +63,7 @@ packages = {
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
-    url = SVNREPURL .. "/openbus/trunk",
+    url = SVNREPURL .. "/openbus/branches/OB_v1_05_04_2012_07_31",
     directory = SVNDIR, -- main source directory for PUts!
                         -- other sources have to be in PRODAPP/something
   },
@@ -398,7 +398,7 @@ packages = {
   },
   -- FIXME: esse pacote deve ser removido quando concluir OPENBUS-1372
   { name = "openbus-lua-extras",
-    url = SVNREPURL .. "/openbus/trunk/data",
+    url = SVNREPURL .. "/openbus/branches/OB_v1_05_04_2012_07_31/data",
     directory = SVNDIR .. "/data", -- main source directory for PUts!
     install_files = {
       ["conf/config"] = "data/conf",
