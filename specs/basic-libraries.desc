@@ -3,7 +3,7 @@
 basesoft = {
   {
     name = "boost_1_48_0",
-    url = "http://ufpr.dl.sourceforge.net/project/boost/boost/1.48.0/boost_1_48_0.zip",
+    url = "http://www.tecgraf.puc-rio.br/ftp_pub/openbus/repository/boost_1_48_0.tgz",
     build = 
     {
       type = "bjam",
