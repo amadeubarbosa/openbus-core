@@ -52,7 +52,7 @@ packages = {
     directory = PRODAPP .."/oil", 
   },
   { name = "idl-source",
-    url = SVNREPURL .. "/openbus/idl/branches/openbus_v2_proto",
+    url = SVNREPURL .. "/openbus/idl/trunk",
     directory = PRODAPP .."/idl",
     install_files = {
       ["src/*.idl"] = "idl/"..IDL_VERSION,
@@ -100,7 +100,7 @@ packages = {
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
-    url = SVNREPURL .. "/openbus/sdk/lua/branches/openbus_v2_proto",
+    url = SVNREPURL .. "/openbus/sdk/lua/trunk",
     directory = PRODAPP .."/sdk-lua",
   },
   { name = "sdk-cpp-source",
