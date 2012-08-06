@@ -8,6 +8,11 @@ local rawset = _G.rawset
 local hash = require "lce.hash"
 local sha256 = hash.sha256
 
+local table = require "loop.table"
+local memoize = table.memoize
+
+local LRUCache = require "loop.collection.LRUCache"
+
 local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
 
@@ -86,6 +91,20 @@ function BusInterceptor:__init()
       },
     }, { __index = function() return defOpAccess end })
   end
+
+  self.signedChainOf = memoize(function(chain) -- [chain] = SignedChainCache
+    return LRUCache{ -- [remoteid] = signedChain
+      retrieve = function(remoteid)
+        local originators = { unpack(chain.originators) }
+        originators[#originators+1] = chain.caller
+        return self.AccessControl:encodeChain{
+          target = remoteid,
+          originators = originators,
+          caller = self.login,
+        }
+      end,
+    }
+  end, "k")
 end
 
 function BusInterceptor:unmarshalCredential(...)
@@ -110,14 +129,8 @@ function BusInterceptor:unmarshalCredential(...)
   return credential
 end
 
-function BusInterceptor:joinedChainFor(remoteid, chain)
-  local originators = { unpack(chain.originators) }
-  originators[#originators+1] = chain.caller
-  return self.AccessControl:encodeChain{
-    target = remoteid,
-    originators = originators,
-    caller = self.login,
-  }
+function BusInterceptor:signChainFor(remoteid, chain)
+  return self.signedChainOf[chain]:get(remoteid)
 end
 
 
