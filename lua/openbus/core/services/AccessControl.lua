@@ -564,8 +564,6 @@ end
 
 function LoginRegistry:getValidity(ids)
   local logins = AccessControl.activeLogins
-  local leaseTime = AccessControl.leaseTime
-  local expirationGap = AccessControl.expirationGap
   local now = time()
   local validity = {}
   for index, id in ipairs(ids) do
@@ -584,7 +582,7 @@ function LoginRegistry:getValidity(ids)
       end
       validity[index] = timeleft
     elseif id == AccessControl.login.id then
-      validity[index] = leaseTime
+      validity[index] = AccessControl.leaseTime
     else
       validity[index] = 0
     end

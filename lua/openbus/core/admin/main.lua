@@ -18,7 +18,6 @@ local openbus = require "openbus"
 local log = require "openbus.util.logger"
 local access = require "openbus.core.Access"
 local neworb = access.initORB
-local log = require "openbus.util.logger"
 local printer = require "openbus.core.admin.print"
 local script = require "openbus.core.admin.script"
 local messages = require "openbus.core.admin.messages"
