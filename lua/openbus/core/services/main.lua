@@ -108,8 +108,10 @@ Options:
 
   -- setup log files
   setuplog(log, Configs.loglevel, Configs.logfile)
-  setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
   log:version(msg.CopyrightNotice)
+  log:config(msg.CoreServicesLogLevel:tag{value=Configs.loglevel})
+  setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
+  log:config(msg.OilLogLevel:tag{value=Configs.oilloglevel})
 
   -- validate time parameters
   assert(Configs.leasetime > 0 and Configs.leasetime%1 == 0,
