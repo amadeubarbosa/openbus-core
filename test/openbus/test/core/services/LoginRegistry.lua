@@ -4,8 +4,6 @@ local ipairs = _G.ipairs
 
 local oil = require "oil"
 
-local pubkey = require "lce.pubkey"
-
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local srvtypes = idl.types.services
@@ -25,8 +23,8 @@ local dPassword = password
 
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
-local connections = orb.OpenBusConnectionManager
-local connprops = { accesskey = pubkey.create(idl.const.EncryptedBlockSize) }
+local OpenBusContext = orb.OpenBusContext
+local connprops = { accesskey = openbus.newKey() }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -75,34 +73,34 @@ end
 -------------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
 end
 
 function NoPermissionCase.afterTestCase(self)
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
 end
 
 function NoPermissionCase.testGetAllLogins(self)
-  local logins = self.conn.logins
+  local logins = OpenBusContext:getLoginRegistry()
   local ok, err = pcall(logins.getAllLogins, logins)
   Check.assertTrue(not ok)
   Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testGetEntityLogins(self)
-  local logins = self.conn.logins
+  local logins = OpenBusContext:getLoginRegistry()
   local ok, err = pcall(logins.getEntityLogins, logins, "entity")
   Check.assertTrue(not ok)
   Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testInvalidateLogin(self)
-  local logins = self.conn.logins
+  local logins = OpenBusContext:getLoginRegistry()
   local ok, err = pcall(logins.invalidateLogin, logins, "login-id")
   Check.assertTrue(not ok)
   Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
@@ -113,17 +111,17 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
-  self.logins = conn.logins
+  self.logins = OpenBusContext:getLoginRegistry()
   self.invalidId = "invalid-login-id"
 end
 
 function InvalidParamCase.afterTestCase(self)
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
   self.logins = nil
 end
@@ -136,20 +134,20 @@ function InvalidParamCase.afterEachTest(self)
 end
 
 function InvalidParamCase.testGetEntityLogins(self)
-  local logins = self.conn.logins
+  local logins = OpenBusContext:getLoginRegistry()
   local infos = logins:getEntityLogins(self.invalidId)
   Check.assertEquals(0, #infos)
 end
 
 function InvalidParamCase.testInvalidateLogin(self)
-  local logins = self.logins
+  local logins = OpenBusContext:getLoginRegistry()
   local ok, ret = pcall(logins.invalidateLogin, logins, self.invalidId)
   Check.assertTrue(ok)
   Check.assertFalse(ret)
 end
 
 function InvalidParamCase.testGetLoginInfo(self)
-  local logins = self.logins
+  local logins = OpenBusContext:getLoginRegistry()
   local ok, err = pcall(logins.getLoginInfo, logins, self.invalidId)
   Check.assertTrue(not ok)
   Check.assertEquals(logintypes.InvalidLogins, err._repid)
@@ -195,11 +193,11 @@ function InvalidParamCase.testSubscribeInvalidObserver(self)
   -- The CORBA error is NO_PERMISSION
   -- loggin in again so 'afterTestCase' can logout
   self.conn:loginByPassword(admin, adminPassword)
-  self.logins = self.conn.logins
+  self.logins = OpenBusContext:getLoginRegistry()
 end
 
 function InvalidParamCase.test2ConnectionSubscribeInvalidObserver(self)
-  local conn2 = connections:createConnection(host, port, connprops)
+  local conn2 = OpenBusContext:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe observer
@@ -225,16 +223,16 @@ end
 -------------------------------------
 
 function LRCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
-  self.logins = conn.logins
+  self.logins = OpenBusContext:getLoginRegistry()
 end
 
 function LRCase.afterTestCase(self)
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
   self.logins = nil
 end
@@ -258,7 +256,7 @@ end
 
 function LRCase.test2ConnectionGetAllLogins(self)
   local logins = self.logins
-  local conn2 = connections:createConnection(host, port, connprops)
+  local conn2 = OpenBusContext:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local ok, list = pcall(logins.getAllLogins, logins)
@@ -286,7 +284,7 @@ end
 
 function LRCase.testInvalidateLogin(self)
   local logins = self.logins
-  local conn2 = connections:createConnection(host, port, connprops)
+  local conn2 = OpenBusContext:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- check login
@@ -320,16 +318,17 @@ end
 
 function LRCase.testGetLoginInfo(self)
   local logins = self.logins
-  local conn2 = connections:createConnection(host, port, connprops)
+  local conn2 = OpenBusContext:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local info = logins:getLoginInfo(conn2.login.id)
   Check.assertNotNil(info)
   Check.assertEquals(conn2.login.id, info.id)
   Check.assertEquals(dUser, info.entity)
-  connections:setRequester(conn2)
-  local ok, info = pcall(conn2.logins.getLoginInfo, conn2.logins, self.conn.login.id)
-  connections:setRequester(nil)
+  OpenBusContext:setCurrentConnection(conn2)
+  local logins2 = OpenBusContext:getLoginRegistry()
+  local ok, info = pcall(logins2.getLoginInfo, logins2, self.conn.login.id)
+  OpenBusContext:setCurrentConnection(nil)
   Check.assertTrue(ok, info)
   Check.assertNotNil(info)
   Check.assertEquals(self.conn.login.id, info.id)
@@ -347,7 +346,7 @@ end
 
 function LRCase.test2ConnectionsGetValidity(self)
   local logins = self.logins
-  local conn2 = connections:createConnection(host, port, connprops)
+  local conn2 = OpenBusContext:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   local list = { self.conn.login.id, conn2.login.id }
@@ -359,7 +358,7 @@ function LRCase.test2ConnectionsGetValidity(self)
 end
 
 function LRCase.testSubscribeObserver(self)
-  local conn2 = connections:createConnection(host, port, connprops)
+  local conn2 = OpenBusContext:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
   -- subscribe login observer

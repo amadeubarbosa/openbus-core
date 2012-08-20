@@ -26,6 +26,7 @@ local types = idl.types.services
 local msg = require "openbus.core.messages"
 local access = require "openbus.core.Access"
 local setNoPermSysEx = access.setNoPermSysEx
+local Context = access.Context
 local Interceptor = access.Interceptor
 local receiveBusRequest = Interceptor.receiverequest
 
@@ -46,15 +47,29 @@ local PredefinedUserSets = {
 }
 
 local function getLoginInfoFor(self, loginId)
-  return self.logins:getLoginEntry(loginId)
+  return self.LoginRegistry:getLoginEntry(loginId)
       or { id = loginId, entity = "<unknown>" }
 end
 
 
 
-local BusInterceptor = class({}, Interceptor)
+local BusInterceptor = class({}, Context, Interceptor)
 
 function BusInterceptor:__init()
+  self.context = self
+  self.signedChainOf = memoize(function(chain) -- [chain] = SignedChainCache
+    return LRUCache{ -- [remoteid] = signedChain
+      retrieve = function(remoteid)
+        local originators = { unpack(chain.originators) }
+        originators[#originators+1] = chain.caller
+        return self.AccessControl:encodeChain{
+          target = remoteid,
+          originators = originators,
+          caller = self.login,
+        }
+      end,
+    }
+  end, "k")
   do
     local forAllOps = Everybody
     
@@ -91,20 +106,6 @@ function BusInterceptor:__init()
       },
     }, { __index = function() return defOpAccess end })
   end
-
-  self.signedChainOf = memoize(function(chain) -- [chain] = SignedChainCache
-    return LRUCache{ -- [remoteid] = signedChain
-      retrieve = function(remoteid)
-        local originators = { unpack(chain.originators) }
-        originators[#originators+1] = chain.caller
-        return self.AccessControl:encodeChain{
-          target = remoteid,
-          originators = originators,
-          caller = self.login,
-        }
-      end,
-    }
-  end, "k")
 end
 
 function BusInterceptor:unmarshalCredential(...)
@@ -133,28 +134,14 @@ function BusInterceptor:signChainFor(remoteid, chain)
   return self.signedChainOf[chain]:get(remoteid)
 end
 
-
-
-function BusInterceptor:setGrantedUsers(interface, operation, users)
-  local accessByIface = self.grantedUsers
-  local accessByOp = rawget(accessByIface, interface)
-  if accessByOp == nil then
-    accessByOp = self.newOpAccess()
-    accessByIface[interface] = accessByOp
-  end
-  accessByOp[operation] = PredefinedUserSets[users] or users
-end
-
-
-
 function BusInterceptor:receiverequest(request)
   if request.servant ~= nil then -- servant object does exist
-    local opName = request.operation_name
-    if opName:find("_", 1, true) ~= 1
-    or opName:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
+    local op = request.operation_name
+    if op:find("_", 1, true) ~= 1
+    or op:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
       receiveBusRequest(self, request)
       if request.success == nil then
-        local granted = self.grantedUsers[request.interface.repID][opName]
+        local granted = self.context.grantedUsers[request.interface.repID][op]
         local chain = self:getCallerChain()
         if chain ~= nil then
           local login = chain.caller
@@ -185,6 +172,16 @@ function BusInterceptor:receiverequest(request)
       end
     end
   end
+end
+
+function BusInterceptor:setGrantedUsers(interface, operation, users)
+  local accessByIface = self.grantedUsers
+  local accessByOp = rawget(accessByIface, interface)
+  if accessByOp == nil then
+    accessByOp = self.newOpAccess()
+    accessByIface[interface] = accessByOp
+  end
+  accessByOp[operation] = PredefinedUserSets[users] or users
 end
 
 

@@ -155,10 +155,26 @@ Options:
   }
   orb:setinterceptor(iceptor, "corba")
   
-  -- create SCS component
+  -- prepare facets to be published as CORBA objects
   local facets = {}
-  copy(AccessControl, facets)
-  copy(OfferRegistry, facets)
+  do
+    local facetmodules = {
+      access_control = AccessControl,
+      offer_registry = OfferRegistry,
+    }
+    local objkeyfmt = idl.const.BusObjectKey.."/%s"
+    for modname, modfacets in pairs(facetmodules) do
+      local types = idl.types.services[modname]
+      for name, facet in pairs(modfacets) do
+        facet.__type = types[name]
+        facet.__facet = name
+        facet.__objkey = objkeyfmt:format(name)
+        facets[name] = facet
+      end
+    end
+  end
+
+  -- create SCS component
   newSCS{
     orb = orb,
     objkey = const.BusObjectKey,
@@ -202,7 +218,7 @@ Options:
       receptacles = {RegistryServiceReceptacle="IDL:scs/core/IComponent:1.0"},
       init = function()
         AccessControlService.IAccessControlService:__init{
-          access = iceptor,
+          access = iceptor.context,
           admins = adminUsers,
         }
       end,

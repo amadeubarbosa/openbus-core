@@ -6,8 +6,6 @@ local oil = require "oil"
 local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
 
-local pubkey = require "lce.pubkey"
-
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local offertypes = idl.types.services.offer_registry
@@ -29,8 +27,8 @@ local entity = system
 
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB{ localrefs="proxy" }
-local connections = orb.OpenBusConnectionManager
-local connprops = { accesskey = pubkey.create(idl.const.EncryptedBlockSize) }
+local OpenBusContext = orb.OpenBusContext
+local connprops = { accesskey = openbus.newKey() }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -139,18 +137,18 @@ end
 
 -- Funções de configuração de testes padrão -----------------------------------
 local function beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(self.user or entity, self.password or entity)
   self.conn = conn
-  self.offers = conn.offers
+  self.offers = OpenBusContext:getOfferRegistry()
   oil.newthread(conn.orb.run, conn.orb)
 end
 
 local function afterTestCase(self)
   self.conn.orb:shutdown()
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
   self.offers = nil
 end
@@ -301,7 +299,7 @@ function AuthorizationInUseCase.afterTestCase(self)
   local aconn = self.aconn
   if aconn ~= nil then
     aconn:logout()
-    connections:setRequester(nil)
+    OpenBusContext:setCurrentConnection(nil)
     self.aconn = nil
   end
   self.serviceOffer:remove()
@@ -309,10 +307,10 @@ function AuthorizationInUseCase.afterTestCase(self)
 end
 
 function AuthorizationInUseCase.testAuhtorizationInUse(self)
-  self.aconn = connections:createConnection(host, port, connprops)
-  connections:setRequester(self.aconn)
+  self.aconn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setCurrentConnection(self.aconn)
   self.aconn:loginByPassword(admin, adminPassword)
-  local entities = self.aconn.entities
+  local entities = OpenBusContext:getEntityRegistry()
   local theEntity = entities:getEntity(entity)
   local ok, err = pcall(theEntity.revokeInterface, theEntity, "IDL:Ping:1.0")
   Check.assertTrue(not ok)

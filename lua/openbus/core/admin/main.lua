@@ -36,7 +36,7 @@ local login, password
 local host, port
 local connection
 local orb = openbus.initORB{ localrefs="proxy" }
-local connections = orb.OpenBusConnectionManager
+local OpenBusContext = orb.OpenBusContext
 
 -- Guarda as funções que serão os tratadores das ações de linha de comando
 local handlers = {}
@@ -1258,8 +1258,7 @@ handlers["report"] = function(cmd)
   legacy = nil
   orb = nil
 
-  local conn = connections:createConnection(host, port)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port)
   local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
   if not ok then
     msg = "[ERRO] Não foi possível logar no barramento! %s"
@@ -1273,6 +1272,16 @@ handlers["report"] = function(cmd)
     end
     return false
   end
+  OpenBusContext:setDefaultConnection(conn)
+  -- TODO:[maia] Code is too much repetivie to make the following changes as
+  --             they should be done. Using the following workaround do avoid
+  --             changing the same code repeated many times in the code.
+  conn.logins = OpenBusContext:getLoginRegistry()
+  conn.certificates = OpenBusContext:getCertificateRegistry()
+  conn.entities = OpenBusContext:getEntityRegistry()
+  conn.interfaces = OpenBusContext:getInterfaceRegistry()
+  conn.offers = OpenBusContext:getOfferRegistry()
+  -- END OF TODO
   connection = conn
   local isadmin = false
 
@@ -1391,8 +1400,8 @@ function connect(retry)
     return connection
   end
   --TODO: implementar mecanismo de retry.  
-  local conn = connections:createConnection(host, port)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port)
+  OpenBusContext:setDefaultConnection(conn)
   local localPassword = password
   if not localPassword then
     localPassword = lpw.getpass("Senha: ")
@@ -1410,6 +1419,15 @@ function connect(retry)
     end
     return nil
   end
+  -- TODO:[maia] Code is too much repetivie to make the following changes as
+  --             they should be done. Using the following workaround do avoid
+  --             changing the same code repeated many times in the code.
+  conn.logins = OpenBusContext:getLoginRegistry()
+  conn.certificates = OpenBusContext:getCertificateRegistry()
+  conn.entities = OpenBusContext:getEntityRegistry()
+  conn.interfaces = OpenBusContext:getInterfaceRegistry()
+  conn.offers = OpenBusContext:getOfferRegistry()
+  -- END OF TODO
   connection = conn
   return connection
 end
@@ -1455,9 +1473,9 @@ return function(...)
       returned = f(command)
     end
     --
-    if connection ~= nil and connection.login ~= nil then
+    if connection ~= nil then
       connection:logout()
-      connections:setDefaultConnection(nil)
+      OpenBusContext:setDefaultConnection(nil)
       connection = nil
     end
     if returned then

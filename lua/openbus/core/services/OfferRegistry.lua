@@ -39,7 +39,6 @@ local assert = idl.serviceAssertion
 local srvex = idl.throw.services
 local throw = idl.throw.services.offer_registry
 local types = idl.types.services.offer_registry
-local const = idl.const.services.offer_registry
 
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
@@ -279,10 +278,7 @@ function Offer:unsubscribeObserver(cookie)
 end
 
 
-OfferRegistry = { -- is local (see forward declaration)
-  __type = types.OfferRegistry,
-  __objkey = const.OfferRegistryFacet,
-}
+OfferRegistry = {} -- is local (see forward declaration)
 
 function OfferRegistry:loginRemoved(login)
   do -- observers
@@ -567,8 +563,6 @@ end
 ------------------------------------------------------------------------------
 
 local InterfaceRegistry = {
-  __type = types.InterfaceRegistry,
-  __objkey = const.InterfaceRegistryFacet,
   interfaces = {},
 }
 
@@ -821,10 +815,7 @@ end
 
 
 
-EntityRegistry = { -- is local (see forward declaration)
-  __type = types.EntityRegistry,
-  __objkey = const.EntityRegistryFacet,
-}
+EntityRegistry = {} -- is local (see forward declaration)
 
 function EntityRegistry:__init(data)
   -- initialize attributes

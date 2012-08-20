@@ -3,8 +3,6 @@ local pcall = _G.pcall
 
 local io = require "io"
 
-local pubkey = require "lce.pubkey"
-
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local srvtypes = idl.types.services
@@ -25,8 +23,8 @@ local certificate = syscrt
 
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
-local connections = orb.OpenBusConnectionManager
-local connprops = { accesskey = pubkey.create(idl.const.EncryptedBlockSize) }
+local OpenBusContext = orb.OpenBusContext
+local connprops = { accesskey = openbus.newKey() }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -51,20 +49,20 @@ local CRCase = Suite.Test3
 --------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
 end
 
 function NoPermissionCase.afterTestCase(self)
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
 end
 
 function NoPermissionCase.testRegisterCertificateNoPermission(self)
-  local certificates = self.conn.certificates
+  local certificates = OpenBusContext:getCertificateRegistry()
   local file = io.open(certificate)
   local cert = file:read("*a")
   file:close()
@@ -75,14 +73,14 @@ function NoPermissionCase.testRegisterCertificateNoPermission(self)
 end
 
 function NoPermissionCase.testGetCertificateNoPermission(self)
-  local certificates = self.conn.certificates
+  local certificates = OpenBusContext:getCertificateRegistry()
   local ok, err = pcall(certificates.getCertificate, certificates, "random")
   Check.assertTrue(not ok)
   Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testRemoveCertificateNoPermission(self)
-  local certificates = self.conn.certificates
+  local certificates = OpenBusContext:getCertificateRegistry()
   local ok, err = pcall(certificates.removeCertificate, certificates, "random")
   Check.assertTrue(not ok)
   Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)  
@@ -93,16 +91,16 @@ end
 -------------------------------------
 
 function InvalidParamCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
-  self.certs = conn.certificates
+  self.certs = OpenBusContext:getCertificateRegistry()
 end
 
 function InvalidParamCase.afterTestCase(self)
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
   self.certs = nil
 end
@@ -147,16 +145,16 @@ end
 -------------------------------------
 
 function CRCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
-  self.certs = conn.certificates
+  self.certs = OpenBusContext:getCertificateRegistry()
 end
 
 function CRCase.afterTestCase(self)
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
   self.certs = nil
 end

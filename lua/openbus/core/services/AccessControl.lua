@@ -57,10 +57,7 @@ local Logins = require "openbus.core.services.LoginDB"
 -- Faceta CertificateRegistry
 ------------------------------------------------------------------------------
 
-local CertificateRegistry = {
-  __type = types.CertificateRegistry,
-  __objkey = const.CertificateRegistryFacet,
-}
+local CertificateRegistry = {}
 
 -- local operations
 
@@ -177,9 +174,6 @@ end
 local LoginRegistry -- forward declaration
 
 local AccessControl = {
-  __type = types.AccessControl,
-  __objkey = const.AccessControlFacet,
-  
   login = {id=idl.const.BusLogin, entity=idl.const.BusEntity},
   pendingChallenges = {}
 }
@@ -211,7 +205,7 @@ function AccessControl:__init(data)
   local encodedkey = assert(access.prvkey:encode("public"))
   self.buskey = encodedkey
   access.AccessControl = self
-  access.logins = self
+  access.LoginRegistry = self
   access.login = self.login
   access.busid = busid
   access.buskey = decodepublickey(encodedkey)
@@ -462,10 +456,7 @@ end
 
 
 
-LoginRegistry = {
-  __type = types.LoginRegistry,
-  __objkey = const.LoginRegistryFacet,
-}
+LoginRegistry = {}
 
 -- local operations
 

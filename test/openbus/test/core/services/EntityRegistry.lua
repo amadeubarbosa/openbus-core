@@ -3,8 +3,6 @@ local pcall = _G.pcall
 
 local io = require "io"
 
-local pubkey = require "lce.pubkey"
-
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local srvtypes = idl.types.services
@@ -24,8 +22,8 @@ local dPassword = password
 
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
-local connections = orb.OpenBusConnectionManager
-local connprops = { accesskey = pubkey.create(idl.const.EncryptedBlockSize) }
+local OpenBusContext = orb.OpenBusContext
+local connprops = { accesskey = openbus.newKey() }
 
 -- Casos de Teste -------------------------------------------------------------
 Suite = {}
@@ -80,22 +78,22 @@ local NoPermissionCase = Suite.Test3
 --------------------------------
 
 function NoPermissionCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(dUser, dPassword)
   self.conn = conn
   
-  local adminConn = connections:createConnection(host, port, connprops)
+  local adminConn = OpenBusContext:createConnection(host, port, connprops)
   adminConn:loginByPassword(admin, adminPassword)
-  connections:setRequester(adminConn)
+  OpenBusContext:setCurrentConnection(adminConn)
   local categoryId = "NoPermissionCategory"
   local categoryDesc = "Category to test Unauthorized Operations"
-  local category = adminConn.entities:createEntityCategory(categoryId, 
+  local category = OpenBusContext:getEntityRegistry():createEntityCategory(categoryId, 
     categoryDesc)
   local entityId = "NoPermissinoEntity"
   local entityDesc = "Entity to test Unauthorized Operations"
   local entity = category:registerEntity(entityId, entityDesc)
-  connections:setRequester(nil)
+  OpenBusContext:setCurrentConnection(nil)
   self.adminConn = adminConn
   self.category = category
   self.categoryId = categoryId
@@ -106,19 +104,19 @@ function NoPermissionCase.beforeTestCase(self)
 end
 
 function NoPermissionCase.afterTestCase(self)
-  connections:setRequester(self.adminConn)
+  OpenBusContext:setCurrentConnection(self.adminConn)
   self.category:removeAll()
   self.adminConn:logout()
   self.adminConn = nil
-  connections:setRequester(nil)
+  OpenBusContext:setCurrentConnection(nil)
   
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
 end
 
 function NoPermissionCase.testEntityRegistryNoPermission(self)
-  local entities = self.conn.entities
+  local entities = OpenBusContext:getEntityRegistry()
   local ok, err = pcall(entities.createEntityCategory, entities, "LoginNotValid",
     "trying to create category with unauthorized login")
   Check.assertTrue(not ok)
@@ -165,11 +163,11 @@ end
 --------------------------------
 
 function Case.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
-  local entities = conn.entities
+  local entities = OpenBusContext:getEntityRegistry()
   -- category
   local catId = "UnitTestCategory"
   local catDesc = "Category to use on unit tests"
@@ -190,12 +188,12 @@ end
 function Case.afterTestCase(self)
   self.category:removeAll()
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
 end
 
 function Case.testGetCategory(self)
-  local entities = self.conn.entities
+  local entities = OpenBusContext:getEntityRegistry()
   Check.assertEquals(self.catId, self.category:_get_id())
   Check.assertEquals(self.catDesc, self.category:_get_name())
   local ok, desc = pcall(self.category.describe, self.category)
@@ -216,7 +214,7 @@ function Case.testGetCategory(self)
 end
 
 function Case.testGetEntity(self)
-  local entities = self.conn.entities
+  local entities = OpenBusContext:getEntityRegistry()
   Check.assertEquals(self.entId, self.entity:_get_id())
   Check.assertEquals(self.entDesc, self.entity:_get_name())
   local ok, description = pcall(self.entity.describe, self.entity)
@@ -245,7 +243,7 @@ function Case.testGetEntity(self)
 end
 
 function Case.testCreateTwice(self)
-  local entities = self.conn.entities
+  local entities = OpenBusContext:getEntityRegistry()
   local ok, err = pcall(entities.createEntityCategory, entities, 
     self.catId, self.catDesc)
   Check.assertTrue(not ok)
@@ -264,7 +262,7 @@ end
 
 function Case.testEntityAuthorization(self)
   local conn = self.conn
-  local entities = conn.entities
+  local entities = OpenBusContext:getEntityRegistry()
   local interface = "IDL:test/Test:1.0"
   local ok, err = pcall(self.entity.grantInterface, self.entity, "InvalidInterface")
   Check.assertTrue(not ok)
@@ -272,7 +270,7 @@ function Case.testEntityAuthorization(self)
   local ok, list = pcall(self.entity.getGrantedInterfaces, self.entity)
   Check.assertTrue(ok)
   Check.assertEquals(0, #list)
-  conn.interfaces:registerInterface(interface)
+  OpenBusContext:getInterfaceRegistry():registerInterface(interface)
   local ok, bool = pcall(self.entity.grantInterface, self.entity, interface)
   Check.assertTrue(ok)
   Check.assertTrue(bool)
@@ -300,7 +298,7 @@ function Case.testEntityAuthorization(self)
   ok, bool = pcall(self.entity.revokeInterface, self.entity, interface)
   Check.assertTrue(ok)
   Check.assertTrue(bool)
-  conn.interfaces:removeInterface(interface)
+  OpenBusContext:getInterfaceRegistry():removeInterface(interface)
 end
 
 --------------------------------
@@ -308,11 +306,11 @@ end
 --------------------------------
 
 function UpdateCase.beforeTestCase(self)
-  local conn = connections:createConnection(host, port, connprops)
-  connections:setDefaultConnection(conn)
+  local conn = OpenBusContext:createConnection(host, port, connprops)
+  OpenBusContext:setDefaultConnection(conn)
   conn:loginByPassword(admin, adminPassword)
   self.conn = conn
-  local entities = conn.entities
+  local entities = OpenBusContext:getEntityRegistry()
   -- category
   local catId = "UnitTestCategory"
   local catDesc = "Category to use on unit tests"
@@ -334,7 +332,7 @@ function UpdateCase.afterTestCase(self)
   self.entity:remove()
   self.category:remove()
   self.conn:logout()
-  connections:setDefaultConnection(nil)
+  OpenBusContext:setDefaultConnection(nil)
   self.conn = nil
 end
 
