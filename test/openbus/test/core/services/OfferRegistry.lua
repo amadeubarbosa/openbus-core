@@ -9,6 +9,7 @@ local sysex = giop.SystemExceptionIDs
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local offertypes = idl.types.services.offer_registry
+local throwsysex = require "openbus.util.sysex"
 
 local ComponentContext = require "scs.core.ComponentContext"
 
@@ -57,6 +58,14 @@ local offerProps = {
   {name="var1", value="value1"},
   {name="var2", value="value2"},
   {name="var3", value="value3"},
+}
+
+local ComponentId = {
+  name = "name",
+  major_version = 1,
+  minor_version = 0,
+  patch_version = 0,
+  platform_spec = "none",
 }
 
 -- Funções auxiliares ---------------------------------------------------------
@@ -198,7 +207,81 @@ function InvalidParamCase.testRegisterInvalidComponent(self)
   orb:loadidl("interface Ping2 { boolean ping(); };")
   context:addFacet("ping2", orb.types:lookup("Ping2").repID, getPingImpl())
   local ok, err = pcall(self.offers.registerService, self.offers, context, {})
-  Check.assertEquals(sysex.BAD_PARAM, err._repid)
+  Check.assertEquals(offertypes.InvalidService, err._repid)
+end
+
+function InvalidParamCase.testRegisterBadGetComponentId(self)
+  local comp = {}
+  function comp:getComponentId()
+    throwsysex.NO_PERMISSION{completed="COMPLETED_NO",minor=1234}
+  end
+  local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
+  Check.assertTrue(not ok)
+  Check.assertEquals(offertypes.InvalidService, err._repid)
+end
+
+function InvalidParamCase.testRegisterBadGetMetaInterface(self)
+  local comp = {}
+  function comp:getComponentId()
+    return ComponentId
+  end
+  function comp:getFacetByName()
+    throwsysex.NO_PERMISSION{completed="COMPLETED_NO",minor=1234}
+  end
+  local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
+  Check.assertTrue(not ok)
+  Check.assertEquals(offertypes.InvalidService, err._repid)
+end
+
+function InvalidParamCase.testRegisterNoMetaInterfaceFacet(self)
+  local comp = {}
+  function comp:getComponentId()
+    return ComponentId
+  end
+  function comp:getFacetByName()
+    return nil
+  end
+  local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
+  Check.assertTrue(not ok)
+  Check.assertEquals(offertypes.InvalidService, err._repid)
+end
+
+function InvalidParamCase.testRegisterBadGetFacets(self)
+  local comp = {}
+  function comp:getComponentId()
+    return ComponentId
+  end
+  local orb = self.conn.orb
+  function comp:getFacetByName(name)
+    if name == "IMetaInterface" then
+      local meta = {__type="IDL:scs/core/IMetaInterface:1.0"}
+      function meta:getFacets()
+        throwsysex.NO_PERMISSION{completed="COMPLETED_NO",minor=1234}
+      end
+      return meta
+    end
+  end
+  local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
+  Check.assertTrue(not ok)
+  Check.assertEquals(offertypes.InvalidService, err._repid)
+end
+
+function InvalidParamCase.testRegisterEmptyFacets(self)
+  local comp = {}
+  function comp:getComponentId()
+    return ComponentId
+  end
+  local orb = self.conn.orb
+  function comp:getFacetByName(name)
+    if name == "IMetaInterface" then
+      local meta = {__type="IDL:scs/core/IMetaInterface:1.0"}
+      function meta:getFacets()
+        return {}
+      end
+      return meta
+    end
+  end
+  self.offers:registerService(comp, {})
 end
 
 function InvalidParamCase.testRegisterNilComponent(self)
@@ -210,7 +293,7 @@ end
 function InvalidParamCase.testRegisterEmptyComponent(self)
   local ok, err = pcall(self.offers.registerService, self.offers, {}, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(sysex.NO_IMPLEMENT, err._repid)
+  Check.assertEquals(offertypes.InvalidService, err._repid)
 end
 
 function InvalidParamCase.testRegisterNilProperties(self)

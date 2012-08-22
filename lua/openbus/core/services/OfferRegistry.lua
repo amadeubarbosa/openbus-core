@@ -423,14 +423,32 @@ function OfferRegistry:registerService(service_ref, properties)
     throw.InvalidService{ message = msg.NullReference }
   end
   -- collect information about the SCS component implementing the service
-  local compId = service_ref:getComponentId()
-  local meta = service_ref:getFacetByName("IMetaInterface")
-  if meta == nil then
+  local ok, result = pcall(service_ref.getComponentId, service_ref)
+  if not ok then
+    throw.InvalidService{message=msg.UnableToObtainComponentId:tag{
+      error = result,
+    }}
+  end
+  local compId = result
+  ok, result = pcall(service_ref.getFacetByName, service_ref, "IMetaInterface")
+  if not ok then
+    throw.InvalidService{message=msg.UnableToObtainStandardFacet:tag{
+      name = "IMetaInterface",
+      error = result,
+    }}
+  elseif result == nil then
     throw.InvalidService{message=msg.MissingStandardFacet:tag{
       name = "IMetaInterface",
     }}
   end
-  local allfacets = meta:__narrow("scs::core::IMetaInterface"):getFacets()
+  local meta = result:__narrow("scs::core::IMetaInterface")
+  ok, result = pcall(meta.getFacets, meta)
+  if not ok then
+    throw.InvalidService{message=msg.UnableToObtainServiceFacets:tag{
+      error = result,
+    }}
+  end
+  local allfacets = result
   local facets = {}
   for _, facet in ipairs(allfacets) do
     local facetname = facet.name
