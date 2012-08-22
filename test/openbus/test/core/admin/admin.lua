@@ -22,6 +22,11 @@ local bin = "busadmin "
 local login = "--login="..admin.." "
 local password = "--password="..adminPassword.." "
 local certificate = "--certificate="..certfile
+
+local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
+if OPENBUS_HOME then
+  bin = OPENBUS_HOME.."/bin/"..bin
+end
 -------------------------------------------------------------------------------
 
 local function finalize()
