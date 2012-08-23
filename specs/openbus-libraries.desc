@@ -33,7 +33,7 @@ packages = {
     },
   },
   { name = "idl-prev-source",
-    url = SVNREPURL .. "/openbus/tags/OB_v1_04_07_2010_11_11/core/idl",
+    url = SVNREPURL .. "/openbus/core/tags/OB_v1_04_07_2010_11_11/core/idl",
     directory = PRODAPP .."/idl-prev",
     install_files = {
       ["*.idl"] = "idl/"..IDL_PREV,
@@ -63,7 +63,7 @@ packages = {
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
-    url = SVNREPURL .. "/openbus/branches/OB_v1_05_04_2012_07_31",
+    url = SVNREPURL .. "/openbus/core/branches/OB_v1_05_04_2012_07_31",
     directory = SVNDIR, -- main source directory for PUts!
                         -- other sources have to be in PRODAPP/something
   },
@@ -398,7 +398,7 @@ packages = {
   },
   -- FIXME: esse pacote deve ser removido quando concluir OPENBUS-1372
   { name = "openbus-lua-extras",
-    url = SVNREPURL .. "/openbus/branches/OB_v1_05_04_2012_07_31/data",
+    url = SVNREPURL .. "/openbus/core/branches/OB_v1_05_04_2012_07_31/data",
     directory = SVNDIR .. "/data", -- main source directory for PUts!
     install_files = {
       ["conf/config"] = "data/conf",
