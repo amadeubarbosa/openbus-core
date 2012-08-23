@@ -19,7 +19,7 @@ packages = {
     directory = PRODAPP .."/idl",
   },
   { name = "idl-1.4-source",
-    url = SVNREPURL .. "/openbus/tags/OB_v1_04_05_2010_04_12/core/idl",
+    url = SVNREPURL .. "/openbus/core/tags/OB_v1_04_05_2010_04_12/core/idl",
     directory = PRODAPP .."/idl-1.4",
   },
   { name = "sdk-java-source",
@@ -35,7 +35,7 @@ packages = {
     directory = PRODAPP .."/sdk-cpp",
   },
   { name = "openbus-source",
-    url = SVNREPURL .. "/openbus/branches/OB_v1_05_2010_05_13",
+    url = SVNREPURL .. "/openbus/core/branches/OB_v1_05_2010_05_13",
     directory = SVNDIR, -- main source directory for PUts!
                         -- other sources have to be in PRODAPP/something
   },
