@@ -111,16 +111,7 @@ a autenticação de uma entidade através de algum método oferecido pelo \openbus{}
 o registro da chave pública de acesso a ser utilizada na validação do acesso;
 e a geração de identificador de login que é usado para identificar aquela autenticação da entidade junto ao barramento.
 
-O login é feito através da \term{Faceta de Controle de Acesso} fornecida pelo \code{::scs::core::IComponent} do barramento.
-O nome da faceta é dado pela seguinte constante:
-
-\begin{samplecode}[language={[CORBA]idl}]
-// File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_0::services::access_control::AccessControlFacet
-const string AccessControlFacet;
-\end{samplecode}
-
-A \term{Faceta de Controle de Acesso} implementa a seguinte interface:
+O login é feito através da faceta de nome \code{AccessControl} fornecida pelo \code{::scs::core::IComponent} do barramento, que implementa a seguinte interface:
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
@@ -288,16 +279,7 @@ const unsigned long UnknownBusCode;
 \end{samplecode}
 
 Em seguida, é necessário verificar se o login informado é válido no barramento indicado.
-Isso é feito através da operação \code{getLoginValidity} da \term{Faceta de Registro de Logins} do barramento.
-O nome desta faceta é dado pela seguinte constante:
-
-\begin{samplecode}[language={[CORBA]idl}]
-// File: access_control.idl
-// Name: ::tecgraf::openbus::core::v2_0::services::access_control::LoginRegistryFacet
-const string LoginRegistryFacet;
-\end{samplecode}
-
-A \term{Faceta de Registro de Logins} implementa a seguinte interface:
+Isso é feito através da operação \code{getLoginValidity} da faceta de nome \term{LoginRegistry}, que implementa a seguinte interface:
 
 \begin{samplecode}[language={[CORBA]idl}]
 // File: access_control.idl
