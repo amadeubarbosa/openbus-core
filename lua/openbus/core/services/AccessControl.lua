@@ -553,32 +553,23 @@ function LoginRegistry:getLoginInfo(id)
   throw.InvalidLogins{loginIds={id}}
 end
 
-function LoginRegistry:getValidity(ids)
-  local logins = AccessControl.activeLogins
-  local now = time()
-  local validity = {}
-  for index, id in ipairs(ids) do
-    local login = logins:getLogin(id)
-    if login ~= nil then
-      local timeleft = login.deadline-now
-      if timeleft <= 0 then
-        log:action(msg.LoginExpired:tag{
-          login = login.id,
-          entity = login.entity,
-        })
-        login:remove()
-        timeleft = 0
-      else
-        timeleft = ceil(timeleft)
-      end
-      validity[index] = timeleft
-    elseif id == AccessControl.login.id then
-      validity[index] = AccessControl.leaseTime
-    else
-      validity[index] = 0
-    end
+function LoginRegistry:getLoginValidity(id)
+  if id == AccessControl.login.id then
+    return AccessControl.leaseTime
   end
-  return validity
+  local login = AccessControl.activeLogins:getLogin(id)
+  if login ~= nil then
+    local timeleft = login.deadline-time()
+    if timeleft > 0 then
+      return ceil(timeleft)
+    end
+    log:action(msg.LoginExpired:tag{
+      login = login.id,
+      entity = login.entity,
+    })
+    login:remove()
+  end
+  return 0
 end
 
 function LoginRegistry:subscribeObserver(callback)

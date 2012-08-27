@@ -65,7 +65,7 @@ end
 -- function LoginRegistry:getEntityLogins(entity)
 -- function LoginRegistry:invalidateLogin(id)
 -- function LoginRegistry:getLoginInfo(id)
--- function LoginRegistry:getValidity(ids)
+-- function LoginRegistry:getLoginValidity(id)
 -- function LoginRegistry:subscribeObserver(callback)
 
 -------------------------------------
@@ -157,19 +157,9 @@ end
 
 function InvalidParamCase.testGetValidity(self)
   local logins = self.logins
-  local list = { self.invalidId }
-  local ok, vals = pcall(logins.getValidity, logins, list)
+  local ok, validity = pcall(logins.getLoginValidity, logins, self.invalidId)
   Check.assertTrue(ok)
-  Check.assertEquals(1, #vals)
-  Check.assertEquals(0, vals[1])
-end
-
-function InvalidParamCase.testGetValidityEmptyList(self)
-  local logins = self.logins
-  local list = {}
-  local ok, vals = pcall(logins.getValidity, logins, list)
-  Check.assertTrue(ok)
-  Check.assertEquals(0, #vals)
+  Check.assertEquals(0, validity)
 end
 
 function InvalidParamCase.testSubscribeInvalidObserver(self)
@@ -292,11 +282,7 @@ function LRCase.testInvalidateLogin(self)
   Check.assertNotNil(info)
   Check.assertEquals(conn2.login.id, info.id)
   Check.assertEquals(dUser, info.entity)
-  local list = { conn2.login.id }
-  local vals = logins:getValidity(list)
-  Check.assertNotNil(vals)
-  Check.assertEquals(1, #vals)
-  local validity = vals[1]  
+  local validity = logins:getLoginValidity(conn2.login.id)
   -- invalidating
   local bool = logins:invalidateLogin(conn2.login.id)
   Check.assertTrue(bool)
@@ -337,11 +323,8 @@ end
 
 function LRCase.testGetValidity(self)
   local logins = self.logins
-  local list = { self.conn.login.id }
-  local vals = logins:getValidity(list)
-  Check.assertNotNil(vals)
-  Check.assertEquals(1, #vals)
-  Check.assertTrue(vals[1] > 0)
+  local validity = logins:getLoginValidity(self.conn.login.id)
+  Check.assertTrue(validity > 0)
 end
 
 function LRCase.test2ConnectionsGetValidity(self)
@@ -349,12 +332,8 @@ function LRCase.test2ConnectionsGetValidity(self)
   local conn2 = OpenBusContext:createConnection(host, port, connprops)
   self.conn2 = conn2
   conn2:loginByPassword(dUser, dPassword)
-  local list = { self.conn.login.id, conn2.login.id }
-  local vals = logins:getValidity(list)
-  Check.assertNotNil(vals)
-  Check.assertEquals(2, #vals)
-  Check.assertTrue(vals[1] > 0)
-  Check.assertTrue(vals[2] > 0)
+  local validity = logins:getLoginValidity(conn2.login.id)
+  Check.assertTrue(validity > 0)
 end
 
 function LRCase.testSubscribeObserver(self)
