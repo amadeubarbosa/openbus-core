@@ -122,7 +122,7 @@ basesoft = {
     build = {
       type = "tecmake",
       src = PRODAPP .. "/logger",
-      mf = { "config OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes USE_NODEPEND=Yes" },
+      mf = { "config OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" },
       Darwin = {
         mf = { "config BUILD_DYLIB=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes USE_NODEPEND=Yes", },
       },
