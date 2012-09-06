@@ -1,0 +1,28 @@
+STUB_OBJ = stubs/StockMarket.o
+CLI_OBJ = src/StockClient.o
+SRV_OBJ = src/StockServer.o
+OBJS = $(STUB_OBJ) $(CLI_OBJ) $(SRV_OBJ)
+
+FLAGS = -Wall -g
+
+all: $(OBJS) server client
+
+$(OBJS): %.o: %.cc
+	g++ $(FLAGS) -c $< -o $@ -I${MICODIR}/include -Istubs
+
+server: $(SRC_OBJ) $(STUB_OBJ)
+	g++ -o server $(SRV_OBJ) $(STUB_OBJ) -L${MICODIR}/lib -lmico2.3.13 -lcrypto
+
+client: $(CLI_OBJ) $(STUB_OBJ)
+	g++ -o client $(CLI_OBJ) $(STUB_OBJ) -L${MICODIR}/lib -lmico2.3.13 -lcrypto
+
+STUBS=stubs/StockMarket.cc stubs/StockMarket.h
+
+$STUBS: idl/StockMarket.idl
+	mkdir -p stubs
+	cd stubs ; ${MICODIR}/bin/idl --typecode --no-paths ../idl/StockMarket.idl
+
+idl: $STUBS
+
+clean:
+	rm -f src/*.o stubs/*.o server client
