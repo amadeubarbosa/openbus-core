@@ -46,6 +46,4 @@ fi
 # Variáveis de ambiente do OpenBus
 
 export OPENBUS_HOME="${OPENBUS_HOME:-${WORKSPACE}/install}"
-
-. ${WORKSPACE}/trunk/specs/shell/kshrc
 ###############################################################################
