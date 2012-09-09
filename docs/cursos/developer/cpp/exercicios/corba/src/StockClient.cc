@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
   StockMarket::StockSymbolList_var l = stockServer->getStockSymbols();
   for (CORBA::ULong i = 0; i < l->length(); ++i)
-    std::cout << l[i] << std::endl;
+    std::cout << l[i] << ": " << stockServer->getStockValue(l[i]) << std::endl;
 
   return 0;
 }
