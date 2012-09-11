@@ -47,13 +47,12 @@ local program = OPENBUS_PROGNAME
 -------------------------------------------------------------------------------
 -- Constantes
 
--- Maximo de tentativas de conexão com o barramento
-local MAXRETRIES = 3
-
 -- String de help
 local help = [[
 
 Uso: %s [opções] --login=<usuário> <comando>
+
+Por padrão realiza-se um login por senha. Vide opção '--password'
 
 -------------------------------------------------------------------------------
 - Opções
@@ -61,6 +60,12 @@ Uso: %s [opções] --login=<usuário> <comando>
     --host=<endereço>
   * Informa a porta do Barramento (padrão 2089):
     --port=<porta>
+  * Realiza o login por senha, aguardando a entrada da senha por linha de comando.
+    --password
+  * Realiza o login por senha.
+    --password=<password>
+  * Realiza o login por certificado.
+    --certificate=<certificate>
   * Aciona o verbose da API OpenBus.
     --verbose=<level>
   * Aciona o verbose do OiL.
@@ -166,8 +171,10 @@ local null = {}
 local options = {
   ["host"] = "127.0.0.1",
   ["port"] = 2089,
-  oilVerbose   = 0,
-  verbose      = 0,
+  oilverbose = 0,
+  verbose = 0,
+  password = null,
+  certificate = null,
 }
 
 --
@@ -331,7 +338,7 @@ local function addoptions(params)
   for opt, val in pairs(options) do
     if not params[opt] then
       params[opt] = val
-    elseif params[opt] == null then
+    elseif params[opt] == null and opt ~= "password"  then
       return false, string.format("Opção inválida: %s", opt)
     end
   end
@@ -1259,20 +1266,10 @@ handlers["report"] = function(cmd)
   orb = nil
 
   local conn = OpenBusContext:createConnection(host, port)
-  local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
-  if not ok then
-    msg = "[ERRO] Não foi possível logar no barramento! %s"
-    if err._repid == logintypes.AccessDenied then
-      printf(msg, messages.AccessDeniedOnLogin)
-    elseif err._repid == logintypes.WrongEncoding then
-      printf(msg, messages.WrongEncodedPassword)
-    else 
-      local errormsg = string.format("\n%s", error(err))
-      printf(msg, errormsg)
-    end
+  OpenBusContext:setDefaultConnection(conn)
+  if not doLogin(conn) then
     return false
   end
-  OpenBusContext:setDefaultConnection(conn)
   -- TODO:[maia] Code is too much repetivie to make the following changes as
   --             they should be done. Using the following workaround do avoid
   --             changing the same code repeated many times in the code.
@@ -1357,7 +1354,7 @@ handlers["report"] = function(cmd)
     printf(msg, #offers)
   end
 
-  -- ofertas inválidas
+  -- ofertas não responsivas
   if #offers > 0 then
     local invalid = {}
     for _, offer in ipairs(offers) do
@@ -1366,11 +1363,11 @@ handlers["report"] = function(cmd)
       end
     end
     if #invalid > 0 then
-      printf(" - Existe(m) '%d' Oferta(s) em estado INVÁLIDO:", #invalid)
+      printf(" - Existe(m) '%d' Oferta(s) que no momento não estão responsivas:", #invalid)
       printer.showOffer(invalid)
     end
     if #invalid > 0 and isadmin then
-      print(" > Deseja remover todas as ofertas inválidas? [s|n]")
+      print(" > Deseja remover todas as ofertas não responsivas? [s|n]")
       local reply = string.lower(io.read())
       if reply == "s" or reply == "sim" or reply == "y" or reply == "yes" then
         local rem = 0
@@ -1380,7 +1377,7 @@ handlers["report"] = function(cmd)
             rem = rem + 1
           end
         end
-        printf(" - Ofertas inválidas removidas: %d", rem)
+        printf(" - Ofertas não responsivas removidas: %d", rem)
       end
     end
   end
@@ -1389,6 +1386,39 @@ end
 -------------------------------------------------------------------------------
 -- Seção de conexão com o barramento e os serviços básicos
 
+function handleError(err)
+  local msg = "[ERRO] Falha no Login! %s"
+  if err._repid == logintypes.AccessDenied then
+    printf(msg, messages.AccessDeniedOnLogin)
+  elseif err._repid == logintypes.MissingCertificate then
+    printf(msg, messages.MissingCertificate:tag{entity=login})
+  else 
+    local errormsg = string.format("\n%s", error(err))
+    printf(msg, errormsg)
+  end
+end
+
+function doLogin(conn)
+  if certificate ~= null then
+    local privatekey = assert(openbus.readKeyFile(certificate))
+    local ok, err = pcall(conn.loginByCertificate, conn, login, privatekey)
+    if not ok then
+      handleError(err)
+      return false
+    end
+  else  
+    local localPassword = password
+    if localPassword == null then
+      localPassword = lpw.getpass("Senha: ")
+    end
+    local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
+    if not ok then
+      handleError(err)
+      return false
+    end
+  end
+  return true
+end
 ---
 -- Efetua a conexão com o barramento.
 --
@@ -1402,21 +1432,7 @@ function connect(retry)
   --TODO: implementar mecanismo de retry.  
   local conn = OpenBusContext:createConnection(host, port)
   OpenBusContext:setDefaultConnection(conn)
-  local localPassword = password
-  if not localPassword then
-    localPassword = lpw.getpass("Senha: ")
-  end
-  local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
-  if not ok then
-    local msg = "[ERRO] Falha no Login! %s"
-    if err._repid == logintypes.AccessDenied then
-      printf(msg, messages.AccessDeniedOnLogin)
-    elseif err._repid == logintypes.WrongEncoding then
-      printf(msg, messages.WrongEncodedPassword)
-    else 
-      local errormsg = string.format("\n%s", error(err))
-      printf(msg, errormsg)
-    end
+  if not doLogin(conn) then
     return nil
   end
   -- TODO:[maia] Code is too much repetivie to make the following changes as
@@ -1455,13 +1471,14 @@ return function(...)
 
   -- Recupera os valores globais
   login    = command.params.login
+  certificate = command.params.certificate
   password = command.params.password
   host  = command.params["host"]
   port  = tonumber(command.params["port"])
 
   -- setup log files
-  log:level(tonumber(command.params.verbose) or 0)
-  oillog:level(tonumber(command.params.oilverbose) or 0)
+  log:level(tonumber(command.params.verbose))
+  oillog:level(tonumber(command.params.oilverbose))
   
   ---
   -- Função principal responsável por despachar o comando.

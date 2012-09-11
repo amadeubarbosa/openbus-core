@@ -2,6 +2,6 @@ local msg = require "openbus.core.messages"
 
 -- openbus.core.admin.main
 msg.AccessDeniedOnLogin = "Acesso negado."
-msg.WrongEncodedPassword = "Senha com codificação inválida."
+msg.MissingCertificate = "Certificado não cadastrado para a entidade '$entity'."
 
 return msg
