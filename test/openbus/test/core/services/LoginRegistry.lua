@@ -296,9 +296,7 @@ function LRCase.testInvalidateLogin(self)
   Check.assertEquals(1, #err.loginIds)
   Check.assertEquals(conn2id, err.loginIds[1])
   -- test logout of conn2
-  local ok, err = pcall(conn2.logout, conn2)
-  Check.assertTrue(ok)
-  Check.assertFalse(err)
+  Check.assertFalse(conn2:logout())
   self.conn2 = nil
 end
 
