@@ -2,7 +2,7 @@
 #include <iostream>
 #include <CORBA.h>
 
-#include "StockMarket.h"
+#include "StockMarket-2.h"
 
 int main(int argc, char **argv) {
   std::ifstream ior(".ior");

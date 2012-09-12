@@ -3,7 +3,7 @@
 #include <map>
 #include <CORBA.h>
 
-#include "StockMarket.h"
+#include "StockMarket-2.h"
 
 class StockServer_impl : public POA_StockMarket::StockServer {
 public:
