@@ -10,7 +10,7 @@ all: $(OBJS) server client
 $(OBJS): %.o: %.cc
 	g++ $(FLAGS) -c $< -o $@ -I${MICODIR}/include -Istubs
 
-server: $(SRC_OBJ) $(STUB_OBJ)
+server: $(SRV_OBJ) $(STUB_OBJ)
 	g++ -o server $(SRV_OBJ) $(STUB_OBJ) -L${MICODIR}/lib -lmico2.3.13 -lcrypto
 
 client: $(CLI_OBJ) $(STUB_OBJ)
