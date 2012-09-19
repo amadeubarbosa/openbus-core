@@ -51,7 +51,7 @@ packages = {
     },
   },--]]
   { name = "sdk-java-source",
-    url = SVNREPURL .. "/openbus/sdk/java/trunk",
+    url = SVNREPURL .. "/openbus/sdk/java/branches/OB_SDK_JAVA_v1_05_03_2012_08_02",
     directory = PRODAPP .."/sdk-java",
   },
   { name = "sdk-lua-source",
