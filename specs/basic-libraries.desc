@@ -311,13 +311,13 @@ basesoft = {
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --enable-debug --disable-optimize --prefix='.. TMPDIR .. ' && make && make install',
     },
     install_files = {
-      [TMPDIR .."/lib/libmico*.so*"] = "lib/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread",
+      [TMPDIR .."/lib/libmico*.so*"] = "lib/mico-2.3.13-multithread-debug",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread-debug",
     },
     dev_files = {
-      [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-multithread",       --dynamic linux,aix,sunos
-      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread",
-      [TMPDIR .."/include/*"] = "include/mico-2.3.13-multithread",
+      [TMPDIR .."/lib/libmico*.*"] = "lib/mico-2.3.13-multithread-debug",       --dynamic linux,aix,sunos
+      [TMPDIR .."/bin/*"] = "bin/mico-2.3.13-multithread-debug",
+      [TMPDIR .."/include/*"] = "include/mico-2.3.13-multithread-debug",
       [SVNDIR.."/specs/shell/mico-setup-multithread*"] = "specs/shell/",
     },
   },
