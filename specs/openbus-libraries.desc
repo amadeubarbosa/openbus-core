@@ -659,7 +659,7 @@ packages = {
     },
   },
   -- MICO related packages
-  { name = "scs-micoMT",
+  { name = "scs-cpp-micomultithread",
     url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
     directory = PRODAPP .."/scs-cpp",
     build = {
@@ -683,20 +683,57 @@ packages = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/libscsmicoMT.*"] = "lib",
+      ["lib/${TEC_UNAME}/libscs-micomultithread.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libscsmicoMT.*"] = "lib",
+      ["lib/${TEC_UNAME}/libscs-micomultithread.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
       ["include/scs/*"] = "include/scs",
     },
   },
-  { name = "scs-micoST",
+  { name = "scs-cpp-micomultithread-debug",
+    url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
+    directory = PRODAPP .."/scs-cpp",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/scs-cpp",
+      mf = { 
+        "mico genstubs SCS_THREADING_ENABLED=Yes DBG=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes DBG=Yes" 
+      },
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++ SCS_THREADING_ENABLED=Yes DBG=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes DBG=Yes" 
+        },
+      },
+      MacOS = {
+        mf = { 
+          "mico genstubs LD=g++ SCS_THREADING_ENABLED=Yes DBG=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes DBG=Yes" 
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/libscs-micomultithread-debug.*"] = "lib",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/libscs-micomultithread-debug.*"] = "lib",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+      ["include/scs/*"] = "include/scs",
+    },
+  },
+  { name = "scs-cpp-micosinglethread",
     url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
     directory = PRODAPP .."/scs-cpp",
     build = {
@@ -720,13 +757,50 @@ packages = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/libscsmicoST.*"] = "lib",
+      ["lib/${TEC_UNAME}/libscs-micosinglethread.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/libscsmicoST.*"] = "lib",
+      ["lib/${TEC_UNAME}/libscs-micosinglethread.*"] = "lib",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+      ["include/scs/*"] = "include/scs",
+    },
+  },
+  { name = "scs-cpp-micosinglethread-debug",
+    url = SVNREPURL .. "/scs/core/cpp/branches/SCS_CORE_CPP_v1_02_00_2011_07_29",
+    directory = PRODAPP .."/scs-cpp",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/scs-cpp",
+      mf = { 
+        "mico genstubs DBG=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 DBG=Yes"
+      },
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++ DBG=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+        },
+      },
+      MacOS = {
+        mf = { 
+          "mico genstubs LD=g++ DBG=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/libscs-micosinglethread-debug.*"] = "lib",
+      -- to make sure that .idl files will be in the .tar.gz package
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
+          "idl/"..IDL_VERSION,
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/libscs-micosinglethread-debug.*"] = "lib",
       -- to make sure that .idl files will be in the .tar.gz package
       [INSTALL.TOP.."/idl/"..IDL_VERSION.."/scs.idl"] =
           "idl/"..IDL_VERSION,
