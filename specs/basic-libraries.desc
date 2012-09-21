@@ -9,7 +9,67 @@ basesoft = {
       ["include/cxxtest"] = "include/cxxtest/",
     },
   },
-  { name = "logger",
+  { name = "logger-multithread",
+    url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .. "/logger",
+      mf = { "config LOGGER_MULTITHREAD=Yes" },
+      Darwin = {
+        mf = {
+          "config BUILD_DYLIB=Yes LOGGER_MULTITHREAD=Yes",
+        },
+      },
+      MacOS = {
+        mf = {
+          "config BUILD_DYLIB=Yes LOGGER_MULTITHREAD=Yes",
+        },
+      },
+      SunOS510 = {
+        mf = {
+          "config LD=CC LOGGER_MULTITHREAD=Yes",
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/liblogger-multithread.*"] = "lib",
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/liblogger-multithread.*"] = "lib",
+      ["*.h"] = "include/logger",
+    },
+  },
+  { name = "logger-multithread-debug",
+    url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .. "/logger",
+      mf = { "config LOGGER_MULTITHREAD=Yes DBG=Yes" },
+      Darwin = {
+        mf = {
+          "config BUILD_DYLIB=Yes LOGGER_MULTITHREAD=Yes DBG=Yes",
+        },
+      },
+      MacOS = {
+        mf = {
+          "config BUILD_DYLIB=Yes LOGGER_MULTITHREAD=Yes DBG=Yes",
+        },
+      },
+      SunOS510 = {
+        mf = {
+          "config LD=CC LOGGER_MULTITHREAD=Yes DBG=Yes",
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/liblogger-multithread-debug.*"] = "lib",
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/liblogger-multithread-debug.*"] = "lib",
+      ["*.h"] = "include/logger",
+    },
+  },
+  { name = "logger-singlethread",
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
     build = {
       type = "tecmake",
@@ -32,10 +92,40 @@ basesoft = {
       },
     },
     install_files = {
-      ["lib/${TEC_UNAME}/liblogger.so"] = "lib",
+      ["lib/${TEC_UNAME}/liblogger-singlethread.*"] = "lib",
     },
     dev_files = {
-      ["lib/${TEC_UNAME}/liblogger.*"] = "lib",
+      ["lib/${TEC_UNAME}/liblogger-singlethread.*"] = "lib",
+      ["*.h"] = "include/logger",
+    },
+  },
+  { name = "logger-singlethread-debug",
+    url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .. "/logger",
+      mf = { "config DBG=Yes" },
+      Darwin = {
+        mf = {
+          "config BUILD_DYLIB=Yes DBG=Yes",
+        },
+      },
+      MacOS = {
+        mf = {
+          "config BUILD_DYLIB=Yes DBG=Yes",
+        },
+      },
+      SunOS510 = {
+        mf = {
+          "config LD=CC DBG=Yes",
+        },
+      },
+    },
+    install_files = {
+      ["lib/${TEC_UNAME}/liblogger-singlethread-debug.*"] = "lib",
+    },
+    dev_files = {
+      ["lib/${TEC_UNAME}/liblogger-singlethread-debug.*"] = "lib",
       ["*.h"] = "include/logger",
     },
   },

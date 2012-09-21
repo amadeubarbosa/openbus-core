@@ -807,30 +807,30 @@ packages = {
       ["include/scs/*"] = "include/scs",
     },
   },
-  { name = "openbus-micoMT",
+  { name = "openbus-sdkcpp-micomultithread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
       mf = { 
-        "mico genstubs MULTITHREAD=Yes", 
-        "mico LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" },
+        "mico genstubs OPENBUS_SDK_MULTITHREAD=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes" },
       -- special compile instructions for solaris
       Darwin = {
         mf = { 
-          "mico genstubs LD=g++ MULTITHREAD=Yes", 
-          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+          "mico genstubs LD=g++ OPENBUS_SDK_MULTITHREA=Yes", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes" 
         },
       },
       MacOS = {
         mf = { 
-          "mico genstubs LD=g++ MULTITHREAD=Yes", 
-          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+          "mico genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREA=Yes" 
         },
       },
     },
     dev_files = {
       ["CHANGES"] = ".",
-      ["lib/${TEC_UNAME}/libopenbusmicoMT.*"] = "lib",
+      ["lib/${TEC_UNAME}/libopenbus-micomultithread.*"] = "lib",
       ["include/*.h"] = "include/openbus/cpp", --include
       ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
       ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
@@ -840,7 +840,7 @@ packages = {
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
     },
   },
-  { name = "openbus-micoST",
+  { name = "openbus-sdkcpp-micosinglethread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp",
@@ -863,7 +863,7 @@ packages = {
     },
     dev_files = {
       ["CHANGES"] = ".",
-      ["lib/${TEC_UNAME}/libopenbusmicoST.*"] = "lib",
+      ["lib/${TEC_UNAME}/libopenbus-micosinglethread.*"] = "lib",
       ["include/*.h"] = "include/openbus/cpp", --include
       ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
       ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
@@ -873,26 +873,92 @@ packages = {
       [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
     },
   },
-  { name = "openbus-demo-hello-micoMT",
+  { name = "openbus-sdkcpp-micomultithread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp",
+      mf = { 
+        "mico genstubs OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" },
+      -- special compile instructions for solaris
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" 
+        },
+      },
+      MacOS = {
+        mf = { 
+          "mico genstubs LD=g++ OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" 
+        },
+      },
+    },
+    dev_files = {
+      ["CHANGES"] = ".",
+      ["lib/${TEC_UNAME}/libopenbus-micomultithread-debug.*"] = "lib",
+      ["include/*.h"] = "include/openbus/cpp", --include
+      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
+      ["stubs/mico"] = "include/openbus/cpp/stubs",     --include
+      [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+    },
+  },
+  { name = "openbus-sdkcpp-micosinglethread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp",
+      mf = { 
+        "mico genstubs DBG=Yes", 
+        "mico LUA51="..PRODAPP.."/lua5.1 DBG=Yes" },
+      -- special compile instructions for solaris
+      Darwin = {
+        mf = { 
+          "mico genstubs LD=g++ DBG=Yes", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+        },
+      },
+      MacOS = {
+        mf = { 
+          "mico genstubs LD=g++ DBG=Yes", 
+          "mico LD=g++ LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+        },
+      },
+    },
+    dev_files = {
+      ["CHANGES"] = ".",
+      ["lib/${TEC_UNAME}/libopenbus-micosinglethread-debug.*"] = "lib",
+      ["include/*.h"] = "include/openbus/cpp", --include
+      ["include/util/*.h"] = "include/openbus/cpp/util/",    --include
+      ["include/interceptors/*.h"] = "include/openbus/cpp/interceptors/",    --include
+      ["stubs/mico"] = "include/openbus/cpp/stubs",     --include
+      [INSTALL.TOP.."/idl/"..IDL_PREV.."/*"] = "idl/"..IDL_PREV,
+      [INSTALL.TOP.."/idl/"..IDL_VERSION.."/*"] = "idl/"..IDL_VERSION,
+      [SVNDIR.."/specs/shell/*rc"] = "specs/shell/", -- shell variables
+    },
+  },
+  { name = "openbus-sdkcpp-demo-hello-micomultithread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/hello/mico",
       mf = { 
-        "server genstubs MULTITHREAD=Yes", 
-        "client LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes",
-        "server LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        "server genstubs OPENBUS_SDK_MULTITHREAD=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes",
+        "server LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes" 
       },
       SunOS510 = { 
         mf = { 
-          "server genstubs MULTITHREAD=Yes",
-          'client "LUA51='..PRODAPP..'/lua5.1 MULTITHREAD=Yes"',
-          'server "LUA51='..PRODAPP..'/lua5.1 MULTITHREAD=Yes"',
+          "server genstubs OPENBUS_SDK_MULTITHREAD=Yes",
+          'client "LUA51='..PRODAPP..'/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes"',
+          'server "LUA51='..PRODAPP..'/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes"',
         }, 
       },
       SunOS510_64 = { 
-        mf = { "server genstubs USE_NODEPEND=Yes MULTITHREAD=Yes", 
-               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes MULTITHREAD=Yes", 
-               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes MULTITHREAD=Yes"}, 
+        mf = { "server genstubs USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes"}, 
       }
     },
     dev_files = {
@@ -913,7 +979,7 @@ packages = {
       ["server"] = "demo/hello/mico",
     },
   },
-  { name = "openbus-demo-hello-micoST",
+  { name = "openbus-sdkcpp-demo-hello-micosinglethread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/hello/mico",
@@ -953,7 +1019,87 @@ packages = {
       ["server"] = "demo/hello/mico",
     },
   },
-  { name = "openbus-demo-delegate-singlethread-mico",
+  { name = "openbus-sdkcpp-demo-hello-micomultithread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/demo/hello/mico",
+      mf = { 
+        "server genstubs OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes",
+        "server LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes" 
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes",
+          'client "LUA51='..PRODAPP..'/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes"',
+          'server "LUA51='..PRODAPP..'/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes"',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { "server genstubs USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes OPENBUS_SDK_MULTITHREAD=Yes DBG=Yes"}, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin",
+      ["../idl/hello.idl"] = "demo/hello/idl/",
+      ["../management"] = "demo/hello",
+      ["../../README"] = "demo",      
+      ["MakefileMT.linux"] = "demo/hello/mico",
+      ["MakefileMT.sunos"] = "demo/hello/mico",
+      ["Makefile.win"] = "demo/hello/mico",
+      ["client.cpp"] = "demo/hello/mico",
+      ["server.cpp"] = "demo/hello/mico",
+      ["run*"] = "demo/hello/mico",
+      ["*.mak"] = "demo/hello/mico",
+      ["*config"] = "demo/hello/mico",
+      ["run*"] = "demo/hello/mico",
+      ["client"] = "demo/hello/mico",
+      ["server"] = "demo/hello/mico",
+    },
+  },
+  { name = "openbus-sdkcpp-demo-hello-micosinglethread-debug",
+    build = {
+      type = "tecmake",
+      src = PRODAPP .."/sdk-cpp/demo/hello/mico",
+      mf = { 
+        "server genstubs DBG=Yes",
+        "client LUA51="..PRODAPP.."/lua5.1 DBG=Yes",
+        "server LUA51="..PRODAPP.."/lua5.1 DBG=Yes" 
+      },
+      SunOS510 = { 
+        mf = { 
+          "server genstubs DBG=Yes",
+          'client "LUA51='..PRODAPP..'/lua5.1" DBG=Yes',
+          'server "LUA51='..PRODAPP..'/lua5.1" DBG=Yes',
+        }, 
+      },
+      SunOS510_64 = { 
+        mf = { "server genstubs USE_NODEPEND=Yes DBG=Yes", 
+               "client LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes", 
+               "server LUA51="..PRODAPP.."/lua5.1 USE_NODEPEND=Yes DBG=Yes"}, 
+      }
+    },
+    dev_files = {
+      ["bin/${TEC_UNAME}/*"] = "demo/hello/mico/bin",
+      ["../idl/hello.idl"] = "demo/hello/idl/",
+      ["../management"] = "demo/hello",
+      ["../../README"] = "demo",      
+      ["MakefileST.linux"] = "demo/hello/mico",
+      ["MakefileST.sunos"] = "demo/hello/mico",
+      ["Makefile.win"] = "demo/hello/mico",
+      ["client.cpp"] = "demo/hello/mico",
+      ["server.cpp"] = "demo/hello/mico",
+      ["run*"] = "demo/hello/mico",
+      ["*.mak"] = "demo/hello/mico",
+      ["*config"] = "demo/hello/mico",
+      ["run*"] = "demo/hello/mico",
+      ["client"] = "demo/hello/mico",
+      ["server"] = "demo/hello/mico",
+    },
+  },
+  { name = "openbus-sdkcpp-demo-delegate-micosinglethread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/delegate/singlethread/mico",
@@ -986,20 +1132,20 @@ packages = {
       ["server"] = "demo/delegate/singlethread/mico",
     },
   },
-  { name = "openbus-demo-delegate-multithread-mico",
+  { name = "openbus-sdkcpp-demo-delegate-micomultithread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/demo/delegate/multithread/mico",
       mf = { 
-        "server genstubs", 
-        "client LUA51="..PRODAPP.."/lua5.1",
-        "server LUA51="..PRODAPP.."/lua5.1" 
+        "server genstubs OPENBUS_SDK_MULTITHREAD=Yes", 
+        "client LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes",
+        "server LUA51="..PRODAPP.."/lua5.1 OPENBUS_SDK_MULTITHREAD=Yes" 
       },
       SunOS510_64 = { 
         mf = { 
-          "server genstubs ",
-          'client USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
-          'server USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 "',
+          "server genstubs OPENBUS_SDK_MULTITHREAD=Yes",
+          'client USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 " OPENBUS_SDK_MULTITHREAD=Yes',
+          'server USE_NODEPEND=Yes "LUA51='..PRODAPP..'/lua5.1 " OPENBUS_SDK_MULTITHREAD=Yes',
         }, 
       },
     },
@@ -1019,34 +1165,34 @@ packages = {
       ["server"] = "demo/delegate/multithread/mico",
     },
   },
-  { name = "openbus-test-micoMT",
+  { name = "openbus-test-micomultithread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/mico/tests",
       mf = { 
-        "01 MULTITHREAD=Yes genstubs", 
-        "01 MULTITHREAD=Yes", 
-        "02 MULTITHREAD=Yes", 
-        "03 MULTITHREAD=Yes", 
-        "04 MULTITHREAD=Yes", 
-        "05 MULTITHREAD=Yes", 
-        "06 MULTITHREAD=Yes", 
-        "07 MULTITHREAD=Yes", 
-        "08 MULTITHREAD=Yes", 
-        "09 MULTITHREAD=Yes", 
-        "10 MULTITHREAD=Yes", 
-        "11 MULTITHREAD=Yes", 
-        "12 MULTITHREAD=Yes", 
-        "13 MULTITHREAD=Yes", 
-        "14 MULTITHREAD=Yes", 
-        "15 MULTITHREAD=Yes", 
-        "16 MULTITHREAD=Yes", 
-        "17 MULTITHREAD=Yes", 
-        "18 MULTITHREAD=Yes", 
-        "19 MULTITHREAD=Yes", 
-        "20 MULTITHREAD=Yes", 
-        "21 MULTITHREAD=Yes", 
-        "22 MULTITHREAD=Yes",
+        "01 OPENBUS_SDK_MULTITHREAD=Yes genstubs", 
+        "01 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "02 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "03 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "04 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "05 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "06 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "07 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "08 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "09 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "10 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "11 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "12 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "13 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "14 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "15 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "16 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "17 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "18 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "19 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "20 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "21 OPENBUS_SDK_MULTITHREAD=Yes", 
+        "22 OPENBUS_SDK_MULTITHREAD=Yes",
       },
     },
     install_files = {
@@ -1058,7 +1204,7 @@ packages = {
       ["../../idl/*"] = "test/idl",
     },
   },
-  { name = "openbus-test-micoST",
+  { name = "openbus-test-micosinglethread",
     build = {
       type = "tecmake",
       src = PRODAPP .."/sdk-cpp/test/mico/tests",
