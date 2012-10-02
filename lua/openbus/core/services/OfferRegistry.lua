@@ -448,16 +448,12 @@ function OfferRegistry:registerService(service_ref, properties)
       error = result,
     }}
   end
-  local allfacets = result
   local facets = {}
-  for _, facet in ipairs(allfacets) do
-    local facetname = facet.name
-    if IgnoredFacets[facetname] == nil then
-      facets[#facets+1] = {
-        name = facetname,
-        interface_name = facet.interface_name,
-      }
-    end
+  for index, facet in ipairs(result) do
+    facets[index] = {
+      name = facet.name,
+      interface_name = facet.interface_name,
+    }
   end
   -- get information about the caller
   local login = self.access:getCallerChain().caller
@@ -467,8 +463,11 @@ function OfferRegistry:registerService(service_ref, properties)
     local entity = EntityRegistry:getEntity(entityId)
     local unauthorized = {}
     for _, facet in ipairs(facets) do
-      if entity==nil or entity.authorized[facet.interface_name]==nil then
-        unauthorized[#unauthorized+1] = facet.name
+      local facetname = facet.name
+      if IgnoredFacets[facetname] == nil
+      and (entity == nil or entity.authorized[facet.interface_name] == nil)
+      then
+        unauthorized[#unauthorized+1] = facetname
       end
     end
     if #unauthorized > 0 then
@@ -647,12 +646,6 @@ end
 ------------------------------------------------------------------------------
 -- Faceta EntityRegistry
 ------------------------------------------------------------------------------
-
-local IgnoredFacets = {
-  IComponent = true,
-  IMetaInterface = true,
-  IReceptacles = true,
-}
 
 local Entity = class{ __type = types.RegisteredEntity }
 
