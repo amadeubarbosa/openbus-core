@@ -583,23 +583,15 @@ function OfferObserversCase.testCookiesGeneration(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local obs = createOfferObserver()
-  local cookie1 = tOffer:subscribeObserver(obs)
-  Check.assertEquals(1, cookie1)
-  local cookie2 = tOffer:subscribeObserver(obs)
-  Check.assertEquals(2, cookie2)
-  local cookie3 = tOffer:subscribeObserver(obs)
-  Check.assertEquals(3, cookie3)
-  local ok = tOffer:unsubscribeObserver(cookie2)
-  Check.assertTrue(ok)
-  cookie2 = 0
-  cookie2 = tOffer:subscribeObserver(obs)
-  Check.assertEquals(2, cookie2)
-  ok = tOffer:unsubscribeObserver(cookie1)
-  Check.assertTrue(ok)
-  ok = tOffer:unsubscribeObserver(cookie2)
-  Check.assertTrue(ok)
-  ok = tOffer:unsubscribeObserver(cookie3)
-  Check.assertTrue(ok)
+  local subscript1 = tOffer:subscribeObserver(obs)
+  local subscript2 = tOffer:subscribeObserver(obs)
+  local subscript3 = tOffer:subscribeObserver(obs)
+  subscript2:remove()
+  subscript1:remove()
+  subscript3:remove()
+  local ok, err = pcall(subscript3.remove, subscript3)
+  Check.assertTrue(not ok)
+  Check.assertEquals(sysex.OBJECT_NOT_EXIST, err._repid)
 end
 
 function OfferObserversCase.testNotification(self)
@@ -608,7 +600,7 @@ function OfferObserversCase.testNotification(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local obs = createOfferObserver()
-  local cookie = tOffer:subscribeObserver(obs)
+  tOffer:subscribeObserver(obs)
   local newProps = { offerProps[1], }
   tOffer:setProperties(newProps)
   assertCondOrTimeout(function() return obs.wasChanged == 1 end)
@@ -623,10 +615,10 @@ function OfferObserversCase.testMultipleNotification(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local obs = createOfferObserver()
-  local cookie1 = tOffer:subscribeObserver(obs)
-  local cookie2 = tOffer:subscribeObserver(obs)
-  local cookie3 = tOffer:subscribeObserver(obs)
-  local ok = tOffer:unsubscribeObserver(cookie2)
+  local subscript1 = tOffer:subscribeObserver(obs)
+  local subscript2 = tOffer:subscribeObserver(obs)
+  local subscript3 = tOffer:subscribeObserver(obs)
+  subscript2:remove()
   tOffer:remove()
   self.serviceOffer = nil
   assertCondOrTimeout(function() return obs.wasRemoved == 2 end)
@@ -638,12 +630,11 @@ function OfferObserversCase.testSubscribe(self)
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
   local obs = createOfferObserver()
-  local cookie = tOffer:subscribeObserver(obs)
+  local subscript = tOffer:subscribeObserver(obs)
   local newProps = { offerProps[1], }
   tOffer:setProperties(newProps)
   assertCondOrTimeout(function() return obs.wasChanged == 1 end)
-  local ok = tOffer:unsubscribeObserver(cookie)
-  Check.assertTrue(ok)
+  subscript:remove()
   tOffer:remove()
   assertCondOrTimeout(function() return obs.wasRemoved == 0 end)
   self.serviceOffer = nil
@@ -664,7 +655,7 @@ function OfferObserversCase.testSubscribeInvalid(self)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   local tOffer = self.serviceOffer
-  local cookie = tOffer:subscribeObserver({})
+  tOffer:subscribeObserver({})
   local newProps = { offerProps[1], }
   local ok, err = pcall(tOffer.setProperties, tOffer, newProps)
   -- Erro é apenas loggado no lado do bus
@@ -675,85 +666,57 @@ function OfferObserversCase.testSubscribeInvalid(self)
   self.serviceOffer = nil
 end
 
-function OfferObserversCase.testFailUnsubscription(self)
-  local context = createPingComponent(self.conn.orb)
-  local comp = context.IComponent
-  self.serviceOffer = self.offers:registerService(comp, offerProps)
-  local tOffer = self.serviceOffer
-  local invalidCookie = -1
-  local ok = tOffer:unsubscribeObserver(invalidCookie)
-  Check.assertTrue(not ok)
-end
-
 -----------------------------------------------------
 -- Caso de teste de Observação de Registro de Ofertas
 -----------------------------------------------------
 
 RegistryObserversCase.beforeTestCase = beforeTestCase
 RegistryObserversCase.afterTestCase = afterTestCase
-
-function RegistryObserversCase.afterEachTest(self)
-  afterEachTest(self)
-  -- se ocorreu algum erro, garantindo que os observadores foram removidos.
-  for i = 1, 3 do
-    self.offers:unsubscribeObserver(i)
-  end
-end
+RegistryObserversCase.afterEachTest = afterEachTest
 
 function RegistryObserversCase.testCookiesGeneration(self)
   local obs = createOfferRegistryObserver()
-  local cookie1 = self.offers:subscribeObserver(obs, offerProps)
-  Check.assertEquals(1, cookie1)
-  local cookie2 = self.offers:subscribeObserver(obs, offerProps)
-  Check.assertEquals(2, cookie2)
-  local cookie3 = self.offers:subscribeObserver(obs, offerProps)
-  Check.assertEquals(3, cookie3)
-  local ok = self.offers:unsubscribeObserver(cookie2)
-  Check.assertTrue(ok)
-  cookie2 = 0
-  cookie2 = self.offers:subscribeObserver(obs, offerProps)
-  Check.assertEquals(2, cookie2)
-  ok = self.offers:unsubscribeObserver(cookie1)
-  Check.assertTrue(ok)
-  ok = self.offers:unsubscribeObserver(cookie2)
-  Check.assertTrue(ok)
-  ok = self.offers:unsubscribeObserver(cookie3)
-  Check.assertTrue(ok)
+  local subscript1 = self.offers:subscribeObserver(obs, offerProps)
+  local subscript2 = self.offers:subscribeObserver(obs, offerProps)
+  local subscript3 = self.offers:subscribeObserver(obs, offerProps)
+  subscript2:remove()
+  subscript2 = self.offers:subscribeObserver(obs, offerProps)
+  subscript1:remove()
+  subscript2:remove()
+  subscript3:remove()
 end
 
 function RegistryObserversCase.testNotification(self)
   local obs = createOfferRegistryObserver()
-  local cookie = self.offers:subscribeObserver(obs, offerProps)
+  local subscript = self.offers:subscribeObserver(obs, offerProps)
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   assertCondOrTimeout(function() return obs.registered == 1 end)
-  local ok = self.offers:unsubscribeObserver(cookie)
-  Check.assertTrue(ok)  
+  subscript:remove()
 end
 
 function RegistryObserversCase.testMultipleNotification(self)
   local obs = createOfferRegistryObserver()
-  local cookie1 = self.offers:subscribeObserver(obs, offerProps)
-  local cookie2 = self.offers:subscribeObserver(obs, offerProps)
-  local cookie3 = self.offers:subscribeObserver(obs, offerProps)
+  local subscript1 = self.offers:subscribeObserver(obs, offerProps)
+  local subscript2 = self.offers:subscribeObserver(obs, offerProps)
+  local subscript3 = self.offers:subscribeObserver(obs, offerProps)
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   assertCondOrTimeout(function() return obs.registered == 3 end)
   self.serviceOffer:remove()
-  local ok = self.offers:unsubscribeObserver(cookie2)
-  Check.assertTrue(ok)
+  subscript2:remove()
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   assertCondOrTimeout(function() return obs.registered == 5 end)
-  ok = self.offers:unsubscribeObserver(cookie1)
-  ok = self.offers:unsubscribeObserver(cookie3)
+  subscript1:remove()
+  subscript3:remove()
 end
 
 function RegistryObserversCase.testSubscribe(self)
   local newProps = { offerProps[1], }
   local obs = createOfferRegistryObserver()
-  local cookie = self.offers:subscribeObserver(obs, newProps)
+  local subscript = self.offers:subscribeObserver(obs, newProps)
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
@@ -764,8 +727,7 @@ function RegistryObserversCase.testSubscribe(self)
   newProps = { offerProps[2], }
   tOffer:setProperties(newProps)
   assertCondOrTimeout(function() return obs.registered == 2 end)
-  local ok = self.offers:unsubscribeObserver(cookie)
-  Check.assertTrue(ok)  
+  subscript:remove()
   tOffer:setProperties(offerProps)
   assertCondOrTimeout(function() return obs.registered == 2 end)
 end
@@ -781,16 +743,10 @@ function RegistryObserversCase.testFailSubscription(self)
 end
 
 function RegistryObserversCase.testSubscribeInvalid(self)
-  local cookie = self.offers:subscribeObserver({}, offerProps)
+  local subscript = self.offers:subscribeObserver({}, offerProps)
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
   -- Erro é apenas loggado no lado do bus
-  self.offers:unsubscribeObserver(cookie)
-end
-
-function RegistryObserversCase.testFailUnsubscription(self)
-  local cookie = -1
-  self.offers:unsubscribeObserver(cookie)
-  Check.assertTrue(not ok)
+  subscript:remove()
 end

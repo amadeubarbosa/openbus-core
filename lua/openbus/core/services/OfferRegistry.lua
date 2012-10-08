@@ -50,8 +50,7 @@ local OfferRegistry -- forward declaration
 local EntityRegistry -- forward declaration
 
 local function assertCaller(self, owner)
-  local caller = self.access:getCallerChain().caller
-  local entity = caller.entity
+  local entity = self.access:getCallerChain().caller.entity
   local logtag
   if entity == owner then
     logtag = "request"
@@ -120,30 +119,30 @@ local function makePropertyList(entry, service_props)
   return props
 end
 
-local function registerObserver(self, watched, cookie, entry)
-  local login = entry.login
-  watched.observers[cookie] = login
-  self.observerLogins[login][watched][cookie] = entry
+local function registerObserver(self, watched, id, subscription)
+  local login = subscription.login
+  watched.observers[id] = login
+  self.observerLogins[login][watched][id] = subscription
 end
 
-local function unregisterObserver(self, watched, cookie)
+local function unregisterObserver(self, watched, id)
   local observers = watched.observers
-  local login = observers[cookie]
-  observers[cookie] = nil
-  return delautotab(self.observerLogins, login, watched, cookie)
+  local login = observers[id]
+  observers[id] = nil
+  return delautotab(self.observerLogins, login, watched, id)
 end
 
 local function notifyOfferObservers(self, watched, event, offer)
   local observerLogins = self.observerLogins
-  for cookie, login in pairs(watched.observers) do
-    local entry = observerLogins[login][watched][cookie]
-    local observer = entry.observer
+  for id, login in pairs(watched.observers) do
+    local subscription = observerLogins[login][watched][id]
+    local observer = subscription.observer
     schedule(newthread(function()
       local ok, errmsg = pcall(observer[event], observer, offer)
       if not ok then
         log:exception(msg.OfferObserverException:tag{
-          cookie = cookie,
-          owner = entry.login,
+          id = id,
+          owner = subscription.login,
           watched = watched.id,
           errmsg = errmsg,
         })
@@ -156,35 +155,95 @@ end
 -- Faceta OfferRegistry
 ------------------------------------------------------------------------------
 
+local OfferObserverSubscription = class{
+  __type = types.OfferObserverSubscription,
+}
+
+function OfferObserverSubscription:__init()
+  local id = self.id
+  local offer = self.offer
+  self.__objkey = "OfferObserver:"..id -- for the ORB
+  registerObserver(offer.registry, offer, id, self)
+end
+
+function OfferObserverSubscription:remove(tag)
+  local id = self.id
+  local offer = self.offer
+  local registry = offer.registry
+  local tag = tag or assertCaller(registry,
+    AccessControl:getLoginEntry(self.login).entity)
+  -- try to remove persisted observer (may raise expections)
+  assert(offer.database:setentryfield(offer.id, "observers", id, nil))
+  -- commit changes in memory
+  registry.access.orb:deactivate(self)
+  unregisterObserver(registry, offer, id)
+  log[tag](log, msg.UnsubscribeOfferObserver:tag{
+    login = self.login,
+    offer = offer.id,
+    id = id,
+  })
+end
+
+
+
+local OfferRegistryObserverSubscription = class{
+  __type = types.OfferRegistryObserverSubscription,
+}
+
+function OfferRegistryObserverSubscription:__init()
+  local id = self.id
+  local registry = self.registry
+  self.__objkey = "OfferRegObs:"..id -- for the ORB
+  registerObserver(registry, registry, id, self)
+end
+
+function OfferRegistryObserverSubscription:remove(tag)
+  local id = self.id
+  local registry = self.registry
+  local tag = tag or assertCaller(registry,
+    AccessControl:getLoginEntry(self.login).entity)
+  -- try to remove persisted observer (may raise expections)
+  assert(registry.offerRegObsDB:removeentry(id))
+  -- commit change to memory
+  registry.access.orb:deactivate(self)
+  unregisterObserver(registry, registry, id)
+  log[tag](log, msg.UnsubscribeOfferRegistryObserver:tag{
+    login = self.login,
+    id = id,
+  })
+end
+
+
 local Offer = class{ __type = types.ServiceOffer }
   
 function Offer:__init()
   self.ref = self -- IDL struct attribute (see operation 'describe')
   self.__objkey = "Offer:"..self.id -- for the ORB
-  local registry = self.registry
-  registry.offers:add(self)
+  self.registry.offers:add(self)
   -- recover observers
   local persistedObs = self.observers -- backup observer persisted entries
   self.observers = {} -- this table will contain entries in memory only
                       -- which is filled by operation 'registerObserver'
-  local orb = self.orb
-  for cookie, entry in pairs(persistedObs) do
+  local orb = self.registry.access.orb
+  for id, entry in pairs(persistedObs) do
     local login = entry.login
     if AccessControl:getLoginEntry(login) then
       log:action(msg.RecoverPersistedOfferObserver:tag{
         login = login,
         offer = self.id,
-        cookie = cookie,
+        id = id,
       })
+      entry.id = id
       entry.observer = orb:newproxy(entry.observer, nil, types.OfferObserver)
-      registerObserver(registry, self, cookie, entry)
+      entry.offer = self
+      orb:newservant(OfferObserverSubscription(entry))
     else
       log:action(msg.DiscardOfferObserverAfterLogout:tag{
         login = login,
         offer = self.id,
-        cookie = cookie,
+        id = id,
       })
-      persistedObs[cookie] = nil
+      persistedObs[id] = nil
     end
   end
   -- commit removal of logged out observers (may raise expections)
@@ -217,17 +276,19 @@ function Offer:remove(tag)
   -- try to remove persisted offer (may raise expections)
   assert(self.database:removeentry(self.id))
   -- commit changes in memory
-  self.orb:deactivate(self)
+  registry.access.orb:deactivate(self)
   registry.offers:remove(self)
   log[tag](log, msg.RemoveServiceOffer:tag{
     offer = self.id,
     entity = self.entity,
     login = self.login,
   })
-  -- notify observers and unregister them from the logout callback
+  -- notify observers
   notifyOfferObservers(registry, self, "removed", self)
-  for cookie in pairs(self.observers) do
-    unregisterObserver(registry, self, cookie)
+  -- unregister observers from the logout callback
+  local observerLogins = registry.observerLogins
+  for id, login in pairs(self.observers) do
+    observerLogins[login][self][id]:remove()
   end
 end
 
@@ -236,45 +297,25 @@ function Offer:subscribeObserver(observer)
     sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local registry = self.registry
-  local id = self.id
+  local offerid = self.id
   local login = registry.access:getCallerChain().caller.id
   local entry = {
     login = login,
     observer = tostring(observer),
   }
-  local cookie = #self.observers + 1
+  local id = newid("time")
   -- try to persist observer (may raise expections)
-  assert(self.database:setentryfield(id, "observers", cookie, entry))
+  assert(self.database:setentryfield(offerid, "observers", id, entry))
   -- commit changes in memory
-  entry.observer = observer
-  registerObserver(registry, self, cookie, entry)
   log:request(msg.SubscribeOfferObserver:tag{
     login = login,
-    offer = id,
-    cookie = cookie,
+    offer = offerid,
+    id = id,
   })
-  return cookie
-end
-
-function Offer:unsubscribeObserver(cookie)
-  local id = self.id
-  if self.observers[cookie] ~= nil then
-    -- try to remove persisted observer (may raise expections)
-    assert(self.database:setentryfield(id, "observers", cookie, nil))
-    -- commit changes in memory
-    local entry = unregisterObserver(self.registry, self, cookie)
-    log:request(msg.UnsubscribeOfferObserver:tag{
-      login = entry.login,
-      offer = id,
-      cookie = cookie,
-    })
-    return true
-  end
-  log:exception(msg.UnableToUnsubscribeInexistentOfferObserver:tag{
-    offer = id,
-    cookie = cookie,
-  })
-  return false
+  entry.id = id
+  entry.observer = observer
+  entry.offer = self
+  return OfferObserverSubscription(entry)
 end
 
 
@@ -284,9 +325,9 @@ function OfferRegistry:loginRemoved(login)
   do -- observers
     local watchedMap = rawget(self.observerLogins, login.id)
     if watchedMap ~= nil then
-      for watched, cookies in pairs(watchedMap) do
-        for cookie in pairs(cookies) do
-          watched:unsubscribeObserver(cookie)
+      for watched, subscriptions in pairs(watchedMap) do
+        for id, subscription in pairs(subscriptions) do
+          subscription:remove("action")
         end
       end
     end
@@ -305,20 +346,20 @@ end
 function OfferRegistry:notifyRegistryObservers(offer)
   local offers = self.offers
   local observerLogins = self.observerLogins
-  for cookie, login in pairs(self.observers) do
-    local entry = observerLogins[login][self][cookie]
+  for id, login in pairs(self.observers) do
+    local subscription = observerLogins[login][self][id]
     local matched
-    for _, prop in ipairs(entry.properties) do
+    for _, prop in ipairs(subscription.properties) do
       matched = offers:get(prop.name, prop.value)[offer]
       if not matched then break end
     end
     if matched then
-      local observer = entry.observer
+      local observer = subscription.observer
       schedule(newthread(function()
         local ok, errmsg = pcall(observer.offerRegistered, observer, offer)
         if not ok then
-          log:exception(msg.OfferRegistrationObserverException:tag{
-            cookie = cookie,
+          log:exception(msg.OfferRegistryObserverException:tag{
+            id = id,
             errmsg = errmsg,
           })
         end
@@ -366,7 +407,6 @@ function OfferRegistry:__init(data)
         entry.service_ref = orb:newproxy(entry.service_ref, nil,
                                          types.OfferedService)
         entry.properties = makePropertyList(entry, entry.properties)
-        entry.orb = orb
         entry.registry = self
         entry.database = offerDB
         orb:newservant(Offer(entry))
@@ -388,22 +428,24 @@ function OfferRegistry:__init(data)
     local offers = self.offers
     local offerRegObsDB = self.offerRegObsDB
     local toberemoved = {}
-    for cookie, entry in assert(offerRegObsDB:ientries()) do
+    for id, entry in assert(offerRegObsDB:ientries()) do
       local login = entry.login
       if AccessControl:getLoginEntry(login) then
         log:action(msg.RecoverPersistedOfferRegistryObserver:tag{
-          cookie = cookie,
+          id = id,
           login = login,
         })
+        entry.id = id
         entry.observer = orb:newproxy(entry.observer, nil,
-                                      types.OfferRegistrationObserver)
-        registerObserver(self, self, cookie, entry)
+                                      types.OfferRegistryObserver)
+        entry.registry = self
+        orb:newservant(OfferRegistryObserverSubscription(entry))
       else
         log:action(msg.DiscardOfferRegistryObserverAfterLogout:tag{
-          cookie = cookie,
+          id = id,
           login = login,
         })
-        toberemoved[cookie] = true
+        toberemoved[id] = true
       end
     end
     for id in pairs(toberemoved) do
@@ -506,7 +548,6 @@ function OfferRegistry:registerService(service_ref, properties)
   -- create object for the new offer
   entry.service_ref = service_ref
   entry.properties = allprops
-  entry.orb = self.access.orb
   entry.registry = self
   entry.database = database
   log:request(msg.RegisterServiceOffer:tag{
@@ -538,41 +579,23 @@ function OfferRegistry:subscribeObserver(observer, properties)
     sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local login = self.access:getCallerChain().caller.id
-  local observers = self.observers
-  local cookie = #observers + 1
+  local id = newid("time")
   local entry = { 
     login = login,
     properties = properties,
     observer = tostring(observer),
   }
   -- try to persist observer (may raise expections)
-  assert(self.offerRegObsDB:setentry(cookie, entry))
+  assert(self.offerRegObsDB:setentry(id, entry))
   -- commit change to memory
-  entry.observer = observer
-  registerObserver(self, self, cookie, entry)
   log:request(msg.SubscribeOfferRegistryObserver:tag{
     login = login,
-    cookie = cookie,
+    id = id,
   })
-  return cookie
-end
-
-function OfferRegistry:unsubscribeObserver(cookie)
-  if self.observers[cookie] ~= nil then
-    -- try to remove persisted observer (may raise expections)
-    assert(self.offerRegObsDB:removeentry(cookie))
-    -- commit change to memory
-    local entry = unregisterObserver(self, self, cookie)
-    log:request(msg.UnsubscribeOfferRegistryObserver:tag{
-      login = entry.login,
-      cookie = cookie,
-    })
-    return true
-  end
-  log:exception(msg.UnableToUnsubscribeInexistentOfferRegistryObserver:tag{
-    cookie = cookie,
-  })
-  return false
+  entry.id = id
+  entry.observer = observer
+  entry.registry = self
+  return OfferRegistryObserverSubscription(entry)
 end
 
 ------------------------------------------------------------------------------
@@ -678,7 +701,7 @@ function Entity:remove()
     end
   end
   assert(self.database:removeentry(id))
-  self.orb:deactivate(self)
+  registry.access.orb:deactivate(self)
   local interfaces = InterfaceRegistry.interfaces
   for ifaceId in pairs(self.authorized) do
     interfaces[ifaceId][self] = nil
@@ -780,8 +803,9 @@ function Category:remove()
     throw.EntityCategoryInUse{ category = id, entities = self:getEntities() }
   end
   assert(self.database:removeentry(id))
-  self.orb:deactivate(self)
-  self.registry.categories[id] = nil
+  local registry = self.registry
+  registry.access.orb:deactivate(self)
+  registry.categories[id] = nil
   log:admin(msg.EntityCategoryRemoved:tag{category=id})
 end
 
@@ -810,7 +834,6 @@ function Category:registerEntity(id, name)
     id = id,
     name = name,
     category = self,
-    orb = self.orb,
     registry = registry,
     database = database,
   }
@@ -830,7 +853,7 @@ EntityRegistry = {} -- is local (see forward declaration)
 
 function EntityRegistry:__init(data)
   -- initialize attributes
-  self.orb = data.access.orb
+  self.access = data.access
   self.database = data.database
   self.enforceAuth = data.enforceAuth
   self.categories = {}
@@ -849,7 +872,7 @@ function EntityRegistry:__init(data)
   access:setGrantedUsers(Entity.__type,"grantInterface",admins)
   access:setGrantedUsers(Entity.__type,"revokeInterface",admins)
   
-  local orb = self.orb
+  local orb = access.orb
   local database = self.database
   -- recover all category objects
   local categoryDB = assert(database:gettable("Categories"))
@@ -857,7 +880,6 @@ function EntityRegistry:__init(data)
     orb:newservant(Category{
       id = id,
       name = name,
-      orb = orb,
       registry = self,
       database = categoryDB,
     })
@@ -880,7 +902,6 @@ function EntityRegistry:__init(data)
       name = entry.name,
       category = category,
       authorized = entry.authorized,
-      orb = orb,
       registry = self,
       database = entityDB,
     }
@@ -918,7 +939,6 @@ function EntityRegistry:createEntityCategory(id, name)
   return Category{
     id = id,
     name = name,
-    orb = self.orb,
     registry = self,
     database = database,
   }
