@@ -1,0 +1,291 @@
+[/
+  Copyright (c) 2012 Tecgraf/PUC-Rio. All rights reserved.  
+  Created by Hugo Roenick on 2012-05-22.
+]  
+
+[article Manual de Instalação do OpenBus 2.0.0
+  [quickbook 1.5]
+  [authors [Roenick, Hugo]]
+  [id installation]
+  [copyright 2012 Tecgraf/PUC-Rio]
+  [source-mode teletype]
+]
+
+[def __version__ 2.0.0]
+[def __openbus__ OpenBus]
+
+[section:intro Introdução]
+
+Este documento visa informar apenas o procedimento necessário para instalar um barramento [link ref_openbus __openbus__] da versão __version__.
+Caso tenha interesse de entender melhor o que é um barramento __openbus__, consulte o seu [link ref_manual manual de referência].
+
+[endsect]
+
+[section:install Instalação]
+
+O primeiro para instalar o barramento deve ser descompactar o pacote do barramento da plataforma desejada.
+Os pacotes oficialmente suportados estão disponibilizados no site oficial do projeto: [@http://www.tecgraf.puc-rio.br/openbus].
+
+As plataformas oficialmente suportadas são:
+
+* Solaris 10 release 8/07 SPARC 64 bits (SunOS510_64)
+* Solaris 10 release 8/07 SPARC 32 bits (SunOS510)
+* Linux Kernel 2.6 glibc 2.5 64 bits (Linux26g4_64)
+* Linux Kernel 2.6 glibc 2.5 32 bits (Linux26g4)
+* Linux Kernel 2.4 glibc 2.3 64 bits (Linux24g3_64)
+* Linux Kernel 2.4 glibc 2.3 32 bits (Linux24g3)
+
+Para executar o barramento deve-se seguir o seguinte procedimento:
+
+# Extrair o pacote. Para fins de legibilidade, vamos guardar o caminho do local da extração em uma variável de ambiente. Porém, [*essa declaração não é obrigatória!].
+``
+  export OPENBUS_HOME=<local de extracao do pacote>
+`` 
+# Testar se a execução do binário do barramento esta funcionando.
+``
+  $OPENBUS_HOME/bin/busservices --help
+``
+# Gerar um par de chaves com tamanho de 2048 bits para o barramento. 
+A chave privada (arquivo com terminação ['.key]) deve ser do formato PKCS8 codificada em DER, e o certificado (arquivo com terminação ['.crt]) deve ser do formato X.509 codificado em DER.
+Esse par de chaves pode ser criado utilizando o script ['openssl-generate.ksh].
+``
+  cd ${OPENBUS_HOME} && ./bin/openssl-generate.ksh -n <nome do par de chaves>
+``
+# Executar o barramento passando as configurações desejadas. Como por exemplo, o par de chaves do barramento.
+
+
+Maiores informações sobre a como utilizar a configuração do ['busservices] podem ser encontradas no [link ref_manual manual de referência].
+
+[endsect]
+
+[section:ldap Configuração do validador LDAP]
+
+O validador LDAP tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao ['busservices] através do parâmetro [^-configs]. A seguir apresentamos quais são as propriedades, seu significado e possíveis valores:
+
+* [*ldap_servers] indica uma lista de URLs de servidores LDAP. Cada URL deve seguir o formato ['<protocol>://<server>:<port>], onde ['<protocol>] pode ser ['ldaps] ou ['ldap]. Exemplo:
+``
+  ldap_servers = { 
+   "ldaps://server.mycompany.com",
+   "ldap://otherserver.mycompany.com:389",
+  }
+``
+* [*ldap_patterns] indica uma lista de padrões de formação de nomes que serão usados na autenticação LDAP. Atualmente só há suporte para o padrão ['%U], e o validador irá substituir esse padrão pelo nome do usuário fornecido no ato do login. No exemplo abaixo apresentamos dois padrões, o primeiro é útil para autenticação em servidores Microsoft Active Directory (que utilizam [link upn UPN]) e o segundo é útil para autenticação em servidores OpenLDAP (que utilizam [link dn DN], veja [link rfc4514 RFC4514] para mais informações). Exemplo:
+``
+  ldap_patterns = {
+    "%U@project.mycompany.com",
+    "cn=%U,ou=users,ou=groups,dc=company",
+  }
+``
+* [*ldap_timeout] indica um tempo máximo de espera (em segundos) da resposta do servidor LDAP. Exemplo:
+``
+  ldap_timeout = 10
+``
+
+[endsect]
+
+[section:opt Configurações opcionais para administradores do servidor]
+
+No pacote de instalação do barramento existem scripts que auxiliam algumas tarefas diárias comuns ao administrador da máquina onde o barramento está instalado. Esses scripts estão localizados na pasta ['bin] e são eles:
+
+* [*openssl-generate.ksh] script com as pré-configurações adequadas para geração de pares de chaves pública e privada a serem usadas pelo barramento (seja no cadastro de novos serviços ou na instalação do próprio barramento).
+* [*bus-init] script de inicialização para iniciar e parar o barramento, semelhante aos scripts do /etc/init.d em servidores Unix.
+* [*bus-check-running] script que verifica se o barramento está executando e, caso não esteja, inicia o barramento utilizando o script ['bus-init].
+
+[section:init Inicialização] [/sub]
+
+Recomendamos que o administrador coloque o script ['bus-init] em /etc/init.d/openbus (ou outro lugar semelhante em seu sistema operacional) e faça o link simbólico apropriado para cada ['runlevel]. É [*necessário editar o script ['bus-init]] para redefinir o local da instalação do barramento, de modo que o script possa encontrar o executável do ['busservices]. 
+
+Além disso, por padrão, este script salva um arquivo de nome ['busservices.pid] (contendo o PID do processo do ['busservices]) dentro do diretório de instalação do barramento. Caso o administrador queira, ele também pode mudar a localização desse arquivo dentro do script.
+
+Para utilizar o script ['bus-init] [*é recomendado] que o administrador do sistema configure o barramento para utilizar um arquivo de configuração. Nesse caso o administrador [*precisa] decidir onde colocar esse arquivo de configuração. Há duas formas de fazer isso utilizando o ['bus-init]:
+
+# Criando um arquivo /etc/default/openbus e definindo a variável OPENBUS_CONFIG. Exemplo:
+``
+  OPENBUS_CONFIG=/etc/openbus.cfg
+  export OPENBUS_CONFIG
+``
+# Editando o script ['bus-init] e alterando a variável PARAMS com o parâmetro [^-configs] e a localização do arquivo de configuração desejado. Exemplo:
+``
+  PARAMS=-configs /etc/openbus.cfg
+``
+
+[endsect]
+
+[section:mon Monitoramento] [/sub]
+
+O script ['bus-check-running] foi criado para ser utilizado em conjunto com o agendador de tarefas do sistema (comando ['cron] no Unix). Este script [*aceita dois parâmetros] sendo que apenas o primeiro é obrigatório. O primeiro argumento deve indicar o local de instalação do barramento e o segundo um destinatário de email para receber as notificações de reinício do barramento (caso não seja informado, será enviado email para root@<hostname>). É importante observar que este script [*depende] do script ['bus-init].
+
+Além disso, caso o administrador coloque o ['bus-init] em outro local (que não seja /etc/init.d/openbus), [*será necessário editar o script ['bus-check-running]] para redefinir a variável OPENBUS_INIT. Da mesma forma, caso o administrador altere o local do arquivo ['busservices.pid] [*também será necessário editar este script] para redefinir a variável PID_BUSSERVICES.
+
+Um exemplo de agendamento no ['cron] para utilizar o ['bus-check-running] é dado a seguir, neste exemplo consideramos que o barramento está instalado em /opt/openbus-2.0:
+``
+  */10 * * * * /opt/openbus-2.0/bin/bus-check-running /opt/openbus-2.0
+``
+
+[endsect]
+
+[section:rotate Rotacionamento de logs] [/sub]
+
+Por padrão, o barramento imprime logs em tela. É [*fortemente recomendado] configurar o barramento para salvar esses logs em arquivos conforme documentado no [link ref_manual manual de referência]. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
+
+O comando [*logrotate] é um utilitário para simplificar a administração de arquivos de logs bem comum na maioria das instalações Linux e Solaris. O logrotate permite a rotação automática, a compressão dos logs antigos, a remoção de logs muito velhos e mesmo o envio de emails contendo os arquivos de logs.
+
+Para rotacionar os logs do barramento basta configurar o logrotate com as linhas a seguir, neste exemplo consideramos que o barramento salva o log em /var/log/openbus.log:
+``
+  /var/log/openbus.log {
+    weekly
+    compress
+    copytruncate
+    rotate 4
+  }
+``
+
+Os significados das opções recomendadas acima são dados a seguir:
+
+# O rotacionamento dos logs ocorre [*semanalmente].
+# Os logs antigos são comprimidos.
+# A opção [*copytruncate] é necessária pois o barramento escreve continuamente no log e ocorrerá erro de escrita em disco caso os descritores de arquivos sejam alterados. Essa opção copia os arquivos de logs e depois reseta o arquivo original. É o procedimento mais seguro nesses casos.
+# Armazena-se até [*4] volumes dos logs antigos.
+
+[section:logadm Rotacionamento de logs usando o logadm (plataforma Solaris)] [/subsub]
+
+O [*logadm] é muito parecido com o logrotate. Para a rotação dos logs, nós iremos utilizar o crontab e o logadm.
+Caso não seja o root da maquina, você deve utilizar o parâmetro [^-f] para informar um arquivo de configuração. Esse arquivo irá conter todos os logs que você deseja rotacionar. Abaixo temos um exemplo de como configurar o logadmin para rotacionar os logs do barramento.
+
+* O agendamento do cron que faz o logadm ser executado todo dia às 5:00AM:
+``
+  00 05 * * * /usr/sbin/logadm -f /etc/openbus-logadm.conf
+``
+* No arquivo /etc/openbus-logadm.conf temos:
+``
+  /var/log/openbus.log -C 5 -P 'Mon Jul 26 20:13:01 2010' -c -p 7d -z 0
+``
+
+Os significados das opções recomendadas acima são dados a seguir:
+
+# Os parâmetros [^-C 5 -c -p 7d -z 0] que fazem com que o logadm guarde os 5 últimos logs, truncando-os e comprimindo-os no formato .gz. Essa ação será feita a cada 7 dias.
+# O parâmetro [^-P] será adicionado pelo próprio logadm após a primeira execução, ele é responsável por controlar a próxima data que o rotacionamento ocorrerá.
+
+[endsect] [/subsub logadm]
+
+[endsect] [/sub rotate]
+
+[endsect] [/section opt]
+
+[section:faq FAQ]
+
+[section Não lembro a sintaxe do crontab. Qual é ela mesmo?]
+
+``
+.---------------- minuto (0 - 59)
+|  .------------- hora (0 - 23)
+|  |  .---------- dia do mês (1 - 31)
+|  |  |  .------- mês (1 - 12) 
+|  |  |  |  .---- dia da semana (0 - 6) (Domingo=0 ou 7) 
+|  |  |  |  |
+*  *  *  *  *  comando a ser executado e suas opções
+``
+
+[endsect]
+
+[section Não lembro como editar o agendamento do cron. Como é mesmo?]
+
+Para adicionar um novo agendamento pode-se usar o arquivo global /etc/crontab (caso seja root) ou editar a tabela específica do usuário (todo usuário pode usar o cronpara rodar tarefas periódicas). O comando é:
+``
+  crontab -e
+``
+
+Um arquivo com os agendamentos já existentes será aberto e será possível adicionar conforme informado anteriormente. Se o arquivo está vazio é porque o usuário do sistema não tem nenhum agendamento ainda.
+
+[endsect]
+
+[section Onde devo salvar o arquivo de configuração do logrotate?]
+
+Na maioria das instalações Linux recentes já dispõem do diretório /etc/logrotate.d. Nesses casos, basta criar um arquivo chamado openbus (pode ser outro nome de sua preferência) e salvar as configurações acima nele.
+
+É importante que o administrador leia as páginas de manual do logrotate (man logrotate) pois podem haver diferenças na configuração para versões antigas desse utilitário. Uma das situações comum é não haver suporte ao diretório /etc/logrotate.d, nesses casos, basta adicionar as configurações acima no arquivo /etc/logrotate.conf.
+
+[endsect]
+
+[section Precisa ser configurada alguma permissão especial? Qual o owner e o grupo que a configuração do logrotate precisa ter?]
+
+Não é necessário nenhuma permissão especial, basta o proprietário ser root e ter leitura para qualquer usuário (pode haver plataformas onde o logrotate execute como outro usuário que não o root).
+
+[endsect]
+
+[section Onde os arquivos rotacionados são armazenados?]
+
+No mesmo diretório dos arquivos originais.
+
+[endsect]
+
+[section Preciso executar o comando [^logrotate /etc/logrotate.d/openbus]?]
+
+Não é preciso. Normalmente o logrotate é cadastrado como uma tarefa diária no cron. Mas isso não impede de que o administrador execute tal comando passando o parâmetro [^--force] para obrigar o primeiro rotacionamento. Isso é indicado principalmente logo após a configuração inicial.
+
+[endsect]
+
+[section Preciso configurar para o comando [^logrotate /etc/logrotate.d/openbus] ser colocado na inicialização automática da máquina? Como saber que ele está executando?]
+
+O logrotate não é um daemon, portanto não se mantém em execução. Normalmente, o logrotate é executado através do agendamento do cron. Caso não haja cron disponível em uma dada plataforma, então nesse caso será sim importante executar o comando do logrotate na inicialização da máquina.
+
+[endsect]
+
+[section Como usar o logrotate sem precisar ter acesso de administrador na máquina?]
+
+O logrotate pode ser usado por usuários desprivilegiados (aqueles que não possuem acesso de root). Contudo, é muito comum que esses usuários ainda queiram rotacionar periodicamente seus arquivos de log. Nessa situação, recomendamos que o usuário adicione regras no agendador de tarefas do Unix (cron) para que o comando do logrotate seja chamado (ao menos) diariamente.
+
+Para usuários desprivilegiados é importante usar alguns parâmetros do logrotate como o [^--state]. Esse parâmetro indica qual arquivo de estados será usado. O logrotate usa tal arquivo de estado para registrar a data da última rotação.
+
+Segue um exemplo de agendamento do cron para executar o logrotate diariamente às 12:00 horas para o barramento instalado em /opt/openbus-2.0:
+``
+  0 12 * * * /usr/sbin/logrotate --state /opt/openbus-2.0/logrotate.status /etc/openbus-logrotate.conf   
+``
+
+É importante notar que o arquivo logrotate.status contendo o último estado da rotação foi mantido no diretório da instalação do barramento.
+
+[endsect]
+
+[section Como instalar o logrotate como usuário comum numa Solaris 10?]
+
+Nas plataformas Solaris a forma mais simples é baixar o pacote binário a partir do SunFreeware e usar diretamente da pasta do usuário. Um exemplo é dado a seguir:
+
+# Download e extração do pacote a partir do sunfreeware:
+``
+  wget -c ftp://ftp.sunfreeware.com/pub/freeware/sparc/10/logrotate-3.7.6-sol10-sparc-local.gz
+  gunzip logrotate-3.7.6-sol10-sparc-local.gz
+  mkdir /tmp/install
+  pkgtrans logrotate-3.7.6-sol10-sparc-local /tmp/install      
+``
+# Entendendo o conteúdo do pacote e copiando para uma pasta pessoal o binário principal:
+``
+  ls -l /tmp/install/SMClogr/reloc/
+    drwxr-xr-x   3 openbus  tecgraf      512 Apr 12 15:24 doc
+    drwxr-xr-x   3 openbus  tecgraf      512 Apr 12 15:24 man
+    drwxr-xr-x   2 openbus  tecgraf      512 Apr 12 15:24 sbin
+  cp /tmp/install/SMClogr/reloc/sbin/logrotate $HOME/bin
+``
+
+Após esse procedimento basta ter a pasta [^$HOME/bin] no [^PATH].
+
+[endsect]
+
+[section Ainda estou com dúvidas. Como entro em contato?]
+
+Disponibilizamos uma lista pública de discussão com o intuito de reconhecer os usuários da nossa tecnologia, bem como receber sugestões e críticas que contribuam para a evolução do nosso projeto.
+
+Maiores informações sobre a nossa lista de discussão veja [@http://listas.tecgraf.puc-rio.br/mailman/listinfo/openbus-users].
+
+[endsect]
+
+[endsect] [/section faq]
+
+[section:ref Referências Bibliográficas]
+
+# [#upn] Microsoft. [*UPN - User Principal Name attribute in Microsoft Active Directory]. 2012. Último acesso em: 29 de Junho de 2012. [@http://msdn.microsoft.com/en-us/library/windows/desktop/ms680857(v=vs.85).aspx]
+# [#dn] OpenLDAP Foundation. [*DN - Distinguished Name in LDAP]. 2012. Último acesso em: 29 de Junho de 2012. [@http://www.openldap.org/doc/admin24/intro.html#What%20is%20LDAP]
+# [#rfc4514] OpenLDAP Foundation. [*RFC 4514 - Lightweight Directory Access Protocol (LDAP): String Representation of Distinguished Names]. 2006. Último acesso em 29 de Junho de 2012. [@http://www.ietf.org/rfc/rfc4514.txt]
+# [#ref_openbus] Tecgraf. [*__openbus__ Project]. 2012. [@http://www.tecgraf.puc-rio.br/openbus]
+# [#ref_manual] Tecgraf. [*__openbus__ Project - Manual de Referência __version__]. 2012. [@http://www.tecgraf.puc-rio.br/ftp_pub/openbus/docs/2.0.0/reference.html]
+
+[endsect]

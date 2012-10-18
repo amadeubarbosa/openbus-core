@@ -1,0 +1,21 @@
+xml installation : installation.qbk ;
+
+boostbook standalone
+    :
+        installation
+    :
+        # HTML options first:
+        # Use text not graphic for navigation:
+        <xsl:param>navig.graphics=0
+        # How far down we chunk nested sections, basically all of them:
+        <xsl:param>chunk.section.depth=3
+        # Don't put the first section on the same page as the TOC:
+        <xsl:param>chunk.first.sections=1
+        # How far down sections get TOC's
+        <xsl:param>toc.section.depth=10
+        # Max depth in each TOC:
+        <xsl:param>toc.max.depth=3
+        # How far down we go with TOC's
+        <xsl:param>generate.section.toc.level=10
+        <xsl:param>doc.standalone=true
+    ;
