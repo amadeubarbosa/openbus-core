@@ -624,7 +624,7 @@ handlers["add-entity"] = function(cmd)
     if err._repid == offertypes.EntityAlreadyRegistered then
       printf("[ERRO] Entidade '%s' já cadastrada.", id)
     else
-      printf("[ERRO] Erro inesperado ao adicionar categoria: %s", tostring(err))
+      printf("[ERRO] Erro inesperado ao adicionar entidade: %s", tostring(err))
     end
     return false
   end
