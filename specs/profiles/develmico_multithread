@@ -2,8 +2,8 @@ licenses
 lua5.1-dev
 openssl-0.9.9-dev
 mico-2.3.13-multithread-dev
-logger-dev
+logger-multithread-dev
 scs-idl
-scs-micoMT-dev
-openbus-micoMT-dev
-openbus-demo-hello-micoMT-dev
+scs-cpp-micomultithread-dev
+openbus-sdkcpp-micomultithread-dev
+openbus-sdkcpp-demo-hello-micomultithread-dev
