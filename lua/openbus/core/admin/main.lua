@@ -1099,7 +1099,7 @@ handlers["list-offer"] = function(cmd)
   local id = cmd.params[cmd.name]
   if id == null then 
     -- Lista todos
-    ok, offers = pcall(conn.offers.getServices, conn.offers)
+    ok, offers = pcall(conn.offers.getAllServices, conn.offers)
     if not ok then
       printf("[ERRO] Erro inesperado ao listar ofertas: %s", tostring(offers))
       return false
@@ -1129,7 +1129,7 @@ handlers["del-offer"] = function(cmd)
   local offers, ok
   local id = cmd.params.entity
   if not id or id == null then
-    ok, offers = pcall(conn.offers.getServices, conn.offers)
+    ok, offers = pcall(conn.offers.getAllServices, conn.offers)
     if not ok then
       printf("[ERRO] Erro inesperado ao remover oferta: %s", tostring(offers))
       return false
@@ -1174,7 +1174,7 @@ handlers["list-props"] = function(cmd)
   local ok, offers
   local id = cmd.params[cmd.name]
   if not id or id == null then
-    ok, offers = pcall(conn.offers.getServices, conn.offers)
+    ok, offers = pcall(conn.offers.getAllServices, conn.offers)
     if not ok then
       printf("[ERRO] Erro inesperado ao listar propriedades: %s", tostring(offers))
       return false
@@ -1346,7 +1346,7 @@ handlers["report"] = function(cmd)
   end
   
   msg = " - Ofertas publicadas: %s"
-  local ok, offers = pcall(conn.offers.getServices, conn.offers)
+  local ok, offers = pcall(conn.offers.getAllServices, conn.offers)
   if not ok then 
     local errormsg = string.format("[ERRO]\n%s", tostring(offers))
     printf(msg, errormsg)

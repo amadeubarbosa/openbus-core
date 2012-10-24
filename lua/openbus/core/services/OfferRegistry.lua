@@ -564,7 +564,7 @@ function OfferRegistry:findServices(properties)
   return self.offers:find(properties)
 end
 
-function OfferRegistry:getServices()
+function OfferRegistry:getAllServices()
   local result = {}
   for _, offers in pairs(self.offers.index["openbus.offer.id"]) do
     for offer in pairs(offers) do

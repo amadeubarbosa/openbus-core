@@ -179,7 +179,7 @@ end
 --          ServiceFailure);
 -- ServiceOfferDescSeq findServices(in ServicePropertySeq properties)
 --  raises (ServiceFailure);
--- ServiceOfferDescSeq getServices() raises (ServiceFailure);
+-- ServiceOfferDescSeq getAllServices() raises (ServiceFailure);
 
 -- Interface ServiceOffer: 
 -- readonly attribute OfferedService service_ref;
@@ -555,17 +555,17 @@ function ORCase.testFindBySingleProperty(self)
   end
 end
 
-function ORCase.testGetServices(self)
-  local services = self.offers:getServices()
+function ORCase.testGetAllServices(self)
+  local services = self.offers:getAllServices()
   local preSize = #services
   local context = createPingComponent(self.conn.orb)
   local comp = context.IComponent
   self.serviceOffer = self.offers:registerService(comp, offerProps)
-  services = self.offers:getServices()
+  services = self.offers:getAllServices()
   Check.assertEquals(preSize + 1, #services)
   self.serviceOffer:remove()
   self.serviceOffer = nil
-  services = self.offers:getServices()
+  services = self.offers:getAllServices()
   Check.assertEquals(preSize, #services)
 end
 

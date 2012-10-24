@@ -115,10 +115,10 @@ NOTE: testar Entity ID contendo caracteres UTF-8 e ISO-8859-1!
 **** 3.8.3.7 [NO|OK] depois de ser notificado que foi deslogado remotamente
 ** 3.9 onInvalidLoginCallback:
 *** UNDEFINED 3.9.1 Depois do 'close'                               :runfail:
-*** 3.9.2 É chamada no 'logout|getServices()' depois do login ter expirado
-**** 3.9.2.1 Quando a callback não reloga (logout()==false | getServices()->NO_PERMISSION{InvalidLogin})  :run:
-**** 3.9.2.2 Quando a callback reloga (logout()==true | getServices()->OK) :run:
-*** 3.9.3 Não é chamada no 'logout|getServices' depois do 'logout'      :run:
+*** 3.9.2 É chamada no 'logout|getAllServices()' depois do login ter expirado
+**** 3.9.2.1 Quando a callback não reloga (logout()==false | getAllServices()->NO_PERMISSION{InvalidLogin})  :run:
+**** 3.9.2.2 Quando a callback reloga (logout()==true | getAllServices()->OK) :run:
+*** 3.9.3 Não é chamada no 'logout|getAllServices' depois do 'logout'      :run:
 ** 3.10 logout
 *** 3.10.1 Depois do 'close'                                        :runfail:
 *** 3.10.2 Depois de algum 'loginBy*' (senha, certificado e single-signon)  :run:
