@@ -99,7 +99,7 @@ São elas:
 \begin{description}
   \item[CORBA]
   \foreign{Common Object Requester Broker Architecture}~\cite{omg08corbaspec} é um padrão da indústria que especifica um middleware para sistemas distribuídos heterogêneos orientados a objetos.
-  CORBA é define o modelo básico de comunicação usado nas integrações de sistemas feitas com o OpenBus.
+  CORBA define o modelo básico de comunicação usado nas integrações de sistemas feitas com o OpenBus.
   CORBA tem suporte para inúmeras linguagens de programação e plataformas computacionais, que nos permite integrar com o OpenBus uma grande variedade de sistemas.
   \item[SCS]
   \foreign{Software Component System}~\cite{web:SCS} é um modelo simples e flexível de componentes de software baseado em CORBA que permite estruturar sistemas usando uma arquitetura baseada em componentes.
@@ -111,7 +111,7 @@ Em cima dessas duas tecnologias o OpenBus introduz duas novas extensões, que bas
 \begin{description}
   \item[Barramento de Integração]
   É o conceito central do OpenBus.
-  O barramento que é o meio através do qual toda interação e comunicação entre os sistemas integrados é feita.
+  O barramento é o meio através do qual toda interação e comunicação entre os sistemas integrados é feita.
   O barramento é uma extensão de CORBA com suporte a controle de acesso, que basicamente consiste na autenticação de todo sistema que acessa o barramento, assim como a identificação de forma segura da origem de toda comunicação (chamadas CORBA) feita através desse meio.
   \item[Serviços de Apoio à Integração]
   Juntamente ao barramento, o OpenBus também provê suporte para registro e descoberta de serviços ofertados pelos sistemas integrados, comunicação baseada em eventos, entre outras funcionalidades através de uma arquitetura orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}).
@@ -165,11 +165,11 @@ Contudo, ao contrário das chamadas de CORBA comuns, nas chamadas feitas através 
 
 % TODO: [maia] a partir daqui eu não revisei
 
-O barramento é composto por um serviço de Controle de Acesso e pelo uso do \emph{middleware} \corba{}, com os quais especifica um protocolo de acesso.
-
+Essas políticas do controle de acesso implementadas com o uso do \emph{middleware} \corba{}, especificam o protocolo de acesso.
+2
 O Controle de Acesso serve como ponto de entrada do barramento, sendo responsável por autenticar, renovar e gerenciar os logins de serviços e aplicações ao barramento. 
 A autenticação de login é uma verificação realizada no estabelecimento de um login que permite associá-lo a uma dada entidade.
-A autenticação pode ser feita através de uma senha (login por senha), certificado previamente registrado no barramento (login por certificado), ou através do compartilhamento de uma autorização de um login previamente estabelecido (login por single sign-on).
+A autenticação pode ser feita através de uma senha (login por senha), certificado previamente registrado no barramento (login por certificado), ou através do compartilhamento de uma autenticação de um login previamente estabelecido (login por autenticação compartilhada).
 
 O resultado da autenticação é a criação de um login, que representa uma autenticação de uma entidade junto ao barramento para poder acessá-lo. 
 Todo login possui um tempo de validade (lease), no qual permanecerá válido sem necessidade de renovação, mas deve ser renovada para que não expire. 
@@ -360,9 +360,9 @@ Existem os conceitos de:
   Categorias de entidade são agrupamentos usados exclusivamente para facilitar a gerência das diversas entidades cadastradas no barramento pelo administrador.
 
   \item[Entidade] Representa uma entidade do barramento registrada.
-  Entidade é tudo aquilo que pode fazer login no barramento e usufruir dos   recursos do barramento.
-  Em particular, tanto usuários humanos como implantações de sistema são considerados entidades.
-  Entidades podem ou não ser cadastradas no serviço, mas apenas entidades cadastradas podem ser autorizadas a ofertar serviços.
+  Entidade é tudo aquilo que pode fazer login no barramento e usufruir dos seus   recursos.
+  Em particular, tanto usuários como implantações de sistema são considerados entidades.
+  Entidades podem ou não ser cadastradas no barramento, mas apenas entidades cadastradas podem ser autorizadas a ofertar serviços.
 
   \item[Certificado] Chave pública que pode ser usado para autenticar uma
 dada entidade no barramento.
