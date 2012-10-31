@@ -138,7 +138,7 @@ Maiores informações sobre a como utilizar a configuração do \emph{busservices} p
 
 \section{Configuração do validador LDAP}
 
-O validador LDAP tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seu significado e possíveis valores:
+O validador LDAP, disponibilizado em \texttt{openbus.core.services.passwordvalidator.LDAP}, tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seu significado e possíveis valores:
 \begin{description}
 \item[ldap\_servers] indica uma lista de URLs de servidores LDAP. Cada URL deve seguir o formato \\ \texttt{<protocol>://<server>:<port>}, onde \texttt{<protocol>} pode ser \texttt{ldaps} ou \texttt{ldap}. Exemplo:
 \begin{verbatim}
