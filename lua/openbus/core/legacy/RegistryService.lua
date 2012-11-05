@@ -99,50 +99,64 @@ function IRegistryService:findByCriteria(facets, criteria)
       end
     end
   end
-  local offers = newfacets.OfferRegistry:findServices(props)
+  local offers
+  if #props == 0 then
+    offers = newfacets.OfferRegistry:getAllServices()
+  else
+    offers = newfacets.OfferRegistry:findServices(props)
+  end
   local results = {}
   for index, offer in ipairs(offers) do
-    for _, facet in ipairs(offer.facets) do
-      -- only add as result the offers that either offer a facet with a name or
-      -- interface name specified in the 'facets' parameter of this opertion
-      if facets[facet.name] ~= nil or facets[facet.interface_name] ~= nil then
-        local compId = {}
-        local name2index = {}
-        local props = {}
-        for _, prop in ipairs(offer.properties) do
-          local name = prop.name
-          if name == "openbus.component.name" then
-            compId.name = prop.value
-          elseif name == "openbus.component.version.major" then
-            compId.major = prop.value
-          elseif name == "openbus.component.version.minor" then
-            compId.minor = prop.value
-          elseif name == "openbus.component.version.patch" then
-            compId.patch = prop.value
-          else
-            if name == "openbus.offer.entity" then
-              name = "registered_by"
-            end
-            local index = name2index[name]
-            if index == nil then
-              index = #props+1
-              name2index[name] = index
-              props[index] = { name = name, value = {} }
-            end
-            local value = props[index].value
-            value[#value+1] = prop.value
-          end
+    local include = true
+    for _, facetspec in ipairs(facets) do
+      local found = false
+      for _, facetinfo in ipairs(offer.facets) do
+        if facetinfo.name == facetspec or facetinfo.interface_name == facetspec then
+          found = true
+          break
         end
-        props[#props+1] = {
-          name = "component_id",
-          value = { "name", ("$name:$major.$minor.$patch"):tag(compId) }
-        }
-        results[#results+1] = {
-          member = offer.service_ref,
-          properties = props,
-        }
+      end
+      if not found then
+        include = false
         break
       end
+    end
+    if include then
+      local compId = {}
+      local name2index = {}
+      local props = {}
+      for _, prop in ipairs(offer.properties) do
+        local name = prop.name
+        if name == "openbus.component.name" then
+          compId.name = prop.value
+        elseif name == "openbus.component.version.major" then
+          compId.major = prop.value
+        elseif name == "openbus.component.version.minor" then
+          compId.minor = prop.value
+        elseif name == "openbus.component.version.patch" then
+          compId.patch = prop.value
+        else
+          if name == "openbus.offer.entity" then
+            name = "registered_by"
+          end
+          local index = name2index[name]
+          if index == nil then
+            index = #props+1
+            name2index[name] = index
+            props[index] = { name = name, value = {} }
+          end
+          local value = props[index].value
+          value[#value+1] = prop.value
+        end
+      end
+      props[#props+1] = {
+        name = "component_id",
+        value = { "name", ("$name:$major.$minor.$patch"):tag(compId) }
+      }
+      results[#results+1] = {
+        member = offer.service_ref,
+        properties = props,
+      }
     end
   end
   return results

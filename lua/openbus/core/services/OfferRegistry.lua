@@ -80,6 +80,23 @@ local function updateAuthorization(db, id, set, spec, value)
   end
 end
 
+local ReservedProperties = {
+  ["openbus.offer.id"] = true,
+  ["openbus.offer.login"] = true,
+  ["openbus.offer.entity"] = true,
+  ["openbus.offer.timestamp"] = true,
+  ["openbus.offer.year"] = true,
+  ["openbus.offer.month"] = true,
+  ["openbus.offer.day"] = true,
+  ["openbus.offer.hour"] = true,
+  ["openbus.offer.minute"] = true,
+  ["openbus.offer.second"] = true,
+  ["openbus.component.name"] = true,
+  ["openbus.component.version.major"] = true,
+  ["openbus.component.version.minor"] = true,
+  ["openbus.component.version.patch"] = true,
+}
+
 local function makePropertyList(entry, service_props)
   local props = {
     { name = "openbus.offer.id", value = entry.id },
@@ -107,10 +124,10 @@ local function makePropertyList(entry, service_props)
   end
   local illegal = {}
   for _, prop in ipairs(service_props) do
-    if prop.name:find("openbus", 1, true) == 1 then
-      illegal[#illegal+1] = prop
-    else
+    if ReservedProperties[prop.name] == nil then
       props[#props+1] = prop
+    else
+      illegal[#illegal+1] = prop
     end
   end
   if #illegal > 0 then

@@ -112,7 +112,7 @@ function BusInterceptor:unmarshalCredential(...)
   local credential = Interceptor.unmarshalCredential(self, ...)
   if credential ~= nil then
     local chain = credential.chain
-    if chain == nil then
+    if chain == nil then -- unjoined non-legacy call
       chain = {
         signature = false,
         originators = {},
@@ -120,7 +120,7 @@ function BusInterceptor:unmarshalCredential(...)
         target = self.login.id,
       }
       credential.chain = chain
-    else
+    elseif chain.signature ~= nil then -- joined non-legacy call
       local originators = chain.originators
       originators[#originators+1] = chain.caller -- add last originator
       chain.caller = getLoginInfoFor(self, chain.target)
