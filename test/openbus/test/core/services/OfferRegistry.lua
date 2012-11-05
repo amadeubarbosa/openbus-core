@@ -68,6 +68,23 @@ local ComponentId = {
   platform_spec = "none",
 }
 
+local ReservedProperties = {
+  ["openbus.offer.id"] = true,
+  ["openbus.offer.login"] = true,
+  ["openbus.offer.entity"] = true,
+  ["openbus.offer.timestamp"] = true,
+  ["openbus.offer.year"] = true,
+  ["openbus.offer.month"] = true,
+  ["openbus.offer.day"] = true,
+  ["openbus.offer.hour"] = true,
+  ["openbus.offer.minute"] = true,
+  ["openbus.offer.second"] = true,
+  ["openbus.component.name"] = true,
+  ["openbus.component.version.major"] = true,
+  ["openbus.component.version.minor"] = true,
+  ["openbus.component.version.patch"] = true,
+}
+
 -- Funções auxiliares ---------------------------------------------------------
 local function assertCondOrTimeout(condition,timeout)
   if timeout == nil then timeout = 2 end
@@ -309,10 +326,14 @@ function InvalidParamCase.testRegisterInvalidProperties(self)
   local orb = self.conn.orb
   local context = createPingComponent(orb)
   local comp = context.IComponent
-  local props = { {name="openbus.myname", value="ping"}, }
-  local ok, err = pcall(self.offers.registerService, self.offers, comp, props)
-  Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidProperties, err._repid)  
+  for reservedname in pairs(ReservedProperties) do
+    local props = { {name=reservedname, value="blah"}, }
+    local ok, err = pcall(self.offers.registerService, self.offers, comp, props)
+    Check.assertTrue(not ok)
+    Check.assertEquals(offertypes.InvalidProperties, err._repid)  
+    Check.assertTrue(isContained(props, err.properties))
+    Check.assertTrue(isContained(err.properties, props))
+  end
 end
 
 function InvalidParamCase.testRegisterUnauthorizedFacets(self)
@@ -460,15 +481,15 @@ function ServiceOfferCase.testSetProperties(self)
 end
 
 function ServiceOfferCase.testInvalidProperties(self)
-  local invalidProps = {
-    { name="openbus.reserved.name", value="should fail"},
-  }
-  local ok, err = pcall(self.serviceOffer.setProperties, self.serviceOffer, 
-    invalidProps)
-  Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidProperties, err._repid)
-  Check.assertTrue(isContained(invalidProps, err.properties))
-  Check.assertTrue(isContained(err.properties, invalidProps))
+  for reservedname in pairs(ReservedProperties) do
+    local invalidProps = {{ name=reservedname, value="blah"}}
+    local ok, err = pcall(self.serviceOffer.setProperties, self.serviceOffer, 
+      invalidProps)
+    Check.assertTrue(not ok)
+    Check.assertEquals(offertypes.InvalidProperties, err._repid)
+    Check.assertTrue(isContained(invalidProps, err.properties))
+    Check.assertTrue(isContained(err.properties, invalidProps))
+  end
 end
 
 function ServiceOfferCase.testRemoveProperties(self)
