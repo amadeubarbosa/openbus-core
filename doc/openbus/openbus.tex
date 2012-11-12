@@ -44,6 +44,7 @@
 %% Redefines the label 'Listing' for ..
 \def\lstlistingname{Código}
 \codestyle{colorful}
+\imagedir{figs}
 
 % new commands
 \newcommand{\foreign}[1]{\textit{#1}}
@@ -112,7 +113,7 @@ Em cima dessas duas tecnologias o OpenBus introduz duas novas extensões, que bas
   \item[Barramento de Integração]
   É o conceito central do OpenBus.
   O barramento é o meio através do qual toda interação e comunicação entre os sistemas integrados é feita.
-  O barramento é uma extensão de CORBA com suporte a controle de acesso, que basicamente consiste na autenticação de todo sistema que acessa o barramento, assim como a identificação de forma segura da origem de toda comunicação (chamadas CORBA) feita através desse meio.
+  O barramento é uma extensão de CORBA com suporte a controle de acesso, que basicamente consiste na autenticação de todo acesso a sistemas através do barramento, permitindo assim identificar de forma segura da origem de toda comunicação (chamadas CORBA) feita através do barramento.
   \item[Serviços de Apoio à Integração]
   Juntamente ao barramento, o OpenBus também provê suporte para registro e descoberta de serviços ofertados pelos sistemas integrados, comunicação baseada em eventos, entre outras funcionalidades através de uma arquitetura orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}).
   O objetivo desses serviços é oferecer funcionalidades básicas e essenciais que visem facilitar e agilizar o desenvolvimento da integração dos diferentes sistemas.
@@ -124,92 +125,105 @@ Nesta seção introdutória apresentaremos uma definição do projeto e os motivadore
 Na seção~\ref{sec:architecture} apresentamos a arquitetura do sistema, e entramos um pouco mais em detalhes de como ocorre a comunicação dentro do barramento na seção~\ref{sec:communication}.
 Em seguida, na seção~\ref{sec:perspectives} falamos um pouco mais sobre o projeto de acordo com a visão de cada tipo de usuário, e, por fim, na seção~\ref{sec:glossary} apresentamos um glossário com os conceitos principais do projeto.
 
-\subsection{Por que utilizar o \openbus{}?}
-Quando há necessidade de integração entre aplicações, algumas soluções podem ser apresentadas conforme a complexidade do ambiente a ser integrado.
-Caso o problema se resuma a troca de dados entre as aplicações, uma primeira solução é a integração externa, que consiste na exportação do dado em um determinado formato padronizado que possa ser carregado pela aplicação de destino.
-Este processo é normalmente manual, deixando a cargo do usuário, ou do \emph{job} que automatiza o processo, a responsabilidade pela sua execução.
-Um outro problema é a possibilidade de ocorrer perda de informação quando o formato padrão utilizado não consegue representar corretamente o dado de origem. 
+\subsection{Quando Utilizar o \openbus{}}
 
-As opções de soluções disponíveis para a integração, podem ser ampliadas quando há a presença de aplicações de código aberto ou que ofereçam interfaces de programação.
-Para estes casos, uma integração programática pode ser realizada de forma direta, através de uma implementação que permita ao usuário comandar a transferência de dados.
-Este modo de interação agrega mais qualidade, diminuindo as chances de perda de informação durante a transferência do dado, pois os metadados das aplicações envolvidas podem ser considerados.
-Além da troca de dados, há a possibilidade de troca de mensagens entre as aplicações.
-O problema desta solução é que uma ponte deve ser desenvolvida para cada par de aplicações, o que resulta em um número quadrático de codificações de pontes em relação ao número de aplicações.
-Por exemplo, para integrar 10 aplicações precisamos implementar 45 pontes.
-Além disso, a troca de mensagens é naturalmente limitada entre cada par de aplicações.
+O \openbus{} é um middleware para integração de sistemas heterogêneos.
+Contudo, a integração de sistemas pode se dar de diversas formas diferentes e envolver requisitos diversos.
+Por exemplo, uma forma de integração extremamente simples entre dois sistemas que apenas precisam trocar dados é por meio da troca de arquivos num formato adotado por ambos sistemas.
+Inclusive esses arquivos podem ser transmitidos pela rede manualmente ou automaticamente.
 
-Os problemas apresentados acima pela programática direta, podem ser eliminados com a adoção de uma plataforma comum de integração entre aplicações.
-Como por exemplo um \emph{barramento}, em que cada aplicação se conecta a este, segundo um protocolo próprio deste barramento, e carrega ou exporta dados para outras aplicações também conectadas ao barramento.
-Essa arquitetura define uma linguagem comum entre todas as aplicações, e, induz o compartilhamento de interfaces bem definidas para os serviços comuns entre as aplicações envolvidas.
-Desta forma o esforço de codificação das pontes pode ser reduzido para um esforço linear, ou seja, para se integrar \emph{n} aplicações, \emph{n} pontes são necessárias.
-No mais, a troca de mensagens dinâmicas entre todas as aplicações passa a ser possível, possibilitando um ambiente de colaboração entre as aplicações.
+Em outros cenários, a integração pode também exigir alguma colaboração entre os sistemas, através da execução comandos por exemplo.
+Nesse caso, é necessário que os sistemas forneçam alguma forma para receber comandos, que pode ser através de mensagens enviadas por um socket, comandos de um WebService, chamadas a um objeto remoto, etc.
+Fazer uma sistema implementar inúmeras interfaces de acesso para integração com diferentes sistemas é uma solução pouco razoável num cenário em que devam existir vários sistemas a serem intergrados.
+Idealmente, deve-se adotar uma tecnologia de comunicação genérica e eficiente o suficiente para ser adequada ao uso com sistemas com diferentes requisitos.
+
+Outra necessidade comum na integração de sistemas cooporativos é o controle acesso e a govenaça das integrações.
+Ou seja, quando os sistemas integrados não são abertos ao acesso público e irrestrito, é necessário que a infraestrutura forneça mecanismos que permitam restringir quais serviços podem ser integrados e como essas integrações podem ser feitas.
+
+O \openbus{} oferece uma infraestrutura adequada para implementar integrações entre sistemas tendo essas questões e necessidade em mente.
+Em particular, o \openbus{} se baseia na tecnologia CORBA para definir uma tecnologia de comunicação genérica e eficiente para integração de sistemas escritos em diferentes linguagens de programação e plataformas computacionais.
+Além disso, o \openbus{} estende a tecnologia CORBA com suporte a um rigoroso controle de acesso que permite a inspeção e controle das integrações através de um modelo de governaça onde um gerente do barramento pode controlar quais sistemas accessam o barramento e se integram a outros sistemas.
 
 \section{Arquitetura}\label{sec:architecture}
 
-O \openbus{} pode ser essencialmente divido em três partes principais: o barramento, os serviços núcleo, e os serviços extras.
+A infraestrutura mínima do \openbus{} é representada pelo seu núcleo principal, que é composto por um barramento de comunicação e serviços essenciais, denominados serviços núcleo.
+Além do núcleo do barramento, a arquitetura \openbus{} também define um conjunto de elementos adicionais que fornecem outras facilidades importantes, tais como bibliotecas e serviços extras.
+
 A figura~\ref{fig:architecture}, apresenta a arquitetura do \openbus{} e suas partes principais. 
 Entraremos em detalhes sobre as partes principais do \openbus{} nas subseções a seguir.
 
-\begin{figure} [htb]
-\centering
-\includegraphics[width=0.9\textwidth]{./figs/openbus.pdf}
-\caption{Arquitetura do \openbus{}}
-\label{fig:architecture}
-\end{figure}
+\inputimage[width=0.9\textwidth]{architecture}{Arquitetura do \openbus{}}
 
-\subsection{Barramento}\label{subsec:barramento}
+\subsection{Barramento}\label{sec:barramento}
 
 O barramento é o meio de comunicação entre os sistemas integrados.
 Toda comunicação feita pelos sistemas integrados através do barramento consiste de chamadas de objetos distribuídos usando o padrão CORBA.
-Contudo, ao contrário das chamadas de CORBA comuns, nas chamadas feitas através do barramento, é imposto um rigoroso controle de acesso que só permite chamadas por sistemas autenticados, assim como a identificação do sistema que originou cada chamada.
+Contudo, ao contrário das chamadas de CORBA comuns, nas chamadas feitas através do barramento, é imposto um rigoroso controle de acesso que só permite chamadas autenticadas por entidades previamente autorizadas acessar o barramento.
 
-% TODO: [maia] a partir daqui eu não revisei
+Essas entidades são tipicamente sistemas computacionais e usuários desses sistemas.
+Cada entidade é identificada por um nome único no barramento a ser definido pelo gerente barramento.
+Tipicamente, os nomes de entidade são nomes de sistemas computacionais que oferecem serviços no barramento e nomes de contas de usuários numa base de diretórios como o LDAP.
 
-Essas políticas do controle de acesso implementadas com o uso do \emph{middleware} \corba{}, especificam o protocolo de acesso.
-2
-O Controle de Acesso serve como ponto de entrada do barramento, sendo responsável por autenticar, renovar e gerenciar os logins de serviços e aplicações ao barramento. 
-A autenticação de login é uma verificação realizada no estabelecimento de um login que permite associá-lo a uma dada entidade.
-A autenticação pode ser feita através de uma senha (login por senha), certificado previamente registrado no barramento (login por certificado), ou através do compartilhamento de uma autenticação de um login previamente estabelecido (login por autenticação compartilhada).
+Todo acesso ao barramento é autenticado através de credenciais ocultas nas chamadas de objetos CORBA.
+Essas credenciais de acesso especificam um login no barramento.
+Todo login é sempre autenticado em nome de uma entidade, que é responsável por todos os acessos feitos através daquele login.
+Cada login possui um identificador único que é utilizado para identificar acessos ao barramento feitos através daquele login.
+Uma mesma entidade pode ter mais de um login para acesso ao barramento simultaneamente.
+Por exemplo, no caso de um serviço implementado como um sistema distribuído composto por mais de um processo que acessa o barramento simultaneamente, é interessante que cada processo possa utilizar um login próprio para acesso ao barramento.
 
-O resultado da autenticação é a criação de um login, que representa uma autenticação de uma entidade junto ao barramento para poder acessá-lo. 
-Todo login possui um tempo de validade (lease), no qual permanecerá válido sem necessidade de renovação, mas deve ser renovada para que não expire. 
-Contudo, um login pode ser invalidado explicitamente por um administrador antes do tempo de lease.
+O OpenBus define três formas para autenticação de um entidade no processo de criação de logins de acesso.
+Essas três formas de autenticação são:
 
-O \emph{middleware} \corba{} (\emph{Common Object Request Broker Architecture}) é a especificação de um padrão de \orb{} sobre a qual o \openbus{} é definido e implementado, e é a tecnologia adotada para prover suporte à comunicação de objetos distribuídos em múltiplas linguagens.
-O \openbus{} pode ser visto como uma extensão do padrão \corba{}.
+\begin{description}
+  \item[Autenticação por Senha] Neste caso, a autenticação é feita através de uma senha fornecida juntamente com o nome da entidade.
+  A senha é validada por um módulo de validação de senhas especificado pelo gerente do barramento.
+  Tipicamente esse módulo de validação é integrado a alguma base de dados de usuário que fornece informações para validação das senhas.
+  Essa forma de autenticação é geralmente utilizada para incoroporar ao barramento um grande número de usuários mantidos num sistema separado.
+  Um exemplo dessa integração é o validador de senhas LDAP fornecido pelo OpenBus, que permite autenticar nomes de usuários num serviço de diretórios LDAP como entidades para acesso ao barramento.
+  Neste caso, todos os nomes de usuários na base LDAP são automaticamente entidades autorizadas a acessar o barramento.
 
-Por sua vez, o protocolo de acesso é o conjunto de regras para realização de chamadas \corba{} através de um barramento \openbus{}, que foi introduzido na versão \version{} do \openbus{}.
-O principal objetivo desse protocolo é garantir um nível adequado de segurança das chamadas que permita assegurar a identidade da entidade que iniciou cada chamada realizada através do barramento.
-Maiores informações sobre o protocolo podem ser encontradas no documento de especificação do protocolo~\cite{ob2.0protospec}.
+  \item[Autenticação por Certificado] Neste caso, a autenticação é feita através de um certificado previamente cadastrado pelo gerente do barramento em nome de uma entidade particular.
+  Para que a autenticação ocorra é preciso decodificar um desafio encriptado com a chave pública contida no certificado cadastrado.
+  Para tanto, é necessário ter a chave privada correspondente ao certificado cadastrado.
+  Essa forma de autenticação é geralmente utilizada para autorizar o acesso de sistemas computacionais específicos que forneçem serviços através do barramento.
+  Toda gerência dos certificados de acesso cadastrados no barramento é de responsabilidade do gerente do barramento, que utiliza ferramentas fornecidas pelo OpenBus para adicionar, remover e listar os certificados cadastrados.
 
-Para facilitar o trabalho de integração de serviços e aplicações no barramento, oferecemos uma biblioteca de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua}, que implementa o protocolo de acesso e exporta uma interface de programação (API). 
-A biblioteca de acesso é implementada nas linguagens: C++, C\#, Java e Lua.
+  \item[Autenticação Compartilhada] Neste caso, a autenticação é feita em colaboração com outro sistema que já possua um login no barramento, ou seja, já está autenticado em nome de uma entidade para acessar o barramento.
+  Neste caso, o sistema já autenticado produz um segredo a ser compartilhado com o outro sistema que é utilizado na autenticação desse novo sistema em nome da entidade autenticadora do sistema original.
+  Essa forma de autenticação é geralmente utilizada quando um sistema deseja compartilhar sua forma de autenticação com outro sistema sem fornecer informações privilegiadas como senhas ou chaves privadas.
+\end{description}
+
+Tipicamente os logins de acesso ao barramento ficam válidos por um período denominado \term{lease}.
+Após o período de \term{lease}, o login deve ser renovado para que possa continuar válido\footnote{Essa tarefa de renovação de login é feita automaticamente pela biblioteca de acesso do OpenBus.}.
+Independentemente disso, todo login pode se tornar inválido a revelia da aplicação.
+Neste caso, uma nova autenticação deve ser realizada para obtenção de um novo login para continuar acessando o barramento\footnote{A identificação de que o login ficou inválido e o restabelecimento do login podem ser feitos através da callback \code{onInvalidLogin} da biblioteca de acesso do OpenBus.}.
+Uma vez inválido, um login nunca volta a ser válido novamente.
 
 \subsection{Serviços Núcleo}
 
-Serviços Núcleo são os serviços oferecidos pelo próprio barramento, tipicamente acessados através da API (\emph{Application Program Interface}), que é a interface de programação oferecida às aplicações que precisam acessar o barramento, seja para fazer ou receber chamadas através do barramento, ou acessar serviços oferecidos pelo barramento.
+O barramento oferece em seu núcleo um serviço essencial denominado Registro de Ofertas.
+Através dele é possível publicar, buscar e monitorar os demais serviços disponíveis através do barramento.
 
-Atualmente o barramento possui apenas um serviço núcleo, que é o Registro de Ofertas. 
-Através dele é possível registrar e buscar serviços oferecidos no barramento, além de permitir a inscrição observadores de registros de ofertas.
+Todo serviço a ser ofertado através do Registro de Ofertas deve ser implementado como um componente \scs{}~\cite{web:SCS} que oferece diferentes facetas através das quais o serviço é acessado.
+No momento do registro de uma oferta de serviço, deve ser fornecido um conjunto pares nome e valor que devem descrever propriedades particulares do serviço sendo ofertado.
+Essas propriedades poderão ser utilizadas como critério de filtro no momento de buscar por ofertas de serviço no Registro de Ofertas.
 
-\subsubsection{Registro de Ofertas}
+Além das propriedades fornecidas no registro da oferta, o próprio serviço de Registro de Oferta também gera um conjunto de propriedades automáticas que descrevem:
 
-O Registro de Ofertas é um serviço núcleo do barramento, que permite que entidades publiquem e busquem ofertas de serviços no barramento.
-Uma oferta de serviço corresponde a um cadastro no Registro de Ofertas de um conjunto de propriedades e um componente \scs{}~\cite{web:SCS}, que implementa um conjunto de interfaces que representam um dado serviço a ser utilizado através do barramento.
-
-Uma propriedade da oferta corresponde a um par de nome e valor, que, ao registrar uma oferta de serviço no barramento, a entidade pode definir um conjunto de propriedades correspondentes à oferta, que poderão ser utilizadas como critério de filtro no momento de buscar por ofertas de serviço no Registro de Ofertas.
-Toda oferta publicada no barramento possui um conjunto de propriedades geradas automaticamente, como a data do registro, a entidade que publicou a oferta, a versão do componente, entre outras.
+\begin{itemize}
+  \item login com que a oferta foi registrada.
+  \item nome da entidade que registrou a oferta.
+  \item momento do registro da oferta.
+  \item nome e versão do componente SCS que implementa o serviço.
+  \item facetas e interfaces do component SCS que implementa o serviço.
+\end{itemize}
 
 O Registro de Ofertas também disponibiliza um mecanismo de observação de publicação, atualização e remoção de ofertas.
-Maiores detalhes sobre a especificação e o uso do serviço de Registro de Ofertas podem ser encontrados nos manuais de uso das bibliotecas de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua}
-
+Maiores detalhes sobre a especificação e o uso do serviço de Registro de Ofertas podem ser encontrados nos manuais de uso das bibliotecas de acesso~(seção \ref{sec:library})
 
 \subsection{Serviços Extras}
 
-A categoria de Serviços Extras define os serviços que acrescentam funcionalidades para auxiliar a integração entre serviços e aplicações, mas que não são parte do núcleo do barramento.
-Não é obrigatória a presença desses serviços em uma instância do barramento.
-
-Nesta versão atual do \openbus{} disponibilizamos apenas um serviço extra: o Serviço de Colaboração.
+A versão atual do \openbus{} oferece um serviço extra denominado Serviço de Colaboração.
 Esse serviço tem como principais funcionalidades:
 
 \begin{itemize}
@@ -219,40 +233,37 @@ Esse serviço tem como principais funcionalidades:
 
 Não entraremos em maiores detalhes sobre as funcionalidades e o uso do Serviço de Colaboração neste documento. Para mais informações, consulte o manual do próprio serviço~\cite{collaboration1.0}.
 
-\section{Comunicação no \openbus{}}\label{sec:communication}
+\subsection{Biblioteca de Acesso}\label{sec:library}
 
-Dado que o barramento serve como uma solução de integração, isso quer dizer que todas as chamadas entre serviços e aplicações integradas serão interceptadas pelo barramento?
-A resposta é não!
+O \openbus{} também disponibiliza uma biblioteca de acesso ao barramento a ser utilizada na implementação da integração de sistemas ao barramento.
+Essa biblioteca basicamente implementa uma API simplificada para acesso ao barramento, ocultando detalhes do protocolo de comunicação do \openbus.
+Através dessa biblioteca é possível realizar as seguintes operções, dentre outras:
 
-Vamos explicar então como ocorre a comunicação dentro do barramento, utilizando como exemplo um cenário onde temos um serviço para publicar no barramento e uma aplicação que vai utilizar o serviço publicado.
-Iremos dividir esse cenário em duas fases, explicando a seqüência de interação que ocorre dentro das mesmas. 
+\begin{itemize}
+  \item Autenticação de entidades;
+  \item Obtenção de logins;
+  \item Renovação automática de \term{lease} de logins;
+  \item Receber notificação de o login se tornou inválido;
+  \item Realizar chamadas utilizando diferentes logins;
+  \item Identificar os logins e entidades que originaram cada chamada recebida.
+\end{itemize}
 
-A primeira fase, ilustrada pela figura~\ref{fig:begin-comm}, corresponde ao processo de realização do login, publicação e busca do serviço publicado no barramento.
-Primeiro o serviço realiza o login no barramento, e com o sucesso no login, ele pode publicar o serviço a ser ofertado no Registro de Ofertas.
-Então a aplicação realiza também o seu login no barramento, e pode buscar pelo serviço no barramento, através do Registro de Ofertas.
-Caso as propriedades especificadas na busca correspondam às propriedades da oferta, ela é retornada pela busca e com isso a aplicação consegue obter uma referência para o serviço desejado.
+A biblioteca de acesso do \openbus{} tem implementações nas quatro diferentes linguagens de programação suportadas oficialmente pelo \openbus{}, em particular, Java~\cite{sdk2.0.0-java}, C\#~\cite{sdk2.0.0-csharp}, C++~\cite{sdk2.0.0-cpp} e Lua~\cite{sdk2.0.0-lua}.
 
-\begin{figure} [htb!]
-\centering
-\includegraphics[width=0.5\textwidth]{./figs/comunicacao-inicio.pdf}
-\caption{Esquema demonstrando como ocorre o início de uma integração entre duas entidades através do barramento.}
-\label{fig:begin-comm}
-\end{figure}
+\subsubsection{Comunicação Através do Barramento}\label{sec:communication}
 
-Começa então a segunda fase, ilustrada pela figura~\ref{fig:direct-comm}, que é caracterizada pela comunicação direta entre a aplicação e o serviço publicado no barramento.
-Neste cenário, a aplicação atua como o cliente, e o serviço ofertado como o servidor.
-O cliente (aplicação) faz uma requisição para o servidor (serviço), e a primeira coisa que o servidor irá fazer é verificar junto ao barramento se o cliente que faz a requisição possui um login válido.
-Se o login for válido, o servidor então pode atender a requisição.
+O barramento é internamente implementado como uma arquitetura orientada a serviços (SOA).
+Em princípio, todas as chamadas feitas através do barramento envolvem chamadas a esses serviços internos, em particular, o serviço de Controle de Acesso.
 
-\begin{figure} [htb!]
-\centering
-\includegraphics[width=0.5\textwidth]{./figs/comunicacao-direta.pdf}
-\caption{Esquema demostrando como ocorre a comunicação entre duas entidades no barramento.}
-\label{fig:direct-comm}
-\end{figure}
+Para evitar a sobrecarga dessas chamadas adicionais a serviços internos do barramento, a biblioteca de acesso, implementa otimizações eficientes que permitem reduzir drasticamente essa sobrecarga nos cenários de uso mais comuns.
+Em particular, a biblioteca de acesso faz uso de vários caches internos para minimizar a necessidade de chamadas adicionais a serviços internos da implementação do barramento.
 
-Essa descrição que apresentamos da segunda fase é uma visão bem simplificada do que realmente acontece, dado que o usuário que faz uso da biblioteca de acesso~\cite{sdk2.0.0-cpp,sdk2.0.0-csharp,sdk2.0.0-java,sdk2.0.0-lua} não precisa se preocupar com esses detalhes, pois as bibliotecas de acesso se encarregam de respeitar e implementar todo o protocolo~\cite{ob2.0protospec} necessário para que a comunicação seja segura e correta.
-Na próxima vez que o mesmo cliente falar com o mesmo servidor, o servidor não precisará necessariamente realizar uma chamada remota para o barramento, caso as informações necessárias para validar a requisição ainda estejam válidas e presentes nos caches das bibliotecas.
+Em cenários de integração típicos, a maior parde da comunicação através do barramento é feita diretamente entre os sistemas integrados, sem necessidade de acesso à infraestrutura interna do barramento.
+Essa característica da bibliotea de acesso trás duas vantagens importantes:
+\begin{itemize}
+  \item Primeiramente, o desempenho da comunicação entre dois sistemas só depende da qualidade da rede de comunicação entre esses dois sistemas.
+  \item Além disso, mesmo que a infraestrutura do barramento fique indisponível por alguma falha inesperada, a comunicação entre os serviços pode continuar, mesmo que com um nível de qualidade limitado.
+\end{itemize}
 
 \section{Perspectivas}\label{sec:perspectives}
 
@@ -262,7 +273,7 @@ O \openbus{} não traz para a sua implementação uma distinção entre administrador
 Ambos desempenham papéis de administração.
 Porém, entendemos que nem sempre o administrador do barramento também irá gerenciar o barramento. Logo, vamos separar esses dois conceitos e apresentar os conceitos do barramento que competem a cada um desses perfis.
 
-\subsection{\openbus{} para Administradores}
+\subsection{Administradores de Sistema}
 
 Esta seção apresenta alguns conceitos que são importantes para os administradores do barramento, onde por administradores consideramos as pessoas que possuem acesso a máquina onde o barramento será executado e são os responsáveis por levantar e parar o barramento.
 
@@ -347,7 +358,7 @@ Porém, é importante deixar claro que versão 2.0 traz muitas melhorias no quesito
 O barramento permite que clientes 1.5 se comuniquem com clientes 2.0, e vice-e-versa, porém essas comunicações se realizam com o mesmo nível de segurança que existia na versão 1.5 do barramento.
 Esse suporte de compatibilidade com a versão anterior pode ser desabilitado através da opção ``nolegacy''.
 
-\subsection{\openbus{} para Gerentes do Barramento}
+\subsection{Gerentes do Barramento}
 
 Consideramos gerentes do barramento aqueles que irão desempenhar o papel de organizar e acompanhar o que é publicado no barramento.
 Para desempenhar esse papel, disponibilizamos a ferramenta \emph{busadmin}, que permite que se realize atividades de governança (administração) sobre o barramento.
@@ -598,11 +609,11 @@ A listagem completa dos comandos disponíveis é apresentada a seguir:
 
 \end{itemize}
 
-\subsection{\openbus{} para Desenvolvedores}
+\subsection{Desenvolvedores de Sistemas Integrados}
 
 Como desenvolvedores, nos referimos aos responsáveis por implementar a integração de seus respectivos serviços e aplicações ao barramento.
-Como informando na seção~\ref{subsec:barramento}, oferecemos uma biblioteca de acesso, que implementa o protocolo e exporta uma API de programação, que oferece alguns facilitadores e auxilia a interação com o barramento.
-Para maiores informações, consulte o manual de uso da biblioteca de acesso, que é disponibilizada em C++~\cite{sdk2.0.0-cpp}, C\#~\cite{sdk2.0.0-csharp}, Java~\cite{sdk2.0.0-java} e Lua~\cite{sdk2.0.0-lua}.
+Como informando na seção~\ref{sec:barramento}, oferecemos uma biblioteca de acesso, que implementa o protocolo e exporta uma API de programação, que oferece alguns facilitadores e auxilia a interação com o barramento.
+Para maiores informações, consulte o manual de uso da biblioteca de acesso~(seção \ref{sec:library}).
 
 
 \include{glossary}
