@@ -24,16 +24,21 @@ Caso tenha interesse de entender melhor o que é um barramento __openbus__, cons
 [section:install Instalação]
 
 O primeiro para instalar o barramento deve ser descompactar o pacote do barramento da plataforma desejada.
-Os pacotes oficialmente suportados estão disponibilizados no site oficial do projeto: [@http://www.tecgraf.puc-rio.br/openbus].
+Os pacotes estão disponibilizados no site oficial do projeto: [@http://www.tecgraf.puc-rio.br/openbus].
 
 As plataformas oficialmente suportadas são:
 
-* Solaris 10 release 8/07 SPARC 64 bits (SunOS510_64)
-* Solaris 10 release 8/07 SPARC 32 bits (SunOS510)
 * Linux Kernel 2.6 glibc 2.5 64 bits (Linux26g4_64)
 * Linux Kernel 2.6 glibc 2.5 32 bits (Linux26g4)
+
+Para outras plataformas geramos pacotes sob demanda, exemplos:
+
+* Linux Kernel 3.2 glibc 2.11 64 bits (Linux32_64)
+* Linux Kernel 3.2 glibc 2.11 32 bits (Linux32)
 * Linux Kernel 2.4 glibc 2.3 64 bits (Linux24g3_64)
 * Linux Kernel 2.4 glibc 2.3 32 bits (Linux24g3)
+* Solaris 10 release 8/07 SPARC 64 bits (SunOS510_64)
+* Solaris 10 release 8/07 SPARC 32 bits (SunOS510)
 
 Para executar o barramento deve-se seguir o seguinte procedimento:
 
@@ -47,9 +52,18 @@ Para executar o barramento deve-se seguir o seguinte procedimento:
 ``
 # Gerar um par de chaves com tamanho de 2048 bits para o barramento. 
 A chave privada (arquivo com terminação ['.key]) deve ser do formato PKCS8 codificada em DER, e o certificado (arquivo com terminação ['.crt]) deve ser do formato X.509 codificado em DER.
-Esse par de chaves pode ser criado utilizando o script ['openssl-generate.ksh].
+Esse par de chaves deve ser criado utilizando o comando ['openssl] que acompanha o pacote.
 ``
-  cd ${OPENBUS_HOME} && ./bin/openssl-generate.ksh -n <nome do par de chaves>
+  export LD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${LD_LIBRARY_PATH}"
+  
+  # caso seja MacOS é preciso também:
+  export DYLD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${DYLD_LIBRARY_PATH}"
+
+  export OPENSSL_HOME="${OPENBUS_HOME}/openssl"
+  ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
+  ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt -in tmp_openssl.key -out <nome do par de chaves>.key -outform DER
+  rm -f tmp_openssl.key
+  ${OPENBUS_HOME}/bin/openssl req -new -x509 -key <nome do par de chaves>.key -keyform DER -out <nome do par de chaves>.crt -outform DER
 ``
 # Executar o barramento passando as configurações desejadas. Como por exemplo, o par de chaves do barramento.
 
@@ -87,7 +101,6 @@ O validador LDAP tem suporte a servidores Microsoft Active Directory e OpenLDAP.
 
 No pacote de instalação do barramento existem scripts que auxiliam algumas tarefas diárias comuns ao administrador da máquina onde o barramento está instalado. Esses scripts estão localizados na pasta ['bin] e são eles:
 
-* [*openssl-generate.ksh] script com as pré-configurações adequadas para geração de pares de chaves pública e privada a serem usadas pelo barramento (seja no cadastro de novos serviços ou na instalação do próprio barramento).
 * [*bus-init] script de inicialização para iniciar e parar o barramento, semelhante aos scripts do /etc/init.d em servidores Unix.
 * [*bus-check-running] script que verifica se o barramento está executando e, caso não esteja, inicia o barramento utilizando o script ['bus-init].
 
