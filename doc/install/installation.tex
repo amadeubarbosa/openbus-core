@@ -144,7 +144,7 @@ $OPENBUS_HOME/bin/busservices --help
   ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
     -in tmp_openssl.key -out <nome do par de chaves>.key -outform DER
   rm -f tmp_openssl.key
-  ${OPENBUS_HOME}/bin/openssl req -new -x509 \
+  ${OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 \
     -key <nome do par de chaves>.key -keyform DER \
     -out <nome do par de chaves>.crt -outform DER
 \end{verbatim}
@@ -180,6 +180,21 @@ ldap_patterns = {
 ldap_timeout = 10
 \end{verbatim}
 \end{description}
+
+\section{Criação de um validador personalizado}
+
+Um validador precisa ser um módulo Lua\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}. A função \texttt{validator} recebe como primeiro parâmetro o nome de usuário e como segundo a senha. Caso o par usuário/senha seja válido deve-se retornar verdadeiro, caso contrário falso. Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
+\begin{verbatim}
+local function validator(name, password)
+  if name == password then
+    return true
+  end
+end
+
+return function(configs) return validator end
+\end{verbatim}
+
+Para utilizar um validador como esse pode ser necessário a configuração das variáveis de ambiente LUA\_PATH e LUA\_CPATH. Caso não esteja familiarizado, consulte o manual da linguagem Lua\cite{web:luamodule}.
 
 \section{Configurações opcionais para administradores do servidor}
 
