@@ -5,7 +5,6 @@
 
 [article Manual de Instalação do OpenBus 2.0.0
   [quickbook 1.5]
-  [authors [Roenick, Hugo]]
   [id installation]
   [copyright 2012 Tecgraf/PUC-Rio]
   [source-mode teletype]
@@ -63,7 +62,7 @@ Esse par de chaves deve ser criado utilizando o comando ['openssl] que acompanha
   ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
   ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt -in tmp_openssl.key -out <nome do par de chaves>.key -outform DER
   rm -f tmp_openssl.key
-  ${OPENBUS_HOME}/bin/openssl req -new -x509 -key <nome do par de chaves>.key -keyform DER -out <nome do par de chaves>.crt -outform DER
+  ${OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 -key <nome do par de chaves>.key -keyform DER -out <nome do par de chaves>.crt -outform DER
 ``
 # Executar o barramento passando as configurações desejadas. Como por exemplo, o par de chaves do barramento.
 
@@ -94,6 +93,23 @@ O validador LDAP tem suporte a servidores Microsoft Active Directory e OpenLDAP.
 ``
   ldap_timeout = 10
 ``
+
+[endsect]
+
+[section:validador Criação de um validador personalizado]
+
+Um validador precisa ser um [link luamodule módulo Lua] que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função ['validator]. A função ['validator] recebe como primeiro parâmetro o nome de usuário e como segundo a senha. Caso o par usuário/senha seja válido deve-se retornar verdadeiro, caso contrário falso. Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
+``
+  local function validator(name, password)
+    if name == password then
+      return true
+    end
+  end
+
+  return function(configs) return validator end
+  ``
+
+Para utilizar um validador como esse pode ser necessário a configuração das variáveis de ambiente LUA_PATH e LUA_CPATH. Caso não esteja familiarizado, consulte o [link luamodule manual da linguagem Lua].
 
 [endsect]
 
@@ -300,5 +316,6 @@ Maiores informações sobre a nossa lista de discussão veja [@http://listas.tec
 # [#rfc4514] OpenLDAP Foundation. [*RFC 4514 - Lightweight Directory Access Protocol (LDAP): String Representation of Distinguished Names]. 2006. Último acesso em 29 de Junho de 2012. [@http://www.ietf.org/rfc/rfc4514.txt]
 # [#ref_openbus] Tecgraf. [*__openbus__ Project]. 2012. [@http://www.tecgraf.puc-rio.br/openbus]
 # [#ref_manual] Tecgraf. [*__openbus__ Project - Manual de Referência __version__]. 2012. [@http://www.tecgraf.puc-rio.br/ftp_pub/openbus/docs/2.0.0/reference.html]
+# [#luamodule] Roberto Ierusalimschy. [*The Programming Language Lua. Modules]. 2012. [@http://www.lua.org/manual/5.1/manual.html#5.3]
 
 [endsect]
