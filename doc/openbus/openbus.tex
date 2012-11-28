@@ -137,12 +137,12 @@ Nesse caso, é necessário que os sistemas forneçam alguma forma para receber coma
 Fazer uma sistema implementar inúmeras interfaces de acesso para integração com diferentes sistemas é uma solução pouco razoável num cenário em que devam existir vários sistemas a serem intergrados.
 Idealmente, deve-se adotar uma tecnologia de comunicação genérica e eficiente o suficiente para ser adequada ao uso com sistemas com diferentes requisitos.
 
-Outra necessidade comum na integração de sistemas cooporativos é o controle acesso e a govenaça das integrações.
+Outra necessidade comum na integração de sistemas cooporativos é o controle acesso e a governança das integrações.
 Ou seja, quando os sistemas integrados não são abertos ao acesso público e irrestrito, é necessário que a infraestrutura forneça mecanismos que permitam restringir quais serviços podem ser integrados e como essas integrações podem ser feitas.
 
 O \openbus{} oferece uma infraestrutura adequada para implementar integrações entre sistemas tendo essas questões e necessidade em mente.
 Em particular, o \openbus{} se baseia na tecnologia CORBA para definir uma tecnologia de comunicação genérica e eficiente para integração de sistemas escritos em diferentes linguagens de programação e plataformas computacionais.
-Além disso, o \openbus{} estende a tecnologia CORBA com suporte a um rigoroso controle de acesso que permite a inspeção e controle das integrações através de um modelo de governaça onde um gerente do barramento pode controlar quais sistemas accessam o barramento e se integram a outros sistemas.
+Além disso, o \openbus{} estende a tecnologia CORBA com suporte a um rigoroso controle de acesso que permite a inspeção e controle das integrações através de um modelo de governança onde um gerente do barramento pode controlar quais sistemas accessam o barramento e se integram a outros sistemas.
 
 \section{Arquitetura}\label{sec:architecture}
 
@@ -462,7 +462,7 @@ O \emph{busadmin} também permite realizar esses cadastros e descadastros manualm
 A listagem completa dos comandos disponíveis é apresentada a seguir:
 
 \begin{itemize}
-  \item \textbf{Configuração:}
+  \item \textbf{Opções:}
 
 \begin{description}
   \item[\texttt{--}host=\textless endereço\textgreater] Informa o endereço do Barramento.\\
@@ -478,6 +478,9 @@ A listagem completa dos comandos disponíveis é apresentada a seguir:
   \item[\texttt{--}oilverbose=\textless nível\textgreater] Aciona o verbose do \oil{}.\\
   Valor padrão é 0.
   Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
+
+  \item[\texttt{--}certificate=\textless arquivo\textgreater] Informa a chave privada para realizar a autenticação por certificado ao invés de ser por senha.
+O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha antes de executar o comando.
 
 \end{description}
 
