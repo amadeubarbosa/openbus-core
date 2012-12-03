@@ -94,28 +94,28 @@
 \section{Introdução}
 
 O \openbus{}~\cite{web:OPENBUS} é um projeto de um middleware para integração de sistemas computacionais heterogêneos, ou seja, desenvolvidos em diferentes linguagens de programação e plataformas computacionais.
-O OpenBus se baseia em duas tecnologias complementares para constituir uma infraestrutura básica de integração de sistemas.
+O \openbus{} se baseia em duas tecnologias complementares para constituir uma infraestrutura básica de integração de sistemas.
 São elas:
 %
 \begin{description}
-  \item[CORBA]
+  \item[\corba{}]
   \foreign{Common Object Requester Broker Architecture}~\cite{omg08corbaspec} é um padrão da indústria que especifica um middleware para sistemas distribuídos heterogêneos orientados a objetos.
-  CORBA define o modelo básico de comunicação usado nas integrações de sistemas feitas com o OpenBus.
-  CORBA tem suporte para inúmeras linguagens de programação e plataformas computacionais, que nos permite integrar com o OpenBus uma grande variedade de sistemas.
-  \item[SCS]
-  \foreign{Software Component System}~\cite{web:SCS} é um modelo simples e flexível de componentes de software baseado em CORBA que permite estruturar sistemas usando uma arquitetura baseada em componentes.
-  O SCS é usado no OpenBus tanto como um modelo arquitetural básico para a infraestrutura básica oferecida como também para estruturar a forma como as intregrações são feitas.
+  \corba{} define o modelo básico de comunicação usado nas integrações de sistemas feitas com o \openbus{}.
+  \corba{} tem suporte para inúmeras linguagens de programação e plataformas computacionais, que nos permite integrar com o \openbus{} uma grande variedade de sistemas.
+  \item[\scs{}]
+  \foreign{Software Component System}~\cite{web:SCS} é um modelo simples e flexível de componentes de software baseado em \corba{} que permite estruturar sistemas usando uma arquitetura baseada em componentes.
+  O \scs{} é usado no \openbus{} tanto como um modelo arquitetural básico para a infraestrutura básica oferecida como também para estruturar a forma como as intregrações são feitas.
 \end{description}
 
-Em cima dessas duas tecnologias o OpenBus introduz duas novas extensões, que basiamente definem a infraestrutura especializada para integração de sistemas computacionais:
+Em cima dessas duas tecnologias o \openbus{} introduz duas novas extensões, que basicamente definem a infraestrutura especializada para integração de sistemas computacionais:
 %
 \begin{description}
   \item[Barramento de Integração]
-  É o conceito central do OpenBus.
+  É o conceito central do \openbus{}.
   O barramento é o meio através do qual toda interação e comunicação entre os sistemas integrados é feita.
-  O barramento é uma extensão de CORBA com suporte a controle de acesso, que basicamente consiste na autenticação de todo acesso a sistemas através do barramento, permitindo assim identificar de forma segura da origem de toda comunicação (chamadas CORBA) feita através do barramento.
+  O barramento é uma extensão de \corba{} com suporte a controle de acesso, que basicamente consiste na autenticação de todo acesso a sistemas através do barramento, permitindo assim identificar de forma segura da origem de toda comunicação (chamadas \corba{}) feita através do barramento.
   \item[Serviços de Apoio à Integração]
-  Juntamente ao barramento, o OpenBus também provê suporte para registro e descoberta de serviços ofertados pelos sistemas integrados, comunicação baseada em eventos, entre outras funcionalidades através de uma arquitetura orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}).
+  Juntamente ao barramento, o \openbus{} também provê suporte para registro e descoberta de serviços ofertados pelos sistemas integrados, comunicação baseada em eventos, entre outras funcionalidades através de uma arquitetura orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}).
   O objetivo desses serviços é oferecer funcionalidades básicas e essenciais que visem facilitar e agilizar o desenvolvimento da integração dos diferentes sistemas.
 \end{description}
 
@@ -141,8 +141,8 @@ Outra necessidade comum na integração de sistemas cooporativos é o controle aces
 Ou seja, quando os sistemas integrados não são abertos ao acesso público e irrestrito, é necessário que a infraestrutura forneça mecanismos que permitam restringir quais serviços podem ser integrados e como essas integrações podem ser feitas.
 
 O \openbus{} oferece uma infraestrutura adequada para implementar integrações entre sistemas tendo essas questões e necessidade em mente.
-Em particular, o \openbus{} se baseia na tecnologia CORBA para definir uma tecnologia de comunicação genérica e eficiente para integração de sistemas escritos em diferentes linguagens de programação e plataformas computacionais.
-Além disso, o \openbus{} estende a tecnologia CORBA com suporte a um rigoroso controle de acesso que permite a inspeção e controle das integrações através de um modelo de governança onde um gerente do barramento pode controlar quais sistemas accessam o barramento e se integram a outros sistemas.
+Em particular, o \openbus{} se baseia na tecnologia \corba{} para definir uma tecnologia de comunicação genérica e eficiente para integração de sistemas escritos em diferentes linguagens de programação e plataformas computacionais.
+Além disso, o \openbus{} estende a tecnologia \corba{} com suporte a um rigoroso controle de acesso que permite a inspeção e controle das integrações através de um modelo de governança onde um gerente do barramento pode controlar quais sistemas accessam o barramento e se integram a outros sistemas.
 
 \section{Arquitetura}\label{sec:architecture}
 
@@ -162,21 +162,21 @@ Entraremos em detalhes sobre as partes principais do \openbus{} nas subseções a 
 \subsection{Barramento}\label{sec:barramento}
 
 O barramento é o meio de comunicação entre os sistemas integrados.
-Toda comunicação feita pelos sistemas integrados através do barramento consiste de chamadas de objetos distribuídos usando o padrão CORBA.
-Contudo, ao contrário das chamadas de CORBA comuns, nas chamadas feitas através do barramento, é imposto um rigoroso controle de acesso que só permite chamadas autenticadas por entidades previamente autorizadas acessar o barramento.
+Toda comunicação feita pelos sistemas integrados através do barramento consiste de chamadas de objetos distribuídos usando o padrão \corba{}.
+Contudo, ao contrário das chamadas de \corba{} comuns, nas chamadas feitas através do barramento, é imposto um rigoroso controle de acesso que só permite chamadas autenticadas por entidades previamente autorizadas acessar o barramento.
 
 Essas entidades são tipicamente sistemas computacionais e usuários desses sistemas.
 Cada entidade é identificada por um nome único no barramento a ser definido pelo gerente barramento.
 Tipicamente, os nomes de entidade são nomes de sistemas computacionais que oferecem serviços no barramento e nomes de contas de usuários numa base de diretórios como o LDAP.
 
-Todo acesso ao barramento é autenticado através de credenciais ocultas nas chamadas de objetos CORBA.
+Todo acesso ao barramento é autenticado através de credenciais ocultas nas chamadas de objetos \corba{}.
 Essas credenciais de acesso especificam um login no barramento.
 Todo login é sempre autenticado em nome de uma entidade, que é responsável por todos os acessos feitos através daquele login.
 Cada login possui um identificador único que é utilizado para identificar acessos ao barramento feitos através daquele login.
 Uma mesma entidade pode ter mais de um login para acesso ao barramento simultaneamente.
 Por exemplo, no caso de um serviço implementado como um sistema distribuído composto por mais de um processo que acessa o barramento simultaneamente, é interessante que cada processo possa utilizar um login próprio para acesso ao barramento.
 
-O OpenBus define três formas para autenticação de um entidade no processo de criação de logins de acesso.
+O \openbus{} define três formas para autenticação de um entidade no processo de criação de logins de acesso.
 Essas três formas de autenticação são:
 
 \begin{description}
@@ -184,14 +184,14 @@ Essas três formas de autenticação são:
   A senha é validada por um módulo de validação de senhas especificado pelo gerente do barramento.
   Tipicamente esse módulo de validação é integrado a alguma base de dados de usuário que fornece informações para validação das senhas.
   Essa forma de autenticação é geralmente utilizada para incoroporar ao barramento um grande número de usuários mantidos num sistema separado.
-  Um exemplo dessa integração é o validador de senhas LDAP fornecido pelo OpenBus, que permite autenticar nomes de usuários num serviço de diretórios LDAP como entidades para acesso ao barramento.
+  Um exemplo dessa integração é o validador de senhas LDAP fornecido pelo \openbus{}, que permite autenticar nomes de usuários num serviço de diretórios LDAP como entidades para acesso ao barramento.
   Neste caso, todos os nomes de usuários na base LDAP são automaticamente entidades autorizadas a acessar o barramento.
 
   \item[Autenticação por Certificado] Neste caso, a autenticação é feita através de um certificado previamente cadastrado pelo gerente do barramento em nome de uma entidade particular.
   Para que a autenticação ocorra é preciso decodificar um desafio encriptado com a chave pública contida no certificado cadastrado.
   Para tanto, é necessário ter a chave privada correspondente ao certificado cadastrado.
   Essa forma de autenticação é geralmente utilizada para autorizar o acesso de sistemas computacionais específicos que forneçem serviços através do barramento.
-  Toda gerência dos certificados de acesso cadastrados no barramento é de responsabilidade do gerente do barramento, que utiliza ferramentas fornecidas pelo OpenBus para adicionar, remover e listar os certificados cadastrados.
+  Toda gerência dos certificados de acesso cadastrados no barramento é de responsabilidade do gerente do barramento, que utiliza ferramentas fornecidas pelo \openbus{} para adicionar, remover e listar os certificados cadastrados.
 
   \item[Autenticação Compartilhada] Neste caso, a autenticação é feita em colaboração com outro sistema que já possua um login no barramento, ou seja, já está autenticado em nome de uma entidade para acessar o barramento.
   Neste caso, o sistema já autenticado produz um segredo a ser compartilhado com o outro sistema que é utilizado na autenticação desse novo sistema em nome da entidade autenticadora do sistema original.
@@ -199,9 +199,9 @@ Essas três formas de autenticação são:
 \end{description}
 
 Tipicamente os logins de acesso ao barramento ficam válidos por um período denominado \term{lease}.
-Após o período de \term{lease}, o login deve ser renovado para que possa continuar válido\footnote{Essa tarefa de renovação de login é feita automaticamente pela biblioteca de acesso do OpenBus.}.
+Após o período de \term{lease}, o login deve ser renovado para que possa continuar válido\footnote{Essa tarefa de renovação de login é feita automaticamente pela biblioteca de acesso do \openbus{}.}.
 Independentemente disso, todo login pode se tornar inválido a revelia da aplicação.
-Neste caso, uma nova autenticação deve ser realizada para obtenção de um novo login para continuar acessando o barramento\footnote{A identificação de que o login ficou inválido e o restabelecimento do login podem ser feitos através da callback \code{onInvalidLogin} da biblioteca de acesso do OpenBus.}.
+Neste caso, uma nova autenticação deve ser realizada para obtenção de um novo login para continuar acessando o barramento\footnote{A identificação de que o login ficou inválido e o restabelecimento do login podem ser feitos através da callback \code{onInvalidLogin} da biblioteca de acesso do \openbus{}.}.
 Uma vez inválido, um login nunca volta a ser válido novamente.
 
 \subsection{Serviços Núcleo}
@@ -219,8 +219,8 @@ Além das propriedades fornecidas no registro da oferta, o próprio serviço de Reg
   \item login com que a oferta foi registrada.
   \item nome da entidade que registrou a oferta.
   \item momento do registro da oferta.
-  \item nome e versão do componente SCS que implementa o serviço.
-  \item facetas e interfaces do component SCS que implementa o serviço.
+  \item nome e versão do componente \scs{} que implementa o serviço.
+  \item facetas e interfaces do component \scs{} que implementa o serviço.
 \end{itemize}
 
 O Registro de Ofertas também disponibiliza um mecanismo de observação de publicação, atualização e remoção de ofertas.
