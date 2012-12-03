@@ -666,19 +666,19 @@ packages = {
       type = "tecmake",
       src = PRODAPP .."/scs-cpp",
       mf = { 
-        "mico genstubs MULTITHREAD=Yes", 
-        "mico LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+        "mico genstubs SCS_THREADING_ENABLED=Yes",
+        "mico LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes" 
       },
       Darwin = {
         mf = { 
-          "mico genstubs LD=g++ MULTITHREAD=Yes", 
-          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+          "mico genstubs LD=g++ SCS_THREADING_ENABLED=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes" 
         },
       },
       MacOS = {
         mf = { 
-          "mico genstubs LD=g++ MULTITHREAD=Yes", 
-          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 MULTITHREAD=Yes" 
+          "mico genstubs LD=g++ SCS_THREADING_ENABLED=Yes", 
+          "mico BUILD_DYLIB=Yes LD=g++ LUA51="..PRODAPP.."/lua5.1 SCS_THREADING_ENABLED=Yes" 
         },
       },
     },
