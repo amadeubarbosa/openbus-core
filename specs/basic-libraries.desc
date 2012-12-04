@@ -13,7 +13,7 @@ basesoft = {
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
     build = {
       type = "tecmake",
-      src = PRODAPP .. "/logger",
+      src = PRODAPP .. "/logger-multithread",
       mf = { "config LOGGER_MULTITHREAD=Yes" },
       Darwin = {
         mf = {
@@ -43,7 +43,7 @@ basesoft = {
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
     build = {
       type = "tecmake",
-      src = PRODAPP .. "/logger",
+      src = PRODAPP .. "/logger-multithread-debug",
       mf = { "config LOGGER_MULTITHREAD=Yes DBG=Yes" },
       Darwin = {
         mf = {
@@ -73,7 +73,7 @@ basesoft = {
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
     build = {
       type = "tecmake",
-      src = PRODAPP .. "/logger",
+      src = PRODAPP .. "/logger-singlethread",
       mf = { "config" },
       Darwin = {
         mf = {
@@ -103,7 +103,7 @@ basesoft = {
     url = SVNREPURL .. "/cpputils/logger/branches/LG_v1_01_2010_08_10/",
     build = {
       type = "tecmake",
-      src = PRODAPP .. "/logger",
+      src = PRODAPP .. "/logger-singlethread-debug",
       mf = { "config DBG=Yes" },
       Darwin = {
         mf = {
@@ -345,9 +345,7 @@ basesoft = {
       type = "autotools",
       test_libs = {"libmico*2.3.13*"},
       Linux26_64 = "rm -f config.cache && ./configure --prefix="..TMPDIR.. " --disable-sl3 --disable-csiv2 --disable-time --disable-property --disable-events --disable-naming && make && make install",
-      Linux24g3 = "rm -f config.cache && ./configure --disable-csiv2 --disable-sl3 --prefix=".. TMPDIR .. " && make && make install",
-      Linux24g3_64 = "rm -f config.cache && ./configure --disable-csiv2 --disable-sl3 --prefix=".. TMPDIR .. " && make && make install",
-      Linux = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
+      Linux = "rm -f config.cache && ./configure --disable-csiv2 --disable-sl3 --prefix=".. TMPDIR .. " && make && make install",
       Darwin = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       MacOS = "rm -f config.cache && ./configure --prefix=".. TMPDIR .. " && make && make install",
       SunOS = 'rm -f config.cache && CC=cc CXX=CC CONF_AR=CC CONF_ARFLAGS="-m64 -xar -o" CFLAGS="-KPIC -m64" CXXFLAGS="-erroff=badargtype2w -library=stlport4 -KPIC -m64" LDFLAGS="-m64" ./configure --prefix='.. TMPDIR .. ' && make && make install',
