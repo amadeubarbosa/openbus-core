@@ -137,10 +137,10 @@ Nesse caso, é necessário que os sistemas forneçam alguma forma para receber coma
 Fazer uma sistema implementar inúmeras interfaces de acesso para integração com diferentes sistemas é uma solução pouco razoável num cenário em que devam existir vários sistemas a serem intergrados.
 Idealmente, deve-se adotar uma tecnologia de comunicação genérica e eficiente o suficiente para ser adequada ao uso com sistemas com diferentes requisitos.
 
-Outra necessidade comum na integração de sistemas cooporativos é o controle acesso e a governança das integrações.
+Outra necessidade comum na integração de sistemas cooporativos é o controle de acesso e a governança das integrações.
 Ou seja, quando os sistemas integrados não são abertos ao acesso público e irrestrito, é necessário que a infraestrutura forneça mecanismos que permitam restringir quais serviços podem ser integrados e como essas integrações podem ser feitas.
 
-O \openbus{} oferece uma infraestrutura adequada para implementar integrações entre sistemas tendo essas questões e necessidade em mente.
+O \openbus{} oferece uma infraestrutura adequada para implementar integrações entre sistemas tendo essas questões e necessidades em mente.
 Em particular, o \openbus{} se baseia na tecnologia \corba{} para definir uma tecnologia de comunicação genérica e eficiente para integração de sistemas escritos em diferentes linguagens de programação e plataformas computacionais.
 Além disso, o \openbus{} estende a tecnologia \corba{} com suporte a um rigoroso controle de acesso que permite a inspeção e controle das integrações através de um modelo de governança onde um gerente do barramento pode controlar quais sistemas accessam o barramento e se integram a outros sistemas.
 
@@ -163,7 +163,7 @@ Entraremos em detalhes sobre as partes principais do \openbus{} nas subseções a 
 
 O barramento é o meio de comunicação entre os sistemas integrados.
 Toda comunicação feita pelos sistemas integrados através do barramento consiste de chamadas de objetos distribuídos usando o padrão \corba{}.
-Contudo, ao contrário das chamadas de \corba{} comuns, nas chamadas feitas através do barramento, é imposto um rigoroso controle de acesso que só permite chamadas autenticadas por entidades previamente autorizadas acessar o barramento.
+Contudo, ao contrário das chamadas de \corba{} comuns, nas chamadas feitas através do barramento, é imposto um rigoroso controle de acesso que só permite chamadas autenticadas por entidades previamente autorizadas a acessar o barramento.
 
 Essas entidades são tipicamente sistemas computacionais e usuários desses sistemas.
 Cada entidade é identificada por um nome único no barramento a ser definido pelo gerente barramento.
@@ -191,7 +191,7 @@ Essas três formas de autenticação são:
   Para que a autenticação ocorra é preciso decodificar um desafio encriptado com a chave pública contida no certificado cadastrado.
   Para tanto, é necessário ter a chave privada correspondente ao certificado cadastrado.
   Essa forma de autenticação é geralmente utilizada para autorizar o acesso de sistemas computacionais específicos que forneçem serviços através do barramento.
-  Toda gerência dos certificados de acesso cadastrados no barramento é de responsabilidade do gerente do barramento, que utiliza ferramentas fornecidas pelo \openbus{} para adicionar, remover e listar os certificados cadastrados.
+  Toda gerência dos certificados de acesso cadastrados no barramento é de responsabilidade do gerente do barramento, que utiliza ferramentas fornecidas pelo \openbus{} para adicionar, remover e consultar os certificados cadastrados.
 
   \item[Autenticação Compartilhada] Neste caso, a autenticação é feita em colaboração com outro sistema que já possua um login no barramento, ou seja, já está autenticado em nome de uma entidade para acessar o barramento.
   Neste caso, o sistema já autenticado produz um segredo a ser compartilhado com o outro sistema que é utilizado na autenticação desse novo sistema em nome da entidade autenticadora do sistema original.
@@ -203,6 +203,24 @@ Após o período de \term{lease}, o login deve ser renovado para que possa continu
 Independentemente disso, todo login pode se tornar inválido a revelia da aplicação.
 Neste caso, uma nova autenticação deve ser realizada para obtenção de um novo login para continuar acessando o barramento\footnote{A identificação de que o login ficou inválido e o restabelecimento do login podem ser feitos através da callback \code{onInvalidLogin} da biblioteca de acesso do \openbus{}.}.
 Uma vez inválido, um login nunca volta a ser válido novamente.
+
+O barramento possui algumas características importantes que devem ser mencionadas.
+Uma delas, é que o barramento persiste todo o seu estado no diretório de dados.
+Dessa forma, sempre que ele é iniciado, e o mesmo já possui uma base de dados populada, esses dados serão recarregados e farão parte do estado inicial do barramento.
+
+Outra característica importante é que o barramento mantém compatibilidade com a a versão imediatamente anterior do barramento.
+Ou seja, mesmo que a versão do barramento evolua, as entidades ainda conseguem acessar o barramento utilizando bibliotecas de acesso de uma versão anterior.
+O \openbus{} utiliza um esquema de versionamento com quatro números, no formato \emph{A.B.C.D}, onde:
+
+\begin{itemize}
+  \item Campos \textbf{A} e \textbf{B} significam a versão da IDL e deve ser igual em todos os pacotes que são compatíveis: versão IDL, barramento e bibliotecas de acesso.
+  \item Campo \textbf{C} é incrementado quando ocorre alguma modificação que não altera a IDL do núcleo do barramento.
+  \item Campo \textbf{D} representa uma versão apenas com correções de falhas.
+\end{itemize}
+
+Sendo assim, o barramento 2.0 permite a realização de acesso utilizando as bibliotecas de acesso de versão 1.5.x, onde \emph{x} pode assumir qualquer valor de \emph{C.D}.
+Porém, é importante deixar claro que versão 2.0 traz muitas melhorias no quesito de segurança, e essas melhorias não serão usufruídas por clientes que acessam o barramento com versões antigas das bibliotecas de acesso.
+O barramento permite que clientes 1.5 se comuniquem com clientes 2.0, e vice-e-versa, porém essas comunicações se realizam com o mesmo nível de segurança que existia na versão 1.5 do barramento.
 
 \subsection{Serviços Núcleo}
 
@@ -273,14 +291,15 @@ Essa característica da bibliotea de acesso trás duas vantagens importantes:
 \section{Perspectivas}\label{sec:perspectives}
 
 Agora que já apresentamos a arquitetura e os conceitos gerais do \openbus{}, iremos falar um pouco sobre algumas características específicas do \openbus{}, que dependem do papel que o usuário tem no barramento.
+Os papéis abordados são:
 
-O \openbus{} não traz para a sua implementação uma distinção entre administrador e gerente do barramento.
-Ambos desempenham papéis de administração.
-Porém, entendemos que nem sempre o administrador do barramento também irá gerenciar o barramento. Logo, vamos separar esses dois conceitos e apresentar os conceitos do barramento que competem a cada um desses perfis.
+\begin{description}
+  \item[Administrador de Sistema] As pessoas que possuem acesso a máquina onde o barramento será executado e são os responsáveis por levantar e parar o barramento.
+  \item[Gerente do Barramento] Aqueles que irão desempenhar o papel de organizar e acompanhar o que é publicado no barramento.
+  \item[Desenvolvedor de Sistemas Integrados] Responsáveis por implementar a integração de seus respectivos serviços e aplicações ao barramento.
+\end{description}
 
 \subsection{Administradores de Sistema}
-
-Esta seção apresenta alguns conceitos que são importantes para os administradores do barramento, onde por administradores consideramos as pessoas que possuem acesso a máquina onde o barramento será executado e são os responsáveis por levantar e parar o barramento.
 
 O barramento e os serviços núcleo são distribuídos em um mesmo programa, o \emph{busservice}. Logo, para disparar o barramento, basta executar o programa passando as suas configurações por linha de comando ou por arquivo de configuração.
 Se uma configuração não for explicitada, será utilizado o seu valor padrão.
@@ -336,7 +355,7 @@ leasetime = 30
 \end{samplelisting}
 
 Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção ``config'' por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
-O \emph{busservices} foi pensado para que as opções passadas por linha de comando tenham prioridade sobre as opções definidas no arquivo de configuração.
+Porém, as opções passadas por linha de comando tenham prioridade sobre as opções definidas no arquivo de configuração.
 
 Através da opção ``validator'' informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
 Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações como configurar o validador LDAP, consulte~\cite{ob2.0install}.
@@ -344,29 +363,12 @@ Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um val
 %% NOTE: comentado parte que falava sobre o validador de teste: 
 % e em \\\texttt{openbus.test.core.services.TesterUserValidator} disponibilizamos um validador para ambientes de teste, que permite acesso quando o login é igual a senha.
 
-O barramento possui algumas características importantes e devem ser mencionadas.
-Uma delas, é que o barramento procura persistir todo o seu estado no diretório de dados (definido através da opção ``database'').
-Dessa forma, sempre que ele é iniciado, e o mesmo já possui uma base de dados populada, esses dados serão recarregados e farão parte do estado inicial do barramento.
+Também é possível desabilitar o suporte de compatibilidade com a versão anterior através da opção ``nolegacy''. Ao ativar essa opção o barramento deixa de permitir que entidades se autentiquem no barramento utilizando as bibliotecas de acesso de versão 1.5.x. 
 
-Outra característica importante é que o barramento mantém compatibilidade com a API da versão imediatamente anterior.
-Ou seja, mesmo que a versão do barramento evolua, os clientes (serviços e aplicações) ainda conseguem acessar o barramento utilizando bibliotecas de acesso de uma versão anterior.
-O \openbus{} utiliza um esquema de versionamento com quatro números, no formato \emph{A.B.C.D}, onde:
-
-\begin{itemize}
-  \item Campos \textbf{A} e \textbf{B} significam a versão da IDL e deve ser igual em todos os pacotes que são compatíveis: versão IDL, barramento e bibliotecas de acesso.
-  \item Campo \textbf{C} é incrementado quando ocorre alguma modificação na API interna.
-  \item Campo \textbf{D} representa uma versão apenas com correções de falhas.
-\end{itemize}
-
-Sendo assim, o barramento 2.0 permite a realização de acesso utilizando as bibliotecas de acesso de versão 1.5.x, onde \emph{x} pode assumir qualquer valor de \emph{C.D}.
-Porém, é importante deixar claro que versão 2.0 traz muitas melhorias no quesito de segurança, e essas melhorias não serão usufruídas por clientes que acessam o barramento com versões antigas das bibliotecas de acesso.
-O barramento permite que clientes 1.5 se comuniquem com clientes 2.0, e vice-e-versa, porém essas comunicações se realizam com o mesmo nível de segurança que existia na versão 1.5 do barramento.
-Esse suporte de compatibilidade com a versão anterior pode ser desabilitado através da opção ``nolegacy''.
 
 \subsection{Gerentes do Barramento}
 
-Consideramos gerentes do barramento aqueles que irão desempenhar o papel de organizar e acompanhar o que é publicado no barramento.
-Para desempenhar esse papel, disponibilizamos a ferramenta \emph{busadmin}, que permite que se realize atividades de governança (administração) sobre o barramento.
+Para desempenhar o papel de gerente do barramento, disponibilizamos a ferramenta \emph{busadmin}, que permite que se realize atividades de governança (administração) sobre o barramento.
 
 Antes de entrar em detalhes sobre o uso e as funcionalidades do \emph{busadmin}, vamos agora apresentar alguns conceitos importantes de governança dentro do \openbus{}.
 Existem os conceitos de:
@@ -619,7 +621,6 @@ O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha
 
 \subsection{Desenvolvedores de Sistemas Integrados}
 
-Como desenvolvedores, nos referimos aos responsáveis por implementar a integração de seus respectivos serviços e aplicações ao barramento.
 Como informando na seção~\ref{sec:barramento}, oferecemos uma biblioteca de acesso, que implementa o protocolo e exporta uma API de programação, que oferece alguns facilitadores e auxilia a interação com o barramento.
 Para maiores informações, consulte o manual de uso da biblioteca de acesso~(seção \ref{sec:library}).
 
