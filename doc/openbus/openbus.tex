@@ -35,6 +35,16 @@
 % Package for including code in the document
 \usepackage{../mwlabinputs2}
 
+\usepackage{html}   %  *always* load this for LaTeX2HTML
+\begin{htmlonly}
+  \usepackage{verbatim}
+  \providecommand{\url}[1]{\texttt{#1}}
+  \providecommand{\codeinput}[2]{%
+    \textbf{\label{lst:#1}#2}%
+    \verbatiminput{src/#1}%
+  }%
+\end{htmlonly}
+
 % If you want to generate a toc for each chapter (use with book)
 \usepackage{minitoc}
 
@@ -347,12 +357,13 @@ Quando essas opções são configuradas por linha de comando, basta repetir a opção
 Quando são configuradas através do arquivo de configuração, é necessário informar a lista de valores desejados, no formato de uma tabela \lua{}~\cite{web:lua}.
 O código~\ref{lst:openbus.cfg} apresenta um exemplo de arquivo do configuração.
 
-\begin{samplelisting}[language=lua]{openbus.cfg}{Exemplo de arquivo de configuração.}
-validator = {"openbus.test.core.services.TesterUserValidator"}
-loglevel = 5 
-admin = {"admin1", "admin2"}
-leasetime = 30
-\end{samplelisting}
+\begin{htmlonly}
+  \codeinput{openbus.cfg}{Exemplo de arquivo de configuração:}
+\end{htmlonly}
+
+\begin{latexonly}
+  \inputlisting[language=lua]{openbus.cfg}{Exemplo de arquivo de configuração.}
+\end{latexonly}
 
 Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção ``config'' por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
 Porém, as opções passadas por linha de comando tenham prioridade sobre as opções definidas no arquivo de configuração.
@@ -399,66 +410,13 @@ busadmin [opções] --login=<usuário> <comando>
 
 Para adicionar e remover categorias, entidades, certificados, interfaces e autorizações, aconselhamos que se defina um arquivo de script \lua{} com o formato especificado no código~\ref{lst:openbus.adm}, porque ele serve de entrada para os comandos ``script'' e ``undo-script'' da ferramenta \emph{busadmin}, que executa ou desfaz a execução do lote de comandos especificados pelo arquivo de script.
 
-\begin{samplelisting}[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
--- Definição de uma categoria
--- * comando: Category
--- * parâmetros:
---   * id = identificador da categoria
---   * name = descrição da categoria
-Category {
-  id = "TEST_Category",
-  name = "Descrição da categoria",
-}
--- Definição de uma entidade
--- * comando: Entity
--- * parâmetros:
---   * id = identificador da entidade
---   * category = identificador da categoria que a entidade pertence
---   * name = descrição da entidade
-Entity {
-  id = "TEST_Entity",
-  category = "TEST_Category",
-  name = "Descrição da entidade",
-}
--- Definição de um certificado
--- * comando: Certificate
--- * parâmetros:
---   * id = identificador da entidade
---   * certificate = caminho para arquivo de certificado associado a entidade
-Certificate {
-  id = "TEST_Entity",
-  certificate = "teste.crt",
-}
--- Definição de uma interface
--- * comando: Interface
--- * parâmetros:
---   * id = repID da interface
-Interface {
-  id = "IDL:script/Test:1.0"
-}
--- Conceder autorização
--- * comando: Grant
--- * parâmetros:
---   * id = identificador da entidade a ser autorizada
---   * interfaces = lista de interfaces a serem autorizadas.
-Grant {
-  id = "TEST_Entity",
-  interfaces = {
-    "IDL:script/Test:1.0",
-  }
-}
--- Remover autorização
--- * comando: Revoke
--- * parâmetros:
---   * id = identificador da entidade
---   * interfaces = lista de interfaces a serem desautorizadas.
-Revoke {
-  id = "TEST_Entity",
-  interfaces = {
-    "IDL:script/Test:1.0",
-  }
-}
-\end{samplelisting}
+\begin{htmlonly}
+  \codeinput{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}:}
+\end{htmlonly}
+
+\begin{latexonly}
+  \inputlisting[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
+\end{latexonly}
 
 O \emph{busadmin} também permite realizar esses cadastros e descadastros manualmente, além de realizar consultas e outras atividades de gerência do barramento.
 A listagem completa dos comandos disponíveis é apresentada a seguir:
