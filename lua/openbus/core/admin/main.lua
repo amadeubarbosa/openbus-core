@@ -26,6 +26,7 @@ local logintypes = idl.types.services.access_control
 local offertypes = idl.types.services.offer_registry
 local types = idl.types.services
 local BusObjectKey = idl.const.BusObjectKey
+local corba = require "openbus.util.corba"
 
 -- Alias
 local lower = _G.string.lower
@@ -1244,8 +1245,9 @@ handlers["report"] = function(cmd)
   msg = " - Barramento (versão 2.0.x): %s"
   local ref = "corbaloc::"..host..":"..port.."/"..BusObjectKey
   local bus = orb:newproxy(ref, nil, "scs::core::IComponent")
-  if bus:_non_existent() then
-    printf(msg, "[INACESSÍVEL]")
+  local status, except = corba.refStatus(bus)
+  if status ~= "accessible" then
+    printf(msg, "[INACESSÍVEL]", except or "")
     return
   else
     printf(msg, "[ACESSÍVEL]")
@@ -1256,10 +1258,13 @@ handlers["report"] = function(cmd)
   msg = " - Suporte legado (versão 1.5.x): %s"
   local legacyref = "corbaloc::"..host..":"..port.."/openbus_v1_05"
   local legacy = orb:newproxy(legacyref, nil, "scs::core::IComponent")
-  if legacy:_non_existent() then
+  local status, except = corba.refStatus(legacy)
+  if status == "accessible" then
+    printf(msg, "[HABILITADO]")
+  elseif status == "nonexistent" then
     printf(msg, "[DESABILITADO]")
   else
-    printf(msg, "[HABILITADO]")
+    printf(msg, "[INACESSÍVEL]", except or "")
   end
   legacyref = nil
   legacy = nil
@@ -1358,7 +1363,7 @@ handlers["report"] = function(cmd)
   if #offers > 0 then
     local invalid = {}
     for _, offer in ipairs(offers) do
-      if offer.service_ref:_non_existent() then
+      if corba.refStatus(offer.service_ref) ~= "accessible" then
         invalid[#invalid+1] = offer
       end
     end

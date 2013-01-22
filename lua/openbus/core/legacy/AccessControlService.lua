@@ -12,6 +12,7 @@ local setmetatable = _G.setmetatable
 local type = _G.type
 
 local cothread = require "cothread"
+cothread.plugin(require "cothread.plugin.socket")
 local time = cothread.now
 
 local hash = require "lce.hash"

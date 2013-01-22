@@ -18,6 +18,7 @@ local inf = math.huge
 local min = math.min
 
 local cothread = require "cothread"
+cothread.plugin(require "cothread.plugin.socket")
 local time = cothread.now
 local running = cothread.running
 local schedule = cothread.schedule

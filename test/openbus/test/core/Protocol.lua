@@ -3,6 +3,7 @@ require "openbus.test.configs"
 require "openbus.test.lowlevel"
 
 local cothread = require "cothread"
+cothread.plugin(require "cothread.plugin.socket")
 local sleep = cothread.delay
 
 local uuid = require "uuid"
@@ -21,6 +22,8 @@ local CredentialContextId = idl.const.credential.CredentialContextId
 local loginconst = idl.const.services.access_control
 local logintypes = idl.types.services.access_control
 
+local corba = require "openbus.util.corba"
+local refstatus = corba.refStatus
 local server = require "openbus.util.server"
 local readfrom = server.readfrom
 
@@ -146,7 +149,7 @@ do -- login successfull
   local secret = assert(syskey:decrypt(challenge))
   local encrypted = encodeLogin(bus.key, secret, pubkey)
   local login, lease = attempt:login(pubkey, encrypted)
-  assert(attempt:_non_existent())
+  assert(refstatus(attempt) == "nonexistent")
   assert(validid(login.id))
   assert(login.entity == system)
   assert(lease > 0)
@@ -156,7 +159,7 @@ end
 do -- cancel login attempt
   local attempt = ac:startLoginByCertificate(system)
   attempt:cancel()
-  assert(attempt:_non_existent())
+  assert(refstatus(attempt) == "nonexistent")
 end
 
 -- logout ----------------------------------------------------------------------
