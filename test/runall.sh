@@ -13,8 +13,12 @@ LATT_LUA=${LATT_LUA:=$OPENBUS_HOME/lib/lua/5.1}
 LATT_PRELUDE="package.path=package.path..';$LATT_LUA/?.lua'"
 TEST_PRELUDE='package.path=package.path..";"..(os.getenv("OPENBUS_CORE_LUA") or "../lua").."/?.lua"'
 
+#LUACASES="\
+#openbus/test/util/database \
+#openbus/test/core/services/LoginDB \
+#openbus/test/core/Protocol \
+#"
 LUACASES="\
-openbus/test/core/services/LoginDB \
 openbus/test/core/Protocol \
 "
 for case in ${LUACASES}; do

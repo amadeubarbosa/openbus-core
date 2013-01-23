@@ -6,9 +6,6 @@ local cothread = require "cothread"
 cothread.plugin(require "cothread.plugin.socket")
 local sleep = cothread.delay
 
-local uuid = require "uuid"
-local validid = uuid.isvalid
-
 local pubkey = require "lce.pubkey"
 local newkey = pubkey.create
 local decodepubkey = pubkey.decodepublic
@@ -28,6 +25,14 @@ local server = require "openbus.util.server"
 local readfrom = server.readfrom
 
 syskey = assert(decodeprvkey(readfrom(syskey)))
+
+local checkuuid do
+  local used = {}
+  function checkuuid(id)
+    assert(used[id] == nil)
+    used[id] = true
+  end
+end
 
 -- test initialization ---------------------------------------------------------
 
@@ -89,7 +94,7 @@ end
 do -- login successfull
   local encrypted = encodeLogin(bus.key, password, pubkey)
   local login, lease = ac:loginByPassword(user, pubkey, encrypted)
-  assert(validid(login.id))
+  checkuuid(login.id)
   assert(login.entity == user)
   assert(lease > 0)
   validlogin = login
@@ -150,7 +155,7 @@ do -- login successfull
   local encrypted = encodeLogin(bus.key, secret, pubkey)
   local login, lease = attempt:login(pubkey, encrypted)
   assert(refstatus(attempt) == "nonexistent")
-  assert(validid(login.id))
+  checkuuid(login.id)
   assert(login.entity == system)
   assert(lease > 0)
   logoutid = login.id -- this login will be invalidated by a logout

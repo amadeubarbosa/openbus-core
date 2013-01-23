@@ -20,12 +20,13 @@ LUASRC= \
   $(LUADIR)/openbus/core/services/messages.lua \
   $(LUADIR)/openbus/core/services/PropertyIndex.lua \
   $(LUADIR)/openbus/core/services/OfferRegistry.lua \
-  $(LUADIR)/openbus/core/services/passwordvalidator/LDAP.lua
+  $(LUADIR)/openbus/core/services/passwordvalidator/LDAP.lua \
+  $(LUADIR)/openbus/util/database.lua
 
 include ${OIL_HOME}/openbus/base.mak
 
 LIBS:= lce luuid lfs lualdap luavararg luastruct  luasocket loop luatuple \
-  luacoroutine luacothread luainspector luaidl oil luascs luaopenbus lua5.1
+  luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
   TECMAKE_APPNAME=\"$(APPNAME)\"
