@@ -96,7 +96,7 @@ Caso tenha interesse de entender melhor o que é um barramento \openbus{}, consul
 
 \section{Instalação}
 
-O primeiro para instalar o barramento deve ser descompactar o pacote do barramento da plataforma desejada.
+O primeiro passo para instalar o barramento deve ser descompactar o pacote do barramento da plataforma desejada.
 Os pacotes estão disponibilizados no site oficial do projeto: \url{http://www.tecgraf.puc-rio.br/openbus}.
 
 As plataformas oficialmente suportadas são:
@@ -125,7 +125,7 @@ Para executar o barramento deve-se seguir o seguinte procedimento:
 export OPENBUS_HOME=<local de extracao do pacote>
 \end{verbatim}
   
-  \item Testar se a execução do binário do barramento esta funcionando
+  \item Testar se a execução do binário do barramento está funcionando
 \begin{verbatim}  
 $OPENBUS_HOME/bin/busservices --help
 \end{verbatim}
@@ -153,11 +153,11 @@ $OPENBUS_HOME/bin/busservices --help
 
 \end{enumerate}
 
-Maiores informações sobre a como utilizar a configuração do \emph{busservices} podem ser encontradas no manual de referência~\cite{ob2.0core}.
+Maiores informações sobre como utilizar a configuração do \emph{busservices} podem ser encontradas no manual de referência~\cite{ob2.0core}.
 
 \section{Configuração do validador LDAP}
 
-O validador LDAP, disponibilizado em \texttt{openbus.core.services.passwordvalidator.LDAP}, tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seu significado e possíveis valores:
+O validador LDAP, disponibilizado em \texttt{openbus.core.services.passwordvalidator.LDAP}, tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seus significados e possíveis valores:
 \begin{description}
 \item[ldap\_servers] indica uma lista de URLs de servidores LDAP. Cada URL deve seguir o formato \\ \texttt{<protocol>://<server>:<port>}, onde \texttt{<protocol>} pode ser \texttt{ldaps} ou \texttt{ldap}. Exemplo:
 \begin{verbatim}
@@ -183,7 +183,7 @@ ldap_timeout = 10
 
 \section{Criação de um validador personalizado}
 
-Um validador precisa ser um módulo Lua\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}. A função \texttt{validator} recebe como primeiro parâmetro o nome de usuário e como segundo a senha. Caso o par usuário/senha seja válido deve-se retornar verdadeiro, caso contrário falso. Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
+Um validador precisa ser um módulo Lua\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}. A função \texttt{validator} recebe como primeiro parâmetro o nome de usuário e, como segundo, a senha. Caso o par usuário/senha seja válido, deve-se retornar verdadeiro, caso contrário, falso. Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
 \begin{verbatim}
 local function validator(name, password)
   if name == password then
@@ -194,7 +194,7 @@ end
 return function(configs) return validator end
 \end{verbatim}
 
-Para utilizar um validador como esse pode ser necessário a configuração das variáveis de ambiente LUA\_PATH e LUA\_CPATH. Caso não esteja familiarizado, consulte o manual da linguagem Lua\cite{web:luamodule}.
+Para utilizar um validador como esse, pode ser necessário a configuração das variáveis de ambiente LUA\_PATH e LUA\_CPATH. Caso não esteja familiarizado, consulte o manual da linguagem Lua\cite{web:luamodule}.
 
 \section{Configurações opcionais para administradores do servidor}
 
@@ -210,7 +210,7 @@ Recomendamos que o administrador coloque o script \emph{bus-init} em /etc/init.d
 
 Além disso, por padrão, este script salva um arquivo de nome \emph{busservices.pid} (contendo o PID do processo do \emph{busservices}) dentro do diretório de instalação do barramento. Caso o administrador queira, ele também pode mudar a localização desse arquivo dentro do script.
 
-Para utilizar o script \emph{bus-init} \textbf{é recomendado} que o administrador do sistema configure o barramento para utilizar um arquivo de configuração. Nesse caso o administrador \textbf{precisa} decidir onde colocar esse arquivo de configuração. Há duas formas de fazer isso utilizando o \emph{bus-init}:
+Para utilizar o script \emph{bus-init} \textbf{é recomendado} que o administrador do sistema configure o barramento para utilizar um arquivo de configuração. Nesse caso, o administrador \textbf{precisa} decidir onde colocar esse arquivo de configuração. Há duas formas de fazer isso utilizando o \emph{bus-init}:
 \begin{enumerate}
    \item Criando um arquivo /etc/default/openbus e definindo a variável OPENBUS\_CONFIG. Exemplo:
    \begin{verbatim}
@@ -236,11 +236,11 @@ Um exemplo de agendamento no \emph{cron} para utilizar o \emph{bus-check-running
 
 \subsection{Rotacionamento de logs}
 
-Por padrão, o barramento imprime logs em tela. É \textbf{fortemente recomendado} configurar o barramento para salvar esses logs em arquivos conforme documentado em\cite{ob2.0core}. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
+Por padrão, o barramento imprime logs em tela. É \textbf{fortemente recomendado} configurar o barramento para salvar esses logs em arquivos, conforme documentado em\cite{ob2.0core}. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
 
 O comando \textbf{logrotate} é um utilitário para simplificar a administração de arquivos de logs bem comum na maioria das instalações Linux e Solaris. O logrotate permite a rotação automática, a compressão dos logs antigos, a remoção de logs muito velhos e mesmo o envio de emails contendo os arquivos de logs.
 
-Para rotacionar os logs do barramento basta configurar o logrotate com as linhas a seguir, neste exemplo consideramos que o barramento salva o log em /var/log/openbus.log:
+Para rotacionar os logs do barramento, basta configurar o logrotate com as linhas a seguir. Neste exemplo consideramos que o barramento salva o log em /var/log/openbus.log:
 \begin{verbatim}
    /var/log/openbus.log {
     weekly
@@ -254,17 +254,17 @@ Os significados das opções recomendadas acima são dados a seguir:
 \begin{enumerate}
    \item O rotacionamento dos logs ocorre \textbf{semanalmente}.
    \item Os logs antigos são comprimidos.
-   \item A opção \textbf{copytruncate} é necessária pois o barramento escreve continuamente no log e ocorrerá erro de escrita em disco caso os descritores de arquivos sejam alterados. Essa opção copia os arquivos de logs e depois reseta o arquivo original. É o procedimento mais seguro nesses casos.
+   \item A opção \textbf{copytruncate} é necessária, pois o barramento escreve continuamente no log e ocorrerá erro de escrita em disco, caso os descritores de arquivos sejam alterados. Essa opção copia os arquivos de logs e, depois, reseta o arquivo original. É o procedimento mais seguro nesses casos.
    \item Armazena-se até \textbf{4} volumes dos logs antigos.
 \end{enumerate}
 
 \subsubsection{Rotacionamento de logs usando o logadm (plataforma Solaris)}
 
 O \textbf{logadm} é muito parecido com o logrotate. Para a rotação dos logs, nós iremos utilizar o crontab e o logadm.
-Caso não seja o root da maquina, você deve utilizar o parâmetro -f para informar um arquivo de configuração. Esse arquivo irá conter todos os logs que você deseja rotacionar. Abaixo temos um exemplo de como configurar o logadmin para rotacionar os logs do barramento.
+Caso não seja o root da máquina, você deve utilizar o parâmetro -f para informar um arquivo de configuração. Esse arquivo irá conter todos os logs que você deseja rotacionar. Abaixo temos um exemplo de como configurar o logadmin para rotacionar os logs do barramento.
 
 \begin{itemize}
-   \item O agendamento do cron que faz o logadm ser executado todo dia ás 5:00AM:
+   \item O agendamento do cron que faz o logadm ser executado todo dia às 5:00AM:
    \begin{verbatim}
    00 05 * * * /usr/sbin/logadm -f /etc/openbus-logadm.conf
    \end{verbatim}
@@ -276,7 +276,7 @@ Caso não seja o root da maquina, você deve utilizar o parâmetro -f para informar
 
 Os significados das opções recomendadas acima são dados a seguir:
 \begin{enumerate}
-   \item Os parâmetros \texttt{-C 5 -c -p 7d -z 0} que fazem com que o logadm guarde os 5 últimos logs, truncando-os e comprimindo-os no formato .gz. Essa ação será feita a cada 7 dias.
+   \item Os parâmetros \texttt{-C 5 -c -p 7d -z 0} fazem com que o logadm guarde os 5 últimos logs, truncando-os e comprimindo-os no formato .gz. Essa ação será feita a cada 7 dias.
    \item O parâmetro \texttt{-P} será adicionado pelo próprio logadm após a primeira execução, ele é responsável por controlar a próxima data que o rotacionamento ocorrerá.
 \end{enumerate}
 
@@ -305,9 +305,9 @@ Um arquivo com os agendamentos já existentes será aberto e será possível adicion
 
 \subsection{Onde devo salvar o arquivo de configuração do logrotate?}
 
-Na maioria das instalações Linux recentes já dispõem do diretório /etc/logrotate.d. Nesses casos, basta criar um arquivo chamado openbus (pode ser outro nome de sua preferência) e salvar as configurações acima nele.
+A maioria das instalações Linux recentes já dispõem do diretório /etc/logrotate.d. Nesses casos, basta criar um arquivo chamado openbus (pode ser outro nome de sua preferência) e salvar as configurações acima nele.
 
-É importante que o administrador leia as páginas de manual do logrotate (man logrotate) pois podem haver diferenças na configuração para versões antigas desse utilitário. Uma das situações comum é não haver suporte ao diretório /etc/logrotate.d, nesses casos, basta adicionar as configurações acima no arquivo /etc/logrotate.conf.
+É importante que o administrador leia as páginas de manual do logrotate (man logrotate), pois podem haver diferenças na configuração para versões antigas desse utilitário. Uma das situações comuns é não haver suporte ao diretório /etc/logrotate.d. Nesses casos, basta adicionar as configurações acima no arquivo /etc/logrotate.conf.
 
 \subsection{Precisa ser configurada alguma permissão especial? Qual o owner e o grupo que a configuração do logrotate precisa ter?}
 
