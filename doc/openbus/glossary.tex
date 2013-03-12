@@ -37,7 +37,7 @@ dada entidade no barramento.
 
 \item [Controle de Acesso] Serve como ponto de entrada do barramento, sendo responsável por autenticar, renovar e gerenciar os logins de serviços e aplicações ao barramento.
 
-\item [\corba{}] \emph{Common Object Request Broker Architecture}. Espeficiação de um padrão de ORB sobre a qual o OpenBus é definido e implementado.
+\item [\corba{}] \emph{Common Object Request Broker Architecture}. Especificação de um padrão de ORB sobre a qual o OpenBus é definido e implementado.
 O \openbus{} pode ser visto como uma extensão do padrão \corba{}.
 
 \end{description}
@@ -68,6 +68,8 @@ Entidades podem ser usuários humanos de sistemas ou mesmo instalações de serviço
 
 \item [Lease] Período de tempo pelo qual um login no barramento permanecerá válido sem necessidade de renovação.
 Contudo, um login pode ser invalidado explicitamente por um administrador antes do tempo de lease.
+
+\item [LDAP] \emph{Lightweight Directory Access Protocol}. É um protocolo de Internet para acessar serviços de diretório distribuídos. É comumente usado para autenticação em redes corporativas.
 
 \item [Login] Representa uma autenticação de uma entidade junto ao barramento para poder acessá-lo.
 
@@ -115,4 +117,10 @@ Todos serviços ofertados no barramento devem ser modelados como componentes \scs
 
 \item [Serviços Extras] Serviços que acrescentam funcionalidades para auxiliar a integração entre serviços e aplicações, mas que não são parte do núcleo do barramento.
 
+\end{description}
+
+\subsection*{V}
+
+\begin{description}
+\item [Validadores LDAP]  São utilizados para autenticar usuários em serviços de diretório que utilizam o protocolo LDAP.
 \end{description}

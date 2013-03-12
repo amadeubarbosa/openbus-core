@@ -115,6 +115,7 @@ Para outras plataformas geramos pacotes sob demanda, exemplos:
   \item Solaris 10 release 8/07 SPARC 32 bits (SunOS510)
 \end{itemize}
 
+Os exemplos deste documento utilizam comandos do Bash shell (interpretador de linguagem de comandos)~\cite{web:bash}. 
 Para executar o barramento deve-se seguir o seguinte procedimento:
 
 \begin{enumerate}
@@ -149,13 +150,26 @@ $OPENBUS_HOME/bin/busservices --help
     -out <nome do par de chaves>.crt -outform DER
 \end{verbatim}
 
-  \item Executar o barramento passando as configurações desejadas. Como por exemplo, o par de chaves do barramento.
+  \item Configurar o validador (ver próxima seção) e executar o barramento (binário \emph{busservices}), passando as configurações da chave privada e do validador a serem utilizados, as quais são obrigatórias para execução do OpenBus.
 
 \end{enumerate}
 
 Maiores informações sobre como utilizar a configuração do \emph{busservices} podem ser encontradas no manual de referência~\cite{ob2.0core}.
 
-\section{Configuração do validador LDAP}
+\section{Validadores}
+
+\subsection{Para que servem?}
+
+São responsáveis por autenticar o sistema/usuário que se conecta ao barramento.
+Atualmente pode-se utilizar 2 tipos de validadores no OpenBus: validadores LDAP ou validadores personalizados.
+
+\begin{itemize}
+\item Validadores LDAP - usam as informações contidas em um serviço de diretórios LDAP para autenticar o acesso de usuários ao barramento. Em ambientes corporativos, é comum a administração da rede utilizar servidores LDAP~\cite{web:rfc4510,wiki:LDAP} para a autenticação de usuários.
+\item Validadores personalizados - utilizam funções escritas em Lua para verificar a autenticidade dos usuários.
+\end{itemize}
+
+
+\subsection{Validadores LDAP}
 
 O validador LDAP, disponibilizado em \texttt{openbus.core.services.passwordvalidator.LDAP}, tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seus significados e possíveis valores:
 \begin{description}
@@ -167,7 +181,7 @@ ldap_servers = {
 }
 \end{verbatim}
 
-\item[ldap\_patterns] indica uma lista de padrões de formação de nomes que serão usados na autenticação LDAP. Atualmente só há suporte para o padrão \texttt{\%U}, e o validador irá substituir esse padrão pelo nome do usuário fornecido no ato do login. No exemplo abaixo apresentamos dois padrões, o primeiro é útil para autenticação em servidores Microsoft Active Directory (que utilizam UPN \cite{web:upn}) e o segundo é útil para autenticação em servidores OpenLDAP (que utilizam DN \cite{web:dn,web:rfc4514}). Exemplo:
+\item[ldap\_patterns] indica uma lista de padrões de formação de nomes que serão usados na autenticação LDAP. Atualmente só há suporte para o padrão \texttt{\%U}, e o validador irá substituir esse padrão pelo nome do usuário fornecido no ato do login. No exemplo abaixo apresentamos dois padrões, o primeiro é útil para autenticação em servidores Microsoft Active Directory (que utilizam UPN~\cite{web:upn}) e o segundo é útil para autenticação em servidores OpenLDAP (que utilizam DN~\cite{web:dn,web:rfc4514}). Exemplo:
 \begin{verbatim}
 ldap_patterns = {
   "%U@project.mycompany.com",
@@ -181,9 +195,10 @@ ldap_timeout = 10
 \end{verbatim}
 \end{description}
 
-\section{Criação de um validador personalizado}
 
-Um validador precisa ser um módulo Lua\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}. A função \texttt{validator} recebe como primeiro parâmetro o nome de usuário e, como segundo, a senha. Caso o par usuário/senha seja válido, deve-se retornar verdadeiro, caso contrário, falso. Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
+\subsection{Validadores personalizados}\label{subsec:valpersonalizados}
+
+Um validador personalizado precisa ser um módulo Lua~\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}. A função \texttt{validator} recebe como primeiro parâmetro o nome de usuário e, como segundo, a senha. Caso o par usuário/senha seja válido, deve-se retornar verdadeiro, caso contrário, falso. Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
 \begin{verbatim}
 local function validator(name, password)
   if name == password then
@@ -194,7 +209,10 @@ end
 return function(configs) return validator end
 \end{verbatim}
 
-Para utilizar um validador como esse, pode ser necessário a configuração das variáveis de ambiente LUA\_PATH e LUA\_CPATH. Caso não esteja familiarizado, consulte o manual da linguagem Lua\cite{web:luamodule}.
+Para ver um exemplo de como configurar um validador personalizado, consulte a seção FAQ~\ref{sec:faq}.
+
+
+
 
 \section{Configurações opcionais para administradores do servidor}
 
@@ -236,7 +254,7 @@ Um exemplo de agendamento no \emph{cron} para utilizar o \emph{bus-check-running
 
 \subsection{Rotacionamento de logs}
 
-Por padrão, o barramento imprime logs em tela. É \textbf{fortemente recomendado} configurar o barramento para salvar esses logs em arquivos, conforme documentado em\cite{ob2.0core}. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
+Por padrão, o barramento imprime logs em tela. É \textbf{fortemente recomendado} configurar o barramento para salvar esses logs em arquivos, conforme documentado em~\cite{ob2.0core}. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
 
 O comando \textbf{logrotate} é um utilitário para simplificar a administração de arquivos de logs bem comum na maioria das instalações Linux e Solaris. O logrotate permite a rotação automática, a compressão dos logs antigos, a remoção de logs muito velhos e mesmo o envio de emails contendo os arquivos de logs.
 
@@ -280,7 +298,7 @@ Os significados das opções recomendadas acima são dados a seguir:
    \item O parâmetro \texttt{-P} será adicionado pelo próprio logadm após a primeira execução, ele é responsável por controlar a próxima data que o rotacionamento ocorrerá.
 \end{enumerate}
 
-\section{FAQ}
+\section{FAQ}\label{sec:faq}
 
 \subsection{Não lembro a sintaxe do crontab. Qual é ela mesmo?}
 
@@ -361,6 +379,16 @@ Nas plataformas Solaris a forma mais simples é baixar o pacote binário a partir 
 \end{enumerate}
 
 Após esse procedimento basta ter a pasta \$HOME/bin no PATH.
+
+\subsection{Como configuro um validador personalizado?}
+
+Um exemplo simples de configuração de um validador personalizado, seria criar um código como o apresentado em \ref{subsec:valpersonalizados}, e salvar o código em um arquivo com a extensão ``.lua''. Depois, adicione o caminho onde foi salvo o arquivo à variável de ambiente LUA\_PATH, da seguinte forma: 
+
+\begin{verbatim}
+export LUA_PATH+=";<caminho onde está o validador>/?.lua"
+\end{verbatim}
+
+Para maiores informações, consulte o manual da linguagem Lua~\cite{web:luamodule}.
 
 \subsection{Ainda estou com dúvidas. Como entro em contato?}
 

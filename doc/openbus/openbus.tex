@@ -51,6 +51,8 @@
 % This is now the recommended way for checking for PDFLaTeX:
 \usepackage{ifpdf}
 
+\usepackage{listings}
+
 %% Redefines the label 'Listing' for ..
 \def\lstlistingname{Código}
 \codestyle{colorful}
@@ -164,7 +166,7 @@ Entraremos em detalhes sobre as partes principais do \openbus{} nas subseções a 
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{figs/architecture.png}
+\includegraphics[width=\textwidth]{figs/architecture}
 \caption{Arquitetura do \openbus{}}
 \label{fig:architecture}
 \end{figure}
@@ -327,7 +329,7 @@ Valor padrão é ``openbus.db".
 Valor padrão é ``openbus.key"
 
   \item [-leasetime] Tempo em segundos de lease dos logins de acesso.\\
-Valor padrão é 180 segundos.
+Valor padrão é 1800 segundos.
   \item [-expirationgap] Tempo em segundos que os logins ficam válidos após o lease.\\
 Valor padrão é 10 segundos. 
 
@@ -394,7 +396,7 @@ Existem os conceitos de:
   Entidades podem ou não ser cadastradas no barramento, mas apenas entidades cadastradas podem ser autorizadas a ofertar serviços.
 
   \item[Certificado] Chave pública que pode ser usada para autenticar uma
-dada entidade no barramento.
+dada entidade no barramento. Ver seção sobre geração de chaves para informações sobre como gerar as chaves pública e privada.
   É possível adicionar certificados para entidades não cadastradas no barramento.
 
   \item[Interface] Definição de uma interface IDL de um serviço que pode ser ofertado no barramento.
@@ -408,15 +410,11 @@ Para utilizar a ferramenta, deve-se executar:
 busadmin [opções] --login=<usuário> <comando>
 \end{verbatim} 
 
-Para adicionar e remover categorias, entidades, certificados, interfaces e autorizações, aconselhamos que se defina um arquivo de script \lua{} com o formato especificado no código~\ref{lst:openbus.adm}, porque ele serve de entrada para os comandos ``script'' e ``undo-script'' da ferramenta \emph{busadmin}, que executa ou desfaz a execução do lote de comandos especificados pelo arquivo de script.
+Para adicionar e remover categorias, entidades, certificados, interfaces e autorizações, aconselhamos que se defina um arquivo de script \lua{} com o formato especificado no código~\ref{lst:openbus.adm}. Ele serve de entrada para os comandos ``script'' e ``undo-script'' da ferramenta \emph{busadmin}, que, respectivamente, executa e desfaz a execução do lote de comandos especificados pelo arquivo de script.
 
 \begin{htmlonly}
   \codeinput{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}:}
 \end{htmlonly}
-
-\begin{latexonly}
-  \inputlisting[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
-\end{latexonly}
 
 O \emph{busadmin} também permite realizar esses cadastros e descadastros manualmente, além de realizar consultas e outras atividades de gerência do barramento.
 A listagem completa dos comandos disponíveis é apresentada a seguir:
@@ -441,6 +439,7 @@ A listagem completa dos comandos disponíveis é apresentada a seguir:
 
   \item[\texttt{--}certificate=\textless arquivo\textgreater] Informa a chave privada para realizar a autenticação por certificado, ao invés de ser por senha.
 O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha antes de executar o comando.
+
 
 \end{description}
 
@@ -577,9 +576,48 @@ O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha
 
 \end{itemize}
 
+\begin{latexonly}
+  \codeplacement{!hb}
+  \inputlisting[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
+\end{latexonly}
+
+
+\subsection{Geração de chaves}
+
+Dentro do pacote de distribuição do OpenBus, está incluso o binário do OpenSSL, que permite gerar chaves privada e pública. 
+Antes de utilizar o binário, é necessário executar os seguintes comandos (estamos utilizando comandos do Bash shell~\cite{web:bash} no exemplo abaixo):
+
+\begin{verbatim}
+#este comando é apenas para facilitar a legibilidade do código abaixo, sendo opcional
+  export OPENBUS_HOME=<local de extracao do pacote>
+
+  export LD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${LD_LIBRARY_PATH}"
+  
+# caso seja MacOS é preciso também:
+  export DYLD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${DYLD_LIBRARY_PATH}"
+\end{verbatim}
+
+Para gerar a chave privada, utilize os seguintes comandos:
+
+\begin{verbatim}
+ ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
+  ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
+    -in tmp_openssl.key -out <nome do par de chaves>.key -outform DER
+  rm -f tmp_openssl.key
+\end{verbatim}
+
+Para gerar o certificado, utilize o seguinte código:
+
+\begin{verbatim}
+  ${OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 \
+    -key <nome do par de chaves>.key -keyform DER \
+    -out <nome do par de chaves>.crt -outform DER
+\end{verbatim}
+
+
 \subsection{Desenvolvedores de Sistemas Integrados}
 
-Como informado na seção~\ref{sec:barramento}, oferecemos uma biblioteca de acesso, que implementa o protocolo e exporta uma API de programação, que oferece alguns facilitadores e auxilia a interação com o barramento.
+Como informado na seção~\ref{sec:barramento}, oferecemos uma biblioteca de acesso, que implementa o protocolo e exporta uma API de programação, a qual oferece alguns facilitadores e auxilia a interação com o barramento.
 Para maiores informações, consulte o manual de uso da biblioteca de acesso~(seção \ref{sec:library}).
 
 
