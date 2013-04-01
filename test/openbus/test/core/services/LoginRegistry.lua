@@ -162,6 +162,15 @@ function InvalidParamCase.testGetValidity(self)
   Check.assertEquals(0, validity)
 end
 
+function InvalidParamCase.testSubscribeNullObserver(self)
+  local logins = self.logins
+  local ok, result = pcall(logins.subscribeObserver, logins, nil)
+  Check.assertFalse(ok)
+  Check.assertEquals(result._repid, "IDL:omg.org/CORBA/BAD_PARAM:1.0")
+  Check.assertEquals(result.completed, "COMPLETED_NO")
+  Check.assertEquals(result.minor, 0)
+end
+
 function InvalidParamCase.testSubscribeInvalidObserver(self)
   local logins = self.logins
   local ok, observer = pcall(logins.subscribeObserver, logins, {})

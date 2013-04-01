@@ -25,9 +25,6 @@ local schedule = cothread.schedule
 local unschedule = cothread.unschedule
 local waituntil = cothread.defer
 
-local giop = require "oil.corba.giop"
-local sysex = giop.SystemExceptionIDs
-
 local uuid = require "uuid"
 local newid = uuid.new
 
@@ -38,9 +35,10 @@ local decodepublickey = pubkey.decodepublic
 local x509 = require "lce.x509"
 local decodecertificate = x509.decode
 
+local log = require "openbus.util.logger"
 local oo = require "openbus.util.oo"
 local class = oo.class
-local log = require "openbus.util.logger"
+local sysex = require "openbus.util.sysex"
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
@@ -574,6 +572,9 @@ function LoginRegistry:getLoginValidity(id)
 end
 
 function LoginRegistry:subscribeObserver(callback)
+  if callback == nil then
+    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+  end
   local logins = AccessControl.activeLogins
   local caller = self.access:getCallerChain().caller
   local login = logins:getLogin(caller.id)
