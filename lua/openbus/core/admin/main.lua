@@ -1376,7 +1376,7 @@ handlers["report"] = function(cmd)
       local reply = string.lower(io.read())
       if reply == "s" or reply == "sim" or reply == "y" or reply == "yes" then
         local rem = 0
-        for _, offer in ipairs(offers) do
+        for _, offer in ipairs(invalid) do
           local ok, err = pcall(offer.ref.remove, offer.ref)
           if ok then
             rem = rem + 1
