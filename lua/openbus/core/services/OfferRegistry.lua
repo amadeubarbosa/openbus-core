@@ -413,7 +413,7 @@ function OfferRegistry:__init(data)
           login = login,
         })
         if self.enforceAuth and EntityRegistry:getEntity(entity) == nil then
-          sysex.ServiceFailure{
+          srvex.ServiceFailure{
             message = msg.CorruptedDatabaseDueToMissingEntity:tag{
               entity = entity,
             }
@@ -907,7 +907,7 @@ function EntityRegistry:__init(data)
     -- check if referenced category exists
     local category = self.categories[entry.categoryId]
     if category == nil then
-      sysex.ServiceFailure{
+      srvex.ServiceFailure{
         message = msg.CorruptedDatabaseDueToMissingCategory:tag{
           category = entry.category,
         },
@@ -926,7 +926,7 @@ function EntityRegistry:__init(data)
     local interfaces = InterfaceRegistry.interfaces
     for ifaceId in pairs(entry.authorized) do
       if interfaces[ifaceId] == nil then
-        sysex.ServiceFailure{
+        srvex.ServiceFailure{
           message = msg.CorruptedDatabaseDueToMissingInterface:tag{
             interface = ifaceId,
           },
