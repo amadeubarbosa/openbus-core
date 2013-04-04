@@ -15,8 +15,10 @@ PRELOAD_LUA= ${OPENBUS_HOME}/lib/lua/5.1/preloader.lua
 PRELOAD_FLAGS= -p SESSION_SERVICE -o sspreloaded -d ${PRECMP_DIR}
 
 SS_MODULES= $(addprefix core.services.session.,\
+        Session_Prev \
         Session \
         SessionServiceComponent \
+        SessionService_Prev \
         SessionService \
         SessionServer )
 

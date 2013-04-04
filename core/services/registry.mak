@@ -16,6 +16,7 @@ PRELOAD_FLAGS= -p REGISTRY_SERVER -o rgspreloaded -d ${PRECMP_DIR}
 
 RGS_MODULES=$(addprefix core.services.registry.,\
         OffersDB \
+        RegistryService_Prev \
         RegistryService \
         RegistryServer )
 
