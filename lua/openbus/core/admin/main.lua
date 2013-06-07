@@ -65,8 +65,8 @@ Por padrão realiza-se um login por senha. Vide opção '--password'
     --password
   * Realiza o login por senha.
     --password=<password>
-  * Realiza o login por certificado.
-    --certificate=<certificate>
+  * Realiza o login com chave privada.
+    --privatekey=<private key>
   * Aciona o verbose da API OpenBus.
     --verbose=<level>
   * Aciona o verbose do OiL.
@@ -175,7 +175,7 @@ local options = {
   oilverbose = 0,
   verbose = 0,
   password = null,
-  certificate = null,
+  privatekey = null,
 }
 
 --
@@ -1404,9 +1404,9 @@ function handleError(err)
 end
 
 function doLogin(conn)
-  if certificate ~= null then
-    local privatekey = assert(openbus.readKeyFile(certificate))
-    local ok, err = pcall(conn.loginByCertificate, conn, login, privatekey)
+  if privatekey ~= null then
+    local prvkey = assert(openbus.readKeyFile(privatekey))
+    local ok, err = pcall(conn.loginByCertificate, conn, login, prvkey)
     if not ok then
       handleError(err)
       return false
@@ -1476,7 +1476,7 @@ return function(...)
 
   -- Recupera os valores globais
   login    = command.params.login
-  certificate = command.params.certificate
+  privatekey = command.params.privatekey
   password = command.params.password
   host  = command.params["host"]
   port  = tonumber(command.params["port"])
