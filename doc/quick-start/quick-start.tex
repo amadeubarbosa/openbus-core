@@ -91,7 +91,7 @@
 \section{Introdução}
 
 Este documento visa prover os passos necessários para instalar e levantar um barramento \openbus{}~\cite{web:OPENBUS} da versão \version{} e executar um demo.
-Caso tenha interesse de entender melhor o que é um barramento \openbus{} e os detalhes de instalação, consulte o seu manual de referência~\cite{ob2.0core} e o manual de instalação~\cite{ob2.0install}. Os procedimentos a seguir descrevem a instalação em plataforma Linux (Ubuntu 12.04) utilizando comandos do Bash shell (interpretador de linguagem de comandos)~\cite{web:bash}.
+Caso tenha interesse de entender melhor o que é um barramento \openbus{} e os detalhes de instalação, consulte o manual de referência~\cite{ob2.0core} e o manual de instalação~\cite{ob2.0install}. Os procedimentos a seguir descrevem a instalação em plataforma Linux (Ubuntu 12.04) utilizando comandos do Bash shell (interpretador de linguagem de comandos)~\cite{web:bash}. O demo é em C++, e é executado na mesma máquina do barramento. Para a execução em outras plataformas, de demos em outras linguagens, e utilizando configurações diferentes, é sugerido que se consulte os manuais acima referidos.
 
 \section{Como instalar e levantar o barramento:}
 
@@ -103,13 +103,6 @@ Caso tenha interesse de entender melhor o que é um barramento \openbus{} e os de
   \item Descompacte o pacote:
 \begin{verbatim}  
   $ tar xvzf openbus-core-2.0.0.1-Linux26g4.tar.gz
-\end{verbatim}
-
-  \item Instale também as seguintes bibliotecas no Linux (Ubuntu 12.04):
-
-\begin{verbatim}  
-  $ sudo apt-get install g++-4.6
-  $ sudo apt-get install libstdc++6-4.6-dev
 \end{verbatim}
 
   \item Inclua a seguinte variável de ambiente no seu arquivo de inicialização. Não esqueça de sair e entrar novamente no shell para que a variável de ambiente seja definida para a sessão corrente.
@@ -124,7 +117,7 @@ export OPENSSL_HOME="${OPENBUS_HOME}/openssl"
 export LUA_PATH="${OPENBUS_HOME}/?.lua;${LUA_PATH}"
 \end{verbatim}
 
-  \item Gere um arquibo de chave privada (arquivo com terminação .key) e um certificado (arquivo com terminação .crt) utilizando o comando openssl que acompanha o pacote:
+  \item Gere um arquivo de chave privada (arquivo com extensão ".key") e um certificado (arquivo com extensão ".crt") utilizando o comando \verb|openssl| que acompanha o pacote. Os arquivos podem ter um nome diferente do sugerido abaixo, desde que o nome do arquivo de chave privada seja passado no parâmetro \verb|-privatekey| do servidor do barramento (\verb|busservices|).
 \begin{verbatim}  
   $ cd $OPENBUS_HOME
   $ {OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
@@ -136,7 +129,7 @@ export LUA_PATH="${OPENBUS_HOME}/?.lua;${LUA_PATH}"
     -out openbus.crt -outform DER
 \end{verbatim}
 
-  \item Criei um script validador em LUA para verificar se o nome do usuário e senha utilizados para acessar o barramento são válidos. No nosso caso, vamos utilizar um script validador que verifica apenas se o nome do usuário é igual à senha:
+  \item Criei um script de validação em LUA para verificar se o nome do usuário e senha utilizados para acessar o barramento são válidos. No nosso caso, vamos utilizar um script de validação que verifica apenas se o nome do usuário é igual à senha:
 \begin{verbatim}  
   $ cd $OPENBUS_HOME
   $ vi validador.lua
@@ -148,7 +141,7 @@ end
 return function(configs) return validator end
 \end{verbatim}
 
-  \item Levante o barramento:
+  \item Levante o barramento. O nome do script de validação é passado no parâmetro \verb|-validator| sem a extensão ".lua". A variável de ambiente \verb|$LUA_PATH| contém o caminho onde o servidor do barramento fará a busca pelo script de validação. Caso o parâmetro \verb|-privatekey| não seja passado, o servidor do barramento utilizará o nome do arquivo de chave privada padrão (\verb|openbus.key|). Como não foram passados os parâmetros \verb|-host| e \verb|-port|, o servidor do barramento será levantando utilizando a máscara de host e a porta padrão (\verb|host="*" port=2089|).
 \begin{verbatim}  
   $ cd $OPENBUS_HOME
   $ ./bin/busservices -privatekey openbus.key -admin admin -validator validador
@@ -167,6 +160,13 @@ return function(configs) return validator end
   \item Descompacte o pacote:
 \begin{verbatim}  
   $ tar xvzf openbus-cpp-mico-2.0.0.0-Linux26g4.tar.gz
+\end{verbatim}
+
+  \item Instale também as seguintes bibliotecas no Linux (Ubuntu 12.04):
+
+\begin{verbatim}  
+  $ sudo apt-get install g++-4.6
+  $ sudo apt-get install libstdc++6-4.6-dev
 \end{verbatim}
 
   \item Inclua a seguinte variável de ambiente no seu arquivo de inicialização. Não esqueça de sair e entrar novamente no shell para que a variável de ambiente seja definida para a sessão corrente.
@@ -205,7 +205,7 @@ alias mico-st-d='export LD_LIBRARY_PATH="/<caminho do openbus-cpp-mico>/lib/mico
   $ b2 --layout=tagged threading=multi
 \end{verbatim}
   
-  \item Excute o script LUA com um lote de comandos para cadastrar servidor do demo no barramento:
+  \item Excute o script LUA com um lote de comandos para cadastrar o servidor do demo no barramento. Caso o parâmetro \verb|--password| não seja passado, a senha de acesso será pedido pelo administrador do barramento (\verb|busadmin|).
 \begin{verbatim}  
   $ cd /<caminho do openbus-cpp-mico>/demo/hello/admin
   $ busadmin --login=admin --password=admin --script=busadmin.adm
