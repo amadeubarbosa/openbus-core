@@ -91,7 +91,7 @@
 \section{Introdução}
 
 Este documento visa prover os passos necessários para instalar e levantar um barramento \openbus{}~\cite{web:OPENBUS} da versão \version{} e executar um demo.
-Caso tenha interesse de entender melhor o que é um barramento \openbus{} e os detalhes de instalação, consulte o manual de referência~\cite{ob2.0core} e o manual de instalação~\cite{ob2.0install}. Os procedimentos a seguir descrevem a instalação em plataforma Linux (Ubuntu 12.04) utilizando comandos do Bash shell (interpretador de linguagem de comandos)~\cite{web:bash}. O demo é em C++, e é executado na mesma máquina do barramento. Para a execução em outras plataformas, de demos em outras linguagens, e utilizando configurações diferentes, é sugerido que se consulte os manuais acima referidos.
+Caso tenha interesse em entender melhor o que é um barramento \openbus{} e os detalhes de instalação, consulte o manual de referência~\cite{ob2.0core} e o manual de instalação~\cite{ob2.0install}. Os procedimentos a seguir descrevem a instalação em plataforma Linux (Ubuntu 12.04) utilizando comandos do Bash shell (interpretador de linguagem de comandos)~\cite{web:bash}~\cite{web:advbash}. O demo é em C++, e é executado na mesma máquina do barramento. Para a execução em outras plataformas, de demos em outras linguagens, e utilizando configurações diferentes, é sugerido que se consulte os manuais acima referidos.
 
 \section{Como instalar e levantar o barramento:}
 
@@ -120,11 +120,11 @@ export LUA_PATH="${OPENBUS_HOME}/?.lua;${LUA_PATH}"
   \item Gere um arquivo de chave privada (arquivo com extensão ".key") e um certificado (arquivo com extensão ".crt") utilizando o comando \verb|openssl| que acompanha o pacote. Os arquivos podem ter um nome diferente do sugerido abaixo, desde que o nome do arquivo de chave privada seja passado no parâmetro \verb|-privatekey| do servidor do barramento (\verb|busservices|).
 \begin{verbatim}  
   $ cd $OPENBUS_HOME
-  $ {OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
-  $ {OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
+  $ ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
+  $ ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
     -in tmp_openssl.key -out openbus.key -outform DER
   $ rm -f tmp_openssl.key
-  $ {OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 \
+  $ ${OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 \
     -key openbus.key -keyform DER \
     -out openbus.crt -outform DER
 \end{verbatim}
@@ -165,8 +165,8 @@ return function(configs) return validator end
   \item Instale também as seguintes bibliotecas no Linux (Ubuntu 12.04):
 
 \begin{verbatim}  
-  $ sudo apt-get install g++-4.6
-  $ sudo apt-get install libstdc++6-4.6-dev
+  $ sudo apt-get install g++
+  $ sudo apt-get install libstdc++6
 \end{verbatim}
 
   \item Para facilitar o processo, é recomendado que se inclua as seguintes variáveis de ambiente no arquivo de inicialização. Não esqueça de sair e entrar novamente no shell para que as variáveis de ambiente sejam definidas para a sessão corrente.
