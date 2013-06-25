@@ -18,7 +18,6 @@ local copy = table.copy
 local cothread = require "cothread"
 local running = cothread.running
 
-local oil = require "oil"
 local oillog = require "oil.verbose"
 
 local log = require "openbus.util.logger"
