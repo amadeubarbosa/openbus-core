@@ -48,7 +48,7 @@ local PredefinedUserSets = {
 
 local function getLoginInfoFor(self, loginId)
   return self.LoginRegistry:getLoginEntry(loginId)
-      or { id = loginId, entity = "<unknown>" }
+      or {id=loginId,entity="<unknown>"}
 end
 
 
@@ -58,12 +58,12 @@ local BusInterceptor = class({}, Context, Interceptor)
 function BusInterceptor:__init()
   self.context = self
   self.signedChainOf = memoize(function(chain) -- [chain] = SignedChainCache
-    return LRUCache{ -- [remoteid] = signedChain
-      retrieve = function(remoteid)
+    return LRUCache{ -- [target] = signedChain
+      retrieve = function(target)
         local originators = { unpack(chain.originators) }
         originators[#originators+1] = chain.caller
         return self.AccessControl:encodeChain{
-          target = remoteid,
+          target = target,
           originators = originators,
           caller = self.login,
         }
@@ -117,21 +117,26 @@ function BusInterceptor:unmarshalCredential(...)
         signature = false,
         originators = {},
         caller = getLoginInfoFor(self, credential.login),
-        target = self.login.id,
+        target = self.login.entity,
       }
       credential.chain = chain
     elseif chain.signature ~= nil then -- joined non-legacy call
       local originators = chain.originators
       originators[#originators+1] = chain.caller -- add last originator
-      chain.caller = getLoginInfoFor(self, chain.target)
-      chain.target = self.login.id
+      local caller = getLoginInfoFor(self, credential.login)
+      chain.caller = caller
+      local target = chain.target
+      if target ~= caller.entity then
+        chain.caller = {id="<unknown>",entity=target}
+      end
+      chain.target = self.login.entity
     end
   end
   return credential
 end
 
-function BusInterceptor:signChainFor(remoteid, chain)
-  return self.signedChainOf[chain]:get(remoteid)
+function BusInterceptor:signChainFor(target, chain)
+  return self.signedChainOf[chain]:get(target)
 end
 
 function BusInterceptor:receiverequest(request)

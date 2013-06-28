@@ -317,7 +317,7 @@ Os dados do \term{service context} consitem da seguinte estrutura deve codificad
 // File: credential.idl
 // Name: tecgraf::openbus::core::v2_0::credential::CredentialReset
 struct CredentialReset {
-	Identifier login;         // callee UUID
+	Identifier target;        // callee entity
 	unsigned long session;    // session ID
 	EncryptedBlock challenge; // encrypted 16-byte random value (the secret)
 };
@@ -376,15 +376,15 @@ struct SignedCallChain {
 // File: access_control.idl
 // Name: tecgraf::openbus::core::v2_0::services::access:control::CallChain
 struct CallChain {
-	Identifier target;    // Identificador do login a quem a cadeia se destina.
+	Identifier target;    // Node da entidade a quem a cadeia se destina.
   LoginInfoSeq originators; // Informações de login das entidades que realizaram as chamadas em cadeia que originam essa chamada.
   LoginInfo caller; // Informações de login da entidades que efetivamente fez chamada atual (última da cadeia).
 };
 	\end{samplecode}
 	
-	\item[Campo \code{target}] contém o identificador do login a quem a cadeia está destinada.
-	Ou seja, esse campo contém o mesmo identificador fornecido pelo campo \code{login} da estrutura \code{CredentialReset} descrito na seção \ref{sub:validacao_da_personalidade} que informa o login do objeto ao qual a chamada se destina.
-	Esse campo \code{target} da cadeia garante que a cadeia só possa ser utilizada (fazer novas chamadas dentro daquela cadeia) por quem detiver o login ao qual ela foi enviada.
+	\item[Campo \code{target}] contém o nome da entidade a quem a cadeia está destinada.
+	Ou seja, esse campo contém o mesmo identificador fornecido pelo campo \code{target} da estrutura \code{CredentialReset} descrito na seção \ref{sub:validacao_da_personalidade} que informa o login do objeto ao qual a chamada se destina.
+	Esse campo \code{target} da cadeia garante que a cadeia só possa ser utilizada (fazer novas chamadas dentro daquela cadeia) por quem estiver logado como a mesma entidade ao quem ela foi enviada.
 	
 	\item[Campo \code{originators}] contém uma sequência de informações sobre os vários logins que realizaram as chamadas em cadeia que originam essa chamada.
 	
@@ -399,7 +399,7 @@ Para que a cadeia de chamada seja válida, as seguintes condições devem ser válid
 
 \begin{itemize}
 		\item O campo \code{SignedCallChain::signature} deve conter uma assinatura válida do campo \code{SignedCallChain::encoded} a ser autenticada com a chave pública do barramento.
-	\item O campo \code{CallChain::target} deve ser o login de quem recebe a chamada.
+	\item O campo \code{CallChain::target} deve ser o nome da entidade de quem recebe a chamada.
 	\item O campo \code{CallChain::caller} deve indicar as informações do login de quem iniciou a chamada.
 \end{itemize}
 
@@ -419,7 +419,7 @@ const unsigned long InvalidChainCode;
 Muitas chamadas para operações das facetas fornecidas pelo barramento são feitas usando credenciais de chamada como especificadas neste documento.
 Contudo, as cadeias de chamada enviadas nas credenciais em chamadas ao barramento são diferente das cadeias enviadas em outras chamadas.
 
-A identificação de que o objeto CORBA sendo chamado reside no barramento é feita comparando o campo \code{CredentialReset::login} com o identificador do barramento, que é obtido através do atributo \code{busid} da \term{Faceta de Controle de Acesso} do barramento.
+A identificação de que o objeto CORBA sendo chamado reside no barramento é feita comparando o campo \code{CredentialReset::target} com o identificador do barramento, que é obtido através do atributo \code{busid} da \term{Faceta de Controle de Acesso} do barramento.
 
 Nas chamadas para o barramento, que são feitas fora de qualquer cadeia de chamada obtida previamente pelo iniciador da chamada, a cadeia a ser enviada na credencial é uma cadeia nula, que consiste da estrutura \code{SignedCallChain} em que o campo \code{signed} é uma sequência de zeros e o campo \code{encoded} é uma sequência vazia.
 
@@ -439,7 +439,7 @@ Ou seja, é como se a chamada de \code{signChainFor} é feita como uma chamada ani
 Nesse sentido, para gerar uma cadeia nova que não seja uma extensão de outra cadeia previamente recebida, é necessário enviar uma cadeia nula na credencial da chamada de \code{signChainFor}, o que está em conformidade com a regra para geração de cadeias para o barramento, uma vez que a operação \code{signChainFor} é do barramento.
 
 Como resultado da operação \code{signChainFor} é devolvida uma nova cadeia em que o campo \code{CallChain::caller} da cadeia original será adicionado à sequência do campo \code{CallChain::originators} e o campo \code{CallChain::caller} conterá informações do login de quem chamou a operação \code{signChainFor}.
-Adicionalmente, o campo \code{CallChain::target} conterá o identificador de login fornecido pelo parâmetro \code{target} da chamada de \code{signChainFor}.
+Adicionalmente, o campo \code{CallChain::target} conterá o nome da entidade fornecido pelo parâmetro \code{target} da chamada de \code{signChainFor}.
 
 Note que dessa forma é possível se adicionar a cadeias recebidas (processo denominado \term{join}), assim como gerar tais cadeias para quaisquer destinos para o qual seja necessário enviar credenciais.
 

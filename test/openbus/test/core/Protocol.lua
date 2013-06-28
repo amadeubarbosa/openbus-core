@@ -15,7 +15,6 @@ local decodeprvkey = pubkey.decodeprivate
 
 local idl = require "openbus.core.idl"
 local loadIDL = idl.loadto
-local BusLogin = idl.const.BusLogin
 local EncryptedBlockSize = idl.const.EncryptedBlockSize
 local CredentialContextId = idl.const.credential.CredentialContextId
 local loginconst = idl.const.services.access_control
@@ -209,18 +208,18 @@ end
 
 -- chain signature -------------------------------------------------------------
 
-do -- sign chain for an invalid login
+do -- sign chain for an invalid entity
   validlogin.busSession:newCred("signChainFor")
-  signed = ac:signChainFor(logoutid)
+  signed = ac:signChainFor("invalid")
   local chain = decodeChain(bus.key, signed)
-  assert(chain.target == logoutid)
+  assert(chain.target == "invalid")
   assert(chain.caller.id == validlogin.id)
   assert(chain.caller.entity == user)
 end
 
-do -- join chain targeted for other login (an invalid one)
+do -- join chain targeted for other entity (an invalid one)
   validlogin.busSession:newCred("signChainFor", signed)
-  local ok, ex = pcall(ac.signChainFor, ac, logoutid)
+  local ok, ex = pcall(ac.signChainFor, ac, "invalid")
   assert(ok == false)
   assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
   assert(ex.completed == "COMPLETED_NO")

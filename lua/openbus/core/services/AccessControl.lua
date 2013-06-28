@@ -172,7 +172,7 @@ end
 local LoginRegistry -- forward declaration
 
 local AccessControl = {
-  login = {id=idl.const.BusLogin, entity=idl.const.BusEntity},
+  login = {id=nil, entity=idl.const.BusEntity},
   pendingChallenges = {}
 }
 
@@ -199,6 +199,7 @@ function AccessControl:__init(data)
   
   -- initialize access
   self.busid = busid
+  self.login.id = busid
   local access = self.access
   local encodedkey = assert(access.prvkey:encode("public"))
   self.buskey = encodedkey
