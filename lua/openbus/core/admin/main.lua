@@ -1249,8 +1249,6 @@ handlers["report"] = function(cmd)
   if status ~= "accessible" then
     printf(msg, "[INACESSÍVEL]", except or "")
     return
-  else
-    printf(msg, "[ACESSÍVEL]")
   end
   bus = nil
   ref = nil
@@ -1333,14 +1331,14 @@ handlers["report"] = function(cmd)
   msg = " - Autorizações concedidas: %s"
   local ok, ents = pcall(conn.entities.getAuthorizedEntities, conn.entities)
   if not ok then
-    local errormsg = string.format("[ERRO]\n%s", tostring(interfaces))
+    local errormsg = string.format("[ERRO]\n%s", tostring(ents))
     printf(msg, errormsg)
   else
     local authorizations = 0
     for _, entitydesc in ipairs(ents) do 
       local ok, ifaces = pcall(entitydesc.ref.getGrantedInterfaces, entitydesc.ref)
       if not ok then
-        local errormsg = string.format("[ERRO]\n%s", tostring(interfaces))
+        local errormsg = string.format("[ERRO]\n%s", tostring(ifaces))
         printf(msg, errormsg)
         break
       else
@@ -1362,10 +1360,19 @@ handlers["report"] = function(cmd)
   -- ofertas não responsivas
   if #offers > 0 then
     local invalid = {}
+    local failed = {}
     for _, offer in ipairs(offers) do
-      if corba.refStatus(offer.service_ref) ~= "accessible" then
+      local status, result = corba.refStatus(offer.service_ref)
+      if status == "nonexistent" then
         invalid[#invalid+1] = offer
+      elseif status ~= "acessible" then
+        offer.error = result._repid
+        failed[#failed+1] = offer
       end
+    end
+    if #failed > 0 then
+      printf(" - '%d' Falha(s) inesperada(s) na tentativa de contactar oferta(s):", #failed)
+      printer.showFailedOffer(failed)
     end
     if #invalid > 0 then
       printf(" - Existe(m) '%d' Oferta(s) que no momento não estão responsivas:", #invalid)
