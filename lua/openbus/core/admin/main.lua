@@ -1244,11 +1244,18 @@ handlers["report"] = function(cmd)
   msg = " - Barramento (versão 2.0.x): %s"
   local ref = "corbaloc::"..host..":"..port.."/"..BusObjectKey
   local bus = orb:newproxy(ref, nil, "scs::core::IComponent")
-  if bus:_non_existent() then
-    printf(msg, "[INACESSÍVEL]")
-    return
+  local ok, status = pcall(bus._non_existent, bus) 
+  if ok then
+    if status then
+      printf(msg, "[INACESSÍVEL]")
+      return
+    else
+      printf(msg, "[ACESSÍVEL]")
+    end
   else
-    printf(msg, "[ACESSÍVEL]")
+    local errmsg = string.format("[ERRO] %s", status._repid)
+    printf(msg, errmsg)
+    return
   end
   bus = nil
   ref = nil
@@ -1256,10 +1263,16 @@ handlers["report"] = function(cmd)
   msg = " - Suporte legado (versão 1.5.x): %s"
   local legacyref = "corbaloc::"..host..":"..port.."/openbus_v1_05"
   local legacy = orb:newproxy(legacyref, nil, "scs::core::IComponent")
-  if legacy:_non_existent() then
-    printf(msg, "[DESABILITADO]")
+  ok, status = pcall(legacy._non_existent, legacy) 
+  if ok then
+    if status then
+      printf(msg, "[DESABILITADO]")
+    else
+      printf(msg, "[HABILITADO]")
+    end
   else
-    printf(msg, "[HABILITADO]")
+    local errmsg = string.format("[ERRO] %s", status._repid)
+    printf(msg, errmsg)
   end
   legacyref = nil
   legacy = nil
@@ -1328,14 +1341,14 @@ handlers["report"] = function(cmd)
   msg = " - Autorizações concedidas: %s"
   local ok, ents = pcall(conn.entities.getAuthorizedEntities, conn.entities)
   if not ok then
-    local errormsg = string.format("[ERRO]\n%s", tostring(interfaces))
+    local errormsg = string.format("[ERRO]\n%s", tostring(ents))
     printf(msg, errormsg)
   else
     local authorizations = 0
     for _, entitydesc in ipairs(ents) do 
       local ok, ifaces = pcall(entitydesc.ref.getGrantedInterfaces, entitydesc.ref)
       if not ok then
-        local errormsg = string.format("[ERRO]\n%s", tostring(interfaces))
+        local errormsg = string.format("[ERRO]\n%s", tostring(ifaces))
         printf(msg, errormsg)
         break
       else
@@ -1357,10 +1370,21 @@ handlers["report"] = function(cmd)
   -- ofertas não responsivas
   if #offers > 0 then
     local invalid = {}
+    local failed = {}
     for _, offer in ipairs(offers) do
-      if offer.service_ref:_non_existent() then
-        invalid[#invalid+1] = offer
+      local ok, nonexists = pcall(offer.service_ref._non_existent, offer.service_ref)
+      if ok then
+        if nonexists then
+          invalid[#invalid+1] = offer
+        end
+      else
+        offer.error = nonexists._repid
+        failed[#failed+1] = offer
       end
+    end
+    if #failed > 0 then
+      printf(" - '%d' Falha(s) inesperada(s) na tentativa de contactar oferta(s):", #failed)
+      printer.showFailedOffer(failed)
     end
     if #invalid > 0 then
       printf(" - Existe(m) '%d' Oferta(s) que no momento não estão responsivas:", #invalid)

@@ -245,9 +245,15 @@ end
 -- Exibe a tabela com as interfaces oferecidas no barramento.
 --
 -- @param offers Estrutura definida na IDL.
+-- @param failed Parâmetro opcional que indica se informa o erro associado.
 ---
-function module.showOffer(offers)
-  local titles = { "", "ID ENTIDADE", "INTERFACES", "DATA", "HORA"}
+function module.showOffer(offers, failed)
+  local titles 
+  if not failed then
+    titles = { "", "ID ENTIDADE", "INTERFACES", "DATA", "HORA"}
+  else
+    titles = { "", "ID ENTIDADE", "INTERFACES", "ERROR", "DATA", "HORA"}
+  end
   if #offers == 0 then
     showEmptyTable(titles)
     return {}
@@ -260,6 +266,9 @@ function module.showOffer(offers)
     desc.offer = offer.ref
     desc.properties = offer.properties
     desc.interfaces = {}
+    if failed then 
+      desc.error = offer.error
+    end
     for j, prop in ipairs(offer.properties) do
       if prop.name == "openbus.offer.entity" then
         desc.entity = prop.value
@@ -290,10 +299,17 @@ function module.showOffer(offers)
   end)
   for i, desc in ipairs(offerList) do
     desc.id = i
-    table.insert(tableList, { {string.format("%.3d", i)}, {desc.entity},
-        desc.interfaces, {string.format("%.2d/%.2d/%d", desc.day, desc.month,
-        desc.year)}, {string.format("%.2d:%.2d:%.2d", desc.hour, desc.minute,
-        desc.second)} })
+    if not failed then
+      table.insert(tableList, { {string.format("%.3d", i)}, {desc.entity},
+          desc.interfaces, {string.format("%.2d/%.2d/%d", desc.day, desc.month,
+          desc.year)}, {string.format("%.2d:%.2d:%.2d", desc.hour, desc.minute,
+          desc.second)} })
+    else
+      table.insert(tableList, { {string.format("%.3d", i)}, {desc.entity},
+          desc.interfaces, {desc.error}, {string.format("%.2d/%.2d/%d", 
+          desc.day, desc.month, desc.year)}, {string.format("%.2d:%.2d:%.2d", 
+          desc.hour, desc.minute, desc.second)} })
+    end
   end
         
   local sizes = adjustColumnWidth(titles, tableList)
@@ -301,6 +317,14 @@ function module.showOffer(offers)
   return offerList
 end
 
+---
+-- Exibe a tabela com as interfaces oferecidas no barramento.
+--
+-- @param offers Estrutura definida na IDL.
+---
+function module.showFailedOffer(offers)
+  module.showOffer(offers, true)
+end
 ---
 -- Exibe a tabela com as propriedades da oferta.
 --
