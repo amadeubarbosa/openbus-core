@@ -15,6 +15,7 @@ local decodeprvkey = pubkey.decodeprivate
 
 local idl = require "openbus.core.idl"
 local loadIDL = idl.loadto
+local BusLogin = idl.const.BusLogin
 local EncryptedBlockSize = idl.const.EncryptedBlockSize
 local CredentialContextId = idl.const.credential.CredentialContextId
 local loginconst = idl.const.services.access_control
@@ -149,13 +150,40 @@ do -- login successfull
   assert(validid(login.id))
   assert(login.entity == system)
   assert(lease > 0)
-  logoutid = login.id -- this login will be invalidated by a logout
+  syslogin = login.id -- this login will be invalidated by a logout
 end
 
 do -- cancel login attempt
   local attempt = ac:startLoginByCertificate(system)
   attempt:cancel()
   assert(attempt:_non_existent())
+end
+
+-- credentials -----------------------------------------------------------------
+
+do
+  validlogin.prvkey = prvkey
+  validlogin.busSession = initBusSession(bus, validlogin)
+  local function greaterthanzero(value) assert(value > 0) end
+  testBusCall(bus, validlogin, otherkey, greaterthanzero, bus.AccessControl, "renew")
+end
+
+-- chain signature 1 -----------------------------------------------------------
+
+do -- join chain targeted for other login
+  validlogin.busSession:newCred("signChainFor")
+  signed = ac:signChainFor(syslogin)
+  local chain = decodeChain(bus.key, signed)
+  assert(chain.target == system)
+  assert(chain.caller.id == validlogin.id)
+  assert(chain.caller.entity == user)
+
+  validlogin.busSession:newCred("signChainFor", signed)
+  local ok, ex = pcall(ac.signChainFor, ac, validlogin.id)
+  assert(ok == false)
+  assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+  assert(ex.completed == "COMPLETED_NO")
+  assert(ex.minor == loginconst.InvalidChainCode)
 end
 
 -- logout ----------------------------------------------------------------------
@@ -165,7 +193,7 @@ do -- logout
   local credential = {
     opname = "logout",
     bus = bus.id,
-    login = logoutid,
+    login = syslogin,
     session = 0,
     ticket = 0,
     secret = "",
@@ -197,33 +225,14 @@ do -- logout
   assert(ex.minor == loginconst.InvalidLoginCode)
 end
 
--- credentials -----------------------------------------------------------------
+-- chain signature 2 -----------------------------------------------------------
 
-do
-  validlogin.prvkey = prvkey
-  validlogin.busSession = initBusSession(bus, validlogin)
-  local function greaterthanzero(value) assert(value > 0) end
-  testBusCall(bus, validlogin, otherkey, greaterthanzero, bus.AccessControl, "renew")
-end
-
--- chain signature -------------------------------------------------------------
-
-do -- sign chain for an invalid entity
+do -- sign chain for an invalid login
   validlogin.busSession:newCred("signChainFor")
-  signed = ac:signChainFor("invalid")
-  local chain = decodeChain(bus.key, signed)
-  assert(chain.target == "invalid")
-  assert(chain.caller.id == validlogin.id)
-  assert(chain.caller.entity == user)
-end
-
-do -- join chain targeted for other entity (an invalid one)
-  validlogin.busSession:newCred("signChainFor", signed)
-  local ok, ex = pcall(ac.signChainFor, ac, "invalid")
+  local ok, ex = pcall(ac.signChainFor, ac, syslogin)
   assert(ok == false)
-  assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
-  assert(ex.completed == "COMPLETED_NO")
-  assert(ex.minor == loginconst.InvalidChainCode)
+  assert(ex._repid == logintypes.InvalidLogins)
+  assert(ex.loginIds[1] == syslogin)
 end
 
 -- login lease -----------------------------------------------------------------

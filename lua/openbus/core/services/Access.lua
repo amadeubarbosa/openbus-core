@@ -62,11 +62,10 @@ function BusInterceptor:__init()
       retrieve = function(target)
         local originators = { unpack(chain.originators) }
         originators[#originators+1] = chain.caller
-        return self.AccessControl:encodeChain{
-          target = target,
+        return self.AccessControl:encodeChain({
           originators = originators,
           caller = self.login,
-        }
+        }, target)
       end,
     }
   end, "k")
@@ -127,7 +126,7 @@ function BusInterceptor:unmarshalCredential(...)
       chain.caller = caller
       local target = chain.target
       if target ~= caller.entity then
-        chain.caller = {id="<unknown>",entity=target}
+        chain.caller = {id="<unknown>",entity=target} -- raises "InvalidChain"
       end
       chain.target = self.login.entity
     end
@@ -146,7 +145,7 @@ function BusInterceptor:receiverequest(request)
     or op:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
       receiveBusRequest(self, request)
       if request.success == nil then
-        local granted = self.context.grantedUsers[request.interface.repID][op]
+        local granted = self.grantedUsers[request.interface.repID][op]
         local chain = self:getCallerChain()
         if chain ~= nil then
           local login = chain.caller

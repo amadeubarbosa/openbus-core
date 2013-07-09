@@ -172,7 +172,7 @@ end
 local LoginRegistry -- forward declaration
 
 local AccessControl = {
-  login = {id=nil, entity=idl.const.BusEntity},
+  login = {id=idl.const.BusLogin, entity=idl.const.BusEntity},
   pendingChallenges = {}
 }
 
@@ -199,7 +199,6 @@ function AccessControl:__init(data)
   
   -- initialize access
   self.busid = busid
-  self.login.id = busid
   local access = self.access
   local encodedkey = assert(access.prvkey:encode("public"))
   self.buskey = encodedkey
@@ -275,7 +274,10 @@ function AccessControl:getLoginEntry(id)
   return self.activeLogins:getLogin(id)
 end
 
-function AccessControl:encodeChain(chain)
+function AccessControl:encodeChain(chain, target)
+  local login = self.activeLogins:getLogin(target)
+  if login == nil then throw.InvalidLogins{ loginIds = {target} } end
+  chain.target = login.entity
   local access = self.access
   local encoder = access.orb:newencoder()
   encoder:put(chain, access.types.CallChain)
@@ -377,9 +379,7 @@ function AccessControl:renew()
 end
 
 function AccessControl:signChainFor(target)
-  local chain = self.access:getCallerChain()
-  chain.target = target
-  return self:encodeChain(chain)
+  return self:encodeChain(self.access:getCallerChain(), target)
 end
 
 ------------------------------------------------------------------------------

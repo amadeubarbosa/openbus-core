@@ -439,7 +439,7 @@ Ou seja, é como se a chamada de \code{signChainFor} é feita como uma chamada ani
 Nesse sentido, para gerar uma cadeia nova que não seja uma extensão de outra cadeia previamente recebida, é necessário enviar uma cadeia nula na credencial da chamada de \code{signChainFor}, o que está em conformidade com a regra para geração de cadeias para o barramento, uma vez que a operação \code{signChainFor} é do barramento.
 
 Como resultado da operação \code{signChainFor} é devolvida uma nova cadeia em que o campo \code{CallChain::caller} da cadeia original será adicionado à sequência do campo \code{CallChain::originators} e o campo \code{CallChain::caller} conterá informações do login de quem chamou a operação \code{signChainFor}.
-Adicionalmente, o campo \code{CallChain::target} conterá o nome da entidade fornecido pelo parâmetro \code{target} da chamada de \code{signChainFor}.
+Adicionalmente, o campo \code{CallChain::target} conterá o nome da entidade do identificador de login fornecido pelo parâmetro \code{target} da chamada de \code{signChainFor}.
 
 Note que dessa forma é possível se adicionar a cadeias recebidas (processo denominado \term{join}), assim como gerar tais cadeias para quaisquer destinos para o qual seja necessário enviar credenciais.
 
