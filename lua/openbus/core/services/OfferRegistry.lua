@@ -925,13 +925,15 @@ function EntityRegistry:__init(data)
     -- check if authorized interfaces exist
     local interfaces = InterfaceRegistry.interfaces
     for ifaceId in pairs(entry.authorized) do
-      if interfaces[ifaceId] == nil then
+      entities = interfaces[ifaceId]
+      if entities == nil then
         srvex.ServiceFailure{
           message = msg.CorruptedDatabaseDueToMissingInterface:tag{
             interface = ifaceId,
           },
         }
       end
+      entities[entry] = true
     end
     -- create object
     orb:newservant(entry)
