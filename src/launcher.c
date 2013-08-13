@@ -125,7 +125,7 @@ static int docall (lua_State *L, int narg) {
   lua_pushcfunction(L, traceback);  /* push traceback function */
   lua_insert(L, base);  /* put it under chunk and args */
   signal(SIGINT, laction);
-  status = lua_pcall(L, narg, 0, base);
+  status = lua_pcall(L, narg, 1, base);
   signal(SIGINT, SIG_DFL);
   lua_remove(L, base);  /* remove traceback function */
   /* force a complete garbage collection in case of errors */
@@ -149,6 +149,7 @@ static int getargs (lua_State *L, char **argv) {
 struct Smain {
   char **argv;
   int status;
+  int retval;
 };
 
 
@@ -191,6 +192,8 @@ static int pmain (lua_State *L) {
     }
   }
   s->status = report(L, status);
+  s->retval = lua_tointeger(L, -1);
+  lua_pop(L, 1);
   return 0;
 }
 
@@ -208,5 +211,5 @@ int main (int argc, char **argv) {
   status = lua_cpcall(L, &pmain, &s);
   report(L, status);
   lua_close(L);
-  return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
+  return (status || s.status || s.retval) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
