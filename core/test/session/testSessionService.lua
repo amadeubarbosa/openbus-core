@@ -56,6 +56,7 @@ Suite = {
       orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/access_control_service.idl")
       orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/registry_service.idl")
       orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/session_service.idl")
+      assert(orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_VERSION.."/session_service_extended.idl"))
       orb:loadidlfile(IDLPATH_DIR.."/"..Utils.IDL_PREV.."/access_control_service.idl")
 
       local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
@@ -105,6 +106,14 @@ Suite = {
           Utils.SESSION_SERVICE_INTERFACE)
       self.sessionService = orb:narrow(self.sessionService,
           Utils.SESSION_SERVICE_INTERFACE)
+
+      local ISessionServiceExtendedRepId = "IDL:tecgraf/openbus/session_service/"..
+                                     Utils.IDL_VERSION.."/ISessionServiceExtended:1.0"
+      self.sessionServiceExtended = sessionServiceComponent:getFacet(
+          Utils.SESSION_SERVICE_INTERFACE)
+      self.sessionServiceExtended = orb:narrow(self.sessionServiceExtended,
+          ISessionServiceExtendedRepId)
+      Check.assertNotNil(self.sessionServiceExtended)
     end,
 
     afterEachTest = function(self)
@@ -163,6 +172,15 @@ Suite = {
       session2 = session2:getFacet(Utils.SESSION_INTERFACE)
       session2 = orb:narrow(session2, Utils.SESSION_INTERFACE)
       Check.assertEquals(session1:getIdentifier(), session2:getIdentifier())
+
+      local session3 = self.sessionServiceExtended:getSessionByCredentialId(self.credential.identifier)
+      Check.assertNotNil(session3)
+      session3 = session3:getFacet(Utils.SESSION_INTERFACE)
+      session3 = orb:narrow(session3, Utils.SESSION_INTERFACE)
+      Check.assertEquals(session1:getIdentifier(), session3:getIdentifier())
+      Check.assertEquals(session2:getIdentifier(), session3:getIdentifier())
+
+      Check.assertNil(self.sessionServiceExtended:getSessionByCredentialId("invalidid"))
 
       Check.assertTrue(session2:removeMember(id))
     end,

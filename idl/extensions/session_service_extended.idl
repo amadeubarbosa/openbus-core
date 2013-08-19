@@ -1,0 +1,15 @@
+#ifndef __TECGRAF_OPENBUS_SESSION_SERVICE_EXTENDED_IDL__
+#define __TECGRAF_OPENBUS_SESSION_SERVICE_EXTENDED_IDL__
+#include "session_service.idl"
+module tecgraf {
+module openbus {
+module session_service {
+module v1_05 {
+interface ISessionServiceExtended : ISessionService {
+  scs::core::IComponent getSessionByCredentialId(in tecgraf::openbus::core::v1_05::Identifier identifier);
+};  
+}; // v1_05
+}; // session_service
+}; // openbus
+}; // tecgraf
+#endif

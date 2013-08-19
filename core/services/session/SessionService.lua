@@ -99,7 +99,7 @@ function SessionService:createSession(member)
   sessionFacet.sessionService = self
   component["SessionEventSink_"..Utils.IDL_VERSION].sessionService = self
   self.sessions[credential.identifier] = component
-  Log:debug(format("A credencial {%s. %s, %s} criou a sessão %s",
+  Log:debug(format("A credencial {%s, %s, %s} criou a sessão %s",
       credential.identifier, credential.owner, credential.delegate,
       sessionFacet.identifier))
 
@@ -218,6 +218,25 @@ function SessionService:generateIdentifier()
 end
 
 ---
+--Obtém a sessão associada a um identificador.
+--
+--@param id Identificador da credencial do criador da sessão.
+--@return A sessão, ou nil, caso o identificador seja inválido ou não exista sessão.
+---
+function SessionService:getSessionByCredentialId(id)
+  if not id or not luuid.isvalid(id) then 
+    Log:warn(format("O identificador de credencial %s não é válido", tostring(id)))
+    return nil 
+  end
+  local session = self.sessions[id]
+  if not session then
+    Log:warn(format("A credencial com identificador %s não possui sessão", id))
+    return nil
+  end
+  return session.IComponent
+end
+
+---
 --Obtém a sessão associada a uma credencial. A credencial em questão é
 --recuperada da requisição pelo interceptador do serviço, e repassada através
 --do objeto PICurrent.
@@ -226,13 +245,13 @@ end
 ---
 function SessionService:getSession()
   local credential = Openbus:getInterceptedCredential()
-  local session = self.sessions[credential.identifier]
-  if not session then
+  local component = self:getSessionByCredentialId(credential.identifier)
+  if not component then
     Log:warn(format("A credencial {%s, %s, %s} não possui sessão",
         credential.identifier, credential.owner, credential.delegate))
     return nil
   end
-  return session.IComponent
+  return component
 end
 
 ---
@@ -268,25 +287,6 @@ function SessionService:expired()
   for _, credentialId in ipairs(invalidCredentials) do
     self:credentialWasDeletedById(credentialId)
   end
-end
-
----
---Inicia o componente.
---
---@see scs.core.IComponent#startup
----
-function SessionService:startup()
-  local acsIComp = Openbus:getACSIComponent()
-  local orb = Openbus:Orb()
-  local success, conId =
-    oil.pcall(self.context.IReceptacles.connect, self.context.IReceptacles,
-              "AccessControlServiceReceptacle", acsIComp)
-  if not success then
-    Log:error(
-        "Ocorreu um erro ao conectar com o serviço de controle de acesso: ",
-        conId)
-    error(orb:newexcept{StartupFailedException})
- end
 end
 
 --------------------------------------------------------------------------------

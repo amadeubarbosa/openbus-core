@@ -128,6 +128,8 @@ local idlfile = IDLPATH_DIR .. "/"..Utils.IDL_VERSION.."/session_service.idl"
 orb:loadidlfile(idlfile)
 idlfile = IDLPATH_DIR .. "/"..Utils.IDL_PREV.."/session_service.idl"
 orb:loadidlfile(idlfile)
+idlfile = IDLPATH_DIR .. "/"..Utils.IDL_VERSION.."/session_service_extended.idl"
+assert(orb:loadidlfile(idlfile))
 
 function main()
   Openbus:run()
@@ -143,9 +145,20 @@ function main()
   local component = ComponentContext(orb, componentId)
   component:updateFacet("IComponent",
                       SessionServiceComponent.SessionServiceComponent())
-  component:addFacet("ISessionService_"..Utils.IDL_VERSION,
-                      Utils.SESSION_SERVICE_INTERFACE,
-                      SessionService.SessionService())
+  do
+    --[[OPENBUS-2345:
+      addFacet do SCS Lua faz um orb:newservant usando o tipo do segundo parâmetro.
+      Este workaround substitui por um servant criado com o tipo mais estendido.
+    ]]
+    local name = "ISessionService_"..Utils.IDL_VERSION
+    component:addFacet(name, Utils.SESSION_SERVICE_INTERFACE, SessionService.SessionService())
+
+    local description = component._facets[name]
+    component._orb:deactivate(description.facet_ref)
+    description.facet_ref = assert(component._orb:newservant(description.implementation, description.key,
+                            "IDL:tecgraf/openbus/session_service/"..Utils.IDL_VERSION.."/ISessionServiceExtended:1.0"))
+    component[name] = description.facet_ref
+  end
   component:addFacet("ISessionService",
                       Utils.SESSION_SERVICE_INTERFACE_PREV,
                       SessionServicePrev.SessionService())
