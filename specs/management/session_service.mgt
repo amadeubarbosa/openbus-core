@@ -17,6 +17,10 @@ Interface {
 }
 
 Interface {
+  id = "IDL:tecgraf/openbus/session_service/v1_05/ISessionServiceExtended:1.0"
+}
+
+Interface {
   id = "IDL:openbusidl/ss/ISessionService:1.0"
 }
 
@@ -28,7 +32,8 @@ Grant {
   id = "SessionService",
   interfaces = {
     "IDL:tecgraf/openbus/session_service/v1_05/ISessionService:1.0",
+    "IDL:tecgraf/openbus/session_service/v1_05/ISessionServiceExtended:1.0",
     "IDL:openbusidl/ss/ISessionService:1.0",
-  "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0",
+    "IDL:tecgraf/openbus/core/v1_05/access_control_service/ICredentialObserver:1.0",
   }
 }

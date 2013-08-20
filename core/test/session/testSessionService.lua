@@ -107,12 +107,12 @@ Suite = {
       self.sessionService = orb:narrow(self.sessionService,
           Utils.SESSION_SERVICE_INTERFACE)
 
-      local ISessionServiceExtendedRepId = "IDL:tecgraf/openbus/session_service/"..
-                                     Utils.IDL_VERSION.."/ISessionServiceExtended:1.0"
+      local SESSION_SERVICE_EXTENDED_INTERFACE = "IDL:tecgraf/openbus/session_service/"..
+                                        Utils.IDL_VERSION.."/ISessionServiceExtended:1.0"
       self.sessionServiceExtended = sessionServiceComponent:getFacet(
-          Utils.SESSION_SERVICE_INTERFACE)
+          SESSION_SERVICE_EXTENDED_INTERFACE)
       self.sessionServiceExtended = orb:narrow(self.sessionServiceExtended,
-          ISessionServiceExtendedRepId)
+          SESSION_SERVICE_EXTENDED_INTERFACE)
       Check.assertNotNil(self.sessionServiceExtended)
     end,
 
