@@ -111,6 +111,7 @@ Suite = {
                                         Utils.IDL_VERSION.."/ISessionServiceExtended:1.0"
       self.sessionServiceExtended = sessionServiceComponent:getFacet(
           SESSION_SERVICE_EXTENDED_INTERFACE)
+      Check.assertNotNil(self.sessionServiceExtended)
       self.sessionServiceExtended = orb:narrow(self.sessionServiceExtended,
           SESSION_SERVICE_EXTENDED_INTERFACE)
       Check.assertNotNil(self.sessionServiceExtended)
