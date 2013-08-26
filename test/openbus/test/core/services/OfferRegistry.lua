@@ -8,7 +8,14 @@ local sysex = giop.SystemExceptionIDs
 
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
-local offertypes = idl.types.services.offer_registry
+local offtps = idl.types.services.offer_registry
+local InvalidService = offtps.InvalidService
+local InvalidProperties = offtps.InvalidProperties
+local UnauthorizedFacets = offtps.UnauthorizedFacets
+local admidl = require "openbus.core.admin.idl"
+local offadm = admidl.types.services.offer_registry.admin.v1_0
+local AuthorizationInUse = offadm.AuthorizationInUse
+
 local throwsysex = require "openbus.util.sysex"
 
 local ComponentContext = require "scs.core.ComponentContext"
@@ -224,7 +231,7 @@ function InvalidParamCase.testRegisterInvalidComponent(self)
   orb:loadidl("interface Ping2 { boolean ping(); };")
   context:addFacet("ping2", orb.types:lookup("Ping2").repID, getPingImpl())
   local ok, err = pcall(self.offers.registerService, self.offers, context, {})
-  Check.assertEquals(offertypes.InvalidService, err._repid)
+  Check.assertEquals(InvalidService, err._repid)
 end
 
 function InvalidParamCase.testRegisterBadGetComponentId(self)
@@ -234,7 +241,7 @@ function InvalidParamCase.testRegisterBadGetComponentId(self)
   end
   local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidService, err._repid)
+  Check.assertEquals(InvalidService, err._repid)
 end
 
 function InvalidParamCase.testRegisterBadGetMetaInterface(self)
@@ -247,7 +254,7 @@ function InvalidParamCase.testRegisterBadGetMetaInterface(self)
   end
   local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidService, err._repid)
+  Check.assertEquals(InvalidService, err._repid)
 end
 
 function InvalidParamCase.testRegisterNoMetaInterfaceFacet(self)
@@ -260,7 +267,7 @@ function InvalidParamCase.testRegisterNoMetaInterfaceFacet(self)
   end
   local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidService, err._repid)
+  Check.assertEquals(InvalidService, err._repid)
 end
 
 function InvalidParamCase.testRegisterBadGetFacets(self)
@@ -280,7 +287,7 @@ function InvalidParamCase.testRegisterBadGetFacets(self)
   end
   local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidService, err._repid)
+  Check.assertEquals(InvalidService, err._repid)
 end
 
 function InvalidParamCase.testRegisterEmptyFacets(self)
@@ -304,13 +311,13 @@ end
 function InvalidParamCase.testRegisterNilComponent(self)
   local ok, err = pcall(self.offers.registerService, self.offers, nil, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidService, err._repid)
+  Check.assertEquals(InvalidService, err._repid)
 end
 
 function InvalidParamCase.testRegisterEmptyComponent(self)
   local ok, err = pcall(self.offers.registerService, self.offers, {}, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidService, err._repid)
+  Check.assertEquals(InvalidService, err._repid)
 end
 
 function InvalidParamCase.testRegisterNilProperties(self)
@@ -330,7 +337,7 @@ function InvalidParamCase.testRegisterInvalidProperties(self)
     local props = { {name=reservedname, value="blah"}, }
     local ok, err = pcall(self.offers.registerService, self.offers, comp, props)
     Check.assertTrue(not ok)
-    Check.assertEquals(offertypes.InvalidProperties, err._repid)  
+    Check.assertEquals(InvalidProperties, err._repid)  
     Check.assertTrue(isContained(props, err.properties))
     Check.assertTrue(isContained(err.properties, props))
   end
@@ -343,7 +350,7 @@ function InvalidParamCase.testRegisterUnauthorizedFacets(self)
   comp:addFacet("ping2", orb.types:lookup("Ping2").repID, getPingImpl())
   local ok, err = pcall(self.offers.registerService, self.offers, comp.IComponent, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.UnauthorizedFacets, err._repid)
+  Check.assertEquals(UnauthorizedFacets, err._repid)
 end
 
 function InvalidParamCase.testFindNilProps(self)
@@ -384,7 +391,7 @@ function NoAuthorizedCase.testRegisterUnauthorizedEntity(self)
   local comp = context.IComponent
   local ok, err = pcall(self.offers.registerService, self.offers, comp, {})
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.UnauthorizedFacets, err._repid)
+  Check.assertEquals(UnauthorizedFacets, err._repid)
 end
 
 ---------------------------------------
@@ -418,7 +425,7 @@ function AuthorizationInUseCase.testAuhtorizationInUse(self)
   local theEntity = entities:getEntity(entity)
   local ok, err = pcall(theEntity.revokeInterface, theEntity, "IDL:Ping:1.0")
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.AuthorizationInUse, err._repid)
+  Check.assertEquals(AuthorizationInUse, err._repid)
 end
 
 --------------------------------
@@ -486,7 +493,7 @@ function ServiceOfferCase.testInvalidProperties(self)
     local ok, err = pcall(self.serviceOffer.setProperties, self.serviceOffer, 
       invalidProps)
     Check.assertTrue(not ok)
-    Check.assertEquals(offertypes.InvalidProperties, err._repid)
+    Check.assertEquals(InvalidProperties, err._repid)
     Check.assertTrue(isContained(invalidProps, err.properties))
     Check.assertTrue(isContained(err.properties, invalidProps))
   end

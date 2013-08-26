@@ -5,8 +5,11 @@ local io = require "io"
 
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
-local srvtypes = idl.types.services
-local logintypes = srvtypes.access_control
+local UnauthorizedOperation = idl.types.services.UnauthorizedOperation
+local MissingCertificate = idl.types.services.access_control.MissingCertificate
+local admidl = require "openbus.core.admin.idl"
+local InvalidCertificate = admidl.types.services.access_control.admin.v1_0.InvalidCertificate
+
 
 local Check = require "latt.Check"
 
@@ -69,21 +72,21 @@ function NoPermissionCase.testRegisterCertificateNoPermission(self)
   local ok, err = pcall(certificates.registerCertificate, certificates, "random",
       cert)
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testGetCertificateNoPermission(self)
   local certificates = OpenBusContext:getCertificateRegistry()
   local ok, err = pcall(certificates.getCertificate, certificates, "random")
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testRemoveCertificateNoPermission(self)
   local certificates = OpenBusContext:getCertificateRegistry()
   local ok, err = pcall(certificates.removeCertificate, certificates, "random")
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)  
+  Check.assertEquals(UnauthorizedOperation, err._repid)  
 end
 
 -------------------------------------
@@ -111,7 +114,7 @@ function InvalidParamCase.testRegisterEmptyCertificate(self)
   local read = file:read("*a")
   local ok, err = pcall(certs.registerCertificate, certs, "unknown", read)
   Check.assertTrue(not ok)
-  Check.assertEquals(logintypes.InvalidCertificate, err._repid)
+  Check.assertEquals(InvalidCertificate, err._repid)
   file:close()
 end
 
@@ -122,7 +125,7 @@ function InvalidParamCase.testRegisterInvalidCertificate(self)
   read = "\n--CORRUPTED!--\n" .. read
   local ok, err = pcall(certs.registerCertificate, certs, "unknown", read)
   Check.assertTrue(not ok)
-  Check.assertEquals(logintypes.InvalidCertificate, err._repid)
+  Check.assertEquals(InvalidCertificate, err._repid)
   file:close()
 end
 
@@ -130,7 +133,7 @@ function InvalidParamCase.testInvalidGetCertificate(self)
   local certs = self.certs
   local ok, err = pcall(certs.getCertificate, certs, "unknown")
   Check.assertTrue(not ok)
-  Check.assertEquals(logintypes.MissingCertificate, err._repid)
+  Check.assertEquals(MissingCertificate, err._repid)
 end
 
 function InvalidParamCase.testInvalidRemoveCertificate(self)

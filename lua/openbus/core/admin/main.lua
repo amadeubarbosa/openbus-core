@@ -18,14 +18,16 @@ local openbus = require "openbus"
 local log = require "openbus.util.logger"
 local access = require "openbus.core.Access"
 local neworb = access.initORB
+local idl = require "openbus.core.idl"
+local BusObjectKey = idl.const.BusObjectKey
+local types = idl.types.services
+local logintypes = idl.types.services.access_control
+local idl = require "openbus.core.admin.idl"
+local admintypes = idl.types.services.access_control.admin.v1_0
+local authotypes = idl.types.services.offer_registry.admin.v1_0
 local printer = require "openbus.core.admin.print"
 local script = require "openbus.core.admin.script"
 local messages = require "openbus.core.admin.messages"
-local idl = require "openbus.core.idl"
-local logintypes = idl.types.services.access_control
-local offertypes = idl.types.services.offer_registry
-local types = idl.types.services
-local BusObjectKey = idl.const.BusObjectKey
 
 -- Alias
 local lower = _G.string.lower
@@ -475,7 +477,7 @@ handlers["add-category"] = function(cmd)
     local ok, err = pcall(conn.entities.createEntityCategory, conn.entities,
         id, cmd.params.name)
     if not ok then
-      if err._repid == offertypes.EntityCategoryAlreadyExists then
+      if err._repid == authotypes.EntityCategoryAlreadyExists then
         printf("[ERRO] Categoria '%s' já cadastrada", id)
       else
         printf("[ERRO] Erro inesperado ao adicionar categoria: %s", tostring(err))
@@ -513,7 +515,7 @@ handlers["del-category"] = function(cmd)
   end
   local ok, err = pcall(category.remove, category)
   if not ok then
-    if err._repid == offertypes.EntityCategoryInUse then
+    if err._repid == authotypes.EntityCategoryInUse then
       printf("[ERRO] Categoria '%s' em uso.", id)
     else
       printf("[ERRO] Erro inesperado ao remover categoria: %s", tostring(err))
@@ -621,7 +623,7 @@ handlers["add-entity"] = function(cmd)
   end
   local ok, err = pcall(category.registerEntity, category, id, cmd.params.name)
   if not ok then
-    if err._repid == offertypes.EntityAlreadyRegistered then
+    if err._repid == authotypes.EntityAlreadyRegistered then
       printf("[ERRO] Entidade '%s' já cadastrada.", id)
     else
       printf("[ERRO] Erro inesperado ao adicionar entidade: %s", tostring(err))
@@ -785,7 +787,7 @@ handlers["add-certificate"] = function(cmd)
   local ok, err = pcall(conn.certificates.registerCertificate,
       conn.certificates, id, cert)
   if not ok then
-    if err._repid == logintypes.InvalidCertificate then
+    if err._repid == admintypes.InvalidCertificate then
       printf("[ERRO] Certificado inválido: '%s'", certificate)
     else
       printf("[ERRO] Erro inesperado ao incluir certificado: %s", tostring(ret))
@@ -833,7 +835,7 @@ handlers["add-interface"] = function(cmd)
   local id = cmd.params[cmd.name]
   local ok, err = pcall(conn.interfaces.registerInterface, conn.interfaces, id)
   if not ok then
-    if err._repid == offertypes.InvalidInterface then
+    if err._repid == authotypes.InvalidInterface then
       printf("[ERRO] Interface '%s' inválida.", id)
     else
       printf("[ERRO] Erro inesperado ao adicionar interface: %s", tostring(err))
@@ -857,7 +859,7 @@ handlers["del-interface"] = function(cmd)
   local id = cmd.params[cmd.name]
   local ok, err = pcall(conn.interfaces.removeInterface, conn.interfaces, id)
   if not ok then
-    if err._repid == offertypes.InterfaceInUse then
+    if err._repid == authotypes.InterfaceInUse then
       printf("[ERRO] Interface '%s' em uso.", id)
     else
       printf("[ERRO] Erro inesperado ao remover interface: %s", tostring(err))
@@ -914,7 +916,7 @@ handlers["set-authorization"] = function(cmd)
     interface = cmd.params.grant
     ok, err = pcall(entity.grantInterface, entity, interface)
     if not ok then
-      if err._repid == offertypes.InvalidInterface then
+      if err._repid == authotypes.InvalidInterface then
         printf("[ERRO] Interface '%s' inválida.", interface)
       else
         printf("[ERRO] Erro inesperado ao configurar autorizações: %s", tostring(err))
@@ -927,9 +929,9 @@ handlers["set-authorization"] = function(cmd)
     interface = cmd.params.revoke
     ok, err = pcall(entity.revokeInterface, entity, interface)
     if not ok then
-      if err._repid == offertypes.InvalidInterface then
+      if err._repid == authotypes.InvalidInterface then
         printf("[ERRO] Interface '%s' inválida.", interface)
-      elseif err._repid == offertypes.AuthorizationInUse then
+      elseif err._repid == authotypes.AuthorizationInUse then
         printf("[ERRO] Autorização '%s' em uso pela entidade '%s'.", interface,
           id)
       else

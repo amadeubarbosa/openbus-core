@@ -3,14 +3,22 @@ APPNAME= $(PROJNAME)
 
 OPENBUSINC= ${OPENBUS_HOME}/include
 OPENBUSLIB= ${OPENBUS_HOME}/lib
+OPENBUSIDL= ${OPENBUS_HOME}/idl/v2_0
 
 SRC= \
   launcher.c \
   coreservlibs.c \
   $(PRELOAD_DIR)/coreservices.c
 
+IDLDIR= ../idl
+IDLSRC= \
+  $(IDLDIR)/access_management.idl \
+  $(IDLDIR)/offer_authorization.idl
+
 LUADIR= ../lua
 LUASRC= \
+  $(LUADIR)/openbus/core/admin/idl.lua \
+  $(LUADIR)/openbus/core/admin/parsed.lua \
   $(LUADIR)/openbus/core/legacy/AccessControlService.lua \
   $(LUADIR)/openbus/core/legacy/RegistryService.lua \
   $(LUADIR)/openbus/core/services/Access.lua \
@@ -70,6 +78,9 @@ else
 endif
 
 LIBS+= dl
+
+$(LUADIR)/openbus/core/admin/parsed.lua: $(IDL2LUA) $(IDLSRC)
+	$(OILBIN) $(IDL2LUA) -I $(OPENBUSIDL) -o $@ $(IDLSRC)
 
 $(PRELOAD_DIR)/coreservices.c $(PRELOAD_DIR)/coreservices.h: $(LUAPRELOADER) $(LUASRC)
 	$(LOOPBIN) $(LUAPRELOADER) -l "$(LUADIR)/?.lua" \

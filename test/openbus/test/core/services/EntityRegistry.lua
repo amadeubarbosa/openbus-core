@@ -5,8 +5,13 @@ local io = require "io"
 
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
-local srvtypes = idl.types.services
-local offertypes = srvtypes.offer_registry
+local UnauthorizedOperation = idl.types.services.UnauthorizedOperation
+local admidl = require "openbus.core.admin.idl"
+local offadm = admidl.types.services.offer_registry.admin.v1_0
+local EntityCategoryAlreadyExists = offadm.EntityCategoryAlreadyExists
+local EntityAlreadyRegistered = offadm.EntityAlreadyRegistered
+local EntityCategoryInUse = offadm.EntityCategoryInUse
+local InvalidInterface = offadm.InvalidInterface
 
 local Check = require "latt.Check"
 
@@ -120,7 +125,7 @@ function NoPermissionCase.testEntityRegistryNoPermission(self)
   local ok, err = pcall(entities.createEntityCategory, entities, "LoginNotValid",
     "trying to create category with unauthorized login")
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testCategoryNoPermission(self)
@@ -128,17 +133,17 @@ function NoPermissionCase.testCategoryNoPermission(self)
   local ok, err = pcall(category.setName, category, 
     "should receive unauthorized exception")
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
   ok, err = pcall(category.remove, category)
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
   ok, err = pcall(category.removeAll, category)
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
   ok, err = pcall(category.registerEntity, category, "LoginNotValid",
     "trying to create entity with unauthorized login")
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
 end
 
 function NoPermissionCase.testEntityNoPermission(self)
@@ -146,16 +151,16 @@ function NoPermissionCase.testEntityNoPermission(self)
   local ok, err = pcall(entity.setName, entity, 
     "should receive unauthorized exception")
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
   ok, err = pcall(entity.remove, entity)
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
   ok, err = pcall(entity.grantInterface, entity, "IDL:test/Test:1.0")
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
   ok, err = pcall(entity.revokeInterface, entity, "IDL:test/Test:1.0")
   Check.assertTrue(not ok)
-  Check.assertEquals(srvtypes.UnauthorizedOperation, err._repid)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
 end
 
 --------------------------------
@@ -247,17 +252,17 @@ function Case.testCreateTwice(self)
   local ok, err = pcall(entities.createEntityCategory, entities, 
     self.catId, self.catDesc)
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.EntityCategoryAlreadyExists, err._repid)
+  Check.assertEquals(EntityCategoryAlreadyExists, err._repid)
   ok, err = pcall(self.category.registerEntity, self.category, 
     self.entId, self.entDesc)
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.EntityAlreadyRegistered, err._repid)
+  Check.assertEquals(EntityAlreadyRegistered, err._repid)
 end
 
 function Case.testCategoryInUse(self)
   local ok, err = pcall(self.category.remove, self.category)
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.EntityCategoryInUse, err._repid)
+  Check.assertEquals(EntityCategoryInUse, err._repid)
 end
 
 function Case.testEntityAuthorization(self)
@@ -266,7 +271,7 @@ function Case.testEntityAuthorization(self)
   local interface = "IDL:test/Test:1.0"
   local ok, err = pcall(self.entity.grantInterface, self.entity, "InvalidInterface")
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidInterface, err._repid)
+  Check.assertEquals(InvalidInterface, err._repid)
   local ok, list = pcall(self.entity.getGrantedInterfaces, self.entity)
   Check.assertTrue(ok)
   Check.assertEquals(0, #list)
@@ -294,7 +299,7 @@ function Case.testEntityAuthorization(self)
   Check.assertEquals(self.entDesc, descEntity.name)  
   ok, err = pcall(self.entity.revokeInterface, self.entity, "InvalidInterface")
   Check.assertTrue(not ok)
-  Check.assertEquals(offertypes.InvalidInterface, err._repid)
+  Check.assertEquals(InvalidInterface, err._repid)
   ok, bool = pcall(self.entity.revokeInterface, self.entity, interface)
   Check.assertTrue(ok)
   Check.assertTrue(bool)

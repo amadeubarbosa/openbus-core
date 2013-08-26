@@ -1,0 +1,377 @@
+/**
+ * \mainpage Documentação da IDL
+ */
+#ifndef __TECGRAF_OPENBUS_CORE_V20_SERVICES_OFFERREGISTRY_ADMIN_V10_IDL__
+#define __TECGRAF_OPENBUS_CORE_V20_SERVICES_OFFERREGISTRY_ADMIN_V10_IDL__
+
+#include "offer_registry.idl"
+
+/** \brief Módulo dos sistemas e aplicações do Tecgraf. */
+module tecgraf {
+
+/** \brief Módulo do middleware OpenBus. */
+module openbus {
+
+/** \brief Módulo de definições básicas do OpenBus. */
+module core {
+
+/* \brief Módulo de versionamento dos Serviços Básicos do OpenBus. */
+module v2_0 {
+
+/** \brief Módulo dos Serviços Básicos do OpenBus. */
+module services {
+
+/** \brief Módulo do Serviço de Ofertas. */
+module offer_registry {
+
+/** \brief Módulo de gerência do serviço. */
+module admin {
+
+/** \brief Módulo de versionamento da gerência do serviço. */
+module v1_0 {
+
+/****************************************************************************/
+/* Faceta de Gerência de Autorização de Entidades ***************************/
+/****************************************************************************/
+
+interface RegisteredEntity; /* forward declaration */
+interface EntityCategory; /* forward declaration */
+
+
+
+/** \brief Descrição de uma categoria de entidade. */
+struct EntityCategoryDesc {
+  Identifier id;      /** \brief Identificador da categoria. */
+  string name;        /** \brief Nome descritivo da categoria. */
+  EntityCategory ref; /** \brief Objeto que representa a categoria. */
+};
+/** \brief Sequência de descrições de catergorias de entidade. */
+typedef sequence<EntityCategoryDesc> EntityCategoryDescSeq;
+
+/** \brief Descrição de uma entidade registrada. */
+struct RegisteredEntityDesc {
+  EntityCategory category; /** \brief Categoria da entidade. */
+  Identifier id;           /** \brief Identificador da entidade. */
+  string name;             /** \brief Nome descritivo da entidade. */
+  RegisteredEntity ref;    /** \brief Objeto que representa a entidade. */
+};
+/** \brief Sequência de descrições sobre entidades registradas */
+typedef sequence<RegisteredEntityDesc> RegisteredEntityDescSeq;
+
+/** \brief Identificação de uma interface. */
+typedef string InterfaceId; /* same type of interface identifiers of SCS */
+/** \brief Sequência de identificações de interface. */
+typedef sequence<InterfaceId> InterfaceIdSeq;
+
+
+
+/** \brief Indica que uma entidade com o identificador dado já está registrada. */
+exception EntityAlreadyRegistered { RegisteredEntityDesc existing; };
+
+/** \brief Indica que uma categoria com o identificador dado já existe. */
+exception EntityCategoryAlreadyExists { EntityCategoryDesc existing; };
+
+/** \brief Indica que existe entidades nessa categoria de entidade. */
+exception EntityCategoryInUse { RegisteredEntityDescSeq entities; };
+
+/** \brief Indica que a especificação de interfaces autorizadas é inválida. */
+exception InvalidInterface { InterfaceId ifaceId; };
+
+/** \brief Indica que uma oferta existente exige a autorização removida. */
+exception AuthorizationInUse { ServiceOfferDescSeq offers; };
+
+
+
+/** 
+ * \brief Representa uma categoria de entidades no barramento.
+ *
+ * Categorias de entidade são agrupamentos usados exclusivamente para
+ * facilitar a gerência das diversas entidades cadastradas no barramento
+ * pelo administrador do sistema.
+ */
+interface EntityCategory {
+  readonly attribute Identifier id; /** \brief Identificador da categoria */
+  readonly attribute string name;   /** \brief Nome descritivo da categoria */
+  
+  /** 
+   * \brief Devolve uma estrutura descrevedo a categoria de entidade.
+   *
+   * \return A descrição da categoria de entidade
+   */
+  EntityCategoryDesc describe();
+  
+  /**
+   * \brief Altera a descrição da categoria.
+   *
+   * \param name Nome descritivo da categoria.
+   *
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  void setName(in string name) raises (UnauthorizedOperation, ServiceFailure);
+
+  /** 
+   * \brief Remove a categoria de entidade.
+   *
+   * A categoria só é removida se não existir nenhuma entidade nela.
+   *
+   * \exception EntityCategoryInUse A categoria possui alguma entidade.
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  void remove()
+    raises (EntityCategoryInUse, UnauthorizedOperation, ServiceFailure);
+  
+  /** 
+   * \brief Remove a categoria e todas suas entidades.
+   *
+   * Se houver alguma entidade cadastrada nessa categoria  ela também é
+   * removida.
+   *
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  void removeAll() raises (UnauthorizedOperation, ServiceFailure);
+  
+  /**
+   * \brief Cria uma nova entidade nessa categoria.
+   *
+   * \param id Identificador da entidade (deve ser único no barramento).
+   * \param name Nome descritivo da entidade (texto livre).
+   *
+   * \exception EntityAlreadyRegistered Indica que uma entidade com esse
+   *            identificador já está registrada.
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  RegisteredEntity registerEntity(in Identifier id, in string name)
+    raises (EntityAlreadyRegistered, UnauthorizedOperation, ServiceFailure);
+  
+  /**
+   * \brief Recupera todas entidades nessa categoria.
+   *
+   * \return Sequência de descrições das entidades nessa categoria. 
+   */
+  RegisteredEntityDescSeq getEntities() raises (ServiceFailure);
+};
+
+/** 
+ * \brief Representa uma entidade do barramento registrada.
+ *
+ * Entidade é tudo aquilo que pode se logar ao barramento e usufruir dos
+ * recursos do barramento. Em particular, tanto usuários humanos como
+ * implantações de sistema são considerados entidades. Entidades podem ou não
+ * ser cadastradas no serviço. Apenas entidades cadastradas podem ser
+ * autorizadas a ofertar serviços.
+ */
+interface RegisteredEntity {
+  readonly attribute EntityCategory category; /** \brief Categoria da entidade */
+  readonly attribute Identifier id; /** \brief Identificador da entidade */
+  readonly attribute string name; /** \brief Nome descritivo da entidade */
+  
+  /** 
+   * \brief Devolve uma estrutura descrevedo a entidade registrada. 
+   *
+   * \return A descrição da entidade registrada
+   */
+  RegisteredEntityDesc describe();
+  
+  /**
+   * \brief Altera o nome descritivo da entidade.
+   *
+   * \param name Nome descritivo da entidade.
+   *
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  void setName(in string name) raises (UnauthorizedOperation, ServiceFailure);
+  
+  /** 
+   * \brief Remove o registro da entidade.
+   *
+   * Todas as autorizações e ofertas de serviço da entidade são removidas
+   * juntamente com a entidade.
+   *
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  void remove() raises (UnauthorizedOperation, ServiceFailure);
+  
+  /**
+   * \brief Autoriza que a entidade possa ofertar serviços que implementem
+   *        essa interface.
+   *
+   * \param ifaceId Identificador da interface a ser autorizada.
+   *
+   * \result \c true caso a interface não estava autorizada e passou a ser
+   *         autorizada ou \c false caso a interface já estava autorizada e
+   *         a operação não resultou em nenhuma mudança.
+   *
+   * \exception InvalidInterface A interface é inválida (não está registrada).
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  boolean grantInterface(in InterfaceId ifaceId)
+    raises (InvalidInterface, UnauthorizedOperation, ServiceFailure);
+  
+  /**
+   * \brief Remove a autorização da entidade de ofertar serviços que
+   *        implementem a interface.
+   *
+   * \param ifaceId Identificador da interface a ser revogada.
+   *
+   * \result \c true caso a interface estava autorizada e deixou de ser
+   *         autorizada ou \c false caso a interface já não era autorizada e
+   *         a operação não resultou em nenhuma mudança.
+   *
+   * \exception InvalidInterface A interface é inválida (não está registrada).
+   * \exception AuthorizationInUse Existem ofertas de serviço dessa entidade
+   *                               que implementam interfaces referentes a
+   *                               essa autorização.
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  boolean revokeInterface(in InterfaceId ifaceId)
+    raises (InvalidInterface, AuthorizationInUse,
+            UnauthorizedOperation, ServiceFailure);
+  
+  /**
+   * \brief Devolve a lista de especificações de interfaces autorizadas
+   *        associados a essa entidade.
+   *
+   * \return Lista de especificação de interfaces autorizadas.
+   */
+  InterfaceIdSeq getGrantedInterfaces()
+    raises (ServiceFailure);
+};
+
+/**
+ * \brief Interface de registro de entidades do barramento.
+ */
+interface EntityRegistry {
+  
+  /** 
+   * \brief Cria uma nova cateroria de entidade no barramento.
+   *  
+   * \param id Identificador da categoria (deve ser único no barramento).
+   * \param name Nome descritivo da categoria (texto livre).
+   *
+   * \exception EntityCategoryAlreadyExists Indica que uma categoria com o mesmo
+   *                                        identificador já está existe.
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  EntityCategory createEntityCategory(in Identifier id, in string name)
+    raises (EntityCategoryAlreadyExists, UnauthorizedOperation, ServiceFailure);
+  
+  /** 
+   * \brief Recupera todas as categorias de entidade existentes.
+   *
+   * \return Uma sequência de descrições das categorias.
+   */
+  EntityCategoryDescSeq getEntityCategories() raises (ServiceFailure);
+  
+  /** 
+   * \brief Busca um categoria de entidade pelo seu identificador.
+   *
+   * \param id Identificador da categoria a ser buscada.
+   *
+   * \return Categoria encontrada com aquele identifcador ou \c null caso não
+   *         exista nenhuma categoria com o identificador fornecido.
+   */
+  EntityCategory getEntityCategory(in Identifier id) raises (ServiceFailure);
+  
+  /**
+   * \brief Obtém todas entidades registradas.
+   *
+   * \return Sequência de descrições das entidades registradas.
+   */
+  RegisteredEntityDescSeq getEntities() raises (ServiceFailure);
+  
+  /**
+   * \brief Busca uma entidade pelo seu identificador.
+   *
+   * \param id Identificador da entidade a ser buscada.
+   * 
+   * \return Entidade encontrada com aquele identifcador ou \c null caso não
+   *         exista nenhuma entidade com o identificador fornecido.
+   */
+  RegisteredEntity getEntity(in Identifier id) raises (ServiceFailure);
+  
+  /**
+   * \brief Obtém todas as entidades registradas com alguma autorização de
+   *        interface associada.
+   *
+   * \return Sequência de descrições das entidades encontradas.
+   */
+  RegisteredEntityDescSeq getAuthorizedEntities() raises (ServiceFailure);
+  
+  /**
+   * \brief Obtém todas as entidades registradas que tenham autorizações de
+   *        interface que casem com um conjunto de interfaces fornecido
+   *
+   * \param interfaces Sequência de interfaces que as entidades devem estar
+   *                   autorizadas a fornecer através de serviços.
+   * 
+   * \return Sequência de entidades autorizadas a fornecer as interfaces
+   *         especificadas através de serviços.
+   */
+  RegisteredEntityDescSeq getEntitiesByAuthorizedInterfaces(
+    in InterfaceIdSeq interfaces) raises (ServiceFailure);
+};
+
+/****************************************************************************/
+/* Faceta de Gerência de Interfaces Autorizadas *****************************/
+/****************************************************************************/
+
+/** \brief Indica que uma interface está autorizada para algumas entidades. */
+exception InterfaceInUse { RegisteredEntityDescSeq entities; };
+
+
+
+/**
+ * \brief Interface de registro de interfaces do barramento.
+ */
+interface InterfaceRegistry {
+  /** 
+   * \brief Registra uma interface autorizada no cadastro.
+   *
+   * \param ifaceId Identificador da interface.
+   *
+   * \return \c true caso a interface não estava registrada e foi registrada,
+   *         e \c false caso a interface já estava registrada.
+   *
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  boolean registerInterface(in InterfaceId ifaceId) 
+    raises (InvalidInterface, UnauthorizedOperation, ServiceFailure);
+  
+  /** 
+   * \brief Remove uma interface autorizada do cadastro.
+   *
+   * \param ifaceId Identificador da interface.
+   *
+   * \return \c true caso a interface estava registrada e foi removida, e
+   *         \c false caso a interface não estivesse registrada.
+   *
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  boolean removeInterface(in InterfaceId ifaceId)
+    raises (InterfaceInUse, UnauthorizedOperation, ServiceFailure);
+  
+  /** 
+   * \brief Devolve uma lista de todas as interfaces cadastradas.
+   *
+   * \return Lista de interfaces cadastradas.
+   */
+  InterfaceIdSeq getInterfaces() raises (ServiceFailure);
+};
+
+}; // version
+
+}; // admin
+
+}; // offer_registry
+
+}; // services
+
+}; // core version
+
+}; // core
+
+}; // openbus
+
+}; // tecgraf
+
+#endif

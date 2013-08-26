@@ -30,9 +30,10 @@ local setuplog = server.setuplog
 local readprivatekey = server.readprivatekey
 
 local idl = require "openbus.core.idl"
-local const = idl.const
+local BusObjectKey = idl.const.BusObjectKey
+local mngidl = require "openbus.core.admin.idl"
+local loadidl = mngidl.loadto
 local access = require "openbus.core.services.Access"
-
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
@@ -153,6 +154,7 @@ Options:
     legacy = legacy,
   }
   orb:setinterceptor(iceptor, "corba")
+  loadidl(orb)
   
   -- prepare facets to be published as CORBA objects
   local facets = {}
@@ -161,11 +163,9 @@ Options:
       access_control = AccessControl,
       offer_registry = OfferRegistry,
     }
-    local objkeyfmt = idl.const.BusObjectKey.."/%s"
+    local objkeyfmt = BusObjectKey.."/%s"
     for modname, modfacets in pairs(facetmodules) do
-      local types = idl.types.services[modname]
       for name, facet in pairs(modfacets) do
-        facet.__type = types[name]
         facet.__facet = name
         facet.__objkey = objkeyfmt:format(name)
         facets[name] = facet
@@ -176,8 +176,8 @@ Options:
   -- create SCS component
   newSCS{
     orb = orb,
-    objkey = const.BusObjectKey,
-    name = const.BusObjectKey,
+    objkey = BusObjectKey,
+    name = BusObjectKey,
     facets = facets,
     init = function()
       local params = {

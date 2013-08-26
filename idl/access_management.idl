@@ -1,0 +1,104 @@
+/**
+ * \mainpage Documentação da IDL
+ */
+#ifndef __TECGRAF_OPENBUS_CORE_V20_SERVICES_ACCESSCONTROL_ADMIN_V10_IDL__
+#define __TECGRAF_OPENBUS_CORE_V20_SERVICES_ACCESSCONTROL_ADMIN_V10_IDL__
+
+#include "access_control.idl"
+
+/** \brief Módulo dos sistemas e aplicações do Tecgraf. */
+module tecgraf {
+
+/** \brief Módulo do middleware OpenBus. */
+module openbus {
+
+/** \brief Módulo de definições básicas do OpenBus. */
+module core {
+
+/* \brief Módulo de versionamento dos Serviços Básicos do OpenBus. */
+module v2_0 {
+
+/** \brief Módulo dos Serviços Básicos do OpenBus. */
+module services {
+
+/** \brief Módulo do Serviço de Autenticação. */
+module access_control {
+
+/** \brief Módulo de gerência do serviço. */
+module admin {
+
+/** \brief Módulo de versionamento da gerência do serviço. */
+module v1_0 {
+
+/****************************************************************************/
+/* Faceta de Gerência de Certificados de Entidades **************************/
+/****************************************************************************/
+
+/** \brief Certificado que utilizado na autenticação de entidades. */
+typedef sequence<octet> EntityCertificate;
+
+
+
+/** \brief Indica que o certificado fornecido é inválido */
+exception InvalidCertificate { string message; };
+
+
+
+/**
+ * \brief Gerência de certificados de autenticação de entidades no barramento.
+ */
+interface CertificateRegistry {
+  /**
+   * \brief Registra um certificado que pode ser usado para autenticar uma
+   *        dada entidade no barramento.
+   *
+   * \param entity Ident. da entidade a qual o certificado será associado.
+   * \param cert Certificado a ser associado a entidade.
+   *
+   * \exception InvalidCertificate Certificado fornecido é inválido.
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  void registerCertificate(in Identifier entity, in EntityCertificate cert)
+    raises (InvalidCertificate, UnauthorizedOperation, ServiceFailure);
+  
+  /**
+   * \brief Obtém o certificado associado a uma dada entidade no barramento.
+   *
+   * \param entity Ident. da entidade a qual o certificado será associado.
+   * 
+   * \return certificate Certificado a ser associado a entidade.
+   *
+   * \exception MissingCertificate Certificado não encontrado.
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  EntityCertificate getCertificate(in Identifier entity)
+    raises (MissingCertificate, UnauthorizedOperation, ServiceFailure);
+  
+  /**
+   * \brief Remove um certificado associado a uma entidade.
+   *
+   * \param entity Ident. da entidade a qual o certificado está associado.
+   *
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  boolean removeCertificate(in Identifier entity)
+    raises (UnauthorizedOperation, ServiceFailure);
+};
+
+}; // version
+
+}; // admin
+
+}; // access_control
+
+}; // services
+
+}; // core version
+
+}; // core
+
+}; // openbus
+
+}; // tecgraf
+
+#endif
