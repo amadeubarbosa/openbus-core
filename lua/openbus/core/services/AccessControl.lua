@@ -85,8 +85,9 @@ function CertificateRegistry:__init(data)
   local access = data.access
   local admins = data.admins
   access:setGrantedUsers(self.__type, "registerCertificate", admins)
-  access:setGrantedUsers(self.__type, "getCertificate", admins)
   access:setGrantedUsers(self.__type, "removeCertificate", admins)
+  access:setGrantedUsers(self.__type, "getCertificate", admins)
+  access:setGrantedUsers(self.__type, "getEntitiesWithCertificate", admins)
 end
 
 function CertificateRegistry:getPublicKey(entity)
@@ -122,6 +123,14 @@ function CertificateRegistry:getCertificate(entity)
     MissingCertificate{entity=entity}
   end
   return certificate
+end
+
+function CertificateRegistry:getEntitiesWithCertificate()
+  local entities = {}
+  for entity in self.certificateDB:ientries() do
+    entities[#entities+1] = entity
+  end
+  return entities
 end
 
 function CertificateRegistry:removeCertificate(entity)

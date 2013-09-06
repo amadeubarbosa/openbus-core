@@ -62,6 +62,16 @@ interface CertificateRegistry {
     raises (InvalidCertificate, UnauthorizedOperation, ServiceFailure);
   
   /**
+   * \brief Remove um certificado associado a uma entidade.
+   *
+   * \param entity Ident. da entidade a qual o certificado está associado.
+   *
+   * \exception UnauthorizedOperation Entidade que chama não é administrador.
+   */
+  boolean removeCertificate(in Identifier entity)
+    raises (UnauthorizedOperation, ServiceFailure);
+  
+  /**
    * \brief Obtém o certificado associado a uma dada entidade no barramento.
    *
    * \param entity Ident. da entidade a qual o certificado será associado.
@@ -75,13 +85,15 @@ interface CertificateRegistry {
     raises (MissingCertificate, UnauthorizedOperation, ServiceFailure);
   
   /**
-   * \brief Remove um certificado associado a uma entidade.
+   * \brief Obtém uma lista das entidades que possuem um certificado associado.
    *
-   * \param entity Ident. da entidade a qual o certificado está associado.
+   * \return entities Lista de ident. de entidade que tem um certificado
+                      associado que é utilizado pra autenticação junto ao
+                      barramento.
    *
    * \exception UnauthorizedOperation Entidade que chama não é administrador.
    */
-  boolean removeCertificate(in Identifier entity)
+  IdentifierSeq getEntitiesWithCertificate()
     raises (UnauthorizedOperation, ServiceFailure);
 };
 

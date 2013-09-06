@@ -82,6 +82,13 @@ function NoPermissionCase.testGetCertificateNoPermission(self)
   Check.assertEquals(UnauthorizedOperation, err._repid)
 end
 
+function NoPermissionCase.testGetEntitiesWithCertificateNoPermission(self)
+  local certificates = OpenBusContext:getCertificateRegistry()
+  local ok, err = pcall(certificates.getEntitiesWithCertificate, certificates)
+  Check.assertTrue(not ok)
+  Check.assertEquals(UnauthorizedOperation, err._repid)
+end
+
 function NoPermissionCase.testRemoveCertificateNoPermission(self)
   local certificates = OpenBusContext:getCertificateRegistry()
   local ok, err = pcall(certificates.removeCertificate, certificates, "random")
@@ -166,27 +173,20 @@ function CRCase.testRegisterRemoveCertificate(self)
   local certs = self.certs
   local file = io.open(certificate)
   local read = file:read("*a")
-  local ok, err = pcall(certs.registerCertificate, certs, "test-1", read)
-  Check.assertTrue(ok)
   file:close()
-  local ok, err = pcall(certs.removeCertificate, certs, "test-1")
-  Check.assertTrue(ok)
-  Check.assertTrue(err)
+  certs:registerCertificate("test-1", read)
+  Check.assertTrue(certs:removeCertificate("test-1"))
 end
 
 function CRCase.testRegisterGetRemoveCertificate(self)
   local certs = self.certs
   local file = io.open(certificate)
   local read = file:read("*a")
-  local ok, err = pcall(certs.registerCertificate, certs, "test-2", read)
-  Check.assertTrue(ok)
   file:close()
-  local ok, err = pcall(certs.getCertificate, certs, "test-2")
-  Check.assertTrue(ok)
-  Check.assertTrue(read == err, "certificate file should be the same")
-  local ok, err = pcall(certs.removeCertificate, certs, "test-2")
-  Check.assertTrue(ok)
-  Check.assertTrue(err)  
+  certs:registerCertificate("test-2", read)
+  local result = certs:getCertificate("test-2")
+  Check.assertTrue(read == result, "certificate file should be the same")
+  Check.assertTrue(certs:removeCertificate("test-2"))
 end
 
 function CRCase.testRegisterCertificateTwice(self)
@@ -194,14 +194,42 @@ function CRCase.testRegisterCertificateTwice(self)
   local file = io.open(certificate)
   local read = file:read("*a")
   file:close()
-  local ok, err = pcall(certs.registerCertificate, certs, "test-3", read)
-  Check.assertTrue(ok)
-  local ok, err = pcall(certs.registerCertificate, certs, "test-3", read)
-  Check.assertTrue(ok)
-  local ok, err = pcall(certs.removeCertificate, certs, "test-3")
-  Check.assertTrue(ok)
-  Check.assertTrue(err)
-  local ok, err = pcall(certs.removeCertificate, certs, "test-3")
-  Check.assertTrue(ok)
-  Check.assertFalse(err)
+  certs:registerCertificate("test-3", read)
+  certs:registerCertificate("test-3", read)
+  local result = certs:removeCertificate("test-3")
+  Check.assertTrue(result)
+  local result = certs:removeCertificate("test-3")
+  Check.assertFalse(result)
+end
+
+function CRCase.testGetListWithManyEntitiesWithCertificate(self)
+  local certs = self.certs
+  -- get entities with previously registered certificates
+  local previous = {}
+  local prevcount
+  for index, entity in ipairs(certs:getEntitiesWithCertificate()) do
+    previous[entity] = true
+    prevcount = index
+  end
+  -- register some new certificates
+  local file = io.open(certificate)
+  local read = file:read("*a")
+  file:close()
+  local count = 3
+  local expected = {}
+  for i = 1, count do
+    local entity = "test-4_"..i
+    expected[entity] = true
+    certs:registerCertificate(entity, read)
+  end
+  -- check the new list inclue the new entities with registered certificates
+  local list = certs:getEntitiesWithCertificate()
+  Check.assertEquals(count+prevcount, #list)
+  for _, entity in ipairs(list) do
+    if not previous[entity] then
+      Check.assertTrue(expected[entity])
+      expected[entity] = nil
+      certs:removeCertificate(entity)
+    end
+  end
 end
