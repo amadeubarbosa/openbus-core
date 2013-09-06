@@ -601,7 +601,7 @@ handlers["list-category"] = function(cmd)
       return false
     end
     if not category then 
-      printf("[ERRO] Categoria '%s' não existe.", id)
+      printf("[ERRO] Categoria '%s' não existe.", tostring(cmd.params[cmd.name]))
       return false
     end
     local ok, description = pcall(category.describe, category)
