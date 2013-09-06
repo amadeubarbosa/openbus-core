@@ -3,6 +3,9 @@ local pcall = _G.pcall
 
 local io = require "io"
 
+local giop = require "oil.corba.giop"
+local sysex = giop.SystemExceptionIDs
+
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local UnauthorizedOperation = idl.types.services.UnauthorizedOperation
@@ -265,6 +268,16 @@ function Case.testGetEntity(self)
   Check.assertTrue(ok)
   Check.assertNotNil(entSeq)
   Check.assertEquals(1, #entSeq)
+end
+
+function Case.testCreateEmptyIds(self)
+  local entities = OpenBusContext:getEntityRegistry()
+  local ok, err = pcall(entities.createEntityCategory, entities, "", "")
+  Check.assertFalse(ok)
+  Check.assertEquals(sysex.BAD_PARAM, err._repid)
+  local ok, err = pcall(self.category.registerEntity, self.category, "", "")
+  Check.assertFalse(ok)
+  Check.assertEquals(sysex.BAD_PARAM, err._repid)
 end
 
 function Case.testCreateTwice(self)

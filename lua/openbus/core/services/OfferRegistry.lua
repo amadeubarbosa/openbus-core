@@ -33,6 +33,7 @@ local log = require "openbus.util.logger"
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
+local BAD_PARAM = sysex.BAD_PARAM
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
@@ -336,7 +337,7 @@ end
 
 function Offer:subscribeObserver(observer)
   if observer == nil then
-    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local registry = self.registry
   local offerid = self.id
@@ -618,7 +619,7 @@ end
 
 function OfferRegistry:subscribeObserver(observer, properties)
   if observer == nil then
-    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local login = self.access:getCallerChain().caller.id
   local id = newid("time")
@@ -860,6 +861,9 @@ function Category:removeAll()
 end
 
 function Category:registerEntity(id, name)
+  if id == "" then
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+  end
   local categoryId = self.id
   local entities = self.entities
   -- check if category already exists
@@ -970,6 +974,9 @@ function EntityRegistry:__init(data)
 end
 
 function EntityRegistry:createEntityCategory(id, name)
+  if id == "" then
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+  end
   local categories = self.categories
   -- check if category already exists
   local category = categories[id]
