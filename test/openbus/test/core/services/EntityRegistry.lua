@@ -28,6 +28,26 @@ local dPassword = password
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
 local OpenBusContext = orb.OpenBusContext
+do
+  admidl.loadto(orb)
+  local CoreServices = {
+    InterfaceRegistry = offadm,
+    EntityRegistry = offadm,
+  }
+  for name, idlmod in pairs(CoreServices) do
+    OpenBusContext["get"..name] = function (self)
+      local conn = self:getCurrentConnection()
+      if conn == nil or conn.login == nil then
+        sysexthrow.NO_PERMISSION{
+          completed = "COMPLETED_NO",
+          minor = loginconst.NoLoginCode,
+        }
+      end
+      local facet = conn.bus:getFacetByName(name)
+      return self.orb:narrow(facet, idlmod[name])
+    end
+  end
+end
 local connprops = { accesskey = openbus.newKey() }
 
 -- Casos de Teste -------------------------------------------------------------

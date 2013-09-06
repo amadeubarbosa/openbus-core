@@ -39,6 +39,26 @@ local host, port
 local connection
 local orb = openbus.initORB{ localrefs="proxy" }
 local OpenBusContext = orb.OpenBusContext
+do
+  idl.loadto(orb)
+  local CoreServices = {
+    CertificateRegistry = admintypes,
+    InterfaceRegistry = authotypes,
+    EntityRegistry = authotypes,
+  }
+  for name, idlmod in pairs(CoreServices) do
+    OpenBusContext["get"..name] = function (self)
+      local conn = self:getCurrentConnection()
+      if conn == nil or conn.login == nil then
+        sysexthrow.NO_PERMISSION{
+          completed = "COMPLETED_NO",
+          minor = loginconst.NoLoginCode,
+        }
+      end
+      return self.orb:narrow(conn.bus:getFacetByName(name), idlmod[name])
+    end
+  end
+end
 
 -- Guarda as funções que serão os tratadores das ações de linha de comando
 local handlers = {}

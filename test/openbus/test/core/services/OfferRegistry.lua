@@ -12,8 +12,12 @@ local offtps = idl.types.services.offer_registry
 local InvalidService = offtps.InvalidService
 local InvalidProperties = offtps.InvalidProperties
 local UnauthorizedFacets = offtps.UnauthorizedFacets
+
+-- TODO:[maia] all the code that depend on these definition are misplaced here,
+--             they all should be in the file of the tests of EntityRegistry.
 local admidl = require "openbus.core.admin.idl"
 local offadm = admidl.types.services.offer_registry.admin.v1_0
+local EntityRegistry = offadm.EntityRegistry
 local AuthorizationInUse = offadm.AuthorizationInUse
 
 local throwsysex = require "openbus.util.sysex"
@@ -36,6 +40,20 @@ local entity = system
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB{ localrefs="proxy" }
 local OpenBusContext = orb.OpenBusContext
+do
+  admidl.loadto(orb)
+  function OpenBusContext:getEntityRegistry()
+    local conn = self:getCurrentConnection()
+    if conn == nil or conn.login == nil then
+      sysexthrow.NO_PERMISSION{
+        completed = "COMPLETED_NO",
+        minor = loginconst.NoLoginCode,
+      }
+    end
+    local facet = conn.bus:getFacetByName("EntityRegistry")
+    return self.orb:narrow(facet, EntityRegistry)
+  end
+end
 local connprops = { accesskey = openbus.newKey() }
 
 -- Casos de Teste -------------------------------------------------------------

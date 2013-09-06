@@ -8,6 +8,7 @@ local idl = require "openbus.core.idl"
 local UnauthorizedOperation = idl.types.services.UnauthorizedOperation
 local MissingCertificate = idl.types.services.access_control.MissingCertificate
 local admidl = require "openbus.core.admin.idl"
+local CertificateRegistry = admidl.types.services.access_control.admin.v1_0.CertificateRegistry
 local InvalidCertificate = admidl.types.services.access_control.admin.v1_0.InvalidCertificate
 
 
@@ -27,6 +28,20 @@ local certificate = syscrt
 -- Inicialização --------------------------------------------------------------
 local orb = openbus.initORB()
 local OpenBusContext = orb.OpenBusContext
+do
+  admidl.loadto(orb)
+  function OpenBusContext:getCertificateRegistry()
+    local conn = self:getCurrentConnection()
+    if conn == nil or conn.login == nil then
+      sysexthrow.NO_PERMISSION{
+        completed = "COMPLETED_NO",
+        minor = loginconst.NoLoginCode,
+      }
+    end
+    local facet = conn.bus:getFacetByName("CertificateRegistry")
+    return self.orb:narrow(facet, CertificateRegistry)
+  end
+end
 local connprops = { accesskey = openbus.newKey() }
 
 -- Casos de Teste -------------------------------------------------------------
