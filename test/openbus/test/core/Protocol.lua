@@ -33,6 +33,7 @@ local ac = bus.AccessControl
 local prvkey = newkey(EncryptedBlockSize)
 local pubkey = prvkey:encode("public")
 local shortkey = newkey(EncryptedBlockSize-1):encode("public")
+local longkey = newkey(EncryptedBlockSize+1):encode("public")
 local otherkey = newkey(EncryptedBlockSize)
 
 -- login by password -----------------------------------------------------------
@@ -77,6 +78,14 @@ end
 
 do -- login with key too short
   local pubkey = shortkey
+  local encrypted = encodeLogin(bus.key, password, pubkey)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+  assert(ok == false)
+  assert(ex._repid == logintypes.InvalidPublicKey)
+end
+
+do -- login with key too long
+  local pubkey = longkey
   local encrypted = encodeLogin(bus.key, password, pubkey)
   local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
   assert(ok == false)

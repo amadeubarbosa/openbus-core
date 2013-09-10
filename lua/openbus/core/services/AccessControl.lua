@@ -69,10 +69,23 @@ local CertificateRegistryType = mngtyp.CertificateRegistry
 local msg = require "openbus.core.services.messages"
 local Logins = require "openbus.core.services.LoginDB"
 
+local MaxEncryptedData = strrep("\255", EncryptedBlockSize-11)
 
 ------------------------------------------------------------------------------
 -- Faceta CertificateRegistry
 ------------------------------------------------------------------------------
+
+local function getkeyerror(key)
+  local result, errmsg = key:encrypt(MaxEncryptedData)
+  if result == nil then
+    return msg.UnableToEncryptWithKey:tag{error=errmsg}
+  end
+  if #result ~= EncryptedBlockSize then
+    return msg.WrongKeySize:tag{actual=#result,expected=EncryptedBlockSize}
+  end
+end
+
+
 
 local CertificateRegistry = { __type = CertificateRegistryType }
 
@@ -108,6 +121,10 @@ function CertificateRegistry:registerCertificate(entity, certificate)
   end
   local pubkey, errmsg = certobj:getpubkey()
   if not pubkey then
+    InvalidCertificate{entity=entity,message=errmsg}
+  end
+  errmsg = getkeyerror(pubkey)
+  if errmsg ~= nil then
     InvalidCertificate{entity=entity,message=errmsg}
   end
   log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
@@ -151,15 +168,14 @@ local function renewLogin(self, login)
   login.deadline = time() + self.leaseTime + self.expirationGap
 end
 
-local MaxEncryptedData = strrep("\255", EncryptedBlockSize-11)
-local function checkkey(pubkey)
+local function checkaccesskey(pubkey)
   local result, errmsg = decodepublickey(pubkey)
   if result == nil then
     InvalidPublicKey{message=msg.UnableToDecodeKey:tag{error=errmsg}}
   end
-  result, errmsg = result:encrypt(MaxEncryptedData)
-  if result == nil then
-    InvalidPublicKey{message=msg.UnableToEncryptWithKey:tag{error=errmsg}}
+  errmsg = getkeyerror(result)
+  if errmsg ~= nil then
+    InvalidPublicKey{message=errmsg}
   end
 end
 
@@ -175,7 +191,7 @@ end
 
 function LoginProcess:login(pubkey, encrypted)
   self:cancel()
-  checkkey(pubkey)
+  checkaccesskey(pubkey)
   local entity = self.entity
   local manager = self.manager
   local access = manager.access
@@ -320,7 +336,7 @@ end
 
 function AccessControl:loginByPassword(entity, pubkey, encrypted)
   if entity ~= self.login.entity then
-    checkkey(pubkey)
+    checkaccesskey(pubkey)
     local decrypted, errmsg = self.access.prvkey:decrypt(encrypted)
     if decrypted == nil then
       WrongEncoding{entity=entity,message=errmsg or "no error message"}
