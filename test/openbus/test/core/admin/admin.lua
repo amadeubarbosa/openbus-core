@@ -82,6 +82,7 @@ assert(execute("--del-entity=ENT01"))
 assert(execute("--add-certificate=NoReg",certificate))
 assert(execute("--del-certificate=NoReg"))
 assert(execute("--del-certificate=ENT02"))
+assert(execute("--list-certificate"))
 
 -- interface
 assert(execute("--add-interface=IDL:script/test:1.0"))
