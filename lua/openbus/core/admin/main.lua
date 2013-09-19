@@ -124,6 +124,8 @@ Por padrão realiza-se um login por senha. Vide opção '--password'
     --add-certificate=<id_entidade> --certificate=<certificado>
   * Remover certificado da entidade:
     --del-certificate=<id_entidade>
+  * Mostrar entidades com um certificado cadastrado:
+    --list-certificate
      
 - Controle de Interface
   * Adicionar interface:
@@ -264,6 +266,9 @@ local commands = {
    };
   ["del-certificate"] = {
     {n = 1, params = {}}
+  };
+  ["list-certificate"] = {
+    {n = 0, params = {}}
   };
   ["add-interface"] = {
     {n = 1, params = {}}
@@ -840,6 +845,25 @@ handlers["del-certificate"] = function(cmd)
     printf("[INFO] Certificado da entidade '%s' não existe", id)
   end
   return ret
+end
+
+---
+-- Exibe entidades que possuem um certificado cadastrado.
+--
+-- @param cmd Comando e seus argumentos.
+--
+handlers["list-certificate"] = function(cmd)
+  local conn = connect()
+  if not conn then
+    return false
+  end
+  local ok, identifiers = pcall(conn.certificates.getEntitiesWithCertificate, conn.certificates)
+  if not ok then
+    printf("[ERRO] Erro inesperado ao listar entidades com certificado: %s", tostring(identifiers))
+    return false
+  end
+  printer.showIdentifier(identifiers)
+  return true
 end
 
 ---

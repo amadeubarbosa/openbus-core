@@ -191,6 +191,31 @@ function module.showCategory(categories)
 end
 
 ---
+-- Exibe a tabela com Identificadores
+--
+-- @param entities Estrutura definida na IDL.
+---
+function module.showIdentifier(identifiers)
+  local titles = { "", "ID" }
+  if #identifiers == 0 then
+    showEmptyTable(titles)
+    return
+  end
+
+  table.sort(identifiers, function(a, b)
+    return lower(a) < lower(b)
+  end)
+
+  local identifierList = {}
+  for i, identifier in ipairs(identifiers) do
+    table.insert(identifierList, { {string.format("%.3d", i)}, {identifier} })
+  end
+  local sizes = adjustColumnWidth(titles, identifierList)
+
+  printTable(titles, identifierList, sizes)
+end
+
+---
 -- Exibe a tabela com as Entidades cadastrados no barramento.
 --
 -- @param entities Estrutura definida na IDL.
