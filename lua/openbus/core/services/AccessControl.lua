@@ -115,6 +115,9 @@ end
 -- IDL operations
 
 function CertificateRegistry:registerCertificate(entity, certificate)
+  if entity == "" then
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+  end
   local certobj, errmsg = decodecertificate(certificate)
   if not certobj then
     InvalidCertificate{entity=entity,message=errmsg}
