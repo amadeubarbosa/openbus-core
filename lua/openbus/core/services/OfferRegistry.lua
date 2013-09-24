@@ -468,7 +468,6 @@ function OfferRegistry:__init(data)
   end
   local observerLogins = self.observerLogins
   do -- recover observers
-    local offers = self.offers
     local offerRegObsDB = self.offerRegObsDB
     local toberemoved = {}
     for id, entry in assert(offerRegObsDB:ientries()) do
@@ -865,14 +864,13 @@ function Category:registerEntity(id, name)
     BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local categoryId = self.id
-  local entities = self.entities
-  -- check if category already exists
-  local entity = entities[id]
+  local registry = self.registry
+  -- check if entity already exists
+  local entity = registry.entities[id]
   if entity ~= nil then
     EntityAlreadyRegistered{ category = categoryId, existing = entity }
   end
   -- persist the new entity
-  local registry = self.registry
   local database = registry.entityDB
   assert(database:setentry(id, {categoryId=categoryId, name=name}))
   -- create object for the new entity

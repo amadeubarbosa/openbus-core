@@ -292,6 +292,15 @@ function Case.testCreateTwice(self)
   Check.assertEquals(EntityAlreadyRegistered, err._repid)
 end
 
+function Case.testRegisterEntityInTwoCategories(self)
+  local entities = OpenBusContext:getEntityRegistry()
+  local category = entities:createEntityCategory("Fake", "Fake Category")
+  ok, err = pcall(category.registerEntity, category, self.entId, self.entDesc)
+  Check.assertTrue(not ok)
+  Check.assertEquals(EntityAlreadyRegistered, err._repid)
+  category:remove()
+end
+
 function Case.testCategoryInUse(self)
   local ok, err = pcall(self.category.remove, self.category)
   Check.assertTrue(not ok)
