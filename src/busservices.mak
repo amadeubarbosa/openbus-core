@@ -15,6 +15,13 @@ IDLSRC= \
   $(IDLDIR)/access_management.idl \
   $(IDLDIR)/offer_authorization.idl
 
+DEPENDENTIDLSRC=\
+  $(OPENBUSIDL)/core.idl \
+  $(OPENBUSIDL)/credential.idl \
+  $(OPENBUSIDL)/scs.idl \
+  $(OPENBUSIDL)/access_control.idl \
+  $(OPENBUSIDL)/offer_registry.idl
+
 LUADIR= ../lua
 LUASRC= \
   $(LUADIR)/openbus/core/admin/idl.lua \
@@ -79,7 +86,7 @@ endif
 
 LIBS+= dl
 
-$(LUADIR)/openbus/core/admin/parsed.lua: $(IDL2LUA) $(IDLSRC)
+$(LUADIR)/openbus/core/admin/parsed.lua: $(IDL2LUA) $(IDLSRC) $(DEPENDENTIDLSRC)
 	$(OILBIN) $(IDL2LUA) -I $(OPENBUSIDL) -o $@ $(IDLSRC)
 
 $(PRELOAD_DIR)/coreservices.c $(PRELOAD_DIR)/coreservices.h: $(LUAPRELOADER) $(LUASRC)

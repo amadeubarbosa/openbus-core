@@ -15,6 +15,13 @@ IDLSRC= \
   $(IDLDIR)/access_management.idl \
   $(IDLDIR)/offer_authorization.idl
 
+DEPENDENTIDLSRC= \
+  $(OPENBUSIDL)/core.idl \
+  $(OPENBUSIDL)/credential.idl \
+  $(OPENBUSIDL)/scs.idl \
+  $(OPENBUSIDL)/access_control.idl \
+  $(OPENBUSIDL)/offer_registry.idl
+
 LUADIR= ../lua
 LUASRC= \
   $(LUADIR)/openbus/core/admin/idl.lua \
@@ -24,7 +31,7 @@ LUASRC= \
   $(LUADIR)/openbus/core/admin/print.lua \
   $(LUADIR)/openbus/core/admin/script.lua \
 
-include ${LOOP_HOME}/openbus/base.mak
+include ${OIL_HOME}/openbus/base.mak
 
 LIBS:= lce luuid lfs luavararg luastruct  luasocket loop luatuple \
   luacoroutine luacothread luainspector luaidl oil luascs luaopenbus lua5.1
@@ -72,7 +79,7 @@ endif
 
 LIBS+= dl
 
-$(LUADIR)/openbus/core/admin/parsed.lua: $(IDL2LUA) $(IDLSRC)
+$(LUADIR)/openbus/core/admin/parsed.lua: $(IDL2LUA) $(IDLSRC) $(DEPENDENTIDLSRC)
 	$(OILBIN) $(IDL2LUA) -I $(OPENBUSIDL) -o $@ $(IDLSRC)
 
 $(PRELOAD_DIR)/coreadmin.c $(PRELOAD_DIR)/coreadmin.h: $(LUAPRELOADER) $(LUASRC)
