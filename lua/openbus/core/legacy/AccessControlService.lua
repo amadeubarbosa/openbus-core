@@ -220,7 +220,7 @@ function IAccessControlService:addCredentialToObserver(obsId, loginId)
     if type(res) == "table" and res._repid ~= InvalidLogins then
       error(res)
     end
-    return ok
+    return ok and res
   end
   return false
 end
