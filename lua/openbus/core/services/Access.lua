@@ -1,9 +1,11 @@
 local _G = require "_G"
 local getmetatable = _G.getmetatable
-local newproxy = _G.newproxy
 local setmetatable = _G.setmetatable
 local rawget = _G.rawget
 local rawset = _G.rawset
+
+local array = require "table"
+local unpack = array.unpack or _G.unpack
 
 local hash = require "lce.hash"
 local sha256 = hash.sha256
@@ -33,13 +35,11 @@ local receiveBusRequest = Interceptor.receiverequest
 
 
 local function alwaysIndex(default)
-  local index = newproxy(true)
-  getmetatable(index).__index = function() return default end
-  return index
+  return setmetatable({}, { __index = function() return default end })
 end
 
 local Anybody = alwaysIndex(true)
-local Everybody = newproxy(Anybody) -- copy of Anybody
+local Everybody = alwaysIndex(true)
 local PredefinedUserSets = {
   none = alwaysIndex(nil),
   any = Anybody,

@@ -1,5 +1,5 @@
 /*
-** $Id: lua.c,v 1.160 2006/06/02 15:34:00 roberto Exp $
+** $Id: lua.c,v 1.206 2012/09/29 20:07:06 roberto Exp $
 ** Lua stand-alone interpreter
 ** See Copyright Notice in lua.h
 */
@@ -16,25 +16,35 @@
 
 #include "extralibraries.h"
 
+
+#if !defined(LUA_PROMPT)
+#define LUA_PROMPT		"> "
+#define LUA_PROMPT2		">> "
+#endif
+
+#if !defined(LUA_PROGNAME)
+#define LUA_PROGNAME		"lua"
+#endif
+
+#if !defined(LUA_MAXINPUT)
+#define LUA_MAXINPUT		512
+#endif
+
+#if !defined(LUA_INIT)
+#define LUA_INIT		"LUA_INIT"
+#endif
+
+#define LUA_INITVERSION  \
+	LUA_INIT "_" LUA_VERSION_MAJOR "_" LUA_VERSION_MINOR
+
+
+
+
 static lua_State *globalL = NULL;
 
 static const char *progpath = NULL;
 
 static const char *callerchunk =
-" _G.lua51_pcall = _G.pcall"
-" _G.lua51_xpcall = _G.xpcall"
-" require 'coroutine.pcall'"
-
-" local _loadfile = _G.loadfile"
-" _G.lua51_loadfile = _loadfile"
-" function _G.loadfile(path, mode, env)"
-"   local result, errmsg = _loadfile(path)"
-"   if result ~= nil and env ~= nil then"
-"     setfenv(result, env)"
-"   end"
-"   return result, errmsg"
-" end"
-
 " local _G = require '_G'"
 " local error = _G.error"
 " local tostring = _G.tostring"
@@ -62,6 +72,7 @@ static const char *callerchunk =
 " end";
 
 
+
 static void lstop (lua_State *L, lua_Debug *ar) {
   (void)ar;  /* unused arg. */
   lua_sethook(L, NULL, 0, 0);
@@ -71,65 +82,64 @@ static void lstop (lua_State *L, lua_Debug *ar) {
 
 static void laction (int i) {
   signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
-                         terminate process (default action) */
+                              terminate process (default action) */
   lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
 
 
 static void l_message (const char *pname, const char *msg) {
-  if (pname) fprintf(stderr, "%s: ", pname);
-  fprintf(stderr, "%s\n", msg);
-  fflush(stderr);
+  if (pname) luai_writestringerror("%s: ", pname);
+  luai_writestringerror("%s\n", msg);
 }
 
 
 static int report (lua_State *L, int status) {
-  if (status && !lua_isnil(L, -1)) {
+  if (status != LUA_OK && !lua_isnil(L, -1)) {
     const char *msg = lua_tostring(L, -1);
     if (msg == NULL) msg = "(error object is not a string)";
     l_message(progpath, msg);
     lua_pop(L, 1);
+    /* force a complete garbage collection in case of errors */
+    lua_gc(L, LUA_GCCOLLECT, 0);
   }
   return status;
 }
 
 
+/* the next function is called unprotected, so it must avoid errors */
+static void finalreport (lua_State *L, int status) {
+  if (status != LUA_OK) {
+    const char *msg = (lua_type(L, -1) == LUA_TSTRING) ? lua_tostring(L, -1)
+                                                       : NULL;
+    if (msg == NULL) msg = "(error object is not a string)";
+    l_message(progpath, msg);
+    lua_pop(L, 1);
+  }
+}
+
+
 static int traceback (lua_State *L) {
-  lua_getfield(L, LUA_GLOBALSINDEX, "tostring");
-  if (lua_isfunction(L, -1)) {
-    lua_insert(L, 1);  /* place below the message */
-    lua_call(L, 1, 1);  /* call tostring */
-  } else {
-    lua_pop(L, 1);
+  const char *msg = lua_tostring(L, 1);
+  if (msg)
+    luaL_traceback(L, L, msg, 1);
+  else if (!lua_isnoneornil(L, 1)) {  /* is there an error object? */
+    if (!luaL_callmeta(L, 1, "__tostring"))  /* try its 'tostring' metamethod */
+      lua_pushliteral(L, "(no error message)");
   }
-  lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-  if (!lua_istable(L, -1)) {
-    lua_pop(L, 1);
-    return 1;
-  }
-  lua_getfield(L, -1, "traceback");
-  if (!lua_isfunction(L, -1)) {
-    lua_pop(L, 2);
-    return 1;
-  }
-  lua_pushvalue(L, 1);  /* pass error message */
-  lua_pushinteger(L, 2);  /* skip this function and traceback */
-  lua_call(L, 2, 1);  /* call debug.traceback */
   return 1;
 }
 
 
-static int docall (lua_State *L, int narg) {
+static int docall (lua_State *L, int narg, int nres) {
   int status;
   int base = lua_gettop(L) - narg;  /* function index */
   lua_pushcfunction(L, traceback);  /* push traceback function */
   lua_insert(L, base);  /* put it under chunk and args */
+  globalL = L;  /* to be available to 'laction' */
   signal(SIGINT, laction);
-  status = lua_pcall(L, narg, 1, base);
+  status = lua_pcall(L, narg, nres, base);
   signal(SIGINT, SIG_DFL);
   lua_remove(L, base);  /* remove traceback function */
-  /* force a complete garbage collection in case of errors */
-  if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
   return status;
 }
 
@@ -146,29 +156,31 @@ static int getargs (lua_State *L, char **argv) {
 }
 
 
-struct Smain {
-  char **argv;
-  int status;
-  int retval;
-};
+static int dostring (lua_State *L, const char *s, const char *name) {
+  int status = luaL_loadbuffer(L, s, strlen(s), name);
+  if (status == LUA_OK) status = docall(L, 0, LUA_MULTRET);
+  return report(L, status);
+}
 
 
 static int pmain (lua_State *L) {
-  struct Smain *s = (struct Smain *)lua_touserdata(L, 1);
-  char **argv = s->argv;
+  int argc = (int)lua_tointeger(L, 1);
+  char **argv = (char **)lua_touserdata(L, 2);
   int status = 0;
-  globalL = L;
+  /* open standard libraries */
+  luaL_checkversion(L);
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   luaL_openlibs(L);  /* open libraries */
   lua_gc(L, LUA_GCRESTART, 0);
-  
+
   if (argv[0] && argv[0][0]) {
     progpath = argv[0];
     lua_pushstring(L, progpath); lua_setglobal(L, "OPENBUS_PROGPATH");
     if (argv[1] && argv[1][0] && strcmp(argv[1], "DEBUG") == 0) {
       argv++;
-      status = luaL_dostring(L,
-        "table.insert(package.loaders, (table.remove(package.loaders, 1)))");
+      status = dostring(L,
+        "table.insert(package.searchers, (table.remove(package.searchers, 1)))",
+        "SET_DEBUG");
     }
   }
   
@@ -178,38 +190,42 @@ static int pmain (lua_State *L) {
   luapreload_extralibraries(L);
   
   /* ??? */
-  if (status == 0) {
+  if (status == LUA_OK) {
     /* execute main module */
-    status = luaL_dostring(L, callerchunk);
-    if (status == 0) {
+    status = dostring(L, callerchunk, "MAIN_THREAD");
+    if (status == LUA_OK) {
       lua_getglobal(L, "require");
       lua_pushstring(L, OPENBUS_MAIN);
       status = lua_pcall(L, 1, 1, 0);
-      if (status == 0) {
+      if (status == LUA_OK) {
         int narg = getargs(L, argv);  /* collect arguments */
-        status = docall(L, narg+1);
+        status = docall(L, narg+1, 1);
+        if ( (status == LUA_OK) && lua_isnumber(L, -1) ) return 1;
       }
     }
   }
-  s->status = report(L, status);
-  s->retval = lua_tointeger(L, -1);
-  lua_pop(L, 1);
-  return 0;
+
+  report(L, status);
+  lua_pushinteger(L, EXIT_FAILURE);
+  return 1;
 }
 
 
 int main (int argc, char **argv) {
-  int status;
-  struct Smain s;
-  lua_State *L = lua_open();  /* create state */
-  (void)argc; /* not used */
+  int status, result;
+  lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create Lua state: not enough memory");
     return EXIT_FAILURE;
   }
-  s.argv = argv;
-  status = lua_cpcall(L, &pmain, &s);
-  report(L, status);
+  /* call 'pmain' in protected mode */
+  lua_pushcfunction(L, &pmain);
+  lua_pushinteger(L, argc);  /* 1st argument */
+  lua_pushlightuserdata(L, argv); /* 2nd argument */
+  status = lua_pcall(L, 2, 1, 0);
+  result = lua_tointeger(L, -1);  /* get result */
+  finalreport(L, status);
   lua_close(L);
-  return (status || s.status || s.retval) ? EXIT_FAILURE : EXIT_SUCCESS;
+  return (status == LUA_OK) ? result : EXIT_FAILURE;
 }
+

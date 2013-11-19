@@ -59,7 +59,11 @@ static int luaopen_lpw(lua_State *L)
 void luapreload_extralibraries(lua_State *L)
 {
   /* preload binded C libraries */
+#if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM > 501
+  luaL_getsubtable(L, LUA_REGISTRYINDEX, "_PRELOAD");
+#else
   luaL_findtable(L, LUA_GLOBALSINDEX, "package.preload", 1);
+#endif
   lua_pushcfunction(L,luaopen_uuid);lua_setfield(L,-2,"uuid");
   lua_pushcfunction(L,luaopen_lfs);lua_setfield(L,-2,"lfs");
   lua_pushcfunction(L,luaopen_vararg);lua_setfield(L,-2,"vararg");

@@ -170,6 +170,7 @@ local function assertEx(errmsg, ...)
 end
 
 do
+  local lfs = require "lfs"
   assert(lfs.rmdir("test.db/Logins"))
   assert(io.open("test.db/Logins", "w")):close()
   assertEx("'test%.db/Logins' expected to be directory %(got file%)",
@@ -180,7 +181,7 @@ do
   local file = assert(io.open("test.db/Logins/corrupted.lua", "w"))
   assert(file:write("illegal Lua code"))
   file:close()
-  assertEx("unable to load file 'test%.db/Logins/corrupted%.lua' %(test.db/Logins/corrupted%.lua:1: '=' expected near 'Lua'%)",
+  assertEx("unable to load file 'test%.db/Logins/corrupted%.lua'",
            LoginDB, {database=assert(database.open("test.db"))})
   
   assert(os.execute("chmod 000 test.db/Logins") == 0)
