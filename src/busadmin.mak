@@ -34,7 +34,7 @@ LUASRC= \
 include ${OIL_HOME}/openbus/base.mak
 
 LIBS:= lce luuid lfs luavararg luastruct  luasocket loop luatuple \
-  luacoroutine luacothread luainspector luaidl oil luascs luaopenbus lua5.1
+  luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
   TECMAKE_APPNAME=\"$(APPNAME)\"

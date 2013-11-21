@@ -42,7 +42,7 @@ end
 
 local function execute(...)
   local command = bin..login..password
-  local params = table.concat(arg, " ")
+  local params = table.concat({...}, " ")
   local tofile = " > "..outputfile
   os.execute(command..params..tofile)
   local output = readOutput()

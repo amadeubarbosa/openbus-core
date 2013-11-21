@@ -28,6 +28,10 @@
 
 #define LPW_LIBNAME "lpw"
 
+#if (LUA_VERSION_NUM < 502)
+#define luaL_newlib(L,f)  luaL_register(L,"lpw",f)
+#endif
+
 const char const* OPENBUS_MAIN = "openbus.core.admin.main";
 const char const* OPENBUS_PROGNAME = TECMAKE_APPNAME;
 
@@ -52,7 +56,7 @@ static const luaL_Reg lpw_funcs[] = {
 
 static int luaopen_lpw(lua_State *L)
 {
-  luaL_register(L, LPW_LIBNAME, lpw_funcs);
+  luaL_newlib(L, lpw_funcs);
   return 1;
 }
 
