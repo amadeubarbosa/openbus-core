@@ -614,6 +614,12 @@ Para gerar o certificado, utilize o seguinte código:
     -out <nome do par de chaves>.crt -outform DER
 \end{verbatim}
 
+Para converter uma chave utilizada em um SDK 1.5 para uma chave que funcione com SDKs 2.0, utilize o seguinte comando:
+
+\begin{verbatim}
+${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt -in chave.pem -inform PEM -out chave.der -outform DER
+\end{verbatim}
+
 
 \subsection{Desenvolvedores de Sistemas Integrados}
 
