@@ -6,7 +6,9 @@
 #include "luuid.h"
 #include "lce.h"
 #include "lfs.h"
+#ifndef _WIN32
 #include "lualdap.h"
+#endif
 #include "luavararg.h"
 #include "luastruct.h"
 #include "luasocket.h"
@@ -21,6 +23,7 @@
 #include "luaopenbus.h"
 #include "coreservices.h"
 
+
 const char const* OPENBUS_MAIN = "openbus.core.services.main";
 const char const* OPENBUS_PROGNAME = TECMAKE_APPNAME;
 
@@ -34,7 +37,9 @@ void luapreload_extralibraries(lua_State *L)
 #endif
   lua_pushcfunction(L,luaopen_uuid);lua_setfield(L,-2,"uuid");
   lua_pushcfunction(L,luaopen_lfs);lua_setfield(L,-2,"lfs");
+#ifndef _WIN32
   lua_pushcfunction(L,luaopen_lualdap);lua_setfield(L,-2,"lualdap");
+#endif
   lua_pushcfunction(L,luaopen_vararg);lua_setfield(L,-2,"vararg");
   lua_pushcfunction(L,luaopen_struct);lua_setfield(L,-2,"struct");
   lua_pushcfunction(L,luaopen_socket_core);lua_setfield(L,-2,"socket.core");

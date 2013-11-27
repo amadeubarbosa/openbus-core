@@ -1,9 +1,8 @@
 PROJNAME= busservices
 APPNAME= $(PROJNAME)
 
-OPENBUSINC= ${OPENBUS_HOME}/include
-OPENBUSLIB= ${OPENBUS_HOME}/lib
-OPENBUSIDL= ${OPENBUS_HOME}/idl/v2_0
+SCSIDL= ${SCS_IDL1_2_HOME}/src
+OPENBUSIDL= ${OPENBUS_IDL2_0_HOME}/src
 
 SRC= \
   launcher.c \
@@ -15,10 +14,10 @@ IDLSRC= \
   $(IDLDIR)/access_management.idl \
   $(IDLDIR)/offer_authorization.idl
 
-DEPENDENTIDLSRC=\
+DEPENDENTIDLSRC= \
+  $(SCSIDL)/scs.idl \
   $(OPENBUSIDL)/core.idl \
   $(OPENBUSIDL)/credential.idl \
-  $(OPENBUSIDL)/scs.idl \
   $(OPENBUSIDL)/access_control.idl \
   $(OPENBUSIDL)/offer_registry.idl
 
@@ -39,25 +38,44 @@ LUASRC= \
 
 include ${OIL_HOME}/openbus/base.mak
 
-LIBS:= lce luuid lfs lualdap luavararg luastruct  luasocket loop luatuple \
+LIBS:= lce luuid lfs luavararg luastruct  luasocket loop luatuple \
   luacoroutine luacothread luainspector luaidl oil luascs luaopenbus
 
 DEFINES= \
   TECMAKE_APPNAME=\"$(APPNAME)\"
 
 INCLUDES+= . $(SRCLUADIR) \
-  $(OPENBUSINC)/luuid \
-  $(OPENBUSINC)/lce \
-  $(OPENBUSINC)/luafilesystem \
-  $(OPENBUSINC)/lualdap-1.1.0 \
-  $(OPENBUSINC)/luavararg \
-  $(OPENBUSINC)/luastruct \
-  $(OPENBUSINC)/luasocket2 \
-  $(OPENBUSINC)/loop \
-  $(OPENBUSINC)/oil \
-  $(OPENBUSINC)/scs/lua \
-  $(OPENBUSINC)/openbus/lua
-LDIR+= $(OPENBUSLIB)
+  $(LCE_HOME)/include \
+  $(LUUID_HOME)/include \
+  $(LUAFILESYSTEM_HOME)/include \
+  $(LUASOCKET_HOME)/include \
+  $(LUASTRUCT_HOME)/src \
+  $(LUAVARARG_HOME)/src \
+  $(LUAINSPECTOR_HOME)/obj/$(TEC_UNAME) \
+  $(LUATUPLE_HOME)/obj/$(TEC_UNAME) \
+  $(LUACOROUTINE_HOME)/obj/$(TEC_UNAME) \
+  $(LUACOTHREAD_HOME)/obj/$(TEC_UNAME) \
+  $(LOOP_HOME)/obj/$(TEC_UNAME) \
+  $(LUAIDL_HOME)/obj/$(TEC_UNAME) \
+  $(OIL_HOME)/obj/$(TEC_UNAME) \
+  $(SCS_LUA_HOME)/obj/$(TEC_UNAME) \
+  $(OPENBUS_LUA_HOME)/obj/$(TEC_UNAME)
+LDIR+= \
+  $(LCE_HOME)/lib/$(TEC_UNAME) \
+  $(LUUID_HOME)/lib/$(TEC_UNAME) \
+  $(LUAFILESYSTEM_HOME)/lib/$(TEC_UNAME) \
+  $(LUASOCKET_HOME)/lib/$(TEC_UNAME) \
+  $(LUASTRUCT_HOME)/lib/$(TEC_UNAME) \
+  $(LUAVARARG_HOME)/lib/$(TEC_UNAME) \
+  $(LUAINSPECTOR_HOME)/lib/$(TEC_UNAME) \
+  $(LUATUPLE_HOME)/lib/$(TEC_UNAME) \
+  $(LUACOROUTINE_HOME)/lib/$(TEC_UNAME) \
+  $(LUACOTHREAD_HOME)/lib/$(TEC_UNAME) \
+  $(LUAIDL_HOME)/lib/$(TEC_UNAME) \
+  $(LOOP_HOME)/lib/$(TEC_UNAME) \
+  $(OIL_HOME)/lib/$(TEC_UNAME) \
+  $(SCS_LUA_HOME)/lib/$(TEC_UNAME) \
+  $(OPENBUS_LUA_HOME)/lib/$(TEC_UNAME)
 
 ifeq "$(TEC_SYSNAME)" "Linux"
   LFLAGS = -Wl,-E
@@ -71,29 +89,41 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
   LFLAGS= $(CFLAGS) -xildoff
 endif
 
+ifneq "$(TEC_SYSNAME)" "Win32"
+  INCLUDES+= $(LUALDAP_HOME)/include
+  LDIR+= $(LUALDAP_HOME)/lib/$(TEC_UNAME)
+  LIBS+= lualdap
+endif
+
 ifdef USE_STATIC
-  SLIB:= $(foreach libname, $(LIBS) uuid ldap lber ssl crypto, $(OPENBUSLIB)/lib$(libname).a)
+  SLIB:= $(foreach libname, $(LIBS) uuid ldap lber ssl crypto, ${OPENBUS_HOME}/lib/lib$(libname).a)
   ifeq "$(TEC_SYSNAME)" "SunOS"
     LIBS:= rt nsl socket resolv
   else
     LIBS:= 
   endif
 else
-  ifneq "$(TEC_SYSNAME)" "Darwin"
-    LIBS+= uuid
+  ifneq "$(TEC_SYSNAME)" "Win32"
+    ifneq "$(TEC_SYSNAME)" "Darwin"
+      LIBS+= uuid
+    endif
   endif
 endif
 
-LIBS+= dl
+ifeq "$(TEC_SYSNAME)" "Win32"
+  APPTYPE= console
+else
+  LIBS+= dl
+endif
 
 $(LUADIR)/openbus/core/admin/parsed.lua: $(IDL2LUA) $(IDLSRC) $(DEPENDENTIDLSRC)
-	$(OILBIN) $(IDL2LUA) -I $(OPENBUSIDL) -o $@ $(IDLSRC)
+	$(OILBIN) $(IDL2LUA) -I $(SCSIDL) -I $(OPENBUSIDL) -o $@ $(IDLSRC)
 
 $(PRELOAD_DIR)/coreservices.c $(PRELOAD_DIR)/coreservices.h: $(LUAPRELOADER) $(LUASRC)
 	$(LOOPBIN) $(LUAPRELOADER) -l "$(LUADIR)/?.lua" \
-                             -d $(PRELOAD_DIR) \
-                             -h coreservices.h \
-                             -o coreservices.c \
-                             $(LUASRC)
+	                           -d $(PRELOAD_DIR) \
+	                           -h coreservices.h \
+	                           -o coreservices.c \
+	                           $(LUASRC)
 
 coreservlibs.c: $(PRELOAD_DIR)/coreservices.h
