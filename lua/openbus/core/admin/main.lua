@@ -799,7 +799,7 @@ handlers["add-certificate"] = function(cmd)
   end
   
   local certificate = cmd.params.certificate
-  local f = io.open(certificate)
+  local f = io.open(certificate, "rb")
   if not f then
     print("[ERRO] Não foi possível localizar arquivo de certificado")
     return false

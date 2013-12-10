@@ -81,7 +81,7 @@ end
 
 function NoPermissionCase.testRegisterCertificateNoPermission(self)
   local certificates = OpenBusContext:getCertificateRegistry()
-  local file = io.open(certificate)
+  local file = assert(io.open(certificate, "rb"))
   local cert = file:read("*a")
   file:close()
   local ok, err = pcall(certificates.registerCertificate, certificates, "random",
@@ -142,7 +142,7 @@ end
 
 function InvalidParamCase.testRegisterInvalidCertificate(self)
   local certs = self.certs
-  local file = io.open(certificate)
+  local file = assert(io.open(certificate, "rb"))
   local read = file:read("*a")
   read = "\n--CORRUPTED!--\n" .. read
   local ok, err = pcall(certs.registerCertificate, certs, "unknown", read)
@@ -186,7 +186,7 @@ end
 
 function CRCase.testRegisterRemoveCertificate(self)
   local certs = self.certs
-  local file = io.open(certificate)
+  local file = assert(io.open(certificate, "rb"))
   local read = file:read("*a")
   file:close()
   certs:registerCertificate("test-1", read)
@@ -195,7 +195,7 @@ end
 
 function CRCase.testRegisterGetRemoveCertificate(self)
   local certs = self.certs
-  local file = io.open(certificate)
+  local file = assert(io.open(certificate, "rb"))
   local read = file:read("*a")
   file:close()
   certs:registerCertificate("test-2", read)
@@ -206,7 +206,7 @@ end
 
 function CRCase.testRegisterCertificateTwice(self)
   local certs = self.certs
-  local file = io.open(certificate)
+  local file = assert(io.open(certificate, "rb"))
   local read = file:read("*a")
   file:close()
   certs:registerCertificate("test-3", read)
@@ -227,7 +227,7 @@ function CRCase.testGetListWithManyEntitiesWithCertificate(self)
     prevcount = index
   end
   -- register some new certificates
-  local file = io.open(certificate)
+  local file = assert(io.open(certificate, "rb"))
   local read = file:read("*a")
   file:close()
   local count = 3
