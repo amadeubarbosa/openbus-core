@@ -89,7 +89,7 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
   LFLAGS= $(CFLAGS) -xildoff
 endif
 
-ifneq "$(TEC_SYSNAME)" "Win32"
+ifeq ($(findstring $(TEC_SYSNAME), Win32 Win64), )
   INCLUDES+= $(LUALDAP_HOME)/include
   LDIR+= $(LUALDAP_HOME)/lib/$(TEC_UNAME)
   LIBS+= lualdap
@@ -103,15 +103,21 @@ ifdef USE_STATIC
     LIBS:= 
   endif
 else
-  ifneq "$(TEC_SYSNAME)" "Win32"
+  ifeq ($(findstring $(TEC_SYSNAME), Win32 Win64), )
     ifneq "$(TEC_SYSNAME)" "Darwin"
       LIBS+= uuid
     endif
   endif
 endif
 
-ifeq "$(TEC_SYSNAME)" "Win32"
+ifneq ($(findstring $(TEC_SYSNAME), Win32 Win64), )
   APPTYPE= console
+  LIBS+= wsock32 libeay32MD ssleay32MD
+  ifeq "$(TEC_WORDSIZE)" "TEC_32"
+    LDIR+= ../../OpenSSL-Win32/lib/VC
+  else
+    LDIR+= ../../OpenSSL-Win64/lib/VC
+  endif
 else
   LIBS+= dl
 endif
