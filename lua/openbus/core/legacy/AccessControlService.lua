@@ -195,20 +195,8 @@ end
 
 -- Credential Observation Support
 
-local ObserverTranslator = class()
-
-function ObserverTranslator:entityLogout(login)
-  self.observer:credentialWasDeleted{
-    identifier = login.id,
-    owner = login.entity,
-    delegate = "",
-  }
-end
-
-
 function IAccessControlService:addObserver(observer, loginIds)
-  observer = ObserverTranslator{ observer = observer }
-  local subscription = facets.LoginRegistry:subscribeObserver(observer)
+  local subscription = facets.LoginRegistry:subscribeObserver(observer, true)
   subscription:watchLogins(loginIds)
   return subscription.id
 end

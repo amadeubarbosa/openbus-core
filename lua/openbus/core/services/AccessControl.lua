@@ -66,6 +66,9 @@ local InvalidCertificate = mngexp.InvalidCertificate
 local mngtyp = mngidl.types.services.access_control.admin.v1_0
 local CertificateRegistryType = mngtyp.CertificateRegistry
 
+local idl = require "openbus.core.legacy.idl"
+local ICredentialObserver = idl.types.access_control_service.ICredentialObserver
+
 local msg = require "openbus.core.services.messages"
 local Logins = require "openbus.core.services.LoginDB"
 
@@ -531,12 +534,22 @@ end
 function LoginRegistry:loginRemoved(login, observers)
   local orb = self.access.orb
   for observer in pairs(observers) do
+    local iface, opname, param = LoginObserver, "entityLogout", login
+    if observer.legacy then
+      iface = ICredentialObserver
+      opname = "credentialWasDeleted"
+      param = {
+        identifier = login.id,
+        owner = login.entity,
+        delegate = "",
+      }
+    end
     local callback = observer.callback
     if callback == nil then
-      callback = orb:newproxy(observer.ior, nil, LoginObserver)
+      callback = orb:newproxy(observer.ior, nil, iface)
     end
     schedule(newthread(function()
-      local ok, errmsg = pcall(callback.entityLogout, callback, login)
+      local ok, errmsg = pcall(callback[opname], callback, param)
       if not ok then
         log:exception(msg.LoginObserverException:tag{
           observer = observer.id,
@@ -618,14 +631,14 @@ function LoginRegistry:getLoginValidity(id)
   return 0
 end
 
-function LoginRegistry:subscribeObserver(callback)
+function LoginRegistry:subscribeObserver(callback, legacy)
   if callback == nil then
     BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local logins = AccessControl.activeLogins
   local caller = self.access:getCallerChain().caller
   local login = logins:getLogin(caller.id)
-  local observer = login:newObserver(callback)
+  local observer = login:newObserver(callback, legacy)
   observer.callback = callback
   local id = observer.id
   local subscription = Subscription{ id=id, logins=logins, registry=self }

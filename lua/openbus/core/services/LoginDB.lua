@@ -102,7 +102,7 @@ function Login:__init()
   if self.observers == nil then self.observers = {} end
 end
 
-function Login:newObserver(callback)
+function Login:newObserver(callback, legacy)
   local base = self.base
   local table = base.obsTab
   local id = newid("time")
@@ -111,6 +111,7 @@ function Login:newObserver(callback)
     login = self.id,
     watched = {},
     ior = tostring(callback),
+    legacy = legacy,
   }
   assert(table:setentry(id, data))
   data.callback = callback
