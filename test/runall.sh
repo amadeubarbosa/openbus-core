@@ -9,7 +9,7 @@ elif [ "$1" != "RELEASE" ]; then
 	exit 1
 fi
 
-LATT_LUA=${LATT_LUA:=$OPENBUS_HOME/lib/lua/5.1}
+LATT_LUA=${LATT_LUA:=$OPENBUS_HOME/lib/lua/5.2}
 LATT_PRELUDE="package.path=package.path..';$LATT_LUA/?.lua'"
 TEST_PRELUDE='package.path=package.path..";"..(os.getenv("OPENBUS_CORE_LUA") or "../lua").."/?.lua"'
 
