@@ -235,5 +235,4 @@ Options:
 
   -- start ORB
   log:uptime(msg.CoreServicesStarted)
-  orb:run()
 end

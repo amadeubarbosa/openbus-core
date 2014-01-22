@@ -28,7 +28,7 @@ syskey = assert(decodeprvkey(readfrom(syskey)))
 
 -- test initialization ---------------------------------------------------------
 
-local bus = connectToBus(bushost, busport)
+local bus, orb = connectToBus(bushost, busport)
 local ac = bus.AccessControl
 local prvkey = newkey(EncryptedBlockSize)
 local pubkey = prvkey:encode("public")
@@ -264,3 +264,5 @@ do
   assert(ex.completed == "COMPLETED_NO")
   assert(ex.minor == loginconst.InvalidLoginCode)
 end
+
+orb:shutdown()

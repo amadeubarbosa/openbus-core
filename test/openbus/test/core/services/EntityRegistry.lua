@@ -1,7 +1,7 @@
-local _G = require "_G"
-local pcall = _G.pcall
-
-local io = require "io"
+local cached = require "loop.cached"
+local checks = require "loop.test.checks"
+local Fixture = require "loop.test.Fixture"
+local Suite = require "loop.test.Suite"
 
 local giop = require "oil.corba.giop"
 local sysex = giop.SystemExceptionIDs
@@ -11,390 +11,492 @@ local idl = require "openbus.core.idl"
 local UnauthorizedOperation = idl.types.services.UnauthorizedOperation
 local admidl = require "openbus.core.admin.idl"
 local offadm = admidl.types.services.offer_registry.admin.v1_0
-local EntityCategoryAlreadyExists = offadm.EntityCategoryAlreadyExists
+local AuthorizationInUse = offadm.AuthorizationInUse
 local EntityAlreadyRegistered = offadm.EntityAlreadyRegistered
+local EntityCategory = offadm.EntityCategory
+local EntityCategoryAlreadyExists = offadm.EntityCategoryAlreadyExists
 local EntityCategoryInUse = offadm.EntityCategoryInUse
+local EntityRegistry = offadm.EntityRegistry
 local InvalidInterface = offadm.InvalidInterface
-
-local Check = require "latt.Check"
+local RegisteredEntity = offadm.RegisteredEntity
 
 -- Configurações --------------------------------------------------------------
-bushost, busport = ...
-require "openbus.test.configs"
-local host = bushost
-local port = busport
-local admin = admin
-local adminPassword = admpsw
-local dUser = user
-local dPassword = password
 
--- Inicialização --------------------------------------------------------------
-local orb = openbus.initORB()
-local OpenBusContext = orb.OpenBusContext
-do
-  admidl.loadto(orb)
-  local CoreServices = {
-    InterfaceRegistry = offadm,
-    EntityRegistry = offadm,
-  }
-  for name, idlmod in pairs(CoreServices) do
-    OpenBusContext["get"..name] = function (self)
-      local conn = self:getCurrentConnection()
-      if conn == nil or conn.login == nil then
-        sysexthrow.NO_PERMISSION{
-          completed = "COMPLETED_NO",
-          minor = loginconst.NoLoginCode,
-        }
+require "openbus.test.core.services.utils"
+
+local CategoryId = category
+local CategoryName = "OpenBus 2.0 Test Entities"
+local EntityId = system
+local EntityName = "OpenBus 2.0 Test System"
+local GrantedInterface = "IDL:Ping:1.0"
+local SomeInterface = "IDL:Hello:1.0"
+local FakeCategory = "Test Category (should not remain after the tests)"
+local FakeEntity = "Test Entity Description (should not remain after the tests)"
+local SomeCategoryName = "Test Category Description (should not remain after the tests)"
+local SomeEntityName = "Test Entity Description (should not remain after the tests)"
+
+-- Funções auxiliares ---------------------------------------------------------
+
+local likeCategoryDesc = checks.like{ id=CategoryId, name=CategoryName }
+
+local function isCategory(value)
+  if value:_is_a(EntityCategory) then
+    return likeCategoryDesc(value:describe())
+  end
+  return false, "invalid EntityCategory"
+end
+
+local function isCategoryDesc(value)
+  local ok, err = likeCategoryDesc(value)
+  if ok then
+    ok, err = isCategory(value.ref)
+  end
+  return ok, err
+end
+
+local function containsCategoryDesc(categories)
+  local found = false
+  for _, category in ipairs(categories) do
+    if category.id == CategoryId then
+      checks.assert(category, isCategoryDesc)
+      found = true
+    else
+      checks.assert(category.id, checks.type("string", "invalid category.id in sequence"))
+      checks.assert(category.name, checks.type("string", "invalid category.name in sequence"))
+      checks.assert(category.ref:_is_a(EntityCategory), checks.equal(true, "invalid category.ref in sequence"))
+    end
+  end
+  if not found then
+    return false, checks.viewer:tostring(categories).." does not contain the expected category"
+  end
+  return true
+end
+
+local likeEntityDesc = checks.like{ id=EntityId, name=EntityName }
+
+local function isEntity(value)
+  if value:_is_a(RegisteredEntity) then
+    return likeEntityDesc(value:describe())
+  end
+  return false, "invalid RegisteredEntity"
+end
+
+local function isEntityDesc(value)
+  local ok, err = likeEntityDesc(value)
+  if ok then
+    ok, err = isCategory(value.category)
+    if ok then
+      ok, err = isEntity(value.ref)
+    end
+  end
+  return ok, err
+end
+
+local function containsEntityDesc(entities)
+  local found = false
+  for _, entity in ipairs(entities) do
+    if entity.id == EntityId then
+      checks.assert(entity, isEntityDesc)
+      found = true
+    else
+      checks.assert(entity.id, checks.type("string", "invalid entity.id in sequence"))
+      checks.assert(entity.name, checks.type("string", "invalid entity.name in sequence"))
+      checks.assert(entity.category:_is_a(EntityCategory), checks.equal(true, "invalid entity.category in sequence"))
+      checks.assert(entity.ref:_is_a(RegisteredEntity), checks.equal(true, "invalid entity.ref in sequence"))
+    end
+  end
+  if not found then
+    return false, checks.viewer:tostring(entities).." does not contain the expected entity"
+  end
+  return true
+end
+
+local EntitiesFixture = cached.class({}, IdentityFixture)
+
+function EntitiesFixture:setup(openbus)
+  IdentityFixture.setup(self, openbus)
+  local entities = self.entities
+  if entities == nil then
+    local conn = openbus.context:getCurrentConnection()
+    local facet = conn.bus:getFacetByName("EntityRegistry")
+    entities = openbus.orb:narrow(facet, EntityRegistry)
+    self.entities = entities
+  end
+  local category = self.category
+  if category == nil then
+    category = entities:getEntityCategory(CategoryId)
+    checks.assert(category, checks.NOT(checks.equal(nil)))
+    self.category = category
+  end
+  local entity = self.entity
+  if entity == nil then
+    entity = entities:getEntity(EntityId)
+    checks.assert(entity, checks.NOT(checks.equal(nil)))
+    self.entity = entity
+  end
+  local unregistered = self.unregistered
+  if unregistered ~= nil then
+    local categorylist = unregistered.category
+    if categorylist ~= nil then
+      for _, category in ipairs(categorylist) do
+        checks.assert(entities:getEntityCategory(category), checks.equal(nil))
       end
-      local facet = conn.bus:getFacetByName(name)
-      return self.orb:narrow(facet, idlmod[name])
+    end
+    local entitylist = unregistered.entities
+    if entitylist ~= nil then
+      for _, entity in ipairs(self.unregistered.entities) do
+        checks.assert(entities:getEntity(entity), checks.equal(nil))
+      end
     end
   end
 end
-local connprops = { accesskey = openbus.newKey() }
 
--- Casos de Teste -------------------------------------------------------------
-Suite = {}
-Suite.Test1 = {}
-Suite.Test2 = {}
-Suite.Test3 = {}
-
--- Aliases
-local Case = Suite.Test1
-local UpdateCase = Suite.Test2
-local NoPermissionCase = Suite.Test3
+function EntitiesFixture:teardown(openbus)
+  local unregistered = self.unregistered
+  if unregistered ~= nil then
+    if self.identity ~= "admin" then
+      openbus.context:setCurrentConnection(self:newConn("admin"))
+    end
+    local entities = self.entities
+    local entitylist = unregistered.entities
+    if entitylist ~= nil then
+      for _, entity in ipairs(entitylist) do
+        local ref = entities:getEntity(entity)
+        if ref ~= nil then
+          ref:remove()
+        end
+      end
+    end
+    local categorylist = unregistered.category
+    if categorylist ~= nil then
+      for _, category in ipairs(categorylist) do
+        local ref = entities:getEntityCategory(category)
+        if ref ~= nil then
+          ref:removeAll()
+        end
+      end
+    end
+  end
+  return IdentityFixture.teardown(self, openbus)
+end
 
 -- Testes do EntityRegistry ----------------------------------------------
 
--- -- IDL operations
---  EntityCategory createEntityCategory(in Identifier id, in string name)
---    raises (EntityCategoryAlreadyExists, UnauthorizedOperation);
---  EntityCategoryDescSeq getEntityCategories();
---  EntityCategory getEntityCategory(in Identifier id);
---  RegisteredEntityDescSeq getEntities();
---  RegisteredEntity getEntity(in Identifier id);
---  RegisteredEntityDescSeq getAuthorizedEntities();
---  RegisteredEntityDescSeq getEntitiesByAuthorizedInterfaces(InterfaceIdSeq interfaces);
+return OpenBusFixture{
+  idlloaders = { admidl.loadto },
+  Suite{
+    --------------------------------
+    -- Caso de teste "NO PERMISSION"
+    --------------------------------
+    AsUser = EntitiesFixture{
+      identity = "user",
+      unregistered = {
+        categories = { FakeCategory },
+        entities = { FakeEntity },
+      },
+      tests = makeSimpleTests{
+        entities = {
+          createEntityCategory = {
+            Unauthorized = {
+              params = { FakeCategory, SomeCategoryName },
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          getEntityCategories = {
+            Call = {
+              params = {},
+              result = { containsCategoryDesc },
+            },
+          },
+          getEntityCategory = {
+            Call = {
+              params = { CategoryId },
+              result = { isCategory },
+            },
+          },
+          getEntities = {
+            Call = {
+              params = {},
+              result = { containsEntityDesc },
+            },
+          },
+          getEntity = {
+            Call = {
+              params = { EntityId },
+              result = { isEntity },
+            },
+          },
+          getAuthorizedEntities = {
+            Call = {
+              params = {},
+              result = { containsEntityDesc },
+            },
+          },
+          getEntitiesByAuthorizedInterfaces = {
+            Call = {
+              params = { {GrantedInterface} },
+              result = { containsEntityDesc },
+            },
+          },
+        },
+        category = {
+          _get_id = {
+            Call = {
+              params = {},
+              result = { checks.equal(CategoryId) },
+            },
+          },
+          _get_name = {
+            Call = {
+              params = {},
+              result = { checks.equal(CategoryName) },
+            },
+          },
+          describe = {
+            Call = {
+              params = {},
+              result = { isCategoryDesc },
+            },
+          },
+          setName = {
+            Unauthorized = {
+              params = { CategoryName },
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          remove = {
+            Unauthorized = {
+              params = {},
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          removeAll = {
+            Unauthorized = {
+              params = {},
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          registerEntity = {
+            Unauthorized = {
+              params = { FakeEntity, SomeEntityName },
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          getEntities = {
+            Call = {
+              params = {},
+              result = { containsEntityDesc },
+            },
+          },
+        },
+        entity = {
+          _get_category = {
+            Call = {
+              params = {},
+              result = { isCategory },
+            },
+          },
+          _get_id = {
+            Call = {
+              params = {},
+              result = { checks.equal(EntityId) },
+            },
+          },
+          _get_name = {
+            Call = {
+              params = {},
+              result = { checks.equal(EntityName) },
+            },
+          },
+          describe = {
+            Call = {
+              params = {},
+              result = { isEntityDesc },
+            },
+          },
+          setName = {
+            Unauthorized = {
+              params = { EntityName },
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          remove = {
+            Unauthorized = {
+              params = {},
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          grantInterface = {
+            Unauthorized = {
+              params = { SomeInterface },
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          revokeInterface = {
+            Unauthorized = {
+              params = { GrantedInterface },
+              except = checks.like{_repid=UnauthorizedOperation},
+            },
+          },
+          getGrantedInterfaces = {
+            Unauthorized = {
+              params = {},
+              result = { checks.like{GrantedInterface} },
+            },
+          },
+        },
+      },
+    },
+    AsAdmin = EntitiesFixture{
+      identity = "admin",
+      unregistered = {
+        categories = { FakeCategory },
+        entities = { FakeEntity },
+      },
+      tests = makeSimpleTests{
+        entities = {
+          createEntityCategory = {
+            EmptyId = {
+              params = { "", SomeCategoryName },
+              except = checks.like{_repid=sysex.BAD_PARAM, completed="COMPLETED_NO", minor=0},
+            },
+            Existing = {
+              params = { CategoryId, SomeCategoryName },
+              except = checks.like{
+                _repid = EntityCategoryAlreadyExists,
+                existing = {
+                  id = CategoryId,
+                  name = CategoryName,
+                },
+              },
+            },
+          },
+        },
+        category = {
+          setName = {
+            Call = {
+              params = { CategoryName },
+              result = {},
+            },
+          },
+          registerEntity = {
+            EmptyId = {
+              params = { "", SomeEntityName },
+              except = checks.like{_repid=sysex.BAD_PARAM, completed="COMPLETED_NO", minor=0},
+            },
+            Existing = {
+              params = { EntityId, SomeEntityName },
+              except = checks.like{
+                _repid = EntityAlreadyRegistered,
+                existing = {
+                  id = EntityId,
+                  name = EntityName,
+                },
+              },
+            },
+          },
+          remove = {
+            InUse = {
+              params = {},
+              except = function (except)
+                checks.assert(except._repid, checks.equal(EntityCategoryInUse))
+                checks.assert(except.entities, containsEntityDesc)
+                return true
+              end,
+            },
+          },
+        },
+        entity = {
+          setName = {
+            Call = {
+              params = { EntityName },
+              result = {},
+            },
+          },
+          grantInterface = {
+            Invalid = {
+              params = { SomeInterface },
+              except = checks.like{_repid=InvalidInterface, ifaceId=SomeInterface},
+            },
+          },
+        },
+        RegisterEntityInTwoCategories = function (fixture)
+          local entities = fixture.entities
+          local category = entities:createEntityCategory(FakeCategory, SomeCategoryName)
+          local ok, err = pcall(category.registerEntity, category, EntityId, EntityName)
+          checks.assert(ok, checks.equal(false))
+          checks.assert(err, checks.like{_repid=EntityAlreadyRegistered})
+          checks.assert(err.existing, isEntityDesc)
+          category:remove()
+        end,
+        RegisterEntityAndGrantInterface = function (fixture)
+          local category = fixture.category
+          local entity = category:registerEntity(FakeEntity, SomeEntityName)
+          entity:grantInterface(GrantedInterface)
+          checks.assert(entity:getGrantedInterfaces(), checks.like{GrantedInterface})
 
--- -- IDL operations of EntityCategory
---  readonly attribute Identifier id;
---  readonly attribute string name;
---  EntityCategoryDesc describe();
---  void setName(in string name) raises (UnauthorizedOperation);
---  void remove()
---    raises (EntityCategoryInUse, UnauthorizedOperation);
---  void removeAll() raises (UnauthorizedOperation);
---  RegisteredEntity registerEntity(in Identifier id, in string name)
---    raises (EntityAlreadyRegistered, UnauthorizedOperation);  
---  RegisteredEntityDescSeq getEntities();
+          local entities = fixture.entities
+          local authorized = entities:getAuthorizedEntities()
+          checks.assert(authorized, checks.contains{
+            id = FakeEntity,
+            name = SomeEntityName,
+          })
+          authorized = entities:getEntitiesByAuthorizedInterfaces({GrantedInterface})
+          checks.assert(authorized, checks.contains{
+            id = FakeEntity,
+            name = SomeEntityName,
+          })
 
--- -- IDL operations of RegisteredEntity
---  readonly attribute EntityCategory category;
---  readonly attribute Identifier id;
---  readonly attribute string name;
---  RegisteredEntityDesc describe();
---  void setName(in string name) raises (UnauthorizedOperation);
---  void remove() raises (UnauthorizedOperation);
---  boolean grantInterface(in InterfaceId ifaceId)
---    raises (InvalidInterface, UnauthorizedOperation);
---  boolean revokeInterface(in InterfaceId ifaceId)
---    raises (InvalidInterface, AuthorizationInUse, UnauthorizedOperation);
---  InterfaceIdSeq getGrantedInterfaces();
+          entity:remove()
 
---------------------------------
--- Caso de teste "NO PERMISSION"
---------------------------------
-
-function NoPermissionCase.beforeTestCase(self)
-  local conn = OpenBusContext:createConnection(host, port, connprops)
-  OpenBusContext:setDefaultConnection(conn)
-  conn:loginByPassword(dUser, dPassword)
-  self.conn = conn
-  
-  local adminConn = OpenBusContext:createConnection(host, port, connprops)
-  adminConn:loginByPassword(admin, adminPassword)
-  OpenBusContext:setCurrentConnection(adminConn)
-  local categoryId = "NoPermissionCategory"
-  local categoryDesc = "Category to test Unauthorized Operations"
-  local category = OpenBusContext:getEntityRegistry():createEntityCategory(categoryId, 
-    categoryDesc)
-  local entityId = "NoPermissinoEntity"
-  local entityDesc = "Entity to test Unauthorized Operations"
-  local entity = category:registerEntity(entityId, entityDesc)
-  OpenBusContext:setCurrentConnection(nil)
-  self.adminConn = adminConn
-  self.category = category
-  self.categoryId = categoryId
-  self.categoryDesc = categoryDesc
-  self.entity = entity
-  self.entityId = entityId
-  self.entityDesc = entityDesc
-end
-
-function NoPermissionCase.afterTestCase(self)
-  OpenBusContext:setCurrentConnection(self.adminConn)
-  self.category:removeAll()
-  self.adminConn:logout()
-  self.adminConn = nil
-  OpenBusContext:setCurrentConnection(nil)
-  
-  self.conn:logout()
-  OpenBusContext:setDefaultConnection(nil)
-  self.conn = nil
-end
-
-function NoPermissionCase.testEntityRegistryNoPermission(self)
-  local entities = OpenBusContext:getEntityRegistry()
-  local ok, err = pcall(entities.createEntityCategory, entities, "LoginNotValid",
-    "trying to create category with unauthorized login")
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-end
-
-function NoPermissionCase.testCategoryNoPermission(self)
-  local category = self.category
-  local ok, err = pcall(category.setName, category, 
-    "should receive unauthorized exception")
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-  ok, err = pcall(category.remove, category)
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-  ok, err = pcall(category.removeAll, category)
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-  ok, err = pcall(category.registerEntity, category, "LoginNotValid",
-    "trying to create entity with unauthorized login")
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-end
-
-function NoPermissionCase.testEntityNoPermission(self)
-  local entity = self.entity
-  local ok, err = pcall(entity.setName, entity, 
-    "should receive unauthorized exception")
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-  ok, err = pcall(entity.remove, entity)
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-  ok, err = pcall(entity.grantInterface, entity, "IDL:test/Test:1.0")
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-  ok, err = pcall(entity.revokeInterface, entity, "IDL:test/Test:1.0")
-  Check.assertTrue(not ok)
-  Check.assertEquals(UnauthorizedOperation, err._repid)
-end
-
---------------------------------
--- Caso de teste "EntityRegistry"
---------------------------------
-
-function Case.beforeTestCase(self)
-  local conn = OpenBusContext:createConnection(host, port, connprops)
-  OpenBusContext:setDefaultConnection(conn)
-  conn:loginByPassword(admin, adminPassword)
-  self.conn = conn
-  local entities = OpenBusContext:getEntityRegistry()
-  -- category
-  local catId = "UnitTestCategory"
-  local catDesc = "Category to use on unit tests"
-  local category = entities:createEntityCategory(catId, catDesc)
-  -- entity
-  local entId = "UnitTestEntity"
-  local entDesc = "Entity to use on unit tests"
-  local entity = category:registerEntity(entId, entDesc)
-  -- saving variables
-  self.category = category
-  self.catId = catId
-  self.catDesc = catDesc
-  self.entity = entity
-  self.entId = entId
-  self.entDesc = entDesc
-end
-
-function Case.afterTestCase(self)
-  self.category:removeAll()
-  self.conn:logout()
-  OpenBusContext:setDefaultConnection(nil)
-  self.conn = nil
-end
-
-function Case.testGetCategory(self)
-  local entities = OpenBusContext:getEntityRegistry()
-  Check.assertEquals(self.catId, self.category:_get_id())
-  Check.assertEquals(self.catDesc, self.category:_get_name())
-  local ok, desc = pcall(self.category.describe, self.category)
-  Check.assertTrue(ok)
-  Check.assertNotNil(desc)
-  Check.assertEquals(self.catId, desc.id)
-  Check.assertEquals(self.catDesc, desc.name)
-  Check.assertNotNil(desc.ref)
-  local ok, categories = pcall(entities.getEntityCategories, entities)
-  Check.assertTrue(ok)
-  Check.assertNotNil(categories)
-  Check.assertTrue(#categories > 0)
-  local ok, getcat = pcall(entities.getEntityCategory, entities, self.catId)
-  Check.assertTrue(ok)
-  Check.assertNotNil(getcat)
-  Check.assertEquals(self.catId, getcat:_get_id())
-  Check.assertEquals(self.catDesc, getcat:_get_name())
-end
-
-function Case.testGetEntity(self)
-  local entities = OpenBusContext:getEntityRegistry()
-  Check.assertEquals(self.entId, self.entity:_get_id())
-  Check.assertEquals(self.entDesc, self.entity:_get_name())
-  local ok, description = pcall(self.entity.describe, self.entity)
-  Check.assertTrue(ok)
-  Check.assertNotNil(description)
-  Check.assertEquals(self.entId, description.id)
-  Check.assertEquals(self.entDesc, description.name)
-  Check.assertNotNil(description.ref)
-  local entsCat = self.entity:_get_category()
-  Check.assertNotNil(entsCat)
-  Check.assertEquals(self.catId, entsCat:_get_id())
-  Check.assertEquals(self.catDesc, entsCat:_get_name())
-  local ok, entSeq = pcall(entities.getEntities, entities)
-  Check.assertTrue(ok)
-  Check.assertNotNil(entSeq)
-  Check.assertTrue(#entSeq > 0)
-  local ok, getent = pcall(entities.getEntity, entities, self.entId)
-  Check.assertTrue(ok)
-  Check.assertEquals(self.entId, getent:_get_id())
-  Check.assertEquals(self.entDesc, getent:_get_name())
-  entSeq = nil
-  ok, entSeq = pcall(self.category.getEntities, self.category)
-  Check.assertTrue(ok)
-  Check.assertNotNil(entSeq)
-  Check.assertEquals(1, #entSeq)
-end
-
-function Case.testCreateEmptyIds(self)
-  local entities = OpenBusContext:getEntityRegistry()
-  local ok, err = pcall(entities.createEntityCategory, entities, "", "")
-  Check.assertFalse(ok)
-  Check.assertEquals(sysex.BAD_PARAM, err._repid)
-  local ok, err = pcall(self.category.registerEntity, self.category, "", "")
-  Check.assertFalse(ok)
-  Check.assertEquals(sysex.BAD_PARAM, err._repid)
-end
-
-function Case.testCreateTwice(self)
-  local entities = OpenBusContext:getEntityRegistry()
-  local ok, err = pcall(entities.createEntityCategory, entities, 
-    self.catId, self.catDesc)
-  Check.assertTrue(not ok)
-  Check.assertEquals(EntityCategoryAlreadyExists, err._repid)
-  ok, err = pcall(self.category.registerEntity, self.category, 
-    self.entId, self.entDesc)
-  Check.assertTrue(not ok)
-  Check.assertEquals(EntityAlreadyRegistered, err._repid)
-end
-
-function Case.testRegisterEntityInTwoCategories(self)
-  local entities = OpenBusContext:getEntityRegistry()
-  local category = entities:createEntityCategory("Fake", "Fake Category")
-  ok, err = pcall(category.registerEntity, category, self.entId, self.entDesc)
-  Check.assertTrue(not ok)
-  Check.assertEquals(EntityAlreadyRegistered, err._repid)
-  category:remove()
-end
-
-function Case.testCategoryInUse(self)
-  local ok, err = pcall(self.category.remove, self.category)
-  Check.assertTrue(not ok)
-  Check.assertEquals(EntityCategoryInUse, err._repid)
-end
-
-function Case.testEntityAuthorization(self)
-  local conn = self.conn
-  local entities = OpenBusContext:getEntityRegistry()
-  local interface = "IDL:test/Test:1.0"
-  local ok, err = pcall(self.entity.grantInterface, self.entity, "InvalidInterface")
-  Check.assertTrue(not ok)
-  Check.assertEquals(InvalidInterface, err._repid)
-  local ok, list = pcall(self.entity.getGrantedInterfaces, self.entity)
-  Check.assertTrue(ok)
-  Check.assertEquals(0, #list)
-  OpenBusContext:getInterfaceRegistry():registerInterface(interface)
-  local ok, bool = pcall(self.entity.grantInterface, self.entity, interface)
-  Check.assertTrue(ok)
-  Check.assertTrue(bool)
-  ok, bool = pcall(self.entity.grantInterface, self.entity, interface)
-  Check.assertTrue(ok)
-  Check.assertFalse(bool)
-  local ok, list = pcall(self.entity.getGrantedInterfaces, self.entity)
-  Check.assertTrue(ok)
-  Check.assertEquals(1, #list)
-  Check.assertEquals(interface, list[1])
-  
-  local ok, authorizedList = pcall(entities.getAuthorizedEntities, entities)
-  Check.assertTrue(ok)
-  Check.assertTrue(#list > 0)
-  ok, authorizedList = pcall(entities.getEntitiesByAuthorizedInterfaces,
-    entities, {interface})
-  Check.assertTrue(ok)
-  Check.assertEquals(1, #list)
-  local descEntity = authorizedList[1]
-  Check.assertEquals(self.entId, descEntity.id)
-  Check.assertEquals(self.entDesc, descEntity.name)  
-  ok, err = pcall(self.entity.revokeInterface, self.entity, "InvalidInterface")
-  Check.assertTrue(not ok)
-  Check.assertEquals(InvalidInterface, err._repid)
-  ok, bool = pcall(self.entity.revokeInterface, self.entity, interface)
-  Check.assertTrue(ok)
-  Check.assertTrue(bool)
-  OpenBusContext:getInterfaceRegistry():removeInterface(interface)
-end
-
---------------------------------
--- Caso de teste de Atualização
---------------------------------
-
-function UpdateCase.beforeTestCase(self)
-  local conn = OpenBusContext:createConnection(host, port, connprops)
-  OpenBusContext:setDefaultConnection(conn)
-  conn:loginByPassword(admin, adminPassword)
-  self.conn = conn
-  local entities = OpenBusContext:getEntityRegistry()
-  -- category
-  local catId = "UnitTestCategory"
-  local catDesc = "Category to use on unit tests"
-  local category = entities:createEntityCategory(catId, catDesc)
-  -- entity
-  local entId = "UnitTestEntity"
-  local entDesc = "Entity to use on unit tests"
-  local entity = category:registerEntity(entId, entDesc)
-  -- saving variables
-  self.category = category
-  self.catId = catId
-  self.catDesc = catDesc
-  self.entity = entity
-  self.entId = entId
-  self.entDesc = entDesc
-end
-
-function UpdateCase.afterTestCase(self)
-  self.entity:remove()
-  self.category:remove()
-  self.conn:logout()
-  OpenBusContext:setDefaultConnection(nil)
-  self.conn = nil
-end
-
-function UpdateCase.testUpdateCategory(self)
-  local newDesc = "new category desc"
-  local ok, err = pcall(self.category.setName, self.category, newDesc)
-  Check.assertTrue(ok)
-  Check.assertEquals(newDesc, self.category:_get_name())
-end
-
-function UpdateCase.testUpdateEntity(self)
-  local newDesc = "new entity desc"
-  local ok, err = pcall(self.entity.setName, self.entity, newDesc)
-  Check.assertTrue(ok)
-  Check.assertEquals(newDesc, self.entity:_get_name())  
-end
-
-  
+          authorized = entities:getAuthorizedEntities()
+          checks.assert(authorized, checks.NOT(checks.contains{
+            id = FakeEntity,
+            name = SomeEntityName,
+          }))
+          authorized = entities:getEntitiesByAuthorizedInterfaces({GrantedInterface})
+          checks.assert(authorized, checks.NOT(checks.contains{
+            id = FakeEntity,
+            name = SomeEntityName,
+          }))
+        end,
+        RevokeAuhtorizationInUse = function (fixture, openbus)
+          -- create component
+          local ComponentContext = require "scs.core.ComponentContext"
+          local orb = openbus.orb
+          orb:loadidl("interface Ping { boolean ping(); };")
+          local component = ComponentContext(orb, {
+            name = "Ping Component",
+            major_version = 1,
+            minor_version = 2,
+            patch_version = 3,
+            platform_spec = "none",
+          })
+          component:addFacet("ping", GrantedInterface, {
+            ping = function ()
+              component.count = component.count+1
+              return true
+            end,
+          })
+          -- register service offer
+          local context = openbus.context
+          local system = fixture:newConn("system")
+          context:setCurrentConnection(system)
+          local offers = openbus.context:getOfferRegistry()
+          local props = {{name="some.property",value="some value"}}
+          local offer = offers:registerService(component.IComponent, props)
+          context:setCurrentConnection(nil)
+          -- try to revoke authorization in use
+          local entities = fixture.entities
+          local entity = entities:getEntity(EntityId)
+          local ok, err = pcall(entity.revokeInterface, entity, GrantedInterface)
+          checks.assert(ok, checks.equal(false))
+          checks.assert(err._repid, checks.equal(AuthorizationInUse))
+          local offerdesc = err.offers[1]
+          checks.assert(offerdesc.service_ref, checks.equal(component.IComponent.__servant))
+          checks.assert(offerdesc.properties, checks.contains(props[1]))
+        end
+      },
+    },
+  },
+}
