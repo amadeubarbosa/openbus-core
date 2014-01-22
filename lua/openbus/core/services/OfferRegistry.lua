@@ -121,6 +121,8 @@ local ReservedProperties = {
   ["openbus.component.version.major"] = true,
   ["openbus.component.version.minor"] = true,
   ["openbus.component.version.patch"] = true,
+  ["openbus.component.interface"] = true,
+  ["openbus.component.facet"] = true,
 }
 
 local function makePropertyList(entry, service_props)
