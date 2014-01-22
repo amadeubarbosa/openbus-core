@@ -341,7 +341,7 @@ function Offer:remove(tag)
   -- unregister observers from the logout callback
   local observerLogins = registry.observerLogins
   for id, login in pairs(self.observers) do
-    observerLogins[login][self][id]:remove()
+    observerLogins[login][self][id]:remove(tag)
   end
 end
 
