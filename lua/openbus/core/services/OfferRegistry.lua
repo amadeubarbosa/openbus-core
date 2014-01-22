@@ -319,6 +319,7 @@ function Offer:setProperties(properties)
   self.properties = allprops
   offers:add(self)
   log[tag](log, msg.UpdateOfferProperties:tag{ offer = self.id })
+  -- notify observers
   notifyOfferObservers(registry, self, "propertiesChanged", self)
   registry:notifyRegistryObservers(self)
 end
@@ -326,6 +327,13 @@ end
 function Offer:remove(tag)
   local registry = self.registry
   local tag = tag or assertCaller(registry, self.entity)
+  -- schedule notification of observers
+  notifyOfferObservers(registry, self, "removed", self)
+  -- unregister observers from the logout callback
+  local observerLogins = registry.observerLogins
+  for id, login in pairs(self.observers) do
+    observerLogins[login][self][id]:remove(tag)
+  end
   -- try to remove persisted offer (may raise expections)
   assert(self.database:removeentry(self.id))
   -- commit changes in memory
@@ -336,13 +344,6 @@ function Offer:remove(tag)
     entity = self.entity,
     login = self.login,
   })
-  -- notify observers
-  notifyOfferObservers(registry, self, "removed", self)
-  -- unregister observers from the logout callback
-  local observerLogins = registry.observerLogins
-  for id, login in pairs(self.observers) do
-    observerLogins[login][self][id]:remove(tag)
-  end
 end
 
 function Offer:subscribeObserver(observer)
