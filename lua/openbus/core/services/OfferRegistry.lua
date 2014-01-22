@@ -211,6 +211,10 @@ function OfferObserverSubscription:__init()
   registerObserver(offer.registry, offer, id, self)
 end
 
+function OfferObserverSubscription:describe()
+  return self
+end
+
 function OfferObserverSubscription:remove(tag)
   local id = self.id
   local offer = self.offer
@@ -240,6 +244,10 @@ function OfferRegistryObserverSubscription:__init()
   local registry = self.registry
   self.__objkey = "OfferRegObs:"..id -- for the ORB
   registerObserver(registry, registry, id, self)
+end
+
+function OfferRegistryObserverSubscription:describe()
+  return self
 end
 
 function OfferRegistryObserverSubscription:remove(tag)
