@@ -16,6 +16,14 @@
 
 #include "extralibraries.h"
 
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM == 501
+#include "compat-5.2.h"
+#include "luacompat52.h"
+#endif
+
+#if !defined(LUA_OK)
+#define LUA_OK 0
+#endif
 
 #if !defined(LUA_PROMPT)
 #define LUA_PROMPT		"> "
@@ -45,6 +53,9 @@ static lua_State *globalL = NULL;
 static const char *progpath = NULL;
 
 static const char *callerchunk =
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM == 501
+" require 'compat52'"
+#endif
 " local _G = require '_G'"
 " local error = _G.error"
 " local tostring = _G.tostring"
@@ -88,8 +99,9 @@ static void laction (int i) {
 
 
 static void l_message (const char *pname, const char *msg) {
-  if (pname) luai_writestringerror("%s: ", pname);
-  luai_writestringerror("%s\n", msg);
+  if (pname) fprintf(stderr, "%s: ", pname);
+  fprintf(stderr, "%s\n", msg);
+  fflush(stderr);
 }
 
 
@@ -164,7 +176,6 @@ static int dostring (lua_State *L, const char *s, const char *name) {
 
 
 static int pmain (lua_State *L) {
-  int argc = (int)lua_tointeger(L, 1);
   char **argv = (char **)lua_touserdata(L, 2);
   int status = 0;
   /* open standard libraries */
@@ -187,6 +198,9 @@ static int pmain (lua_State *L) {
   /* preload libraries and global variables */
   lua_pushstring(L, OPENBUS_MAIN); lua_setglobal(L, "OPENBUS_MAIN");
   lua_pushstring(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM == 501
+  luapreload_luacompat52(L);
+#endif
   luapreload_extralibraries(L);
   
   /* ??? */
@@ -196,7 +210,7 @@ static int pmain (lua_State *L) {
     if (status == LUA_OK) {
       lua_getglobal(L, "require");
       lua_pushstring(L, OPENBUS_MAIN);
-      status = lua_pcall(L, 1, 1, 0);
+      status = docall(L, 1, 1);
       if (status == LUA_OK) {
         int narg = getargs(L, argv);  /* collect arguments */
         status = docall(L, narg+1, 1);

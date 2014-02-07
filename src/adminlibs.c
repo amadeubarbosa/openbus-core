@@ -13,7 +13,6 @@
 #include "luatuple.h"
 #include "luacoroutine.h"
 #include "luacothread.h"
-#include "luainspector.h"
 #include "luaidl.h"
 #include "oil.h"
 #include "luascs.h"
@@ -33,8 +32,8 @@
 
 #define LPW_LIBNAME "lpw"
 
-#if (LUA_VERSION_NUM < 502)
-#define luaL_newlib(L,f)  luaL_register(L,"lpw",f)
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM == 501
+#include "compat-5.2.h"
 #endif
 
 const char const* OPENBUS_MAIN = "openbus.core.admin.main";
@@ -154,7 +153,6 @@ void luapreload_extralibraries(lua_State *L)
   luapreload_luatuple(L);
   luapreload_luacoroutine(L);
   luapreload_luacothread(L);
-  luapreload_luainspector(L);
   luapreload_luaidl(L);
   luapreload_oil(L);
   luapreload_luascs(L);

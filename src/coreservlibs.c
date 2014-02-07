@@ -16,7 +16,6 @@
 #include "luatuple.h"
 #include "luacoroutine.h"
 #include "luacothread.h"
-#include "luainspector.h"
 #include "luaidl.h"
 #include "oil.h"
 #include "luascs.h"
@@ -51,7 +50,6 @@ void luapreload_extralibraries(lua_State *L)
   luapreload_luatuple(L);
   luapreload_luacoroutine(L);
   luapreload_luacothread(L);
-  luapreload_luainspector(L);
   luapreload_luaidl(L);
   luapreload_oil(L);
   luapreload_luascs(L);
