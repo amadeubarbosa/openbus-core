@@ -11,7 +11,6 @@
 #include "luasocket.h"
 #include "loop.h"
 #include "luatuple.h"
-#include "luacoroutine.h"
 #include "luacothread.h"
 #include "luaidl.h"
 #include "oil.h"
@@ -151,7 +150,6 @@ void luapreload_extralibraries(lua_State *L)
   /* preload script libraries */
   luapreload_loop(L);
   luapreload_luatuple(L);
-  luapreload_luacoroutine(L);
   luapreload_luacothread(L);
   luapreload_luaidl(L);
   luapreload_oil(L);
