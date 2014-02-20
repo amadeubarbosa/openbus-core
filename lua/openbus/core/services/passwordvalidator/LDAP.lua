@@ -35,6 +35,11 @@ return function(configs)
   end
   -- validate function to be used in runtime
   return function(name, password)
+    local blankpatt ="^[%s%c%z]*$"
+    if type(name) ~= "string" or name:match(blankpatt) or
+       type(password) ~= "string" or password:match(blankpatt) then
+      return nil, msg.LdapInvalidNameOrPassword
+    end
     local errmsg = {}
     for _, url in ipairs(urls) do
       for _, pattern in ipairs(patterns) do
