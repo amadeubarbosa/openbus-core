@@ -286,10 +286,12 @@ function Offer:__init()
         offer = self.id,
         id = id,
       })
-      entry.id = id
-      entry.observer = orb:newproxy(entry.observer, nil, OfferObserver)
-      entry.offer = self
-      orb:newservant(OfferObserverSubscription(entry))
+      orb:newservant(OfferObserverSubscription{
+        login = login,
+        id = id,
+        observer = orb:newproxy(entry.observer, nil, OfferObserver),
+        offer = self,
+      })
     else
       log:action(msg.DiscardOfferObserverAfterLogout:tag{
         login = login,
