@@ -1,10 +1,9 @@
--------------------------------------------------------------------------------
+-------------------------------------i------------------------------------------
 -- Função Principal
 --
 return function(...)
   local _G = require "_G"
   local error = _G.error
-  local io = _G.io
   local ipairs = _G.ipairs
   local next  = _G.next
   local pairs = _G.pairs
@@ -12,6 +11,9 @@ return function(...)
   local print = _G.print
   local string = _G.string
   local tostring = _G.tostring
+
+  local io = require "io"
+  local os = require "os"
 
   local oil = require "oil"
   local oillog = require "oil.verbose"
@@ -1299,7 +1301,7 @@ return function(...)
       if status then
         printf(msg, "[INACESSÍVEL]")
         orb:shutdown()
-        return
+        return false
       else
         printf(msg, "[ACESSÍVEL]")
       end
@@ -1307,7 +1309,7 @@ return function(...)
       local errmsg = string.format("[ERRO] %s", status._repid)
       printf(msg, errmsg)
       orb:shutdown()
-      return
+      return false
     end
     bus = nil
     ref = nil
@@ -1458,6 +1460,7 @@ return function(...)
         end
       end
     end
+    return true
   end
 
   -------------------------------------------------------------------------------
@@ -1564,12 +1567,13 @@ return function(...)
     if f then
       returned = f(command)
     end
-    --
+    
     if connection ~= nil then
       connection:logout()
       OpenBusContext:setDefaultConnection(nil)
       connection = nil
     end
+
     if returned then
       return 0
     else
@@ -1579,8 +1583,6 @@ return function(...)
   if not ok then
     print(ret)
   end
-
   orb:shutdown()
-
-  return ret
+  os.exit(ret)
 end
