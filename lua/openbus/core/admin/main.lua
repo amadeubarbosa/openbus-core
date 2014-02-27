@@ -413,7 +413,7 @@ return function(...)
   -- e 'params' os parâmetros vindos da linha de comando.
   --
   local function parse(argv)
-    local params, msg, succ, cmdname
+    local params, msg, succ, cmdname, cmdval, cmddesc
     params, msg = parseline(argv)
     if not params then
       return nil, msg
@@ -649,7 +649,7 @@ return function(...)
       return false
     end
     if not category then 
-      printf("[ERRO] Categoria '%s' não existe.", id)
+      printf("[ERRO] Categoria '%s' não existe.", cmd.params.category)
       return false
     end
     local ok, err = pcall(category.registerEntity, category, id, cmd.params.name)
@@ -755,7 +755,7 @@ return function(...)
           return false
         end
         if not category then 
-          printf("[ERRO] Categoria '%s' não existe.", category)
+          printf("[ERRO] Categoria '%s' não existe.", cmd.params.category)
           return false
         end
         ok, entities = pcall(category.getEntities, category)
@@ -1536,15 +1536,15 @@ return function(...)
     print("[ERRO] " .. msg)
     print("[HINT] --help")
     orb:shutdown()
-    return 1
+    os.exit(1)
   elseif command.name == "help" then
     handlers.help(command)
     orb:shutdown()
-    return 0
-  elseif not command.params.login then
+    os.exit(0)
+  elseif (not command.params.login) or (command.params.login == null) then
     print("[ERRO] Usuário não informado")
     orb:shutdown()
-    return 1
+    os.exit(1)
   end
 
   -- Recupera os valores globais
@@ -1561,28 +1561,21 @@ return function(...)
   ---
   -- Função principal responsável por despachar o comando.
   --
-  local ok, ret = pcall(function ()
-    local f = handlers[command.name]
-    local returned
-    if f then
-      returned = f(command)
-    end
-    
-    if connection ~= nil then
-      connection:logout()
-      OpenBusContext:setDefaultConnection(nil)
-      connection = nil
-    end
+  local ok, result = pcall(handlers[command.name], command)
 
-    if returned then
-      return 0
-    else
-      return 1
-    end
-  end)
-  if not ok then
-    print(ret)
+  if connection ~= nil then
+    connection:logout()
+    OpenBusContext:setDefaultConnection(nil)
+    connection = nil
   end
   orb:shutdown()
-  os.exit(ret)
+
+  if not ok then
+    print(result)
+    os.exit(1)
+  elseif result == false then
+    os.exit(1)
+  else
+    os.exit(0)
+  end  
 end
