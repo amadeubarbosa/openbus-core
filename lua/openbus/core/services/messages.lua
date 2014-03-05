@@ -5,7 +5,7 @@ local idl = require "openbus.core.idl"
 local msg = require "openbus.core.messages"
 
 msg.ReleaseVersion = 0
-msg.PatchVersion = 3
+msg.PatchVersion = 4
 
 msg.OpenBusVersion = concat({
   idl.const.MajorVersion,
@@ -17,7 +17,7 @@ if msg.PatchVersion > 0 then
 end
 
 -- openbus.core.services.main
-msg.CopyrightNotice = "OpenBus "..msg.OpenBusVersion.."  Copyright (C) 2012-2013 Tecgraf, PUC-Rio"
+msg.CopyrightNotice = "OpenBus "..msg.OpenBusVersion.."  Copyright (C) 2012-2014 Tecgraf, PUC-Rio"
 --msg.CoreServicesStarted = "serviços núcleo iniciados"
 --msg.RequestedByEntity = "por $entity (login=$login)"
 --
