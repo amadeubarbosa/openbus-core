@@ -71,6 +71,8 @@ local ICredentialObserver = idl.types.access_control_service.ICredentialObserver
 
 local msg = require "openbus.core.services.messages"
 local Logins = require "openbus.core.services.LoginDB"
+local coreutil = require "openbus.core.services.util"
+local assertCaller = coreutil.assertCaller
 
 local MaxEncryptedData = strrep("\255", EncryptedBlockSize-11)
 
@@ -515,10 +517,8 @@ function LoginRegistry:__init(data)
   self.subscriptionOf = {} -- for legacy support (OpenBus 1.5)
   
   local access = self.access
-  local admins = data.admins
-  access:setGrantedUsers(self.__type, "getAllLogins", admins)
-  access:setGrantedUsers(self.__type, "getEntityLogins", admins)
-  access:setGrantedUsers(self.__type, "invalidateLogin", admins)
+  self.admins = data.admins
+  access:setGrantedUsers(self.__type, "getAllLogins", self.admins)
   -- register itself to receive logout notifications
   local logins = AccessControl.activeLogins
   rawset(logins.publisher, self, self)
@@ -580,6 +580,7 @@ function LoginRegistry:getAllLogins()
 end
 
 function LoginRegistry:getEntityLogins(entity)
+  assertCaller(self, entity)
   local logins = {}
   for id, login in AccessControl.activeLogins:iLogins() do
     if login.entity == entity then
@@ -592,8 +593,9 @@ end
 function LoginRegistry:invalidateLogin(id)
   local login = AccessControl.activeLogins:getLogin(id)
   if login ~= nil then
+    local tag = assertCaller(self, login.entity)
     login:remove()
-    log:admin(msg.LogoutForced:tag{
+    log[tag](log, msg.LogoutForced:tag{
       login = id,
       entity = login.entity,
     })

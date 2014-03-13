@@ -59,17 +59,22 @@ return OpenBusFixture{
           },
           getEntityLogins = {
             Unauthorized = {
-              params = { user },
+              params = { "fake" },
               except = checks.like{_repid=srvtypes.UnauthorizedOperation},
             },
           },
           invalidateLogin = {
-            Unauthorized = {
+            InvalidLogin = {
               params = { FakeLoginId },
-              except = checks.like{_repid=srvtypes.UnauthorizedOperation},
+              result = { checks.equal(false)} ,
             },
           },
         },
+        GetInfoOfEntityLogins = function (fixture, openbus)
+          local logins = fixture.logins
+          local login = openbus.context:getCurrentConnection().login
+          checks.assert(logins:getEntityLogins(user), checks.like({login}))
+        end,
         GetInfoOfAllLogins = function (fixture)
           local logins = fixture.logins
           for id, login in pairs(fixture:getMyLogins()) do
@@ -81,6 +86,30 @@ return OpenBusFixture{
           for id in pairs(fixture:getMyLogins()) do
             checks.assert(logins:getLoginValidity(id), checks.greater(0))
           end
+        end,
+        InvalidateLogin = function (fixture)
+          local conn = fixture:newConn("user")
+          local login = conn.login.id
+          local logins = fixture.logins
+          checks.assert(logins:invalidateLogin(login), checks.equal(true))
+          checks.assert(logins:getLoginValidity(login), checks.equal(0))
+          local ok, err = pcall(logins.getLoginInfo, logins, login)
+          checks.assert(ok, checks.equal(false))
+          checks.assert(err, checks.like{
+            _repid = logintypes.InvalidLogins,
+            loginIds = { login },
+          })
+          checks.assert(conn:logout(), checks.equal(false))
+        end,
+        InvalidateLoginUnauthorized = function (fixture)
+          local conn = fixture:newConn("system")
+          local login = conn.login.id
+          local logins = fixture.logins
+          local ok, err = pcall(logins.invalidateLogin, logins, login)
+          checks.assert(ok, checks.equal(false))
+          checks.assert(err, checks.like{
+            _repid = srvtypes.UnauthorizedOperation,
+          })
         end,
         InvalidObserverWatchingOtherLogin = function (fixture)
           local logins = fixture.logins

@@ -38,7 +38,6 @@ local BAD_PARAM = sysex.BAD_PARAM
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
 local ServiceFailure = idl.throw.services.ServiceFailure
-local UnauthorizedOperation = idl.throw.services.UnauthorizedOperation
 local offexp = idl.throw.services.offer_registry
 local InvalidProperties = offexp.InvalidProperties
 local InvalidService = offexp.InvalidService
@@ -71,22 +70,12 @@ local AccessControl = require "openbus.core.services.AccessControl"
 AccessControl = AccessControl.AccessControl
 local PropertyIndex = require "openbus.core.services.PropertyIndex"
 
+local coreutil = require "openbus.core.services.util"
+local assertCaller = coreutil.assertCaller
 
 local OfferRegistry -- forward declaration
 local EntityRegistry -- forward declaration
 
-local function assertCaller(self, owner)
-  local entity = self.access:getCallerChain().caller.entity
-  local logtag
-  if entity == owner then
-    logtag = "request"
-  elseif self.admins[entity] ~= nil then
-    logtag = "admin"
-  else
-    UnauthorizedOperation()
-  end
-  return logtag
-end
 
 local function ifaceId2Key(ifaceId)
   local name, version = ifaceId:match("^IDL:(.-):(%d+%.%d+)$")
