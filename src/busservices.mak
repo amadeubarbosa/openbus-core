@@ -34,6 +34,7 @@ LUASRC= \
   $(LUADIR)/openbus/core/services/messages.lua \
   $(LUADIR)/openbus/core/services/PropertyIndex.lua \
   $(LUADIR)/openbus/core/services/OfferRegistry.lua \
+	$(LUADIR)/openbus/core/services/util.lua \
   $(LUADIR)/openbus/core/services/passwordvalidator/LDAP.lua
 
 include ${OIL_HOME}/openbus/base.mak
