@@ -68,6 +68,7 @@ local ReservedProperties = {
   { name = "openbus.component.version.major", value = tostring(SomeComponentId.major_version) },
   { name = "openbus.component.version.minor", value = tostring(SomeComponentId.minor_version) },
   { name = "openbus.component.version.patch", value = tostring(SomeComponentId.patch_version) },
+  { name = "openbus.component.platform", value = tostring(SomeComponentId.platform_spec) },
   { name = "openbus.component.facet", value = SomeFacetName },
   { name = "openbus.component.interface", value = SomeInterface },
 }
@@ -127,6 +128,7 @@ local function isPropsList(comp, login, props)
       ["openbus.component.version.major"] = checks.equal(tostring(SomeComponentId.major_version)),
       ["openbus.component.version.minor"] = checks.equal(tostring(SomeComponentId.minor_version)),
       ["openbus.component.version.patch"] = checks.equal(tostring(SomeComponentId.patch_version)),
+      ["openbus.component.platform"] = checks.equal(tostring(SomeComponentId.platform_spec)),
       ["openbus.component.facet"] = {
         ["IComponent"] = true,
         ["IMetaInterface"] = true,

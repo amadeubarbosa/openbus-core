@@ -110,6 +110,7 @@ local ReservedProperties = {
   ["openbus.component.version.major"] = true,
   ["openbus.component.version.minor"] = true,
   ["openbus.component.version.patch"] = true,
+  ["openbus.component.platform"] = true,
   ["openbus.component.interface"] = true,
   ["openbus.component.facet"] = true,
 }
@@ -130,6 +131,7 @@ local function makePropertyList(entry, service_props)
     { name = "openbus.component.version.major", value = tostring(entry.component.major_version) },
     { name = "openbus.component.version.minor", value = tostring(entry.component.minor_version) },
     { name = "openbus.component.version.patch", value = tostring(entry.component.patch_version) },
+    { name = "openbus.component.platform", value = entry.component.platform_spec },
   }
   local interfaces = {}
   for _, facet in ipairs(entry.facets) do
