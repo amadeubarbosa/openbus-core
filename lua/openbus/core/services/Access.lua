@@ -7,6 +7,9 @@ local rawset = _G.rawset
 local array = require "table"
 local unpack = array.unpack or _G.unpack
 
+local coroutine = require "coroutine"
+local running = coroutine.running
+
 local hash = require "lce.hash"
 local sha256 = hash.sha256
 
@@ -31,6 +34,7 @@ local setNoPermSysEx = access.setNoPermSysEx
 local Context = access.Context
 local Interceptor = access.Interceptor
 local receiveBusRequest = Interceptor.receiverequest
+local sendBusReply = Interceptor.sendreply
 
 
 
@@ -69,6 +73,7 @@ function BusInterceptor:__init()
       end,
     }
   end, "k")
+  self.callerAddressOf = setmetatable({}, {__mode = "k"})
   do
     local forAllOps = Everybody
     
@@ -139,6 +144,7 @@ function BusInterceptor:signChainFor(target, chain)
 end
 
 function BusInterceptor:receiverequest(request)
+  self.callerAddressOf[running()] = request.channel_address
   if request.servant ~= nil then -- servant object does exist
     local op = request.operation_name
     if op:find("_", 1, true) ~= 1
@@ -176,6 +182,11 @@ function BusInterceptor:receiverequest(request)
       end
     end
   end
+end
+
+function BusInterceptor:sendreply(...)
+  self.callerAddressOf[running()] = nil
+  return sendBusReply(self, ...)
 end
 
 function BusInterceptor:setGrantedUsers(interface, operation, users)

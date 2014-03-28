@@ -39,6 +39,7 @@ local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
 local BAD_PARAM = sysex.BAD_PARAM
+local NO_RESOURCES = sysex.NO_RESOURCES
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
@@ -188,6 +189,62 @@ local function checkaccesskey(pubkey)
 end
 
 
+local PasswordAttempts = class()
+
+function PasswordAttempts:__init()
+  self.attemptsOf = {}
+end
+
+function PasswordAttempts:check(sourceid)
+  local attemptsOf = self.attemptsOf
+  local attempts = attemptsOf[sourceid]
+  if attempts ~= nil then
+    local deadline = attempts.deadline
+    if deadline < time() then
+      attemptsOf[sourceid] = nil
+    elseif attempts.count >= self.maxattempts then
+      log:exception(msg.TooManyFailedLogins:tag{
+        sourceid = sourceid,
+        deadline = os.date(log.timeformat, deadline),
+      })
+      -- TODO: move minor to IDL
+      NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+    end
+  end
+end
+
+function PasswordAttempts:denied(sourceid)
+  local penalty = self.penaltytime
+  if penalty > 0 then
+    local now = self:clean()
+    local deadline = now+penalty
+    local attemptsOf = self.attemptsOf
+    local attempts = attemptsOf[sourceid]
+    if attempts == nil then
+      attempts = { deadline = deadline, count = 1}
+      attemptsOf[sourceid] = attempts
+    else
+      attempts.deadline = deadline
+      attempts.count = attempts.count + 1
+    end
+  end
+end
+
+function PasswordAttempts:granted(sourceid)
+  self.attemptsOf[sourceid] = nil
+end
+
+function PasswordAttempts:clean()
+  local now = time()
+  local attemptsOf = self.attemptsOf
+  for sourceid, attempts in pairs(attemptsOf) do
+    if attempts.deadline < now then
+      attemptsOf[sourceid] = nil
+    end
+  end
+  return now
+end
+
 
 local LoginProcess = class{ __type = LoginProcessType }
 
@@ -248,6 +305,10 @@ function AccessControl:__init(data)
   self.passwordValidators = data.validators
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
+  self.passwordAttempts = PasswordAttempts{
+    maxattempts = data.passwordTries,
+    penaltytime = data.passwordPenaltyTime,
+  }
   self.activeLogins = Logins{ database = database }
   
   -- initialize access
@@ -345,13 +406,18 @@ end
 function AccessControl:loginByPassword(entity, pubkey, encrypted)
   if entity ~= self.login.entity then
     checkaccesskey(pubkey)
-    local decrypted, errmsg = self.access.prvkey:decrypt(encrypted)
+    local access = self.access
+    local decrypted, errmsg = access.prvkey:decrypt(encrypted)
     if decrypted == nil then
       WrongEncoding{entity=entity,message=errmsg or "no error message"}
     end
-    local decoder = self.access.orb:newdecoder(decrypted)
+    local decoder = access.orb:newdecoder(decrypted)
     local decoded = decoder:get(self.LoginAuthInfo)
     if decoded.hash == sha256(pubkey) then
+      local sourceid = access.callerAddressOf[running()]
+      if sourceid ~= nil then sourceid = sourceid.host end
+      local attempts = self.passwordAttempts
+      attempts:check(sourceid)
       for _, validator in ipairs(self.passwordValidators) do
         local valid, errmsg = validator.validate(entity, decoded.data)
         if valid then
@@ -362,6 +428,7 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
             validator = validator.name,
           })
           renewLogin(self, login)
+          attempts:granted(sourceid)
           return login, self.leaseTime
         elseif errmsg ~= nil then
           log:exception(msg.FailedPasswordValidation:tag{
@@ -371,13 +438,14 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
           })
         end
       end
+      attempts:denied(sourceid)
     else
       log:exception(msg.WrongPublicKeyHash:tag{ entity = entity })
     end
   else
     log:exception(msg.RefusedLoginOfBusEntity:tag{ entity = entity })
   end
-  AccessDenied{entity=entity}
+  AccessDenied{ entity = entity }
 end
 
 function AccessControl:startLoginByCertificate(entity)

@@ -5,6 +5,10 @@ local assert = _G.assert
 local ipairs = _G.ipairs
 local require = _G.require
 local select = _G.select
+local setmetatable = _G.setmetatable
+
+local io = require "string"
+local format = io.format
 
 local io = require "io"
 local stderr = io.stderr
@@ -14,6 +18,7 @@ local getenv = os.getenv
 
 local table = require "loop.table"
 local copy = table.copy
+local memoize = table.memoize
 
 local cothread = require "cothread"
 local running = cothread.running
@@ -52,6 +57,9 @@ return function(...)
     leasetime = 30*60,
     expirationgap = 10,
   
+    passwordpenalty = 3*60,
+    passwordtries = 3,
+  
     admin = {},
     validator = {},
   
@@ -62,6 +70,7 @@ return function(...)
     
     noauthorizations = false,
     nolegacy = false,
+    logaddress = false,
   }
 
   -- parse configuration file
@@ -88,6 +97,9 @@ Options:
   -leasetime <seconds>       tempo de lease dos logins de acesso
   -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
 
+  -passwordpenalty <seconds> período com tentativas de login limitadas após falha de senha
+  -passwordtries <number>    número de tentativas durante o período de 'passwordpenalty'
+
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
 
@@ -98,12 +110,39 @@ Options:
 
   -noauthorizations          desativa o suporte a autorizações de oferta
   -nolegacy                  desativa o suporte à versão antiga do barramento
+  -logaddress                exibe o endereço IP do requisitante no log do barramento
 
   -configs <path>            arquivo de configurações adicionais do barramento
   
 ]])
       return 1 -- program's exit code
     end
+  end
+
+  local logaddress = Configs.logaddress and {}
+  if logaddress then
+    local function writeCallerAddress(verbose)
+      local viewer = verbose.viewer
+      local output = viewer.output
+      local address = logaddress[running()]
+      if address == nil then
+        output:write("                      ")
+      else
+        output:write(format("%15s:%5d ", address.host, address.port))
+      end
+      return true
+    end
+    local backup = log.custom
+    log.custom = memoize(function(tag)
+      local custom = backup[tag]
+      if custom ~= nil then
+        return function (self, ...)
+          writeCallerAddress(self)
+          return custom(self, ...)
+        end
+      end
+      return writeCallerAddress
+    end)
   end
 
   -- setup log files
@@ -118,6 +157,10 @@ Options:
     msg.InvalidLeaseTime:tag{value=Configs.leasetime})
   assert(Configs.expirationgap > 0,
     msg.InvalidExpirationGap:tag{value=Configs.expirationgap})
+  assert(Configs.passwordpenalty >= 0,
+    msg.InvalidPasswordPenaltyTime:tag{value=Configs.passwordpenalty})
+  assert(Configs.passwordtries > 0,
+    msg.InvalidNumberOfPasswordLimitedTries:tag{value=Configs.passwordtries})
   
   -- create a set of admin users
   local adminUsers = {}
@@ -148,14 +191,15 @@ Options:
     local ACS = require "openbus.core.legacy.AccessControlService"
     legacy = ACS.IAccessControlService
   end
-  local iceptor = access.Interceptor{
+  iceptor = access.Interceptor{
     prvkey = assert(readprivatekey(Configs.privatekey)),
     orb = orb,
     legacy = legacy,
   }
   orb:setinterceptor(iceptor, "corba")
   loadidl(orb)
-  
+  logaddress = logaddress and iceptor.callerAddressOf
+
   -- prepare facets to be published as CORBA objects
   local facets = {}
   do
@@ -185,14 +229,18 @@ Options:
         database = assert(opendb(Configs.database)),
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
+        passwordPenaltyTime = Configs.passwordpenalty,
+        passwordTries = Configs.passwordtries,
         admins = adminUsers,
         validators = validators,
         enforceAuth = not Configs.noauthorizations,
       }
       log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
       log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
-      log:config(msg.SetupLoginLeaseTime:tag{value=params.leaseTime})
-      log:config(msg.SetupLoginExpirationGap:tag{value=params.expirationGap})
+      log:config(msg.SetupLoginLeaseTime:tag{seconds=params.leaseTime})
+      log:config(msg.SetupLoginExpirationGap:tag{seconds=params.expirationGap})
+      log:config(msg.WrongPasswordPenaltyTime:tag{seconds=Configs.passwordpenalty})
+      log:config(msg.WrongPasswordLimitedTries:tag{maxtries=Configs.passwordtries})
       if not params.enforceAuth then
         log:config(msg.OfferAuthorizationDisabled)
       end
