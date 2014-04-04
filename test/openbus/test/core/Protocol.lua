@@ -98,9 +98,7 @@ for _, userpat in ipairs({"%s", "%s%d"}) do
     assert(ok == false)
     assert(ex._repid == logintypes.AccessDenied)
     -- reseting failed login attempts
-    encrypted = encodeLogin(bus.key, password, pubkey)
-    login = ac:loginByPassword(user, pubkey, encrypted)
-    doLogout(login.id)
+    sleep(passwordpenalty)
   end
 
   do -- login with wrong password max - 1 tries
@@ -120,9 +118,7 @@ for _, userpat in ipairs({"%s", "%s%d"}) do
     assert(ok == false)
     assert(ex._repid == logintypes.AccessDenied)
     -- reseting failed login attempts
-    encrypted = encodeLogin(bus.key, password, pubkey)
-    login = ac:loginByPassword(user, pubkey, encrypted)
-    doLogout(login.id)
+    sleep(passwordpenalty)
   end
 end
 

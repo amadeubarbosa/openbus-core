@@ -10,6 +10,9 @@ local setmetatable = _G.setmetatable
 local io = require "string"
 local format = io.format
 
+local math = require "math"
+local inf = math.huge
+
 local io = require "io"
 local stderr = io.stderr
 
@@ -59,6 +62,8 @@ return function(...)
   
     passwordpenalty = 3*60,
     passwordtries = 3,
+    validationburst = inf,
+    validationrate = inf,
   
     admin = {},
     validator = {},
@@ -99,6 +104,8 @@ Options:
 
   -passwordpenalty <seconds> período com tentativas de login limitadas após falha de senha
   -passwordtries <number>    número de tentativas durante o período de 'passwordpenalty'
+  -validationburst <number>  número máximo de validações de senha simultâneas
+  -validationrate <number>   frequência máxima de validações de senha (validação/segundo)
 
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
@@ -159,8 +166,18 @@ Options:
     msg.InvalidExpirationGap:tag{value=Configs.expirationgap})
   assert(Configs.passwordpenalty >= 0,
     msg.InvalidPasswordPenaltyTime:tag{value=Configs.passwordpenalty})
-  assert(Configs.passwordtries > 0,
+  assert(Configs.passwordtries > 0 and Configs.passwordtries%1 == 0,
     msg.InvalidNumberOfPasswordLimitedTries:tag{value=Configs.passwordtries})
+  assert((Configs.validationburst ~= inf) == (Configs.validationrate ~= inf),
+    msg.MissingPasswordValidationParameter:tag{
+      missing = (Configs.validationburst == inf)
+                and "validationburst"
+                or "validationrate"
+    })
+  assert(Configs.validationburst >= 1,
+    msg.InvalidPasswordValidationLimit:tag{value=Configs.validationburst})
+  assert(Configs.validationrate > 0,
+    msg.InvalidPasswordValidationRate:tag{value=Configs.validationrate})
   
   -- create a set of admin users
   local adminUsers = {}
@@ -231,6 +248,8 @@ Options:
         expirationGap = Configs.expirationgap,
         passwordPenaltyTime = Configs.passwordpenalty,
         passwordTries = Configs.passwordtries,
+        passwordFailureLimit = Configs.validationrate,
+        passwordFailureRate = Configs.validationrate,
         admins = adminUsers,
         validators = validators,
         enforceAuth = not Configs.noauthorizations,

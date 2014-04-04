@@ -72,6 +72,7 @@ local ICredentialObserver = idl.types.access_control_service.ICredentialObserver
 
 local msg = require "openbus.core.services.messages"
 local Logins = require "openbus.core.services.LoginDB"
+local PasswordAttempts = require "openbus.core.services.PasswordAttempts"
 local coreutil = require "openbus.core.services.util"
 local assertCaller = coreutil.assertCaller
 
@@ -189,63 +190,6 @@ local function checkaccesskey(pubkey)
 end
 
 
-local PasswordAttempts = class()
-
-function PasswordAttempts:__init()
-  self.attemptsOf = {}
-end
-
-function PasswordAttempts:check(sourceid)
-  local attemptsOf = self.attemptsOf
-  local attempts = attemptsOf[sourceid]
-  if attempts ~= nil then
-    local deadline = attempts.deadline
-    if deadline < time() then
-      attemptsOf[sourceid] = nil
-    elseif attempts.count >= self.maxattempts then
-      log:exception(msg.TooManyFailedLogins:tag{
-        sourceid = sourceid,
-        deadline = os.date(log.timeformat, deadline),
-      })
-      -- TODO: move minor to IDL
-      NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
-    end
-  end
-end
-
-function PasswordAttempts:denied(sourceid)
-  local penalty = self.penaltytime
-  if penalty > 0 then
-    local now = self:clean()
-    local deadline = now+penalty
-    local attemptsOf = self.attemptsOf
-    local attempts = attemptsOf[sourceid]
-    if attempts == nil then
-      attempts = { deadline = deadline, count = 1}
-      attemptsOf[sourceid] = attempts
-    else
-      attempts.deadline = deadline
-      attempts.count = attempts.count + 1
-    end
-  end
-end
-
-function PasswordAttempts:granted(sourceid)
-  self.attemptsOf[sourceid] = nil
-end
-
-function PasswordAttempts:clean()
-  local now = time()
-  local attemptsOf = self.attemptsOf
-  for sourceid, attempts in pairs(attemptsOf) do
-    if attempts.deadline < now then
-      attemptsOf[sourceid] = nil
-    end
-  end
-  return now
-end
-
-
 local LoginProcess = class{ __type = LoginProcessType }
 
 function LoginProcess:cancel()
@@ -305,9 +249,14 @@ function AccessControl:__init(data)
   self.passwordValidators = data.validators
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
-  self.passwordAttempts = PasswordAttempts{
-    maxattempts = data.passwordTries,
-    penaltytime = data.passwordPenaltyTime,
+  self.loginAttempts = PasswordAttempts{
+    limit = data.passwordTries,
+    period = data.passwordPenaltyTime,
+  }
+  self.validationAttempts = PasswordAttempts{
+    mode = PasswordAttempts.modes.LeakyBucket,
+    limit = data.passwordFailureLimit,
+    period = data.passwordFailureLimit/data.passwordFailureRate,
   }
   self.activeLogins = Logins{ database = database }
   
@@ -414,10 +363,24 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
     local decoder = access.orb:newdecoder(decrypted)
     local decoded = decoder:get(self.LoginAuthInfo)
     if decoded.hash == sha256(pubkey) then
-      local sourceid = access.callerAddressOf[running()]
-      if sourceid ~= nil then sourceid = sourceid.host end
-      local attempts = self.passwordAttempts
-      attempts:check(sourceid)
+      local sourceid = access.callerAddressOf[running()].host
+      local loginAttempts = self.loginAttempts
+      local allowed, wait = loginAttempts:allow(sourceid)
+      if not allowed then
+        log:exception(msg.TooManyFailedLogins:tag{sourceid=sourceid,wait=wait})
+        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+      end
+      allowed, wait = loginAttempts:allow(entity)
+      if not allowed then
+        log:exception(msg.TooManyFailedEntityLogins:tag{entity=entity,wait=wait})
+        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+      end
+      local validationAttempts = self.validationAttempts
+      allowed, wait = validationAttempts:allow("validators")
+      if not allowed then
+        log:exception(msg.TooManyFailedValidations:tag{entity=entity,wait=wait})
+        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+      end
       for _, validator in ipairs(self.passwordValidators) do
         local valid, errmsg = validator.validate(entity, decoded.data)
         if valid then
@@ -428,7 +391,7 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
             validator = validator.name,
           })
           renewLogin(self, login)
-          attempts:granted(sourceid)
+          loginAttempts:granted(entity)
           return login, self.leaseTime
         elseif errmsg ~= nil then
           log:exception(msg.FailedPasswordValidation:tag{
@@ -438,7 +401,9 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
           })
         end
       end
-      attempts:denied(sourceid)
+      loginAttempts:denied(sourceid)
+      loginAttempts:denied(entity)
+      validationAttempts:denied("validators")
     else
       log:exception(msg.WrongPublicKeyHash:tag{ entity = entity })
     end
