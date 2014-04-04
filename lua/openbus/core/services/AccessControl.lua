@@ -250,7 +250,7 @@ function AccessControl:__init(data)
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
   self.loginAttempts = PasswordAttempts{
-    limit = data.passwordTries,
+    limit = data.passwordLimitedTries,
     period = data.passwordPenaltyTime,
   }
   self.validationAttempts = PasswordAttempts{

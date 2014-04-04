@@ -60,10 +60,10 @@ return function(...)
     leasetime = 30*60,
     expirationgap = 10,
   
-    passwordpenalty = 3*60,
-    passwordtries = 3,
-    validationburst = inf,
-    validationrate = inf,
+    badpasswordpenalty = 3*60,
+    badpasswordtries = 3,
+    badpasswordlimit = inf,
+    badpasswordrate = inf,
   
     admin = {},
     validator = {},
@@ -102,10 +102,10 @@ Options:
   -leasetime <seconds>       tempo de lease dos logins de acesso
   -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
 
-  -passwordpenalty <seconds> período com tentativas de login limitadas após falha de senha
-  -passwordtries <number>    número de tentativas durante o período de 'passwordpenalty'
-  -validationburst <number>  número máximo de validações de senha simultâneas
-  -validationrate <number>   frequência máxima de validações de senha (validação/segundo)
+  -badpasswordpenalty <sec.> período com tentativas de login limitadas após falha de senha
+  -badpasswordtries <number> número de tentativas durante o período de 'passwordpenalty'
+  -badpasswordlimit <number> número máximo de autenticações simultâneas com senha incorreta
+  -badpasswordrate <number>  frequência máxima de autenticações com senha incoreta (autenticação/segundo)
 
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
@@ -164,20 +164,20 @@ Options:
     msg.InvalidLeaseTime:tag{value=Configs.leasetime})
   assert(Configs.expirationgap > 0,
     msg.InvalidExpirationGap:tag{value=Configs.expirationgap})
-  assert(Configs.passwordpenalty >= 0,
-    msg.InvalidPasswordPenaltyTime:tag{value=Configs.passwordpenalty})
-  assert(Configs.passwordtries > 0 and Configs.passwordtries%1 == 0,
-    msg.InvalidNumberOfPasswordLimitedTries:tag{value=Configs.passwordtries})
-  assert((Configs.validationburst ~= inf) == (Configs.validationrate ~= inf),
+  assert(Configs.badpasswordpenalty >= 0,
+    msg.InvalidPasswordPenaltyTime:tag{value=Configs.badpasswordpenalty})
+  assert(Configs.badpasswordtries > 0 and Configs.badpasswordtries%1 == 0,
+    msg.InvalidNumberOfPasswordLimitedTries:tag{value=Configs.badpasswordtries})
+  assert((Configs.badpasswordlimit ~= inf) == (Configs.badpasswordrate ~= inf),
     msg.MissingPasswordValidationParameter:tag{
-      missing = (Configs.validationburst == inf)
-                and "validationburst"
-                or "validationrate"
+      missing = (Configs.badpasswordlimit == inf)
+                and "badpasswordlimit"
+                or "badpasswordrate"
     })
-  assert(Configs.validationburst >= 1,
-    msg.InvalidPasswordValidationLimit:tag{value=Configs.validationburst})
-  assert(Configs.validationrate > 0,
-    msg.InvalidPasswordValidationRate:tag{value=Configs.validationrate})
+  assert(Configs.badpasswordlimit >= 1,
+    msg.InvalidPasswordValidationLimit:tag{value=Configs.badpasswordlimit})
+  assert(Configs.badpasswordrate > 0,
+    msg.InvalidPasswordValidationRate:tag{value=Configs.badpasswordlimitrate})
   
   -- create a set of admin users
   local adminUsers = {}
@@ -246,10 +246,10 @@ Options:
         database = assert(opendb(Configs.database)),
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
-        passwordPenaltyTime = Configs.passwordpenalty,
-        passwordTries = Configs.passwordtries,
-        passwordFailureLimit = Configs.validationrate,
-        passwordFailureRate = Configs.validationrate,
+        passwordPenaltyTime = Configs.badpasswordpenalty,
+        passwordLimitedTries = Configs.badpasswordtries,
+        passwordFailureLimit = Configs.badpasswordlimit,
+        passwordFailureRate = Configs.badpasswordrate,
         admins = adminUsers,
         validators = validators,
         enforceAuth = not Configs.noauthorizations,
@@ -258,8 +258,10 @@ Options:
       log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
       log:config(msg.SetupLoginLeaseTime:tag{seconds=params.leaseTime})
       log:config(msg.SetupLoginExpirationGap:tag{seconds=params.expirationGap})
-      log:config(msg.WrongPasswordPenaltyTime:tag{seconds=Configs.passwordpenalty})
-      log:config(msg.WrongPasswordLimitedTries:tag{maxtries=Configs.passwordtries})
+      log:config(msg.BadPasswordPenaltyTime:tag{seconds=Configs.badpasswordpenalty})
+      log:config(msg.BadPasswordLimitedTries:tag{limit=Configs.badpasswordtries})
+      log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})
+      log:config(msg.BadPasswordMaxRate:tag{value=Configs.badpasswordrate})
       if not params.enforceAuth then
         log:config(msg.OfferAuthorizationDisabled)
       end

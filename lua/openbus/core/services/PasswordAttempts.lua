@@ -12,17 +12,17 @@ local class = oo.class
 
 
 local modes = {
-  AngryDog = function (self, now, before)
+  ShortMemory = function (self, before, now)
     local wait = self.period-(now-before.time)
     if wait > 0 then
       return wait
     end
   end,
-  LeakyBucket = function (self, now, before)
+  LeakyBucket = function (self, before, now)
     local rate = self.limit/self.period
-    count = count - (now-before.time)*rate -- leak the bucket
-    before.time = now
+    local count = before.count - (now-before.time)*rate -- leak the bucket
     if count > 0 then
+      before.time = now
       before.count = count
       return 1/rate
     end
@@ -31,7 +31,7 @@ local modes = {
 
 local PasswordAttempts = class{
   modes = modes,
-  mode = modes.AngryDog,
+  mode = modes.ShortMemory,
 }
 
 function PasswordAttempts:__init()
@@ -42,13 +42,14 @@ function PasswordAttempts:allow(sourceid)
   local attemptsOf = self.attemptsOf
   local attempts = attemptsOf[sourceid]
   if attempts ~= nil then
-    local blocked = self:mode(time(), attempts)
+    local blocked = self:mode(attempts, time())
     if blocked == nil then
       attemptsOf[sourceid] = nil
-    else
-      if attempts.count >= self.limit then
-        return false, wait
-      end
+    elseif attempts.count >= self.limit then
+
+_G.print(">>>", attempts.count, self.limit)
+
+      return false, blocked
     end
   end
   return true
@@ -77,11 +78,9 @@ function PasswordAttempts:clean()
   local now = time()
   local attemptsOf = self.attemptsOf
   for sourceid, attempts in pairs(attemptsOf) do
-    local count = self:mode(now, attempts.time, attempts.count)
-    if count == nil then
+    local blocked = self:mode(attempts, now)
+    if blocked == nil then
       attemptsOf[sourceid] = nil
-    else
-      attempts.count = count
     end
   end
   return now
