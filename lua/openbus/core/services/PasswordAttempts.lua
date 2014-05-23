@@ -46,9 +46,6 @@ function PasswordAttempts:allow(sourceid)
     if blocked == nil then
       attemptsOf[sourceid] = nil
     elseif attempts.count >= self.limit then
-
-_G.print(">>>", attempts.count, self.limit)
-
       return false, blocked
     end
   end
