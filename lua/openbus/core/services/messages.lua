@@ -5,7 +5,7 @@ local idl = require "openbus.core.idl"
 local msg = require "openbus.core.messages"
 
 msg.ReleaseVersion = 0
-msg.PatchVersion = 4
+msg.PatchVersion = 5
 
 msg.OpenBusVersion = concat({
   idl.const.MajorVersion,
