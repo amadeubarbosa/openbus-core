@@ -160,7 +160,7 @@ Maiores informações sobre como utilizar a configuração do \emph{busservices} pod
 
 \subsection{Para que servem?}
 
-São responsáveis por autenticar o sistema/usuário que se conecta ao barramento.
+Os validadores representam o conceito de um módulo Lua~\cite{web:luamodule} responsável por verificar se o par usuário e senha fornecido em uma tentativa de autenticação junto ao barramento é válido. 
 Atualmente pode-se utilizar 2 tipos de validadores no OpenBus: validadores LDAP ou validadores personalizados.
 
 \begin{itemize}
@@ -198,18 +198,33 @@ ldap_timeout = 10
 
 \subsection{Validadores personalizados}\label{subsec:valpersonalizados}
 
-Um validador personalizado precisa ser um módulo Lua~\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}. A função \texttt{validator} recebe como primeiro parâmetro o nome de usuário e, como segundo, a senha. Caso o par usuário/senha seja válido, deve-se retornar verdadeiro, caso contrário, falso. Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
+Um validador personalizado precisa ser um módulo Lua~\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}.
+A função \texttt{validator} recebe como primeiro parâmetro o nome de usuário e, como segundo, a senha.
+Caso o par usuário/senha seja válido, deve-se retornar verdadeiro, caso contrário, falso.
+Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
 \begin{verbatim}
+-- this is the validator function
 local function validator(name, password)
   if name == password then
     return true
   end
 end
 
+-- returning the factory to validation function
 return function(configs) return validator end
 \end{verbatim}
 
-Para ver um exemplo de como configurar um validador personalizado, consulte a seção FAQ~\ref{sec:faq}.
+Então, sempre que este módulo for carregado, ele retornará a fábrica de função de validação.
+\begin{verbatim}
+-- dummy usage example of this validation module
+local factory = require "example.of.validator"
+local validator = factory() 
+local isValid = validator(login, password)
+\end{verbatim}
+
+Podemos implementar os validadores tão simples ou seguros como desejarmos.
+Importante frisar que o validador personalizado precisa estar no LUA\_PATH para que seja encontrado pelo executável \emph{busservices}.
+Um exemplo de como configurar o LUA\_PATH para um validador personalizado é apresentado no FAQ (seção~\ref{sec:faq}).
 
 
 
