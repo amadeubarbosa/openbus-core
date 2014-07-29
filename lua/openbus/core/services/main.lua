@@ -46,6 +46,14 @@ local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
 
+local function getoptpath(configs, field, default)
+  local value = configs[field]
+  if value ~= "" then
+    return value
+  end
+  return default
+end
+
 return function(...)
   log.viewer.labels[running()] = "busservices"
   
@@ -56,6 +64,12 @@ return function(...)
   
     database = "openbus.db",
     privatekey = "openbus.key",
+
+    sslrequired = false,
+    sslkey = "",
+    sslcert = "",
+    sslcafile = "",
+    sslcapath = "",
   
     leasetime = 30*60,
     expirationgap = 10,
@@ -98,6 +112,12 @@ Options:
 
   -database <path>           arquivo de dados do barramento
   -privatekey <path>         arquivo com chave privada do barramento
+
+  -sslkey <path>             arquivo com chave privada a ser usada na autenticação SSL
+  -sslcert <path>            arquivo com certificado a ser usado na autenticação SSL
+  -sslcafile <path>          arquivo com certificados de CAs a serem usados na autenticação SSL
+  -sslcapath <path>          diretório com certificados de CAs a serem usados na autenticação SSL
+  -sslrequired               obriga a utilização de SSL para acessar o barramento
 
   -leasetime <seconds>       tempo de lease dos logins de acesso
   -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
@@ -198,9 +218,39 @@ Options:
   assert(#validators>0, msg.NoPasswordValidators)
 
   -- setup bus access
-  local address = { host=Configs.host, port=Configs.port }
-  log:config(msg.ServicesListeningAddress:tag(address))
-  local orb = access.initORB(address)
+  local sslcfg = {
+    key = getoptpath(Configs, "sslkey"),
+    certificate = getoptpath(Configs, "sslcert"),
+    cafile = getoptpath(Configs, "sslcafile"),
+    capath = getoptpath(Configs, "sslcapath"),
+  }
+  local orbflv, orbopt
+  if Configs.sslrequired or next(sslcfg) ~= nil then
+    if Configs.sslrequired then
+      log:config(msg.SecureConnectionEnforced)
+    else
+      log:config(msg.SecureConnectionEnabled)
+    end
+    orbflv = "cooperative;corba;corba.intercepted;corba.ssl;kernel.ssl"
+    orbopt = {
+      security = Configs.sslrequired and "required" or nil,
+      ssl = sslcfg,
+    }
+    log:config(msg.SecureConnectionAuthenticationKey:tag{path=sslcfg.key})
+    log:config(msg.SecureConnectionAuthenticationCertificate:tag{path=sslcfg.certificate})
+    if sslcfg.cafile ~= nil then
+      log:config(msg.SecureConnectionCertificationAuthorityListFile:tag{path=sslcfg.cafile})
+    elseif sslcfg.capath ~= nil then
+      log:config(msg.SecureConnectionCertificationAuthorityDirectory:tag{path=sslcfg.capath})
+    end
+  end
+  local orb = access.initORB{
+    host = Configs.host,
+    port = Configs.port,
+    flavor = orbflv,
+    options = orbopt,
+  }
+  log:config(msg.ServicesListeningAddress:tag{host=orb.host,port=orb.port})
   local legacy
   if not Configs.nolegacy then
     local legacyIDL = require "openbus.core.legacy.idl"
