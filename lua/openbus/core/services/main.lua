@@ -5,6 +5,13 @@ local assert = _G.assert
 local ipairs = _G.ipairs
 local require = _G.require
 local select = _G.select
+local setmetatable = _G.setmetatable
+
+local io = require "string"
+local format = io.format
+
+local math = require "math"
+local inf = math.huge
 
 local io = require "io"
 local stderr = io.stderr
@@ -14,11 +21,11 @@ local getenv = os.getenv
 
 local table = require "loop.table"
 local copy = table.copy
+local memoize = table.memoize
 
 local cothread = require "cothread"
 local running = cothread.running
 
-local oil = require "oil"
 local oillog = require "oil.verbose"
 
 local log = require "openbus.util.logger"
@@ -31,9 +38,10 @@ local setuplog = server.setuplog
 local readprivatekey = server.readprivatekey
 
 local idl = require "openbus.core.idl"
-local const = idl.const
+local BusObjectKey = idl.const.BusObjectKey
+local mngidl = require "openbus.core.admin.idl"
+local loadidl = mngidl.loadto
 local access = require "openbus.core.services.Access"
-
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
@@ -52,6 +60,11 @@ return function(...)
     leasetime = 30*60,
     expirationgap = 10,
   
+    badpasswordpenalty = 3*60,
+    badpasswordtries = 3,
+    badpasswordlimit = inf,
+    badpasswordrate = inf,
+  
     admin = {},
     validator = {},
   
@@ -62,6 +75,7 @@ return function(...)
     
     noauthorizations = false,
     nolegacy = false,
+    logaddress = false,
   }
 
   -- parse configuration file
@@ -88,6 +102,11 @@ Options:
   -leasetime <seconds>       tempo de lease dos logins de acesso
   -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
 
+  -badpasswordpenalty <sec.> período com tentativas de login limitadas após falha de senha
+  -badpasswordtries <number> número de tentativas durante o período de 'passwordpenalty'
+  -badpasswordlimit <number> número máximo de autenticações simultâneas com senha incorreta
+  -badpasswordrate <number>  frequência máxima de autenticações com senha incoreta (autenticação/segundo)
+
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
 
@@ -98,12 +117,39 @@ Options:
 
   -noauthorizations          desativa o suporte a autorizações de oferta
   -nolegacy                  desativa o suporte à versão antiga do barramento
+  -logaddress                exibe o endereço IP do requisitante no log do barramento
 
   -configs <path>            arquivo de configurações adicionais do barramento
   
 ]])
       return 1 -- program's exit code
     end
+  end
+
+  local logaddress = Configs.logaddress and {}
+  if logaddress then
+    local function writeCallerAddress(verbose)
+      local viewer = verbose.viewer
+      local output = viewer.output
+      local address = logaddress[running()]
+      if address == nil then
+        output:write("                      ")
+      else
+        output:write(format("%15s:%5d ", address.host, address.port))
+      end
+      return true
+    end
+    local backup = log.custom
+    log.custom = memoize(function(tag)
+      local custom = backup[tag]
+      if custom ~= nil then
+        return function (self, ...)
+          writeCallerAddress(self)
+          return custom(self, ...)
+        end
+      end
+      return writeCallerAddress
+    end)
   end
 
   -- setup log files
@@ -118,6 +164,20 @@ Options:
     msg.InvalidLeaseTime:tag{value=Configs.leasetime})
   assert(Configs.expirationgap > 0,
     msg.InvalidExpirationGap:tag{value=Configs.expirationgap})
+  assert(Configs.badpasswordpenalty >= 0,
+    msg.InvalidPasswordPenaltyTime:tag{value=Configs.badpasswordpenalty})
+  assert(Configs.badpasswordtries > 0 and Configs.badpasswordtries%1 == 0,
+    msg.InvalidNumberOfPasswordLimitedTries:tag{value=Configs.badpasswordtries})
+  assert((Configs.badpasswordlimit ~= inf) == (Configs.badpasswordrate ~= inf),
+    msg.MissingPasswordValidationParameter:tag{
+      missing = (Configs.badpasswordlimit == inf)
+                and "badpasswordlimit"
+                or "badpasswordrate"
+    })
+  assert(Configs.badpasswordlimit >= 1,
+    msg.InvalidPasswordValidationLimit:tag{value=Configs.badpasswordlimit})
+  assert(Configs.badpasswordrate > 0,
+    msg.InvalidPasswordValidationRate:tag{value=Configs.badpasswordlimitrate})
   
   -- create a set of admin users
   local adminUsers = {}
@@ -148,13 +208,15 @@ Options:
     local ACS = require "openbus.core.legacy.AccessControlService"
     legacy = ACS.IAccessControlService
   end
-  local iceptor = access.Interceptor{
+  iceptor = access.Interceptor{
     prvkey = assert(readprivatekey(Configs.privatekey)),
     orb = orb,
     legacy = legacy,
   }
   orb:setinterceptor(iceptor, "corba")
-  
+  loadidl(orb)
+  logaddress = logaddress and iceptor.callerAddressOf
+
   -- prepare facets to be published as CORBA objects
   local facets = {}
   do
@@ -162,11 +224,9 @@ Options:
       access_control = AccessControl,
       offer_registry = OfferRegistry,
     }
-    local objkeyfmt = idl.const.BusObjectKey.."/%s"
+    local objkeyfmt = BusObjectKey.."/%s"
     for modname, modfacets in pairs(facetmodules) do
-      local types = idl.types.services[modname]
       for name, facet in pairs(modfacets) do
-        facet.__type = types[name]
         facet.__facet = name
         facet.__objkey = objkeyfmt:format(name)
         facets[name] = facet
@@ -177,8 +237,8 @@ Options:
   -- create SCS component
   newSCS{
     orb = orb,
-    objkey = const.BusObjectKey,
-    name = const.BusObjectKey,
+    objkey = BusObjectKey,
+    name = BusObjectKey,
     facets = facets,
     init = function()
       local params = {
@@ -186,14 +246,22 @@ Options:
         database = assert(opendb(Configs.database)),
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
+        passwordPenaltyTime = Configs.badpasswordpenalty,
+        passwordLimitedTries = Configs.badpasswordtries,
+        passwordFailureLimit = Configs.badpasswordlimit,
+        passwordFailureRate = Configs.badpasswordrate,
         admins = adminUsers,
         validators = validators,
         enforceAuth = not Configs.noauthorizations,
       }
       log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
       log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
-      log:config(msg.SetupLoginLeaseTime:tag{value=params.leaseTime})
-      log:config(msg.SetupLoginExpirationGap:tag{value=params.expirationGap})
+      log:config(msg.SetupLoginLeaseTime:tag{seconds=params.leaseTime})
+      log:config(msg.SetupLoginExpirationGap:tag{seconds=params.expirationGap})
+      log:config(msg.BadPasswordPenaltyTime:tag{seconds=Configs.badpasswordpenalty})
+      log:config(msg.BadPasswordLimitedTries:tag{limit=Configs.badpasswordtries})
+      log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})
+      log:config(msg.BadPasswordMaxRate:tag{value=Configs.badpasswordrate})
       if not params.enforceAuth then
         log:config(msg.OfferAuthorizationDisabled)
       end
@@ -236,5 +304,4 @@ Options:
 
   -- start ORB
   log:uptime(msg.CoreServicesStarted)
-  orb:run()
 end

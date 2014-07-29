@@ -1,9 +1,14 @@
 local _G = require "_G"
 local getmetatable = _G.getmetatable
-local newproxy = _G.newproxy
 local setmetatable = _G.setmetatable
 local rawget = _G.rawget
 local rawset = _G.rawset
+
+local array = require "table"
+local unpack = array.unpack or _G.unpack
+
+local coroutine = require "coroutine"
+local running = coroutine.running
 
 local hash = require "lce.hash"
 local sha256 = hash.sha256
@@ -29,17 +34,16 @@ local setNoPermSysEx = access.setNoPermSysEx
 local Context = access.Context
 local Interceptor = access.Interceptor
 local receiveBusRequest = Interceptor.receiverequest
+local sendBusReply = Interceptor.sendreply
 
 
 
 local function alwaysIndex(default)
-  local index = newproxy(true)
-  getmetatable(index).__index = function() return default end
-  return index
+  return setmetatable({}, { __index = function() return default end })
 end
 
 local Anybody = alwaysIndex(true)
-local Everybody = newproxy(Anybody) -- copy of Anybody
+local Everybody = alwaysIndex(true)
 local PredefinedUserSets = {
   none = alwaysIndex(nil),
   any = Anybody,
@@ -48,7 +52,7 @@ local PredefinedUserSets = {
 
 local function getLoginInfoFor(self, loginId)
   return self.LoginRegistry:getLoginEntry(loginId)
-      or { id = loginId, entity = "<unknown>" }
+      or {id=loginId,entity="<unknown>"}
 end
 
 
@@ -58,18 +62,18 @@ local BusInterceptor = class({}, Context, Interceptor)
 function BusInterceptor:__init()
   self.context = self
   self.signedChainOf = memoize(function(chain) -- [chain] = SignedChainCache
-    return LRUCache{ -- [remoteid] = signedChain
-      retrieve = function(remoteid)
+    return LRUCache{ -- [target] = signedChain
+      retrieve = function(target)
         local originators = { unpack(chain.originators) }
         originators[#originators+1] = chain.caller
-        return self.AccessControl:encodeChain{
-          target = remoteid,
+        return self.AccessControl:encodeChain({
           originators = originators,
           caller = self.login,
-        }
+        }, target)
       end,
     }
   end, "k")
+  self.callerAddressOf = setmetatable({}, {__mode = "k"})
   do
     local forAllOps = Everybody
     
@@ -117,31 +121,37 @@ function BusInterceptor:unmarshalCredential(...)
         signature = false,
         originators = {},
         caller = getLoginInfoFor(self, credential.login),
-        target = self.login.id,
+        target = self.login.entity,
       }
       credential.chain = chain
     elseif chain.signature ~= nil then -- joined non-legacy call
       local originators = chain.originators
       originators[#originators+1] = chain.caller -- add last originator
-      chain.caller = getLoginInfoFor(self, chain.target)
-      chain.target = self.login.id
+      local caller = getLoginInfoFor(self, credential.login)
+      chain.caller = caller
+      local target = chain.target
+      if target ~= caller.entity then
+        chain.caller = {id="<unknown>",entity=target} -- raises "InvalidChain"
+      end
+      chain.target = self.login.entity
     end
   end
   return credential
 end
 
-function BusInterceptor:signChainFor(remoteid, chain)
-  return self.signedChainOf[chain]:get(remoteid)
+function BusInterceptor:signChainFor(target, chain)
+  return self.signedChainOf[chain]:get(target)
 end
 
 function BusInterceptor:receiverequest(request)
+  self.callerAddressOf[running()] = request.channel_address
   if request.servant ~= nil then -- servant object does exist
     local op = request.operation_name
     if op:find("_", 1, true) ~= 1
     or op:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
       receiveBusRequest(self, request)
       if request.success == nil then
-        local granted = self.context.grantedUsers[request.interface.repID][op]
+        local granted = self.grantedUsers[request.interface.repID][op]
         local chain = self:getCallerChain()
         if chain ~= nil then
           local login = chain.caller
@@ -172,6 +182,11 @@ function BusInterceptor:receiverequest(request)
       end
     end
   end
+end
+
+function BusInterceptor:sendreply(...)
+  self.callerAddressOf[running()] = nil
+  return sendBusReply(self, ...)
 end
 
 function BusInterceptor:setGrantedUsers(interface, operation, users)

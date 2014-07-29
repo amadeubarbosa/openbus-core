@@ -170,6 +170,7 @@ local function assertEx(errmsg, ...)
 end
 
 do
+  local lfs = require "lfs"
   assert(lfs.rmdir("test.db/Logins"))
   assert(io.open("test.db/Logins", "w")):close()
   assertEx("'test%.db/Logins' expected to be directory %(got file%)",
@@ -180,13 +181,13 @@ do
   local file = assert(io.open("test.db/Logins/corrupted.lua", "w"))
   assert(file:write("illegal Lua code"))
   file:close()
-  assertEx("unable to load file 'test%.db/Logins/corrupted%.lua' %(test.db/Logins/corrupted%.lua:1: '=' expected near 'Lua'%)",
+  assertEx("unable to load file 'test%.db/Logins/corrupted%.lua'",
            LoginDB, {database=assert(database.open("test.db"))})
   
-  assert(os.execute("chmod 000 test.db/Logins") == 0)
+  assert(os.execute("chmod 000 test.db/Logins"))
   assertEx("cannot open test%.db/Logins/: Permission denied",
            LoginDB, {database=assert(database.open("test.db"))})
-  assert(os.execute("chmod 755 test.db/Logins") == 0)
+  assert(os.execute("chmod 755 test.db/Logins"))
   assert(os.remove("test.db/Logins/corrupted.lua"))
 end
 
@@ -198,13 +199,13 @@ do
   local user = assert(logins:newLogin("user", key))
   local obs = assert(user:newObserver(logins.orb:newproxy("obs", nil, "IObserver")))
   
-  assert(os.execute("chmod 000 test.db/Logins") == 0)
+  assert(os.execute("chmod 000 test.db/Logins"))
   
   obs:watchLogin(user)
   assertIterator({[obs] = true}, user:iObservers())
   assertIterator({[user.id] = true}, obs:iWatchedLoginIds())
   
-  assert(os.execute("chmod 000 test.db/LoginObservers") == 0)
+  assert(os.execute("chmod 000 test.db/LoginObservers"))
   
   assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+%.lua' %(.-: Permission denied%)",
            obs.forgetLogin, obs, user)
@@ -223,12 +224,12 @@ do
   assertIterator({[user.id] = user}, logins:iLogins())
   assertIterator({[obs] = true}, user:iObservers())
   
-  assert(os.execute("chmod 755 test.db/LoginObservers") == 0)
+  assert(os.execute("chmod 755 test.db/LoginObservers"))
   obs:forgetLogin(user)
   for _ in user:iWatchers() do error("failure") end
   for _ in obs:iWatchedLoginIds() do error("failure") end
   
-  assert(os.execute("chmod 755 test.db/Logins") == 0)
+  assert(os.execute("chmod 755 test.db/Logins"))
   user:remove()
   assert(logins:getLogin(user.id) == nil)
   assert(logins:getObserver(obs.id) == nil)

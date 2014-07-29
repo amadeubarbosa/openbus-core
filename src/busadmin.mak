@@ -1,41 +1,89 @@
 PROJNAME= busadmin
 APPNAME= $(PROJNAME)
 
-OPENBUSINC= ${OPENBUS_HOME}/include
-OPENBUSLIB= ${OPENBUS_HOME}/lib
+SCSIDL= ${SCS_IDL1_2_HOME}/src
+OPENBUSIDL= ${OPENBUS_IDL2_0_HOME}/src
 
 SRC= \
   launcher.c \
   adminlibs.c \
   $(PRELOAD_DIR)/coreadmin.c
 
+IDLDIR= ../idl
+IDLSRC= \
+  $(IDLDIR)/access_management.idl \
+  $(IDLDIR)/offer_authorization.idl
+
+DEPENDENTIDLSRC= \
+  $(SCSIDL)/scs.idl \
+  $(OPENBUSIDL)/core.idl \
+  $(OPENBUSIDL)/credential.idl \
+  $(OPENBUSIDL)/access_control.idl \
+  $(OPENBUSIDL)/offer_registry.idl
+
 LUADIR= ../lua
 LUASRC= \
+  $(LUADIR)/openbus/core/admin/idl.lua \
   $(LUADIR)/openbus/core/admin/main.lua \
   $(LUADIR)/openbus/core/admin/messages.lua \
+  $(LUADIR)/openbus/core/admin/parsed.lua \
   $(LUADIR)/openbus/core/admin/print.lua \
   $(LUADIR)/openbus/core/admin/script.lua \
 
-include ${LOOP_HOME}/openbus/base.mak
+include ${OIL_HOME}/openbus/base.mak
 
-LIBS:= lce luuid lfs luavararg luastruct  luasocket loop luatuple \
-  luacoroutine luacothread luainspector luaidl oil luascs luaopenbus lua5.1
+LIBS:= \
+  luastruct \
+  luasocket \
+  luatuple \
+  loop \
+  luacothread \
+  luaidl \
+  oil \
+  luavararg \
+  lfs \
+  luuid \
+  lce \
+  luascs \
+  luaopenbus
 
 DEFINES= \
   TECMAKE_APPNAME=\"$(APPNAME)\"
 
 INCLUDES+= . $(SRCLUADIR) \
-  $(OPENBUSINC)/luuid \
-  $(OPENBUSINC)/lce \
-  $(OPENBUSINC)/luafilesystem \
-  $(OPENBUSINC)/luavararg \
-  $(OPENBUSINC)/luastruct \
-  $(OPENBUSINC)/luasocket2 \
-  $(OPENBUSINC)/loop \
-  $(OPENBUSINC)/oil \
-  $(OPENBUSINC)/scs/lua \
-  $(OPENBUSINC)/openbus/lua
-LDIR+= $(OPENBUSLIB)
+  $(LUASTRUCT_HOME)/src \
+  $(LUASOCKET_HOME)/include \
+  $(LUATUPLE_HOME)/obj/$(TEC_UNAME) \
+  $(LOOP_HOME)/obj/$(TEC_UNAME) \
+  $(LUACOTHREAD_HOME)/obj/$(TEC_UNAME) \
+  $(LUAIDL_HOME)/obj/$(TEC_UNAME) \
+  $(OIL_HOME)/obj/$(TEC_UNAME) \
+  $(LUAVARARG_HOME)/src \
+  $(LUAFILESYSTEM_HOME)/include \
+  $(LUUID_HOME)/include \
+  $(LCE_HOME)/include \
+  $(SCS_LUA_HOME)/obj/$(TEC_UNAME) \
+  $(OPENBUS_LUA_HOME)/obj/$(TEC_UNAME)
+LDIR+= \
+  $(LUASTRUCT_HOME)/lib/$(TEC_UNAME) \
+  $(LUASOCKET_HOME)/lib/$(TEC_UNAME) \
+  $(LUATUPLE_HOME)/lib/$(TEC_UNAME) \
+  $(LOOP_HOME)/lib/$(TEC_UNAME) \
+  $(LUACOTHREAD_HOME)/lib/$(TEC_UNAME) \
+  $(LUAIDL_HOME)/lib/$(TEC_UNAME) \
+  $(OIL_HOME)/lib/$(TEC_UNAME) \
+  $(LUAVARARG_HOME)/lib/$(TEC_UNAME) \
+  $(LUAFILESYSTEM_HOME)/lib/$(TEC_UNAME) \
+  $(LUUID_HOME)/lib/$(TEC_UNAME) \
+  $(LCE_HOME)/lib/$(TEC_UNAME) \
+  $(SCS_LUA_HOME)/lib/$(TEC_UNAME) \
+  $(OPENBUS_LUA_HOME)/lib/$(TEC_UNAME)
+
+ifdef USE_LUA51
+  INCLUDES+= $(LUACOMPAT52_HOME)/c-api $(LUACOMPAT52_HOME)/obj/$(TEC_UNAME)
+  LDIR+= $(LUACOMPAT52_HOME)/lib/$(TEC_UNAME)
+  LIBS+= luacompat52 luabit32 luacompat52c
+endif
 
 ifeq "$(TEC_SYSNAME)" "Linux"
   LFLAGS = -Wl,-E
@@ -50,19 +98,44 @@ ifeq "$(TEC_SYSNAME)" "SunOS"
 endif
 
 ifdef USE_STATIC
-  SLIB:= $(foreach libname, $(LIBS) uuid crypto, $(OPENBUSLIB)/lib$(libname).a)
+  SLIB:= $(foreach libname, $(LIBS) uuid crypto, ${OPENBUS_HOME}/lib/lib$(libname).a)
   ifeq "$(TEC_SYSNAME)" "SunOS"
     LIBS:= rt nsl socket resolv
   else
     LIBS:= 
   endif
 else
-  ifneq "$(TEC_SYSNAME)" "Darwin"
-    LIBS+= uuid
+  ifeq ($(findstring $(TEC_SYSNAME), Win32 Win64), )
+    ifneq "$(TEC_SYSNAME)" "Darwin"
+      LIBS+= uuid
+    endif
   endif
 endif
 
-LIBS+= dl
+ifneq ($(findstring $(TEC_SYSNAME), Win32 Win64), )
+  APPTYPE= console
+  LIBS+= wsock32 rpcrt4
+  ifneq ($(findstring dll, $(TEC_UNAME)), ) # USE_DLL
+    ifdef DBG
+      LIBS+= libeay32MDd ssleay32MDd
+    else
+      LIBS+= libeay32MD ssleay32MD
+    endif
+    LDIR+= $(OPENSSL_HOME)/lib/VC
+  else
+    ifdef DBG
+      LIBS+= libeay32MTd ssleay32MTd
+    else
+      LIBS+= libeay32MT ssleay32MT
+    endif
+    LDIR+= $(OPENSSL_HOME)/lib/VC/static
+  endif
+else
+  LIBS+= dl
+endif
+
+$(LUADIR)/openbus/core/admin/parsed.lua: $(IDL2LUA) $(IDLSRC) $(DEPENDENTIDLSRC)
+	$(OILBIN) $(IDL2LUA) -I $(SCSIDL) -I $(OPENBUSIDL) -o $@ $(IDLSRC)
 
 $(PRELOAD_DIR)/coreadmin.c $(PRELOAD_DIR)/coreadmin.h: $(LUAPRELOADER) $(LUASRC)
 	$(LOOPBIN) $(LUAPRELOADER) -l "$(LUADIR)/?.lua" \

@@ -3,8 +3,10 @@ require "openbus.test.configs"
 require "openbus.test.lowlevel"
 
 local cothread = require "cothread"
-cothread.plugin(require "cothread.plugin.socket")
 local sleep = cothread.delay
+
+local uuid = require "uuid"
+local validid = uuid.isvalid
 
 local pubkey = require "lce.pubkey"
 local newkey = pubkey.create
@@ -19,29 +21,54 @@ local CredentialContextId = idl.const.credential.CredentialContextId
 local loginconst = idl.const.services.access_control
 local logintypes = idl.types.services.access_control
 
-local corba = require "openbus.util.corba"
-local refstatus = corba.refStatus
+local giop = require "oil.corba.giop"
+local sysex = giop.SystemExceptionIDs
+
 local server = require "openbus.util.server"
 local readfrom = server.readfrom
 
 syskey = assert(decodeprvkey(readfrom(syskey)))
 
-local checkuuid do
-  local used = {}
-  function checkuuid(id)
-    assert(used[id] == nil)
-    used[id] = true
-  end
-end
-
 -- test initialization ---------------------------------------------------------
 
-local bus = connectToBus(bushost, busport)
+local bus, orb = connectToBus(bushost, busport)
 local ac = bus.AccessControl
 local prvkey = newkey(EncryptedBlockSize)
 local pubkey = prvkey:encode("public")
 local shortkey = newkey(EncryptedBlockSize-1):encode("public")
+local longkey = newkey(EncryptedBlockSize+1):encode("public")
 local otherkey = newkey(EncryptedBlockSize)
+
+-- local function --------------------------------------------------------------
+
+local function doLogout(login)
+  -- create an invalid credential
+  local credential = {
+    opname = "logout",
+    bus = bus.id,
+    login = login,
+    session = 0,
+    ticket = 0,
+    secret = "",
+    chain = NullChain,
+  }
+  putreqcxt(CredentialContextId, encodeCredential(credential))
+  -- request cresential reset
+  local ok, ex = pcall(ac.logout, ac)
+  assert(ok == false)
+  assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+  assert(ex.completed == "COMPLETED_NO")
+  assert(ex.minor == loginconst.InvalidCredentialCode)
+  local reset = decodeReset(assert(getrepcxt(CredentialContextId)), prvkey)
+  -- update credential with credential reset information
+  credential.session = reset.session
+  credential.ticket = 1
+  credential.secret = reset.secret
+  putreqcxt(CredentialContextId, encodeCredential(credential))
+  -- perform bus call
+  ac:logout()
+  return credential
+end
 
 -- login by password -----------------------------------------------------------
 
@@ -53,12 +80,50 @@ do -- login using reserved entity
   assert(ex._repid == logintypes.AccessDenied)
 end
 
-do -- login with wrong password
-  local encrypted = encodeLogin(bus.key, "WrongPassword", pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
-  assert(ok == false)
-  assert(ex._repid == logintypes.AccessDenied)
+for _, userpat in ipairs({"%s", "%s%d"}) do
+  do -- login with wrong password max tries
+    local encrypted = encodeLogin(bus.key, "WrongPassword", pubkey)
+    local ok, ex
+    for i = 1, passwordtries do
+      local entity = userpat:format(user, i)
+      ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+      assert(ok == false)
+      assert(ex._repid == logintypes.AccessDenied)
+    end
+    ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+    assert(ok == false)
+    assert(ex._repid == sysex.NO_RESOURCES)
+    sleep(passwordpenalty)
+    ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+    assert(ok == false)
+    assert(ex._repid == logintypes.AccessDenied)
+    -- reseting failed login attempts
+    sleep(passwordpenalty)
+  end
+
+  do -- login with wrong password max - 1 tries
+    local encrypted = encodeLogin(bus.key, "WrongPassword", pubkey)
+    local ok, ex
+    for i = 1, passwordtries - 1 do
+      local entity = userpat:format(user, i)
+      ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+      assert(ok == false)
+      assert(ex._repid == logintypes.AccessDenied)
+    end
+    encrypted = encodeLogin(bus.key, password, pubkey)
+    local login = ac:loginByPassword(user, pubkey, encrypted)
+    doLogout(login.id)
+    encrypted = encodeLogin(bus.key, "WrongPassword", pubkey)
+    ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+    assert(ok == false)
+    assert(ex._repid == logintypes.AccessDenied)
+    -- reseting failed login attempts
+    sleep(passwordpenalty)
+  end
 end
+
+
+-- TODO: login with wrong password max tries with different IP addresses
 
 do -- login with wrong access key hash
   local encrypted = encodeLogin(bus.key, password, "WrongKey")
@@ -91,10 +156,18 @@ do -- login with key too short
   assert(ex._repid == logintypes.InvalidPublicKey)
 end
 
+do -- login with key too long
+  local pubkey = longkey
+  local encrypted = encodeLogin(bus.key, password, pubkey)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+  assert(ok == false)
+  assert(ex._repid == logintypes.InvalidPublicKey)
+end
+
 do -- login successfull
   local encrypted = encodeLogin(bus.key, password, pubkey)
   local login, lease = ac:loginByPassword(user, pubkey, encrypted)
-  checkuuid(login.id)
+  assert(validid(login.id))
   assert(login.entity == user)
   assert(lease > 0)
   validlogin = login
@@ -154,56 +227,17 @@ do -- login successfull
   local secret = assert(syskey:decrypt(challenge))
   local encrypted = encodeLogin(bus.key, secret, pubkey)
   local login, lease = attempt:login(pubkey, encrypted)
-  assert(refstatus(attempt) == "nonexistent")
-  checkuuid(login.id)
+  assert(attempt:_non_existent())
+  assert(validid(login.id))
   assert(login.entity == system)
   assert(lease > 0)
-  logoutid = login.id -- this login will be invalidated by a logout
+  syslogin = login.id -- this login will be invalidated by a logout
 end
 
 do -- cancel login attempt
   local attempt = ac:startLoginByCertificate(system)
   attempt:cancel()
-  assert(refstatus(attempt) == "nonexistent")
-end
-
--- logout ----------------------------------------------------------------------
-
-do -- logout
-  -- create an invalid credential
-  local credential = {
-    opname = "logout",
-    bus = bus.id,
-    login = logoutid,
-    session = 0,
-    ticket = 0,
-    secret = "",
-    chain = NullChain,
-  }
-  putreqcxt(CredentialContextId, encodeCredential(credential))
-  -- request cresential reset
-  local ok, ex = pcall(ac.logout, ac)
-  assert(ok == false)
-  assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
-  assert(ex.completed == "COMPLETED_NO")
-  assert(ex.minor == loginconst.InvalidCredentialCode)
-  local reset = decodeReset(assert(getrepcxt(CredentialContextId)), prvkey)
-  -- update credential with credential reset information
-  credential.session = reset.session
-  credential.ticket = 1
-  credential.secret = reset.secret
-  putreqcxt(CredentialContextId, encodeCredential(credential))
-  -- perform bus call
-  ac:logout()
-  -- update credential with new ticket
-  credential.ticket = credential.ticket+1
-  putreqcxt(CredentialContextId, encodeCredential(credential))
-  -- check if the call will fail
-  local ok, ex = pcall(ac.renew, ac)
-  assert(ok == false)
-  assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
-  assert(ex.completed == "COMPLETED_NO")
-  assert(ex.minor == loginconst.InvalidLoginCode)
+  assert(attempt:_non_existent())
 end
 
 -- credentials -----------------------------------------------------------------
@@ -215,24 +249,47 @@ do
   testBusCall(bus, validlogin, otherkey, greaterthanzero, bus.AccessControl, "renew")
 end
 
--- chain signature -------------------------------------------------------------
+-- chain signature 1 -----------------------------------------------------------
 
-do -- sign chain for an invalid login
+do -- join chain targeted for other login
   validlogin.busSession:newCred("signChainFor")
-  signed = ac:signChainFor(logoutid)
+  signed = ac:signChainFor(syslogin)
   local chain = decodeChain(bus.key, signed)
-  assert(chain.target == logoutid)
+  assert(chain.target == system)
   assert(chain.caller.id == validlogin.id)
   assert(chain.caller.entity == user)
-end
 
-do -- join chain targeted for other login (an invalid one)
   validlogin.busSession:newCred("signChainFor", signed)
-  local ok, ex = pcall(ac.signChainFor, ac, logoutid)
+  local ok, ex = pcall(ac.signChainFor, ac, validlogin.id)
   assert(ok == false)
   assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
   assert(ex.completed == "COMPLETED_NO")
   assert(ex.minor == loginconst.InvalidChainCode)
+end
+
+-- logout ----------------------------------------------------------------------
+
+do -- logout
+  local credential = doLogout(syslogin)
+  -- update credential with new ticket
+  credential.ticket = credential.ticket+1
+  putreqcxt(CredentialContextId, encodeCredential(credential))
+  -- check if the call will fail
+  local ok, ex = pcall(ac.renew, ac)
+  assert(ok == false)
+  assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
+  assert(ex.completed == "COMPLETED_NO")
+  assert(ex.minor == loginconst.InvalidLoginCode)
+end
+
+-- chain signature 2 -----------------------------------------------------------
+
+do -- sign chain for an invalid login
+  validlogin.busSession:newCred("signChainFor")
+  local ok, ex = pcall(ac.signChainFor, ac, syslogin)
+  assert(ok == false)
+  assert(ex._repid == logintypes.InvalidLogins)
+  assert(ex.loginIds[1] == syslogin)
 end
 
 -- login lease -----------------------------------------------------------------
@@ -255,3 +312,5 @@ do
   assert(ex.completed == "COMPLETED_NO")
   assert(ex.minor == loginconst.InvalidLoginCode)
 end
+
+orb:shutdown()

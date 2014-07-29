@@ -33,39 +33,54 @@ local log = require "openbus.util.logger"
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
+local BAD_PARAM = sysex.BAD_PARAM
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
-local srvex = idl.throw.services
-local throw = idl.throw.services.offer_registry
-local types = idl.types.services.offer_registry
+local ServiceFailure = idl.throw.services.ServiceFailure
+local offexp = idl.throw.services.offer_registry
+local InvalidProperties = offexp.InvalidProperties
+local InvalidService = offexp.InvalidService
+local UnauthorizedFacets = offexp.UnauthorizedFacets
+local offtyp = idl.types.services.offer_registry
+local OfferedService = offtyp.OfferedService
+local OfferObserver = offtyp.OfferObserver
+local OffObserverSubType = offtyp.OfferObserverSubscription
+local OffRegObserverType = offtyp.OfferRegistryObserver
+local OffRegObsSubType = offtyp.OfferRegistryObserverSubscription
+local OfferRegistryType = offtyp.OfferRegistry
+local ServiceOffer = offtyp.ServiceOffer
+
+local mngidl = require "openbus.core.admin.idl"
+local mngexp = mngidl.throw.services.offer_registry.admin.v1_0
+local AuthorizationInUse = mngexp.AuthorizationInUse
+local EntityAlreadyRegistered = mngexp.EntityAlreadyRegistered
+local EntityCategoryAlreadyExists = mngexp.EntityCategoryAlreadyExists
+local EntityCategoryInUse = mngexp.EntityCategoryInUse
+local InterfaceInUse = mngexp.InterfaceInUse
+local InvalidInterface = mngexp.InvalidInterface
+local mngtyp = mngidl.types.services.offer_registry.admin.v1_0
+local EntityCategory = mngtyp.EntityCategory
+local EntityRegistryType = mngtyp.EntityRegistry
+local InterfaceRegistryType = mngtyp.InterfaceRegistry
+local RegisteredEntity = mngtyp.RegisteredEntity
 
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 AccessControl = AccessControl.AccessControl
 local PropertyIndex = require "openbus.core.services.PropertyIndex"
 
+local coreutil = require "openbus.core.services.util"
+local assertCaller = coreutil.assertCaller
 
 local OfferRegistry -- forward declaration
 local EntityRegistry -- forward declaration
 
-local function assertCaller(self, owner)
-  local entity = self.access:getCallerChain().caller.entity
-  local logtag
-  if entity == owner then
-    logtag = "request"
-  elseif self.admins[entity] ~= nil then
-    logtag = "admin"
-  else
-    srvex.UnauthorizedOperation()
-  end
-  return logtag
-end
 
 local function ifaceId2Key(ifaceId)
   local name, version = ifaceId:match("^IDL:(.-):(%d+%.%d+)$")
   if name == nil then
-    throw.InvalidInterface{ ifaceId = ifaceId }
+    InvalidInterface{ ifaceId = ifaceId }
   end
   return name:gsub("/", ".").."-"..version
 end
@@ -76,7 +91,7 @@ local function updateAuthorization(db, id, set, spec, value)
   local ok, errmsg = db:setentryfield(id, "authorized", set)
   if not ok then
     set[spec] = backup
-    srvex.ServiceFailure{message=errmsg}
+    ServiceFailure{message=errmsg}
   end
 end
 
@@ -95,6 +110,9 @@ local ReservedProperties = {
   ["openbus.component.version.major"] = true,
   ["openbus.component.version.minor"] = true,
   ["openbus.component.version.patch"] = true,
+  ["openbus.component.platform"] = true,
+  ["openbus.component.interface"] = true,
+  ["openbus.component.facet"] = true,
 }
 
 local function makePropertyList(entry, service_props)
@@ -113,6 +131,7 @@ local function makePropertyList(entry, service_props)
     { name = "openbus.component.version.major", value = tostring(entry.component.major_version) },
     { name = "openbus.component.version.minor", value = tostring(entry.component.minor_version) },
     { name = "openbus.component.version.patch", value = tostring(entry.component.patch_version) },
+    { name = "openbus.component.platform", value = entry.component.platform_spec },
   }
   local interfaces = {}
   for _, facet in ipairs(entry.facets) do
@@ -131,7 +150,7 @@ local function makePropertyList(entry, service_props)
     end
   end
   if #illegal > 0 then
-    throw.InvalidProperties{ properties = illegal }
+    InvalidProperties{ properties = illegal }
   end
   return props
 end
@@ -173,7 +192,7 @@ end
 ------------------------------------------------------------------------------
 
 local OfferObserverSubscription = class{
-  __type = types.OfferObserverSubscription,
+  __type = OffObserverSubType,
 }
 
 function OfferObserverSubscription:__init()
@@ -181,6 +200,10 @@ function OfferObserverSubscription:__init()
   local offer = self.offer
   self.__objkey = "OfferObserver:"..id -- for the ORB
   registerObserver(offer.registry, offer, id, self)
+end
+
+function OfferObserverSubscription:describe()
+  return self
 end
 
 function OfferObserverSubscription:remove(tag)
@@ -204,7 +227,7 @@ end
 
 
 local OfferRegistryObserverSubscription = class{
-  __type = types.OfferRegistryObserverSubscription,
+  __type = OffRegObsSubType,
 }
 
 function OfferRegistryObserverSubscription:__init()
@@ -212,6 +235,10 @@ function OfferRegistryObserverSubscription:__init()
   local registry = self.registry
   self.__objkey = "OfferRegObs:"..id -- for the ORB
   registerObserver(registry, registry, id, self)
+end
+
+function OfferRegistryObserverSubscription:describe()
+  return self
 end
 
 function OfferRegistryObserverSubscription:remove(tag)
@@ -231,7 +258,7 @@ function OfferRegistryObserverSubscription:remove(tag)
 end
 
 
-local Offer = class{ __type = types.ServiceOffer }
+local Offer = class{ __type = ServiceOffer }
   
 function Offer:__init()
   self.ref = self -- IDL struct attribute (see operation 'describe')
@@ -250,10 +277,12 @@ function Offer:__init()
         offer = self.id,
         id = id,
       })
-      entry.id = id
-      entry.observer = orb:newproxy(entry.observer, nil, types.OfferObserver)
-      entry.offer = self
-      orb:newservant(OfferObserverSubscription(entry))
+      orb:newservant(OfferObserverSubscription{
+        login = login,
+        id = id,
+        observer = orb:newproxy(entry.observer, nil, OfferObserver),
+        offer = self,
+      })
     else
       log:action(msg.DiscardOfferObserverAfterLogout:tag{
         login = login,
@@ -283,6 +312,7 @@ function Offer:setProperties(properties)
   self.properties = allprops
   offers:add(self)
   log[tag](log, msg.UpdateOfferProperties:tag{ offer = self.id })
+  -- notify observers
   notifyOfferObservers(registry, self, "propertiesChanged", self)
   registry:notifyRegistryObservers(self)
 end
@@ -290,6 +320,13 @@ end
 function Offer:remove(tag)
   local registry = self.registry
   local tag = tag or assertCaller(registry, self.entity)
+  -- schedule notification of observers
+  notifyOfferObservers(registry, self, "removed", self)
+  -- unregister observers from the logout callback
+  local observerLogins = registry.observerLogins
+  for id, login in pairs(self.observers) do
+    observerLogins[login][self][id]:remove(tag)
+  end
   -- try to remove persisted offer (may raise expections)
   assert(self.database:removeentry(self.id))
   -- commit changes in memory
@@ -300,18 +337,11 @@ function Offer:remove(tag)
     entity = self.entity,
     login = self.login,
   })
-  -- notify observers
-  notifyOfferObservers(registry, self, "removed", self)
-  -- unregister observers from the logout callback
-  local observerLogins = registry.observerLogins
-  for id, login in pairs(self.observers) do
-    observerLogins[login][self][id]:remove()
-  end
 end
 
 function Offer:subscribeObserver(observer)
   if observer == nil then
-    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local registry = self.registry
   local offerid = self.id
@@ -336,7 +366,7 @@ function Offer:subscribeObserver(observer)
 end
 
 
-OfferRegistry = {} -- is local (see forward declaration)
+OfferRegistry = { __type = OfferRegistryType } -- is local (see forward declaration)
 
 function OfferRegistry:loginRemoved(login)
   do -- observers
@@ -413,7 +443,7 @@ function OfferRegistry:__init(data)
           login = login,
         })
         if self.enforceAuth and EntityRegistry:getEntity(entity) == nil then
-          srvex.ServiceFailure{
+          ServiceFailure{
             message = msg.CorruptedDatabaseDueToMissingEntity:tag{
               entity = entity,
             }
@@ -422,7 +452,7 @@ function OfferRegistry:__init(data)
         -- create object for the new offer
         entry.id = id
         entry.service_ref = orb:newproxy(entry.service_ref, nil,
-                                         types.OfferedService)
+                                         OfferedService)
         entry.properties = makePropertyList(entry, entry.properties)
         entry.registry = self
         entry.database = offerDB
@@ -442,7 +472,6 @@ function OfferRegistry:__init(data)
   end
   local observerLogins = self.observerLogins
   do -- recover observers
-    local offers = self.offers
     local offerRegObsDB = self.offerRegObsDB
     local toberemoved = {}
     for id, entry in assert(offerRegObsDB:ientries()) do
@@ -454,7 +483,7 @@ function OfferRegistry:__init(data)
         })
         entry.id = id
         entry.observer = orb:newproxy(entry.observer, nil,
-                                      types.OfferRegistryObserver)
+                                      OffRegObserverType)
         entry.registry = self
         orb:newservant(OfferRegistryObserverSubscription(entry))
       else
@@ -479,31 +508,31 @@ local IgnoredFacets = {
 
 function OfferRegistry:registerService(service_ref, properties)
   if service_ref == nil then
-    throw.InvalidService{ message = msg.NullReference }
+    InvalidService{ message = msg.NullReference }
   end
   -- collect information about the SCS component implementing the service
   local ok, result = pcall(service_ref.getComponentId, service_ref)
   if not ok then
-    throw.InvalidService{message=msg.UnableToObtainComponentId:tag{
+    InvalidService{message=msg.UnableToObtainComponentId:tag{
       error = result,
     }}
   end
   local compId = result
   ok, result = pcall(service_ref.getFacetByName, service_ref, "IMetaInterface")
   if not ok then
-    throw.InvalidService{message=msg.UnableToObtainStandardFacet:tag{
+    InvalidService{message=msg.UnableToObtainStandardFacet:tag{
       name = "IMetaInterface",
       error = result,
     }}
   elseif result == nil then
-    throw.InvalidService{message=msg.MissingStandardFacet:tag{
+    InvalidService{message=msg.MissingStandardFacet:tag{
       name = "IMetaInterface",
     }}
   end
   local meta = result:__narrow("scs::core::IMetaInterface")
   ok, result = pcall(meta.getFacets, meta)
   if not ok then
-    throw.InvalidService{message=msg.UnableToObtainServiceFacets:tag{
+    InvalidService{message=msg.UnableToObtainServiceFacets:tag{
       error = result,
     }}
   end
@@ -530,7 +559,7 @@ function OfferRegistry:registerService(service_ref, properties)
       end
     end
     if #unauthorized > 0 then
-      throw.UnauthorizedFacets{
+      UnauthorizedFacets{
         entity = entityId,
         facets = unauthorized,
       }
@@ -593,7 +622,7 @@ end
 
 function OfferRegistry:subscribeObserver(observer, properties)
   if observer == nil then
-    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local login = self.access:getCallerChain().caller.id
   local id = newid("time")
@@ -620,6 +649,7 @@ end
 ------------------------------------------------------------------------------
 
 local InterfaceRegistry = {
+  __type = InterfaceRegistryType,
   interfaces = {},
 }
 
@@ -664,7 +694,7 @@ function InterfaceRegistry:removeInterface(ifaceId)
       for entity in pairs(entities) do
         list[#list+1] = entity
       end
-      throw.InterfaceInUse{ ifaceId = ifaceId, entities = list }
+      InterfaceInUse{ ifaceId = ifaceId, entities = list }
     end
     self.interfaceDB:removeentry(ifaceId2Key(ifaceId))
     interfaces[ifaceId] = nil
@@ -687,7 +717,7 @@ end
 -- Faceta EntityRegistry
 ------------------------------------------------------------------------------
 
-local Entity = class{ __type = types.RegisteredEntity }
+local Entity = class{ __type = RegisteredEntity }
 
 function Entity:__init()
   local id = self.id
@@ -732,7 +762,7 @@ function Entity:grantInterface(ifaceId)
   -- check if interface is registered
   local entities = InterfaceRegistry.interfaces[ifaceId]
   if entities == nil then
-    throw.InvalidInterface{ ifaceId = ifaceId }
+    InvalidInterface{ ifaceId = ifaceId }
   end
   -- grant interface
   local authorized = self.authorized
@@ -761,13 +791,13 @@ function Entity:revokeInterface(ifaceId)
       end
     end
     if #unauthorized > 0 then
-      throw.AuthorizationInUse{ ifaceId = ifaceId, offers = unauthorized }
+      AuthorizationInUse{ ifaceId = ifaceId, offers = unauthorized }
     end
   end
   -- check if interface is registered
   local entities = InterfaceRegistry.interfaces[ifaceId]
   if entities == nil then
-    throw.InvalidInterface{ ifaceId = ifaceId }
+    InvalidInterface{ ifaceId = ifaceId }
   end
   -- revoke interface
   local authorized = self.authorized
@@ -794,7 +824,7 @@ end
 
 
 
-local Category = class{ __type = types.EntityCategory }
+local Category = class{ __type = EntityCategory }
   
 function Category:__init()
   local id = self.id
@@ -817,7 +847,7 @@ end
 function Category:remove()
   local id = self.id
   if next(self.entities) ~= nil then
-    throw.EntityCategoryInUse{ category = id, entities = self:getEntities() }
+    EntityCategoryInUse{ category = id, entities = self:getEntities() }
   end
   assert(self.database:removeentry(id))
   local registry = self.registry
@@ -834,15 +864,17 @@ function Category:removeAll()
 end
 
 function Category:registerEntity(id, name)
+  if id == "" then
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+  end
   local categoryId = self.id
-  local entities = self.entities
-  -- check if category already exists
-  local entity = entities[id]
+  local registry = self.registry
+  -- check if entity already exists
+  local entity = registry.entities[id]
   if entity ~= nil then
-    throw.EntityAlreadyRegistered{ category = categoryId, existing = entity }
+    EntityAlreadyRegistered{ category = categoryId, existing = entity }
   end
   -- persist the new entity
-  local registry = self.registry
   local database = registry.entityDB
   assert(database:setentry(id, {categoryId=categoryId, name=name}))
   -- create object for the new entity
@@ -866,7 +898,7 @@ end
 
 
 
-EntityRegistry = {} -- is local (see forward declaration)
+EntityRegistry = { __type = EntityRegistryType } -- is local (see forward declaration)
 
 function EntityRegistry:__init(data)
   -- initialize attributes
@@ -907,7 +939,7 @@ function EntityRegistry:__init(data)
     -- check if referenced category exists
     local category = self.categories[entry.categoryId]
     if category == nil then
-      srvex.ServiceFailure{
+      ServiceFailure{
         message = msg.CorruptedDatabaseDueToMissingCategory:tag{
           category = entry.category,
         },
@@ -927,7 +959,7 @@ function EntityRegistry:__init(data)
     for ifaceId in pairs(entry.authorized) do
       entities = interfaces[ifaceId]
       if entities == nil then
-        srvex.ServiceFailure{
+        ServiceFailure{
           message = msg.CorruptedDatabaseDueToMissingInterface:tag{
             interface = ifaceId,
           },
@@ -944,11 +976,14 @@ function EntityRegistry:__init(data)
 end
 
 function EntityRegistry:createEntityCategory(id, name)
+  if id == "" then
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+  end
   local categories = self.categories
   -- check if category already exists
   local category = categories[id]
   if category ~= nil then
-    throw.EntityCategoryAlreadyExists{ category = id, existing = category }
+    EntityCategoryAlreadyExists{ category = id, existing = category }
   end
   -- persist the new category
   local database = self.categoryDB

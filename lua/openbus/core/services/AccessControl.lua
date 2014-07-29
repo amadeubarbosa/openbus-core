@@ -18,7 +18,6 @@ local inf = math.huge
 local min = math.min
 
 local cothread = require "cothread"
-cothread.plugin(require "cothread.plugin.socket")
 local time = cothread.now
 local running = cothread.running
 local schedule = cothread.schedule
@@ -39,24 +38,63 @@ local log = require "openbus.util.logger"
 local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
+local BAD_PARAM = sysex.BAD_PARAM
+local NO_RESOURCES = sysex.NO_RESOURCES
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
-local srvex = idl.throw.services
-local srvtp = idl.types.services
-local throw = idl.throw.services.access_control
-local types = idl.types.services.access_control
-local const = idl.const.services.access_control
+local BusEntity = idl.const.BusEntity
+local BusLogin = idl.const.BusLogin
+local EncryptedBlockSize = idl.const.EncryptedBlockSize
+local ServiceFailure = idl.throw.services.ServiceFailure
+local accexp = idl.throw.services.access_control
+local AccessDenied = accexp.AccessDenied
+local InvalidLogins = accexp.InvalidLogins
+local InvalidPublicKey = accexp.InvalidPublicKey
+local MissingCertificate = accexp.MissingCertificate
+local WrongEncoding = accexp.WrongEncoding
+local acctyp = idl.types.services.access_control
+local AccessControlType = acctyp.AccessControl
+local LoginAuthInfo = acctyp.LoginAuthenticationInfo
+local LoginObserver = acctyp.LoginObserver
+local LoginObsSubType = acctyp.LoginObserverSubscription
+local LoginProcessType = acctyp.LoginProcess
+local LoginRegistryType = acctyp.LoginRegistry
+
+local mngidl = require "openbus.core.admin.idl"
+local mngexp = mngidl.throw.services.access_control.admin.v1_0
+local InvalidCertificate = mngexp.InvalidCertificate
+local mngtyp = mngidl.types.services.access_control.admin.v1_0
+local CertificateRegistryType = mngtyp.CertificateRegistry
+
+local idl = require "openbus.core.legacy.idl"
+local ICredentialObserver = idl.types.access_control_service.ICredentialObserver
 
 local msg = require "openbus.core.services.messages"
 local Logins = require "openbus.core.services.LoginDB"
+local PasswordAttempts = require "openbus.core.services.PasswordAttempts"
+local coreutil = require "openbus.core.services.util"
+local assertCaller = coreutil.assertCaller
 
+local MaxEncryptedData = strrep("\255", EncryptedBlockSize-11)
 
 ------------------------------------------------------------------------------
 -- Faceta CertificateRegistry
 ------------------------------------------------------------------------------
 
-local CertificateRegistry = {}
+local function getkeyerror(key)
+  local result, errmsg = key:encrypt(MaxEncryptedData)
+  if result == nil then
+    return msg.UnableToEncryptWithKey:tag{error=errmsg}
+  end
+  if #result ~= EncryptedBlockSize then
+    return msg.WrongKeySize:tag{actual=#result,expected=EncryptedBlockSize}
+  end
+end
+
+
+
+local CertificateRegistry = { __type = CertificateRegistryType }
 
 -- local operations
 
@@ -67,8 +105,9 @@ function CertificateRegistry:__init(data)
   local access = data.access
   local admins = data.admins
   access:setGrantedUsers(self.__type, "registerCertificate", admins)
-  access:setGrantedUsers(self.__type, "getCertificate", admins)
   access:setGrantedUsers(self.__type, "removeCertificate", admins)
+  access:setGrantedUsers(self.__type, "getCertificate", admins)
+  access:setGrantedUsers(self.__type, "getEntitiesWithCertificate", admins)
 end
 
 function CertificateRegistry:getPublicKey(entity)
@@ -88,11 +127,15 @@ function CertificateRegistry:registerCertificate(entity, certificate)
   end
   local certobj, errmsg = decodecertificate(certificate)
   if not certobj then
-    throw.InvalidCertificate{entity=entity,message=errmsg}
+    InvalidCertificate{entity=entity,message=errmsg}
   end
   local pubkey, errmsg = certobj:getpubkey()
   if not pubkey then
-    throw.InvalidCertificate{entity=entity,message=errmsg}
+    InvalidCertificate{entity=entity,message=errmsg}
+  end
+  errmsg = getkeyerror(pubkey)
+  if errmsg ~= nil then
+    InvalidCertificate{entity=entity,message=errmsg}
   end
   log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
   assert(self.certificateDB:setentry(entity, certificate))
@@ -102,11 +145,19 @@ function CertificateRegistry:getCertificate(entity)
   local certificate, errmsg = self.certificateDB:getentry(entity)
   if certificate == nil then
     if errmsg ~= nil then
-      srvex.ServiceFailure{message=errmsg}
+      assert(nil, errmsg)
     end
-    throw.MissingCertificate{entity=entity}
+    MissingCertificate{entity=entity}
   end
   return certificate
+end
+
+function CertificateRegistry:getEntitiesWithCertificate()
+  local entities = {}
+  for entity in self.certificateDB:ientries() do
+    entities[#entities+1] = entity
+  end
+  return entities
 end
 
 function CertificateRegistry:removeCertificate(entity)
@@ -127,21 +178,19 @@ local function renewLogin(self, login)
   login.deadline = time() + self.leaseTime + self.expirationGap
 end
 
-local MaxEncryptedData = strrep("\255", idl.const.EncryptedBlockSize-11)
-local function checkkey(pubkey)
+local function checkaccesskey(pubkey)
   local result, errmsg = decodepublickey(pubkey)
   if result == nil then
-    throw.InvalidPublicKey{message=msg.UnableToDecodeKey:tag{error=errmsg}}
+    InvalidPublicKey{message=msg.UnableToDecodeKey:tag{error=errmsg}}
   end
-  result, errmsg = result:encrypt(MaxEncryptedData)
-  if result == nil then
-    throw.InvalidPublicKey{message=msg.UnableToEncryptWithKey:tag{error=errmsg}}
+  errmsg = getkeyerror(result)
+  if errmsg ~= nil then
+    InvalidPublicKey{message=errmsg}
   end
 end
 
 
-
-local LoginProcess = class{ __type = types.LoginProcess }
+local LoginProcess = class{ __type = LoginProcessType }
 
 function LoginProcess:cancel()
   local manager = self.manager
@@ -151,18 +200,18 @@ end
 
 function LoginProcess:login(pubkey, encrypted)
   self:cancel()
-  checkkey(pubkey)
+  checkaccesskey(pubkey)
   local entity = self.entity
   local manager = self.manager
   local access = manager.access
   local decrypted, errmsg = access.prvkey:decrypt(encrypted)
   if decrypted == nil then
-    throw.WrongEncoding{entity=entity,message=errmsg or "no error message"}
+    WrongEncoding{entity=entity,message=errmsg or "no error message"}
   end
   local decoder = access.orb:newdecoder(decrypted)
-  local decoded = decoder:get(manager.LoginAuthenticationInfo)
+  local decoded = decoder:get(manager.LoginAuthInfo)
   if decoded.hash ~= sha256(pubkey) or decoded.data ~= self.secret then
-    throw.AccessDenied{entity=entity}
+    AccessDenied{entity=entity}
   end
   local login = manager.activeLogins:newLogin(entity, pubkey,
                                               self.allowLegacyDelegate)
@@ -176,7 +225,8 @@ end
 local LoginRegistry -- forward declaration
 
 local AccessControl = {
-  login = {id=idl.const.BusLogin, entity=idl.const.BusEntity},
+  __type = AccessControlType,
+  login = {id=BusLogin, entity=BusEntity},
   pendingChallenges = {}
 }
 
@@ -199,6 +249,15 @@ function AccessControl:__init(data)
   self.passwordValidators = data.validators
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
+  self.loginAttempts = PasswordAttempts{
+    limit = data.passwordLimitedTries,
+    period = data.passwordPenaltyTime,
+  }
+  self.validationAttempts = PasswordAttempts{
+    mode = PasswordAttempts.modes.LeakyBucket,
+    limit = data.passwordFailureLimit,
+    period = data.passwordFailureLimit/data.passwordFailureRate,
+  }
   self.activeLogins = Logins{ database = database }
   
   -- initialize access
@@ -216,8 +275,7 @@ function AccessControl:__init(data)
   access:setGrantedUsers(self.__type, "loginByPassword", "any")
   access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
   access:setGrantedUsers(LoginProcess.__type, "*", "any")
-  self.LoginAuthenticationInfo =
-    assert(access.orb.types:lookup_id(types.LoginAuthenticationInfo))
+  self.LoginAuthInfo = assert(access.orb.types:lookup_id(LoginAuthInfo))
   
   -- renova todas as credenciais persistidas
   for id, login in self.activeLogins:iLogins() do
@@ -241,7 +299,7 @@ function AccessControl:__init(data)
             entity = login.entity,
           })
           local ok, ex = pcall(login.remove, login) -- catch I/O errors
-          if not ok and (type(ex)~="table" or ex._repid~=srvtp.ServiceFailure) then
+          if not ok and (type(ex)~="table" or ex._repid~=ServiceFailure) then
             error(ex)
           end
         end
@@ -278,7 +336,10 @@ function AccessControl:getLoginEntry(id)
   return self.activeLogins:getLogin(id)
 end
 
-function AccessControl:encodeChain(chain)
+function AccessControl:encodeChain(chain, target)
+  local login = self.activeLogins:getLogin(target)
+  if login == nil then InvalidLogins{ loginIds = {target} } end
+  chain.target = login.entity
   local access = self.access
   local encoder = access.orb:newencoder()
   encoder:put(chain, access.types.CallChain)
@@ -293,14 +354,33 @@ end
 
 function AccessControl:loginByPassword(entity, pubkey, encrypted)
   if entity ~= self.login.entity then
-    checkkey(pubkey)
-    local decrypted, errmsg = self.access.prvkey:decrypt(encrypted)
+    checkaccesskey(pubkey)
+    local access = self.access
+    local decrypted, errmsg = access.prvkey:decrypt(encrypted)
     if decrypted == nil then
-      throw.WrongEncoding{entity=entity,message=errmsg or "no error message"}
+      WrongEncoding{entity=entity,message=errmsg or "no error message"}
     end
-    local decoder = self.access.orb:newdecoder(decrypted)
-    local decoded = decoder:get(self.LoginAuthenticationInfo)
+    local decoder = access.orb:newdecoder(decrypted)
+    local decoded = decoder:get(self.LoginAuthInfo)
     if decoded.hash == sha256(pubkey) then
+      local sourceid = access.callerAddressOf[running()].host
+      local loginAttempts = self.loginAttempts
+      local allowed, wait = loginAttempts:allow(sourceid)
+      if not allowed then
+        log:exception(msg.TooManyFailedLogins:tag{sourceid=sourceid,wait=wait})
+        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+      end
+      allowed, wait = loginAttempts:allow(entity)
+      if not allowed then
+        log:exception(msg.TooManyFailedEntityLogins:tag{entity=entity,wait=wait})
+        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+      end
+      local validationAttempts = self.validationAttempts
+      allowed, wait = validationAttempts:allow("validators")
+      if not allowed then
+        log:exception(msg.TooManyFailedValidations:tag{entity=entity,wait=wait})
+        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+      end
       for _, validator in ipairs(self.passwordValidators) do
         local valid, errmsg = validator.validate(entity, decoded.data)
         if valid then
@@ -311,6 +391,7 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
             validator = validator.name,
           })
           renewLogin(self, login)
+          loginAttempts:granted(entity)
           return login, self.leaseTime
         elseif errmsg ~= nil then
           log:exception(msg.FailedPasswordValidation:tag{
@@ -320,19 +401,22 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
           })
         end
       end
+      loginAttempts:denied(sourceid)
+      loginAttempts:denied(entity)
+      validationAttempts:denied("validators")
     else
       log:exception(msg.WrongPublicKeyHash:tag{ entity = entity })
     end
   else
     log:exception(msg.RefusedLoginOfBusEntity:tag{ entity = entity })
   end
-  throw.AccessDenied{entity=entity}
+  AccessDenied{ entity = entity }
 end
 
 function AccessControl:startLoginByCertificate(entity)
   local publickey = CertificateRegistry:getPublicKey(entity)
   if publickey == nil then
-    throw.MissingCertificate{entity=entity}
+    MissingCertificate{entity=entity}
   end
   local secret = newid("random")
   local logger = LoginProcess{
@@ -380,16 +464,14 @@ function AccessControl:renew()
 end
 
 function AccessControl:signChainFor(target)
-  local chain = self.access:getCallerChain()
-  chain.target = target
-  return self:encodeChain(chain)
+  return self:encodeChain(self.access:getCallerChain(), target)
 end
 
 ------------------------------------------------------------------------------
 -- Faceta LoginRegistry
 ------------------------------------------------------------------------------
 
-local Subscription = class{ __type = types.LoginObserverSubscription }
+local Subscription = class{ __type = LoginObsSubType }
 
 -- local operations
 
@@ -428,7 +510,7 @@ function Subscription:watchLogins(ids)
     ids[index] = login
   end
   if #missing > 0 then
-    throw.InvalidLogins{ loginIds = missing }
+    InvalidLogins{ loginIds = missing }
   end
   local observer = self.observer
   for index, login in ipairs(ids) do
@@ -458,7 +540,7 @@ end
 
 
 
-LoginRegistry = {}
+LoginRegistry = { __type = LoginRegistryType }
 
 -- local operations
 
@@ -468,10 +550,8 @@ function LoginRegistry:__init(data)
   self.subscriptionOf = {} -- for legacy support (OpenBus 1.5)
   
   local access = self.access
-  local admins = data.admins
-  access:setGrantedUsers(self.__type, "getAllLogins", admins)
-  access:setGrantedUsers(self.__type, "getEntityLogins", admins)
-  access:setGrantedUsers(self.__type, "invalidateLogin", admins)
+  self.admins = data.admins
+  access:setGrantedUsers(self.__type, "getAllLogins", self.admins)
   -- register itself to receive logout notifications
   local logins = AccessControl.activeLogins
   rawset(logins.publisher, self, self)
@@ -487,12 +567,22 @@ end
 function LoginRegistry:loginRemoved(login, observers)
   local orb = self.access.orb
   for observer in pairs(observers) do
+    local iface, opname, param = LoginObserver, "entityLogout", login
+    if observer.legacy then
+      iface = ICredentialObserver
+      opname = "credentialWasDeleted"
+      param = {
+        identifier = login.id,
+        owner = login.entity,
+        delegate = "",
+      }
+    end
     local callback = observer.callback
     if callback == nil then
-      callback = orb:newproxy(observer.ior, nil, types.LoginObserver)
+      callback = orb:newproxy(observer.ior, nil, iface)
     end
     schedule(newthread(function()
-      local ok, errmsg = pcall(callback.entityLogout, callback, login)
+      local ok, errmsg = pcall(callback[opname], callback, param)
       if not ok then
         log:exception(msg.LoginObserverException:tag{
           observer = observer.id,
@@ -523,6 +613,7 @@ function LoginRegistry:getAllLogins()
 end
 
 function LoginRegistry:getEntityLogins(entity)
+  assertCaller(self, entity)
   local logins = {}
   for id, login in AccessControl.activeLogins:iLogins() do
     if login.entity == entity then
@@ -535,8 +626,9 @@ end
 function LoginRegistry:invalidateLogin(id)
   local login = AccessControl.activeLogins:getLogin(id)
   if login ~= nil then
+    local tag = assertCaller(self, login.entity)
     login:remove()
-    log:admin(msg.LogoutForced:tag{
+    log[tag](log, msg.LogoutForced:tag{
       login = id,
       entity = login.entity,
     })
@@ -552,7 +644,7 @@ function LoginRegistry:getLoginInfo(id)
   elseif id == AccessControl.login.id then
     return AccessControl.login, AccessControl.buskey
   end
-  throw.InvalidLogins{loginIds={id}}
+  InvalidLogins{loginIds={id}}
 end
 
 function LoginRegistry:getLoginValidity(id)
@@ -574,14 +666,14 @@ function LoginRegistry:getLoginValidity(id)
   return 0
 end
 
-function LoginRegistry:subscribeObserver(callback)
+function LoginRegistry:subscribeObserver(callback, legacy)
   if callback == nil then
-    sysex.BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
+    BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local logins = AccessControl.activeLogins
   local caller = self.access:getCallerChain().caller
   local login = logins:getLogin(caller.id)
-  local observer = login:newObserver(callback)
+  local observer = login:newObserver(callback, legacy)
   observer.callback = callback
   local id = observer.id
   local subscription = Subscription{ id=id, logins=logins, registry=self }

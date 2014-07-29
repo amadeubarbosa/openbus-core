@@ -1,11 +1,3 @@
-local _G = require "_G"
-local string = _G.string
-local os = _G.os
-local io = _G.io
-local print = _G.print
-local tostring = _G.tostring
-local assert = _G.assert
-
 -------------------------------------------------------------------------------
 -- configuração do teste
 bushost, busport = ...
@@ -42,7 +34,7 @@ end
 
 local function execute(...)
   local command = bin..login..password
-  local params = table.concat(arg, " ")
+  local params = table.concat({...}, " ")
   local tofile = " > "..outputfile
   os.execute(command..params..tofile)
   local output = readOutput()

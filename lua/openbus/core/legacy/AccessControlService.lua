@@ -12,7 +12,6 @@ local setmetatable = _G.setmetatable
 local type = _G.type
 
 local cothread = require "cothread"
-cothread.plugin(require "cothread.plugin.socket")
 local time = cothread.now
 
 local hash = require "lce.hash"
@@ -24,10 +23,11 @@ local class = oo.class
 
 local idl = require "openbus.core.legacy.idl"
 local types = idl.types.access_control_service
-local throw = idl.throw.access_control_service
+local ILeaseProvider = types.ILeaseProvider
+local IAccessControlService = types.IAccessControlService
+
 local newidl = require "openbus.core.idl"
-local newtypes = newidl.types.services.access_control
-local newconst = newidl.const.services.access_control
+local InvalidLogins = newidl.types.services.access_control.InvalidLogins
 
 local msg = require "openbus.core.services.messages"
 local facets = require "openbus.core.services.AccessControl"
@@ -41,7 +41,7 @@ end
 
 local ILeaseProvider = {
   __facet = "ILeaseProvider_v1_05",
-  __type = types.ILeaseProvider,
+  __type = ILeaseProvider,
   __objkey = "LP_v1_05",
 }
 
@@ -60,7 +60,7 @@ end
 
 local IAccessControlService = {
   __facet = "IAccessControlService_v1_05",
-  __type = types.IAccessControlService,
+  __type = IAccessControlService,
   __objkey = "ACS_v1_05",
 }
 
@@ -87,7 +87,7 @@ function IAccessControlService:loginByPassword(id, pwrd)
   local access = control.access
   local pubkey = control.buskey
   local encoder = access.orb:newencoder()
-  encoder:put({data=pwrd,hash=sha256(pubkey)}, control.LoginAuthenticationInfo)
+  encoder:put({data=pwrd,hash=sha256(pubkey)}, control.LoginAuthInfo)
   local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
   if encrypted ~= nil then
     local ok, login, lease = pcall(control.loginByPassword, control,
@@ -130,7 +130,7 @@ function IAccessControlService:loginByCertificate(id, answer)
       local pubkey = control.buskey
       local encoder = access.orb:newencoder()
       encoder:put({data=secret,hash=sha256(pubkey)},
-                  control.LoginAuthenticationInfo)
+                  control.LoginAuthInfo)
       local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
       if encrypted ~= nil then
         local ok, login, lease = pcall(logger.login, logger,
@@ -195,20 +195,8 @@ end
 
 -- Credential Observation Support
 
-local ObserverTranslator = class()
-
-function ObserverTranslator:entityLogout(login)
-  self.observer:credentialWasDeleted{
-    identifier = login.id,
-    owner = login.entity,
-    delegate = "",
-  }
-end
-
-
 function IAccessControlService:addObserver(observer, loginIds)
-  observer = ObserverTranslator{ observer = observer }
-  local subscription = facets.LoginRegistry:subscribeObserver(observer)
+  local subscription = facets.LoginRegistry:subscribeObserver(observer, true)
   subscription:watchLogins(loginIds)
   return subscription.id
 end
@@ -217,7 +205,7 @@ function IAccessControlService:addCredentialToObserver(obsId, loginId)
   local subscription = facets.LoginRegistry.subscriptionOf[obsId]
   if subscription ~= nil then
     local ok, res = pcall(subscription.watchLogin, subscription, loginId)
-    if type(res) == "table" and res._repid ~= newtypes.InvalidLogins then
+    if type(res) == "table" and res._repid ~= InvalidLogins then
       error(res)
     end
     return ok and res
@@ -303,28 +291,23 @@ local IFaultTolerantService = {
 }
 
 function IFaultTolerantService:init()
-  assertCaller(facets.AccessControl)
   -- intentionally blank
 end
 
 function IFaultTolerantService:isAlive()
-  assertCaller(facets.AccessControl)
   -- intentionally blank
   return false
 end
 
 function IFaultTolerantService:setStatus(isAlive)
-  assertCaller(facets.AccessControl)
   -- intentionally blank
 end
 
 function IFaultTolerantService:kill()
-  assertCaller(facets.AccessControl)
-  self.context.IComponent:shutdown()
+  -- intentionally blank
 end
 
 function IFaultTolerantService:updateStatus(param)
-  assertCaller(facets.AccessControl)
   -- intentionally blank
   return false
 end

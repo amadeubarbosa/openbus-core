@@ -1,0 +1,344 @@
+%
+%  Documento de Instalação do OpenBus 2.0
+%
+%  Created by Ronaldo Barbieri and Tadeu Martins on 2013-06-07.
+%  Copyright (c) 2012 Tecgraf/PUC-Rio. All rights reserved.
+%
+\documentclass[]{article}
+
+% Use utf-8 encoding for foreign characters
+\usepackage[latin1]{inputenc}
+
+\usepackage[brazil]{babel}
+
+% Setup for fullpage use
+\usepackage{fullpage}
+
+% Uncomment some of the following if you use the features
+%
+% Running Headers and footers
+%\usepackage{fancyhdr}
+
+% Multipart figures
+%\usepackage{subfigure}
+
+% More symbols
+%\usepackage{amsmath}
+%\usepackage{amssymb}
+%\usepackage{latexsym}
+
+\usepackage{hyperref}
+
+% Surround parts of graphics with box
+\usepackage{boxedminipage}
+
+% Package for including code in the document
+\usepackage{../mwlabinputs2}
+
+% If you want to generate a toc for each chapter (use with book)
+\usepackage{minitoc}
+
+% This is now the recommended way for checking for PDFLaTeX:
+\usepackage{ifpdf}
+
+%% Redefines the label 'Listing' for ..
+\def\lstlistingname{Código}
+\codestyle{colorful}
+
+% new commands
+\newcommand{\term}[1]{\textit{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newcommand{\openbus}{\textsc{OpenBus}}
+\newcommand{\corba}{\textsc{CORBA}}
+\newcommand{\orb}{\textsc{ORB}}
+\newcommand{\scs}{\textsc{SCS}}
+\newcommand{\lua}{\textsc{Lua}}
+\newcommand{\oil}{\textsc{OiL}}
+\newcommand{\version}{2.0.0}
+
+%\newif\ifpdf
+%\ifx\pdfoutput\undefined
+%\pdffalse % we are not running PDFLaTeX
+%\else
+%\pdfoutput=1 % we are running PDFLaTeX
+%\pdftrue
+%\fi
+
+\ifpdf
+\usepackage[pdftex]{graphicx}
+\else
+\usepackage{graphicx}
+\fi
+
+\title{Guia de Início Rápido do \openbus{} \version{}}
+\author{Tecgraf}
+
+\date{\today}
+
+\begin{document}
+
+\ifpdf
+\DeclareGraphicsExtensions{.pdf, .jpg, .tif}
+\else
+\DeclareGraphicsExtensions{.eps, .jpg}
+\fi
+
+\maketitle
+
+\tableofcontents
+
+\section{Introdução}
+
+Este documento visa prover os passos necessários para instalar e levantar um barramento \openbus{}~\cite{web:OPENBUS} da versão \version{} e executar um demo.
+Caso tenha interesse em entender melhor o que é um barramento \openbus{} e os detalhes de instalação, consulte o manual de referência~\cite{ob2.0core} e o manual de instalação~\cite{ob2.0install}. Os procedimentos a seguir descrevem a instalação em plataforma Linux (Ubuntu 12.04) utilizando comandos do Bash shell (interpretador de linguagem de comandos)~\cite{web:bash}~\cite{web:advbash}. O demo é em C++, e é executado na mesma máquina do barramento. Para a execução em outras plataformas, de demos em outras linguagens, e utilizando configurações diferentes, é sugerido que se consulte os manuais acima referidos.
+
+\section{Como instalar e levantar o barramento:}
+
+\begin{enumerate}
+  \item Faça o download da versão estável do core do OpenBus para um diretório do Linux. Selecione o pacote mais apropriado para a sua plataforma:
+
+\url{https://jira.tecgraf.puc-rio.br/confluence/display/OPENBUS020/Core}
+
+  \item Descompacte o pacote:
+\begin{verbatim}  
+  $ tar xvzf openbus-core-2.0.0.1-Linux26g4.tar.gz
+\end{verbatim}
+
+  \item Para facilitar o processo, é recomendado que se inclua as seguintes variáveis de ambiente no arquivo de inicialização. Não esqueça de sair e entrar novamente no shell para que as variáveis de ambiente sejam definidas para a sessão corrente.
+\begin{verbatim}  
+  $ cd ~
+  $ vi .bashrc 
+export OPENBUS_HOME=<caminho do openbus-core>
+export PATH="${OPENBUS_HOME}/bin:.:${PATH}"
+export LD_LIBRARY_PATH="/usr/lib:/lib/i386-linux-gnu:${OPENBUS_HOME}/lib: \
+  ${LD_LIBRARY_PATH}"
+export OPENSSL_HOME="${OPENBUS_HOME}/openssl"
+export LUA_PATH="${OPENBUS_HOME}/?.lua;${LUA_PATH}"
+\end{verbatim}
+
+  \item Gere um arquivo de chave privada (arquivo com extensão ".key") e um certificado (arquivo com extensão ".crt") utilizando o comando \verb|openssl| que acompanha o pacote. Os arquivos podem ter um nome diferente do sugerido abaixo, desde que o nome do arquivo de chave privada seja passado no parâmetro \verb|-privatekey| do servidor do barramento (\verb|busservices|).
+\begin{verbatim}  
+  $ cd $OPENBUS_HOME
+  $ ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
+  $ ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
+    -in tmp_openssl.key -out openbus.key -outform DER
+  $ rm -f tmp_openssl.key
+  $ ${OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 \
+    -key openbus.key -keyform DER \
+    -out openbus.crt -outform DER
+\end{verbatim}
+
+  \item Crie um script de validação em LUA para verificar se o nome do usuário e senha utilizados para acessar o barramento são válidos. No nosso caso, vamos utilizar um script de validação que verifica apenas se o nome do usuário é igual à senha:
+\begin{verbatim}  
+  $ cd $OPENBUS_HOME
+  $ vi validador.lua
+local function validator(name, password)
+  if name == password then
+    return true
+  end
+end
+return function(configs) return validator end
+\end{verbatim}
+
+  \item Levante o barramento. O nome do script de validação é passado no parâmetro \verb|-validator| sem a extensão ".lua". A variável de ambiente \verb|$LUA_PATH| contém o caminho onde o servidor do barramento fará a busca pelo script de validação. Caso o parâmetro \verb|-privatekey| não seja passado, o servidor do barramento utilizará o nome do arquivo de chave privada padrão (\verb|openbus.key|). Como não foram passados os parâmetros \verb|-host| e \verb|-port|, o servidor do barramento será levantando utilizando a máscara de host e a porta padrão (\verb|host="*" port=2089|).
+\begin{verbatim}  
+  $ cd $OPENBUS_HOME
+  $ ./bin/busservices -privatekey openbus.key -admin admin -validator validador
+\end{verbatim}
+
+\end{enumerate}
+
+\section{Como compilar e executar um demo:}
+
+\begin{enumerate}
+
+  \item Faça o download de uma versão estável de um SDK (ex: C++ - ORB Mico). Selecione o SDK mais apropriado para a sua plataforma:
+
+\url{https://jira.tecgraf.puc-rio.br/confluence/display/OPENBUS020/SDK}
+
+  \item Descompacte o pacote:
+\begin{verbatim}  
+  $ tar xvzf openbus-cpp-mico-2.0.0.0-Linux26g4.tar.gz
+\end{verbatim}
+
+  \item Instale também as seguintes bibliotecas no Linux (Ubuntu 12.04):
+
+\begin{verbatim}  
+  $ sudo apt-get install g++
+  $ sudo apt-get install libstdc++6
+\end{verbatim}
+
+  \item Para facilitar o processo, é recomendado que se inclua as seguintes variáveis de ambiente no arquivo de inicialização. Não esqueça de sair e entrar novamente no shell para que as variáveis de ambiente sejam definidas para a sessão corrente.
+\begin{verbatim}  
+  $ cd ~
+  $ vi .bashrc 
+export PATH="/<caminho do openbus-cpp-mico>/bin:.:${PATH}"
+export LD_LIBRARY_PATH="/<caminho do openbus-cpp-mico>/lib:${LD_LIBRARY_PATH}"
+export BOOST_ROOT="/<caminho do openbus-cpp-mico>/boost-build"
+
+alias mico-mt='export LD_LIBRARY_PATH="/<caminho do openbus-cpp-mico>/lib/mico-mt: \
+  ${LD_LIBRARY_PATH}";export PATH="/<caminho do openbus-cpp-mico>/bin/mico-mt:${PATH}"'
+
+alias mico-mt-d='export LD_LIBRARY_PATH="/<caminho do openbus-cpp-mico>/lib/mico-mt-d: \
+  ${LD_LIBRARY_PATH}";export PATH="/<caminho do openbus-cpp-mico>/bin/mico-mt-d:${PATH}"'
+
+alias mico-st='export LD_LIBRARY_PATH="/<caminho do openbus-cpp-mico>/lib/mico-st: \
+  ${LD_LIBRARY_PATH}";export PATH="/<caminho do openbus-cpp-mico>/bin/mico-st:${PATH}"'
+
+alias mico-st-d='export LD_LIBRARY_PATH="/<caminho do openbus-cpp-mico>/lib/mico-st-d: \
+  ${LD_LIBRARY_PATH}";export PATH="/<caminho do openbus-cpp-mico>/bin/mico-st-d:${PATH}"'
+\end{verbatim}
+
+  \item Chame um dos aliases acima de acordo com o tipo de compilação desejado (mt-multithreading/st-single threading, d-debug):
+\begin{verbatim}  
+  $ mico-mt-d
+\end{verbatim}
+
+  \item Entre no diretório de demo que deseja compilar:
+\begin{verbatim}  
+  $ cd /<caminho do openbus-cpp-mico>/demo/hello
+\end{verbatim}
+
+  \item Compile o demo selecionado utilizando os parâmetros correspondente ao tipo de compilação:
+\begin{verbatim}  
+  $ b2 --layout=tagged threading=multi
+\end{verbatim}
+  
+  \item Excute o script LUA com um lote de comandos para cadastrar o servidor do demo no barramento. Caso o parâmetro \verb|--password| não seja passado, a senha de acesso será pedido pelo administrador do barramento (\verb|busadmin|).
+\begin{verbatim}  
+  $ cd /<caminho do openbus-cpp-mico>/demo/hello/admin
+  $ busadmin --login=admin --password=admin --script=busadmin.adm
+[INFO] Categoria 'DemoCppHelloCategory' cadastrada com sucesso
+[INFO] Entidade 'demo' cadastrada com sucesso
+[INFO] Certificado da entidade 'demo' cadastrada com sucesso
+[INFO] Interface 'IDL:tecgraf/openbus/interop/simple/Hello:1.0' cadastrada com sucesso.
+[INFO] Autoriza??o concedida a 'demo': IDL:tecgraf/openbus/interop/simple/Hello:1.0
+\end{verbatim}
+
+  \item Para listar as informações cadastradas do servidor do demo, utilize os seguintes comandos:
+
+\begin{verbatim}
+  $ busadmin --login=admin --password=admin --list-entity
+-----+-------------+----------------------+-------------------------------------
+     | ID ENTIDADE | ID CATEGORIA         | NOME                        
+-----+-------------+----------------------+-------------------------------------
+ 001 | demo        | DemoCppHelloCategory | Entidade gerada pelo script 
+-----+-------------+----------------------+-------------------------------------
+
+  $ busadmin --login=admin --password=admin --list-category
+-----+----------------------+---------------------------------------------------
+     | ID CATEGORIA         | NOME                         
+-----+----------------------+---------------------------------------------------
+ 001 | DemoCppHelloCategory | Categoria gerada pelo script 
+-----+----------------------+---------------------------------------------------
+
+  $ busadmin --login=admin --password=admin --list-interface
+-----+--------------------------------------------------------------------------
+     | INTERFACE                                    
+-----+--------------------------------------------------------------------------
+ 001 | IDL:tecgraf/openbus/interop/simple/Hello:1.0 
+-----+--------------------------------------------------------------------------
+
+  $ busadmin --login=admin --password=admin --list-authorization 
+-----+-------------+------------------------------------------------------------
+     | ID ENTIDADE | INTERFACES                                   
+-----+-------------+------------------------------------------------------------
+ 001 | demo        | IDL:tecgraf/openbus/interop/simple/Hello:1.0 
+-----+-------------+------------------------------------------------------------
+\end{verbatim}
+
+  \item Execute o servidor do demo. O caminho do binário segue o tipo de compilação escolhido:
+\begin{verbatim}  
+  $ cd /<caminho do openbus-cpp-mico>/demo
+  $ ./bin/hello/gcc-4.6/debug/threading-multi/hello_server --private-key \
+    hello/admin/DemoCppHello.key
+\end{verbatim}
+
+  \item Em um shell diferente, chame o alias correspondente ao tipo de compilação desejado (mt-multithreading/st-single threading, d-debug):
+\begin{verbatim}  
+  $ mico-mt-d
+\end{verbatim}
+
+  \item Execute o cliente do demo. O caminho do binário segue o tipo de compilação escolhido:
+\begin{verbatim}  
+  $ cd /<caminho do openbus-cpp-mico>/demo
+  $ ./bin/hello/gcc-4.6/debug/threading-multi/hello_client
+\end{verbatim}
+
+  \item Liste as ofertas de serviços disponíveis no barramento:
+
+\begin{verbatim}  
+  $ busadmin --login=admin --password=admin --list-offer
+-----+-------------+----------------------------------------------+------------+----------
+     | ID ENTIDADE | INTERFACES                                   | DATA       | HORA     
+-----+-------------+----------------------------------------------+------------+----------
+ 001 | demo        | IDL:scs/core/IComponent:1.0                  | 06/06/2013 | 17:48:07 
+     |             | IDL:scs/core/IMetaInterface:1.0              |            |          
+     |             | IDL:scs/core/IReceptacles:1.0                |            |          
+     |             | IDL:tecgraf/openbus/interop/simple/Hello:1.0 |            |          
+-----+-------------+----------------------------------------------+------------+----------
+\end{verbatim}
+
+  \item Se o servidor do demo foi parado e reiniciado, os serviços serão oferecidos novamente. Remove todos os serviços oferecidos e reinicie o servidor do demo.
+
+\begin{verbatim}  
+  $ busadmin --login=admin --password=admin --list-offer
+-----+-------------+----------------------------------------------+------------+----------
+     | ID ENTIDADE | INTERFACES                                   | DATA       | HORA     
+-----+-------------+----------------------------------------------+------------+----------
+ 001 | demo        | IDL:scs/core/IComponent:1.0                  | 06/06/2013 | 17:48:07 
+     |             | IDL:scs/core/IMetaInterface:1.0              |            |          
+     |             | IDL:scs/core/IReceptacles:1.0                |            |          
+     |             | IDL:tecgraf/openbus/interop/simple/Hello:1.0 |            |          
+ 002 | demo        | IDL:scs/core/IComponent:1.0                  | 06/06/2013 | 17:53:52 
+     |             | IDL:scs/core/IMetaInterface:1.0              |            |          
+     |             | IDL:scs/core/IReceptacles:1.0                |            |          
+     |             | IDL:tecgraf/openbus/interop/simple/Hello:1.0 |            |          
+-----+-------------+----------------------------------------------+------------+----------
+
+  $ ./bin/hello/gcc-4.6/debug/threading-multi/hello_client
+Existe mais de um servico Hello no barramento. Tentaremos encontrar uma funcional.
+Erro de comunicacao. Verifique se o sistema se encontra ainda disponivel ou se sua
+conexao com o mesmo foi interrompida
+
+  $ busadmin --login=admin --password=admin --del-offer --entity=demo
+-----+-------------+----------------------------------------------+------------+----------
+     | ID ENTIDADE | INTERFACES                                   | DATA       | HORA     
+-----+-------------+----------------------------------------------+------------+----------
+ 001 | demo        | IDL:scs/core/IComponent:1.0                  | 06/06/2013 | 17:48:07 
+     |             | IDL:scs/core/IMetaInterface:1.0              |            |          
+     |             | IDL:scs/core/IReceptacles:1.0                |            |          
+     |             | IDL:tecgraf/openbus/interop/simple/Hello:1.0 |            |          
+ 002 | demo        | IDL:scs/core/IComponent:1.0                  | 06/06/2013 | 17:53:52 
+     |             | IDL:scs/core/IMetaInterface:1.0              |            |          
+     |             | IDL:scs/core/IReceptacles:1.0                |            |          
+     |             | IDL:tecgraf/openbus/interop/simple/Hello:1.0 |            |          
+-----+-------------+----------------------------------------------+------------+----------
+Informe o Indice da oferta que deseja remover:
+002
+[INFO] Oferta '2' removida com sucesso.
+  $ busadmin --login=admin --password=admin --del-offer --entity=demo
+-----+-------------+----------------------------------------------+------------+----------
+     | ID ENTIDADE | INTERFACES                                   | DATA       | HORA     
+-----+-------------+----------------------------------------------+------------+----------
+ 001 | demo        | IDL:scs/core/IComponent:1.0                  | 06/06/2013 | 17:48:07 
+     |             | IDL:scs/core/IMetaInterface:1.0              |            |          
+     |             | IDL:scs/core/IReceptacles:1.0                |            |          
+     |             | IDL:tecgraf/openbus/interop/simple/Hello:1.0 |            |          
+-----+-------------+----------------------------------------------+------------+----------
+Informe o Indice da oferta que deseja remover:
+001
+[INFO] Oferta '1' removida com sucesso.
+
+  $ cd /<caminho do openbus-cpp-mico>/demo
+  $ ./bin/hello/gcc-4.6/debug/threading-multi/hello_server --private-key \
+    hello/admin/DemoCppHello.key
+\end{verbatim}
+
+\end{enumerate}
+
+\bibliographystyle{plain}
+\bibliography{../references}
+
+\end{document}

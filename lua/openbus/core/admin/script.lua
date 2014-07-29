@@ -73,7 +73,7 @@ local function readScriptFile(cmd)
     printf("[ERRO] Falha ao ler conteúdo do arquivo: %s", err)
     return false
   end
-  func, err = loadstring(str)
+  func, err = load(str)
   if not func then
     printf("[ERRO] Falha ao carregar script: %s", err)
     return false
