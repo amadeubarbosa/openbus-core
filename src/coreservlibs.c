@@ -5,6 +5,7 @@
 
 #include "luuid.h"
 #include "lce.h"
+#include "luasec.h"
 #include "lfs.h"
 #ifndef _WIN32
 #include "lualdap.h"
@@ -44,6 +45,7 @@ void luapreload_extralibraries(lua_State *L)
   lua_pop(L, 1);  /* pop 'package.preload' table */
   /* preload other C libraries */
   luapreload_lce(L);
+  luapreload_luasec(L);
   /* preload script libraries */
   luapreload_loop(L);
   luapreload_luatuple(L);
