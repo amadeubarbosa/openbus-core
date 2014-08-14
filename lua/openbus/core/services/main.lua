@@ -6,6 +6,7 @@ local ipairs = _G.ipairs
 local require = _G.require
 local select = _G.select
 local setmetatable = _G.setmetatable
+local tostring = _G.tostring
 
 local io = require "string"
 local format = io.format
@@ -26,6 +27,8 @@ local memoize = table.memoize
 local cothread = require "cothread"
 local running = cothread.running
 
+local oil = require "oil"
+local writeto = oil.writeto
 local oillog = require "oil.verbose"
 
 local log = require "openbus.util.logger"
@@ -46,9 +49,14 @@ local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
 
-local function getoptpath(configs, field, default)
+local SSLRequiredOptions = {
+  required = true,
+  supported = true,
+}
+
+local function getoptcfg(configs, field, default)
   local value = configs[field]
-  if value ~= "" then
+  if value ~= default then
     return value
   end
   return default
@@ -59,18 +67,20 @@ return function(...)
   
   -- configuration parameters parser
   local Configs = ConfigArgs{
+    iorfile = "",
     host = "*",
-    port = 2089,
+    port = 0,
   
-    database = "openbus.db",
-    privatekey = "openbus.key",
-
-    sslrequired = false,
-    sslkey = "",
-    sslcert = "",
+    sslenabled = "",
+    sslport = 0,
     sslcafile = "",
     sslcapath = "",
+    sslcert = "",
+    sslkey = "",
   
+    privatekey = "openbus.key",
+    database = "openbus.db",
+
     leasetime = 30*60,
     expirationgap = 10,
   
@@ -107,17 +117,19 @@ return function(...)
 Usage:  ]],OPENBUS_PROGNAME,[[ [options]
 Options:
 
+  -iorfile <path>            arquivo onde o IOR do barramento deve ser gerado
   -host <address>            endereço de rede usado pelo barramento
   -port <number>             número da porta usada pelo barramento
 
-  -database <path>           arquivo de dados do barramento
-  -privatekey <path>         arquivo com chave privada do barramento
-
-  -sslkey <path>             arquivo com chave privada a ser usada na autenticação SSL
-  -sslcert <path>            arquivo com certificado a ser usado na autenticação SSL
-  -sslcafile <path>          arquivo com certificados de CAs a serem usados na autenticação SSL
+  -sslenabled <mode>         ativa o suporte SSL através das opções 'supported' ou 'required'
+  -sslport <number>          número da porta segura usada pelo barramento
   -sslcapath <path>          diretório com certificados de CAs a serem usados na autenticação SSL
-  -sslrequired               obriga a utilização de SSL para acessar o barramento
+  -sslcafile <path>          arquivo com certificados de CAs a serem usados na autenticação SSL
+  -sslcert <path>            arquivo com certificado do barramento
+  -sslkey <path>             arquivo com chave privada do barramento
+
+  -privatekey <path>         arquivo com chave privada do barramento
+  -database <path>           arquivo de dados do barramento
 
   -leasetime <seconds>       tempo de lease dos logins de acesso
   -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
@@ -219,23 +231,25 @@ Options:
 
   -- setup bus access
   local sslcfg = {
-    key = getoptpath(Configs, "sslkey"),
-    certificate = getoptpath(Configs, "sslcert"),
-    cafile = getoptpath(Configs, "sslcafile"),
-    capath = getoptpath(Configs, "sslcapath"),
+    port = getoptcfg(Configs, "sslport", 0),
+    key = getoptcfg(Configs, "sslkey", ""),
+    certificate = getoptcfg(Configs, "sslcert", ""),
+    cafile = getoptcfg(Configs, "sslcafile", ""),
+    capath = getoptcfg(Configs, "sslcapath", ""),
   }
   local orbflv, orbopt
-  if Configs.sslrequired or next(sslcfg) ~= nil then
-    if Configs.sslrequired then
+  if SSLRequiredOptions[Configs.sslenabled] or next(sslcfg) ~= nil then
+    if Configs.sslenabled == "required" then
       log:config(msg.SecureConnectionEnforced)
     else
       log:config(msg.SecureConnectionEnabled)
     end
     orbflv = "cooperative;corba;corba.intercepted;corba.ssl;kernel.ssl"
     orbopt = {
-      security = Configs.sslrequired and "required" or nil,
+      security = Configs.sslenabled == "required" and "required" or nil,
       ssl = sslcfg,
     }
+    log:config(msg.SecureConnectionPortNumber:tag{path=Configs.sslport})
     log:config(msg.SecureConnectionAuthenticationKey:tag{path=sslcfg.key})
     log:config(msg.SecureConnectionAuthenticationCertificate:tag{path=sslcfg.certificate})
     if sslcfg.cafile ~= nil then
@@ -246,7 +260,7 @@ Options:
   end
   local orb = access.initORB{
     host = Configs.host,
-    port = Configs.port,
+    port = getoptcfg(Configs, "port", 0),
     flavor = orbflv,
     options = orbopt,
   }
@@ -285,7 +299,7 @@ Options:
   end
 
   -- create SCS component
-  newSCS{
+  local bus = newSCS{
     orb = orb,
     objkey = BusObjectKey,
     name = BusObjectKey,
@@ -350,6 +364,14 @@ Options:
     }
     ACS.IReceptacles:connect("RegistryServiceReceptacle", RGS.IComponent)
     log:config(msg.LegacySupportEnabled)
+  end
+
+  local iorfile = Configs.iorfile
+  if iorfile ~= "" then
+    writeto(iorfile, bus.IComponent)
+    log:config(msg.BusCoreReferenceWrittenTo:tag{path=iorfile})
+  else
+    log:config(msg.BusCoreReferenceGenerated:tag{ior=tostring(bus.IComponent)})
   end
 
   -- start ORB
