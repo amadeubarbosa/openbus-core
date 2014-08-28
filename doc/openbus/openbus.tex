@@ -623,7 +623,7 @@ Para gerar a chave privada, utilize os seguintes comandos:
 Para gerar o certificado, utilize o seguinte código:
 
 \begin{verbatim}
-  ${OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 \
+  ${OPENBUS_HOME}/bin/openssl req -config ${OPENBUS_HOME}/openssl/openssl.cnf -new -x509 \
     -key <nome do par de chaves>.key -keyform DER \
     -out <nome do par de chaves>.crt -outform DER
 \end{verbatim}

@@ -140,12 +140,11 @@ $OPENBUS_HOME/bin/busservices --help
   # caso seja MacOS é preciso também:
   export DYLD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${DYLD_LIBRARY_PATH}"
 
-  export OPENSSL_HOME="${OPENBUS_HOME}/openssl"
   ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
   ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
     -in tmp_openssl.key -out <nome do par de chaves>.key -outform DER
   rm -f tmp_openssl.key
-  ${OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 \
+  ${OPENBUS_HOME}/bin/openssl req -config ${OPENBUS_HOME}/openssl/openssl.cnf -new -x509 \
     -key <nome do par de chaves>.key -keyform DER \
     -out <nome do par de chaves>.crt -outform DER
 \end{verbatim}
