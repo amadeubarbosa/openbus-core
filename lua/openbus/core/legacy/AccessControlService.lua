@@ -85,13 +85,13 @@ local NullLeaseTime = 0
 function IAccessControlService:loginByPassword(id, pwrd)
   local control = facets.AccessControl
   local access = control.access
-  local pubkey = control.buskey
+  local buskey = access.buskey
   local encoder = access.orb:newencoder()
-  encoder:put({data=pwrd,hash=sha256(pubkey)}, control.LoginAuthInfo)
+  encoder:put({data=pwrd,hash=sha256(buskey)}, control.LoginAuthInfo)
   local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
   if encrypted ~= nil then
     local ok, login, lease = pcall(control.loginByPassword, control,
-                                   id, control.buskey, encrypted)
+                                   id, buskey, encrypted)
     if ok then
       local credential = {
         identifier = login.id,
@@ -127,14 +127,13 @@ function IAccessControlService:loginByCertificate(id, answer)
     local access = control.access
     local secret, errmsg = access.prvkey:decrypt(answer)
     if secret ~= nil then
-      local pubkey = control.buskey
+      local buskey = access.buskey
       local encoder = access.orb:newencoder()
-      encoder:put({data=secret,hash=sha256(pubkey)},
+      encoder:put({data=secret,hash=sha256(buskey)},
                   control.LoginAuthInfo)
-      local encrypted, errmsg = access.buskey:encrypt(encoder:getdata())
+      local encrypted, errmsg = buskey:encrypt(encoder:getdata())
       if encrypted ~= nil then
-        local ok, login, lease = pcall(logger.login, logger,
-                                       pubkey, encrypted)
+        local ok, login, lease = pcall(logger.login, logger, buskey, encrypted)
         if ok then
           local credential = {
             identifier = login.id,

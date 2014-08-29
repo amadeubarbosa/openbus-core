@@ -204,16 +204,22 @@ function LoginProcess:login(pubkey, encrypted)
   local entity = self.entity
   local manager = self.manager
   local access = manager.access
-  local decrypted, errmsg = access.prvkey:decrypt(encrypted)
+  local prvkey = access.prvkey
+  local decrypted, errmsg = prvkey:decrypt(encrypted)
   if decrypted == nil then
     WrongEncoding{entity=entity,message=errmsg or "no error message"}
   end
   local decoder = access.orb:newdecoder(decrypted)
   local decoded = decoder:get(manager.LoginAuthInfo)
-  if decoded.hash ~= sha256(pubkey) or decoded.data ~= self.secret then
+  local keyhash = assert(sha256(pubkey))
+  if decoded.hash ~= keyhash or decoded.data ~= self.secret then
     AccessDenied{entity=entity}
   end
-  local login = manager.activeLogins:newLogin(entity, pubkey,
+  local signedkey = {
+    signature = assert(prvkey:sign(keyhash)),
+    encoded = pubkey,
+  }
+  local login = manager.activeLogins:newLogin(entity, signedkey,
                                               self.allowLegacyDelegate)
   renewLogin(manager, login)
   log:request(msg.LoginProcessConcluded:tag{login=login.id,entity=entity})
@@ -263,8 +269,13 @@ function AccessControl:__init(data)
   -- initialize access
   self.busid = busid
   local access = self.access
-  local encodedkey = assert(access.prvkey:encode("public"))
-  self.buskey = encodedkey
+  local prvkey = access.prvkey
+  local encodedkey = assert(prvkey:encode("public"))
+  self.buskey = encodedkey -- TODO: this shall become a X.509 certificate
+  self.signedkey = {
+    signature = assert(prvkey:sign(assert(sha256(encodedkey)))),
+    encoded = encodedkey,
+  }
   access.AccessControl = self
   access.LoginRegistry = self
   access.login = self.login
@@ -356,13 +367,15 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
   if entity ~= self.login.entity then
     checkaccesskey(pubkey)
     local access = self.access
-    local decrypted, errmsg = access.prvkey:decrypt(encrypted)
+    local prvkey = access.prvkey
+    local decrypted, errmsg = prvkey:decrypt(encrypted)
     if decrypted == nil then
       WrongEncoding{entity=entity,message=errmsg or "no error message"}
     end
     local decoder = access.orb:newdecoder(decrypted)
     local decoded = decoder:get(self.LoginAuthInfo)
-    if decoded.hash == sha256(pubkey) then
+    local keyhash = assert(sha256(pubkey))
+    if decoded.hash == keyhash then
       local sourceid = access.callerAddressOf[running()].host
       local loginAttempts = self.loginAttempts
       local allowed, wait = loginAttempts:allow(sourceid)
@@ -384,7 +397,10 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
       for _, validator in ipairs(self.passwordValidators) do
         local valid, errmsg = validator.validate(entity, decoded.data)
         if valid then
-          local login = self.activeLogins:newLogin(entity, pubkey)
+          local login = self.activeLogins:newLogin(entity, {
+            signature = assert(prvkey:sign(keyhash)),
+            encoded = pubkey,
+          })
           log:request(msg.LoginByPassword:tag{
             login = login.id,
             entity = entity,
@@ -640,9 +656,9 @@ end
 function LoginRegistry:getLoginInfo(id)
   local login = AccessControl.activeLogins:getLogin(id)
   if login ~= nil then
-    return login, login.encodedkey
+    return login, login.signedkey
   elseif id == AccessControl.login.id then
-    return AccessControl.login, AccessControl.buskey
+    return AccessControl.login, AccessControl.signedkey
   end
   InvalidLogins{loginIds={id}}
 end

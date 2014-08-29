@@ -1,3 +1,5 @@
+local hash = require "lce.hash"
+local sha256 = hash.sha256
 local pubkey = require "lce.pubkey"
 local newkey = pubkey.create
 
@@ -31,7 +33,9 @@ local function assertIterator(expected, ...)
   assert(next(expected) == nil)
 end
 
-local key = newkey(EncryptedBlockSize):encode("public")
+local prvkey = newkey(EncryptedBlockSize)
+local pubkey = prvkey:encode("public")
+local key = {signature=assert(prvkey:sign(assert(sha256(pubkey)))), encoded=pubkey}
 
 do
   local logins = LoginDB{

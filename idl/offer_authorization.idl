@@ -16,7 +16,7 @@ module openbus {
 module core {
 
 /* \brief Módulo de versionamento dos Serviços Básicos do OpenBus. */
-module v2_0 {
+module v2_1 {
 
 /** \brief Módulo dos Serviços Básicos do OpenBus. */
 module services {
