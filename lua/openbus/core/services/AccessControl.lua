@@ -481,6 +481,17 @@ end
 -- Faceta LoginRegistry
 ------------------------------------------------------------------------------
 
+local function getObserver(observer)
+  local callback = observer.callback
+  if callback == nil then
+    callback = orb:newproxy(observer.ior, nil, LoginObsType)
+    observer.callback = callback
+  end
+  return callback
+end
+
+
+
 local Subscription = class{ __type = LoginObsSubType }
 
 -- local operations
@@ -492,6 +503,14 @@ function Subscription:__init()
 end
 
 -- IDL operations
+
+function Subscription:_get_observer()
+  return getObserver(self.observer)
+end
+
+function Subscription:describe()
+  return { observer = self:_get_observer() }
+end
 
 function Subscription:watchLogin(id)
   local login = self.logins:getLogin(id)
@@ -577,10 +596,7 @@ end
 function LoginRegistry:loginRemoved(login, observers)
   local orb = self.access.orb
   for observer in pairs(observers) do
-    local callback = observer.callback
-    if callback == nil then
-      callback = orb:newproxy(observer.ior, nil, LoginObsType)
-    end
+    local callback = getObserver(observer)
     schedule(newthread(function()
       local ok, errmsg = pcall(callback.entityLogout, callback, login)
       if not ok then
