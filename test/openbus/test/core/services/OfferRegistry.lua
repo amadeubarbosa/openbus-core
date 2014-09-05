@@ -16,13 +16,6 @@ local InvalidService = offtps.InvalidService
 local InvalidProperties = offtps.InvalidProperties
 local UnauthorizedFacets = offtps.UnauthorizedFacets
 
--- TODO:[maia] all the code that depend on these definition are misplaced here,
---             they all should be in the file of the tests of EntityRegistry.
-local admidl = require "openbus.core.admin.idl"
-local offadm = admidl.types.services.offer_registry.admin.v1_0
-local EntityRegistry = offadm.EntityRegistry
-local AuthorizationInUse = offadm.AuthorizationInUse
-
 local throwsysex = require "openbus.util.sysex"
 
 local ComponentContext = require "scs.core.ComponentContext"

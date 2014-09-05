@@ -12,7 +12,6 @@ local Suite = require "loop.test.Suite"
 local idl = require "openbus.core.idl"
 local BusLogin = idl.const.BusLogin
 local BusEntity = idl.const.BusEntity
-local admidl = require "openbus.core.admin.idl"
 
 -- Configurações --------------------------------------------------------------
 
