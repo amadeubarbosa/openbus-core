@@ -265,17 +265,9 @@ Options:
     options = orbopt,
   }
   log:config(msg.ServicesListeningAddress:tag{host=orb.host,port=orb.port})
-  local legacy
-  if not Configs.nolegacy then
-    local legacyIDL = require "openbus.core.legacy.idl"
-    legacyIDL.loadto(orb)
-    local ACS = require "openbus.core.legacy.AccessControlService"
-    legacy = ACS.IAccessControlService
-  end
   iceptor = access.Interceptor{
     prvkey = assert(readprivatekey(Configs.privatekey)),
     orb = orb,
-    legacy = legacy,
   }
   orb:setinterceptor(iceptor, "corba")
   loadidl(orb)
@@ -341,28 +333,30 @@ Options:
   
   -- create legacy SCS components
   if not Configs.nolegacy then
-    local AccessControlService = require "openbus.core.legacy.AccessControlService"
-    local ACS = newSCS{
+    local oldidl = require "openbus.core.legacy.idl"
+    local BusObjectKey = oldidl.const.BusObjectKey
+    oldidl.loadto(orb)
+    local LegacyFacets = require "openbus.core.legacy.ServiceWrappers"
+    -- prepare facets to be published as CORBA objects
+    do
+      local params = {
+        access = iceptor,
+        services = facets,
+        admins = adminUsers,
+      }
+      local objkeyfmt = BusObjectKey.."/%s"
+      for name, facet in pairs(LegacyFacets) do
+        facet.__facet = name
+        facet.__objkey = objkeyfmt:format(name)
+        facet:__init(params)
+      end
+    end
+    local legacyBus = newSCS{
       orb = orb,
-      objkey = "openbus_v1_05",
-      name = "AccessControlService",
-      facets = AccessControlService,
-      receptacles = {RegistryServiceReceptacle="IDL:scs/core/IComponent:1.0"},
-      init = function()
-        AccessControlService.IAccessControlService:__init{
-          access = iceptor.context,
-          admins = adminUsers,
-        }
-      end,
+      objkey = BusObjectKey,
+      name = BusObjectKey,
+      facets = LegacyFacets,
     }
-    local RegistryService = require "openbus.core.legacy.RegistryService"
-    local RGS = newSCS{
-      orb = orb,
-      objkey = "IC",
-      name = "RegistryService",
-      facets = RegistryService,
-    }
-    ACS.IReceptacles:connect("RegistryServiceReceptacle", RGS.IComponent)
     log:config(msg.LegacySupportEnabled)
   end
 

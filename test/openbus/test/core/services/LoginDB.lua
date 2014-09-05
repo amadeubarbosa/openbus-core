@@ -44,7 +44,7 @@ do
   }
   
   local user = logins:newLogin("user", key)
-  local deleg = logins:newLogin("delegator", key, true)
+  local deleg = logins:newLogin("delegator", key)
   
   local obs = user:newObserver(logins.orb:newproxy("userObs", nil, "IObserver"))
   obs:watchLogin(deleg)
@@ -75,13 +75,6 @@ do
     delegator = {},
   }
   for id, login in logins:iLogins() do
-    -- check login
-    local entity = login.entity
-    if entity == "delegator" then
-      assert(login.allowLegacyDelegate == true, "wrong stored login")
-    else
-      assert(login.allowLegacyDelegate == false, "wrong stored login")
-    end
     -- check observers owned by this login
     local observers = assert(Data[login.entity], "unknown stored login")
     Data[login.entity] = nil

@@ -56,7 +56,7 @@ local WrongEncoding = accexp.WrongEncoding
 local acctyp = idl.types.services.access_control
 local AccessControlType = acctyp.AccessControl
 local LoginAuthInfo = acctyp.LoginAuthenticationInfo
-local LoginObserver = acctyp.LoginObserver
+local LoginObsType = acctyp.LoginObserver
 local LoginObsSubType = acctyp.LoginObserverSubscription
 local LoginProcessType = acctyp.LoginProcess
 local LoginRegistryType = acctyp.LoginRegistry
@@ -66,9 +66,6 @@ local mngexp = mngidl.throw.services.access_control.admin.v1_0
 local InvalidCertificate = mngexp.InvalidCertificate
 local mngtyp = mngidl.types.services.access_control.admin.v1_0
 local CertificateRegistryType = mngtyp.CertificateRegistry
-
-local idl = require "openbus.core.legacy.idl"
-local ICredentialObserver = idl.types.access_control_service.ICredentialObserver
 
 local msg = require "openbus.core.services.messages"
 local Logins = require "openbus.core.services.LoginDB"
@@ -101,7 +98,7 @@ local CertificateRegistry = { __type = CertificateRegistryType }
 function CertificateRegistry:__init(data)
   self.database = data.database
   self.certificateDB = assert(self.database:gettable("Certificates"))
-  
+  -- setup operation access
   local access = data.access
   local admins = data.admins
   access:setGrantedUsers(self.__type, "registerCertificate", admins)
@@ -171,7 +168,7 @@ function CertificateRegistry:removeCertificate(entity)
 end
 
 ------------------------------------------------------------------------------
--- Faceta LoginManager
+-- Faceta AccessControl
 ------------------------------------------------------------------------------
 
 local function renewLogin(self, login)
@@ -219,8 +216,7 @@ function LoginProcess:login(pubkey, encrypted)
     signature = assert(prvkey:sign(keyhash)),
     encoded = pubkey,
   }
-  local login = manager.activeLogins:newLogin(entity, signedkey,
-                                              self.allowLegacyDelegate)
+  local login = manager.activeLogins:newLogin(entity, signedkey)
   renewLogin(manager, login)
   log:request(msg.LoginProcessConcluded:tag{login=login.id,entity=entity})
   return login, manager.leaseTime
@@ -439,7 +435,6 @@ function AccessControl:startLoginByCertificate(entity)
     manager = self,
     entity = entity,
     secret = secret,
-    allowLegacyDelegate = true,
   }
   self.pendingChallenges[logger] = time()+self.leaseTime
   log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
@@ -454,7 +449,6 @@ function AccessControl:startLoginBySharedAuth()
     manager = self,
     entity = login.entity,
     secret = secret,
-    allowLegacyDelegate = login.allowLegacyDelegate,
   }
   self.pendingChallenges[logger] = time()+self.leaseTime
   log:request(msg.LoginBySharedAuthInitiated:tag{
@@ -493,7 +487,7 @@ local Subscription = class{ __type = LoginObsSubType }
 
 function Subscription:__init()
   local id = self.id
-  self.__objkey = id
+  self.__objkey = "LoginObserver_v2.1:"..id
   self.observer = self.logins:getObserver(id)
 end
 
@@ -563,11 +557,11 @@ LoginRegistry = { __type = LoginRegistryType }
 function LoginRegistry:__init(data)
   -- initialize attributes
   self.access = data.access
-  self.subscriptionOf = {} -- for legacy support (OpenBus 1.5)
-  
+  self.admins = data.admins -- for 'assertCaller'
+  self.subscriptionOf = {}
+  -- setup operation access
   local access = self.access
-  self.admins = data.admins
-  access:setGrantedUsers(self.__type, "getAllLogins", self.admins)
+  access:setGrantedUsers(self.__type, "getAllLogins", data.admins)
   -- register itself to receive logout notifications
   local logins = AccessControl.activeLogins
   rawset(logins.publisher, self, self)
@@ -583,22 +577,12 @@ end
 function LoginRegistry:loginRemoved(login, observers)
   local orb = self.access.orb
   for observer in pairs(observers) do
-    local iface, opname, param = LoginObserver, "entityLogout", login
-    if observer.legacy then
-      iface = ICredentialObserver
-      opname = "credentialWasDeleted"
-      param = {
-        identifier = login.id,
-        owner = login.entity,
-        delegate = "",
-      }
-    end
     local callback = observer.callback
     if callback == nil then
-      callback = orb:newproxy(observer.ior, nil, iface)
+      callback = orb:newproxy(observer.ior, nil, LoginObsType)
     end
     schedule(newthread(function()
-      local ok, errmsg = pcall(callback[opname], callback, param)
+      local ok, errmsg = pcall(callback.entityLogout, callback, login)
       if not ok then
         log:exception(msg.LoginObserverException:tag{
           observer = observer.id,
@@ -682,15 +666,14 @@ function LoginRegistry:getLoginValidity(id)
   return 0
 end
 
-function LoginRegistry:subscribeObserver(callback, legacy)
+function LoginRegistry:subscribeObserver(callback)
   if callback == nil then
     BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local logins = AccessControl.activeLogins
   local caller = self.access:getCallerChain().caller
   local login = logins:getLogin(caller.id)
-  local observer = login:newObserver(callback, legacy)
-  observer.callback = callback
+  local observer = login:newObserver(callback)
   local id = observer.id
   local subscription = Subscription{ id=id, logins=logins, registry=self }
   self.subscriptionOf[id] = subscription

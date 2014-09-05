@@ -27,7 +27,7 @@ local class = oo.class
 
 local idl = require "openbus.core.idl"
 local const = idl.const.services.access_control
-local types = idl.types.services
+local UnauthorizedOperation = idl.types.services.UnauthorizedOperation
 local msg = require "openbus.core.messages"
 local access = require "openbus.core.Access"
 local setNoPermSysEx = access.setNoPermSysEx
@@ -116,15 +116,14 @@ function BusInterceptor:unmarshalCredential(...)
   local credential = Interceptor.unmarshalCredential(self, ...)
   if credential ~= nil then
     local chain = credential.chain
-    if chain == nil then -- unjoined non-legacy call
+    if chain == nil then -- unjoined call
       chain = {
-        signature = false,
         originators = {},
         caller = getLoginInfoFor(self, credential.login),
         target = self.login.entity,
       }
       credential.chain = chain
-    elseif chain.signature ~= nil then -- joined non-legacy call
+    else -- joined call
       local originators = chain.originators
       originators[#originators+1] = chain.caller -- add last originator
       local caller = getLoginInfoFor(self, credential.login)
@@ -156,22 +155,13 @@ function BusInterceptor:receiverequest(request)
         if chain ~= nil then
           local login = chain.caller
           if not granted[login.entity] then
-            if chain.signature == nil then -- legacy call (OpenBus 1.5)
-              setNoPermSysEx(request, 0)
-              log:exception(msg.DeniedLegacyBusCall:tag{
-                operation = request.operation.name,
-                remote = login.id,
-                entity = login.entity,
-              })
-            else
-              request.success = false
-              request.results = {{_repid = types.UnauthorizedOperation}}
-              log:exception(msg.DeniedBusCall:tag{
-                operation = request.operation.name,
-                remote = login.id,
-                entity = login.entity,
-              })
-            end
+            request.success = false
+            request.results = {{_repid = UnauthorizedOperation}}
+            log:exception(msg.DeniedBusCall:tag{
+              operation = request.operation.name,
+              remote = login.id,
+              entity = login.entity,
+            })
           end
         elseif granted ~= Anybody then
           setNoPermSysEx(request, const.NoCredentialCode)

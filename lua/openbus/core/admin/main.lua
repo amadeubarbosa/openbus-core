@@ -1313,21 +1313,6 @@ return function(...)
     end
     bus = nil
     ref = nil
-    -- check legacy
-    msg = " - Suporte legado (versão 1.5.x): %s"
-    local legacyref = "corbaloc::"..host..":"..port.."/openbus_v1_05"
-    local legacy = orb:newproxy(legacyref, nil, "scs::core::IComponent")
-    ok, status = pcall(legacy._non_existent, legacy) 
-    if ok then
-      if status then
-        printf(msg, "[DESABILITADO]")
-      else
-        printf(msg, "[HABILITADO]")
-      end
-    else
-      local errmsg = string.format("[ERRO] %s", status._repid)
-      printf(msg, errmsg)
-    end
     orb:shutdown()
     legacyref = nil
     legacy = nil

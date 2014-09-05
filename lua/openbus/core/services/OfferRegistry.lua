@@ -7,6 +7,7 @@ local next = _G.next
 local pairs = _G.pairs
 local pcall = _G.pcall
 local rawget = _G.rawget
+local rawset = _G.rawset
 local tostring = _G.tostring
 
 local coroutine = require "coroutine"
@@ -44,12 +45,12 @@ local InvalidService = offexp.InvalidService
 local UnauthorizedFacets = offexp.UnauthorizedFacets
 local offtyp = idl.types.services.offer_registry
 local OfferedService = offtyp.OfferedService
-local OfferObserver = offtyp.OfferObserver
+local OfferObsType = offtyp.OfferObserver
 local OffObserverSubType = offtyp.OfferObserverSubscription
 local OffRegObserverType = offtyp.OfferRegistryObserver
 local OffRegObsSubType = offtyp.OfferRegistryObserverSubscription
 local OfferRegistryType = offtyp.OfferRegistry
-local ServiceOffer = offtyp.ServiceOffer
+local ServiceOfferType = offtyp.ServiceOffer
 
 local mngidl = require "openbus.core.admin.idl"
 local mngexp = mngidl.throw.services.offer_registry.admin.v1_0
@@ -198,7 +199,7 @@ local OfferObserverSubscription = class{
 function OfferObserverSubscription:__init()
   local id = self.id
   local offer = self.offer
-  self.__objkey = "OfferObserver:"..id -- for the ORB
+  self.__objkey = "OfferObserver_v2.1:"..id -- for the ORB
   registerObserver(offer.registry, offer, id, self)
 end
 
@@ -233,7 +234,7 @@ local OfferRegistryObserverSubscription = class{
 function OfferRegistryObserverSubscription:__init()
   local id = self.id
   local registry = self.registry
-  self.__objkey = "OfferRegObs:"..id -- for the ORB
+  self.__objkey = "OfferRegObs_v2.1:"..id -- for the ORB
   registerObserver(registry, registry, id, self)
 end
 
@@ -258,11 +259,11 @@ function OfferRegistryObserverSubscription:remove(tag)
 end
 
 
-local Offer = class{ __type = ServiceOffer }
+local Offer = class{ __type = ServiceOfferType }
   
 function Offer:__init()
   self.ref = self -- IDL struct attribute (see operation 'describe')
-  self.__objkey = "Offer:"..self.id -- for the ORB
+  self.__objkey = "Offer_v2.1:"..self.id -- for the ORB
   self.registry.offers:add(self)
   -- recover observers
   local persistedObs = self.observers -- backup observer persisted entries
@@ -280,7 +281,7 @@ function Offer:__init()
       orb:newservant(OfferObserverSubscription{
         login = login,
         id = id,
-        observer = orb:newproxy(entry.observer, nil, OfferObserver),
+        observer = orb:newproxy(entry.observer, nil, OfferObsType),
         offer = self,
       })
     else

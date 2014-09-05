@@ -25,8 +25,7 @@ LUADIR= ../lua
 LUASRC= \
   $(LUADIR)/openbus/core/admin/idl.lua \
   $(LUADIR)/openbus/core/admin/parsed.lua \
-  $(LUADIR)/openbus/core/legacy/AccessControlService.lua \
-  $(LUADIR)/openbus/core/legacy/RegistryService.lua \
+  $(LUADIR)/openbus/core/legacy/ServiceWrappers.lua \
   $(LUADIR)/openbus/core/services/Access.lua \
   $(LUADIR)/openbus/core/services/AccessControl.lua \
   $(LUADIR)/openbus/core/services/LoginDB.lua \
