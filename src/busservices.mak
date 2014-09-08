@@ -1,8 +1,9 @@
 PROJNAME= busservices
 APPNAME= $(PROJNAME)
 
-SCSIDL= ${SCS_IDL1_2_HOME}/src
-OPENBUSIDL= ${OPENBUS_IDL2_0_HOME}/src
+OPENBUSSCSIDL= ${SCS_IDL1_2_HOME}/src
+OPENBUSNEWIDL= ${OPENBUS_IDL2_1_HOME}/src
+OPENBUSOLDIDL= ${OPENBUS_IDL2_0_HOME}/src
 
 SRC= \
   launcher.c \
@@ -15,16 +16,18 @@ IDLSRC= \
   $(IDLDIR)/offer_authorization.idl
 
 DEPENDENTIDLSRC= \
-  $(SCSIDL)/scs.idl \
-  $(OPENBUSIDL)/core.idl \
-  $(OPENBUSIDL)/credential.idl \
-  $(OPENBUSIDL)/access_control.idl \
-  $(OPENBUSIDL)/offer_registry.idl
+  $(OPENBUSSCSIDL)/scs.idl \
+  $(OPENBUSNEWIDL)/core.idl \
+  $(OPENBUSNEWIDL)/credential.idl \
+  $(OPENBUSNEWIDL)/access_control.idl \
+  $(OPENBUSNEWIDL)/offer_registry.idl
 
 LUADIR= ../lua
 LUASRC= \
   $(LUADIR)/openbus/core/admin/idl.lua \
   $(LUADIR)/openbus/core/admin/parsed.lua \
+  $(LUADIR)/openbus/core/legacy/idl.lua \
+  $(LUADIR)/openbus/core/legacy/parsed.lua \
   $(LUADIR)/openbus/core/legacy/ServiceWrappers.lua \
   $(LUADIR)/openbus/core/services/Access.lua \
   $(LUADIR)/openbus/core/services/AccessControl.lua \
@@ -34,8 +37,17 @@ LUASRC= \
   $(LUADIR)/openbus/core/services/PasswordAttempts.lua \
   $(LUADIR)/openbus/core/services/PropertyIndex.lua \
   $(LUADIR)/openbus/core/services/OfferRegistry.lua \
-	$(LUADIR)/openbus/core/services/util.lua \
+  $(LUADIR)/openbus/core/services/util.lua \
   $(LUADIR)/openbus/core/services/passwordvalidator/LDAP.lua
+
+OLDIDL= \
+  $(OPENBUSOLDIDL)/access_control.idl \
+  $(OPENBUSOLDIDL)/offer_registry.idl
+
+OLDDEPENDENTIDL= \
+  $(OPENBUSOLDIDL)/core.idl \
+  $(OPENBUSOLDIDL)/credential.idl \
+  $(OPENBUSSCSIDL)/scs.idl
 
 include ${OIL_HOME}/openbus/base.mak
 
@@ -151,7 +163,10 @@ else
 endif
 
 $(LUADIR)/openbus/core/admin/parsed.lua: $(IDL2LUA) $(IDLSRC) $(DEPENDENTIDLSRC)
-	$(OILBIN) $(IDL2LUA) -I $(SCSIDL) -I $(OPENBUSIDL) -o $@ $(IDLSRC)
+	$(OILBIN) $(IDL2LUA) -I $(OPENBUSSCSIDL) -I $(OPENBUSNEWIDL) -o $@ $(IDLSRC)
+
+$(LUADIR)/openbus/core/legacy/parsed.lua: $(IDL2LUA) $(OLDIDL) $(OLDDEPENDENTIDL)
+	$(OILBIN) $(IDL2LUA) -I $(OPENBUSSCSIDL) -I $(OPENBUSOLDIDL) -o $@ $(OLDIDL)
 
 $(PRELOAD_DIR)/coreservices.c $(PRELOAD_DIR)/coreservices.h: $(LUAPRELOADER) $(LUASRC)
 	$(LOOPBIN) $(LUAPRELOADER) -l "$(LUADIR)/?.lua" \
