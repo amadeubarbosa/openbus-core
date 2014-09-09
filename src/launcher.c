@@ -25,32 +25,14 @@
 #define LUA_OK 0
 #endif
 
-#if !defined(LUA_PROMPT)
-#define LUA_PROMPT		"> "
-#define LUA_PROMPT2		">> "
-#endif
-
-#if !defined(LUA_PROGNAME)
-#define LUA_PROGNAME		"lua"
-#endif
-
-#if !defined(LUA_MAXINPUT)
-#define LUA_MAXINPUT		512
-#endif
-
-#if !defined(LUA_INIT)
-#define LUA_INIT		"LUA_INIT"
-#endif
-
-#define LUA_INITVERSION  \
-	LUA_INIT "_" LUA_VERSION_MAJOR "_" LUA_VERSION_MINOR
-
 
 
 
 static lua_State *globalL = NULL;
 
 static const char *progpath = NULL;
+
+static char *logpath = NULL;
 
 static const char *callerchunk =
 #if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM == 501
@@ -93,15 +75,30 @@ static void lstop (lua_State *L, lua_Debug *ar) {
 
 static void laction (int i) {
   signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
-                              terminate process (default action) */
+                         terminate process (default action) */
   lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
 
 
+static int l_setlogpath (lua_State *L) {
+  size_t len;
+  const char *path = luaL_checklstring(L, 1, &len);
+  if (logpath) luaL_error(L, "log file already defined (path=%s)", logpath);
+  ++len;
+  logpath = (char *)malloc((len)*sizeof(char));
+  strncpy(logpath, path, len);
+  return 0;
+}
+
+
 static void l_message (const char *pname, const char *msg) {
-  if (pname) fprintf(stderr, "%s: ", pname);
-  fprintf(stderr, "%s\n", msg);
-  fflush(stderr);
+  FILE *out = NULL;
+  if (logpath) out = fopen(logpath, "a");
+  if (out == NULL) out = stderr;
+  if (pname) fprintf(out, "%s: ", pname);
+  fprintf(out, "%s\n", msg);
+  fflush(out);
+  if (out != stderr) fclose(out);
 }
 
 
@@ -171,13 +168,13 @@ static int getargs (lua_State *L, char **argv) {
 static int dostring (lua_State *L, const char *s, const char *name) {
   int status = luaL_loadbuffer(L, s, strlen(s), name);
   if (status == LUA_OK) status = docall(L, 0, LUA_MULTRET);
-  return report(L, status);
+  return status;
 }
 
 
 static int pmain (lua_State *L) {
   char **argv = (char **)lua_touserdata(L, 2);
-  int status = 0;
+  int status = LUA_OK;
   /* open standard libraries */
   luaL_checkversion(L);
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
@@ -195,16 +192,16 @@ static int pmain (lua_State *L) {
     }
   }
   
-  /* preload libraries and global variables */
-  lua_pushstring(L, OPENBUS_MAIN); lua_setglobal(L, "OPENBUS_MAIN");
-  lua_pushstring(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM == 501
-  luapreload_luacompat52(L);
-#endif
-  luapreload_extralibraries(L);
-  
   /* ??? */
   if (status == LUA_OK) {
+    /* preload libraries and global variables */
+    lua_pushstring(L, OPENBUS_MAIN); lua_setglobal(L, "OPENBUS_MAIN");
+    lua_pushstring(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
+    lua_pushcfunction(L, l_setlogpath); lua_setglobal(L, "OPENBUS_SETLOGPATH");
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM == 501
+    luapreload_luacompat52(L);
+#endif
+    luapreload_extralibraries(L);
     /* execute main module */
     status = dostring(L, callerchunk, "MAIN_THREAD");
     if (status == LUA_OK) {
@@ -226,7 +223,7 @@ static int pmain (lua_State *L) {
 
 
 int main (int argc, char **argv) {
-  int status, result;
+  int status, result = EXIT_FAILURE;
   lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create Lua state: not enough memory");
@@ -237,9 +234,10 @@ int main (int argc, char **argv) {
   lua_pushinteger(L, argc);  /* 1st argument */
   lua_pushlightuserdata(L, argv); /* 2nd argument */
   status = lua_pcall(L, 2, 1, 0);
-  result = lua_tointeger(L, -1);  /* get result */
+  if (status == LUA_OK) result = lua_tointeger(L, -1);  /* get result */
   finalreport(L, status);
   lua_close(L);
-  return (status == LUA_OK) ? result : EXIT_FAILURE;
+  if (logpath != NULL) free((void*)logpath);
+  return result;
 }
 
