@@ -59,7 +59,7 @@ local function getoptcfg(configs, field, default)
   if value ~= default then
     return value
   end
-  return default
+  --return default
 end
 
 return function(...)
@@ -250,8 +250,16 @@ Options:
       ssl = sslcfg,
     }
     log:config(msg.SecureConnectionPortNumber:tag{path=Configs.sslport})
-    log:config(msg.SecureConnectionAuthenticationKey:tag{path=sslcfg.key})
-    log:config(msg.SecureConnectionAuthenticationCertificate:tag{path=sslcfg.certificate})
+    if sslcfg.key ~= nil or sslcfg.certificate ~= nil then
+      log:config(msg.SecureConnectionAuthenticationKey:tag{
+        path = assert(sslcfg.key,
+                      msg.MissingSecureConnectionAuthenticationKey),
+      })
+      log:config(msg.SecureConnectionAuthenticationCertificate:tag{
+        path = assert(sslcfg.certificate,
+                      msg.MissingSecureConnectionAuthenticationCertificate),
+      })
+    end
     if sslcfg.cafile ~= nil then
       log:config(msg.SecureConnectionCertificationAuthorityListFile:tag{path=sslcfg.cafile})
     elseif sslcfg.capath ~= nil then
