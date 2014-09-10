@@ -1,5 +1,6 @@
 PROJNAME= busservices
 APPNAME= $(PROJNAME)
+CODEREV?= r$(shell svnversion -n $(PROJDIR))
 
 SCSIDL= ${SCS_IDL1_2_HOME}/src
 OPENBUSIDL= ${OPENBUS_IDL2_0_HOME}/src
@@ -35,7 +36,7 @@ LUASRC= \
   $(LUADIR)/openbus/core/services/PasswordAttempts.lua \
   $(LUADIR)/openbus/core/services/PropertyIndex.lua \
   $(LUADIR)/openbus/core/services/OfferRegistry.lua \
-	$(LUADIR)/openbus/core/services/util.lua \
+  $(LUADIR)/openbus/core/services/util.lua \
   $(LUADIR)/openbus/core/services/passwordvalidator/LDAP.lua
 
 include ${OIL_HOME}/openbus/base.mak
@@ -56,7 +57,8 @@ LIBS:= \
   luaopenbus
 
 DEFINES= \
-  TECMAKE_APPNAME=\"$(APPNAME)\"
+  OPENBUS_PROGNAME=\"$(APPNAME)\" \
+  OPENBUS_CODEREV=\"$(CODEREV)\"
 
 INCLUDES+= . $(SRCLUADIR) \
   $(LUASTRUCT_HOME)/src \

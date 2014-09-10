@@ -181,12 +181,20 @@ static int pmain (lua_State *L) {
   luaL_openlibs(L);  /* open libraries */
   lua_gc(L, LUA_GCRESTART, 0);
 
+  /* export to Lua defined C constants */
+  lua_pushliteral(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
+#ifdef OPENBUS_CODEREV
+  lua_pushliteral(L, OPENBUS_CODEREV); lua_setglobal(L, "OPENBUS_CODEREV");
+#endif
+  lua_pushstring(L, OPENBUS_MAIN); lua_setglobal(L, "OPENBUS_MAIN");
+  lua_pushcfunction(L, l_setlogpath); lua_setglobal(L, "OPENBUS_SETLOGPATH");
   if (argv[0] && argv[0][0]) {
     progpath = argv[0];
     lua_pushstring(L, progpath); lua_setglobal(L, "OPENBUS_PROGPATH");
     if (argv[1] && argv[1][0] && strcmp(argv[1], "DEBUG") == 0) {
       argv++;
       status = dostring(L,
+        "OPENBUS_CODEREV = OPENBUS_CODEREV..'-DEBUG'"
         "table.insert(package.searchers, (table.remove(package.searchers, 1)))",
         "SET_DEBUG");
     }
@@ -195,9 +203,6 @@ static int pmain (lua_State *L) {
   /* ??? */
   if (status == LUA_OK) {
     /* preload libraries and global variables */
-    lua_pushstring(L, OPENBUS_MAIN); lua_setglobal(L, "OPENBUS_MAIN");
-    lua_pushstring(L, OPENBUS_PROGNAME); lua_setglobal(L, "OPENBUS_PROGNAME");
-    lua_pushcfunction(L, l_setlogpath); lua_setglobal(L, "OPENBUS_SETLOGPATH");
 #if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM == 501
     luapreload_luacompat52(L);
 #endif

@@ -4,17 +4,12 @@ local concat = array.concat
 local idl = require "openbus.core.idl"
 local msg = require "openbus.core.messages"
 
-msg.ReleaseVersion = 0
-msg.PatchVersion = 5
-
 msg.OpenBusVersion = concat({
   idl.const.MajorVersion,
   idl.const.MinorVersion,
-  msg.ReleaseVersion
+  0,
+  OPENBUS_CODEREV,
 }, ".")
-if msg.PatchVersion > 0 then
-  msg.OpenBusVersion = msg.OpenBusVersion.."_"..msg.PatchVersion
-end
 
 -- openbus.core.services.main
 msg.CopyrightNotice = "OpenBus "..msg.OpenBusVersion.."  Copyright (C) 2012-2014 Tecgraf, PUC-Rio"
