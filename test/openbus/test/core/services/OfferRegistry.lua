@@ -219,6 +219,14 @@ local function isOfferRegSubscription(observer, properties)
   end
 end
 
+local function getProperty(list, name)
+  for _, prop in ipairs(list) do
+    if prop.name == name then
+      return prop.value
+    end
+  end
+end
+
 
 local OffersFixture = cached.class({}, IdentityFixture)
 
@@ -667,13 +675,6 @@ return OpenBusFixture{
           checks.assert(#found, checks.equal(1))
           checks.assert(found[1], isServiceOfferDesc(comp, login, props2))
 
-          local function getProperty(list, name)
-            for _, prop in ipairs(list) do
-              if prop.name == name then
-                return prop.value
-              end
-            end
-          end
           found = offers:findServices(SomeOfferProps)
           checks.assert(#found, checks.equal(3))
           for _, offer in ipairs(found) do
@@ -701,6 +702,30 @@ return OpenBusFixture{
             completed = "COMPLETED_NO",
             minor = 0,
           })
+        end,
+        JIRA_OPENBUS_2577 = function (fixture, openbus)
+          local conn = fixture.system or openbus.context:getCurrentConnection()
+          local login = conn.login
+          local offers = fixture.offers
+          local comp = fixture.component
+          local offer1 = offers:registerService(comp.IComponent, {
+            {name="prop1", value="value1"},
+            {name="prop2", value="YYYYYY"},
+            {name="prop3", value="XXXXXX"},
+          })
+          local offer2 = offers:registerService(comp.IComponent, {
+            {name="prop1", value="ZZZZZZ"},
+            {name="prop2", value="value2"},
+            {name="prop3", value="XXXXXX"},
+          })
+          -- search first service offer
+          local props = {
+            {name="prop1", value="value1"},
+            {name="prop3", value="XXXXXX"},
+            {name="prop2", value="value2"},
+          }
+          local found = offers:findServices(props)
+          checks.assert(#found, checks.equal(0))
         end,
       },
     },

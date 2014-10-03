@@ -90,14 +90,13 @@ function PropertyIndex:find(properties)
     -- select the objects from the minimum set that are also present
     -- in the other sets (i.e. satisfy all other properties)
     for object in pairs(min) do
-      local exclude
       for index = 1, count-1 do
-        exclude = (sets[index][object]==nil)
-		if exclude then break end
+        if sets[index][object]==nil then
+          goto continue
+        end
       end
-      if not exclude then
-        found[#found+1] = object
-      end
+      found[#found+1] = object
+      ::continue::
     end
   end
   return found
