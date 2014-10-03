@@ -93,6 +93,7 @@ function PropertyIndex:find(properties)
       local exclude
       for index = 1, count-1 do
         exclude = (sets[index][object]==nil)
+		if exclude then break end
       end
       if not exclude then
         found[#found+1] = object
