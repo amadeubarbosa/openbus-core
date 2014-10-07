@@ -1,5 +1,6 @@
 PROJNAME= busadmin
 APPNAME= $(PROJNAME)
+CODEREV?= r$(shell svnversion -n $(PROJDIR))
 
 SCSIDL= ${SCS_IDL1_2_HOME}/src
 OPENBUSIDL= ${OPENBUS_IDL2_1_HOME}/src
@@ -49,7 +50,8 @@ LIBS:= \
   luaopenbus
 
 DEFINES= \
-  TECMAKE_APPNAME=\"$(APPNAME)\"
+  OPENBUS_PROGNAME=\"$(APPNAME)\" \
+  OPENBUS_CODEREV=\"$(CODEREV)\"
 
 INCLUDES+= . $(SRCLUADIR) \
   $(LUASTRUCT_HOME)/src \

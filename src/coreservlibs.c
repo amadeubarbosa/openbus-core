@@ -24,7 +24,6 @@
 
 
 const char const* OPENBUS_MAIN = "openbus.core.services.main";
-const char const* OPENBUS_PROGNAME = TECMAKE_APPNAME;
 
 void luapreload_extralibraries(lua_State *L)
 {

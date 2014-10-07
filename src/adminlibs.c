@@ -37,7 +37,6 @@
 #endif
 
 const char const* OPENBUS_MAIN = "openbus.core.admin.main";
-const char const* OPENBUS_PROGNAME = TECMAKE_APPNAME;
 
 #if defined(_WIN32)
 static void pusherror (lua_State *L) {

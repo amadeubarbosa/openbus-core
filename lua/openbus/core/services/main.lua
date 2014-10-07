@@ -1,7 +1,6 @@
 -- $Id$
 
 local _G = require "_G"
-local assert = _G.assert
 local ipairs = _G.ipairs
 local require = _G.require
 local select = _G.select
@@ -15,6 +14,7 @@ local math = require "math"
 local inf = math.huge
 
 local io = require "io"
+local openfile = io.open
 local stderr = io.stderr
 
 local os = require "os"
@@ -64,7 +64,22 @@ end
 
 return function(...)
   log.viewer.labels[running()] = "busservices"
-  
+
+  local errcode = {
+    InvalidLeaseTime = 2,
+    InvalidExpirationGap = 3,
+    InvalidPasswordPenaltyTime = 4,
+    InvalidNumberOfPasswordLimitedTries = 5,
+    MissingPasswordValidationParameter = 6,
+    InvalidPasswordValidationLimit = 7,
+    InvalidPasswordValidationRate = 8,
+    UnableToLoadPasswordValidator = 9,
+    UnableToInitializePasswordValidator = 10,
+    UnableToReadPrivateKey = 11,
+    UnableToOpenDatabase = 12,
+    NoPasswordValidators = 13,
+  }
+
   -- configuration parameters parser
   local Configs = ConfigArgs{
     iorfile = "",
@@ -102,12 +117,23 @@ return function(...)
     logaddress = false,
   }
 
-  -- parse configuration file
-  Configs:configs("configs", getenv("OPENBUS_CONFIG") or "openbus.cfg")
+  log:level(Configs.loglevel)
+  log:version(msg.CopyrightNotice)
+
+  do -- parse configuration file
+    local path = getenv("OPENBUS_CONFIG")
+    if path == nil then
+      path = "openbus.cfg"
+      local file = openfile(path)
+      if file == nil then goto done end
+      file:close()
+    end
+    Configs:configs("configs", path)
+    ::done::
+  end
 
   -- parse command line parameters
   do
-    io.write(msg.CopyrightNotice, "\n")
     local argidx, errmsg = Configs(...)
     if not argidx or argidx <= select("#", ...) then
       if errmsg ~= nil then
@@ -185,32 +211,98 @@ Options:
   end
 
   -- setup log files
-  setuplog(log, Configs.loglevel, Configs.logfile)
-  log:version(msg.CopyrightNotice)
+  local logfile = setuplog(log, Configs.loglevel, Configs.logfile)
+  if logfile ~= nil then OPENBUS_SETLOGPATH(logfile) end
   log:config(msg.CoreServicesLogLevel:tag{value=Configs.loglevel})
   setuplog(oillog, Configs.oilloglevel, Configs.oillogfile)
   log:config(msg.OilLogLevel:tag{value=Configs.oilloglevel})
 
   -- validate time parameters
-  assert(Configs.leasetime > 0 and Configs.leasetime%1 == 0,
-    msg.InvalidLeaseTime:tag{value=Configs.leasetime})
-  assert(Configs.expirationgap > 0,
-    msg.InvalidExpirationGap:tag{value=Configs.expirationgap})
-  assert(Configs.badpasswordpenalty >= 0,
-    msg.InvalidPasswordPenaltyTime:tag{value=Configs.badpasswordpenalty})
-  assert(Configs.badpasswordtries > 0 and Configs.badpasswordtries%1 == 0,
-    msg.InvalidNumberOfPasswordLimitedTries:tag{value=Configs.badpasswordtries})
-  assert((Configs.badpasswordlimit ~= inf) == (Configs.badpasswordrate ~= inf),
-    msg.MissingPasswordValidationParameter:tag{
+  if Configs.leasetime%1 ~= 0 or Configs.leasetime < 1 then
+    log:misconfig(msg.InvalidLeaseTime:tag{value = Configs.leasetime})
+    return errcode.InvalidLeaseTime
+  elseif Configs.expirationgap <= 0 then
+    log:misconfig(msg.InvalidExpirationGap:tag{value = Configs.expirationgap})
+    return errcode.InvalidExpirationGap
+  elseif Configs.badpasswordpenalty < 0 then
+    log:misconfig(msg.InvalidPasswordPenaltyTime:tag{
+      value = Configs.badpasswordpenalty,
+    })
+    return errcode.InvalidPasswordPenaltyTime
+  elseif Configs.badpasswordtries%1 ~= 0 or Configs.badpasswordtries < 1 then
+    log:misconfig(msg.InvalidNumberOfPasswordLimitedTries:tag{
+      value = Configs.badpasswordtries,
+    })
+    return errcode.InvalidNumberOfPasswordLimitedTries
+  elseif (Configs.badpasswordlimit~=inf) ~= (Configs.badpasswordrate~=inf) then
+    log:misconfig(msg.MissingPasswordValidationParameter:tag{
       missing = (Configs.badpasswordlimit == inf)
                 and "badpasswordlimit"
                 or "badpasswordrate"
     })
-  assert(Configs.badpasswordlimit >= 1,
-    msg.InvalidPasswordValidationLimit:tag{value=Configs.badpasswordlimit})
-  assert(Configs.badpasswordrate > 0,
-    msg.InvalidPasswordValidationRate:tag{value=Configs.badpasswordlimitrate})
+    return errcode.MissingPasswordValidationParameter
+  elseif Configs.badpasswordlimit < 1 then
+    log:misconfig(msg.InvalidPasswordValidationLimit:tag{
+      value = Configs.badpasswordlimit,
+    })
+    return errcode.InvalidPasswordValidationLimit
+  elseif Configs.badpasswordrate <= 0 then
+    log:misconfig(msg.InvalidPasswordValidationRate:tag{
+      value = Configs.badpasswordlimitrate,
+    })
+    return errcode.InvalidPasswordValidationRate
+  end
   
+  -- load private key
+  local prvkey, errmsg = readprivatekey(Configs.privatekey)
+  if prvkey == nil then
+    log:misconfig(msg.UnableToReadPrivateKey:tag{
+      path = Configs.privatekey,
+      error = errmsg,
+    })
+    return errcode.UnableToReadPrivateKey
+  end
+  
+  -- open database
+  local database, errmsg = opendb(Configs.database)
+  if database == nil then
+    log:misconfig(msg.UnableToOpenDatabase:tag{
+      path = Configs.database,
+      error = errmsg,
+    })
+    return errcode.UnableToOpenDatabase
+  end
+
+  -- load all password validators to be used
+  local validators = {}
+  for index, package in ipairs(Configs.validator) do
+    local ok, result = pcall(require, package)
+    if not ok then
+      log:misconfig(msg.UnableToLoadPasswordValidator:tag{
+        validator = package,
+        error = result,
+      })
+      return errcode.UnableToLoadPasswordValidator
+    end
+    local validate, errmsg = result(Configs)
+    if validate == nil then
+      log:misconfig(msg.UnableToInitializePasswordValidator:tag{
+        validator = package,
+        error = errmsg,
+      })
+      return errcode.UnableToInitializePasswordValidator
+    end
+    validators[#validators+1] = {
+      name = package,
+      validate = validate,
+    }
+    log:config(msg.PasswordValidatorLoaded:tag{name=package})
+  end
+  if #validators == 0 then
+    log:misconfig(msg.NoPasswordValidators)
+    return errcode.NoPasswordValidators
+  end
+
   -- create a set of admin users
   local adminUsers = {}
   for _, admin in ipairs(Configs.admin) do
@@ -218,17 +310,6 @@ Options:
     log:config(msg.AdministrativeRightsGranted:tag{entity=admin})
   end
   
-  -- load all password validators to be used
-  local validators = {}
-  for index, package in ipairs(Configs.validator) do
-    validators[#validators+1] = {
-      name = package,
-      validate = assert(require(package)(Configs)),
-    }
-    log:config(msg.PasswordValidatorLoaded:tag{name=package})
-  end
-  assert(#validators>0, msg.NoPasswordValidators)
-
   -- setup bus access
   local sslcfg = {
     port = getoptcfg(Configs, "sslport", 0),
@@ -274,7 +355,7 @@ Options:
   }
   log:config(msg.ServicesListeningAddress:tag{host=orb.host,port=orb.port})
   iceptor = access.Interceptor{
-    prvkey = assert(readprivatekey(Configs.privatekey)),
+    prvkey = prvkey,
     orb = orb,
   }
   orb:setinterceptor(iceptor, "corba")
@@ -307,7 +388,7 @@ Options:
     init = function()
       local params = {
         access = iceptor,
-        database = assert(opendb(Configs.database)),
+        database = database,
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
         passwordPenaltyTime = Configs.badpasswordpenalty,

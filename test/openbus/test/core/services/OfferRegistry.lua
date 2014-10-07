@@ -16,13 +16,6 @@ local InvalidService = offtps.InvalidService
 local InvalidProperties = offtps.InvalidProperties
 local UnauthorizedFacets = offtps.UnauthorizedFacets
 
--- TODO:[maia] all the code that depend on these definition are misplaced here,
---             they all should be in the file of the tests of EntityRegistry.
-local admidl = require "openbus.core.admin.idl"
-local offadm = admidl.types.services.offer_registry.admin.v1_0
-local EntityRegistry = offadm.EntityRegistry
-local AuthorizationInUse = offadm.AuthorizationInUse
-
 local throwsysex = require "openbus.util.sysex"
 
 local ComponentContext = require "scs.core.ComponentContext"
@@ -223,6 +216,14 @@ local function isOfferRegSubscription(observer, properties)
     checks.assert(desc.observer, checks.equal(observer))
     checks.assert(desc.properties, checkprops)
     return true
+  end
+end
+
+local function getProperty(list, name)
+  for _, prop in ipairs(list) do
+    if prop.name == name then
+      return prop.value
+    end
   end
 end
 
@@ -674,13 +675,6 @@ return OpenBusFixture{
           checks.assert(#found, checks.equal(1))
           checks.assert(found[1], isServiceOfferDesc(comp, login, props2))
 
-          local function getProperty(list, name)
-            for _, prop in ipairs(list) do
-              if prop.name == name then
-                return prop.value
-              end
-            end
-          end
           found = offers:findServices(SomeOfferProps)
           checks.assert(#found, checks.equal(3))
           for _, offer in ipairs(found) do
@@ -708,6 +702,30 @@ return OpenBusFixture{
             completed = "COMPLETED_NO",
             minor = 0,
           })
+        end,
+        JIRA_OPENBUS_2577 = function (fixture, openbus)
+          local conn = fixture.system or openbus.context:getCurrentConnection()
+          local login = conn.login
+          local offers = fixture.offers
+          local comp = fixture.component
+          local offer1 = offers:registerService(comp.IComponent, {
+            {name="prop1", value="value1"},
+            {name="prop2", value="YYYYYY"},
+            {name="prop3", value="XXXXXX"},
+          })
+          local offer2 = offers:registerService(comp.IComponent, {
+            {name="prop1", value="ZZZZZZ"},
+            {name="prop2", value="value2"},
+            {name="prop3", value="XXXXXX"},
+          })
+          -- search first service offer
+          local props = {
+            {name="prop1", value="value1"},
+            {name="prop3", value="XXXXXX"},
+            {name="prop2", value="value2"},
+          }
+          local found = offers:findServices(props)
+          checks.assert(#found, checks.equal(0))
         end,
       },
     },
