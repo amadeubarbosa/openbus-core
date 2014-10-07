@@ -12,8 +12,6 @@ local rawset = _G.rawset
 local tabop = require "loop.table"
 local memoize = tabop.memoize
 
---local Wrapper = require "loop.object.Wrapper"
-
 local oo = require "openbus.util.oo"
 local class = oo.class
 
@@ -282,6 +280,7 @@ do
       local subscription = LocalOfferObserverSubscription{
         offer = offer,
         wrapper = wrapper,
+        __reference = {}, -- to make it look like an OiL proxy
       }
       subscription.observer = subscription
       local registry = offer.registry
