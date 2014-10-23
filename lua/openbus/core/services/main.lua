@@ -78,6 +78,8 @@ return function(...)
     UnableToReadPrivateKey = 11,
     UnableToOpenDatabase = 12,
     NoPasswordValidators = 13,
+    MissingSecureConnectionAuthenticationKey = 14,
+    MissingSecureConnectionAuthenticationCertificate = 15,
   }
 
   -- configuration parameters parser
@@ -332,13 +334,19 @@ Options:
     }
     log:config(msg.SecureConnectionPortNumber:tag{path=Configs.sslport})
     if sslcfg.key ~= nil or sslcfg.certificate ~= nil then
+      if sslcfg.key == nil then
+        log:misconfig(msg.MissingSecureConnectionAuthenticationKey)
+        return errcode.MissingSecureConnectionAuthenticationKey
+      end
+      if sslcfg.certificate == nil then
+        log:misconfig(msg.MissingSecureConnectionAuthenticationCertificate)
+        return errcode.MissingSecureConnectionAuthenticationCertificate
+      end
       log:config(msg.SecureConnectionAuthenticationKey:tag{
-        path = assert(sslcfg.key,
-                      msg.MissingSecureConnectionAuthenticationKey),
+        path = sslcfg.key,
       })
       log:config(msg.SecureConnectionAuthenticationCertificate:tag{
-        path = assert(sslcfg.certificate,
-                      msg.MissingSecureConnectionAuthenticationCertificate),
+        path = sslcfg.certificate,
       })
     end
     if sslcfg.cafile ~= nil then
