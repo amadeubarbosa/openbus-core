@@ -18,6 +18,9 @@ local memoize = table.memoize
 
 local LRUCache = require "loop.collection.LRUCache"
 
+local giop = require "oil.corba.giop"
+local sysex = giop.SystemExceptionIDs
+
 local log = require "openbus.util.logger"
 local oo = require "openbus.util.oo"
 local class = oo.class

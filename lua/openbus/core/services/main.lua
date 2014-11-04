@@ -281,7 +281,6 @@ Options:
   -- setup bus access
   local address = { host=Configs.host, port=Configs.port }
   log:config(msg.ServicesListeningAddress:tag(address))
-  address.tcpoptions = {timeout=1,reuseaddr=true}
   local orb = access.initORB(address)
   local legacy
   if not Configs.nolegacy then
