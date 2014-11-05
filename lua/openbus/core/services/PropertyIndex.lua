@@ -3,6 +3,7 @@ local ipairs = _G.ipairs
 local next = _G.next
 local pairs = _G.pairs
 local rawget = _G.rawget
+local setmetatable = _G.setmetatable
 
 local table = require "loop.table"
 local memoize = table.memoize

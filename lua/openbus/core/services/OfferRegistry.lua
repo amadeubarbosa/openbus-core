@@ -7,6 +7,7 @@ local next = _G.next
 local pairs = _G.pairs
 local pcall = _G.pcall
 local rawget = _G.rawget
+local rawset = _G.rawset
 local tostring = _G.tostring
 
 local coroutine = require "coroutine"
@@ -957,7 +958,7 @@ function EntityRegistry:__init(data)
     -- check if authorized interfaces exist
     local interfaces = InterfaceRegistry.interfaces
     for ifaceId in pairs(entry.authorized) do
-      entities = interfaces[ifaceId]
+      local entities = interfaces[ifaceId]
       if entities == nil then
         ServiceFailure{
           message = msg.CorruptedDatabaseDueToMissingInterface:tag{

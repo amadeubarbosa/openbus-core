@@ -1,8 +1,10 @@
 -- $Id$
 
 local _G = require "_G"
+local error = _G.error
 local ipairs = _G.ipairs
 local pairs = _G.pairs
+local pcall = _G.pcall
 local rawset = _G.rawset
 local type = _G.type
 
@@ -329,7 +331,7 @@ function AccessControl:shutdown()
     unschedule(sweeper)
   end
   self.sweeper = false -- indicate no sweeper shall run anymore
-  log:admin(msg.AccessControlShutDown:tag{entity=process.entity})
+  log:admin(msg.AccessControlShutDown)
 end
 
 function AccessControl:getLoginEntry(id)

@@ -2,6 +2,8 @@
 
 local _G = require "_G"
 local ipairs = _G.ipairs
+local pairs = _G.pairs
+local pcall = _G.pcall
 local require = _G.require
 local select = _G.select
 local setmetatable = _G.setmetatable
@@ -289,7 +291,7 @@ Options:
     local ACS = require "openbus.core.legacy.AccessControlService"
     legacy = ACS.IAccessControlService
   end
-  iceptor = access.Interceptor{
+  local iceptor = access.Interceptor{
     prvkey = prvkey,
     orb = orb,
     legacy = legacy,
