@@ -14,6 +14,7 @@
 local _G = require "_G"
 local ipairs = _G.ipairs
 local tostring = _G.tostring
+local type = _G.type
 
 local array = require "table"
 local concat = array.concat

@@ -10,7 +10,7 @@ local certfile = syscrt
 local script = admscript
 local outputfile = admoutput
 
-local bin = "busadmin DEBUG "
+local bin = "busadmin "
 local login = "--login="..admin.." "
 local password = "--password="..adminPassword.." "
 local certificate = "--certificate="..certfile

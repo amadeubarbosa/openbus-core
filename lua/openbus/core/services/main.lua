@@ -2,6 +2,8 @@
 
 local _G = require "_G"
 local ipairs = _G.ipairs
+local pairs = _G.pairs
+local pcall = _G.pcall
 local require = _G.require
 local select = _G.select
 local setmetatable = _G.setmetatable
@@ -362,7 +364,7 @@ Options:
     options = orbopt,
   }
   log:config(msg.ServicesListeningAddress:tag{host=orb.host,port=orb.port})
-  iceptor = access.Interceptor{
+  local iceptor = access.Interceptor{
     prvkey = prvkey,
     orb = orb,
   }
