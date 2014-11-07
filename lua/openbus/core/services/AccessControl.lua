@@ -344,10 +344,8 @@ function AccessControl:getLoginEntry(id)
 end
 
 function AccessControl:encodeChain(chain, target)
-  local login = self.activeLogins:getLogin(target)
-  if login == nil then InvalidLogins{ loginIds = {target} } end
   chain.bus = self.busid
-  chain.target = login.entity
+  chain.target = target
   local access = self.access
   local encoder = access.orb:newencoder()
   encoder:put(chain, access.types.CallChain)
