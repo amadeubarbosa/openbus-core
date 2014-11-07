@@ -253,14 +253,14 @@ end
 
 do -- join chain targeted for other login
   validlogin.busSession:newCred("signChainFor")
-  signed = ac:signChainFor(syslogin)
+  signed = ac:signChainFor(system)
   local chain = decodeChain(bus.key, signed)
   assert(chain.target == system)
   assert(chain.caller.id == validlogin.id)
   assert(chain.caller.entity == user)
 
   validlogin.busSession:newCred("signChainFor", signed)
-  local ok, ex = pcall(ac.signChainFor, ac, validlogin.id)
+  local ok, ex = pcall(ac.signChainFor, ac, validlogin.entity)
   assert(ok == false)
   assert(ex._repid == "IDL:omg.org/CORBA/NO_PERMISSION:1.0")
   assert(ex.completed == "COMPLETED_NO")
@@ -284,12 +284,13 @@ end
 
 -- chain signature 2 -----------------------------------------------------------
 
-do -- sign chain for an invalid login
+do -- sign chain for an entity without login
   validlogin.busSession:newCred("signChainFor")
-  local ok, ex = pcall(ac.signChainFor, ac, syslogin)
-  assert(ok == false)
-  assert(ex._repid == logintypes.InvalidLogins)
-  assert(ex.loginIds[1] == syslogin)
+  signed = ac:signChainFor(system)
+  local chain = decodeChain(bus.key, signed)
+  assert(chain.target == system)
+  assert(chain.caller.id == validlogin.id)
+  assert(chain.caller.entity == user)
 end
 
 -- login lease -----------------------------------------------------------------
