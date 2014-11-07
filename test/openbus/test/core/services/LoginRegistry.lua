@@ -109,7 +109,6 @@ return OpenBusFixture{
             _repid = logintypes.InvalidLogins,
             loginIds = { login },
           })
-          checks.assert(conn:logout(), checks.equal(false))
         end,
         InvalidateLoginUnauthorized = function (fixture)
           local conn = fixture:newConn("system")
@@ -234,7 +233,6 @@ return OpenBusFixture{
             _repid = logintypes.InvalidLogins,
             loginIds = { login },
           })
-          checks.assert(conn:logout(), checks.equal(false))
         end,
         ObserverOfOtherLogin = function (fixture, openbus)
           -- create new observer
@@ -251,8 +249,6 @@ return OpenBusFixture{
           -- wait for the notification
           local notified = observer:_wait("entityLogout")
           checks.assert(notified, checks.like(login))
-          -- assert that second logout fails
-          checks.assert(conn:logout(), checks.equal(false))
         end,
         ObserverOfOwnLogin = function (fixture, openbus)
           -- assume new login that can be logged out later
@@ -272,8 +268,6 @@ return OpenBusFixture{
           -- wait for the notification
           local notified = observer:_wait("entityLogout")
           checks.assert(notified, checks.like(login))
-          -- assert that second logout fails
-          checks.assert(conn:logout(), checks.equal(false))
         end,
         ObserverOfTerminatedLogin = function (fixture, openbus)
           -- create new observer
@@ -291,7 +285,6 @@ return OpenBusFixture{
           -- wait for the notification
           local notified = observer:_wait("entityLogout")
           checks.assert(notified, checks.like(login))
-          checks.assert(conn:logout(), checks.equal(false))
         end,
         ObserverOfOwnTermination = function (fixture, openbus)
           -- assume new login that can be terminated later
@@ -313,7 +306,6 @@ return OpenBusFixture{
           -- wait for the notification
           local notified = observer:_wait("entityLogout")
           checks.assert(notified, checks.like(login))
-          checks.assert(conn:logout(), checks.equal(false))
         end,
       },
     },

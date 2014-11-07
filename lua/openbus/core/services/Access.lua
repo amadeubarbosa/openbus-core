@@ -118,6 +118,7 @@ function BusInterceptor:unmarshalCredential(...)
     local chain = credential.chain
     if chain == nil then -- unjoined call
       chain = {
+        busid = self.busid,
         originators = {},
         caller = getLoginInfoFor(self, credential.login),
         target = self.login.entity,
