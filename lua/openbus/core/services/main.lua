@@ -450,12 +450,21 @@ Options:
         facet:__init(params)
       end
     end
+    iceptor.legacy = LegacyFacets.AccessControl
     local legacyBus = newSCS{
       orb = orb,
       objkey = BusObjectKey,
       name = BusObjectKey,
       facets = LegacyFacets,
     }
+    local legacyFacet = "LegacySupport"
+    bus._facets[legacyFacet] = {
+      name = legacyFacet,
+      interface_name = legacyBus._facets.IComponent.interface_name,
+      facet_ref = legacyBus.IComponent,
+      implementation = legacyBus._facets.IComponent.implementation,
+    }
+    bus[legacyFacet] = servant
     log:config(msg.LegacySupportEnabled)
   end
 

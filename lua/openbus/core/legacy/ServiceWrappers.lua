@@ -8,9 +8,18 @@ local assert = _G.assert
 local ipairs = _G.ipairs
 local pairs = _G.pairs
 local rawset = _G.rawset
+local xpcall = _G.xpcall
+
+local array = require "table"
+local unpack = array.unpack or _G.unpack
+
+local hash = require "lce.hash"
+local sha256 = hash.sha256
 
 local tabop = require "loop.table"
 local memoize = tabop.memoize
+
+local LRUCache = require "loop.collection.LRUCache"
 
 local oo = require "openbus.util.oo"
 local class = oo.class
@@ -23,6 +32,8 @@ local LoginObsType = acctyp.LoginObserver
 local LoginObsSubType = acctyp.LoginObserverSubscription
 local LoginProcessType = acctyp.LoginProcess
 local LoginRegistryType = acctyp.LoginRegistry
+local accexp = idl.throw.services.access_control
+local InvalidLogins = accexp.InvalidLogins
 local offtyp = idl.types.services.offer_registry
 local OfferObsType = offtyp.OfferObserver
 local OffObserverSubType = offtyp.OfferObserverSubscription
@@ -95,9 +106,43 @@ function AccessControl:__init(data)
   access:setGrantedUsers(self.__type, "loginByPassword", "any")
   access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
   access:setGrantedUsers(LoginProcessType, "*", "any")
+  -- cache of signed legacy chains
+  self.signedChainOf = memoize(function(chain) -- [chain] = SignedChainCache
+    return LRUCache{ -- [target] = signedChain
+      retrieve = function(target)
+        local originators = { unpack(chain.originators) }
+        originators[#originators+1] = chain.caller
+        return self:encodeChain({
+          originators = originators,
+          caller = self.login,
+        }, target)
+      end,
+    }
+  end, "k")
+end
+
+function AccessControl:encodeChain(chain, target)
+  local access = self.__object.access
+  chain.target = target
+  local encoder = access.orb:newencoder()
+  encoder:put(chain, access.types.LegacyCallChain)
+  local encoded = encoder:getdata()
+  return {
+    encoded = encoded,
+    signature = assert(access.prvkey:sign(assert(sha256(encoded)))),
+  }
 end
 
 -- IDL operations
+
+function AccessControl:signChainFor(target, chain)
+  local AccessControl = self.__object
+  local login = AccessControl.activeLogins:getLogin(target)
+  if login == nil then InvalidLogins{ loginIds = {target} } end
+  target = login.entity
+  if chain ~= nil then return self.signedChainOf[chain]:get(target) end
+  return self:encodeChain(AccessControl.access:getCallerChain(), target)
+end
 
 function AccessControl:startLoginByCertificate(...)
   local logger, secret = trymethod(self.__object, "startLoginByCertificate", ...)
