@@ -42,6 +42,7 @@ local class = oo.class
 local sysex = require "openbus.util.sysex"
 local BAD_PARAM = sysex.BAD_PARAM
 local NO_RESOURCES = sysex.NO_RESOURCES
+local NO_PERMISSION = sysex.NO_PERMISSION
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
@@ -62,6 +63,8 @@ local LoginObserver = acctyp.LoginObserver
 local LoginObsSubType = acctyp.LoginObserverSubscription
 local LoginProcessType = acctyp.LoginProcess
 local LoginRegistryType = acctyp.LoginRegistry
+local accconst = idl.const.services.access_control
+local InvalidChain = accconst.InvalidChainCode
 
 local mngidl = require "openbus.core.admin.idl"
 local mngexp = mngidl.throw.services.access_control.admin.v1_0
@@ -466,7 +469,11 @@ function AccessControl:renew()
 end
 
 function AccessControl:signChainFor(target)
-  return self:encodeChain(self.access:getCallerChain(), target)
+  local chain = self.access:getCallerChain()
+  if chain.signature == nil then
+    NO_PERMISSION{ completed = "COMPLETED_NO", minor = InvalidChain }
+  end
+  return self:encodeChain(chain, target)
 end
 
 ------------------------------------------------------------------------------
