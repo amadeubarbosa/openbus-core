@@ -24,9 +24,6 @@ local FakeLoginId = "Fake Login ID"
 local function isLoginSubscription(observer)
   return function (subs)
     checks.assert(subs:watchLogin(FakeLoginId), checks.equal(false))
-    checks.assert(subs:_get_observer(), checks.equal(observer))
-    local desc = subs:describe()
-    checks.assert(desc.observer, checks.equal(observer))
     return true
   end
 end
