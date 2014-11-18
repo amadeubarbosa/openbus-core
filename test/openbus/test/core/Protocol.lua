@@ -80,7 +80,7 @@ do -- login using reserved entity
   assert(ex._repid == logintypes.AccessDenied)
 end
 
-for _, userpat in ipairs({"%s", "%s%d"}) do
+for _, userpat in pairs{"%s", "%s%d"} do
   do -- login with wrong password max tries
     local encrypted = encodeLogin(bus.key, "WrongPassword", pubkey)
     local ok, ex
@@ -92,7 +92,9 @@ for _, userpat in ipairs({"%s", "%s%d"}) do
     end
     ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
     assert(ok == false)
-    assert(ex._repid == sysex.NO_RESOURCES)
+    assert(ex._repid == logintypes.TooManyAttempts)
+    assert(ex.domain == "ADDRESS")
+    assert(ex.penaltyTime - 1000*passwordpenalty < 0.1)
     sleep(passwordpenalty)
     ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
     assert(ok == false)

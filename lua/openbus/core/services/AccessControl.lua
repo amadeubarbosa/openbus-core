@@ -51,6 +51,7 @@ local EncryptedBlockSize = idl.const.EncryptedBlockSize
 local ServiceFailure = idl.types.services.ServiceFailure
 local accexp = idl.throw.services.access_control
 local AccessDenied = accexp.AccessDenied
+local TooManyAttempts = accexp.TooManyAttempts
 local InvalidLogins = accexp.InvalidLogins
 local InvalidPublicKey = accexp.InvalidPublicKey
 local MissingCertificate = accexp.MissingCertificate
@@ -378,18 +379,18 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
       local allowed, wait = loginAttempts:allow(sourceid)
       if not allowed then
         log:exception(msg.TooManyFailedLogins:tag{sourceid=sourceid,wait=wait})
-        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+        TooManyAttempts{ domain = "ADDRESS", penaltyTime = 1000*wait }
       end
       allowed, wait = loginAttempts:allow(entity)
       if not allowed then
         log:exception(msg.TooManyFailedEntityLogins:tag{entity=entity,wait=wait})
-        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+        TooManyAttempts{ domain = "ENTITY", penaltyTime = 1000*wait }
       end
       local validationAttempts = self.validationAttempts
       allowed, wait = validationAttempts:allow("validators")
       if not allowed then
         log:exception(msg.TooManyFailedValidations:tag{entity=entity,wait=wait})
-        NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
+        TooManyAttempts{ domain = "VALIDATOR", penaltyTime = 1000*wait }
       end
       for _, validator in ipairs(self.passwordValidators) do
         local valid, errmsg = validator.validate(entity, decoded.data)
