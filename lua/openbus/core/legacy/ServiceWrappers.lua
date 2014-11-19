@@ -24,23 +24,29 @@ local LRUCache = require "loop.collection.LRUCache"
 local oo = require "openbus.util.oo"
 local class = oo.class
 
-local idl = require "openbus.core.legacy.idl"
+local idl = require "openbus.core.idl"
 local UnauthorizedOperation = idl.throw.services.UnauthorizedOperation
-local acctyp = idl.types.services.access_control
+
+local oldidl = require "openbus.core.legacy.idl"
+local LegacyUnauthorizedOperation = oldidl.throw.v2_0.services.UnauthorizedOperation
+local InvalidExportedData = oldidl.throw.v2_1.services.legacy_support.InvalidExportedData
+local acctyp = oldidl.types.v2_0.services.access_control
 local AccessControlType = acctyp.AccessControl
 local LoginObsType = acctyp.LoginObserver
 local LoginObsSubType = acctyp.LoginObserverSubscription
 local LoginProcessType = acctyp.LoginProcess
 local LoginRegistryType = acctyp.LoginRegistry
-local accexp = idl.throw.services.access_control
+local accexp = oldidl.throw.v2_0.services.access_control
 local InvalidLogins = accexp.InvalidLogins
-local offtyp = idl.types.services.offer_registry
+local offtyp = oldidl.types.v2_0.services.offer_registry
 local OfferObsType = offtyp.OfferObserver
 local OffObserverSubType = offtyp.OfferObserverSubscription
 local OffRegObserverType = offtyp.OfferRegistryObserver
 local OffRegObsSubType = offtyp.OfferRegistryObserverSubscription
 local OfferRegistryType = offtyp.OfferRegistry
 local ServiceOfferType = offtyp.ServiceOffer
+local cvrtyp = oldidl.types.v2_1.services.legacy_support
+local LegacyConverterType = cvrtyp.LegacyConverter
 
 local function traceback(errmsg)
   if type(errmsg) == "string" then
@@ -190,7 +196,7 @@ end
 function LoginRegistry:getAllLogins(...)
   local entity = self.access:getCallerChain().caller.entity
   if self.admins[entity] == nil then
-    UnauthorizedOperation()
+    LegacyUnauthorizedOperation()
   end
   return trymethod(self.__object, "getAllLogins", ...)
 end
@@ -340,7 +346,7 @@ end
 
 
 
-local OfferRegistry = { __type = OfferRegistryType } -- is local (see forward declaration)
+local OfferRegistry = { __type = OfferRegistryType }
 
 function OfferRegistry:__init(data)
   -- initialize attributes
@@ -410,10 +416,46 @@ function OfferRegistry:subscribeObserver(observer, ...)
   return OfferRegistryObserverSubscription(subscription)
 end
 
+------------------------------------------------------------------------------
+-- Faceta LegacyConverter
+------------------------------------------------------------------------------
+
+local LegacyConverter = { __type = LegacyConverterType }
+
+function LegacyConverter:__init(data)
+  self.access = data.access
+  self.AccessControl = data.services.AccessControl
+end
+
+-- IDL operations
+
+function LegacyConverter:convertSharedAuth(attempt)
+  if self.AccessControl.pendingChallenges[attempt] == nil then
+    InvalidExportedData()
+  end
+  if attempt.originator ~= self.access:getCallerChain().caller.id then
+    UnauthorizedOperation()
+  end
+  local wrapper = Wrapper{
+    __type = LoginProcessType,
+    __object = attempt,
+  }
+  local cancel = attempt.cancel
+  function attempt:cancel(...)
+    self.manager.access.orb:deactivate(wrapper)
+    return cancel(self, ...)
+  end
+  return wrapper
+end
+
+function LegacyConverter:convertSignedChain(chain)
+end
+
 -- Exported Module -----------------------------------------------------------
 
 return {
   AccessControl = AccessControl,
   LoginRegistry = LoginRegistry,
   OfferRegistry = OfferRegistry,
+  LegacyConverter = LegacyConverter,
 }

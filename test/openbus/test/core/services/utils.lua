@@ -150,9 +150,11 @@ end
 IdentityFixture = cached.class({}, Fixture)
 
 function IdentityFixture:newConn(kind)
-  local info = assert(Entities[kind], "invalid identity kind")
-  conn = self.openbus.context:createConnection(bushost, busport, connprops)
-  conn[ info[1] ](conn, info[2], info[3])
+  local conn = self.openbus.context:createConnection(bushost, busport, connprops)
+  if kind ~= nil then
+    local info = assert(Entities[kind], "invalid identity kind")
+    conn[ info[1] ](conn, info[2], info[3])
+  end
   self.connections[conn] = true
   return conn
 end

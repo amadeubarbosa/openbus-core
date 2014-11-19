@@ -433,7 +433,7 @@ Options:
   -- create legacy SCS components
   if not Configs.nolegacy then
     local oldidl = require "openbus.core.legacy.idl"
-    local BusObjectKey = oldidl.const.BusObjectKey
+    local BusObjectKey = oldidl.const.v2_0.BusObjectKey
     oldidl.loadto(orb)
     local LegacyFacets = require "openbus.core.legacy.ServiceWrappers"
     -- prepare facets to be published as CORBA objects

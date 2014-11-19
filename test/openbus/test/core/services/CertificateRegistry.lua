@@ -31,7 +31,7 @@ local CertificatesFixture = cached.class({}, IdentityFixture)
 function CertificatesFixture:setup(openbus)
   IdentityFixture.setup(self, openbus)
   local certificates = self.certificates
-  if self.certificates == nil then
+  if certificates == nil then
     local conn = openbus.context:getCurrentConnection()
     local facet = conn.bus:getFacetByName("CertificateRegistry")
     certificates = openbus.orb:narrow(facet, CertificateRegistry)

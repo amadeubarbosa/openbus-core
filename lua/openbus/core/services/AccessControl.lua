@@ -449,6 +449,7 @@ function AccessControl:startLoginBySharedAuth()
   local secret = newid("random")
   local logger = LoginProcess{
     manager = self,
+    originator = login.id,
     entity = login.entity,
     secret = secret,
   }

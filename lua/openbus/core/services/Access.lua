@@ -144,8 +144,8 @@ function BusInterceptor:receiverequest(request)
   self.callerAddressOf[running()] = request.channel_address
   if request.servant ~= nil then -- servant object does exist
     local op = request.operation_name
-    if op:find("_", 1, true) ~= 1
-    or op:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
+    --if op:find("_", 1, true) ~= 1
+    --or op:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
       receiveBusRequest(self, request)
       if request.success == nil then
         local granted = self.grantedUsers[request.interface.repID][op]
@@ -156,7 +156,8 @@ function BusInterceptor:receiverequest(request)
             request.success = false
             request.results = {{_repid = UnauthorizedOperation}}
             log:exception(msg.DeniedBusCall:tag{
-              operation = request.operation.name,
+              interface = iface,
+              operation = op,
               remote = login.id,
               entity = login.entity,
             })
@@ -164,11 +165,12 @@ function BusInterceptor:receiverequest(request)
         elseif granted ~= Anybody then
           setNoPermSysEx(request, const.NoCredentialCode)
           log:exception(msg.DeniedOrdinaryCall:tag{
-            operation = request.operation.name,
+            interface = iface,
+            operation = op,
           })
         end
       end
-    end
+    --end
   end
 end
 
