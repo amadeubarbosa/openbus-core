@@ -430,10 +430,8 @@ end
 -- IDL operations
 
 function LegacyConverter:convertSharedAuth(attempt)
-  if self.AccessControl.pendingChallenges[attempt] == nil then
-    InvalidExportedData()
-  end
-  if attempt.originator ~= self.access:getCallerChain().caller.id then
+  if self.AccessControl.pendingChallenges[attempt] == nil 
+  or attempt.originator ~= self.access:getCallerChain().caller.id then
     UnauthorizedOperation()
   end
   local wrapper = Wrapper{
@@ -448,7 +446,14 @@ function LegacyConverter:convertSharedAuth(attempt)
   return wrapper
 end
 
-function LegacyConverter:convertSignedChain(chain)
+function LegacyConverter:convertSignedChain()
+  local chain = self.access:getCallerChain()
+  local target = chain.caller.entity
+  local originators = chain.originators
+  local caller = originators[#originators]
+  originators[#originators] = nil
+  chain.caller = caller
+  return AccessControl:encodeChain(chain, target)
 end
 
 -- Exported Module -----------------------------------------------------------

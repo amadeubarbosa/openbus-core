@@ -162,20 +162,23 @@ end
 function IdentityFixture:setup(openbus)
   self.openbus = openbus
   self.connections = {}
+  local context = openbus.context
   local identity = self.identity
   if identity ~= nil then
-    local context = openbus.context
     self.defaultConn = context:setDefaultConnection(self:newConn(identity))
     self.currentConn = context:setCurrentConnection(nil)
   end
+  self.joinedChain = context:exitChain()
 end
 
 function IdentityFixture:teardown(openbus)
   local context = openbus.context
   context:setDefaultConnection(self.defaultConn)
   context:setCurrentConnection(self.currentConn)
+  context:joinChain(self.joinedChain)
   self.defaultConn = nil
   self.currentConn = nil
+  self.joinedChain = nil
   for conn in pairs(self.connections) do
     conn:logout()
   end

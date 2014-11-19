@@ -144,33 +144,30 @@ function BusInterceptor:receiverequest(request)
   self.callerAddressOf[running()] = request.channel_address
   if request.servant ~= nil then -- servant object does exist
     local op = request.operation_name
-    --if op:find("_", 1, true) ~= 1
-    --or op:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
-      receiveBusRequest(self, request)
-      if request.success == nil then
-        local granted = self.grantedUsers[request.interface.repID][op]
-        local chain = self:getCallerChain()
-        if chain ~= nil then
-          local login = chain.caller
-          if not granted[login.entity] then
-            request.success = false
-            request.results = {{_repid = UnauthorizedOperation}}
-            log:exception(msg.DeniedBusCall:tag{
-              interface = iface,
-              operation = op,
-              remote = login.id,
-              entity = login.entity,
-            })
-          end
-        elseif granted ~= Anybody then
-          setNoPermSysEx(request, const.NoCredentialCode)
-          log:exception(msg.DeniedOrdinaryCall:tag{
+    receiveBusRequest(self, request)
+    if request.success == nil then
+      local granted = self.grantedUsers[request.interface.repID][op]
+      local chain = self:getCallerChain()
+      if chain ~= nil then
+        local login = chain.caller
+        if not granted[login.entity] then
+          request.success = false
+          request.results = {{_repid = UnauthorizedOperation}}
+          log:exception(msg.DeniedBusCall:tag{
             interface = iface,
             operation = op,
+            remote = login.id,
+            entity = login.entity,
           })
         end
+      elseif granted ~= Anybody then
+        setNoPermSysEx(request, const.NoCredentialCode)
+        log:exception(msg.DeniedOrdinaryCall:tag{
+          interface = iface,
+          operation = op,
+        })
       end
-    --end
+    end
   end
 end
 
