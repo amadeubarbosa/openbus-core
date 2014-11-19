@@ -133,9 +133,7 @@ return OpenBusFixture{
         end,
         ConvertSignedChainOfSomeoneElse = function (fixture, openbus)
           local context = openbus.context
-          local buskey = context:getCurrentConnection().buskey
-          local chain = context:makeChainFor(FakeEntityName)
-          context:joinChain(chain)
+          context:joinChain(context:makeChainFor(FakeEntityName))
           local legacyconverter = fixture.legacyconverter
           local ok, except = pcall(legacyconverter.convertSignedChain, legacyconverter)
           checks.assert(ok, checks.is(false))
