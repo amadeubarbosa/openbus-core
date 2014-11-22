@@ -24,8 +24,12 @@ local LRUCache = require "loop.collection.LRUCache"
 local oo = require "openbus.util.oo"
 local class = oo.class
 
+local sysex = require "openbus.util.sysex"
+local NO_RESOURCES = sysex.NO_RESOURCES
+
 local idl = require "openbus.core.idl"
 local UnauthorizedOperation = idl.throw.services.UnauthorizedOperation
+local TooManyAttemptsRepId = idl.types.services.access_control.TooManyAttempts
 
 local oldidl = require "openbus.core.legacy.idl"
 local LegacyUnauthorizedOperation = oldidl.throw.v2_0.services.UnauthorizedOperation
@@ -162,6 +166,19 @@ function AccessControl:startLoginBySharedAuth(...)
   logger.__type = LoginProcessType
   wrapmethod(logger, "login")
   return logger, secret
+end
+
+function AccessControl:loginByPassword(...)
+  local object = self.__object
+  local ok, login, leasetime = xpcall(object.loginByPassword, traceback, object, ...)
+  if not ok then
+    local ex = login
+    if ex._repid == TooManyAttemptsRepId then
+      NO_RESOURCES{ completed="COMPLETED_NO", minor = 0x42555000 }
+    end
+    doexcept(false, ex)
+  end
+  return login, leasetime
 end
 
 ------------------------------------------------------------------------------

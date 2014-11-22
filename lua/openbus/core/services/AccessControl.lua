@@ -41,7 +41,6 @@ local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
 local BAD_PARAM = sysex.BAD_PARAM
-local NO_RESOURCES = sysex.NO_RESOURCES
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
