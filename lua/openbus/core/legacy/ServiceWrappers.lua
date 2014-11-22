@@ -456,6 +456,11 @@ function LegacyConverter:convertSignedChain()
   return AccessControl:encodeChain(chain, target)
 end
 
+function LegacyConverter:signChainFor(target)
+  return AccessControl:encodeChain(self.access:getCallerChain(), target)
+end
+
+
 -- Exported Module -----------------------------------------------------------
 
 return {
