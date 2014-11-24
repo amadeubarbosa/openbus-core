@@ -107,19 +107,22 @@ local AccessControl = Wrapper{ __type = AccessControlType }
 -- local operations
 
 function AccessControl:__init(data)
+  local access = data.access
   -- initialize attributes
   self.__object = data.services.AccessControl -- delegatee (see 'Wrapper' class)
+  self.access = access
   -- setup operation access
-  local access = data.access
   access:setGrantedUsers(self.__type, "_get_busid", "any")
   access:setGrantedUsers(self.__type, "_get_buskey", "any")
   access:setGrantedUsers(self.__type, "loginByPassword", "any")
   access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
   access:setGrantedUsers(LoginProcessType, "*", "any")
   -- cache of signed legacy chains
+  local AccessControl = self.__object
   self.signedChainOf = memoize(function(chain) -- [chain] = SignedChainCache
     return LRUCache{ -- [target] = signedChain
       retrieve = function(target)
+        target = self:resolveTarget(target)
         local originators = { unpack(chain.originators) }
         originators[#originators+1] = chain.caller
         return self:encodeChain({
@@ -131,8 +134,14 @@ function AccessControl:__init(data)
   end, "k")
 end
 
+function AccessControl:resolveTarget(target)
+  local login = self.__object.activeLogins:getLogin(target)
+  if login == nil then InvalidLogins{ loginIds = {target} } end
+  return login.entity
+end
+
 function AccessControl:encodeChain(chain, target)
-  local access = self.__object.access
+  local access = self.access
   chain.target = target
   local encoder = access.orb:newencoder()
   encoder:put(chain, access.types.LegacyCallChain)
@@ -146,12 +155,9 @@ end
 -- IDL operations
 
 function AccessControl:signChainFor(target, chain)
-  local AccessControl = self.__object
-  local login = AccessControl.activeLogins:getLogin(target)
-  if login == nil then InvalidLogins{ loginIds = {target} } end
-  target = login.entity
   if chain ~= nil then return self.signedChainOf[chain]:get(target) end
-  return self:encodeChain(AccessControl.access:getCallerChain(), target)
+  return self:encodeChain(self.access:getCallerChain(),
+                          self:resolveTarget(target))
 end
 
 function AccessControl:startLoginByCertificate(...)
