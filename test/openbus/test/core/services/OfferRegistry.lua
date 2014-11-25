@@ -195,9 +195,10 @@ local function isServiceOfferDesc(comp, ...)
   end
 end
 
-local function isOfferSubscription(observer, comp, ...)
+local function isOfferSubscription(login, observer, comp, ...)
   local checkoffer = isServiceOffer(comp, ...)
   return function (subs)
+    checks.assert(subs:_get_owner(), checks.like(login))
     checks.assert(subs:_get_observer(), checks.equal(observer))
     checks.assert(subs:_get_offer(), checkoffer)
     local desc = subs:describe()
@@ -207,9 +208,10 @@ local function isOfferSubscription(observer, comp, ...)
   end
 end
 
-local function isOfferRegSubscription(observer, properties)
+local function isOfferRegSubscription(login, observer, properties)
   local checkprops = checks.like(properties)
   return function (subs)
+    checks.assert(subs:_get_owner(), checks.like(login))
     checks.assert(subs:_get_observer(), checks.equal(observer))
     checks.assert(subs:_get_properties(), checkprops)
     local desc = subs:describe()
@@ -420,14 +422,16 @@ return OpenBusFixture{
           local found = offers:findServices({})
           checks.assert(found, checks.like({n=0}, nil, {isomorphic=true}))
         end,
-        SubscribeAndRemoveRegistryObservers = function (fixture)
+        SubscribeAndRemoveRegistryObservers = function (fixture, openbus)
           local offers = fixture.offers
           local observer = {}
           local subscriptions = {}
+          local owner = openbus.context:getCurrentConnection().login
           for i, prop in ipairs(SomeOfferProps) do
             local props = {prop}
             subscriptions[i] = offers:subscribeObserver(observer, props)
-            checks.assert(subscriptions[i], isOfferRegSubscription(observer,
+            checks.assert(subscriptions[i], isOfferRegSubscription(owner,
+                                                                   observer,
                                                                    props))
           end
           for i = #subscriptions, 1, -1 do
@@ -448,7 +452,9 @@ return OpenBusFixture{
           local offers = fixture.offers
           local observer = {}
           local subscription = offers:subscribeObserver(observer, SomeOfferProps)
-          checks.assert(subscription, isOfferRegSubscription(observer,
+          local owner = openbus.context:getCurrentConnection().login
+          checks.assert(subscription, isOfferRegSubscription(owner,
+                                                             observer,
                                                              SomeOfferProps))
           -- change service offer properties
           local context = openbus.context
@@ -465,7 +471,9 @@ return OpenBusFixture{
           -- subscribe observer
           local offers = fixture.offers
           local subscription = offers:subscribeObserver(observer, SomeOfferProps)
-          checks.assert(subscription, isOfferRegSubscription(observer,
+          local owner = openbus.context:getCurrentConnection().login
+          checks.assert(subscription, isOfferRegSubscription(owner,
+                                                             observer,
                                                              SomeOfferProps))
           -- change service offer properties
           local system = fixture:newConn("system")
@@ -492,11 +500,13 @@ return OpenBusFixture{
           local offers = fixture.offers
           local observers = {}
           local subscriptions = {}
+          local owner = openbus.context:getCurrentConnection().login
           for i, prop in ipairs(SomeOfferProps) do
             observers[i] = newObserver({ offerRegistered = true }, context)
             local props = {prop}
             subscriptions[i] = offers:subscribeObserver(observers[i], props)
-            checks.assert(subscriptions[i], isOfferRegSubscription(observers[i],
+            checks.assert(subscriptions[i], isOfferRegSubscription(owner,
+                                                                   observers[i],
                                                                    props))
           end
           -- change service offer properties
@@ -538,7 +548,9 @@ return OpenBusFixture{
           local offers = fixture.offers
           local newprops = { SomeOfferProps[1] }
           local subscription = offers:subscribeObserver(observer, newprops)
-          checks.assert(subscription, isOfferRegSubscription(observer,
+          local owner = openbus.context:getCurrentConnection().login
+          checks.assert(subscription, isOfferRegSubscription(owner,
+                                                             observer,
                                                              newprops))
           -- change service offer properties
           local system = fixture:newConn("system")
@@ -814,7 +826,9 @@ return OpenBusFixture{
           local offer = fixture.offer
           local observer = {}
           local subscription = offer:subscribeObserver(observer)
-          checks.assert(subscription, isOfferSubscription(observer,
+          local owner = openbus.context:getCurrentConnection().login
+          checks.assert(subscription, isOfferSubscription(owner,
+                                                          observer,
                                                           fixture.component,
                                                           fixture.system.login,
                                                           SomeOfferProps))
@@ -837,7 +851,9 @@ return OpenBusFixture{
           local system = fixture.system
           local login = system.login
           local subscription = offer:subscribeObserver(observer)
-          checks.assert(subscription, isOfferSubscription(observer,
+          local owner = openbus.context:getCurrentConnection().login
+          checks.assert(subscription, isOfferSubscription(owner,
+                                                          observer,
                                                           comp,
                                                           login,
                                                           SomeOfferProps))
@@ -875,7 +891,9 @@ return OpenBusFixture{
           local system = fixture.system
           local login = system.login
           local subscription = offer:subscribeObserver(observer)
-          checks.assert(subscription, isOfferSubscription(observer,
+          local owner = openbus.context:getCurrentConnection().login
+          checks.assert(subscription, isOfferSubscription(owner,
+                                                          observer,
                                                           comp,
                                                           login,
                                                           SomeOfferProps))
@@ -899,13 +917,15 @@ return OpenBusFixture{
           local login = system.login
           local observers = {}
           local subscriptions = {}
+          local owner = openbus.context:getCurrentConnection().login
           for i = 1, 3 do
             observers[i] = newObserver({
               propertiesChanged = true,
               removed = true,
             }, context)
             subscriptions[i] = offer:subscribeObserver(observers[i])
-            checks.assert(subscriptions[i], isOfferSubscription(observers[i],
+            checks.assert(subscriptions[i], isOfferSubscription(owner,
+                                                                observers[i],
                                                                 comp,
                                                                 login,
                                                                 SomeOfferProps))

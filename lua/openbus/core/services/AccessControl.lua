@@ -678,7 +678,12 @@ function LoginRegistry:subscribeObserver(callback)
   local login = logins:getLogin(caller.id)
   local observer = login:newObserver(callback)
   local id = observer.id
-  local subscription = Subscription{ id=id, logins=logins, registry=self }
+  local subscription = Subscription{
+    id = id,
+    owner = login,
+    logins = logins,
+    registry = self,
+  }
   self.subscriptionOf[id] = subscription
   return subscription
 end

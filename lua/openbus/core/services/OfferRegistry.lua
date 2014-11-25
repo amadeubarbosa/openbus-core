@@ -346,9 +346,9 @@ function Offer:subscribeObserver(observer)
   end
   local registry = self.registry
   local offerid = self.id
-  local login = registry.access:getCallerChain().caller.id
+  local login = registry.access:getCallerChain().caller
   local entry = {
-    login = login,
+    login = login.id,
     observer = tostring(observer),
   }
   local id = newid("time")
@@ -356,11 +356,12 @@ function Offer:subscribeObserver(observer)
   assert(self.database:setentryfield(offerid, "observers", id, entry))
   -- commit changes in memory
   log:request(msg.SubscribeOfferObserver:tag{
-    login = login,
+    login = login.id,
     offer = offerid,
     id = id,
   })
   entry.id = id
+  entry.owner = login
   entry.observer = observer
   entry.offer = self
   return OfferObserverSubscription(entry)
@@ -625,10 +626,10 @@ function OfferRegistry:subscribeObserver(observer, properties)
   if observer == nil then
     BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
-  local login = self.access:getCallerChain().caller.id
+  local login = self.access:getCallerChain().caller
   local id = newid("time")
   local entry = { 
-    login = login,
+    login = login.id,
     properties = properties,
     observer = tostring(observer),
   }
@@ -636,10 +637,11 @@ function OfferRegistry:subscribeObserver(observer, properties)
   assert(self.offerRegObsDB:setentry(id, entry))
   -- commit change to memory
   log:request(msg.SubscribeOfferRegistryObserver:tag{
-    login = login,
+    login = login.id,
     id = id,
   })
   entry.id = id
+  entry.owner = login
   entry.observer = observer
   entry.registry = self
   return OfferRegistryObserverSubscription(entry)

@@ -21,9 +21,10 @@ local FakeLoginId = "Fake Login ID"
 
 -- Funções auxiliares ---------------------------------------------------------
 
-local function isLoginSubscription(observer)
+local function isLoginSubscription(observer, login)
   return function (subs)
     checks.assert(subs:watchLogin(FakeLoginId), checks.equal(false))
+    checks.assert(subs:_get_owner(), checks.like(login))
     checks.assert(subs:_get_observer(), checks.equal(observer))
     local desc = subs:describe()
     checks.assert(desc.observer, checks.equal(observer))
@@ -120,11 +121,12 @@ return OpenBusFixture{
             _repid = srvtypes.UnauthorizedOperation,
           })
         end,
-        InvalidObserverWatchingOtherLogin = function (fixture)
+        InvalidObserverWatchingOtherLogin = function (fixture, openbus)
           local logins = fixture.logins
           local observer = {}
           local subscription = logins:subscribeObserver(observer)
-          checks.assert(subscription, isLoginSubscription(observer))
+          checks.assert(subscription, isLoginSubscription(observer,
+            openbus.context:getCurrentConnection().login))
           local conn = fixture:newConn("user")
           checks.assert(subscription:watchLogin(conn.login.id), checks.equal(true))
           conn:logout()
@@ -138,7 +140,7 @@ return OpenBusFixture{
           local logins = fixture.logins
           local observer = {}
           local subscription = logins:subscribeObserver(observer)
-          checks.assert(subscription, isLoginSubscription(observer))
+          checks.assert(subscription, isLoginSubscription(observer, conn.login))
           checks.assert(subscription:watchLogin(conn.login.id), checks.equal(true))
           conn:logout()
           -- CORBA Error should happen in the BUS side and can`t be checked here.
@@ -239,7 +241,8 @@ return OpenBusFixture{
           local observer = newObserver({ entityLogout = true }, openbus.context)
           -- subscribe a new observer and validate some of its operations
           local subscription = fixture.logins:subscribeObserver(observer)
-          checks.assert(subscription, isLoginSubscription(observer))
+          checks.assert(subscription, isLoginSubscription(observer,
+            openbus.context:getCurrentConnection().login))
           -- watch a new login that will be logged out later
           local conn = fixture:newConn("user")
           local login = conn.login
@@ -259,7 +262,7 @@ return OpenBusFixture{
           local observer = newObserver({ entityLogout = true }, openbus.context)
           -- subscribe a new observer and validate some of its operations
           local subscription = fixture.logins:subscribeObserver(observer)
-          checks.assert(subscription, isLoginSubscription(observer))
+          checks.assert(subscription, isLoginSubscription(observer, conn.login))
           -- watch the new login
           local login = conn.login
           checks.assert(subscription:watchLogin(login.id), checks.equal(true))
@@ -275,7 +278,8 @@ return OpenBusFixture{
           -- subscribe a new observer and validate some of its operations
           local logins = fixture.logins
           local subscription = logins:subscribeObserver(observer)
-          checks.assert(subscription, isLoginSubscription(observer))
+          checks.assert(subscription, isLoginSubscription(observer,
+            openbus.context:getCurrentConnection().login))
           -- watch a new login that will be terminated later
           local conn = fixture:newConn("user")
           local login = conn.login
@@ -296,7 +300,7 @@ return OpenBusFixture{
           -- subscribe a new observer and validate some of its operations
           local logins = fixture.logins
           local subscription = logins:subscribeObserver(observer)
-          checks.assert(subscription, isLoginSubscription(observer))
+          checks.assert(subscription, isLoginSubscription(observer, conn.login))
           -- watch the new login
           local login = conn.login
           checks.assert(subscription:watchLogin(login.id), checks.equal(true))
