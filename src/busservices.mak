@@ -17,10 +17,10 @@ IDLSRC= \
 
 DEPENDENTIDLSRC= \
   $(OPENBUSSCSIDL)/scs.idl \
-  $(OPENBUSIDL)/tecgraf/openbus/core/v2_1/core.idl \
-  $(OPENBUSIDL)/tecgraf/openbus/core/v2_1/credential.idl \
-  $(OPENBUSIDL)/tecgraf/openbus/core/v2_1/services/access_control.idl \
-  $(OPENBUSIDL)/tecgraf/openbus/core/v2_1/services/offer_registry.idl
+  $(OPENBUSNEWIDL)/tecgraf/openbus/core/v2_1/core.idl \
+  $(OPENBUSNEWIDL)/tecgraf/openbus/core/v2_1/credential.idl \
+  $(OPENBUSNEWIDL)/tecgraf/openbus/core/v2_1/services/access_control.idl \
+  $(OPENBUSNEWIDL)/tecgraf/openbus/core/v2_1/services/offer_registry.idl
 
 LUADIR= ../lua
 LUASRC= \
