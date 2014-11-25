@@ -112,6 +112,7 @@ function newObserver(methods, context)
         local chain = context:getCallerChain()
         chain.encoded = nil
         chain.signature = nil
+        chain.legacy = nil
         info.chain = chain
       end
       events[name] = info

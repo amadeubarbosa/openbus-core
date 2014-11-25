@@ -33,9 +33,7 @@ local function assertIterator(expected, ...)
   assert(next(expected) == nil)
 end
 
-local prvkey = newkey(EncryptedBlockSize)
-local pubkey = prvkey:encode("public")
-local key = {signature=assert(prvkey:sign(assert(sha256(pubkey)))), encoded=pubkey}
+local key = newkey(EncryptedBlockSize):encode("public")
 
 do
   local logins = LoginDB{

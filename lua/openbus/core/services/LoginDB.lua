@@ -96,7 +96,7 @@ end
 local Login = class()
  
 function Login:__init()
-  self.pubkey = assert(decodekey(self.signedkey.encoded))
+  self.pubkey = assert(decodekey(self.encodedkey))
   self.base.logins[self.id] = self
   if self.watchers == nil then self.watchers = {} end
   if self.observers == nil then self.observers = {} end
@@ -164,12 +164,12 @@ function Database:__init()
                                        self)))
 end
 
-function Database:newLogin(entity, signedkey)
+function Database:newLogin(entity, encodedkey)
   local id = newid("time")
   local data = {
     id = id,
     entity = entity,
-    signedkey = signedkey,
+    encodedkey = encodedkey,
   }
   local table = self.lgnTab
   assert(table:setentry(id, data))
