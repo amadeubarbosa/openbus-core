@@ -268,7 +268,7 @@ function AccessControl:__init(data)
   access.LoginRegistry = self
   access.login = self.login
   access.busid = busid
-  access.buskey = decodepublickey(encodedkey)
+  access.buskey = assert(decodepublickey(encodedkey))
   access:setGrantedUsers(self.__type, "_get_busid", "any")
   access:setGrantedUsers(self.__type, "_get_buskey", "any")
   access:setGrantedUsers(self.__type, "loginByPassword", "any")
