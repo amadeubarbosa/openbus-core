@@ -215,7 +215,7 @@ function LoginProcess:login(pubkey, encrypted)
   end
   local decoder = access.orb:newdecoder(decrypted)
   local decoded = decoder:get(manager.LoginAuthInfo)
-  if decoded.hash ~= sha256(pubkey) or decoded.data ~= self.secret then
+  if decoded.hash ~= assert(sha256(pubkey)) or decoded.data ~= self.secret then
     AccessDenied{entity=entity}
   end
   local login = manager.activeLogins:newLogin(entity, pubkey,
@@ -274,7 +274,7 @@ function AccessControl:__init(data)
   access.LoginRegistry = self
   access.login = self.login
   access.busid = busid
-  access.buskey = decodepublickey(encodedkey)
+  access.buskey = assert(decodepublickey(encodedkey))
   access:setGrantedUsers(self.__type, "_get_busid", "any")
   access:setGrantedUsers(self.__type, "_get_buskey", "any")
   access:setGrantedUsers(self.__type, "loginByPassword", "any")
@@ -367,7 +367,7 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
     end
     local decoder = access.orb:newdecoder(decrypted)
     local decoded = decoder:get(self.LoginAuthInfo)
-    if decoded.hash == sha256(pubkey) then
+    if decoded.hash == assert(sha256(pubkey)) then
       local sourceid = access.callerAddressOf[running()].host
       local loginAttempts = self.loginAttempts
       local allowed, wait = loginAttempts:allow(sourceid)
