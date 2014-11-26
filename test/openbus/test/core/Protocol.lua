@@ -75,7 +75,7 @@ end
 do -- login using reserved entity
   local user = "OpenBus"
   local encrypted = encodeLogin(bus.key, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.AccessDenied)
 end
@@ -86,17 +86,17 @@ for _, userpat in pairs{"%s", "%s%d"} do
     local ok, ex
     for i = 1, passwordtries do
       local entity = userpat:format(user, i)
-      ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+      ok, ex = pcall(ac.loginByPassword, ac, entity, domain, pubkey, encrypted)
       assert(ok == false)
       assert(ex._repid == logintypes.AccessDenied)
     end
-    ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+    ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
     assert(ok == false)
     assert(ex._repid == logintypes.TooManyAttempts)
     assert(ex.domain == "ADDRESS")
     assert(ex.penaltyTime - 1000*passwordpenalty < 0.1)
     sleep(passwordpenalty)
-    ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+    ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
     assert(ok == false)
     assert(ex._repid == logintypes.AccessDenied)
     -- reseting failed login attempts
@@ -108,15 +108,15 @@ for _, userpat in pairs{"%s", "%s%d"} do
     local ok, ex
     for i = 1, passwordtries - 1 do
       local entity = userpat:format(user, i)
-      ok, ex = pcall(ac.loginByPassword, ac, entity, pubkey, encrypted)
+      ok, ex = pcall(ac.loginByPassword, ac, entity, domain, pubkey, encrypted)
       assert(ok == false)
       assert(ex._repid == logintypes.AccessDenied)
     end
     encrypted = encodeLogin(bus.key, password, pubkey)
-    local login = ac:loginByPassword(user, pubkey, encrypted)
+    local login = ac:loginByPassword(user, domain, pubkey, encrypted)
     doLogout(login.id)
     encrypted = encodeLogin(bus.key, "WrongPassword", pubkey)
-    ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+    ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
     assert(ok == false)
     assert(ex._repid == logintypes.AccessDenied)
     -- reseting failed login attempts
@@ -129,7 +129,7 @@ end
 
 do -- login with wrong access key hash
   local encrypted = encodeLogin(bus.key, password, "WrongKey")
-  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.AccessDenied)
 end
@@ -137,7 +137,7 @@ end
 do -- login with wrong bus key
   local buskey = decodepubkey(pubkey)
   local encrypted = encodeLogin(buskey, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.WrongEncoding)
 end
@@ -145,7 +145,7 @@ end
 do -- login with invalid access key
   local pubkey = "InvalidAccessKey"
   local encrypted = encodeLogin(bus.key, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.InvalidPublicKey)
 end
@@ -153,7 +153,7 @@ end
 do -- login with key too short
   local pubkey = shortkey
   local encrypted = encodeLogin(bus.key, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.InvalidPublicKey)
 end
@@ -161,14 +161,14 @@ end
 do -- login with key too long
   local pubkey = longkey
   local encrypted = encodeLogin(bus.key, password, pubkey)
-  local ok, ex = pcall(ac.loginByPassword, ac, user, pubkey, encrypted)
+  local ok, ex = pcall(ac.loginByPassword, ac, user, domain, pubkey, encrypted)
   assert(ok == false)
   assert(ex._repid == logintypes.InvalidPublicKey)
 end
 
 do -- login successfull
   local encrypted = encodeLogin(bus.key, password, pubkey)
-  local login, lease = ac:loginByPassword(user, pubkey, encrypted)
+  local login, lease = ac:loginByPassword(user, domain, pubkey, encrypted)
   assert(validid(login.id))
   assert(login.entity == user)
   assert(lease > 0)

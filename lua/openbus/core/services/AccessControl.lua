@@ -49,8 +49,10 @@ local BusLogin = idl.const.BusLogin
 local EncryptedBlockSize = idl.const.EncryptedBlockSize
 local ServiceFailure = idl.types.services.ServiceFailure
 local accexp = idl.throw.services.access_control
+local UnknownDomain = accexp.UnknownDomain
 local AccessDenied = accexp.AccessDenied
 local TooManyAttempts = accexp.TooManyAttempts
+local InvalidToken = accexp.InvalidToken
 local InvalidLogins = accexp.InvalidLogins
 local InvalidPublicKey = accexp.InvalidPublicKey
 local MissingCertificate = accexp.MissingCertificate
@@ -244,7 +246,8 @@ function AccessControl:__init(data)
   
   -- initialize attributes
   self.access = data.access
-  self.passwordValidators = data.validators
+  self.passwordValidators = data.passwordValidators
+  self.tokenValidators = data.tokenValidators
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
   self.loginAttempts = PasswordAttempts{
@@ -350,7 +353,7 @@ end
 
 -- IDL operations
 
-function AccessControl:loginByPassword(entity, pubkey, encrypted)
+function AccessControl:loginByPassword(entity, domain, pubkey, encrypted)
   if entity ~= self.login.entity then
     checkaccesskey(pubkey)
     local access = self.access
@@ -379,12 +382,14 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
         log:exception(msg.TooManyFailedValidations:tag{entity=entity,wait=wait})
         TooManyAttempts{ domain = "VALIDATOR", penaltyTime = 1000*wait }
       end
-      for _, validator in ipairs(self.passwordValidators) do
+      local validator = self.passwordValidators[domain]
+      if validator ~= nil then
         local valid, errmsg = validator.validate(entity, decoded.data)
         if valid then
           local login = self.activeLogins:newLogin(entity, pubkey)
           log:request(msg.LoginByPassword:tag{
             login = login.id,
+            domain = domain,
             entity = entity,
             validator = validator.name,
           })
@@ -393,15 +398,18 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
           return login, self.leaseTime
         elseif errmsg ~= nil then
           log:exception(msg.FailedPasswordValidation:tag{
+            domain = domain,
             entity = entity,
             validator = validator.name,
             errmsg = errmsg,
           })
         end
+        loginAttempts:denied(sourceid)
+        loginAttempts:denied(entity)
+        validationAttempts:denied("validators")
+      else
+        UnknownDomain{ domain = domain }
       end
-      loginAttempts:denied(sourceid)
-      loginAttempts:denied(entity)
-      validationAttempts:denied("validators")
     else
       log:exception(msg.WrongPublicKeyHash:tag{ entity = entity })
     end
@@ -462,6 +470,39 @@ end
 
 function AccessControl:signChainFor(target)
   return self:encodeChain(self.access:getCallerChain(), target)
+end
+
+function AccessControl:signChainByToken(encrypted, domain)
+  local access = self.access
+  local caller = access:getCallerChain().caller
+  local decrypted, errmsg = access.prvkey:decrypt(encrypted)
+  if decrypted == nil then
+    WrongEncoding{entity=entity,message=errmsg or "no error message"}
+  end
+  local validator = self.tokenValidators[domain]
+  if validator ~= nil then
+    entities, errmsg = validator.validate(caller.id, caller.entity, decrypted)
+    if entities then
+      local count = #entities
+      local originators = {}
+      for i = 1, count-1 do
+        originators[i] = {id="<unknown>",entity=entities[i]}
+      end
+      local chain = {
+        originators = originators,
+        caller = {id="<unknown>",entity=entities[count]}
+      }
+      return self:encodeChain(chain, caller.entity)
+    elseif errmsg ~= nil then
+      log:exception(msg.FailedTokenValidation:tag{
+        validator = validator.name,
+        errmsg = errmsg,
+      })
+    end
+    InvalidToken{ message = errmsg }
+  else
+    UnknownDomain{ domain = domain }
+  end
 end
 
 ------------------------------------------------------------------------------

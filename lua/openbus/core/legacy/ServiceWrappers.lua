@@ -29,7 +29,9 @@ local NO_RESOURCES = sysex.NO_RESOURCES
 
 local idl = require "openbus.core.idl"
 local UnauthorizedOperation = idl.throw.services.UnauthorizedOperation
+local AccessDenied = idl.throw.services.access_control.AccessDenied
 local TooManyAttemptsRepId = idl.types.services.access_control.TooManyAttempts
+local UnknownDomainRepId = idl.types.services.access_control.UnknownDomain
 
 local oldidl = require "openbus.core.legacy.idl"
 local LegacyUnauthorizedOperation = oldidl.throw.v2_0.services.UnauthorizedOperation
@@ -111,6 +113,7 @@ function AccessControl:__init(data)
   -- initialize attributes
   self.__object = data.services.AccessControl -- delegatee (see 'Wrapper' class)
   self.access = access
+  self.domain = data.domain
   -- setup operation access
   access:setGrantedUsers(self.__type, "_get_busid", "any")
   access:setGrantedUsers(self.__type, "_get_buskey", "any")
@@ -174,13 +177,15 @@ function AccessControl:startLoginBySharedAuth(...)
   return logger, secret
 end
 
-function AccessControl:loginByPassword(...)
+function AccessControl:loginByPassword(entity, ...)
   local object = self.__object
-  local ok, login, leasetime = xpcall(object.loginByPassword, traceback, object, ...)
+  local ok, login, leasetime = xpcall(object.loginByPassword, traceback, object, entity, self.domain, ...)
   if not ok then
     local ex = login
     if ex._repid == TooManyAttemptsRepId then
       NO_RESOURCES{ completed="COMPLETED_NO", minor = 0x42555000 }
+    elseif ex._repid == UnknownDomainRepId then
+      AccessDenied()
     end
     doexcept(false, ex)
   end
@@ -216,26 +221,11 @@ end
 
 -- IDL operations
 
-function LoginRegistry:getAllLogins(...)
-  local entity = self.access:getCallerChain().caller.entity
-  if self.admins[entity] == nil then
-    LegacyUnauthorizedOperation()
-  end
-  return trymethod(self.__object, "getAllLogins", ...)
-end
-
-function LoginRegistry:getLoginInfo(...)
-  local login, signedkey = trymethod(self.__object, "getLoginInfo", ...)
-  return login, signedkey.encoded
-end
-
-do
-  function LoginRegistry:subscribeObserver(...)
-    local subscription = trymethod(self.__object, "subscribeObserver", ...)
-    subscription.__type = LoginObsSubType
-    wrapmethod(subscription, "remove")
-    return subscription
-  end
+function LoginRegistry:subscribeObserver(...)
+  local subscription = trymethod(self.__object, "subscribeObserver", ...)
+  subscription.__type = LoginObsSubType
+  wrapmethod(subscription, "remove")
+  return subscription
 end
 
 ------------------------------------------------------------------------------

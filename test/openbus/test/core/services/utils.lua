@@ -123,8 +123,8 @@ end
 
 
 local Entities = {
-  user = { "loginByPassword", user, password },
-  admin = { "loginByPassword", admin, admpsw },
+  user = { "loginByPassword", user, password, domain },
+  admin = { "loginByPassword", admin, admpsw, domain },
   system = { "loginByCertificate", system, assert(openbus.readKeyFile(syskey)) },
 }
 
@@ -154,7 +154,7 @@ function IdentityFixture:newConn(kind)
   local conn = self.openbus.context:createConnection(bushost, busport, connprops)
   if kind ~= nil then
     local info = assert(Entities[kind], "invalid identity kind")
-    conn[ info[1] ](conn, info[2], info[3])
+    conn[ info[1] ](conn, array.unpack(info, 2))
   end
   self.connections[conn] = true
   return conn

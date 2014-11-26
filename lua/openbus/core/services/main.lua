@@ -2,6 +2,7 @@
 
 local _G = require "_G"
 local ipairs = _G.ipairs
+local next = _G.next
 local pairs = _G.pairs
 local pcall = _G.pcall
 local require = _G.require
@@ -9,8 +10,9 @@ local select = _G.select
 local setmetatable = _G.setmetatable
 local tostring = _G.tostring
 
-local io = require "string"
-local format = io.format
+local string = require "string"
+local format = string.format
+local match = string.match
 
 local math = require "math"
 local inf = math.huge
@@ -61,7 +63,6 @@ local function getoptcfg(configs, field, default)
   if value ~= default then
     return value
   end
-  --return default
 end
 
 return function(...)
@@ -76,12 +77,20 @@ return function(...)
     InvalidPasswordValidationLimit = 7,
     InvalidPasswordValidationRate = 8,
     UnableToLoadPasswordValidator = 9,
-    UnableToInitializePasswordValidator = 10,
-    UnableToReadPrivateKey = 11,
-    UnableToOpenDatabase = 12,
-    NoPasswordValidators = 13,
-    MissingSecureConnectionAuthenticationKey = 14,
-    MissingSecureConnectionAuthenticationCertificate = 15,
+    UnableToLoadTokenValidator = 10,
+    UnableToInitializePasswordValidator = 11,
+    UnableToInitializeTokenValidator = 12,
+    UnableToReadPrivateKey = 13,
+    UnableToOpenDatabase = 14,
+    NoPasswordValidators = 15,
+    NoTokenValidators = 16,
+    DuplicatedPasswordValidators = 17,
+    DuplicatedTokenValidators = 18,
+    IllegalPasswordValidatorSpec = 19,
+    IllegalTokenValidatorSpec = 20,
+    MissingSecureConnectionAuthenticationKey = 21,
+    MissingSecureConnectionAuthenticationCertificate = 22,
+    NoPasswordValidatorForLegacyDomain = 23,
   }
 
   -- configuration parameters parser
@@ -110,6 +119,7 @@ return function(...)
   
     admin = {},
     validator = {},
+    tokenvalidator = {},
   
     loglevel = 3,
     logfile = "",
@@ -117,8 +127,9 @@ return function(...)
     oillogfile = "",
     
     noauthorizations = false,
-    nolegacy = false,
     logaddress = false,
+    nolegacy = false,
+    legacydomain = "",
   }
 
   log:level(Configs.loglevel)
@@ -171,6 +182,7 @@ Options:
 
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
+  -tokenvalidator <name>     nome de pacote de validação de token de cadeia externa
 
   -loglevel <number>         nível de log gerado pelo barramento
   -logfile <path>            arquivo de log gerado pelo barramento
@@ -277,34 +289,91 @@ Options:
     return errcode.UnableToOpenDatabase
   end
 
-  -- load all password validators to be used
-  local validators = {}
-  for index, package in ipairs(Configs.validator) do
-    local ok, result = pcall(require, package)
-    if not ok then
-      log:misconfig(msg.UnableToLoadPasswordValidator:tag{
-        validator = package,
-        error = result,
-      })
-      return errcode.UnableToLoadPasswordValidator
+  -- load all password and token validators to be used
+  local validators = {
+    validator = {},
+    tokenvalidator = {},
+  }
+  local valinfo = {
+    validator = {
+      loaded = msg.PasswordValidatorLoaded,
+      illegalerrmsg = msg.IllegalPasswordValidatorSpec,
+      illegalerrcode = errcode.IllegalPasswordValidatorSpec,
+      noneerrmsg = msg.NoPasswordValidators,
+      noneerrcode = errcode.NoPasswordValidators,
+      twiceerrmsg = msg.DuplicatedPasswordValidators,
+      twiceerrcode = errcode.DuplicatedPasswordValidators,
+      loaderrmsg = msg.UnableToLoadPasswordValidator,
+      loaderrcode = errcode.UnableToLoadPasswordValidator,
+      initerrmsg = msg.UnableToInitializePasswordValidator,
+      initerrcode = errcode.UnableToInitializePasswordValidator,
+    },
+    tokenvalidator = {
+      loaded = msg.TokenValidatorLoaded,
+      illegalerrmsg = msg.IllegalTokenValidatorSpec,
+      illegalerrcode = errcode.IllegalTokenValidatorSpec,
+      noneerrmsg = msg.NoTokenValidators,
+      noneerrcode = errcode.NoTokenValidators,
+      twiceerrmsg = msg.DuplicatedTokenValidators,
+      twiceerrcode = errcode.DuplicatedTokenValidators,
+      loaderrmsg = msg.UnableToLoadTokenValidator,
+      loaderrcode = errcode.UnableToLoadTokenValidator,
+      initerrmsg = msg.UnableToInitializeTokenValidator,
+      initerrcode = errcode.UnableToInitializeTokenValidator,
+    },
+  }
+  for param, list in pairs(validators) do
+    for index, spec in ipairs(Configs[param]) do
+      local info = valinfo[param]
+      local domain, package = match(spec, "^([^:]*):(.+)$")
+      if domain == nil then
+        log:misconfig(info.illegalerrmsg:tag{
+          specification = spec,
+        })
+        return info.illegalerrcode
+      end
+      local other = list[domain]
+      if other ~= nil then
+        log:misconfig(info.twiceerrmsg:tag{
+          domain = domain,
+          validator = package,
+          other = other.name,
+        })
+        return info.twiceerrcode
+      end
+      local ok, result = pcall(require, package)
+      if not ok then
+        log:misconfig(info.loaderrmsg:tag{
+          domain = domain,
+          validator = package,
+          error = result,
+        })
+        return info.loaderrcode
+      end
+      local validate, errmsg = result(Configs)
+      if validate == nil then
+        log:misconfig(info.initerrmsg:tag{
+          domain = domain,
+          validator = package,
+          error = errmsg,
+        })
+        return info.initerrcode
+      end
+      list[domain] = {
+        name = package,
+        validate = validate,
+      }
+      log:config(info.loaded:tag{name=package})
     end
-    local validate, errmsg = result(Configs)
-    if validate == nil then
-      log:misconfig(msg.UnableToInitializePasswordValidator:tag{
-        validator = package,
-        error = errmsg,
-      })
-      return errcode.UnableToInitializePasswordValidator
+    if next(list) == nil then
+      log:misconfig(info.noneerrmsg)
+      return info.noneerrcode
+    elseif param == "validator"
+       and not Configs.nolegacy
+       and list[Configs.legacydomain] == nil then
+      log:misconfig(msg.NoPasswordValidatorForLegacyDomain:tag{ domain = Configs.legacydomain })
+      return info.NoPasswordValidatorForLegacyDomain
     end
-    validators[#validators+1] = {
-      name = package,
-      validate = validate,
-    }
-    log:config(msg.PasswordValidatorLoaded:tag{name=package})
-  end
-  if #validators == 0 then
-    log:misconfig(msg.NoPasswordValidators)
-    return errcode.NoPasswordValidators
   end
 
   -- create a set of admin users
@@ -406,7 +475,8 @@ Options:
         passwordFailureLimit = Configs.badpasswordlimit,
         passwordFailureRate = Configs.badpasswordrate,
         admins = adminUsers,
-        validators = validators,
+        passwordValidators = validators.validator,
+        tokenValidators = validators.tokenvalidator,
         enforceAuth = not Configs.noauthorizations,
       }
       log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
@@ -442,7 +512,9 @@ Options:
         access = iceptor,
         services = facets,
         admins = adminUsers,
+        domain = Configs.legacydomain,
       }
+      log:config(msg.LegacyPasswordDomain:tag{value=Configs.legacydomain})
       local objkeyfmt = BusObjectKey.."/%s"
       for name, facet in pairs(LegacyFacets) do
         facet.__facet = name
