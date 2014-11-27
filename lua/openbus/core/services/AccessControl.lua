@@ -11,8 +11,11 @@ local type = _G.type
 local coroutine = require "coroutine"
 local newthread = coroutine.create
 
+local array = require "table"
+local concat = array.concat
+
 local string = require "string"
-local strrep = string.rep
+local repeatstring = string.rep
 
 local math = require "math"
 local ceil = math.ceil
@@ -41,6 +44,8 @@ local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
 local BAD_PARAM = sysex.BAD_PARAM
+local server = require "openbus.util.server"
+local blockencrypt = server.blockencrypt
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
@@ -77,14 +82,15 @@ local PasswordAttempts = require "openbus.core.services.PasswordAttempts"
 local coreutil = require "openbus.core.services.util"
 local assertCaller = coreutil.assertCaller
 
-local MaxEncryptedData = strrep("\255", EncryptedBlockSize-11)
+local MaxEncryptionSize = EncryptedBlockSize-11
+local MaxEncryptionData = repeatstring("\255", MaxEncryptionSize)
 
 ------------------------------------------------------------------------------
 -- Faceta CertificateRegistry
 ------------------------------------------------------------------------------
 
 local function getkeyerror(key)
-  local result, errmsg = key:encrypt(MaxEncryptedData)
+  local result, errmsg = key:encrypt(MaxEncryptionData)
   if result == nil then
     return msg.UnableToEncryptWithKey:tag{error=errmsg}
   end
@@ -189,6 +195,7 @@ local function checkaccesskey(pubkey)
     InvalidPublicKey{message=errmsg}
   end
 end
+
 
 
 local LoginProcess = class{ __type = LoginProcessType }
@@ -475,7 +482,8 @@ end
 function AccessControl:signChainByToken(encrypted, domain)
   local access = self.access
   local caller = access:getCallerChain().caller
-  local decrypted, errmsg = access.prvkey:decrypt(encrypted)
+  local decrypted, errmsg = blockencrypt(access.prvkey, "decrypt",
+                                         EncryptedBlockSize, encrypted)
   if decrypted == nil then
     WrongEncoding{entity=entity,message=errmsg or "no error message"}
   end
