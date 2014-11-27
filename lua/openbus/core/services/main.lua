@@ -10,9 +10,13 @@ local select = _G.select
 local setmetatable = _G.setmetatable
 local tostring = _G.tostring
 
+local array = require "table"
+local concat = array.concat
+
 local string = require "string"
 local format = string.format
 local match = string.match
+local char = string.char
 
 local math = require "math"
 local inf = math.huge
@@ -23,6 +27,9 @@ local stderr = io.stderr
 
 local os = require "os"
 local getenv = os.getenv
+
+local x509 = require "lce.x509"
+local decodecertificate = x509.decode
 
 local table = require "loop.table"
 local copy = table.copy
@@ -42,6 +49,7 @@ local server = require "openbus.util.server"
 local ConfigArgs = server.ConfigArgs
 local newSCS = server.newSCS
 local setuplog = server.setuplog
+local readfile = server.readfrom
 local readprivatekey = server.readprivatekey
 
 local idl = require "openbus.core.idl"
@@ -81,6 +89,7 @@ return function(...)
     UnableToInitializePasswordValidator = 11,
     UnableToInitializeTokenValidator = 12,
     UnableToReadPrivateKey = 13,
+    UnableToReadCertificate = 24,
     UnableToOpenDatabase = 14,
     NoPasswordValidators = 15,
     NoTokenValidators = 16,
@@ -107,6 +116,7 @@ return function(...)
     sslkey = "",
   
     privatekey = "openbus.key",
+    certificate = "openbus.crt",
     database = "openbus.db",
 
     leasetime = 30*60,
@@ -272,11 +282,42 @@ Options:
   -- load private key
   local prvkey, errmsg = readprivatekey(Configs.privatekey)
   if prvkey == nil then
-    log:misconfig(msg.UnableToReadPrivateKey:tag{
-      path = Configs.privatekey,
+    log:misconfig(errmsg)
+    return errcode.UnableToReadPrivateKey
+  end
+  
+  -- load certificate
+  local certificate, errmsg = readfile(Configs.certificate)
+  if certificate == nil then
+    log:misconfig(msg.UnableToReadCertificate:tag{
+      path = Configs.certificate,
       error = errmsg,
     })
-    return errcode.UnableToReadPrivateKey
+    return errcode.UnableToReadCertificate
+  end
+
+  -- validate certificate
+  do
+    local result, errmsg = decodecertificate(certificate)
+    if result ~= nil then
+      result, errmsg = result:getpubkey()
+      if result ~= nil then
+        local chars = {}
+        for i = 0, 128 do chars[i+1] = char(i) end
+        chars = concat(chars)
+        result, errmsg = result:encrypt(chars)
+        if result ~= nil then
+          result, errmsg = (prvkey:decrypt(result) == chars), msg.WrongPublicKey
+        end
+      end
+    end
+    if not result then
+      log:misconfig(msg.WrongBusCertificate:tag{
+        path = Configs.certificate,
+        error = errmsg,
+      })
+      return errcode.WrongCertificate
+    end
   end
   
   -- open database
@@ -467,6 +508,7 @@ Options:
     init = function()
       local params = {
         access = iceptor,
+        certificate = certificate,
         database = database,
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
@@ -481,6 +523,7 @@ Options:
       }
       log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
       log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
+      log:config(msg.LoadedBusCertificate:tag{path=Configs.certificate})
       log:config(msg.SetupLoginLeaseTime:tag{seconds=params.leaseTime})
       log:config(msg.SetupLoginExpirationGap:tag{seconds=params.expirationGap})
       log:config(msg.BadPasswordPenaltyTime:tag{seconds=Configs.badpasswordpenalty})

@@ -253,6 +253,7 @@ function AccessControl:__init(data)
   
   -- initialize attributes
   self.access = data.access
+  self.certificate = data.certificate
   self.passwordValidators = data.passwordValidators
   self.tokenValidators = data.tokenValidators
   self.leaseTime = data.leaseTime
@@ -271,8 +272,7 @@ function AccessControl:__init(data)
   -- initialize access
   self.busid = busid
   local access = self.access
-  local prvkey = access.prvkey
-  local encodedkey = assert(prvkey:encode("public"))
+  local encodedkey = assert(access.prvkey:encode("public"))
   self.buskey = encodedkey -- TODO: this shall become a X.509 certificate
   access.AccessControl = self
   access.LoginRegistry = self
@@ -280,7 +280,7 @@ function AccessControl:__init(data)
   access.busid = busid
   access.buskey = assert(decodepublickey(encodedkey))
   access:setGrantedUsers(self.__type, "_get_busid", "any")
-  access:setGrantedUsers(self.__type, "_get_buskey", "any")
+  access:setGrantedUsers(self.__type, "_get_certificate", "any")
   access:setGrantedUsers(self.__type, "loginByPassword", "any")
   access:setGrantedUsers(self.__type, "startLoginByCertificate", "any")
   access:setGrantedUsers(LoginProcess.__type, "*", "any")
