@@ -10,9 +10,10 @@ local certfile = syscrt
 local script = admscript
 local outputfile = admoutput
 
-local bin = "busadmin "
+local bin = "busadmin DEBUG "
 local login = "--login="..admin.." "
 local password = "--password="..adminPassword.." "
+local domain = "--domain="..domain.." "
 local certificate = "--certificate="..certfile
 
 local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
@@ -33,11 +34,14 @@ local function readOutput()
 end
 
 local function execute(...)
-  local command = bin..login..password
+  local command = bin..login..password..domain
   local params = table.concat({...}, " ")
   local tofile = " > "..outputfile
-  os.execute(command..params..tofile)
+  local ok, errmsg = os.execute(command..params..tofile)
   local output = readOutput()
+  if not ok then
+    return false, output
+  end
   local failed = output:find("[ERRO]",1,true)
   if not failed then
     return true

@@ -40,7 +40,7 @@ return function(...)
 
   -- Variáveis que são referenciadas antes de sua crição
   -- Não usar globais para não exportá-las para o comando 'script'
-  local login, password
+  local login, password, domain
   local host, port
   local connection
   local orb = openbus.initORB{ localrefs="proxy" }
@@ -92,6 +92,8 @@ return function(...)
       --password
     * Realiza o login por senha.
       --password=<password>
+    * Define o domínio de autenticação por senha.
+      --domain=<domínio>
     * Realiza o login com chave privada.
       --privatekey=<private key>
     * Aciona o verbose da API OpenBus.
@@ -204,6 +206,7 @@ return function(...)
     oilverbose = 0,
     verbose = 0,
     password = null,
+    dogmain = null,
     privatekey = null,
   }
 
@@ -371,7 +374,7 @@ return function(...)
     for opt, val in pairs(options) do
       if not params[opt] then
         params[opt] = val
-      elseif params[opt] == null and opt ~= "password"  then
+      elseif params[opt] == null and opt ~= "password" and opt ~= "domain"  then
         return false, string.format("Opção inválida: %s", opt)
       end
     end
@@ -1284,10 +1287,6 @@ return function(...)
   -- @param cmd Comando e seus argumentos.
   --
   handlers["report"] = function(cmd)
-    local localPassword = password
-    if not localPassword then
-      localPassword = lpw.getpass("Senha: ")
-    end
     
     printf("RELATÓRIO DE STATUS DO BARRAMENTO (HOST:%s PORT:%d)", host, port)
     local msg
@@ -1476,7 +1475,11 @@ return function(...)
       if localPassword == null then
         localPassword = lpw.getpass("Senha: ")
       end
-      local ok, err = pcall(conn.loginByPassword, conn, login, localPassword)
+      local localDomain = domain
+      if not localDomain then
+        localDomain = lpw.getpass("Domínio: ")
+      end
+      local ok, err = pcall(conn.loginByPassword, conn, login, localPassword, localDomain)
       if not ok then
         handleError(err)
         return false
@@ -1536,6 +1539,7 @@ return function(...)
   login    = command.params.login
   privatekey = command.params.privatekey
   password = command.params.password
+  domain = command.params.domain
   host  = command.params["host"]
   port  = tonumber(command.params["port"])
 
