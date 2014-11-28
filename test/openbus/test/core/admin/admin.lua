@@ -2,15 +2,12 @@
 -- configuração do teste
 bushost, busport = ...
 require "openbus.test.configs"
-local host = bushost
-local port = busport
-local admin = admin
 local adminPassword = admpsw
 local certfile = syscrt
 local script = admscript
 local outputfile = admoutput
 
-local bin = "busadmin DEBUG "
+local bin = "busadmin --host="..bushost.." --port="..busport.." "
 local login = "--login="..admin.." "
 local password = "--password="..adminPassword.." "
 local domain = "--domain="..domain.." "
