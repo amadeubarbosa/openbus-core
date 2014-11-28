@@ -364,8 +364,8 @@ Options:
     },
   }
   for param, list in pairs(validators) do
+    local info = valinfo[param]
     for index, spec in ipairs(Configs[param]) do
-      local info = valinfo[param]
       local domain, package = match(spec, "^([^:]*):(.+)$")
       if domain == nil then
         log:misconfig(info.illegalerrmsg:tag{
