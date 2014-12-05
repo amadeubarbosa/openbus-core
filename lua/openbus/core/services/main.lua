@@ -89,17 +89,15 @@ return function(...)
     UnableToInitializePasswordValidator = 11,
     UnableToInitializeTokenValidator = 12,
     UnableToReadPrivateKey = 13,
-    UnableToReadCertificate = 24,
-    UnableToOpenDatabase = 14,
-    NoPasswordValidators = 15,
-    NoTokenValidators = 16,
-    DuplicatedPasswordValidators = 17,
-    DuplicatedTokenValidators = 18,
-    IllegalPasswordValidatorSpec = 19,
-    IllegalTokenValidatorSpec = 20,
-    MissingSecureConnectionAuthenticationKey = 21,
-    MissingSecureConnectionAuthenticationCertificate = 22,
-    NoPasswordValidatorForLegacyDomain = 23,
+    UnableToReadCertificate = 14,
+    UnableToOpenDatabase = 15,
+    DuplicatedPasswordValidators = 16,
+    DuplicatedTokenValidators = 17,
+    IllegalPasswordValidatorSpec = 18,
+    IllegalTokenValidatorSpec = 19,
+    MissingSecureConnectionAuthenticationKey = 20,
+    MissingSecureConnectionAuthenticationCertificate = 21,
+    NoPasswordValidatorForLegacyDomain = 22,
   }
 
   -- configuration parameters parser
@@ -200,8 +198,9 @@ Options:
   -oillogfile <path>         arquivo de log gerado pelo OiL (debug)
 
   -noauthorizations          desativa o suporte a autorizações de oferta
-  -nolegacy                  desativa o suporte à versão antiga do barramento
   -logaddress                exibe o endereço IP do requisitante no log do barramento
+  -nolegacy                  desativa o suporte à versão antiga do barramento
+  -legacydomain              domínio de autenticação com a versão antiga do barramento
 
   -configs <path>            arquivo de configurações adicionais do barramento
   
@@ -340,8 +339,6 @@ Options:
       loaded = msg.PasswordValidatorLoaded,
       illegalerrmsg = msg.IllegalPasswordValidatorSpec,
       illegalerrcode = errcode.IllegalPasswordValidatorSpec,
-      noneerrmsg = msg.NoPasswordValidators,
-      noneerrcode = errcode.NoPasswordValidators,
       twiceerrmsg = msg.DuplicatedPasswordValidators,
       twiceerrcode = errcode.DuplicatedPasswordValidators,
       loaderrmsg = msg.UnableToLoadPasswordValidator,
@@ -353,8 +350,6 @@ Options:
       loaded = msg.TokenValidatorLoaded,
       illegalerrmsg = msg.IllegalTokenValidatorSpec,
       illegalerrcode = errcode.IllegalTokenValidatorSpec,
-      noneerrmsg = msg.NoTokenValidators,
-      noneerrcode = errcode.NoTokenValidators,
       twiceerrmsg = msg.DuplicatedTokenValidators,
       twiceerrcode = errcode.DuplicatedTokenValidators,
       loaderrmsg = msg.UnableToLoadTokenValidator,
@@ -366,7 +361,7 @@ Options:
   for param, list in pairs(validators) do
     local info = valinfo[param]
     for index, spec in ipairs(Configs[param]) do
-      local domain, package = match(spec, "^([^:]*):(.+)$")
+      local domain, package = match(spec, "^([^:]-):?([^:]+)$")
       if domain == nil then
         log:misconfig(info.illegalerrmsg:tag{
           specification = spec,
@@ -404,14 +399,11 @@ Options:
         name = package,
         validate = validate,
       }
-      log:config(info.loaded:tag{name=package})
+      log:config(info.loaded:tag{name=package,domain=domain})
     end
-    if next(list) == nil then
-      log:misconfig(info.noneerrmsg)
-      return info.noneerrcode
-    elseif param == "validator"
-       and not Configs.nolegacy
-       and list[Configs.legacydomain] == nil then
+    if param == "validator"
+    and not Configs.nolegacy
+    and list[Configs.legacydomain] == nil then
       log:misconfig(msg.NoPasswordValidatorForLegacyDomain:tag{ domain = Configs.legacydomain })
       return info.NoPasswordValidatorForLegacyDomain
     end

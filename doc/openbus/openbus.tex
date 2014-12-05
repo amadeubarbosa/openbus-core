@@ -347,22 +347,28 @@ Por padrão, o controle de fluxo está desativado.
 Por padrão, o controle de fluxo está desativado.
 
   \item [-admin] Usuário com privilégio de administração.\\
-Não é definido um valor padrão.
-  \item [-validator] Nome de pacote de validação de login.\\
-Não é definido um valor padrão.
+  \item [-validator] Define um validador de senha no formato: \verb|<domain>:<package>| onde \verb|<domain>| é um nome do domínio de autenticação do validador e \verb|<package>| é o nome do pacote Lua que implementa o validador de senhas.\\
+A parte \verb|<domain>:| é opcional.
+Caso seja omitida, o domínio adotado para o validador é a string vazia.
+  \item [-tokenvalidator] Define um validador de autenticação externa no formato: \verb|<domain>:<package>| onde \verb|<domain>| é um nome do domínio de autenticação do validador e \verb|<package>| é o nome do pacote Lua que implementa o validador de autenticação externa.\\
+A parte \verb|<domain>:| é opcional.
+Caso seja omitida, o domínio adotado para o validador é a string vazia.
 
   \item [-loglevel] Nível de log gerado pelo barramento.\\
 O valor padrão é 3. Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
   \item [-logfile] Arquivo de log gerado pelo barramento.\\
 Por padrão o log é direcionado para a saída padrão (\emph{standard output}).
   \item [-oilloglevel] Nível de log gerado pelo \oil{}~\cite{maia06oil,web:oil} (debug).\\
-  O valor padrão é 0. Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
+  O valor padrão é 0, que desativa o log.
   \item [-oillogfile] Arquivo de log gerado pelo \oil{} (debug).\\
 Por padrão o log é direcionado para a saída padrão (\emph{standard output}).
 
   \item [-noauthorizations] Desativa o suporte à autorizações de oferta.
-  \item [-nolegacy] Desativa o suporte à versão antiga do barramento.
   \item [-logaddress] Exibe o endereço IP do requisitante no log do barramento.
+  \item [-nolegacy] Desativa o suporte à versão antiga do barramento.
+  \item [-legacydomain] Define o domínio de autenticação de senhas para acessos com a versão antiga do barramento.\\
+Caso o suporte à versão antiga do barramento esteja desabilitado essa configuração não precisa ser fornecida.
+O valor padrão é a string vazia.
 
   \item [-configs] Arquivo de configurações adicionais do barramento.\\
 O valor padrão é ``openbus.cfg".
@@ -390,7 +396,7 @@ Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um val
 %% NOTE: comentado parte que falava sobre o validador de teste: 
 % e em \\\texttt{openbus.test.core.services.TesterUserValidator} disponibilizamos um validador para ambientes de teste, que permite acesso quando o login é igual a senha.
 
-Também é possível desabilitar o suporte de compatibilidade com a versão anterior através da opção ``nolegacy''. Ao ativar essa opção, o barramento deixa de permitir que entidades se autentiquem no barramento utilizando as bibliotecas de acesso de versão 1.5.x. 
+Também é possível desabilitar o suporte de compatibilidade com a versão anterior através da opção ``nolegacy''. Ao ativar essa opção, o barramento deixa de permitir que entidades se autentiquem no barramento utilizando as bibliotecas de acesso de versão 2.0. 
 
 
 \subsection{Gerentes do Barramento}
