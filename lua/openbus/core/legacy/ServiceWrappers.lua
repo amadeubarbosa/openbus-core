@@ -5,13 +5,18 @@
 
 local _G = require "_G"
 local assert = _G.assert
+local error = _G.error
 local ipairs = _G.ipairs
 local pairs = _G.pairs
 local rawset = _G.rawset
+local type = _G.type
 local xpcall = _G.xpcall
 
 local array = require "table"
-local unpack = array.unpack or _G.unpack
+local unpack = array.unpack
+
+local debug = require "debug"
+local stacktrace = debug.traceback
 
 local hash = require "lce.hash"
 local sha256 = hash.sha256
@@ -56,7 +61,7 @@ local LegacyConverterType = cvrtyp.LegacyConverter
 
 local function traceback(errmsg)
   if type(errmsg) == "string" then
-    return debug.traceback(errmsg)
+    return stacktrace(errmsg)
   end
   return errmsg
 end

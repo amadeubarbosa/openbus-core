@@ -485,11 +485,11 @@ function AccessControl:signChainByToken(encrypted, domain)
   local decrypted, errmsg = blockencrypt(access.prvkey, "decrypt",
                                          EncryptedBlockSize, encrypted)
   if decrypted == nil then
-    WrongEncoding{entity=entity,message=errmsg or "no error message"}
+    WrongEncoding{message=errmsg or "no error message"}
   end
   local validator = self.tokenValidators[domain]
   if validator ~= nil then
-    entities, errmsg = validator.validate(caller.id, caller.entity, decrypted)
+    local entities, errmsg = validator.validate(caller.id, caller.entity, decrypted)
     if entities then
       local count = #entities
       local originators = {}
@@ -517,7 +517,7 @@ end
 -- Faceta LoginRegistry
 ------------------------------------------------------------------------------
 
-local function getObserver(observer)
+local function getObserver(observer, orb)
   local callback = observer.callback
   if callback == nil then
     callback = orb:newproxy(observer.ior, nil, LoginObsType)
@@ -535,13 +535,13 @@ local Subscription = class{ __type = LoginObsSubType }
 function Subscription:__init()
   local id = self.id
   self.__objkey = "LoginObserver_v2.1:"..id
-  self.observer = self.logins:getObserver(id)
+  self.observer = self.logins:getObserver(id, self.registry.access.orb)
 end
 
 -- IDL operations
 
 function Subscription:_get_observer()
-  return getObserver(self.observer)
+  return getObserver(self.observer, self.registry.access.orb)
 end
 
 function Subscription:describe()
@@ -632,7 +632,7 @@ end
 function LoginRegistry:loginRemoved(login, observers)
   local orb = self.access.orb
   for observer in pairs(observers) do
-    local callback = getObserver(observer)
+    local callback = getObserver(observer, orb)
     schedule(newthread(function()
       local ok, errmsg = pcall(callback.entityLogout, callback, login)
       if not ok then

@@ -98,6 +98,7 @@ return function(...)
     MissingSecureConnectionAuthenticationKey = 20,
     MissingSecureConnectionAuthenticationCertificate = 21,
     NoPasswordValidatorForLegacyDomain = 22,
+    InvalidSecurityLayerMode = 23,
   }
 
   -- configuration parameters parser
@@ -106,7 +107,7 @@ return function(...)
     host = "*",
     port = 0,
   
-    sslenabled = "",
+    sslmode = "",
     sslport = 0,
     sslcafile = "",
     sslcapath = "",
@@ -170,7 +171,7 @@ Options:
   -host <address>            endereço de rede usado pelo barramento
   -port <number>             número da porta usada pelo barramento
 
-  -sslenabled <mode>         ativa o suporte SSL através das opções 'supported' ou 'required'
+  -sslmode <mode>            ativa o suporte SSL através das opções 'supported' ou 'required'
   -sslport <number>          número da porta segura usada pelo barramento
   -sslcapath <path>          diretório com certificados de CAs a serem usados na autenticação SSL
   -sslcafile <path>          arquivo com certificados de CAs a serem usados na autenticação SSL
@@ -424,19 +425,13 @@ Options:
     cafile = getoptcfg(Configs, "sslcafile", ""),
     capath = getoptcfg(Configs, "sslcapath", ""),
   }
-  local orbflv, orbopt
-  if SSLRequiredOptions[Configs.sslenabled] or next(sslcfg) ~= nil then
-    if Configs.sslenabled == "required" then
-      log:config(msg.SecureConnectionEnforced)
-    else
-      log:config(msg.SecureConnectionEnabled)
-    end
+  local sslmode, orbflv, orbopt = Configs.sslmode
+  if SSLRequiredOptions[sslmode] ~= nil then
     orbflv = "cooperative;corba;corba.intercepted;corba.ssl;kernel.ssl"
     orbopt = {
-      security = Configs.sslenabled == "required" and "required" or nil,
+      security = Configs.sslmode == "required" and "required" or nil,
       ssl = sslcfg,
     }
-    log:config(msg.SecureConnectionPortNumber:tag{path=Configs.sslport})
     if sslcfg.key ~= nil or sslcfg.certificate ~= nil then
       if sslcfg.key == nil then
         log:misconfig(msg.MissingSecureConnectionAuthenticationKey)
@@ -458,6 +453,11 @@ Options:
     elseif sslcfg.capath ~= nil then
       log:config(msg.SecureConnectionCertificationAuthorityDirectory:tag{path=sslcfg.capath})
     end
+  elseif sslmode ~= "" then
+    log:misconfig(msg.InvalidSecurityLayerMode:tag{
+      value = Configs.sslmode,
+    })
+    return errcode.InvalidSecurityLayerMode
   end
   local orb = access.initORB{
     host = Configs.host,
@@ -465,6 +465,11 @@ Options:
     flavor = orbflv,
     options = orbopt,
   }
+  if orbopt ~= nil then
+    log:config(sslmode == "required" and msg.SecureConnectionEnforced
+                                      or msg.SecureConnectionEnabled)
+    log:config(msg.SecureConnectionPortNumber:tag{port=orb.sslport})
+  end
   log:config(msg.ServicesListeningAddress:tag{host=orb.host,port=orb.port})
   local iceptor = access.Interceptor{
     prvkey = prvkey,
@@ -571,7 +576,6 @@ Options:
       facet_ref = legacyBus.IComponent,
       implementation = legacyBus._facets.IComponent.implementation,
     }
-    bus[legacyFacet] = servant
     log:config(msg.LegacySupportEnabled)
   end
 

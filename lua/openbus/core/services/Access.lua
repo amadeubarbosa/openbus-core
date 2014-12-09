@@ -154,7 +154,6 @@ function BusInterceptor:receiverequest(request)
           request.success = false
           request.results = {{_repid = UnauthorizedOperation}}
           log:exception(msg.DeniedBusCall:tag{
-            interface = iface,
             operation = op,
             remote = login.id,
             entity = login.entity,
@@ -163,7 +162,6 @@ function BusInterceptor:receiverequest(request)
       elseif granted ~= Anybody then
         setNoPermSysEx(request, const.NoCredentialCode)
         log:exception(msg.DeniedOrdinaryCall:tag{
-          interface = iface,
           operation = op,
         })
       end
