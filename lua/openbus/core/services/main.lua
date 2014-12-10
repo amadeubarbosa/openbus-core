@@ -419,7 +419,6 @@ Options:
   
   -- setup bus access
   local sslcfg = {
-    port = getoptcfg(Configs, "sslport", 0),
     key = getoptcfg(Configs, "sslkey", ""),
     certificate = getoptcfg(Configs, "sslcert", ""),
     cafile = getoptcfg(Configs, "sslcafile", ""),
@@ -462,6 +461,7 @@ Options:
   local orb = access.initORB{
     host = Configs.host,
     port = getoptcfg(Configs, "port", 0),
+    sslport = getoptcfg(Configs, "sslport", 0),
     flavor = orbflv,
     options = orbopt,
   }
