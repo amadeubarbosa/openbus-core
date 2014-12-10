@@ -18,13 +18,16 @@ local memoize = table.memoize
 
 local LRUCache = require "loop.collection.LRUCache"
 
+local giop = require "oil.corba.giop"
+local CORBAObjectOperations = giop.ObjectOperations
+
 local log = require "openbus.util.logger"
 local oo = require "openbus.util.oo"
 local class = oo.class
 
 local idl = require "openbus.core.idl"
 local const = idl.const.services.access_control
-local types = idl.types.services
+local UnauthorizedOperation = idl.types.services.UnauthorizedOperation
 local msg = require "openbus.core.messages"
 local access = require "openbus.core.Access"
 local setNoPermSysEx = access.setNoPermSysEx
@@ -144,37 +147,41 @@ function BusInterceptor:receiverequest(request)
   self.callerAddressOf[running()] = request.channel_address
   if request.servant ~= nil then -- servant object does exist
     local op = request.operation_name
-    if op:find("_", 1, true) ~= 1
-    or op:find("_[gs]et_", 1) == 1 then -- not CORBA obj op
-      receiveBusRequest(self, request)
-      if request.success == nil then
-        local granted = self.grantedUsers[request.interface.repID][op]
-        local chain = self:getCallerChain()
-        if chain ~= nil then
-          local login = chain.caller
-          if not granted[login.entity] then
-            if chain.signature == nil then -- legacy call (OpenBus 1.5)
-              setNoPermSysEx(request, 0)
-              log:exception(msg.DeniedLegacyBusCall:tag{
-                operation = request.operation.name,
-                remote = login.id,
-                entity = login.entity,
-              })
-            else
-              request.success = false
-              request.results = {{_repid = types.UnauthorizedOperation}}
-              log:exception(msg.DeniedBusCall:tag{
-                operation = request.operation.name,
-                remote = login.id,
-                entity = login.entity,
-              })
+    if CORBAObjectOperations[op] == nil then -- not CORBA obj op
+      local granted = self.grantedUsers[request.interface.repID][op]
+      if granted ~= Anybody then
+        receiveBusRequest(self, request)
+        if request.success == nil then
+          local chain = self:getCallerChain()
+          if chain ~= nil then
+            local login = chain.caller
+            if not granted[login.entity] then
+              if chain.signature == nil then -- legacy call (OpenBus 1.5)
+                setNoPermSysEx(request, 0)
+                log:exception(msg.DeniedLegacyBusCall:tag{
+                  interface = request.interface.repID,
+                  operation = op,
+                  remote = login.id,
+                  entity = login.entity,
+                })
+              else
+                request.success = false
+                request.results = {{_repid = UnauthorizedOperation}}
+                log:exception(msg.DeniedBusCall:tag{
+                  interface = request.interface.repID,
+                  operation = op,
+                  remote = login.id,
+                  entity = login.entity,
+                })
+              end
             end
+          else
+            setNoPermSysEx(request, const.NoCredentialCode)
+            log:exception(msg.DeniedOrdinaryCall:tag{
+              interface = request.interface.repID,
+              operation = op,
+            })
           end
-        elseif granted ~= Anybody then
-          setNoPermSysEx(request, const.NoCredentialCode)
-          log:exception(msg.DeniedOrdinaryCall:tag{
-            operation = request.operation.name,
-          })
         end
       end
     end
