@@ -27,11 +27,12 @@ local sysex = giop.SystemExceptionIDs
 local server = require "openbus.util.server"
 local readfrom = server.readfrom
 
-syskey = assert(decodeprvkey(readfrom(syskey)))
+busref = assert(readfrom(busref))
+syskey = assert(decodeprvkey(assert(readfrom(syskey))))
 
 -- test initialization ---------------------------------------------------------
 
-local bus, orb = connectToBus(bushost, busport)
+local bus, orb = connectToBus(busref)
 local ac = bus.AccessControl
 local prvkey = newkey(EncryptedBlockSize)
 local pubkey = prvkey:encode("public")

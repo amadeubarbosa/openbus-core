@@ -18,6 +18,9 @@ local memoize = table.memoize
 
 local LRUCache = require "loop.collection.LRUCache"
 
+local giop = require "oil.corba.giop"
+local CORBAObjectOperations = giop.ObjectOperations
+
 local log = require "openbus.util.logger"
 local oo = require "openbus.util.oo"
 local class = oo.class
@@ -144,26 +147,32 @@ function BusInterceptor:receiverequest(request)
   self.callerAddressOf[running()] = request.channel_address
   if request.servant ~= nil then -- servant object does exist
     local op = request.operation_name
-    receiveBusRequest(self, request)
-    if request.success == nil then
+    if CORBAObjectOperations[op] == nil then -- not CORBA obj op
       local granted = self.grantedUsers[request.interface.repID][op]
-      local chain = self:getCallerChain()
-      if chain ~= nil then
-        local login = chain.caller
-        if not granted[login.entity] then
-          request.success = false
-          request.results = {{_repid = UnauthorizedOperation}}
-          log:exception(msg.DeniedBusCall:tag{
-            operation = op,
-            remote = login.id,
-            entity = login.entity,
-          })
+      if granted ~= Anybody then
+        receiveBusRequest(self, request)
+        if request.success == nil then
+          local chain = self:getCallerChain()
+          if chain ~= nil then
+            local login = chain.caller
+            if not granted[login.entity] then
+              request.success = false
+              request.results = {{_repid = UnauthorizedOperation}}
+              log:exception(msg.DeniedBusCall:tag{
+                interface = request.interface.repID,
+                operation = op,
+                remote = login.id,
+                entity = login.entity,
+              })
+            end
+          else
+            setNoPermSysEx(request, const.NoCredentialCode)
+            log:exception(msg.DeniedOrdinaryCall:tag{
+              interface = request.interface.repID,
+              operation = op,
+            })
+          end
         end
-      elseif granted ~= Anybody then
-        setNoPermSysEx(request, const.NoCredentialCode)
-        log:exception(msg.DeniedOrdinaryCall:tag{
-          operation = op,
-        })
       end
     end
   end

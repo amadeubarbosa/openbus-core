@@ -290,7 +290,7 @@ return OpenBusFixture{
                 end,
                 SomeOfferProps,
               },
-              except = isInvalidServiceEx("unable to obtain component id (error=unable to connect to inaccessible:2809 (host not found)"),
+              except = isInvalidServiceEx("unable to obtain component id (error=unable to connect "),
             },
             Inexistent = {
               params = {

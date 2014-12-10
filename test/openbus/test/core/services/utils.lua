@@ -4,6 +4,7 @@ local oil = require "oil"
 
 local openbus = require "openbus"
 
+local table = require "loop.table"
 local cached = require "loop.cached"
 local checks = require "loop.test.checks"
 local Fixture = require "loop.test.Fixture"
@@ -13,11 +14,15 @@ local idl = require "openbus.core.idl"
 local BusLogin = idl.const.BusLogin
 local BusEntity = idl.const.BusEntity
 
+local util = require "openbus.util.server"
+
 -- Configurações --------------------------------------------------------------
 
-bushost, busport = ...
-require "openbus.test.configs"
+require "openbus.test.util"
 
+setorbcfg()
+
+busref = assert(util.readfrom(busref, "r"))
 local connprops = { accesskey = openbus.newKey() }
 
 -- Casos de Teste -------------------------------------------------------------
@@ -54,7 +59,7 @@ do
               end
               checkResults(casedesc,
                 pcall(facet[opname], facet,
-                  table.unpack(params, 1, params.n)))
+                  array.unpack(params, 1, params.n)))
             end
           end
         end
@@ -131,7 +136,7 @@ local Entities = {
 OpenBusFixture = cached.class({}, Fixture)
 
 function OpenBusFixture:setup()
-  self.orb = openbus.initORB(self.orbconfig)
+  self.orb = openbus.initORB(table.copy(orbcfg))
   self.context = self.orb.OpenBusContext
   local idlloaders = self.idlloaders
   if idlloaders ~= nil then
@@ -151,7 +156,8 @@ end
 IdentityFixture = cached.class({}, Fixture)
 
 function IdentityFixture:newConn(kind)
-  local conn = self.openbus.context:createConnection(bushost, busport, connprops)
+  local bus = self.openbus.orb:newproxy(busref, nil, "scs::core::IComponent")
+  local conn = self.openbus.context:connectByReference(bus, connprops)
   if kind ~= nil then
     local info = assert(Entities[kind], "invalid identity kind")
     conn[ info[1] ](conn, array.unpack(info, 2))
