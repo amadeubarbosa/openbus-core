@@ -136,7 +136,7 @@ local Entities = {
 OpenBusFixture = cached.class({}, Fixture)
 
 function OpenBusFixture:setup()
-  self.orb = openbus.initORB(table.copy(orbcfg))
+  self.orb = openbus.initORB(orbcfg and table.copy(orbcfg))
   self.context = self.orb.OpenBusContext
   local idlloaders = self.idlloaders
   if idlloaders ~= nil then
