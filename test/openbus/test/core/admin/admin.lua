@@ -13,9 +13,9 @@ local password = "--password="..adminPassword.." "
 local domain = "--domain="..domain.." "
 local certificate = "--certificate="..certfile
 
-local OPENBUS_HOME = os.getenv("OPENBUS_HOME")
-if OPENBUS_HOME then
-  bin = OPENBUS_HOME.."/bin/"..bin
+local installpath = os.getenv("OPENBUS_CORE_HOME")
+if installpath then
+  bin = installpath.."/bin/"..bin
 end
 -------------------------------------------------------------------------------
 
