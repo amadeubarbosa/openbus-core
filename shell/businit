@@ -1,0 +1,141 @@
+#!/bin/bash
+
+INSTALL_DIR=${OPENBUS_HOME:=/local/openbus}
+DESC=${DESC:="OpenBus Core Services"}
+NAME=${NAME:=openbus}
+
+# Read configuration variable file if it is present
+CONFIG_FILES="/etc/default/$NAME $INSTALL_DIR/config/$NAME.rc"
+for cfg in $CONFIG_FILES; do
+  [ -r $cfg ] && . $cfg
+done
+
+# Exit if the package is not properly installed
+if [ -z "$SERVER" ] || [ -z "$PIDFILE" ] || [ -z "$OUTFILE" ]; then
+  echo "ERROR: Missing configuration of SERVER or PIDFILE or OUTFILE variables!"
+  for cfg in $CONFIG_FILES; do
+    echo "TIP: Check configuration file at $cfg"
+  done
+  exit 2
+fi
+if [ ! -x "$SERVER" ]; then
+  echo "ERROR: $SERVER is not an executable!"
+  exit 2
+fi
+
+# redirects to /dev/null if no destination if configured
+OUTFILE=${OUTFILE:=/dev/null}
+
+check_pid()
+{
+  local pid=$1
+  if [ -n "$pid" ]; then
+    ps $pid > /dev/null 2>&1
+    if [ $? == 0 ]; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+kill_pid()
+{
+  local pid=$1
+  if [ -n "$pid" ]; then
+    kill -15 $pid || kill -9 $pid
+    return $?
+  fi
+  return 0
+}
+
+do_status()
+{
+  local pid=$(cat $PIDFILE 2> /dev/null)
+  check_pid $pid
+  if [ $? == 0 ]; then
+    echo "$DESC is running (PID=$pid)"
+    return 0
+  fi
+  echo "$DESC is not running"
+  return 1
+}
+
+do_start()
+{
+  local pid=$(cat $PIDFILE 2> /dev/null)
+  check_pid $pid
+  if [ $? == 0 ]; then
+    echo "$DESC is already running (PID=$pid)"
+    return 0
+  fi
+
+  echo -n "Starting $DESC "
+  # ensure pid and  parent directories exists
+  mkdir -p $(dirname $PIDFILE)
+  mkdir -p $(dirname $OUTFILE)
+  # execute server
+  eval "nohup $SERVER $PARAMS >> $OUTFILE 2>&1 &"
+  pid=$!
+  sleep 2
+  check_pid $pid
+  if [ $? == 0 ]; then
+    echo "[ OK ]"
+    echo "$pid" > $PIDFILE
+    return 0
+  fi
+  echo "[ FAILED ]"
+  return 1
+}
+
+do_stop()
+{
+  local pid=$(cat $PIDFILE 2> /dev/null)
+  check_pid $pid
+  if [ $? -ne 0 ]; then
+    echo "$DESC is not running"
+    return 0
+  fi
+
+  echo -n "Stopping $DESC "
+  kill_pid $pid
+  local ret=$?
+  if [ $ret -ne 0 ]; then
+    echo "[ FAILED ]"
+    return $ret
+  fi
+  echo "[ OK ]"
+  rm -f $PIDFILE
+  return 0
+}
+
+case "$1" in
+  start)
+  do_start
+  exit $?
+  ;;
+  status)
+  do_status
+  exit $?
+  ;;
+  stop)
+  do_stop
+  exit $?
+  ;;
+  restart)
+  echo "Restarting $DESC"
+  do_stop
+  ret=$?
+  if [ $ret == 0 ]; then
+    do_start
+    exit $?
+  else
+    exit $ret
+  fi
+  ;;
+  *)
+  echo "Usage: $0 {start|stop|restart|status}"
+  exit 3
+  ;;
+esac
+
+:

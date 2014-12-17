@@ -1,0 +1,77 @@
+#!/bin/bash
+
+INSTALL_DIR=${OPENBUS_HOME:=/local/openbus}
+DESC=${DESC:="OpenBus Core Services"}
+NAME=${NAME:=openbus}
+
+CRASHBACKUP=false
+CRASHBACKUP_DIR=$INSTALL_DIR/crashes
+INITSCRIPT=$INSTALL_DIR/bin/businit
+
+# Read configuration variable file if it is present
+CONFIG_FILES="/etc/default/$NAME $INSTALL_DIR/config/$NAME.rc"
+for cfg in $CONFIG_FILES; do
+  [ -r $cfg ] && . $cfg
+done
+
+HOSTNAME=`hostname`
+DATE=`date +%Y%m%d_%Hh%Mm%Ss`
+EMAIL=root@$HOSTNAME
+EMAIL_SUBJECT="$DESC restart on $HOSTNAME"
+EMAIL_BODY="This is an automatic notification. Please do not reply.
+
+The service $DESC was not running on machine $HOSTNAME.
+The service was restarted automatically.
+Service name: $DESC ($NAME)
+Machine: $HOSTNAME
+Date: $DATE
+Installation path: $INSTALL_DIR"
+
+# Exit if the package is not properly installed
+if [ -z "$INITSCRIPT" ]; then
+  echo "ERROR: Missing configuration of INITSCRIPT variable!"
+  for cfg in $CONFIG_FILES; do
+    echo "TIP: Check configuration file at $cfg"
+  done
+  exit 2
+fi
+
+save_crash() {
+  mkdir -p $CRASHBACKUP_DIR
+  EMAIL_BODY="$EMAIL_BODY
+_______________________________
+Crash backup files:"
+  for each in $CRASHBACKUP_FILES; do
+    backup="$CRASHBACKUP_DIR/$DATE-$(basename $each)"
+    if [ -f "$each" ]; then
+      cp -r $each $backup || return 1
+      gzip -r $backup || return 1
+      EMAIL_BODY="$EMAIL_BODY
+$backup.gz"
+    elif [ -d "$each" ]; then
+      tar -czf $backup.tgz -C $each . || return 1
+      EMAIL_BODY="$EMAIL_BODY
+$backup.tgz"
+    fi
+  done
+  return 0
+}
+
+env OPENBUS_HOME="$INSTALL_DIR" NAME="$NAME" DESC="$DESC" $INITSCRIPT status
+if [ $? -ne 0 ] ; then
+  if [ "$CRASHBACKUP" == true ]; then
+    save_crash || echo "Failure to save crash log files"
+  fi 
+  for each in $CRASHBACKUP_FILES; do
+    if [ -f "$each" ]; then
+      EMAIL_BODY="$EMAIL_BODY
+_______________________________
+$each (last 50 lines):
+$(tail -n 50 $each)"
+    fi
+  done
+
+  env OPENBUS_HOME="$INSTALL_DIR" NAME="$NAME" DESC="$DESC" $INITSCRIPT start || exit 
+  echo -e "$EMAIL_BODY" | mail -s "$EMAIL_SUBJECT" $EMAIL
+  exit 0
+fi
