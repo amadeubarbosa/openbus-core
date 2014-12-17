@@ -1,0 +1,37 @@
+#!/bin/bash
+
+## don't override the following variables:
+#
+# NAME = service name used by init script (and name of this file)
+# DESC = description used in output of init script
+# INSTALL_DIR = root installation path
+#
+
+# you may define the following variables:
+# SERVER = path to binary that runs the service
+# PIDFILE = path to .pid file that init script will store
+#
+# you can define the following variables:
+# PARAMS = parameters passed to $SERVER
+# OUTFILE = path to a file to stdout redirection (/dev/null is default)
+# LOGFILE = path to a file to set the log (/dev/null is default)
+#
+SERVER=$INSTALL_DIR/bin/busservices
+PIDFILE=$INSTALL_DIR/data/$NAME.pid
+OUTFILE=$INSTALL_DIR/data/$NAME.log
+PARAMS=
+
+# EMAIL = specifies an email address to be notified (default: root@localhost)"
+EMAIL=openbus@localhost
+# CRASHBACKUP = save the service logs to new compressed files timestamped (values: true or false, default: false)
+# CRASHBACKUP_DIR = path to store log files from last execution (default: $INSTALL_DIR/crashes)
+# CRASHBACKUP_FILES = files to be saved before an automatic restart
+CRASHBACKUP=true
+CRASHBACKUP_DIR=$INSTALL_DIR/crashes
+CRASHBACKUP_FILES="$OUTFILE $INSTALL_DIR/data/$NAME.db"
+
+# you can define other commands here:
+# example: export LUA_PATH="$INSTALL_DIR/config/validators/?.lua;;"
+export OPENBUS_NAME=$NAME
+export OPENBUS_HOME=$INSTALL_DIR
+export OPENBUS_CONFIG=$INSTALL_DIR/config/$NAME.cfg
