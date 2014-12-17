@@ -179,6 +179,7 @@ Options:
   -sslkey <path>             arquivo com chave privada do barramento
 
   -privatekey <path>         arquivo com chave privada do barramento
+  -certificate <path>        arquivo de certificado com chave pública do barramento
   -database <path>           arquivo de dados do barramento
 
   -leasetime <seconds>       tempo de lease dos logins de acesso
