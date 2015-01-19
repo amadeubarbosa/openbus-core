@@ -40,6 +40,10 @@ LUASRC= \
 
 include ${OIL_HOME}/openbus/base.mak
 
+DEFINES= \
+  OPENBUS_PROGNAME=\"$(APPNAME)\" \
+  OPENBUS_CODEREV=\"$(CODEREV)\"
+
 LIBS:= \
   luastruct \
   luasocket \
@@ -56,11 +60,8 @@ LIBS:= \
   luascs \
   luaopenbus
 
-DEFINES= \
-  OPENBUS_PROGNAME=\"$(APPNAME)\" \
-  OPENBUS_CODEREV=\"$(CODEREV)\"
-
-INCLUDES+= . $(SRCLUADIR) \
+INCLUDES+= . \
+  $(SRCLUADIR) \
   $(LUASTRUCT_HOME)/src \
   $(LUASOCKET_HOME)/include \
   $(LUATUPLE_HOME)/obj/$(TEC_UNAME) \
@@ -74,7 +75,8 @@ INCLUDES+= . $(SRCLUADIR) \
   $(LCE_HOME)/include \
   $(LUASEC_HOME)/include \
   $(SCS_LUA_HOME)/obj/$(TEC_UNAME) \
-  $(OPENBUS_LUA_HOME)/obj/$(TEC_UNAME)
+  $(OPENBUS_LUA_HOME)/obj/$(TEC_UNAME) \
+  $(OPENBUS_LUA_HOME)/src
 LDIR+= \
   $(LUASTRUCT_HOME)/lib/$(TEC_UNAME) \
   $(LUASOCKET_HOME)/lib/$(TEC_UNAME) \
@@ -161,5 +163,8 @@ $(PRELOAD_DIR)/coreservices.c $(PRELOAD_DIR)/coreservices.h: $(LUAPRELOADER) $(L
 	                           -h coreservices.h \
 	                           -o coreservices.c \
 	                           $(LUASRC)
+
+launcher.c: $(OPENBUS_LUA_HOME)/src/launcher.c
+	cp $< $@
 
 coreservlibs.c: $(PRELOAD_DIR)/coreservices.h

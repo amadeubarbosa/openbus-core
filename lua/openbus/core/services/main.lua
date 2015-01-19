@@ -57,6 +57,7 @@ local BusObjectKey = idl.const.BusObjectKey
 local mngidl = require "openbus.core.admin.idl"
 local loadidl = mngidl.loadto
 local access = require "openbus.core.services.Access"
+local initorb = access.initORB
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
@@ -77,6 +78,7 @@ return function(...)
   log.viewer.labels[running()] = "busservices"
 
   local errcode = {
+    IllegalConfigurationParameter = 1,
     InvalidLeaseTime = 2,
     InvalidExpirationGap = 3,
     InvalidPasswordPenaltyTime = 4,
@@ -139,6 +141,8 @@ return function(...)
     logaddress = false,
     nolegacy = false,
     legacydomain = "",
+
+    help = false,
   }
 
   log:level(Configs.loglevel)
@@ -156,13 +160,16 @@ return function(...)
     ::done::
   end
 
-  -- parse command line parameters
-  do
+  do -- parse command line parameters
     local argidx, errmsg = Configs(...)
-    if not argidx or argidx <= select("#", ...) then
-      if errmsg ~= nil then
-        stderr:write(errmsg,"\n")
+    if argidx == nil or argidx <= select("#", ...) then
+      if argidx ~= nil then
+        errmsg = msg.IllegalConfigurationParameter:tag{value=select(argidx, ...)}
       end
+      stderr:write(errmsg,"\n")
+      Configs.help = true
+    end
+    if Configs.help then
       stderr:write([[
 Usage:  ]],OPENBUS_PROGNAME,[[ [options]
 Options:
@@ -205,10 +212,11 @@ Options:
   -legacydomain              domínio de autenticação com a versão antiga do barramento
 
   -configs <path>            arquivo de configurações adicionais do barramento
-  
+
+  -help                      exibe essa mensagem e encerra a execução
 ]])
-      return 1 -- program's exit code
     end
+    return errcode.IllegalConfigurationParameter
   end
 
   local logaddress = Configs.logaddress and {}
@@ -459,7 +467,7 @@ Options:
     })
     return errcode.InvalidSecurityLayerMode
   end
-  local orb = access.initORB{
+  local orb = initorb{
     host = Configs.host,
     port = getoptcfg(Configs, "port", 0),
     sslport = getoptcfg(Configs, "sslport", 0),

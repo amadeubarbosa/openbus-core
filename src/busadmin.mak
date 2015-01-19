@@ -28,10 +28,13 @@ LUASRC= \
   $(LUADIR)/openbus/core/admin/main.lua \
   $(LUADIR)/openbus/core/admin/messages.lua \
   $(LUADIR)/openbus/core/admin/parsed.lua \
-  $(LUADIR)/openbus/core/admin/print.lua \
-  $(LUADIR)/openbus/core/admin/script.lua \
+  $(LUADIR)/openbus/core/admin/script.lua
 
 include ${OIL_HOME}/openbus/base.mak
+
+DEFINES= \
+  OPENBUS_PROGNAME=\"$(APPNAME)\" \
+  OPENBUS_CODEREV=\"$(CODEREV)\"
 
 LIBS:= \
   luastruct \
@@ -49,10 +52,6 @@ LIBS:= \
   luascs \
   luaopenbus
 
-DEFINES= \
-  OPENBUS_PROGNAME=\"$(APPNAME)\" \
-  OPENBUS_CODEREV=\"$(CODEREV)\"
-
 INCLUDES+= . $(SRCLUADIR) \
   $(LUASTRUCT_HOME)/src \
   $(LUASOCKET_HOME)/include \
@@ -67,7 +66,8 @@ INCLUDES+= . $(SRCLUADIR) \
   $(LCE_HOME)/include \
   $(LUASEC_HOME)/include \
   $(SCS_LUA_HOME)/obj/$(TEC_UNAME) \
-  $(OPENBUS_LUA_HOME)/obj/$(TEC_UNAME)
+  $(OPENBUS_LUA_HOME)/obj/$(TEC_UNAME) \
+  $(OPENBUS_LUA_HOME)/src
 LDIR+= \
   $(LUASTRUCT_HOME)/lib/$(TEC_UNAME) \
   $(LUASOCKET_HOME)/lib/$(TEC_UNAME) \
@@ -148,5 +148,8 @@ $(PRELOAD_DIR)/coreadmin.c $(PRELOAD_DIR)/coreadmin.h: $(LUAPRELOADER) $(LUASRC)
                              -h coreadmin.h \
                              -o coreadmin.c \
                              $(LUASRC)
+
+launcher.c: $(OPENBUS_LUA_HOME)/src/launcher.c
+	cp $< $@
 
 adminlibs.c: $(PRELOAD_DIR)/coreadmin.h
