@@ -215,8 +215,8 @@ Options:
 
   -help                      exibe essa mensagem e encerra a execução
 ]])
+      return errcode.IllegalConfigurationParameter
     end
-    return errcode.IllegalConfigurationParameter
   end
 
   local logaddress = Configs.logaddress and {}
