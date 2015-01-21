@@ -25,7 +25,7 @@ return function(...)
   --local sandbox = require "openbus.util.sandbox"
   --local newsandbox = sandbox.create
 
-  local msg = require "openbus.core.services.messages"
+  local msg = require "openbus.core.admin.messages"
   local openbus = require "openbus"
   local initorb = openbus.initORB
 
