@@ -337,29 +337,27 @@ function module.create(OpenBusORB, Configs, env)
   end
 
   local function resolveCategory(category)
-    local entities = OpenBusContext:getEntityRegistry()
     if type(category) == "string" then
-      category = entities:getEntityCategory(category)
+      category = OpenBusContext:getEntityRegistry():getEntityCategory(category)
       if category ~= nil then
-        category = category:describe()
+        category = EntityCategory(category:describe())
       end
     elseif not isinstanceof(category, EntityCategory) then
       error("invalid entity category, got "..type(category))
     end
-    return category and EntityCategory(category)
+    return category
   end
 
   local function resolveEntity(entity)
-    local entities = OpenBusContext:getEntityRegistry()
     if type(entity) == "string" then
-      entity = entities:getEntity(entity)
+      entity = OpenBusContext:getEntityRegistry():getEntity(entity)
       if entity ~= nil then
-        entity = entity:describe()
+        entity = RegisteredEntity(entity:describe())
       end
     elseif not isinstanceof(entity, RegisteredEntity) then
       error("invalid entity, got "..type(entity))
     end
-    return entity and RegisteredEntity(entity)
+    return entity
   end
 
   function env.login(entity, secret, domain)
@@ -442,7 +440,8 @@ function module.create(OpenBusORB, Configs, env)
   function env.setcert(entity, path)
     local certificate = assert(readfile(path))
     local certs = OpenBusContext:getCertificateRegistry()
-    return certs:registerCertificate(entity, certificate)
+    certs:registerCertificate(entity, certificate)
+    return true
   end
 
   function env.getcert(entity)
@@ -464,11 +463,11 @@ function module.create(OpenBusORB, Configs, env)
 
   env.getcategory = resolveCategory
 
-  function env.setcategory(category, name)
-    category = resolveCategory(category)
+  function env.setcategory(catid, name)
+    local category = resolveCategory(catid)
     if category == nil then
       local entities = OpenBusContext:getEntityRegistry()
-      category = entities:createEntityCategory(id, name)
+      category = entities:createEntityCategory(catid, name)
       return EntityCategory(category:describe())
     end
     category.ref:setName(name)

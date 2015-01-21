@@ -1,117 +1,130 @@
--------------------------------------------------------------------------------
--- configuração do teste
-bushost, busport = ...
+local mode = ...
+
+local path = (os.getenv("OPENBUS_SDKLUA_HOME") or "").."/bin/busadmin"
+if mode=="DEBUG" then
+  path = path.." DEBUG"
+end
+
 require "openbus.test.configs"
-local adminPassword = admpsw
-local certfile = syscrt
-local script = admscript
-local outputfile = admoutput
 
-local bin = "busadmin --host="..bushost.." --port="..busport.." "
-local login = "--login="..admin.." "
-local password = "--password="..adminPassword.." "
-local domain = "--domain="..domain.." "
-local certificate = "--certificate="..certfile
+local command = string.format("%s -iorfile %s -e 'login(%q, %q, %q)'",
+                              path, busref, admin, admpsw, domain)
 
-local installpath = os.getenv("OPENBUS_CORE_HOME")
-if installpath then
-  bin = installpath.."/bin/"..bin
-end
--------------------------------------------------------------------------------
-
-local function finalize()
-  os.execute("rm -f " ..outputfile)
+local function popen(command)
+  local path = os.tmpname()
+  local how, value = select(2, os.execute(command.." > "..path.." 2>&1"))
+  local output = assert(io.open(path)):read("*a")
+  os.remove(path)
+  assert(how == "exit")
+  --assert(value == 0)
+  return output
 end
 
-local function readOutput()
-  local f = io.open(outputfile)
-  local err = f:read("*a")
-  f:close()
-  return err
-end
-
-local function execute(...)
-  local command = bin..login..password..domain
-  local params = table.concat({...}, " ")
-  local tofile = " > "..outputfile
-  local ok, errmsg = os.execute(command..params..tofile)
-  local output = readOutput()
-  if not ok then
-    return false, output
-  end
-  local failed = output:find("[ERRO]",1,true)
-  if not failed then
-    return true
+local function testparams(params, ...)
+  local output = popen(command.." "..params)
+  local count = select("#", ...)
+  if count == 0 then
+    assert(string.match(output, "^%s*$"), output)
   else
-    finalize()
-    return false, output
+    for index = 1, select("#", ...) do
+      local replacement = select(index, ...)
+      output, replacement = string.gsub(output, replacement, "")
+      assert(replacement > 0, output)
+    end
   end
+end
+
+local function testscript(script, ...)
+  return testparams("-e '"..script.."'", ...)
 end
 
 -- help
-assert(execute("--help"))
+testparams("-help", "Usage:")
+
+-- clean up any left over definitions
+testscript([[
+for _, catid in ipairs({"CTG01", "CTG02"}) do
+  local category = getcategory(catid)
+  if category ~= nil then
+    for _, entity in ipairs(category:entities()) do
+      assert(delentity(entity))
+    end
+    assert(delcategory(category))
+  end
+end
+delcert("ENT02")
+delcert("NoReg")
+deliface("IDL:script/test:1.0")
+deliface("IDL:script/test2:1.0")
+]])
 
 -- categoria
-assert(execute("--add-category=CTG01","--name='categoria numero 01'"))
-assert(execute("--add-category=CTG02","--name='categoria numero 02'"))
-assert(execute("--list-category"))
-assert(execute("--list-category=CTG01"))
-assert(execute("--set-category=CTG01","--name='novo nome da categoria 01'"))
-assert(execute("--del-category=CTG01"))
+testscript([[assert(setcategory("CTG01", "categoria numero 01"))]])
+testscript([[assert(setcategory("CTG02", "categoria numero 02"))]])
+testscript([[print(categories())]],
+  "CTG01", "categoria numero 01",
+  "CTG02", "categoria numero 02")
+testscript([[print(getcategory("CTG01"))]], "CTG01", "categoria numero 01")
+testscript([[assert(setcategory("CTG01", "novo nome da categoria 01"))]])
+testscript([[assert(delcategory("CTG01"))]])
 
 -- entidade
-assert(execute("--add-entity=ENT01","--category=CTG02","--name='entidade 01'"))
-assert(execute("--add-entity=ENT02","--category=CTG02", "--name='entidade 02'"))
-assert(execute("--add-certificate=ENT02", certificate))
-assert(execute("--add-entity=ENT03","--category=CTG02","--name='entidade 03'"))
-assert(execute("--add-entity=ENT04","--category=CTG02","--name='entidade 04'"))
-assert(execute("--list-entity"))
-assert(execute("--list-entity=ENT02"))
-assert(execute("--list-entity","--category=CTG02"))
-assert(execute("--set-entity=ENT01","--name='novo nome da entidade 01'"))
-assert(execute("--del-entity=ENT01"))
+testscript([[
+  local category = assert(getcategory("CTG02"))
+  category:addentity("ENT01", "entidade 01")
+  category:addentity("ENT02", "entidade 02")
+  category:addentity("ENT03", "entidade 03")
+  category:addentity("ENT04", "entidade 04")
+]])
+testscript([[print(entities())]],
+  "ENT01", "entidade 01",
+  "ENT02", "entidade 02",
+  "ENT03", "entidade 03",
+  "ENT04", "entidade 04")
+testscript([[print(getentity("ENT02"))]], "ENT02", "entidade 02")
+testscript([[print(assert(getcategory("CTG02")):entities())]],
+  "ENT03", "entidade 03",
+  "ENT04", "entidade 04")
+testscript([[assert(setentity("ENT01", "novo nome da entidade 01"))]])
+testscript([[assert(delentity("ENT01"))]])
 
 -- certificado
-assert(execute("--add-certificate=NoReg",certificate))
-assert(execute("--del-certificate=NoReg"))
-assert(execute("--del-certificate=ENT02"))
-assert(execute("--list-certificate"))
+testscript([[assert(setcert("ENT02", "]]..syscrt..[["))]])
+testscript([[assert(setcert("NoReg", "]]..syscrt..[["))]])
+testscript([[print(certents())]], "ENT02", "NoReg")
+testscript([[assert(delcert("NoReg"))]])
+testscript([[assert(delcert("ENT02"))]])
 
 -- interface
-assert(execute("--add-interface=IDL:script/test:1.0"))
-assert(execute("--add-interface=IDL:script/test2:1.0"))
-assert(execute("--list-interface"))
-assert(execute("--del-interface=IDL:script/test2:1.0"))
+testscript([[assert(addiface("IDL:script/test:1.0"))]])
+testscript([[assert(addiface("IDL:script/test2:1.0"))]])
+testscript([[print(ifaces())]], "IDL:script/test:1.0", "IDL:script/test2:1.0")
+testscript([[assert(deliface("IDL:script/test2:1.0"))]])
 
 -- autorização
-assert(execute("--set-authorization=ENT02","--grant=IDL:script/test:1.0"))
-assert(execute("--set-authorization=ENT03","--grant=IDL:script/test:1.0"))
-assert(execute("--set-authorization=ENT04","--grant=IDL:script/test:1.0"))
-assert(execute("--set-authorization=ENT04","--revoke=IDL:script/test:1.0"))
-assert(execute("--list-authorization"))
-assert(execute("--list-authorization=ENT03"))
-assert(execute("--list-authorization","--interface=IDL:script/test:1.0"))
+testscript([[assert(getentity("ENT02")):grant("IDL:script/test:1.0")]])
+testscript([[assert(getentity("ENT03")):grant("IDL:script/test:1.0")]])
+testscript([[assert(getentity("ENT04")):grant("IDL:script/test:1.0")]])
+testscript([[assert(getentity("ENT04")):revoke("IDL:script/test:1.0")]])
+testscript([[print(entities("*"))]], "ENT02", "ENT03")
+testscript([[print(assert(getentity("ENT03")):ifaces())]], "IDL:script/test:1.0")
+testscript([[print(entities("IDL:script/test:1.0"))]], "ENT02", "ENT03")
 
 -- oferta
-assert(execute("--list-offer"))
+testscript([[print(offers())]], "")
 
 -- login
-assert(execute("--list-login"))
+testscript([[print(logins())]], "")
 
 -- script
-assert(execute("--script="..script))
-assert(execute("--undo-script="..script))
+--assert(execute("--script="..script))
+--assert(execute("--undo-script="..script))
 
 -- removendo tudo o que foi criado
-assert(execute("--set-authorization=ENT02","--revoke=IDL:script/test:1.0"))
-assert(execute("--set-authorization=ENT03","--revoke=IDL:script/test:1.0"))
-assert(execute("--del-interface=IDL:script/test:1.0"))
-assert(execute("--del-entity=ENT02"))
-assert(execute("--del-entity=ENT03"))
-assert(execute("--del-entity=ENT04"))
-assert(execute("--del-category=CTG02"))
-
-finalize()
-print("[OK] Script de testes executado por completo!")
-
-os.exit()
+testscript([[assert(getentity("ENT02")):revoke("IDL:script/test:1.0")]])
+testscript([[assert(getentity("ENT03")):revoke("IDL:script/test:1.0")]])
+testscript([[assert(deliface("IDL:script/test:1.0"))]])
+testscript([[delentity("ENT02")]])
+testscript([[delentity("ENT03")]])
+testscript([[delentity("ENT04")]])
+testscript([[delcategory("CTG02")]])

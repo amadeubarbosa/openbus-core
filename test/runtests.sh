@@ -5,7 +5,7 @@ mode=$1
 busconsole="${OPENBUS_SDKLUA_HOME}/bin/busconsole"
 
 if [[ "$mode" == "DEBUG" ]]; then
-	busconsole="$busconsole -d"
+	busconsole="$busconsole DEBUG"
 elif [[ "$mode" != "RELEASE" ]]; then
 	echo "Usage: $0 <RELEASE|DEBUG>"
 	exit 1
@@ -21,7 +21,7 @@ if [ "$2" == "" ]; then
 	"
 	for case in ${LUACASES}; do
 		echo -n "Test '${case}' ... "
-		$busconsole -e "$TEST_PRELUDE" ${case}.lua || exit $?
+		$busconsole -e "$TEST_PRELUDE" ${case}.lua $mode || exit $?
 		echo "OK"
 	done
 fi

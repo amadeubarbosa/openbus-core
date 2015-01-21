@@ -1,4 +1,3 @@
-bushost, busport = ...
 require "openbus.test.configs"
 require "openbus.test.lowlevel"
 
