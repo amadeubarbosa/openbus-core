@@ -36,12 +36,12 @@ openbus@tecgraf.puc-rio.br
 	fi
 }
 
-admin=`$busconsole -lopenbus.test.configs -e'print(admin)'`
-admpsw=`$busconsole -lopenbus.test.configs -e'print(admpsw)'`
-domain=`$busconsole -lopenbus.test.configs -e'print(domain)'`
-leasetime=`$busconsole -lopenbus.test.configs -e'print(leasetime)'`
-expirationgap=`$busconsole -lopenbus.test.configs -e'print(expirationgap)'`
-passwordpenalty=`$busconsole -lopenbus.test.configs -e'print(passwordpenalty)'`
+admin=`$busconsole -l openbus.test.configs -e 'print(admin)'`
+admpsw=`$busconsole -l openbus.test.configs -e 'print(admpsw)'`
+domain=`$busconsole -l openbus.test.configs -e 'print(domain)'`
+leasetime=`$busconsole -l openbus.test.configs -e 'print(leasetime)'`
+expirationgap=`$busconsole -l openbus.test.configs -e 'print(expirationgap)'`
+passwordpenalty=`$busconsole -l openbus.test.configs -e 'print(passwordpenalty)'`
 
 genkey $OPENBUS_TEMP/$name
 
@@ -63,7 +63,7 @@ $buscore \
 	pid="$pid $!"
 	trap "kill $pid > /dev/null 2>&1" 0
 
-$busconsole -e"
+$busconsole -e "
 	local socket = require 'socket.core'
 	for _=1, 10 do
 		if assert(socket.tcp()):connect('localhost', $port) then

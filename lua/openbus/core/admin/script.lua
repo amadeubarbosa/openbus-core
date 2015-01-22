@@ -363,7 +363,7 @@ function module.create(OpenBusORB, Configs, env)
   function env.login(entity, secret, domain)
     local conn = createConnection()
     if secret ~= nil and domain == nil then
-      conn:loginByCertificate(entity, readprivatekey(secret))
+      conn:loginByCertificate(entity, assert(readprivatekey(secret)))
     else
       conn:loginByPassword(entity, secret or gettext("Password: "),
                                    domain or gettext("Domain: "))
