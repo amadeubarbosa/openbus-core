@@ -7,7 +7,7 @@ param=${4%%=*}
 desc=${4#--*=}
 
 busadmin="${OPENBUS_CORE_HOME}/bin/busadmin"
-busdescriptor="${OPENBUS_CORE_HOME}/bin/busdescriptor.lua"
+busadmdesc="${OPENBUS_CORE_HOME}/bin/busadmdesc.lua"
 busconsole="${OPENBUS_SDKLUA_HOME}/bin/busconsole"
 
 if [[ "$mode" == "DEBUG" ]]; then
@@ -33,9 +33,9 @@ domain=`$busconsole -l openbus.test.configs -e 'print(domain)'`
 $busadmin \
 	-host $bushost \
 	-port $busport \
-$busdescriptor \
-	-entity $admin \
-	-password $admpsw \
-	-domain $domain \
-	$op $desc \
+	$busadmdesc \
+		-entity $admin \
+		-password $admpsw \
+		-domain $domain \
+		$op $desc \
 	|| exit $?
