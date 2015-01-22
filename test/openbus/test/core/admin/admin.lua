@@ -1,7 +1,7 @@
 local mode = ...
 
-local home = assert(os.getenv("OPENBUS_SDKLUA_HOME"),
-  "missing enviroment variable OPENBUS_SDKLUA_HOME")
+local home = assert(os.getenv("OPENBUS_CORE_HOME"),
+  "missing enviroment variable OPENBUS_CORE_HOME")
 local path = home.."/bin/busadmin"
 if mode=="DEBUG" then
   path = path.." DEBUG"
@@ -56,23 +56,23 @@ end
 testparams("-help", {
   "Usage:",
   "Options:",
-  "-iorfile ",
-  "-host ",
-  "-port ",
-  "-sslmode ",
-  "-sslcapath ",
-  "-sslcafile ",
-  "-sslcert ",
-  "-sslkey ",
-  "-loglevel ",
-  "-logfile ",
-  "-oilloglevel ",
-  "-oillogfile ",
-  "-interactive ",
-  "-execute ",
-  "-load ",
-  "-version ",
-  "-configs ",
+  "%-iorfile ",
+  "%-host ",
+  "%-port ",
+  "%-sslmode ",
+  "%-sslcapath ",
+  "%-sslcafile ",
+  "%-sslcert ",
+  "%-sslkey ",
+  "%-loglevel ",
+  "%-logfile ",
+  "%-oilloglevel ",
+  "%-oillogfile ",
+  "%-interactive ",
+  "%-execute ",
+  "%-load ",
+  "%-version ",
+  "%-configs ",
 }, 1)
 
 -- clean up any left over definitions
