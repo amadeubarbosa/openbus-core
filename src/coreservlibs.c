@@ -1,10 +1,10 @@
 #include "extralibraries.h"
 
-#include "lua.h"
-#include "lauxlib.h"
+#include <lua.h>
+#include <lauxlib.h>
 
 #ifndef _WIN32
-#include "lualdap.h"
+#include <lualdap.h>
 #endif
 #include "coreservices.h"
 
