@@ -5,7 +5,6 @@ bushost=$2
 busport=$3
 
 busadmin="${OPENBUS_CORE_HOME}/bin/busadmin"
-busconsole="${OPENBUS_SDKLUA_HOME}/bin/busconsole"
 
 if [[ "$mode" == "DEBUG" ]]; then
 	busadmin="$busadmin DEBUG"
@@ -15,8 +14,10 @@ elif [[ "$mode" != "RELEASE" ]]; then
 	exit 1
 fi
 
-admin=`$busconsole -lopenbus.test.configs -e'print(admin)'`
-admpsw=`$busconsole -lopenbus.test.configs -e'print(admpsw)'`
+runconsole="source ${OPENBUS_SDKLUA_TEST}/runconsole.sh $mode"
+
+admin=`$runconsole -l openbus.test.configs -e 'print(admin)'`
+admpsw=`$runconsole -l openbus.test.configs -e 'print(admpsw)'`
 
 $busadmin \
 	--host=$bushost \

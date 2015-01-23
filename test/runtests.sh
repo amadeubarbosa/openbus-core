@@ -2,14 +2,12 @@
 
 mode=$1
 
-busconsole="${OPENBUS_SDKLUA_HOME}/bin/busconsole"
-
-if [[ "$mode" == "DEBUG" ]]; then
-	busconsole="$busconsole -d"
-elif [[ "$mode" != "RELEASE" ]]; then
+if [[ "$mode" != "DEBUG" && "$mode" != "RELEASE" ]]; then
 	echo "Usage: $0 <RELEASE|DEBUG>"
 	exit 1
 fi
+
+runconsole="source ${OPENBUS_SDKLUA_TEST}/runconsole.sh $mode"
 
 TEST_PRELUDE='package.path=package.path..";"..(os.getenv("OPENBUS_CORE_LUA") or "../lua").."/?.lua"'
 
@@ -21,7 +19,7 @@ if [ "$2" == "" ]; then
 	"
 	for case in ${LUACASES}; do
 		echo -n "Test '${case}' ... "
-		$busconsole -e "$TEST_PRELUDE" ${case}.lua || exit $?
+		$runconsole -e "$TEST_PRELUDE" ${case}.lua || exit $?
 		echo "OK"
 	done
 fi
@@ -38,4 +36,4 @@ local runner = Runner{
 }
 runner('OpenBus', suite)"
 
-$busconsole -e "$TEST_PRELUDE" -e "$TEST_RUNNER" || exit $?
+$runconsole -e "$TEST_PRELUDE" -e "$TEST_RUNNER" || exit $?
