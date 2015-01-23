@@ -51,7 +51,7 @@ static void pusherror (lua_State *L) {
 
 static int lpw_getpass(lua_State *L)
 {
-  char password[10];
+  char password[207];
 
   const char *prompt = luaL_optstring(L, 1, "");
 
