@@ -3,14 +3,16 @@
 ## don't override the following variables:
 #
 # NAME = service name used by init script (and name of this file)
-# DESC = description used in output of init script
 # INSTALL_DIR = root installation path
 #
 
 # you may define the following variables:
+# DESC = description used in output of init script
 # SERVER = path to binary that runs the service
 # PIDFILE = path to .pid file that init script will store
 #
+DESC="OpenBus Core Services"
+
 # you can define the following variables:
 # PARAMS = parameters passed to $SERVER
 # OUTFILE = path to a file to stdout redirection (/dev/null is default)
@@ -22,7 +24,7 @@ OUTFILE=$INSTALL_DIR/data/$NAME.log
 PARAMS=
 
 # EMAIL = specifies an email address to be notified (default: root@localhost)"
-EMAIL=openbus@localhost
+EMAIL=$NAME@localhost
 # CRASHBACKUP = save the service logs to new compressed files timestamped (values: true or false, default: false)
 # CRASHBACKUP_DIR = path to store log files from last execution (default: $INSTALL_DIR/crashes)
 # CRASHBACKUP_FILES = files to be saved before an automatic restart
