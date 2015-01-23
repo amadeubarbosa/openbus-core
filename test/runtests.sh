@@ -2,10 +2,10 @@
 
 mode=$1
 
-busconsole="${OPENBUS_SDKLUA_HOME}/bin/busconsole"
+busadmin="${OPENBUS_CORE_HOME}/bin/busadmin"
 
 if [[ "$mode" == "DEBUG" ]]; then
-	busconsole="$busconsole DEBUG"
+	busadmin="$busadmin DEBUG"
 elif [[ "$mode" != "RELEASE" ]]; then
 	echo "Usage: $0 <RELEASE|DEBUG>"
 	exit 1
@@ -21,7 +21,7 @@ if [ "$2" == "" ]; then
 	"
 	for case in ${LUACASES}; do
 		echo -n "Test '${case}' ... "
-		$busconsole -e "$TEST_PRELUDE" ${case}.lua $mode || exit $?
+		$busadmin -e "$TEST_PRELUDE" ${case}.lua $mode || exit $?
 		echo "OK"
 	done
 fi
@@ -38,4 +38,4 @@ local runner = Runner{
 }
 runner('OpenBus', suite)"
 
-$busconsole -e "$TEST_PRELUDE" -e "$TEST_RUNNER" || exit $?
+$busadmin -e "$TEST_PRELUDE" -e "$TEST_RUNNER" || exit $?

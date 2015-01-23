@@ -4,13 +4,12 @@ mode=$1
 name=$2
 port=$3
 
-buscore="${OPENBUS_CORE_HOME}/bin/busservices"
-busconsole="${OPENBUS_SDKLUA_HOME}/bin/busconsole"
 busssl="${OPENBUS_OPENSSL_HOME}/bin/openssl"
+buscore="${OPENBUS_CORE_HOME}/bin/busservices"
+busadmin="${OPENBUS_CORE_HOME}/bin/busadmin"
 
 if [[ "$mode" == "DEBUG" ]]; then
 	buscore="$buscore DEBUG"
-	busconsole="$busconsole DEBUG"
 elif [[ "$mode" != "RELEASE" ]]; then
 	echo "Usage: $0 <RELEASE|DEBUG> <port> <name>"
 	exit 1
@@ -36,12 +35,12 @@ openbus@tecgraf.puc-rio.br
 	fi
 }
 
-admin=`$busconsole -l openbus.test.configs -e 'print(admin)'`
-admpsw=`$busconsole -l openbus.test.configs -e 'print(admpsw)'`
-domain=`$busconsole -l openbus.test.configs -e 'print(domain)'`
-leasetime=`$busconsole -l openbus.test.configs -e 'print(leasetime)'`
-expirationgap=`$busconsole -l openbus.test.configs -e 'print(expirationgap)'`
-passwordpenalty=`$busconsole -l openbus.test.configs -e 'print(passwordpenalty)'`
+admin=`$busadmin -l openbus.test.configs -e 'print(admin)'`
+admpsw=`$busadmin -l openbus.test.configs -e 'print(admpsw)'`
+domain=`$busadmin -l openbus.test.configs -e 'print(domain)'`
+leasetime=`$busadmin -l openbus.test.configs -e 'print(leasetime)'`
+expirationgap=`$busadmin -l openbus.test.configs -e 'print(expirationgap)'`
+passwordpenalty=`$busadmin -l openbus.test.configs -e 'print(passwordpenalty)'`
 
 genkey $OPENBUS_TEMP/$name
 
@@ -63,7 +62,7 @@ $buscore \
 	pid="$pid $!"
 	trap "kill $pid > /dev/null 2>&1" 0
 
-$busconsole -e "
+$busadmin -e "
 	local socket = require 'socket.core'
 	for _=1, 10 do
 		if assert(socket.tcp()):connect('localhost', $port) then
