@@ -1,8 +1,9 @@
 #!/bin/bash
 
 INSTALL_DIR=${OPENBUS_HOME:=/local/openbus}
-DESC=${DESC:="OpenBus Core Services"}
 NAME=${NAME:=openbus}
+
+DESC="OpenBus Services"
 
 # Read configuration variable file if it is present
 CONFIG_FILES="/etc/default/$NAME $INSTALL_DIR/config/$NAME.rc"

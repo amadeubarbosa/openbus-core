@@ -1,9 +1,9 @@
 #!/bin/bash
 
 INSTALL_DIR=${OPENBUS_HOME:=/local/openbus}
-DESC=${DESC:="OpenBus Core Services"}
 NAME=${NAME:=openbus}
 
+DESC="OpenBus Services"
 CRASHBACKUP=false
 CRASHBACKUP_DIR=$INSTALL_DIR/crashes
 INITSCRIPT=$INSTALL_DIR/bin/businit
@@ -16,7 +16,7 @@ done
 
 HOSTNAME=`hostname`
 DATE=`date +%Y%m%d_%Hh%Mm%Ss`
-EMAIL=root@$HOSTNAME
+EMAIL=${EMAIL:="root@$HOSTNAME"}
 EMAIL_SUBJECT="$DESC restart on $HOSTNAME"
 EMAIL_BODY="This is an automatic notification. Please do not reply.
 
@@ -57,8 +57,8 @@ $backup.tgz"
   return 0
 }
 
-env OPENBUS_HOME="$INSTALL_DIR" NAME="$NAME" DESC="$DESC" $INITSCRIPT status
-if [ $? -ne 0 ] ; then
+env OPENBUS_HOME="$INSTALL_DIR" NAME="$NAME" $INITSCRIPT status
+if [ $? == 1 ] ; then
   if [ "$CRASHBACKUP" == true ]; then
     save_crash || echo "Failure to save crash log files"
   fi 
@@ -71,7 +71,7 @@ $(tail -n 50 $each)"
     fi
   done
 
-  env OPENBUS_HOME="$INSTALL_DIR" NAME="$NAME" DESC="$DESC" $INITSCRIPT start || exit 
+  env OPENBUS_HOME="$INSTALL_DIR" NAME="$NAME" $INITSCRIPT start || exit 
   echo -e "$EMAIL_BODY" | mail -s "$EMAIL_SUBJECT" $EMAIL
   exit 0
 fi
