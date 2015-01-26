@@ -7,6 +7,7 @@ local ipairs = _G.ipairs
 local loadfile = _G.loadfile
 local luatype = _G.type
 local pairs = _G.pairs
+local pcall = _G.pcall
 local select = _G.select
 local setmetatable = _G.setmetatable
 local tostring = _G.tostring
@@ -182,8 +183,7 @@ local function checkfields(value, typespec, prefix)
       end
     end
   elseif luatype(value) ~= typespec then
-    if prefix ~= nil then fieldname = prefix.."."..fieldname end
-    error("field '"..fieldname.."' must be '"..typespec.."', but is '"..luatype(value).."'")
+    error("field '"..prefix.."' must be '"..typespec.."', but is '"..luatype(value).."'")
   end
 end
 

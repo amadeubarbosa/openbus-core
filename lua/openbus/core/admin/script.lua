@@ -1,12 +1,24 @@
 local _G = require "_G"
+local assert = _G.assert
+local error = _G.error
+local ipairs = _G.ipairs
+local pairs = _G.pairs
+local pcall = _G.pcall
+local select = _G.select
 local setmetatable = _G.setmetatable
 local tostring = _G.tostring
+local type = _G.type
 
 local array = require "table"
 local concat = array.concat
 
 local math = require "math"
 local inf = math.huge
+
+local io = require "io"
+local flush = io.flush
+local read = io.read
+local write = io.write
 
 local cothread = require "cothread"
 local suspend = cothread.suspend
@@ -23,6 +35,8 @@ local readfile = server.readfrom
 local readprivatekey = server.readprivatekey
 local argcheck = require "openbus.util.argcheck"
 local convertmodule = argcheck.convertmodule
+local sysex = require "openbus.util.sysex"
+local NO_PERMISSION = sysex.NO_PERMISSION
 
 local assistant = require "openbus.assistant2"
 local newassistant = assistant.create
@@ -31,7 +45,9 @@ local coreidl = require "openbus.core.idl"
 local coresrvtypes = coreidl.types.services
 local logintypes = coresrvtypes.access_control
 local offertypes = coresrvtypes.offer_registry
-local minor = coreidl.const.services.access_control
+local loginconst = coreidl.const.services.access_control
+local accexp = coreidl.throw.services.access_control
+local is_MissingCertificate = assert(accexp.is_MissingCertificate) -- TODO: remove this assert
 
 local admidl = require "openbus.core.admin.idl"
 local loadadmidl = admidl.loadto
@@ -47,17 +63,17 @@ local ExceptionMessages = {
   [sysexrepid.COMM_FAILURE] = msg.BusCommunicationFailure,
   [sysexrepid.OBJECT_NOT_EXIST] = msg.DefinitionRemovedFromBus,
   [sysexrepid.NO_PERMISSION] = {
-    [minor.InvalidCredentialCode] = msg.InvalidCredential,
-    [minor.InvalidChainCode] = msg.InvalidChain,
-    [minor.InvalidLoginCode] = msg.InvalidLogin,
-    [minor.UnverifiedLoginCode] = msg.UnverifiedLogin,
-    [minor.UnknownBusCode] = msg.UnknownBus,
-    [minor.InvalidPublicKeyCode] = msg.InvalidPublicKey,
-    [minor.NoCredentialCode] = msg.NoCredential,
-    [minor.NoLoginCode] = msg.NoLogin,
-    [minor.InvalidRemoteCode] = msg.InvalidRemote,
-    [minor.UnavailableBusCode] = msg.UnavailableBus,
-    [minor.InvalidTargetCode] = msg.InvalidTarget,
+    [loginconst.InvalidCredentialCode] = msg.InvalidCredential,
+    [loginconst.InvalidChainCode] = msg.InvalidChain,
+    [loginconst.InvalidLoginCode] = msg.InvalidLogin,
+    [loginconst.UnverifiedLoginCode] = msg.UnverifiedLogin,
+    [loginconst.UnknownBusCode] = msg.UnknownBus,
+    [loginconst.InvalidPublicKeyCode] = msg.InvalidPublicKey,
+    [loginconst.NoCredentialCode] = msg.NoCredential,
+    [loginconst.NoLoginCode] = msg.NoLogin,
+    [loginconst.InvalidRemoteCode] = msg.InvalidRemote,
+    [loginconst.UnavailableBusCode] = msg.UnavailableBus,
+    [loginconst.InvalidTargetCode] = msg.InvalidTarget,
   },
 
   [coresrvtypes.ServiceFailure] = msg.BusFailure,
@@ -120,9 +136,9 @@ end
 
 
 local function gettext(message)
-  io.write(message)
-  io.flush()
-  return io.read(message == "Password: " and "*?" or "*l")
+  write(message)
+  flush()
+  return read(message == "Password: " and "*?" or "*l")
 end
 
 
@@ -292,7 +308,7 @@ function module.create(OpenBusORB, Configs, env)
       OpenBusContext["get"..name] = function (self)
         local conn = self:getCurrentConnection()
         if conn == nil or conn.login == nil then
-          sysexthrow.NO_PERMISSION{
+          NO_PERMISSION{
             completed = "COMPLETED_NO",
             minor = loginconst.NoLoginCode,
           }
@@ -375,7 +391,7 @@ function module.create(OpenBusORB, Configs, env)
   end
 
   function env.whoami()
-    conn = getCurrentConnection()
+    local conn = getCurrentConnection()
     if conn ~= nil then
       local login = conn.login
       if login ~= nil then
@@ -385,7 +401,7 @@ function module.create(OpenBusORB, Configs, env)
   end
 
   function env.quit()
-    conn = getCurrentConnection()
+    local conn = getCurrentConnection()
     if conn ~= nil then
       conn:logout()
     end
@@ -417,7 +433,7 @@ function module.create(OpenBusORB, Configs, env)
 
   function env.deloffer(offer)
     if type(offer) == "string" then
-      local props = {{name="openbus.offer.id",value=id}}
+      local props = {{name="openbus.offer.id",value=offer}}
       offer = OpenBusContext:getOfferRegistry():findServices(props)[1]
       if offer == nil then
         return nil, "not found"
