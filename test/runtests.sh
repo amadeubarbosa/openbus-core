@@ -18,6 +18,8 @@ if [ "$2" == "" ]; then
 	openbus/test/core/services/LoginDB \
 	openbus/test/core/Protocol \
 	openbus/test/core/admin/admin \
+	openbus/test/core/admin/Description/descriptor \
+	openbus/test/core/admin/Description/loading \
 	"
 	for case in ${LUACASES}; do
 		echo -n "Test '${case}' ... "

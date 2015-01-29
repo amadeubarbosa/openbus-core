@@ -18,15 +18,14 @@ local unpack = array.unpack
 local io = require "io"
 local stderr = io.stderr
 
-local os = require "os"
-local exit = os.exit
-
 local Arguments = require "loop.compiler.Arguments"
 
 local Viewer = require "loop.debug.Viewer"
 
 local msg = require "openbus.util.messages"
 local log = require "openbus.util.logger"
+local server = require "openbus.util.server"
+local readfrom = server.readfrom
 local sandbox = require "openbus.util.sandbox"
 local newsandbox = sandbox.create
 
@@ -38,17 +37,11 @@ local viewer = Viewer{
 }
 
 local args = Arguments{
-  entity = "admin",
-  password = "",
-  domain = "",
   verbose = 2,
   unload = false,
   help = false,
 }
 args._alias = {
-  e = "entity",
-  p = "password",
-  d = "domain",
   v = "verbose",
   u = "unload",
   h = "help",
@@ -70,9 +63,6 @@ if args.help then
 Usage:  [options] <caminho do descritor> [argumentos do descritor]
 Options:
 
-  -e, -entity <entity name>        entidade de autenticação (default=admin)
-  -p, -password <entity password>  senha de autenticação
-  -d, -domain <password domain>    domínio da senha de autenticação
   -v, -verbose <log level>         0=nada, 1=erros, 2=tudo (default=2)
   -u, -unload                      desfaz as definições do descritor
   -h, -help                        exibe esta mensagem e encerra a execução
@@ -83,9 +73,6 @@ end
 
 if args.verbose > 0 then log:flag("  OK  ", true) end
 if args.verbose > 1 then log:flag("FAILED", true) end
-
-if args.password == "" then args.password = nil end
-if args.domain == "" then args.domain = nil end
 
 local exitcode = 0
 
@@ -121,59 +108,60 @@ local Definitions = {
   {
     tag = "Category",
     fields = {
-      id = "string",
-      name = "string",
+      {name = "id", type = "string"},
+      {name = "name", type = "string"},
     },
-    load = {func = setcategory, params = {"id", "name"}},
-    unload = {func = delcategory, params = {"id"}},
+    load = setcategory,
+    unload = delcategory,
   }, {
     tag = "Entity",
     fields = {
-      id = "string",
-      name = "string",
-      category = "string",
+      {name = "id", type = "string"},
+      {name = "name", type = "string"},
+      {name = "category", type = "string"},
     },
-    load = {func = tryaddentity, params = {"id", "name", "category"}},
-    unload = {func = delentity, params = {"id"}},
+    load = tryaddentity,
+    unload = delentity,
   }, {
     tag = "Interface",
     fields = {
-      id = "string",
+      {name = "id", type = "string"},
     },
-    load = {func = addiface, params = {"id"}},
-    unload = {func = deliface, params = {"id"}},
+    load = addiface,
+    unload = deliface,
   }, {
     tag = "Grant",
     fields = {
-      id = "string",
-      interfaces = { "string" },
+      {name = "id", type = "string"},
+      {name = "interfaces", type = {"string"}},
     },
-    load = {func = addmanyifaces, params = {"id", "interfaces"}},
-    unload = {func = delmanyifaces, params = {"id", "interfaces"}},
+    load = addmanyifaces,
+    unload = delmanyifaces,
   }, {
     tag = "Revoke",
     fields = {
-      id = "string",
-      interfaces = { "string" },
+      {name = "id", type = "string"},
+      {name = "interfaces", type = {"string"}},
     },
-    load = {func = delmanyifaces, params = {"id", "interfaces"}},
-    unload = {func = addmanyifaces, params = {"id", "interfaces"}},
+    load = delmanyifaces,
+    unload = addmanyifaces,
   }, {
     tag = "Certificate",
     fields = {
-      id = "string",
-      certificate = "string",
+      {name = "id", type = "string"},
+      {name = "certificate", type = "string"},
     },
-    load = {func = setcert, params = {"id", "certificate"}},
-    unload = {func = delcert, params = {"id"}},
+    load = function(id, path) return setcert(id, assert(readfrom(path))) end,
+    unload = delcert,
   },
 }
 
 local function checkfields(value, typespec, prefix)
   if luatype(typespec) == "table" then
     prefix = prefix and prefix.."." or ""
-    if #typespec == 0 then
-      for fieldname, typespec in pairs(typespec) do
+    if type(typespec[1]) == "table" then
+      for _, field in pairs(typespec) do
+        local fieldname, typespec = field.name, field.type
         checkfields(value[fieldname], typespec, prefix..fieldname)
       end
     else
@@ -185,11 +173,6 @@ local function checkfields(value, typespec, prefix)
   elseif luatype(value) ~= typespec then
     error("field '"..prefix.."' must be '"..typespec.."', but is '"..luatype(value).."'")
   end
-end
-
-local op, start, finish, increment = "load", 1, #Definitions, 1
-if args.unload then
-  op, start, finish, increment = "unload", finish, start, -1
 end
 
 local env = setmetatable(newsandbox(), {__index = _G})
@@ -207,24 +190,35 @@ for index, info in ipairs(Definitions) do
   end
 end
 
+local op, start, finish, increment = "load", 1, #Definitions, 1
+if args.unload then
+  op, start, finish, increment = "unload", finish, start, -1
+end
+
 local path = select(argidx, ...)
 local loader, errmsg = loadfile(path, "t" , env)
 if loader ~= nil then
   local ok, errmsg = pcall(loader, select(argidx+1, ...))
   if ok then
-    local ok, errmsg = pcall(login, args.entity, args.password, args.domain)
+    local ok, errmsg = whoami()
+    if not ok then
+      io.write("Bus Ref.: ")
+      local busref = assert(io.read())
+      io.write("Entity: ")
+      local entity = assert(io.read())
+      ok, errmsg = pcall(login, busref, entity)
+    end
     if ok then
       for i = start, finish, increment do
         local info = Definitions[i]
         local list = defs[info.tag]
         if list ~= nil then
-          local opinfo = info[op]
           for _, fields in ipairs(list) do
             local params = {}
-            for index, fieldname in ipairs(opinfo.params) do
-              params[index] = fields[fieldname]
+            for index, field in ipairs(info.fields) do
+              params[index] = fields[field.name]
             end
-            local ok, result = pcall(opinfo.func, unpack(params))
+            local ok, result = pcall(info[op], unpack(params))
             local logtag
             if ok then
               logtag = "  OK  "

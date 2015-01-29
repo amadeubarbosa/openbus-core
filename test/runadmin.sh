@@ -29,11 +29,10 @@ admpsw=`$busadmin -l openbus.test.configs -e 'print(admpsw)'`
 domain=`$busadmin -l openbus.test.configs -e 'print(domain)'`
 
 $busadmin \
-	-host $bushost \
-	-port $busport \
+	-busref "$bushost:$busport" \
+	-entity $admin \
+	-password $admpsw \
+	-domain $domain \
 	$busadmdesc \
-		-entity $admin \
-		-password $admpsw \
-		-domain $domain \
 		$op $desc \
 	|| exit $?

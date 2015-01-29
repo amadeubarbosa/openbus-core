@@ -1,0 +1,14 @@
+Interface{id=[[IDL:somemodule/for/SomeInterface:1.0]]}
+Category{
+  id=[[MissingEntity]],
+  name=[[MissingEntity]],
+  entities={
+    {
+      id=[[MissingEntity]],
+      name=[[MissingEntity]],
+      interfaces={
+        [[IDL:somemodule/for/SomeInterface:1.0]],
+      },
+    },
+  },
+}

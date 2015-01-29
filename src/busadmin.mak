@@ -24,6 +24,7 @@ DEPENDENTIDLSRC= \
 
 LUADIR= ../lua
 LUASRC= \
+  $(LUADIR)/openbus/core/admin/Description.lua \
   $(LUADIR)/openbus/core/admin/idl.lua \
   $(LUADIR)/openbus/core/admin/main.lua \
   $(LUADIR)/openbus/core/admin/messages.lua \

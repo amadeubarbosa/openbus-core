@@ -30,9 +30,8 @@ local function checkreplace(text, replacement, count)
   return result
 end
 
-local command = path.." -iorfile "..busref
 local function testparams(params, expected, ...)
-  local output = popen(command.." "..params, ...)
+  local output = popen(path.." "..params, ...)
   if expected == nil then
     assert(string.match(output, "^%s*$"), output)
   elseif #expected == 0 then
@@ -47,8 +46,8 @@ local function testparams(params, expected, ...)
 end
 
 local function testscript(script, ...)
-  local params = string.format("-e 'login(%q, %q, %q)' -e '%s'",
-                               admin, admpsw, domain, script)
+  local params = string.format("-e 'login(%q, %q, %q, %q)' -e '%s'",
+                               busref, admin, admpsw, domain, script)
   return testparams(params, ...)
 end
 
@@ -56,9 +55,11 @@ end
 testparams("-help", {
   "Usage:",
   "Options:",
-  "%-iorfile ",
-  "%-host ",
-  "%-port ",
+  "%-busref ",
+  "%-entity ",
+  "%-privatekey ",
+  "%-password ",
+  "%-domain ",
   "%-sslmode ",
   "%-sslcapath ",
   "%-sslcafile ",
@@ -130,8 +131,8 @@ testscript([[assert(setentity("ENT01", "novo nome da entidade 01"))]])
 testscript([[assert(delentity("ENT01"))]])
 
 -- certificado
-testscript([[assert(setcert("ENT02", "]]..syscrt..[["))]])
-testscript([[assert(setcert("NoReg", "]]..syscrt..[["))]])
+testscript([[assert(setcert("ENT02", assert(require("oil").readfrom("]]..syscrt..[[", "rb"))))]])
+testscript([[assert(setcert("NoReg", assert(require("oil").readfrom("]]..syscrt..[[", "rb"))))]])
 testscript([[print(certents())]], {
   "ENT02", "NoReg",
 })
@@ -169,13 +170,6 @@ testscript([[print(offers())]], {})
 
 -- login
 testscript([[print(logins())]], {})
-
--- script
-local descparams = descscript.." -entity "..admin..
-                               " -password "..admpsw..
-                               " -domain "..domain
-testparams(descparams.." "..admscript, {["%[  OK  %]"]=5})
-testparams(descparams.." -unload "..admscript, {["%[  OK  %]"]=5})
 
 -- removendo tudo o que foi criado
 testscript([[

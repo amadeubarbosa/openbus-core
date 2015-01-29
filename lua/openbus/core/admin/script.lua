@@ -6,11 +6,15 @@ local pairs = _G.pairs
 local pcall = _G.pcall
 local select = _G.select
 local setmetatable = _G.setmetatable
+local tonumber = _G.tonumber
 local tostring = _G.tostring
 local type = _G.type
 
 local array = require "table"
 local concat = array.concat
+
+local string = require "string"
+local match = string.match
 
 local math = require "math"
 local inf = math.huge
@@ -34,7 +38,6 @@ local server = require "openbus.util.server"
 local readfile = server.readfrom
 local readprivatekey = server.readprivatekey
 local argcheck = require "openbus.util.argcheck"
-local convertmodule = argcheck.convertmodule
 local sysex = require "openbus.util.sysex"
 local NO_PERMISSION = sysex.NO_PERMISSION
 
@@ -55,7 +58,6 @@ local admintypes = admidl.types.services.access_control.admin.v1_0
 local authotypes = admidl.types.services.offer_registry.admin.v1_0
 
 local msg = require "openbus.util.messages"
-local argcheck = require "openbus.util.argcheck"
 
 
 local ExceptionMessages = {
@@ -256,9 +258,30 @@ end
 
 
 local RegisteredEntity = class()
+local EntityCategory = class()
+
+
+
+function EntityCategory:__tostring()
+  return self.id.." ("..self.name..")"
+end
+
+function EntityCategory:entities()
+  return makelist(self.ref:getEntities(), RegisteredEntity)
+end
+
+function EntityCategory:addentity(id, name)
+  return RegisteredEntity(self.ref:registerEntity(id, name):describe())
+end
+
+
 
 function RegisteredEntity:__tostring()
   return self.id.." ("..self.name..")"
+end
+
+function RegisteredEntity:category()
+  return EntityCategory(self.ref:_get_category())
 end
 
 function RegisteredEntity:grant(iface)
@@ -275,440 +298,309 @@ end
 
 
 
-local EntityCategory = class()
+local OpenBusORB
+local OpenBusContext
 
-function EntityCategory:__tostring()
-  return self.id.." ("..self.name..")"
-end
-
-function EntityCategory:entities()
-  return makelist(self.ref:getEntities(), RegisteredEntity)
-end
-
-function EntityCategory:addentity(id, name)
-  return RegisteredEntity(self.ref:registerEntity(id, name):describe())
-end
-
-
-
-
-local module = {}
-
-function module.create(OpenBusORB, Configs, env)
-  local OpenBusContext = OpenBusORB.OpenBusContext
-
-  do
-    loadadmidl(OpenBusORB)
-    local CoreServices = {
-      CertificateRegistry = admintypes,
-      InterfaceRegistry = authotypes,
-      EntityRegistry = authotypes,
+local function createConnection(busref)
+  local host, port = match(busref, "^(.+):(%d+)$")
+  port = tonumber(port)
+  local conn
+  if host == nil or port > 65535 then
+    local busior = assert(readfile(busref, "r"))
+    busref = OpenBusORB:newproxy(busior, nil, "::scs::core::IComponent")
+    conn = newassistant{
+      orb = OpenBusORB,
+      busref = busref,
     }
-    for name, idlmod in pairs(CoreServices) do
-      OpenBusContext["get"..name] = function (self)
-        local conn = self:getCurrentConnection()
-        if conn == nil or conn.login == nil then
-          NO_PERMISSION{
-            completed = "COMPLETED_NO",
-            minor = loginconst.NoLoginCode,
-          }
-        end
-        return self.orb:narrow(conn.bus:getFacetByName(name), idlmod[name])
-      end
-    end
-  end
-
-  local function setDefaultConnection(conn)
-    conn = OpenBusContext:setDefaultConnection(conn.connection)
-    if conn ~= nil then
-      return conn.assistant
-    end
-  end
-
-  local function getCurrentConnection()
-    local conn = OpenBusContext:getCurrentConnection()
-    if conn ~= nil then
-      return conn.assistant
-    end
-  end
-
-  local createConnection
-  if Configs.iorfile ~= "" then
-    local busior = assert(readfile(Configs.iorfile, "r"))
-    local busref = OpenBusORB:newproxy(busior, nil, "::scs::core::IComponent")
-    function createConnection()
-      return newassistant{
-        orb = OpenBusORB,
-        busref = busref,
-      }
-    end
   else
-    function createConnection()
-      return newassistant{
-        orb = OpenBusORB,
-        bushost = Configs.host,
-        busport = Configs.port,
+    conn = newassistant{
+      orb = OpenBusORB,
+      bushost = host,
+      busport = port,
+    }
+  end
+  return conn
+end
+
+local function setDefaultConnection(conn)
+  conn = OpenBusContext:setDefaultConnection(conn and conn.connection)
+  if conn ~= nil then
+    return conn.assistant
+  end
+end
+
+local function getCurrentConnection()
+  local conn = OpenBusContext:getCurrentConnection()
+  if conn ~= nil then
+    return conn.assistant
+  end
+end
+
+local function admServGetter(name, idlmod)
+  local repid = idlmod[name]
+  return function ()
+    local conn = getCurrentConnection()
+    if conn == nil or conn.connection.login == nil then
+      NO_PERMISSION{
+        completed = "COMPLETED_NO",
+        minor = loginconst.NoLoginCode,
       }
     end
+    return OpenBusORB:narrow(conn.connection.bus:getFacetByName(name), repid)
   end
-
-  local function resolveCategory(category)
-    if type(category) == "string" then
-      category = OpenBusContext:getEntityRegistry():getEntityCategory(category)
-      if category ~= nil then
-        category = EntityCategory(category:describe())
-      end
-    elseif not isinstanceof(category, EntityCategory) then
-      error("invalid entity category, got "..type(category))
-    end
-    return category
-  end
-
-  local function resolveEntity(entity)
-    if type(entity) == "string" then
-      entity = OpenBusContext:getEntityRegistry():getEntity(entity)
-      if entity ~= nil then
-        entity = RegisteredEntity(entity:describe())
-      end
-    elseif not isinstanceof(entity, RegisteredEntity) then
-      error("invalid entity, got "..type(entity))
-    end
-    return entity
-  end
-
-  function env.login(entity, secret, domain)
-    local conn = createConnection()
-    if secret ~= nil and domain == nil then
-      conn:loginByCertificate(entity, assert(readprivatekey(secret)))
-    else
-      conn:loginByPassword(entity, secret or gettext("Password: "),
-                                   domain or gettext("Domain: "))
-    end
-    conn = setDefaultConnection(conn)
-    if conn ~= nil then
-      conn:logout()
-    end
-  end
-
-  function env.whoami()
-    local conn = getCurrentConnection()
-    if conn ~= nil then
-      local login = conn.login
-      if login ~= nil then
-        return LoginInfo(login)
-      end
-    end
-  end
-
-  function env.quit()
-    local conn = getCurrentConnection()
-    if conn ~= nil then
-      conn:logout()
-    end
-    OpenBusORB:shutdown()
-    suspend()
-  end
-
-  function env.logins(entity)
-    if isinstanceof(entity, LoginInfo) then entity = entity.entity end
-    local logins = OpenBusContext:getLoginRegistry()
-    local list = (entity == nil)
-      and logins:getAllLogins()
-      or logins:getEntityLogins(entity)
-    return makelist(list, LoginInfo)
-  end
-
-  function env.kick(id)
-    if isinstanceof(id, LoginInfo) then id = id.id end
-    OpenBusContext:getLoginRegistry():invalidateLogin(id)
-  end
-
-  function env.offers(properties)
-    local offers = OpenBusContext:getOfferRegistry()
-    local list = (properties == nil)
-      and offers:getAllServices()
-      or offers:findServices(makePropList(properties))
-    return makelist(list, ServiceOffer)
-  end
-
-  function env.deloffer(offer)
-    if type(offer) == "string" then
-      local props = {{name="openbus.offer.id",value=offer}}
-      offer = OpenBusContext:getOfferRegistry():findServices(props)[1]
-      if offer == nil then
-        return nil, "not found"
-      end
-    end
-    offer.ref:remove()
-    return true
-  end
-
-  function env.certents()
-    local certs = OpenBusContext:getCertificateRegistry()
-    return makelist(certs:getEntitiesWithCertificate())
-  end
-
-  function env.delcert(entity)
-    local certs = OpenBusContext:getCertificateRegistry()
-    return certs:removeCertificate(entity)
-  end
-
-  function env.setcert(entity, path)
-    local certificate = assert(readfile(path))
-    local certs = OpenBusContext:getCertificateRegistry()
-    certs:registerCertificate(entity, certificate)
-    return true
-  end
-
-  function env.getcert(entity)
-    local certs = OpenBusContext:getCertificateRegistry()
-    local ok, result = pcall(certs.getCertificate, certs, entity)
-    if not ok then
-      if not is_MissingCertificate(result) then
-        error(result)
-      end
-      result = nil
-    end
-    return result
-  end
-
-  function env.categories(category)
-    local entities = OpenBusContext:getEntityRegistry()
-    return makelist(entities:getEntityCategories(), EntityCategory)
-  end
-
-  env.getcategory = resolveCategory
-
-  function env.setcategory(catid, name)
-    local category = resolveCategory(catid)
-    if category == nil then
-      local entities = OpenBusContext:getEntityRegistry()
-      category = entities:createEntityCategory(catid, name)
-      return EntityCategory(category:describe())
-    end
-    category.ref:setName(name)
-    return category
-  end
-
-  function env.delcategory(category)
-    category = resolveCategory(category)
-    if category == nil then
-      return nil, "not found"
-    end
-    category.ref:remove()
-    return category
-  end
-
-  function env.entities(...)
-    local entities = OpenBusContext:getEntityRegistry()
-    local count = select("#", ...)
-    local list
-    if count == 0 then
-      list = entities:getEntities()
-    elseif count == 1 and (...) == "*" then
-      list = entities:getAuthorizedEntities()
-    else
-      list = entities:getEntitiesByAuthorizedInterfaces{...}
-    end
-    return makelist(list, RegisteredEntity)
-  end
-
-  env.getentity = resolveEntity
-
-  function env.setentity(id, name)
-    local entity = resolveEntity(id) or error("entity not registered")
-    entity.ref:setName(name)
-    return entity
-  end
-
-  function env.delentity(entity)
-    entity = resolveEntity(entity)
-    if entity == nil then
-      return nil, "not found"
-    end
-    entity.ref:remove()
-    return entity
-  end
-
-  function env.ifaces(...)
-    return makelist(OpenBusContext:getInterfaceRegistry():getInterfaces())
-  end
-
-  function env.addiface(iface)
-    return OpenBusContext:getInterfaceRegistry():registerInterface(iface)
-  end
-
-  function env.deliface(iface)
-    return OpenBusContext:getInterfaceRegistry():removeInterface(iface)
-  end
-
-  argchecker.module(env, {
-    login = { "string", "nil|string", "nil|string" },
-    whoami = {},
-    quit = {},
-
-    logins = { "nil|string|table" },
-    kick = { "string|table" },
-
-    offers = { "nil|table" },
-    deloffer = { "string|table" },
-
-    certents = {},
-    getcert = { "string" },
-    setcert = { "string", "string" },
-    delcert = { "string" },
-
-    categories = {},
-    getcategory = { "string|table" },
-    setcategory = { "string|table", "string" },
-    delcategory = { "string|table" },
-
-    entities = {},
-    getentity = { "string|table" },
-    setentity = { "string|table", "string" },
-    delentity = { "string|table" },
-
-    ifaces = {},
-    addiface = { "string" },
-    deliface = { "string" },
-  })
 end
+local getCertificateRegistry = admServGetter("CertificateRegistry", admintypes)
+local getInterfaceRegistry = admServGetter("InterfaceRegistry", authotypes)
+local getEntityRegistry = admServGetter("EntityRegistry", authotypes)
+
+local function resolveCategory(category)
+  if type(category) == "string" then
+    category = getEntityRegistry():getEntityCategory(category)
+    if category ~= nil then
+      category = EntityCategory(category:describe())
+    end
+  elseif not isinstanceof(category, EntityCategory) then
+    error("invalid entity category, got "..type(category))
+  end
+  return category
+end
+
+local function resolveEntity(entity)
+  if type(entity) == "string" then
+    entity = getEntityRegistry():getEntity(entity)
+    if entity ~= nil then
+      entity = RegisteredEntity(entity:describe())
+    end
+  elseif not isinstanceof(entity, RegisteredEntity) then
+    error("invalid entity, got "..type(entity))
+  end
+  return entity
+end
+
+
+local script = {}
+
+function script.setorb(orb)
+  local old = OpenBusORB
+  loadadmidl(orb)
+  OpenBusORB = orb
+  OpenBusContext = OpenBusORB.OpenBusContext
+  return old
+end
+
+--script.setconn = setDefaultConnection
+--script.getconn = getCurrentConnection
+
+function script.login(busref, entity, secret, domain)
+  local conn = createConnection(busref)
+  if secret ~= nil and domain == nil then
+    conn:loginByCertificate(entity, assert(readprivatekey(secret)))
+  else
+    conn:loginByPassword(entity, secret or gettext("Password: "),
+                                 domain or gettext("Domain: "))
+  end
+  conn = setDefaultConnection(conn)
+  if conn ~= nil then
+    conn:logout()
+  end
+end
+
+function script.whoami()
+  local conn = getCurrentConnection()
+  if conn ~= nil then
+    local login = conn.login
+    if login ~= nil then
+      return LoginInfo(login)
+    end
+  end
+end
+
+function script.quit()
+  local conn = getCurrentConnection()
+  if conn ~= nil then
+    conn:logout()
+  end
+  OpenBusORB:shutdown()
+  suspend()
+end
+
+function script.logins(entity)
+  if isinstanceof(entity, LoginInfo) then entity = entity.entity end
+  local logins = OpenBusContext:getLoginRegistry()
+  local list = (entity == nil)
+    and logins:getAllLogins()
+    or logins:getEntityLogins(entity)
+  return makelist(list, LoginInfo)
+end
+
+function script.kick(id)
+  if isinstanceof(id, LoginInfo) then id = id.id end
+  OpenBusContext:getLoginRegistry():invalidateLogin(id)
+end
+
+function script.offers(properties)
+  local offers = OpenBusContext:getOfferRegistry()
+  local list = (properties == nil)
+    and offers:getAllServices()
+    or offers:findServices(makePropList(properties))
+  return makelist(list, ServiceOffer)
+end
+
+function script.deloffer(offer)
+  if type(offer) == "string" then
+    local props = {{name="openbus.offer.id",value=offer}}
+    offer = OpenBusContext:getOfferRegistry():findServices(props)[1]
+    if offer == nil then
+      return nil, "not found"
+    end
+  end
+  offer.ref:remove()
+  return true
+end
+
+function script.certents()
+  local certs = getCertificateRegistry()
+  return makelist(certs:getEntitiesWithCertificate())
+end
+
+function script.delcert(entity)
+  local certs = getCertificateRegistry()
+  return certs:removeCertificate(entity)
+end
+
+function script.setcert(entity, certificate)
+  local certs = getCertificateRegistry()
+  certs:registerCertificate(entity, certificate)
+  return true
+end
+
+function script.getcert(entity)
+  local certs = getCertificateRegistry()
+  local ok, result = pcall(certs.getCertificate, certs, entity)
+  if not ok then
+    if not is_MissingCertificate(result) then
+      error(result)
+    end
+    result = nil, "missing certificate"
+  end
+  return result
+end
+
+function script.categories(category)
+  local entities = getEntityRegistry()
+  return makelist(entities:getEntityCategories(), EntityCategory)
+end
+
+script.getcategory = resolveCategory
+
+function script.setcategory(catid, name)
+  local category = resolveCategory(catid)
+  if category == nil then
+    local entities = getEntityRegistry()
+    category = entities:createEntityCategory(catid, name)
+    return EntityCategory(category:describe())
+  end
+  category.ref:setName(name)
+  return category
+end
+
+function script.delcategory(category)
+  category = resolveCategory(category)
+  if category == nil then
+    return nil, "not found"
+  end
+  category.ref:remove()
+  return category
+end
+
+function script.entities(...)
+  local entities = getEntityRegistry()
+  local count = select("#", ...)
+  local list
+  if count == 0 then
+    list = entities:getEntities()
+  elseif count == 1 and (...) == "*" then
+    list = entities:getAuthorizedEntities()
+  else
+    list = entities:getEntitiesByAuthorizedInterfaces{...}
+  end
+  return makelist(list, RegisteredEntity)
+end
+
+script.getentity = resolveEntity
+
+function script.setentity(id, name)
+  local entity = resolveEntity(id) or error("entity not registered")
+  entity.ref:setName(name)
+  return entity
+end
+
+function script.delentity(entity)
+  entity = resolveEntity(entity)
+  if entity == nil then
+    return nil, "not found"
+  end
+  entity.ref:remove()
+  return entity
+end
+
+function script.ifaces(...)
+  return makelist(getInterfaceRegistry():getInterfaces())
+end
+
+function script.addiface(iface)
+  return getInterfaceRegistry():registerInterface(iface)
+end
+
+function script.deliface(iface)
+  return getInterfaceRegistry():removeInterface(iface)
+end
+
+
+
+argchecker.module(script, {
+  login = { "string", "string", "nil|string", "nil|string" },
+  whoami = {},
+  quit = {},
+
+  logins = { "nil|string|table" },
+  kick = { "string|table" },
+
+  offers = { "nil|table" },
+  deloffer = { "string|table" },
+
+  certents = {},
+  getcert = { "string" },
+  setcert = { "string", "string" },
+  delcert = { "string" },
+
+  categories = {},
+  getcategory = { "string|table" },
+  setcategory = { "string|table", "string" },
+  delcategory = { "string|table" },
+
+  entities = {},
+  getentity = { "string|table" },
+  setentity = { "string|table", "string" },
+  delentity = { "string|table" },
+
+  ifaces = {},
+  addiface = { "string" },
+  deliface = { "string" },
+})
 
 argchecker.class(EntityCategory, {
   entities = {},
   addentity = { "string" , "string"},
 })
+
 argchecker.class(RegisteredEntity, {
+  category = {},
   grant = { "string" },
   revoke = { "string" },
   ifaces = {},
 })
 
-return module
-
---[[
-
-- Controle de Categoria
-  * Adicionar categoria:
-     --add-category=<id_categoria> --name=<nome>
-  * Remover categoria:
-     --del-category=<id_categoria>
-  * Alterar o nome descritivo da categoria:
-     --set-category=<id_categoria> --name=<nome>
-  * Mostrar todas as categorias:
-     --list-category
-  * Mostrar informações sobre uma categoria:
-     --list-category=<id_categoria>
-
-- Controle de Entidade
-  * Adicionar entidade:
-     --add-entity=<id_entidade> --category=<id_categoria> --name=<nome>
-  * Alterar descrição:
-     --set-entity=<id_entidade> --name=<nome>
-  * Remover entidade:
-     --del-entity=<id_entidade>
-  * Mostrar todas as entidades:
-     --list-entity
-  * Mostrar informações sobre uma entidade:
-     --list-entity=<id_entidade>
-  * Mostrar entidades de uma categoria:
-     --list-entity --category=<id_categoria>
-
-- Controle de Interface
-  * Adicionar interface:
-     --add-interface=<interface>
-  * Remover interface:
-     --del-interface=<interface>
-  * Mostrar todas interfaces:
-     --list-interface
-
-- Controle de Autorização
-  * Conceder autorização:
-     --set-authorization=<id_entidade> --grant=<interface>
-  * Revogar autorização:
-     --set-authorization=<id_entidade> --revoke=<interface>
-  * Mostrar todas as autorizações:
-     --list-authorization
-  * Mostrar autorizações da entidade:
-     --list-authorization=<id_entidade>
-  * Mostrar todas autorizações contendo as interfaces:
-     --list-authorization --interface="<iface1> <iface2> ... <ifaceN>"
 
 
-- Script
-  * Executa script Lua com um lote de comandos:
-     --script=<arquivo>
-  * Desfaz a execução de um script Lua com um lote de comandos:
-    --undo-script=<arquivo>
-
-- Relatório
-  * Monta um relatório sobre o estado atual do barramento:
-    --report
--------------------------------------------------------------------------------
-
-* Realiza o login por senha, aguardando a entrada da senha por linha de comando.
-  busadmin --login=<entity> --password
-  busconsole -e 'login"<entity>"'
-* Realiza o login por senha.
-  busadmin --login=<entity> --password=<password>
-  busconsole -e 'login("<entity>", "<password>", "<domain>")'
-* Realiza o login com chave privada.
-  busadmin --login=<entity> --privatekey=<key file path>
-  busconsole -e 'login("<entity>", "<key file path>")'
-
-* Remove um login:
-  busadmin --login=<entity> --del-login=<id_login>
-  busconsole -e 'login"<entity>" kick"<id_login>"'
-* Mostrar todos os logins:
-  busadmin --login=<entity> --list-login
-  busconsole -e 'login"<entity>" print(logins())'
-* Mostrar todos os logins de uma entidade:
-  busadmin --login=<entity> --list-login --entity=<id_entidade>
-  busconsole -e 'login"<entity>" print(logins"<id_entidade>")'
-
-* Remover oferta (lista e aguarda a entrada de um índice para remover a oferta):
-  busadmin --login=<entity> --del-offer
-  busconsole -e 'login"<entity>"
-    list=offers()
-    for i,o in ipairs(list) do print(i,o) end
-    index=assert(tonumber(io.read()))
-    deloffer(list[index])'
-* Remover oferta da entidade (lista e aguarda a entrada de um índice para remover a oferta):
-  busadmin --login=<entity> --del-offer --entity=<id_entidade>
-  busconsole -e 'login"<entity>"
-    list=offers{entity="<id_entidade>"}
-    for i,o in ipairs(list) do print(i,o) end
-    index=assert(tonumber(io.read()))
-    deloffer(list[index])'
-* Mostrar todas interfaces ofertadas:
-  busadmin --login=<entity> --list-offer
-  busconsole -e 'login"<entity>" print(offers())'
-* Mostrar todas interfaces ofertadas por uma entidade:
-  busadmin --login=<entity> --list-offer=<id_entidade>
-  busconsole -e 'login"<entity>" print(offers{entity="<id_entidade>"})'
-* Mostrar as propriedades da oferta (lista e aguarda a entrada de um índice para listar propriedades da oferta):
-  busadmin --login=<entity> --list-props
-  busconsole -e 'login"<entity>"
-    list=offers()
-    for i,o in ipairs(list) do print(i,o) end
-    index=assert(tonumber(io.read()))
-    print(list[index].properties)'
-* Mostrar as propriedades da oferta por uma entidade (lista e aguarda a entrada de um índice para listar propriedades da oferta):
-  busadmin --login=<entity> --list-props=<id_entidade>
-  busconsole -e 'login"<entity>"
-    list=offers{entity="<id_entidade>"}
-    for i,o in ipairs(list) do print(i,o) end
-    index=assert(tonumber(io.read()))
-    print(list[index].properties)'
-
-* Adiciona certificado da entidade:
-  busadmin --login=<entity> --add-certificate=<id_entidade> --certificate=<certificado>
-  busconsole -e 'login"<entity>" setcert("<id_entidade>", "<certificado>")'
-* Remover certificado da entidade:
-  busadmin --login=<entity> --del-certificate=<id_entidade>
-  busconsole -e 'login"<entity>" delcert"<id_entidade>"'
-* Mostrar entidades com um certificado cadastrado:
-  busadmin --login=<entity> --list-certificate
-  busconsole -e 'login"<entity>" print(certents())'
-
-]]
+return script

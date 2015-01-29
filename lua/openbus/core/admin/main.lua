@@ -1,10 +1,14 @@
 return function(...)
-  local array = require "table"
-  local concat = array.concat
-
   local _G = require "_G"
   local print = _G.print
   local select = _G.select
+
+  local array = require "table"
+  local concat = array.concat
+  local insert = array.insert
+
+  local string = require "string"
+  local format = string.format
 
   local io = require "io"
   local openfile = io.open
@@ -13,7 +17,13 @@ return function(...)
   local os = require "os"
   local getenv = os.getenv
 
+  local table = require "loop.table"
+  local copy = table.copy
+
   local oillog = require "oil.verbose"
+
+  local openbus = require "openbus"
+  local initorb = openbus.initORB
 
   local console = require "openbus.console.utils"
   local processargs = console.processargs
@@ -26,11 +36,9 @@ return function(...)
   --local newsandbox = sandbox.create
 
   local msg = require "openbus.core.admin.messages"
-  local openbus = require "openbus"
-  local initorb = openbus.initORB
-
+  local Description = require "openbus.core.admin.Description"
   local script = require "openbus.core.admin.script"
-  local newscriptenv = script.create
+  local setorb = script.setorb
 
   local SSLRequiredOptions = {
     required = true,
@@ -55,9 +63,11 @@ return function(...)
   -- configuration parameters parser
   local executables = {}
   local Configs = ConfigArgs{
-    iorfile = "",
-    host = "localhost",
-    port = 2089,
+    busref = "",
+    entity = "",
+    privatekey = "",
+    password = "",
+    domain = "",
   
     sslmode = "",
     sslcafile = "",
@@ -92,9 +102,9 @@ return function(...)
   }
 
   do -- parse configuration file
-    local path = getenv("OPENBUS_CONFIG")
+    local path = getenv("OPENBUS_ADMINCFG")
     if path == nil then
-      path = "openbus.cfg"
+      path = "busadmin.cfg"
       local file = openfile(path)
       if file == nil then goto done end
       file:close()
@@ -114,9 +124,11 @@ return function(...)
 Usage:  ]],OPENBUS_PROGNAME,[[ [options] <script file> <script args>
 Options:
 
-  -iorfile <path>            arquivo onde o IOR do barramento deve ser gerado
-  -host <address>            endereço de rede usado pelo barramento
-  -port <number>             número da porta usada pelo barramento
+  -busref <path|host:port>   arquivo de IOR ou endereço do barramento
+  -entity <name>             entidade de autenticação
+  -privatekey <path>         arquivo com chave de autenticação da entidade
+  -password <text>           senha de autenticação da entidade
+  -domain <name>             domínio da senha de autenticação (default: OpenBus)
 
   -sslmode <mode>            ativa o suporte SSL através das opções 'supported' ou 'required'
   -sslcapath <path>          diretório com certificados de CAs a serem usados na autenticação SSL
@@ -217,7 +229,39 @@ Options:
   end
   log:config(msg.ServicesListeningAddress:tag{host=orb.host,port=orb.port})
 
-  newscriptenv(orb, Configs, _G)
-  OPENBUS_EXITCODE = processargs(_G, Configs.noenvironment, Configs.interactive, executables, select(argidx, ...))
+  setorb(orb)
+  copy(script, _G)
+  _G.setorb = nil
+  function _G.newdesc()
+    return Description()
+  end
+
+  if Configs.busref ~= "" then
+    local value
+    if Configs.privatekey ~= "" then
+      value = format("login(%q, %q, %q)", Configs.busref,
+                                          Configs.entity,
+                                          Configs.privatekey)
+    elseif Configs.password ~= "" then
+      value = format("login(%q, %q, %q, %q)", Configs.busref,
+                                              Configs.entity,
+                                              Configs.password,
+                                              Configs.domain)
+    elseif Configs.domain ~= "" then
+      value = format("login(%q, %q, nil, %q)", Configs.busref,
+                                               Configs.entity,
+                                               Configs.domain)
+    else
+      value = format("login(%q, %q)", Configs.busref,
+                                      Configs.entity)
+    end
+    insert(executables, 1, {kind="code", value=value})
+  end
+
+  OPENBUS_EXITCODE = processargs(_G,
+                                 Configs.noenvironment,
+                                 Configs.interactive,
+                                 executables,
+                                 select(argidx, ...))
   _G.quit()
 end
