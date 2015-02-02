@@ -490,11 +490,11 @@ do
         until stored == certdata
         certid = certid.."-"..i
       end
+      assert(writeto(certdir.."/"..certid..".crt", certdata, "wb"))
       self.log:success(msg.CertificateDumped:tag{
         entity = id,
         certificate = certid,
       })
-      assert(writeto(certdir.."/"..certid..".crt", certdata, "wb"))
     end
     output:write("Certificate{id=[[",id,"]],certificate=certdir..[[/",certid,".crt]]}\n")
   end
