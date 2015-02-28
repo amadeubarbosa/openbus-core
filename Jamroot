@@ -1,0 +1,140 @@
+# -*- coding: iso-8859-1-unix -*-
+
+import os ;
+import modules ;
+
+path-constant here : . ;
+
+local lce-root-path = [ os.environ LCE_ROOT_PATH ] ;
+if ! $(lce-root-path)
+{
+  lce-root-path = "$(here)/../lce" ;
+}
+use-project lce : $(lce-root-path) ;
+
+lua-install-path = [ os.environ LUA_INSTALL_PATH ] ;
+if ! $(lua-install-path)
+{
+  lua-install-path = "$(here)/../../install/lua" ;
+}
+
+loop-root-path = [ os.environ LOOP_ROOT_PATH ] ;
+if ! $(loop-root-path)
+{
+  loop-root-path = "$(here)/../loop" ;
+}
+
+oil-root-path = [ os.environ OIL_ROOT_PATH ] ;
+if ! $(oil-root-path)
+{
+  oil-root-path = "$(here)/../oil" ;
+}
+
+scs-idl-path = [ os.environ SCS_IDL_PATH ] ;
+if ! $(scs-idl-path)
+{
+  scs-idl-path = "$(here)/../scs-idl" ;
+}
+
+openbus-idl-path = [ os.environ OPENBUS_IDL_PATH ] ;
+if ! $(openbus-idl-path)
+{
+  openbus-idl-path = "$(here)/../openbus-idl" ;
+}
+
+openbus-lib-idl-path = [ os.environ OPENBUS_LIB_IDL_PATH ] ;
+if ! $(openbus-lib-idl-path)
+{
+  openbus-lib-idl-path = "$(here)/../openbus-lib-idl" ;
+}
+
+modules.load preloader : : $(loop-root-path) ;
+import preloader ; 
+using preloader ;
+
+project busservices
+  : requirements
+    <target-os>windows:<pch>off
+    <target-os>windows,<link>shared:<runtime-link>shared
+    <target-os>windows,<link>static:<runtime-link>static
+    <target-os>windows:<debug-store>database
+    <target-os>windows:<define>_CRT_SECURE_NO_WARNINGS
+    <target-os>windows:<define>_WIN32
+    <define>OPENBUS_PROGNAME=\\\""busservices\\\""
+    <target-os>windows:<cxxflags>/FS
+    <debug-symbols>on
+  ;
+
+make coreservices.c
+  : lua/openbus/core/admin/idl.lua
+    lua/openbus/core/admin/parsed.lua
+    lua/openbus/core/legacy/AccessControlService.lua
+    lua/openbus/core/legacy/RegistryService.lua
+    lua/openbus/core/services/Access.lua
+    lua/openbus/core/services/AccessControl.lua
+    lua/openbus/core/services/LoginDB.lua
+    lua/openbus/core/services/main.lua
+    lua/openbus/core/services/messages.lua
+    lua/openbus/core/services/PasswordAttempts.lua
+    lua/openbus/core/services/PropertyIndex.lua
+    lua/openbus/core/services/OfferRegistry.lua
+    lua/openbus/core/services/util.lua
+    lua/openbus/core/services/passwordvalidator/LDAP.lua
+  : preloader.pre-compile
+  : <search>$(here)
+  ;
+
+modules.load idl2lua : : $(oil-root-path) ;
+import idl2lua ; 
+using idl2lua ;
+
+make lua/openbus/core/admin/parsed.lua 
+  : idl/access_management.idl
+    idl/offer_authorization.idl
+  : idl2lua.compile
+  : <include>$(openbus-idl-path)/src
+    <include>$(scs-idl-path)/src
+  ;
+
+exe busservices
+  : coreservices.c
+    src/launcher.c
+    src/coreservlibs.c
+    /lua//lua
+    /luuid//luuid
+    /lce//lce
+    /luafilesystem//lfs
+    /luavararg//luavararg
+    /luastruct//luastruct
+    /luasocket//luasocket
+    /loop//loop
+    /loop//luatuple
+    /loop//luacothread
+    /oil//oil
+    /oil//luaidl
+    /luascs//luascs
+    /luaopenbus//luaopenbus    
+  : <dependency>/loop//loop
+    <dependency>/loop//luatuple
+    <dependency>/loop//luacothread
+    <dependency>/oil//oil
+    <dependency>/oil//luaidl
+    <dependency>/luascs//luascs
+    <dependency>/luaopenbus//luaopenbus
+    <include>src
+    <include>.    
+  ;
+explicit busservices ;
+
+install stage
+  : busservices
+  : <location>install
+  ;
+
+install deps
+  : busservices
+  : <location>install
+    <install-dependencies>on
+    <install-type>LIB
+  ;
+explicit deps ;
