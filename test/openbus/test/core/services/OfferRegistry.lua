@@ -4,9 +4,6 @@ local checks = require "loop.test.checks"
 local Fixture = require "loop.test.Fixture"
 local Suite = require "loop.test.Suite"
 
-local giop = require "oil.corba.giop"
-local sysex = giop.SystemExceptionIDs
-
 local openbus = require "openbus"
 local idl = require "openbus.core.idl"
 local UnauthorizedOperation = idl.types.services.UnauthorizedOperation
@@ -16,7 +13,9 @@ local InvalidService = offtps.InvalidService
 local InvalidProperties = offtps.InvalidProperties
 local UnauthorizedFacets = offtps.UnauthorizedFacets
 
-local throwsysex = require "openbus.util.sysex"
+local except = require "openbus.util.except"
+local sysex = except.repid
+local minor = except.minor
 
 local ComponentContext = require "scs.core.ComponentContext"
 
@@ -353,6 +352,34 @@ return OpenBusFixture{
                 SomeOfferProps,
               },
               except = isInvalidServiceEx("unable to obtain service facets (error="..BadOpExMsg),
+            },
+            LogoutDuringRegister = {
+              params = {
+                function (fixture, openbus)
+                  return {
+                    getComponentId = function()
+                      return SomeComponentId
+                    end,
+                    getFacetByName = function(self, name)
+                      if name == "IMetaInterface" then
+                        return {
+                          __type = "::scs::core::IMetaInterface",
+                          getFacets = function ()
+                            openbus.context:getCurrentConnection():logout()
+                            return {}
+                          end,
+                        }
+                      end
+                    end,
+                  }
+                end,
+                SomeOfferProps,
+              },
+              except = checks.like{
+                _repid = NO_PERMISSION,
+                completed = "COMPLETED_NO",
+                minor = minor.NoLogin,
+              },
             },
             InvalidProperties = {
               params = {
