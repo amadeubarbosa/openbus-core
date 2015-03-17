@@ -35,6 +35,7 @@ local oo = require "openbus.util.oo"
 local class = oo.class
 local sysex = require "openbus.util.sysex"
 local BAD_PARAM = sysex.BAD_PARAM
+local NO_PERMISSION = sysex.NO_PERMISSION
 
 local idl = require "openbus.core.idl"
 local assert = idl.serviceAssertion
@@ -51,6 +52,8 @@ local OffRegObserverType = offtyp.OfferRegistryObserver
 local OffRegObsSubType = offtyp.OfferRegistryObserverSubscription
 local OfferRegistryType = offtyp.OfferRegistry
 local ServiceOfferType = offtyp.ServiceOffer
+local accconst = idl.const.services.access_control
+local InvalidLogin = accconst.InvalidLoginCode
 
 local mngidl = require "openbus.core.admin.idl"
 local mngexp = mngidl.throw.services.offer_registry.admin.v1_0
@@ -546,7 +549,10 @@ function OfferRegistry:registerService(service_ref, properties)
     }
   end
   -- get information about the caller
-  local login = self.access:getCallerChain().caller
+  local login = AccessControl:getLoginEntry(self.access:getCallerChain().caller.id)
+  if login == nil then
+    NO_PERMISSION{ completed = "COMPLETED_NO", minor = InvalidLogin }
+  end
   local entityId = login.entity
   -- check the caller is authorized to offer such service
   if self.enforceAuth then

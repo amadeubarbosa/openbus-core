@@ -19,8 +19,8 @@ local type = _G.type
 local array = require "table"
 local concat = array.concat
 
-local lualdap = require "lualdap"
-local openldap = lualdap.open_simple
+local thread = require "openbus.util.thread"
+local spawn = thread.spawn
 
 local msg = require "openbus.core.services.messages"
 
@@ -47,6 +47,63 @@ return function(configs)
     end
     urls[#urls+1] = url
   end
+
+  local idl = [[
+    interface LDAP {
+      boolean validate(in string url,
+                       in string dn,
+                       in string password,
+                       in boolean usetls,
+                       in double timeout,
+                       out string errmsg);
+      void shutdown();
+    };
+  ]]
+  spawn([=[
+    local lualdap = require "lualdap"
+    local openldap = lualdap.open_simple
+
+    local oil = require "oil"
+    local orb = oil.init{
+      flavor = "cooperative.server;corba.server",
+      host = "127.0.0.1",
+    }
+    oil.writeto("ldap.ior", orb:newservant{
+      __type = orb:loadidl[[]=]..idl..[=[]],
+      validate = function(_, url, dn, password, usetls, timeout)
+        if timeout == -1 then timeout = nil end
+        local conn, errmsg = openldap(url, dn, password, usetls, timeout)
+        if conn ~= nil then
+          conn:close()
+          return true, ""
+        end
+        return false, errmsg
+      end,
+      shutdown = function()
+        orb:shutdown()
+      end,
+    })
+  ]=])
+
+  local openldap
+  do
+    local oil = require "oil"
+    local orb = oil.init{ flavor = "cooperative.client;corba.client" }
+    orb:loadidl(idl)
+    local service
+    repeat
+      local ior = oil.readfrom("ldap.ior")
+      if ior ~= nil then
+        local ok, res = pcall(orb.newproxy, orb, ior, nil, "LDAP")
+        if ok then service = res end
+      end
+    until service ~= nil
+    os.remove("ldap.ior")
+    function openldap(url, dn, password, usetls, timeout)
+      return service:validate(url, dn, password, usetls, timeout or -1)
+    end
+  end
+
   -- validate function to be used in runtime
   return function(entity, password)
     -- avoid blank password because this may be allowed as an anonymous bind
@@ -59,19 +116,16 @@ return function(configs)
     for _, url in ipairs(urls) do
       for _, pattern in ipairs(patterns) do
         local dn = pattern:gsub("%%U",entity)
-        local conn, err
+        local valid, err
         -- if the url indicates LDAP raw protocol, we try use LDAP+StartTLS
         if url:match("^ldap://") then
-          conn, err = openldap(url, dn, password, true, timeout)
+          valid, err = openldap(url, dn, password, true, timeout)
         end
         -- if the server rejects LDAP+StartTLS or if url already indicates LDAPS
-        if (not conn and cleartext) or url:match("^ldaps://") then
-          conn, err = openldap(url, dn, password, false, timeout)
+        if (not valid and cleartext) or url:match("^ldaps://") then
+          valid, err = openldap(url, dn, password, false, timeout)
         end
-        if conn ~= nil then
-          conn:close()
-          return true
-        end
+        if valid then return true end
         errmsg[#errmsg+1] = msg.LdapAccessAttemptFailed:tag{
           user = dn,
           server = url,
