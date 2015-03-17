@@ -7,6 +7,7 @@ OPENBUSIDL= ${OPENBUS_IDL2_0_HOME}/src
 
 SRC= \
   launcher.c \
+  lthreadlib.c \
   coreservlibs.c \
   $(PRELOAD_DIR)/coreservices.c
 

@@ -21,6 +21,7 @@
 #include "luaopenbus.h"
 #include "coreservices.h"
 
+LUAMOD_API int luaopen_openbus_util_thread (lua_State *L);
 
 const char const* OPENBUS_MAIN = "openbus.core.services.main";
 
@@ -40,6 +41,7 @@ void luapreload_extralibraries(lua_State *L)
   lua_pushcfunction(L,luaopen_vararg);lua_setfield(L,-2,"vararg");
   lua_pushcfunction(L,luaopen_struct);lua_setfield(L,-2,"struct");
   lua_pushcfunction(L,luaopen_socket_core);lua_setfield(L,-2,"socket.core");
+  lua_pushcfunction(L,luaopen_openbus_util_thread);lua_setfield(L,-2,"openbus.util.thread");
   lua_pop(L, 1);  /* pop 'package.preload' table */
   /* preload other C libraries */
   luapreload_lce(L);
