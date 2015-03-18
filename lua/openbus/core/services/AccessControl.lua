@@ -439,7 +439,7 @@ function AccessControl:startLoginByCertificate(entity)
     entity = entity,
     secret = secret,
   }
-  self.pendingChallenges[logger] = time()+self.challengeTime
+  self.pendingChallenges[logger] = time()+self.challengeTime+self.expirationGap
   log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
   return logger, assert(publickey:encrypt(secret))
 end
@@ -454,7 +454,7 @@ function AccessControl:startLoginBySharedAuth()
     entity = login.entity,
     secret = secret,
   }
-  self.pendingChallenges[logger] = time()+self.sharedAuthTime
+  self.pendingChallenges[logger] = time()+self.sharedAuthTime+self.expirationGap
   log:request(msg.LoginBySharedAuthInitiated:tag{
     login = login.id,
     entity = login.entity,
