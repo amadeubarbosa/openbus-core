@@ -101,6 +101,8 @@ return function(...)
     MissingSecureConnectionAuthenticationCertificate = 21,
     NoPasswordValidatorForLegacyDomain = 22,
     InvalidSecurityLayerMode = 23,
+    InvalidChallengeTime = 24,
+    InvalidSharedAuthTime = 25,
   }
 
   -- configuration parameters parser
@@ -122,7 +124,9 @@ return function(...)
 
     leasetime = 30*60,
     expirationgap = 10,
-  
+    challengetime = 0,
+    sharedauthtime = 0,
+
     badpasswordpenalty = 3*60,
     badpasswordtries = 3,
     badpasswordlimit = inf,
@@ -191,6 +195,8 @@ Options:
 
   -leasetime <seconds>       tempo de lease dos logins de acesso
   -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
+  -challengetime <seconds>   tempo de duração do desafio de autenticação por certificado
+  -sharedauthtime <seconds>  tempo de validade dos segredos de autenticação compartilhada
 
   -badpasswordpenalty <sec.> período com tentativas de login limitadas após falha de senha
   -badpasswordtries <number> número de tentativas durante o período de 'passwordpenalty'
@@ -253,12 +259,24 @@ Options:
   log:config(msg.OilLogLevel:tag{value=Configs.oilloglevel})
 
   -- validate time parameters
+  if Configs.challengetime == 0 then
+    Configs.challengetime = Configs.leasetime
+  end
+  if Configs.sharedauthtime == 0 then
+    Configs.sharedauthtime = Configs.expirationgap
+  end
   if Configs.leasetime%1 ~= 0 or Configs.leasetime < 1 then
     log:misconfig(msg.InvalidLeaseTime:tag{value = Configs.leasetime})
     return errcode.InvalidLeaseTime
   elseif Configs.expirationgap <= 0 then
     log:misconfig(msg.InvalidExpirationGap:tag{value = Configs.expirationgap})
     return errcode.InvalidExpirationGap
+  elseif Configs.challengetime <= 0 then
+    log:misconfig(msg.InvalidChallengeTime:tag{value = Configs.challengetime})
+    return errcode.InvalidChallengeTime
+  elseif Configs.sharedauthtime%1 ~= 0 or Configs.sharedauthtime < 1 then
+    log:misconfig(msg.InvalidSharedAuthTime:tag{value = Configs.sharedauthtime})
+    return errcode.InvalidSharedAuthTime
   elseif Configs.badpasswordpenalty < 0 then
     log:misconfig(msg.InvalidPasswordPenaltyTime:tag{
       value = Configs.badpasswordpenalty,
@@ -518,6 +536,8 @@ Options:
         database = database,
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
+        challengeTime = Configs.challengetime,
+        sharedAuthTime = Configs.sharedauthtime,
         passwordPenaltyTime = Configs.badpasswordpenalty,
         passwordLimitedTries = Configs.badpasswordtries,
         passwordFailureLimit = Configs.badpasswordlimit,
@@ -532,6 +552,8 @@ Options:
       log:config(msg.LoadedBusCertificate:tag{path=Configs.certificate})
       log:config(msg.SetupLoginLeaseTime:tag{seconds=params.leaseTime})
       log:config(msg.SetupLoginExpirationGap:tag{seconds=params.expirationGap})
+      log:config(msg.SetupLoginChallengeTime:tag{seconds=params.challengeTime})
+      log:config(msg.SetupLoginSharedAuthTime:tag{seconds=params.sharedAuthTime})
       log:config(msg.BadPasswordPenaltyTime:tag{seconds=Configs.badpasswordpenalty})
       log:config(msg.BadPasswordLimitedTries:tag{limit=Configs.badpasswordtries})
       log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})

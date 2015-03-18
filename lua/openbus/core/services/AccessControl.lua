@@ -258,6 +258,8 @@ function AccessControl:__init(data)
   self.tokenValidators = data.tokenValidators
   self.leaseTime = data.leaseTime
   self.expirationGap = data.expirationGap
+  self.challengeTime = data.challengeTime
+  self.sharedAuthTime = data.sharedAuthTime
   self.loginAttempts = PasswordAttempts{
     limit = data.passwordLimitedTries,
     period = data.passwordPenaltyTime,
@@ -437,7 +439,7 @@ function AccessControl:startLoginByCertificate(entity)
     entity = entity,
     secret = secret,
   }
-  self.pendingChallenges[logger] = time()+self.leaseTime
+  self.pendingChallenges[logger] = time()+self.challengeTime
   log:request(msg.LoginByCertificateInitiated:tag{ entity = entity })
   return logger, assert(publickey:encrypt(secret))
 end
@@ -452,7 +454,7 @@ function AccessControl:startLoginBySharedAuth()
     entity = login.entity,
     secret = secret,
   }
-  self.pendingChallenges[logger] = time()+self.leaseTime
+  self.pendingChallenges[logger] = time()+self.sharedAuthTime
   log:request(msg.LoginBySharedAuthInitiated:tag{
     login = login.id,
     entity = login.entity,
