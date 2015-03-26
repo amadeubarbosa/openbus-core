@@ -99,6 +99,7 @@ make lua/openbus/core/admin/parsed.lua
 exe busservices
   : coreservices.c
     src/launcher.c
+    src/lthreadlib.c
     src/coreservlibs.c
     /lua//lua
     /luuid//luuid
@@ -121,6 +122,8 @@ exe busservices
     <dependency>/oil//luaidl
     <dependency>/luascs//luascs
     <dependency>/luaopenbus//luaopenbus
+    <target-os>linux:<library>/unix//dl
+    <target-os>linux:<library>/unix//pthread
     <include>src
     <include>.    
   ;
