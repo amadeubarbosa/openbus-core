@@ -195,10 +195,10 @@ Options:
 
   -- validate time parameters
   if Configs.challengetime == 0 then
-    Configs.challengetime = Configs.leasetime
+    Configs.challengetime = Configs.expirationgap
   end
   if Configs.sharedauthtime == 0 then
-    Configs.sharedauthtime = Configs.expirationgap
+    Configs.sharedauthtime = Configs.leasetime
   end
   if Configs.leasetime%1 ~= 0 or Configs.leasetime < 1 then
     log:misconfig(msg.InvalidLeaseTime:tag{value = Configs.leasetime})
