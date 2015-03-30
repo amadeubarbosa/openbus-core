@@ -120,6 +120,7 @@ exe busservices
     <dependency>/loop//luacothread
     <dependency>/oil//oil
     <dependency>/oil//luaidl
+    <dependency>/lce//lce
     <dependency>/luascs//luascs
     <dependency>/luaopenbus//luaopenbus
     <target-os>linux:<library>/unix//dl
