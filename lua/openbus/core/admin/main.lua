@@ -128,7 +128,7 @@ Options:
   -entity <name>             entidade de autenticação
   -privatekey <path>         arquivo com chave de autenticação da entidade
   -password <text>           senha de autenticação da entidade
-  -domain <name>             domínio da senha de autenticação (default: OpenBus)
+  -domain <name>             domínio da senha de autenticação
 
   -sslmode <mode>            ativa o suporte SSL através das opções 'supported' ou 'required'
   -sslcapath <path>          diretório com certificados de CAs a serem usados na autenticação SSL

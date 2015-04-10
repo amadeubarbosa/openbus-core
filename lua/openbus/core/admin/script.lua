@@ -40,6 +40,7 @@ local readprivatekey = server.readprivatekey
 local argcheck = require "openbus.util.argcheck"
 local sysex = require "openbus.util.sysex"
 local NO_PERMISSION = sysex.NO_PERMISSION
+local is_OBJECT_NOT_EXIST = sysex.is_OBJECT_NOT_EXIST
 
 local assistant = require "openbus.assistant2"
 local newassistant = assistant.create
@@ -50,7 +51,7 @@ local logintypes = coresrvtypes.access_control
 local offertypes = coresrvtypes.offer_registry
 local loginconst = coreidl.const.services.access_control
 local accexp = coreidl.throw.services.access_control
-local is_MissingCertificate = assert(accexp.is_MissingCertificate) -- TODO: remove this assert
+local is_MissingCertificate = accexp.is_MissingCertificate
 
 local admidl = require "openbus.core.admin.idl"
 local loadadmidl = admidl.loadto
@@ -226,7 +227,7 @@ local ServiceOffer = class()
 function ServiceOffer:__init()
   for _, prop in ipairs(self.properties) do
     local alias = ReservedProperties[prop.name]
-    if alias ~= nil then
+    if alias ~= nil and self[alias] == nil then
       self[alias] = prop.value
     end
   end
@@ -451,10 +452,16 @@ function script.deloffer(offer)
     local props = {{name="openbus.offer.id",value=offer}}
     offer = OpenBusContext:getOfferRegistry():findServices(props)[1]
     if offer == nil then
-      return nil, "not found"
+      return false
     end
   end
-  offer.ref:remove()
+  local ok, errmsg = pcall(offer.ref.remove, offer.ref)
+  if not ok then
+    if not is_OBJECT_NOT_EXIST(errmsg) then
+      error(errmsg)
+    end
+    return false
+  end
   return true
 end
 
@@ -481,12 +488,12 @@ function script.getcert(entity)
     if not is_MissingCertificate(result) then
       error(result)
     end
-    result = nil, "missing certificate"
+    result = nil
   end
   return result
 end
 
-function script.categories(category)
+function script.categories()
   local entities = getEntityRegistry()
   return makelist(entities:getEntityCategories(), EntityCategory)
 end
@@ -507,7 +514,7 @@ end
 function script.delcategory(category)
   category = resolveCategory(category)
   if category == nil then
-    return nil, "not found"
+    return nil
   end
   category.ref:remove()
   return category
@@ -544,7 +551,7 @@ function script.delentity(entity)
   return entity
 end
 
-function script.ifaces(...)
+function script.ifaces()
   return makelist(getInterfaceRegistry():getInterfaces())
 end
 

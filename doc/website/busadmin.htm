@@ -1,0 +1,8 @@
+<%
+local loader = require "manual.loader"
+local html = require "manual.html"
+local help = require "openbus.core.admin.help"
+package.loaded["openbus.core.admin.help"] = nil
+local manual, types = loader.load(help)
+return html.output(manual, types)
+%>
