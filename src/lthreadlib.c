@@ -1,7 +1,7 @@
 #include <signal.h>
 #include <stdio.h>
 //#include <stdlib.h>
-//#include <string.h>
+#include <string.h>
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -224,9 +224,9 @@ static int l_spawn (lua_State *L)
 	lua_State *newL = luaL_newstate();  /* create state */
 	if (newL == NULL) luaL_error(L, "not enough memory");
 	lua_getfield(L, LUA_REGISTRYINDEX, "OPENBUS_DEBUG");
+	copypreload(L, newL);
 	status = openbuslua_init(newL, 0, !lua_isnil(L, -1));
 	if (status == LUA_OK) {
-		copypreload(L, newL);
 		status = luaL_loadbuffer(newL, code, codelen, code);
 		if (status == LUA_OK) {
 			int res = newthread(luathread, newL);
