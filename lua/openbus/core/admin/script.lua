@@ -12,6 +12,7 @@ local type = _G.type
 
 local array = require "table"
 local concat = array.concat
+local sort = array.sort
 
 local string = require "string"
 local match = string.match
@@ -146,6 +147,21 @@ end
 
 
 
+local PrintableSet = class()
+
+function PrintableSet:__tostring()
+  local res = {}
+  local index = 0
+  for item in pairs(self) do
+    index = index+1
+    res[index] = tostring(item)
+  end
+  sort(res)
+  return concat(res, "\n")
+end
+
+
+
 local PrintableList = class()
 
 function PrintableList:__tostring()
@@ -191,17 +207,29 @@ local ReservedProperties = {
   ["openbus.component.version.minor"] = "minorversion",
   ["openbus.component.version.patch"] = "patchversion",
   ["openbus.component.platform"] = "platform",
+  ["openbus.component.facet"] = "facets",
+  ["openbus.component.interface"] = "interfaces",
 }
 local PropertyAliases = {}
 for name, alias in pairs(ReservedProperties) do
   PropertyAliases[alias] = name
 end
+local ListAliases = {
+  facets = true,
+  interfaces = true,
+}
 
 local function makePropList(props)
   for alias, name in pairs(PropertyAliases) do
     local value = props[alias]
     if value ~= nil then
-      props[#props+1] = {name=name,value=value}
+      if ListAliases[alias] == nil then
+        props[#props+1] = {name=name,value=value}
+      else
+        for value in pairs(value) do
+          props[#props+1] = {name=name,value=value}
+        end
+      end
       props[alias] = nil
     end
   end
@@ -225,10 +253,17 @@ local ServiceOffer = class()
 --end
 
 function ServiceOffer:__init()
-  for _, prop in ipairs(self.properties) do
+  for alias in pairs(ListAliases) do
+    self[alias] = PrintableSet()
+  end
+  for index, prop in ipairs(self.properties) do
     local alias = ReservedProperties[prop.name]
-    if alias ~= nil and self[alias] == nil then
-      self[alias] = prop.value
+    if alias ~= nil then
+      if ListAliases[alias] then
+        self[alias][prop.value] = index
+      elseif self[alias] == nil then
+        self[alias] = prop.value
+      end
     end
   end
   OfferProperties(self.properties)

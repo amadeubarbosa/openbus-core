@@ -64,7 +64,7 @@ return function(...)
   local executables = {}
   local Configs = ConfigArgs{
     busref = "",
-    entity = "",
+    entity = "admin",
     privatekey = "",
     password = "",
     domain = "",

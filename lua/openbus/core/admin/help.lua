@@ -572,9 +572,9 @@ return {
     },
     {
       type = "table",
-      title = "Offer Authorization Management",
+      title = "Registered Entity Management",
       description = [[
-        Functions to manage offer authorizations.
+        Functions to manage registered entities.
       ]],
       fields = {
         entities = {
@@ -833,6 +833,16 @@ return {
         },
       },
     },
+    set = {
+      type = "table",
+      title = "Value Set",
+      description = [[
+        contains values stored as keys, therefore it cannot contain duplicates and elements are stored without a particular order.
+      ]],
+      fields = {
+        __tostring = ToStringMetaMethod(),
+      },
+    },
     list = {
       type = "table",
       title = "Value Sequence",
@@ -943,6 +953,20 @@ return {
           type = "string",
           title = "Value of Property <code>openbus.component.platform</code>",
         },
+        facets = {
+          type = "set",
+          title = "Value of Properties <code>openbus.component.facet</code>",
+          description = [[
+            contains all values of properties <code>openbus.component.facet</code>.
+          ]],
+        },
+        interfaces = {
+          type = "set",
+          title = "Value of Properties <code>openbus.component.interface</code>",
+          description = [[
+            contains all values of properties <code>openbus.component.interface</code>.
+          ]],
+        },
       },
     },
     category = {
@@ -977,6 +1001,24 @@ return {
           description = [[
             registers an entity in the category so it can be authorized to offer services in the bus.
           ]],
+          parameters = {
+            {
+              type = "string",
+              name = "category",
+              title = "Entity Name",
+              description = [[
+                contains the name of the entity to be registered.
+              ]]
+            },
+            {
+              type = "string",
+              name = "name",
+              title = "Entity's Description",
+              description = [[
+                contains the textual description of the entity to be registered.
+              ]],
+            },
+          },
           results = {
             {
               type = "entity",
