@@ -406,3 +406,24 @@ if ! $(luaopenbus-root-path)
   luaopenbus-root-path = "$(here)/../openbus-lua" ;
 }
 use-project luaopenbus : $(luaopenbus-root-path) ;
+
+local openldap-install-path = [ os.environ OPENLDAP_INSTALL_PATH ] ;
+if ! $(openldap-install-path)
+{
+  openldap-install-path = "$(here)/../../install/openldap" ;
+}
+
+project openldap
+  : requirements <include>$(openldap-install-path)/include
+  ;
+
+lib ldap
+  :
+  : <search>$(openldap-install-path)/lib
+  ;
+
+lib lber
+  :
+  : <search>$(openldap-install-path)/lib
+  ;
+  

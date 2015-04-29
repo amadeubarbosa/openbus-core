@@ -12,6 +12,13 @@ if ! $(lce-root-path)
 }
 use-project lce : $(lce-root-path) ;
 
+local lualdap-root-path = [ os.environ LUALDAP_ROOT_PATH ] ;
+if ! $(lualdap-root-path)
+{
+  lualdap-root-path = "$(here)/../lualdap" ;
+}
+use-project lualdap : $(lualdap-root-path) ;
+
 lua-install-path = [ os.environ LUA_INSTALL_PATH ] ;
 if ! $(lua-install-path)
 {
@@ -123,6 +130,7 @@ exe busservices
     <dependency>/lce//lce
     <dependency>/luascs//luascs
     <dependency>/luaopenbus//luaopenbus
+    <target-os>linux:<library>/lualdap//lualdap
     <target-os>linux:<library>/unix//dl
     <target-os>linux:<library>/unix//pthread
     <include>src
