@@ -87,7 +87,7 @@
 \usepackage{graphicx}
 \fi
 
-\title{Manual do \openbus{} \version{}}
+\title{Visão geral do \openbus{} \version{}}
 \author{Tecgraf}
 
 \date{\today}
@@ -313,110 +313,15 @@ Os papéis abordados são:
 
 \subsection{Administradores de Sistema}
 
-O barramento e os serviços núcleo são distribuídos em um mesmo programa, o \emph{busservices}. Logo, para disparar o barramento, basta executar o programa passando as suas configurações por linha de comando ou por arquivo de configuração.
-Se uma configuração não for explicitada, será utilizado o seu valor padrão.
+O papel do administrador de sistema é gerenciar a execução do barramento. O barramento e os serviços núcleo são distribuídos em um mesmo programa, o \emph{busservices}. Logo, para disparar o barramento, basta executar o programa passando as suas configurações por linha de comando ou por arquivo de configuração. Para maiores detalhes sobre a execução do \emph{busservices}, consulte~\cite{busservicesmanual}.
 
-As opções de configuração são:
-\begin{description}
-  \item [-iorfile] Arquivo onde o IOR do barramento deve ser escrito.
-  \item [-host] Endereço de rede usado pelo barramento.\\
-Valor padrão é ``*'', que significa que vai ouvir em todos os IPs da máquina.
-  \item [-port] Número da porta usada pelo barramento.\\
-Valor padrão é 2089.
-
-  \item [-sslmode] Ativa o suporte SSL através das opções ``supported'' ou ``required''.
-  \item [-sslport] Número da porta segura a ser usada pelo barramento.
-  \item [-sslcapath] Diretório com certificados de CAs a serem usados na autenticação SSL.
-  \item [-sslcafile] Arquivo com certificados de CAs a serem usados na autenticação SSL.
-  \item [-sslcert] Arquivo com o certificado do barramento.
-  \item [-sslkey] Arquivo com a chave privada do barramento.
-
-  \item [-database] Arquivo de dados do barramento.\\
-Valor padrão é ``openbus.db''.
-  \item [-privatekey] Arquivo com chave privada do barramento.\\
-Valor padrão é ``openbus.key''.
-  \item [-certificate] Arquivo de certificado com chave pública do barramento.\\
-Valor padrão é ``openbus.crt''.
-
-  \item [-leasetime] Tempo em segundos de lease dos logins de acesso.\\
-Valor padrão é 1800 segundos.
-  \item [-expirationgap] Tempo em segundos que os logins ficam válidos após o lease.\\
-Valor padrão é 10 segundos. 
-
-  \item [-badpasswordpenalty] Tempo em segundos com tentativas de login limitadas após falha de senha.\\
-Após uma falha de autenticação, este é o período em que o número de falhas de autenticação por senha (ver badpasswordtries) provenientes de um mesmo IP ou entidade será limitado.\\
-O valor padrão é 180 segundos.
-
-  \item [-badpasswordtries] Número máximo de tentativas durante o período de badpasswordpenalty.\\
-Número máximo de falhas de autenticação por senha de um IP ou entidade.\\
-O valor padrão é 3 tentativas.
-
-  \item [-badpasswordlimit] Número máximo de autenticações simultâneas com senha incorreta repassadas para os validadores de senha, ou seja, que ocorram dentro de um tempo curto (menor que 1/badpasswordrate segundos).\\
-Por padrão, o controle de fluxo está desativado.
-
-  \item [-badpasswordrate] Frequência máxima de autenticações com senha incorreta repassadas para os validadores de senha em períodos longos (maiores que 2*badpasswordlimit/badpasswordrate segundos).\\
-Por padrão, o controle de fluxo está desativado.
-
-  \item [-admin] Usuário com privilégio de administração.\\
-  \item [-validator] Define um validador de senha no formato: \verb|<domain>:<package>| onde \verb|<domain>| é um nome do domínio de autenticação do validador e \verb|<package>| é o nome do pacote Lua que implementa o validador de senhas.\\
-A parte \verb|<domain>:| é opcional.
-Caso seja omitida, o domínio adotado para o validador é a string vazia.
-  \item [-tokenvalidator] Define um validador de autenticação externa no formato: \verb|<domain>:<package>| onde \verb|<domain>| é um nome do domínio de autenticação do validador e \verb|<package>| é o nome do pacote Lua que implementa o validador de autenticação externa.\\
-A parte \verb|<domain>:| é opcional.
-Caso seja omitida, o domínio adotado para o validador é a string vazia.
-
-  \item [-loglevel] Nível de log gerado pelo barramento.\\
-O valor padrão é 3. Os níveis vão de 0 a 5, onde 5 é o nível com mais detalhes, e o 0 desativa o log.
-  \item [-logfile] Arquivo de log gerado pelo barramento.\\
-Por padrão o log é direcionado para a saída padrão (\emph{standard output}).
-  \item [-oilloglevel] Nível de log gerado pelo \oil{}~\cite{maia06oil,web:oil} (debug).\\
-  O valor padrão é 0, que desativa o log.
-  \item [-oillogfile] Arquivo de log gerado pelo \oil{} (debug).\\
-Por padrão o log é direcionado para a saída padrão (\emph{standard output}).
-
-  \item [-noauthorizations] Desativa o suporte à autorizações de oferta.
-  \item [-logaddress] Exibe o endereço IP do requisitante no log do barramento.
-  \item [-nolegacy] Desativa o suporte à versão antiga do barramento.
-  \item [-legacydomain] Define o domínio de autenticação de senhas para acessos com a versão antiga do barramento.\\
-Caso o suporte à versão antiga do barramento esteja desabilitado essa configuração não precisa ser fornecida.
-O valor padrão é a string vazia.
-
-  \item [-configs] Arquivo de configurações adicionais do barramento.\\
-O valor padrão é ``openbus.cfg".
-\end{description}
-
-As opções ``admin" e ``validator" podem receber mais de um valor.
-Quando essas opções são configuradas por linha de comando, basta repetir a opção o número de vezes desejadas.
-Quando são configuradas através do arquivo de configuração, é necessário informar a lista de valores desejados, no formato de uma tabela \lua{}~\cite{web:lua}.
-O código~\ref{lst:openbus.cfg} apresenta um exemplo de arquivo do configuração.
-
-\begin{htmlonly}
-  \codeinput{openbus.cfg}{Exemplo de arquivo de configuração:} 
-\end{htmlonly}
-
-\begin{latexonly}
-  \inputlisting[language=lua]{openbus.cfg}{Exemplo de arquivo de configuração.}
-\end{latexonly}
-
-Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção ``config'' por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
-Porém, as opções passadas por linha de comando têm prioridade sobre as opções definidas no arquivo de configuração.
-
-Através da opção ``validator'' informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
-Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações sobre como configurar o validador LDAP, consulte~\cite{ob2.0install}.
-
-%% NOTE: comentado parte que falava sobre o validador de teste: 
-% e em \\\texttt{openbus.test.core.services.TesterUserValidator} disponibilizamos um validador para ambientes de teste, que permite acesso quando o login é igual a senha.
-
-Através da opção ``tokenvalidator'' pode-se informar o módulo de um validador de autenticação externa que será utilizado pelo barramento.
-
-Também é possível desabilitar o suporte de compatibilidade com a versão anterior através da opção ``nolegacy''. Ao ativar essa opção, o barramento deixa de permitir que entidades se autentiquem no barramento utilizando as bibliotecas de acesso de versão \legacyidlversion{}. 
 
 
 \subsection{Gerentes do Barramento}
 
 Para desempenhar o papel de gerente do barramento, disponibilizamos a ferramenta \emph{busadmin}, que permite que se realize atividades de governança (administração) sobre o barramento.
 
-Antes de entrar em detalhes sobre o uso e as funcionalidades do \emph{busadmin}, vamos agora apresentar alguns conceitos importantes de governança dentro do \openbus{}.
+Vamos agora apresentar alguns conceitos importantes de governança dentro do \openbus{}.
 Existem os conceitos de:
 \begin{description}
 
@@ -438,7 +343,9 @@ dada entidade no barramento. Ver seção sobre geração de chaves para informações 
 
 \end{description}
 
-Para utilizar a ferramenta, deve-se executar:
+Para informações sobre como utilizar a ferramenta, consulte~\cite{busadminmanual}.
+
+%%TODO mover conteudo abaixo para o manual do busadmin.
 \begin{verbatim}
 busadmin [opções] --login=<usuário> <comando>
 \end{verbatim} 
@@ -614,38 +521,6 @@ O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha
   \inputlisting[language=lua]{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}.}
 \end{latexonly}
 
-
-\subsection{Geração de chaves}
-%% TODO: pode ser que o pacote passe a não incluir mais o binário do openssl. Caso isso ocorra, remover a afirmação e verificar o que deve ser modificado nesta seção.
-Dentro do pacote de distribuição do OpenBus está incluso o binário do OpenSSL, que permite gerar chaves privada e pública. 
-Antes de utilizar o binário, é necessário executar os seguintes comandos (estamos utilizando comandos do Bash shell~\cite{web:bash} no exemplo abaixo):
-
-\begin{verbatim}
-#este comando é apenas para facilitar a legibilidade do código abaixo, sendo opcional
-  export OPENBUS_HOME=<local de extracao do pacote>
-
-  export LD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${LD_LIBRARY_PATH}"
-  
-# caso seja MacOS é preciso também:
-  export DYLD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${DYLD_LIBRARY_PATH}"
-\end{verbatim}
-
-Para gerar a chave privada, utilize os seguintes comandos:
-
-\begin{verbatim}
- ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
-  ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
-    -in tmp_openssl.key -out <nome do par de chaves>.key -outform DER
-  rm -f tmp_openssl.key
-\end{verbatim}
-
-Para gerar o certificado, utilize o seguinte código:
-
-\begin{verbatim}
-  ${OPENBUS_HOME}/bin/openssl req -config ${OPENBUS_HOME}/openssl/openssl.cnf -new -x509 \
-    -key <nome do par de chaves>.key -keyform DER \
-    -out <nome do par de chaves>.crt -outform DER
-\end{verbatim}
 
 
 \subsection{Desenvolvedores de Sistemas Integrados}
