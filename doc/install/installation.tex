@@ -1,5 +1,5 @@
 %
-%  Documento de Instalação do OpenBus 2.0
+%  Documento de Instalação do OpenBus 2.1
 %
 %  Created by Hugo Roenick on 2012-05-22.
 %  Copyright (c) 2012 Tecgraf/PUC-Rio. All rights reserved.
@@ -55,7 +55,7 @@
 \newcommand{\scs}{\textsc{SCS}}
 \newcommand{\lua}{\textsc{Lua}}
 \newcommand{\oil}{\textsc{OiL}}
-\newcommand{\version}{2.0.0}
+\newcommand{\version}{2.1.0}
 
 
 %\newif\ifpdf
@@ -149,7 +149,7 @@ $OPENBUS_HOME/bin/busservices --help
     -out <nome do par de chaves>.crt -outform DER
 \end{verbatim}
 
-  \item Configurar o validador (ver próxima seção) e executar o barramento (binário \emph{busservices}), passando as configurações da chave privada e do validador a serem utilizados, as quais são obrigatórias para execução do OpenBus.
+  \item Configurar os validadores (ver próxima seção) e executar o barramento (binário \emph{busservices}), passando as configurações da chave privada e dos validadores a serem utilizados, as quais são obrigatórias para a execução do OpenBus.
 
 \end{enumerate}
 
@@ -160,11 +160,13 @@ Maiores informações sobre como utilizar a configuração do \emph{busservices} pod
 \subsection{Para que servem?}
 
 Os validadores representam o conceito de um módulo Lua~\cite{web:luamodule} responsável por verificar se o par usuário e senha fornecido em uma tentativa de autenticação junto ao barramento é válido. 
-Atualmente pode-se utilizar 2 tipos de validadores no OpenBus: validadores LDAP ou validadores personalizados.
+Atualmente pode-se utilizar 2 tipos de validadores no OpenBus: validadores de senha e validadores de autenticação externa.
 
 \begin{itemize}
-\item Validadores LDAP - usam as informações contidas em um serviço de diretórios LDAP para autenticar o acesso de usuários ao barramento. Em ambientes corporativos, é comum a administração da rede utilizar servidores LDAP~\cite{web:rfc4510,wiki:LDAP} para a autenticação de usuários.
-\item Validadores personalizados - utilizam funções escritas em Lua para verificar a autenticidade dos usuários.
+\item Validadores de senha
+\subitem Validadores LDAP - usam as informações contidas em um serviço de diretórios LDAP para autenticar o acesso de usuários ao barramento. Em ambientes corporativos, é comum a administração da rede utilizar servidores LDAP~\cite{web:rfc4510,wiki:LDAP} para a autenticação de usuários.
+\subitem Validadores personalizados - utilizam funções escritas em Lua para verificar a autenticidade dos usuários.
+\item Validadores de autenticação externa - utilizam funções escritas em Lua que utilizam serviços externos para validar uma entidade a partir de um \emph{token}.
 \end{itemize}
 
 
@@ -222,9 +224,13 @@ local isValid = validator(login, password)
 \end{verbatim}
 
 Podemos implementar os validadores tão simples ou seguros como desejarmos.
-Importante frisar que o validador personalizado precisa estar no LUA\_PATH para que seja encontrado pelo executável \emph{busservices}.
+É importante frisar que o validador personalizado precisa estar no LUA\_PATH para que seja encontrado pelo executável \emph{busservices}.
 Um exemplo de como configurar o LUA\_PATH para um validador personalizado é apresentado no FAQ (seção~\ref{sec:faq}).
 
+\subsection{Validadores de autenticação externa}\label{subsec:valtoken}
+
+Um validador de autenticação externa deve ser implementado segundo as mesmas regras de um validador de senha personalizado, descrito na seção ~\ref{subsec:valpersonalizados}. A única diferença é que a função \texttt{validator} recebe como parâmetro apenas o token a ser validado.
+O validador deve utilizar algum serviço externo para validar o token recebido e retornar verdadeiro ou falso de acordo com o sucesso ou falha da operação.
 
 
 

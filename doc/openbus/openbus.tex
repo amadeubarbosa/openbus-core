@@ -1,5 +1,5 @@
 %
-%  OpenBus 2.0
+%  OpenBus 2.1
 %
 %  Created by Hugo Roenick on 2012-05-22.
 %  Copyright (c) 2012 Tecgraf/PUC-Rio. All rights reserved.
@@ -68,7 +68,9 @@
 \newcommand{\scs}{\textsc{SCS}}
 \newcommand{\lua}{\textsc{Lua}}
 \newcommand{\oil}{\textsc{OiL}}
-\newcommand{\version}{2.0.0}
+\newcommand{\version}{2.1.0}
+\newcommand{\idlversion}{2.1.x}
+\newcommand{\legacyidlversion}{2.0.x}
 
 
 %\newif\ifpdf
@@ -123,10 +125,10 @@ Em cima dessas duas tecnologias o \openbus{} introduz duas novas extensões, que 
 \begin{description}
   \item[Barramento de Integração]
   É o conceito central do \openbus{}.
-  O barramento é o meio através do qual toda interação e comunicação entre os sistemas integrados é feita.
-  O barramento é uma extensão de \corba{} com suporte a controle de acesso, que basicamente consiste na autenticação de todo acesso a sistemas através do barramento, permitindo assim identificar de forma segura da origem de toda comunicação (chamadas \corba{}) feita através do barramento.
+  O barramento é o meio através do qual toda interação entre os sistemas integrados é feita.
+  O barramento é uma extensão de \corba{} com suporte a controle de acesso, que basicamente consiste na autenticação de todo acesso a sistemas através do barramento, permitindo assim identificar de forma segura a origem de toda comunicação (chamadas \corba{}) feita através do barramento.
   \item[Serviços de Apoio à Integração]
-  Juntamente ao barramento, o \openbus{} também provê suporte para registro e descoberta de serviços ofertados pelos sistemas integrados, comunicação baseada em eventos, entre outras funcionalidades através de uma arquitetura orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}).
+  Juntamente ao barramento, o \openbus{} também provê suporte para registro e descoberta de serviços ofertados pelos sistemas integrados, comunicação baseada em eventos  e outras funcionalidades através de uma arquitetura orientada a serviços (\emph{Service-Oriented Architecture}, ou SOA~\cite{erl2005service}).
   O objetivo desses serviços é oferecer funcionalidades básicas e essenciais que visem facilitar e agilizar o desenvolvimento da integração dos diferentes sistemas.
 \end{description}
 
@@ -134,14 +136,14 @@ Em cima dessas duas tecnologias o \openbus{} introduz duas novas extensões, que 
 Este documento tem como objetivo apresentar o \openbus{} \version{} e seus conceitos principais.
 Nesta seção introdutória apresentaremos uma definição do projeto e os motivadores para o seu uso.
 Na seção~\ref{sec:architecture} apresentamos a arquitetura do sistema, e entramos um pouco mais em detalhes de como ocorre a comunicação dentro do barramento na seção~\ref{sec:communication}.
-Em seguida, na seção~\ref{sec:perspectives} falamos um pouco mais sobre o projeto de acordo com a visão de cada tipo de usuário, e, por fim, na seção~\ref{sec:glossary} apresentamos um glossário com os conceitos principais do projeto.
+Em seguida, na seção~\ref{sec:perspectives} falamos um pouco mais sobre o projeto de acordo com a visão de cada tipo de usuário e, por fim, na seção~\ref{sec:glossary} apresentamos um glossário com os conceitos principais do projeto.
 
 \subsection{Quando Utilizar o \openbus{}}
 
-O \openbus{} é um middleware para integração de sistemas heterogêneos.
+O \openbus{} é um middleware para a integração de sistemas heterogêneos.
 Contudo, a integração de sistemas pode se dar de diversas formas diferentes e envolver requisitos diversos.
-Por exemplo, uma forma de integração extremamente simples entre dois sistemas que apenas precisam trocar dados é por meio da troca de arquivos num formato adotado por ambos sistemas.
-Inclusive esses arquivos podem ser transmitidos pela rede manualmente ou automaticamente.
+Por exemplo, uma forma de integração extremamente simples entre dois sistemas que apenas precisem trocar dados é por meio da troca de arquivos num formato adotado por ambos os sistemas.
+Inclusive, esses arquivos podem ser transmitidos pela rede manualmente ou automaticamente.
 
 Em outros cenários, a integração pode também exigir alguma colaboração entre os sistemas, através da execução comandos, por exemplo.
 Nesse caso, é necessário que os sistemas forneçam alguma forma para receber comandos, que pode ser através de mensagens enviadas por um socket, comandos de um WebService, chamadas a um objeto remoto, etc.
@@ -152,8 +154,8 @@ Outra necessidade comum na integração de sistemas cooperativos é o controle de a
 Ou seja, quando os sistemas integrados não são abertos ao acesso público e irrestrito, é necessário que a infraestrutura forneça mecanismos que permitam restringir quais serviços podem ser integrados e como essas integrações podem ser feitas.
 
 O \openbus{} oferece uma infraestrutura adequada para implementar integrações entre sistemas tendo essas questões e necessidades em mente.
-Em particular, o \openbus{} se baseia na tecnologia \corba{} para definir uma tecnologia de comunicação genérica e eficiente para integração de sistemas escritos em diferentes linguagens de programação e plataformas computacionais.
-Além disso, o \openbus{} estende a tecnologia \corba{} com suporte a um rigoroso controle de acesso que permite a inspeção e controle das integrações através de um modelo de governança, onde um gerente do barramento pode controlar quais sistemas acessam o barramento e se integram a outros sistemas.
+Em particular, o \openbus{} se baseia na tecnologia \corba{} para definir uma tecnologia de comunicação genérica e eficiente para a integração de sistemas escritos em diferentes linguagens de programação e plataformas computacionais.
+Além disso, o \openbus{} estende a tecnologia \corba{} com suporte a um rigoroso controle de acesso que permite a inspeção e o controle das integrações através de um modelo de governança, onde um gerente do barramento pode controlar quais sistemas acessam o barramento e se integram a outros sistemas.
 
 \section{Arquitetura}\label{sec:architecture}
 
@@ -177,7 +179,7 @@ Toda comunicação feita pelos sistemas integrados através do barramento consiste 
 Contudo, ao contrário das chamadas de \corba{} comuns, nas chamadas feitas através do barramento, é imposto um rigoroso controle de acesso que só permite chamadas autenticadas por entidades previamente autorizadas a acessar o barramento.
 
 Essas entidades são tipicamente sistemas computacionais e usuários desses sistemas.
-Cada entidade é identificada por um nome único no barramento a ser definido pelo gerente barramento.
+Cada entidade é identificada por um nome único no barramento a ser definido pelo gerente do barramento.
 Tipicamente, os nomes de entidade são nomes de sistemas computacionais que oferecem serviços no barramento e nomes de contas de usuários numa base de diretórios como o LDAP.
 
 Todo acesso ao barramento é autenticado através de credenciais ocultas nas chamadas de objetos \corba{}.
@@ -193,10 +195,10 @@ Essas três formas de autenticação são:
 \begin{description}
   \item[Autenticação por Senha] Neste caso, a autenticação é feita através de uma senha fornecida juntamente com o nome da entidade.
   A senha é validada por um módulo de validação de senhas especificado pelo gerente do barramento.
-  Tipicamente esse módulo de validação é integrado a alguma base de dados de usuário que fornece informações para validação das senhas.
+  Tipicamente esse módulo de validação é integrado a alguma base de dados de usuário que fornece informações para a validação das senhas.
   Essa forma de autenticação é geralmente utilizada para incorporar ao barramento um grande número de usuários mantidos num sistema separado.
   Um exemplo dessa integração é o validador de senhas LDAP fornecido pelo \openbus{}, que permite autenticar nomes de usuários num serviço de diretórios LDAP como entidades para acesso ao barramento.
-  Neste caso, todos os nomes de usuários na base LDAP são automaticamente entidades autorizadas a acessar o barramento.
+  Neste caso, todos os nomes de usuários na base LDAP são automaticamente entidades autorizadas a acessar o barramento através de autenticação por senha.
 
   \item[Autenticação por Certificado] Neste caso, a autenticação é feita através de um certificado previamente cadastrado pelo gerente do barramento em nome de uma entidade particular.
   Para que a autenticação ocorra, é preciso decodificar um desafio encriptado com a chave pública contida no certificado cadastrado.
@@ -211,15 +213,15 @@ Essas três formas de autenticação são:
 
 Tipicamente os logins de acesso ao barramento ficam válidos por um período denominado \term{lease}.
 Após o período de \term{lease}, o login deve ser renovado para que possa continuar válido\footnote{Essa tarefa de renovação de login é feita automaticamente pela biblioteca de acesso do \openbus{}.}.
-Independentemente disso, todo login pode se tornar inválido a revelia da aplicação.
-Neste caso, uma nova autenticação deve ser realizada para obtenção de um novo login para continuar acessando o barramento\footnote{A identificação de que o login ficou inválido e o restabelecimento do login podem ser feitos através da callback \code{onInvalidLogin} da biblioteca de acesso do \openbus{}.}.
+Independentemente disso, todo login pode se tornar inválido à revelia da aplicação.
+Neste caso, uma nova autenticação deve ser realizada para a obtenção de um novo login para continuar acessando o barramento\footnote{A identificação de que o login ficou inválido e o restabelecimento do login podem ser feitos através da callback \code{onInvalidLogin} da biblioteca de acesso do \openbus{}.}.
 Uma vez inválido, um login nunca volta a ser válido novamente.
 
 O barramento possui algumas características importantes que devem ser mencionadas.
 Uma delas, é que o barramento persiste todo o seu estado no diretório de dados.
 Dessa forma, sempre que ele é iniciado, e o mesmo já possui uma base de dados populada, esses dados serão recarregados e farão parte do estado inicial do barramento.
 
-Outra característica importante é que o barramento mantém compatibilidade com a a versão imediatamente anterior do barramento.
+Outra característica importante é que o barramento mantém compatibilidade com a versão imediatamente anterior do barramento.
 Ou seja, mesmo que a versão do barramento evolua, as entidades ainda conseguem acessar o barramento utilizando bibliotecas de acesso de uma versão anterior.
 O \openbus{} utiliza um esquema de versionamento com quatro números, no formato \emph{A.B.C.D}, onde:
 
@@ -229,9 +231,8 @@ O \openbus{} utiliza um esquema de versionamento com quatro números, no formato 
   \item Campo \textbf{D} representa uma versão apenas com correções de falhas.
 \end{itemize}
 
-Sendo assim, o barramento 2.0 permite a realização de acesso utilizando as bibliotecas de acesso de versão 1.5.x, onde \emph{x} pode assumir qualquer valor de \emph{C.D}.
-Porém, é importante deixar claro que a versão 2.0 traz muitas melhorias no quesito de segurança, e essas melhorias não serão usufruídas por clientes que acessam o barramento com versões antigas das bibliotecas de acesso.
-O barramento permite que clientes 1.5 se comuniquem com clientes 2.0, e vice-e-versa, porém essas comunicações se realizam com o mesmo nível de segurança que existia na versão 1.5 do barramento.
+Sendo assim, o barramento \idlversion{} permite a realização de acesso utilizando as bibliotecas de acesso de versão \legacyidlversion{}, onde \emph{x} pode assumir qualquer valor de \emph{C.D}.
+É importante notar que uma das novas funcionalidades do \openbus{} \idlversion{} é o suporte a comunicações CORBA sobre SSL. Quando um sistema baseado na versão \idlversion{} se comunicar com um sistema baseado na versão \legacyidlversion{}, não será possível utilizar essa funcionalidade. Portanto, as integrações devem levar isso em conta e atualizar ao mesmo tempo caso desejem utilizar a segurança do protocolo SSL em todas as mensagens trocadas entre si.
 
 \subsection{Serviços Núcleo}
 
@@ -239,7 +240,7 @@ O barramento oferece em seu núcleo um serviço essencial denominado Registro de O
 Através dele é possível publicar, buscar e monitorar os demais serviços disponíveis através do barramento.
 
 Todo serviço a ser ofertado através do Registro de Ofertas deve ser implementado como um componente \scs{}~\cite{web:SCS} que oferece diferentes facetas através das quais o serviço é acessado.
-No momento do registro de uma oferta de serviço, deve ser fornecido um conjunto pares nome e valor que devem descrever propriedades particulares do serviço sendo ofertado.
+No momento do registro de uma oferta de serviço, deve ser fornecido um conjunto de pares nome e valor que devem descrever propriedades particulares do serviço sendo ofertado.
 Essas propriedades poderão ser utilizadas como critério de filtro no momento de buscar por ofertas de serviço no Registro de Ofertas.
 
 Além das propriedades fornecidas no registro da oferta, o próprio serviço de Registro de Oferta também gera um conjunto de propriedades automáticas que descrevem:
@@ -252,10 +253,10 @@ Além das propriedades fornecidas no registro da oferta, o próprio serviço de Reg
   \item facetas e interfaces do component \scs{} que implementa o serviço.
 \end{itemize}
 
-O Registro de Ofertas também disponibiliza um mecanismo de observação de publicação, atualização e remoção de ofertas.
+Entre outras propriedade automáticas. O Registro de Ofertas também disponibiliza um mecanismo de observação de publicação, atualização e remoção de ofertas.
 Maiores detalhes sobre a especificação e o uso do serviço de Registro de Ofertas podem ser encontrados nos manuais de uso das bibliotecas de acesso~(seção \ref{sec:library})
 
-\subsection{Serviços Extras}
+\subsection{Serviços Extra}
 
 A versão atual do \openbus{} oferece um serviço extra denominado Serviço de Colaboração.
 Esse serviço tem como principais funcionalidades:
@@ -277,9 +278,9 @@ Através dessa biblioteca é possível realizar as seguintes operações, dentre outr
   \item Autenticação de entidades;
   \item Obtenção de logins;
   \item Renovação automática de \term{lease} de logins;
-  \item Receber notificação de o login se tornou inválido;
+  \item Receber notificação sobre o login se tornar inválido;
   \item Realizar chamadas utilizando diferentes logins;
-  \item Identificar os logins e entidades que originaram cada chamada recebida.
+  \item Identificar os logins e as entidades que originaram cada chamada recebida.
 \end{itemize}
 
 A biblioteca de acesso do \openbus{} tem implementações nas quatro diferentes linguagens de programação suportadas oficialmente pelo \openbus{}, em particular, Java~\cite{sdk2.0.0-java}, C\#~\cite{sdk2.0.0-csharp}, C++~\cite{sdk2.0.0-cpp} e Lua~\cite{sdk2.0.0-lua}.
@@ -290,7 +291,7 @@ O barramento é internamente implementado como uma arquitetura orientada a serviç
 Em princípio, todas as chamadas feitas através do barramento envolvem chamadas a esses serviços internos, em particular, o serviço de Controle de Acesso.
 
 Para evitar a sobrecarga dessas chamadas adicionais a serviços internos do barramento, a biblioteca de acesso implementa otimizações eficientes que permitem reduzir drasticamente essa sobrecarga nos cenários de uso mais comuns.
-Em particular, a biblioteca de acesso faz uso de vários caches internos para minimizar a necessidade de chamadas adicionais a serviços internos da implementação do barramento.
+Em particular, a biblioteca de acesso faz uso de várias caches internas para minimizar a necessidade de chamadas adicionais a serviços internos da implementação do barramento.
 
 Em cenários de integração típicos, a maior parte da comunicação através do barramento é feita diretamente entre os sistemas integrados, sem necessidade de acesso à infraestrutura interna do barramento.
 Essa característica da biblioteca de acesso traz duas vantagens importantes:
@@ -317,10 +318,18 @@ Se uma configuração não for explicitada, será utilizado o seu valor padrão.
 
 As opções de configuração são:
 \begin{description}
+  \item [-iorfile] Arquivo onde o IOR do barramento deve ser escrito.
   \item [-host] Endereço de rede usado pelo barramento.\\
 Valor padrão é ``*'', que significa que vai ouvir em todos os IPs da máquina.
   \item [-port] Número da porta usada pelo barramento.\\
 Valor padrão é 2089.
+
+  \item [-sslmode] Ativa o suporte SSL através das opções ``supported'' ou ``required''.
+  \item [-sslport] Número da porta segura a ser usada pelo barramento.
+  \item [-sslcapath] Diretório com certificados de CAs a serem usados na autenticação SSL.
+  \item [-sslcafile] Arquivo com certificados de CAs a serem usados na autenticação SSL.
+  \item [-sslcert] Arquivo com o certificado do barramento.
+  \item [-sslkey] Arquivo com a chave privada do barramento.
 
   \item [-database] Arquivo de dados do barramento.\\
 Valor padrão é ``openbus.db''.
@@ -398,7 +407,9 @@ Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um val
 %% NOTE: comentado parte que falava sobre o validador de teste: 
 % e em \\\texttt{openbus.test.core.services.TesterUserValidator} disponibilizamos um validador para ambientes de teste, que permite acesso quando o login é igual a senha.
 
-Também é possível desabilitar o suporte de compatibilidade com a versão anterior através da opção ``nolegacy''. Ao ativar essa opção, o barramento deixa de permitir que entidades se autentiquem no barramento utilizando as bibliotecas de acesso de versão 2.0. 
+Através da opção ``tokenvalidator'' pode-se informar o módulo de um validador de autenticação externa que será utilizado pelo barramento.
+
+Também é possível desabilitar o suporte de compatibilidade com a versão anterior através da opção ``nolegacy''. Ao ativar essa opção, o barramento deixa de permitir que entidades se autentiquem no barramento utilizando as bibliotecas de acesso de versão \legacyidlversion{}. 
 
 
 \subsection{Gerentes do Barramento}
@@ -606,7 +617,7 @@ O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha
 
 \subsection{Geração de chaves}
 
-Dentro do pacote de distribuição do OpenBus, está incluso o binário do OpenSSL, que permite gerar chaves privada e pública. 
+Dentro do pacote de distribuição do OpenBus está incluso o binário do OpenSSL, que permite gerar chaves privada e pública. 
 Antes de utilizar o binário, é necessário executar os seguintes comandos (estamos utilizando comandos do Bash shell~\cite{web:bash} no exemplo abaixo):
 
 \begin{verbatim}
@@ -634,12 +645,6 @@ Para gerar o certificado, utilize o seguinte código:
   ${OPENBUS_HOME}/bin/openssl req -config ${OPENBUS_HOME}/openssl/openssl.cnf -new -x509 \
     -key <nome do par de chaves>.key -keyform DER \
     -out <nome do par de chaves>.crt -outform DER
-\end{verbatim}
-
-Para converter uma chave utilizada em um SDK 1.5 para uma chave que funcione com SDKs 2.0, utilize o seguinte comando:
-
-\begin{verbatim}
-${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt -in chave.pem -inform PEM -out chave.der -outform DER
 \end{verbatim}
 
 
