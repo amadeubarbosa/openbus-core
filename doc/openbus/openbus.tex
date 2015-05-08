@@ -232,7 +232,7 @@ O \openbus{} utiliza um esquema de versionamento com quatro números, no formato 
 \end{itemize}
 
 Sendo assim, o barramento \idlversion{} permite a realização de acesso utilizando as bibliotecas de acesso de versão \legacyidlversion{}, onde \emph{x} pode assumir qualquer valor de \emph{C.D}.
-É importante notar que uma das novas funcionalidades do \openbus{} \idlversion{} é o suporte a comunicações CORBA sobre SSL. Quando um sistema baseado na versão \idlversion{} se comunicar com um sistema baseado na versão \legacyidlversion{}, não será possível utilizar essa funcionalidade. Portanto, as integrações devem levar isso em conta e atualizar ao mesmo tempo caso desejem utilizar a segurança do protocolo SSL em todas as mensagens trocadas entre si.
+É importante notar que uma das novas funcionalidades do \openbus{} \idlversion{} é o suporte a comunicações CORBA sobre SSL. Quando um sistema baseado na versão \idlversion{} se comunicar com um sistema baseado na versão \legacyidlversion{}, pode não ser possível utilizar essa funcionalidade.
 
 \subsection{Serviços Núcleo}
 
@@ -616,7 +616,7 @@ O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha
 
 
 \subsection{Geração de chaves}
-
+%% TODO: pode ser que o pacote passe a não incluir mais o binário do openssl. Caso isso ocorra, remover a afirmação e verificar o que deve ser modificado nesta seção.
 Dentro do pacote de distribuição do OpenBus está incluso o binário do OpenSSL, que permite gerar chaves privada e pública. 
 Antes de utilizar o binário, é necessário executar os seguintes comandos (estamos utilizando comandos do Bash shell~\cite{web:bash} no exemplo abaixo):
 

@@ -163,43 +163,13 @@ Os validadores representam o conceito de um módulo Lua~\cite{web:luamodule} resp
 Atualmente pode-se utilizar 2 tipos de validadores no OpenBus: validadores de senha e validadores de autenticação externa.
 
 \begin{itemize}
-\item Validadores de senha
-\subitem Validadores LDAP - usam as informações contidas em um serviço de diretórios LDAP para autenticar o acesso de usuários ao barramento. Em ambientes corporativos, é comum a administração da rede utilizar servidores LDAP~\cite{web:rfc4510,wiki:LDAP} para a autenticação de usuários.
-\subitem Validadores personalizados - utilizam funções escritas em Lua para verificar a autenticidade dos usuários.
-\item Validadores de autenticação externa - utilizam funções escritas em Lua que utilizam serviços externos para validar uma entidade a partir de um \emph{token}.
+\item Validadores de senha - utilizam funções escritas em Lua para verificar a autenticidade dos usuários.
+\item Validadores de autenticação externa - utilizam funções escritas em Lua que utilizam serviços externos para validar uma entidade a partir de um token.
 \end{itemize}
 
+\subsection{Validadores de senha}\label{subsec:valsenha}
 
-\subsection{Validadores LDAP}
-
-O validador LDAP, disponibilizado em \texttt{openbus.core.services.passwordvalidator.LDAP}, tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seus significados e possíveis valores:
-\begin{description}
-\item[ldap\_servers] indica uma lista de URLs de servidores LDAP. Cada URL deve seguir o formato \\ \texttt{<protocol>://<server>:<port>}, onde \texttt{<protocol>} pode ser \texttt{ldaps} ou \texttt{ldap}. Exemplo:
-\begin{verbatim}
-ldap_servers = { 
- "ldaps://server.mycompany.com",
- "ldap://otherserver.mycompany.com:389",
-}
-\end{verbatim}
-
-\item[ldap\_patterns] indica uma lista de padrões de formação de nomes que serão usados na autenticação LDAP. Atualmente só há suporte para o padrão \texttt{\%U}, e o validador irá substituir esse padrão pelo nome do usuário fornecido no ato do login. No exemplo abaixo apresentamos dois padrões, o primeiro é útil para autenticação em servidores Microsoft Active Directory (que utilizam UPN~\cite{web:upn}) e o segundo é útil para autenticação em servidores OpenLDAP (que utilizam DN~\cite{web:dn,web:rfc4514}). Exemplo:
-\begin{verbatim}
-ldap_patterns = {
-  "%U@project.mycompany.com",
-  "cn=%U,ou=users,ou=groups,dc=company",
-}
-\end{verbatim}
-
-\item[ldap\_timeout] indica um tempo máximo de espera (em segundos) da resposta do servidor LDAP. Exemplo:
-\begin{verbatim}
-ldap_timeout = 10
-\end{verbatim}
-\end{description}
-
-
-\subsection{Validadores personalizados}\label{subsec:valpersonalizados}
-
-Um validador personalizado precisa ser um módulo Lua~\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}.
+Um validador de senha precisa ser um módulo Lua~\cite{web:luamodule} que deve retornar uma função que recebe como parâmetro uma tabela de configurações do barramento e retorna uma função \texttt{validator}.
 A função \texttt{validator} recebe como primeiro parâmetro o nome de usuário e, como segundo, a senha.
 Caso o par usuário/senha seja válido, deve-se retornar verdadeiro, caso contrário, falso.
 Um exemplo de validador que verifica se o nome do usuário é igual à senha é dado a seguir:
@@ -227,9 +197,38 @@ Podemos implementar os validadores tão simples ou seguros como desejarmos.
 É importante frisar que o validador personalizado precisa estar no LUA\_PATH para que seja encontrado pelo executável \emph{busservices}.
 Um exemplo de como configurar o LUA\_PATH para um validador personalizado é apresentado no FAQ (seção~\ref{sec:faq}).
 
+\subsubsection{Validador LDAP}
+
+Junto ao pacote do \openbus{} é fornecido um validador pré-definido para validação via LDAP. Esse validador usa as informações contidas em um serviço de diretórios LDAP para autenticar o acesso de usuários ao barramento. Em ambientes corporativos, é comum a administração da rede utilizar servidores LDAP~\cite{web:rfc4510,wiki:LDAP} para a autenticação de usuários.
+
+Disponibilizado em \texttt{openbus.core.services.passwordvalidator.LDAP}, tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seus significados e possíveis valores:
+\begin{description}
+\item[ldap\_servers] indica uma lista de URLs de servidores LDAP. Cada URL deve seguir o formato \\ \texttt{<protocol>://<server>:<port>}, onde \texttt{<protocol>} pode ser \texttt{ldaps} ou \texttt{ldap}. Exemplo:
+\begin{verbatim}
+ldap_servers = { 
+ "ldaps://server.mycompany.com",
+ "ldap://otherserver.mycompany.com:389",
+}
+\end{verbatim}
+
+\item[ldap\_patterns] indica uma lista de padrões de formação de nomes que serão usados na autenticação LDAP. Atualmente só há suporte para o padrão \texttt{\%U}, e o validador irá substituir esse padrão pelo nome do usuário fornecido no ato do login. No exemplo abaixo apresentamos dois padrões, o primeiro é útil para autenticação em servidores Microsoft Active Directory (que utilizam UPN~\cite{web:upn}) e o segundo é útil para autenticação em servidores OpenLDAP (que utilizam DN~\cite{web:dn,web:rfc4514}). Exemplo:
+\begin{verbatim}
+ldap_patterns = {
+  "%U@project.mycompany.com",
+  "cn=%U,ou=users,ou=groups,dc=company",
+}
+\end{verbatim}
+
+\item[ldap\_timeout] indica um tempo máximo de espera (em segundos) da resposta do servidor LDAP. Exemplo:
+\begin{verbatim}
+ldap_timeout = 10
+\end{verbatim}
+\end{description}
+
+
 \subsection{Validadores de autenticação externa}\label{subsec:valtoken}
 
-Um validador de autenticação externa deve ser implementado segundo as mesmas regras de um validador de senha personalizado, descrito na seção ~\ref{subsec:valpersonalizados}. A única diferença é que a função \texttt{validator} recebe como parâmetro apenas o token a ser validado.
+Um validador de autenticação externa deve ser implementado segundo as mesmas regras de um validador de senha, descrito na seção ~\ref{subsec:valsenha}. A única diferença é que a função \texttt{validator} recebe como parâmetro o identificador de login, o nome da entidade e o token a ser validado.
 O validador deve utilizar algum serviço externo para validar o token recebido e retornar verdadeiro ou falso de acordo com o sucesso ou falha da operação.
 
 
@@ -400,9 +399,9 @@ Nas plataformas Solaris a forma mais simples é baixar o pacote binário a partir 
 
 Após esse procedimento basta ter a pasta \$HOME/bin no PATH.
 
-\subsection{Como configuro um validador personalizado?}
+\subsection{Como configuro um validador de senha?}
 
-Um exemplo simples de configuração de um validador personalizado, seria criar um código como o apresentado em \ref{subsec:valpersonalizados}, e salvar o código em um arquivo com a extensão ``.lua''. Depois, adicione o caminho onde foi salvo o arquivo à variável de ambiente LUA\_PATH, da seguinte forma: 
+Um exemplo simples de configuração de um validador de senha seria criar um código como o apresentado em \ref{subsec:valsenha}, e salvar o código em um arquivo com a extensão ``.lua''. Depois, adicione o caminho onde foi salvo o arquivo à variável de ambiente LUA\_PATH, da seguinte forma: 
 
 \begin{verbatim}
 export LUA_PATH+=";<caminho onde está o validador>/?.lua"
