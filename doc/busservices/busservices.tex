@@ -41,6 +41,8 @@
 % This is now the recommended way for checking for PDFLaTeX:
 \usepackage{ifpdf}
 
+\usepackage{html}   %  *always* load this for LaTeX2HTML
+
 %% Redefines the label 'Listing' for ..
 \def\lstlistingname{Código}
 \codestyle{colorful}
@@ -56,6 +58,8 @@
 \newcommand{\lua}{\textsc{Lua}}
 \newcommand{\oil}{\textsc{OiL}}
 \newcommand{\version}{2.1.0}
+\newcommand{\idlversion}{2.1.x}
+\newcommand{\legacyidlversion}{2.0.x}
 
 
 %\newif\ifpdf
@@ -92,7 +96,7 @@
 \section{Introdução}
 
 Este documento visa informar apenas o procedimento necessário para instalar um barramento \openbus{}~\cite{web:OPENBUS} da versão \version{}.
-Caso tenha interesse em entender melhor o que é um barramento \openbus{}, consulte o documento de visão geral~\cite{ob2.0core}.
+Caso tenha interesse em entender melhor o que é um barramento \openbus{}, consulte o documento de visão geral~\cite{ob2.1overview}.
 
 \section{Instalação}
 
@@ -200,7 +204,7 @@ Podemos implementar os validadores tão simples ou seguros como desejarmos.
 É importante frisar que o validador personalizado precisa estar no LUA\_PATH para que seja encontrado pelo executável \emph{busservices}.
 Um exemplo de como configurar o LUA\_PATH para um validador personalizado é apresentado no FAQ (seção~\ref{sec:faq}).
 
-\subsubsection{Validador LDAP}
+\subsubsection{Validador LDAP}\label{subsubsec:ldapval}
 
 Junto ao pacote do \openbus{} é fornecido um validador pré-definido para validação via LDAP. Esse validador usa as informações contidas em um serviço de diretórios LDAP para autenticar o acesso de usuários ao barramento. Em ambientes corporativos, é comum a administração da rede utilizar servidores LDAP~\cite{web:rfc4510,wiki:LDAP} para a autenticação de usuários.
 
@@ -237,7 +241,7 @@ O validador deve utilizar algum serviço externo para validar o token recebido e 
 
 
 
-\section{O executável \emph{busservices}}
+\section{O executável \emph{busservices}}\label{sec:busservices}
 
 O barramento e os serviços núcleo são distribuídos em um mesmo programa, o \emph{busservices}. Logo, para disparar o barramento, basta executar o programa passando as suas configurações por linha de comando ou por arquivo de configuração.
 Se uma configuração não for explicitada, será utilizado o seu valor padrão.
@@ -328,7 +332,7 @@ Existem duas formas de se definir o arquivo de configuração que o programa irá u
 Porém, as opções passadas por linha de comando têm prioridade sobre as opções definidas no arquivo de configuração.
 
 Através da opção ``validator'' informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
-Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações sobre como configurar o validador LDAP, consulte~\cite{ob2.0install}.
+Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações sobre como configurar o validador LDAP, consulte a seção~\ref{subsubsec:ldapval}.
 
 %% NOTE: comentado parte que falava sobre o validador de teste: 
 % e em \\\texttt{openbus.test.core.services.TesterUserValidator} disponibilizamos um validador para ambientes de teste, que permite acesso quando o login é igual a senha.
@@ -380,7 +384,7 @@ Um exemplo de agendamento no \emph{cron} para utilizar o \emph{bus-check-running
 
 \subsection{Rotacionamento de logs}
 
-Por padrão, o barramento imprime logs em tela. É \textbf{fortemente recomendado} configurar o barramento para salvar esses logs em arquivos, conforme documentado em~\cite{ob2.0core}. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
+Por padrão, o barramento imprime logs em tela. É \textbf{fortemente recomendado} configurar o barramento para salvar esses logs em arquivos, conforme documentado na seção~\ref{sec:busservices}. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
 
 O comando \textbf{logrotate} é um utilitário para simplificar a administração de arquivos de logs bem comum na maioria das instalações Linux e Solaris. O logrotate permite a rotação automática, a compressão dos logs antigos, a remoção de logs muito velhos e mesmo o envio de emails contendo os arquivos de logs.
 
