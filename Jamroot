@@ -42,6 +42,12 @@ if ! $(openbus-idl-path)
   openbus-idl-path = "$(here)/../openbus-idl" ;
 }
 
+openbus-legacy-idl-path = [ os.environ OPENBUS_LEGACY_IDL_PATH ] ;
+if ! $(openbus-legacy-idl-path)
+{
+  openbus-legacy-idl-path = "$(here)/../openbus-legacy-idl" ;
+}
+
 openbus-lib-idl-path = [ os.environ OPENBUS_LIB_IDL_PATH ] ;
 if ! $(openbus-lib-idl-path)
 {
@@ -68,8 +74,7 @@ project busservices
 make coreservices.c
   : lua/openbus/core/admin/idl.lua
     lua/openbus/core/admin/parsed.lua
-    lua/openbus/core/legacy/AccessControlService.lua
-    lua/openbus/core/legacy/RegistryService.lua
+    lua/openbus/core/legacy/ServiceWrappers.lua
     lua/openbus/core/services/Access.lua
     lua/openbus/core/services/AccessControl.lua
     lua/openbus/core/services/LoginDB.lua
@@ -91,15 +96,20 @@ using idl2lua ;
 make lua/openbus/core/admin/parsed.lua 
   : idl/access_management.idl
     idl/offer_authorization.idl
+    $(scs-idl-path)/src/scs.idl
+    $(openbus-idl-path)/src/tecgraf/openbus/core/v2_1/core.idl
+    $(openbus-idl-path)/src/tecgraf/openbus/core/v2_1/credential.idl
+    $(openbus-idl-path)/src/tecgraf/openbus/core/v2_1/services/access_control.idl
+    $(openbus-idl-path)/src/tecgraf/openbus/core/v2_1/services/offer_registry.idl
   : idl2lua.compile
   : <include>$(openbus-idl-path)/src
+    <include>$(openbus-legacy-idl-path)/src
     <include>$(scs-idl-path)/src
   ;
 
 exe busservices
   : coreservices.c
     src/launcher.c
-    src/lthreadlib.c
     src/coreservlibs.c
     /lua//lua
     /luuid//luuid
@@ -114,7 +124,9 @@ exe busservices
     /oil//oil
     /oil//luaidl
     /luascs//luascs
-    /luaopenbus//luaopenbus    
+    /luaopenbus//luaopenbus
+    /luasec//luasec
+    /lualdap//lualdap
   : <dependency>/loop//loop
     <dependency>/loop//luatuple
     <dependency>/loop//luacothread

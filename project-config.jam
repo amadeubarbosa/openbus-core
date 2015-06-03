@@ -54,6 +54,12 @@ lib lua
     <search>$(lua-install-path)/lib
   ;
 
+lib lua
+  : 
+  : <target-os>darwin
+    <file>$(lua-install-path)/lib/liblua.a
+  ;
+
 local luuid-root-path = [ os.environ LUUID_ROOT_PATH ] ;
 if ! $(luuid-root-path)
 {
@@ -406,3 +412,38 @@ if ! $(luaopenbus-root-path)
   luaopenbus-root-path = "$(here)/../openbus-lua" ;
 }
 use-project luaopenbus : $(luaopenbus-root-path) ;
+
+local luasec-root-path = [ os.environ LUASEC_ROOT_PATH ] ;
+if ! $(luasec-root-path)
+{
+  luasec-root-path = "$(here)/../luasec" ;
+}
+use-project luasec : $(luasec-root-path) ;
+
+local lualdap-root-path = [ os.environ LUALDAP_ROOT_PATH ] ;
+if ! $(lualdap-root-path)
+{
+  lualdap-root-path = "$(here)/../lualdap" ;
+}
+use-project lualdap : $(lualdap-root-path) ;
+
+local openldap-install-path = [ os.environ OPENLDAP_INSTALL_PATH ] ;
+if ! $(openldap-install-path)
+{
+  openldap-install-path = "$(here)/../../install/openldap" ;
+}
+
+project openldap
+  : requirements <include>$(openldap-install-path)/include
+  ;
+
+lib ldap
+  :
+  : <search>$(openldap-install-path)/lib
+  ;
+
+lib lber
+  :
+  : <search>$(openldap-install-path)/lib
+  ;
+  
