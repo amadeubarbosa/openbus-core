@@ -121,7 +121,8 @@ exe busservices
     /oil//oil
     /oil//luaidl
     /luascs//luascs
-    /luaopenbus//luaopenbus    
+    /luaopenbus//luaopenbus
+    /luasec//luasec    
   : <dependency>/loop//loop
     <dependency>/loop//luatuple
     <dependency>/loop//luacothread
@@ -130,9 +131,10 @@ exe busservices
     <dependency>/lce//lce
     <dependency>/luascs//luascs
     <dependency>/luaopenbus//luaopenbus
-    <target-os>linux:<library>/lualdap//lualdap
     <target-os>linux:<library>/unix//dl
     <target-os>linux:<library>/unix//pthread
+    <target-os>darwin:<library>/lualdap//lualdap
+    <target-os>linux:<library>/lualdap//lualdap
     <include>src
     <include>.    
   ;
