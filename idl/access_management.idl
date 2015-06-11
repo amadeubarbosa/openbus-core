@@ -4,7 +4,7 @@
 #ifndef __TECGRAF_OPENBUS_CORE_V21_SERVICES_ACCESSCONTROL_ADMIN_V10_IDL__
 #define __TECGRAF_OPENBUS_CORE_V21_SERVICES_ACCESSCONTROL_ADMIN_V10_IDL__
 
-#include "tecgraf/openbus/core/v2_1/services/access_control.idl"
+#include "openbus_access-2.1.idl"
 
 /** \brief Módulo dos sistemas e aplicações do Tecgraf. */
 module tecgraf {
