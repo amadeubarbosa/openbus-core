@@ -304,7 +304,7 @@ do
     sleep(lease)
   end
   -- wait for login to expire and check if the call will fail
-  sleep(lease)
+  sleep(lease+1)
   validlogin.busSession:newCred("renew")
   local ok, ex = pcall(ac.renew, ac)
   assert(ok == false)
