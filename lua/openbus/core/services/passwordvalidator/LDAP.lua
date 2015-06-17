@@ -19,6 +19,9 @@ local type = _G.type
 local array = require "table"
 local concat = array.concat
 
+local os = require "os"
+local tmpname = os.tmpname
+
 local thread = require "openbus.util.thread"
 local spawn = thread.spawn
 
@@ -39,6 +42,7 @@ return function(configs)
     return nil, msg.LdapBadTimeout:tag{value=timeout,type=type(timeout)}
   end
   local cleartext = configs.ldap_cleartext
+  local iorpath = configs.ldap_iorpath or tmpname()
   -- collect server urls
   local urls = {}
   for _, url in ipairs(servers) do
@@ -68,7 +72,7 @@ return function(configs)
       flavor = "cooperative.server;corba.server",
       host = "127.0.0.1",
     }
-    oil.writeto("ldap.ior", orb:newservant{
+    oil.writeto("]=]..iorpath..[=[", orb:newservant{
       __type = orb:loadidl[[]=]..idl..[=[]],
       validate = function(_, url, dn, password, usetls, timeout)
         if timeout == -1 then timeout = nil end
@@ -92,13 +96,13 @@ return function(configs)
     orb:loadidl(idl)
     local service
     repeat
-      local ior = oil.readfrom("ldap.ior")
+      local ior = oil.readfrom(iorpath)
       if ior ~= nil then
         local ok, res = pcall(orb.newproxy, orb, ior, nil, "LDAP")
         if ok then service = res end
       end
     until service ~= nil
-    os.remove("ldap.ior")
+    os.remove(iorpath)
     function openldap(url, dn, password, usetls, timeout)
       return service:validate(url, dn, password, usetls, timeout or -1)
     end

@@ -12,6 +12,13 @@ if ! $(lce-root-path)
 }
 use-project lce : $(lce-root-path) ;
 
+local lualdap-root-path = [ os.environ LUALDAP_ROOT_PATH ] ;
+if ! $(lualdap-root-path)
+{
+  lualdap-root-path = "$(here)/../lualdap" ;
+}
+use-project lualdap : $(lualdap-root-path) ;
+
 lua-install-path = [ os.environ LUA_INSTALL_PATH ] ;
 if ! $(lua-install-path)
 {
@@ -67,7 +74,7 @@ project busservices
     <target-os>windows:<define>_CRT_SECURE_NO_WARNINGS
     <target-os>windows:<define>_WIN32
     <define>OPENBUS_PROGNAME=\\\""busservices\\\""
-    <target-os>windows:<cxxflags>/FS
+    <toolset>msvc-12.0:<cxxflags>/FS
     <debug-symbols>on
   ;
 
@@ -131,8 +138,10 @@ exe busservices
     <dependency>/loop//luacothread
     <dependency>/oil//oil
     <dependency>/oil//luaidl
+    <dependency>/lce//lce
     <dependency>/luascs//luascs
     <dependency>/luaopenbus//luaopenbus
+    <target-os>linux:<library>/lualdap//lualdap
     <target-os>linux:<library>/unix//dl
     <target-os>linux:<library>/unix//pthread
     <target-os>darwin:<library>/lualdap//lualdap
