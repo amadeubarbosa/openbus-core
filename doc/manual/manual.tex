@@ -232,14 +232,18 @@ ldap_timeout = 10
 \end{verbatim}
 \end{description}
 
-
 \subsection{Validadores de autenticação externa}\label{subsec:valtoken}
 
-Um validador de autenticação externa deve ser implementado segundo as mesmas regras de um validador de senha, descrito na seção ~\ref{subsec:valsenha}. A única diferença é que a função \texttt{validator} recebe como parâmetro o identificador de login, o nome da entidade e o token a ser validado.
+Um validador de autenticação externa é implementado de forma similar a um validador de senha, descrito na seção ~\ref{subsec:valsenha}. Contudo, a função \texttt{validator} do validador de autenticação externa recebe os seguintes parâmetros:
+\begin{itemize}
+  \item Uma string contendo o identificador de login.
+  \item Uma string contendo o nome da entidade
+  \item Uma string contendo o token a ser validado.
+  \item Um objeto a ser usado para construção da cadeia.
+  Esse objeto apresenta o método \texttt{push} que recebe como parâmetro um nome de entidade a ser adicionado na cadeia.
+  O método devolve como valor de retorno o login ID que essa entidade assume na cadeia sendo criada.
+\end{itemize}
 O validador deve utilizar algum serviço externo para validar o token recebido e retornar verdadeiro ou falso de acordo com o sucesso ou falha da operação.
-
-
-
 
 \section{O executável \emph{busservices}}\label{sec:busservices}
 

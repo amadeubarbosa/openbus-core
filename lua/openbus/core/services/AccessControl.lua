@@ -481,6 +481,13 @@ function AccessControl:signChainFor(target)
   return self:encodeChain(self.access:getCallerChain(), target)
 end
 
+local ImportedChain = class()
+function ImportedChain:push(entity)
+  local id = newid("time")
+  self[#self+1] = {id=id, entity=entity}
+  return id
+end
+
 function AccessControl:signChainByToken(encrypted, domain)
   local access = self.access
   local caller = access:getCallerChain().caller
@@ -491,18 +498,22 @@ function AccessControl:signChainByToken(encrypted, domain)
   end
   local validator = self.tokenValidators[domain]
   if validator ~= nil then
-    local entities, errmsg = validator.validate(caller.id, caller.entity, decrypted)
-    if entities then
-      local count = #entities
-      local originators = {}
-      for i = 1, count-1 do
-        originators[i] = {id="<unknown>",entity=entities[i]}
+    local imported = ImportedChain()
+    local ok, errmsg = validator.validate(caller.id, caller.entity, decrypted, imported)
+    if ok then
+      local count = #imported
+      if count > 0 then
+        local last = imported[count]
+        imported[count] = nil
+        local chain = {
+          originators = imported,
+          caller = last,
+        }
+        return self:encodeChain(chain, caller.entity)
       end
-      local chain = {
-        originators = originators,
-        caller = {id="<unknown>",entity=entities[count]}
+      ServiceFailure{
+        message = msg.ImportedChainWasEmpty:tag{ validator = validator.name },
       }
-      return self:encodeChain(chain, caller.entity)
     elseif errmsg ~= nil then
       log:exception(msg.FailedTokenValidation:tag{
         validator = validator.name,

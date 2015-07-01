@@ -1,12 +1,11 @@
 return function (configs)
-  return function (login, entity, token)
+  return function (login, entity, token, imported)
     local tokenentity, tokenlogin, originators = string.match(token, "^([^@]+)@([^:]+):(.-)$")
     if tokenentity == entity and tokenlogin == login then
-      local entities = {}
       for entity in string.gmatch(originators, "([^, ]+)") do
-        entities[#entities+1] = entity
+        imported:push(entity)
       end
-      return entities
+      return true
     end
     return nil, "malformed test token"
   end
