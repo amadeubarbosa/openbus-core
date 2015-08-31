@@ -96,6 +96,17 @@ make coreservices.c
   : <search>$(here)
   ;
 
+make coreadmin.c
+  : lua/openbus/core/admin/Description.lua
+    lua/openbus/core/admin/idl.lua
+    lua/openbus/core/admin/main.lua
+    lua/openbus/core/admin/messages.lua
+    lua/openbus/core/admin/parsed.lua
+    lua/openbus/core/admin/script.lua
+  : preloader.pre-compile
+  : <search>$(here)
+  ;
+  
 modules.load idl2lua : : $(oil-root-path) ;
 import idl2lua ; 
 using idl2lua ;
@@ -151,8 +162,46 @@ exe busservices
   ;
 explicit busservices ;
 
+exe busadmin
+  : src/launcher.c
+    src/adminlibs.c
+    coreadmin.c
+    /lua//lua
+    /luuid//luuid
+    /lce//lce
+    /luafilesystem//lfs
+    /luavararg//luavararg
+    /luastruct//luastruct
+    /luasocket//luasocket
+    /loop//loop
+    /loop//luatuple
+    /loop//luacothread
+    /oil//oil
+    /oil//luaidl
+    /luascs//luascs
+    /luaopenbus//luaopenbus
+    /luasec//luasec    
+  : <dependency>/loop//loop
+    <dependency>/loop//luatuple
+    <dependency>/loop//luacothread
+    <dependency>/oil//oil
+    <dependency>/oil//luaidl
+    <dependency>/lce//lce
+    <dependency>/luascs//luascs
+    <dependency>/luaopenbus//luaopenbus
+    <target-os>linux:<library>/lualdap//lualdap
+    <target-os>linux:<library>/unix//dl
+    <target-os>linux:<library>/unix//pthread
+    <target-os>darwin:<library>/lualdap//lualdap
+    <target-os>linux:<library>/lualdap//lualdap
+    <include>src
+    <include>.    
+  ;
+explicit busadmin ;
+    
 install stage
   : busservices
+    busadmin
   : <location>install
   ;
 
