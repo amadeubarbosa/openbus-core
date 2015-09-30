@@ -38,6 +38,7 @@ openbus@tecgraf.puc-rio.br
 admin=`$busadmin -l openbus.test.configs -e 'print(admin)'`
 admpsw=`$busadmin -l openbus.test.configs -e 'print(admpsw)'`
 domain=`$busadmin -l openbus.test.configs -e 'print(domain)'`
+baddomain=`$busadmin -l openbus.test.configs -e 'print(baddomain)'`
 leasetime=`$busadmin -l openbus.test.configs -e 'print(leasetime)'`
 expirationgap=`$busadmin -l openbus.test.configs -e 'print(expirationgap)'`
 passwordpenalty=`$busadmin -l openbus.test.configs -e 'print(passwordpenalty)'`
@@ -45,13 +46,15 @@ passwordpenalty=`$busadmin -l openbus.test.configs -e 'print(passwordpenalty)'`
 genkey $OPENBUS_TEMP/$name
 
 $buscore \
-	-port=$port \
-	-iorfile=$OPENBUS_TEMP/$name.ior \
-	-database=$OPENBUS_TEMP/$name.db \
-	-privatekey=$OPENBUS_TEMP/$name.key \
-	-certificate=$OPENBUS_TEMP/$name.crt \
+	-port $port \
+	-iorfile $OPENBUS_TEMP/$name.ior \
+	-database $OPENBUS_TEMP/$name.db \
+	-privatekey $OPENBUS_TEMP/$name.key \
+	-certificate $OPENBUS_TEMP/$name.crt \
 	-validator $domain:openbus.test.core.services.TesterUserValidator \
 	-tokenvalidator $domain:openbus.test.core.services.TestTokenValidator \
+	-validator $baddomain:openbus.test.core.services.BadPasswordValidator \
+	-tokenvalidator $baddomain:openbus.test.core.services.BadTokenValidator \
 	-legacydomain $domain \
 	-admin $admin \
 	-badpasswordpenalty $passwordpenalty \

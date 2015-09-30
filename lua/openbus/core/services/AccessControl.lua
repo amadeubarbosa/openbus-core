@@ -7,6 +7,7 @@ local pairs = _G.pairs
 local pcall = _G.pcall
 local rawset = _G.rawset
 local type = _G.type
+local xpcall = _G.xpcall
 
 local coroutine = require "coroutine"
 local newthread = coroutine.create
@@ -28,6 +29,9 @@ local running = cothread.running
 local schedule = cothread.schedule
 local unschedule = cothread.unschedule
 local waituntil = cothread.defer
+
+local debug = require "debug"
+local traceback = debug.traceback
 
 local uuid = require "uuid"
 local newid = uuid.new
@@ -52,7 +56,8 @@ local assert = idl.serviceAssertion
 local BusEntity = idl.const.BusEntity
 local BusLogin = idl.const.BusLogin
 local EncryptedBlockSize = idl.const.EncryptedBlockSize
-local ServiceFailure = idl.types.services.ServiceFailure
+local ServiceFailureId = idl.types.services.ServiceFailure
+local ServiceFailure = idl.throw.services.ServiceFailure
 local accexp = idl.throw.services.access_control
 local UnknownDomain = accexp.UnknownDomain
 local AccessDenied = accexp.AccessDenied
@@ -310,7 +315,7 @@ function AccessControl:__init(data)
             entity = login.entity,
           })
           local ok, ex = pcall(login.remove, login) -- catch I/O errors
-          if not ok and (type(ex)~="table" or ex._repid~=ServiceFailure) then
+          if not ok and (type(ex)~="table" or ex._repid~=ServiceFailureId) then
             error(ex)
           end
         end
@@ -393,8 +398,16 @@ function AccessControl:loginByPassword(entity, domain, pubkey, encrypted)
       end
       local validator = self.passwordValidators[domain]
       if validator ~= nil then
-        local valid, errmsg = validator.validate(entity, decoded.data)
-        if valid then
+        local ok, valid, errmsg = xpcall(validator.validate, traceback, entity, decoded.data)
+        if not ok then
+          ServiceFailure{
+            message = msg.FailedPasswordValidation:tag{
+              entity = entity,
+              validator = validator.name,
+              errmsg = valid,
+            }
+          }
+        elseif valid then
           local login = self.activeLogins:newLogin(entity, pubkey)
           log:request(msg.LoginByPassword:tag{
             login = login.id,
@@ -499,8 +512,20 @@ function AccessControl:signChainByToken(encrypted, domain)
   local validator = self.tokenValidators[domain]
   if validator ~= nil then
     local imported = ImportedChain()
-    local ok, errmsg = validator.validate(caller.id, caller.entity, decrypted, imported)
-    if ok then
+    local ok, valid, errmsg = xpcall(validator.validate,
+                                     traceback,
+                                     caller.id,
+                                     caller.entity,
+                                     decrypted,
+                                     imported)
+    if not ok then
+      ServiceFailure{
+        message = msg.FailedTokenValidation:tag{
+          validator = validator.name,
+          errmsg = valid,
+        }
+      }
+    elseif valid then
       local count = #imported
       if count > 0 then
         local last = imported[count]

@@ -103,6 +103,7 @@ return function(...)
     InvalidSecurityLayerMode = 23,
     InvalidChallengeTime = 24,
     InvalidSharedAuthTime = 25,
+    InvalidMaximumChannelLimit = 26,
   }
 
   -- configuration parameters parser
@@ -131,7 +132,9 @@ return function(...)
     badpasswordtries = 3,
     badpasswordlimit = inf,
     badpasswordrate = inf,
-  
+
+    maxchannels = 0,
+
     admin = {},
     validator = {},
     tokenvalidator = {},
@@ -202,6 +205,8 @@ Options:
   -badpasswordtries <number> número de tentativas durante o período de 'passwordpenalty'
   -badpasswordlimit <number> número máximo de autenticações simultâneas com senha incorreta
   -badpasswordrate <number>  frequência máxima de autenticações com senha incoreta (autenticação/segundo)
+
+  -maxchannels <number>      número máximo de canais de comunicação com os sistemas
 
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
@@ -306,6 +311,14 @@ Options:
     return errcode.InvalidPasswordValidationRate
   end
   
+  -- validate time parameters
+  if Configs.maxchannels < 0 then
+    log:misconfig(msg.InvalidMaximumChannelLimit:tag{
+      value = Configs.maxchannels,
+    })
+    return errcode.InvalidMaximumChannelLimit
+  end
+
   -- load private key
   local prvkey, errmsg = readprivatekey(Configs.privatekey)
   if prvkey == nil then
@@ -489,6 +502,7 @@ Options:
     host = Configs.host,
     port = getoptcfg(Configs, "port", 0),
     sslport = getoptcfg(Configs, "sslport", 0),
+    maxchannels = getoptcfg(Configs, "maxchannels", 0),
     flavor = orbflv,
     options = orbopt,
   }
@@ -558,6 +572,9 @@ Options:
       log:config(msg.BadPasswordLimitedTries:tag{limit=Configs.badpasswordtries})
       log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})
       log:config(msg.BadPasswordMaxRate:tag{value=Configs.badpasswordrate})
+      if Configs.maxchannels ~= nil then
+        log:config(msg.MaximumChannelLimit:tag{value=orb.maxchannels})
+      end
       if not params.enforceAuth then
         log:config(msg.OfferAuthorizationDisabled)
       end
