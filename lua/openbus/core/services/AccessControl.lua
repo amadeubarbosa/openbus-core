@@ -7,6 +7,7 @@ local pairs = _G.pairs
 local pcall = _G.pcall
 local rawset = _G.rawset
 local type = _G.type
+local xpcall = _G.xpcall
 
 local coroutine = require "coroutine"
 local newthread = coroutine.create
@@ -25,6 +26,9 @@ local running = cothread.running
 local schedule = cothread.schedule
 local unschedule = cothread.unschedule
 local waituntil = cothread.defer
+
+local debug = require "debug"
+local traceback = debug.traceback
 
 local uuid = require "uuid"
 local newid = uuid.new
@@ -389,8 +393,16 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
         NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
       end
       for _, validator in ipairs(self.passwordValidators) do
-        local valid, errmsg = validator.validate(entity, decoded.data)
-        if valid then
+        local ok, valid, errmsg = xpcall(validator.validate, traceback, entity, decoded.data)
+        if not ok then
+          ServiceFailure{
+            message = msg.FailedPasswordValidation:tag{
+              entity = entity,
+              validator = validator.name,
+              errmsg = valid,
+            }
+          }
+        elseif valid then
           local login = self.activeLogins:newLogin(entity, pubkey)
           log:request(msg.LoginByPassword:tag{
             login = login.id,
