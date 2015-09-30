@@ -45,10 +45,11 @@ passwordpenalty=`$runconsole -l openbus.test.configs -e 'print(passwordpenalty)'
 genkey $OPENBUS_TEMP/$name
 
 $buscore \
-	-port=$port \
-	-database=$OPENBUS_TEMP/$name.db \
-	-privatekey=$OPENBUS_TEMP/$name.key \
+	-port $port \
+	-database $OPENBUS_TEMP/$name.db \
+	-privatekey $OPENBUS_TEMP/$name.key \
 	-validator openbus.test.core.services.TesterUserValidator \
+	-validator openbus.test.core.services.BadPasswordValidator \
 	-admin $admin \
 	-badpasswordpenalty $passwordpenalty \
 	-leasetime $leasetime \

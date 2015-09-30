@@ -384,7 +384,9 @@ Options:
       log:config(msg.BadPasswordLimitedTries:tag{limit=Configs.badpasswordtries})
       log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})
       log:config(msg.BadPasswordMaxRate:tag{value=Configs.badpasswordrate})
-      log:config(msg.MaximumChannelLimit:tag{value=Configs.maxchannels})
+      if orb.maxchannels ~= nil then
+        log:config(msg.MaximumChannelLimit:tag{value=Configs.maxchannels})
+      end
       if not params.enforceAuth then
         log:config(msg.OfferAuthorizationDisabled)
       end

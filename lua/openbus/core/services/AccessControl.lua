@@ -53,6 +53,7 @@ local assert = idl.serviceAssertion
 local BusEntity = idl.const.BusEntity
 local BusLogin = idl.const.BusLogin
 local EncryptedBlockSize = idl.const.EncryptedBlockSize
+local ServiceFailureId = idl.types.services.ServiceFailure
 local ServiceFailure = idl.throw.services.ServiceFailure
 local accexp = idl.throw.services.access_control
 local AccessDenied = accexp.AccessDenied
@@ -310,7 +311,7 @@ function AccessControl:__init(data)
             entity = login.entity,
           })
           local ok, ex = pcall(login.remove, login) -- catch I/O errors
-          if not ok and (type(ex)~="table" or ex._repid~=ServiceFailure) then
+          if not ok and (type(ex)~="table" or ex._repid~=ServiceFailureId) then
             error(ex)
           end
         end
