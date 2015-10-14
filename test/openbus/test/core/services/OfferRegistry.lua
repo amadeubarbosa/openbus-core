@@ -598,6 +598,38 @@ return OpenBusFixture{
           -- assert no notifications have arrived
           checks.assert(observer:_get("offerRegistered"), checks.equal(nil))
         end,
+        UnauthorizedObserverRemoval = function (fixture, openbus)
+          -- create observer
+          local context = openbus.context
+          local observer = newObserver({ offerRegistered = true }, context)
+          -- subscribe observer
+          local offers = fixture.offers
+          local newprops = { SomeOfferProps[1] }
+          local subscription = offers:subscribeObserver(observer, newprops)
+          checks.assert(subscription, isOfferRegSubscription(observer,
+                                                             newprops))
+          local system = fixture:newConn("system")
+          context:setCurrentConnection(system)
+          -- attempt to remove observer
+          local ok, err = pcall(subscription.remove, subscription)
+          checks.assert(ok, checks.equal(false))
+          checks.assert(err, checks.like{ _repid = UnauthorizedOperation })
+          -- change service offer properties
+          local comp = fixture.component
+          local offer = offers:registerService(comp.IComponent, SomeOfferProps)
+          context:setCurrentConnection(nil)
+          -- wait for observer notification
+          local desc = observer:_wait("offerRegistered")
+          checks.assert(desc, isServiceOfferDesc(comp, system.login, SomeOfferProps))
+          -- unsubscribe observer
+          subscription:remove()
+          -- change service offer properties to the watched properties
+          context:setCurrentConnection(system)
+          offer:setProperties(SomeOfferProps)
+          context:setCurrentConnection(nil)
+          -- assert no notifications have arrived
+          checks.assert(observer:_get("offerRegistered"), checks.equal(nil))
+        end,
       },
     },
     AsSystem = OffersFixture{
@@ -971,6 +1003,38 @@ return OpenBusFixture{
           -- assert the unsubscribed observer were not notified
           local observer = observers[2]
           checks.assert(observer:_get("removed"), checks.equal(nil))
+          checks.assert(observer:_get("propertiesChanged"), checks.equal(nil))
+        end,
+        UnauthorizedObserverRemoval = function (fixture, openbus)
+          -- create observer
+          local context = openbus.context
+          local observer = newObserver({
+            propertiesChanged = true,
+            removed = true,
+          }, context)
+          -- subscribe observer
+          local offer = fixture.offer
+          local comp = fixture.component
+          local system = fixture.system
+          local login = system.login
+          local subscription = offer:subscribeObserver(observer)
+          checks.assert(subscription, isOfferSubscription(observer,
+                                                          comp,
+                                                          login,
+                                                          SomeOfferProps))
+          -- attempt to remove observer as other entity
+          context:setCurrentConnection(system)
+          local ok, err = pcall(subscription.remove, subscription)
+          checks.assert(ok, checks.equal(false))
+          checks.assert(err, checks.like{ _repid = UnauthorizedOperation })
+          -- remove service offer
+          offer:remove()
+          context:setCurrentConnection(nil)
+          -- wait for observer notification
+          local desc = observer:_wait("removed")
+          -- assert the notification is correct
+          checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps))
+          -- assert no other notification has arrived
           checks.assert(observer:_get("propertiesChanged"), checks.equal(nil))
         end,
       },
