@@ -9,7 +9,7 @@ elif [[ "$mode" != "RELEASE" && "$mode" != "DEBUG" ]]; then
 	exit 1
 fi
 
-busport=21010
+busport=21200
 leasetime=6
 passwordpenalty=6
 
