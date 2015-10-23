@@ -24,7 +24,8 @@ if [ "$2" == "" ]; then
 	done
 fi
 
-TEST_RUNNER="local suite = require('openbus.test.core.services.Suite')
+TEST_RUNNER="package.path=package.path..';./?.lua'
+local suite = require('openbus.test.core.services.Suite')
 local Runner = require('loop.test.Results')
 local path = {}
 for name in string.gmatch('$2', '[^.]+') do
