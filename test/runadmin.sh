@@ -4,11 +4,10 @@ mode=$1
 bushost=$2
 busport=$3
 
-busadmin="${OPENBUS_CORE_HOME}/bin/busadmin"
+busadmin="env LUA_PATH=${OPENBUS_SDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
 
 if [[ "$mode" == "DEBUG" ]]; then
 	busadmin="$busadmin DEBUG"
-	busconsole="$busconsole DEBUG"
 elif [[ "$mode" != "RELEASE" ]]; then
 	echo "Usage: $0 <RELEASE|DEBUG> <bus host> <bus port> <args>"
 	exit 1
