@@ -59,6 +59,9 @@ local ServiceOfferType = offtyp.ServiceOffer
 local cvrtyp = oldidl.types.v2_1.services.legacy_support
 local LegacyConverterType = cvrtyp.LegacyConverter
 
+local coreutil = require "openbus.core.services.util"
+local assertCaller = coreutil.assertCaller
+
 local function traceback(errmsg)
   if type(errmsg) == "string" then
     return stacktrace(errmsg)
@@ -226,9 +229,18 @@ end
 
 -- IDL operations
 
+function LoginRegistry:getAllLogins(...)
+  doexcept(xpcall(assertCaller, traceback, self))
+  return trymethod(self.__object, "getAllLogins", ...)
+end
+
 function LoginRegistry:subscribeObserver(...)
   local subscription = trymethod(self.__object, "subscribeObserver", ...)
   subscription.__type = LoginObsSubType
+  wrapmethod(subscription, "watchLogin")
+  wrapmethod(subscription, "forgetLogin")
+  wrapmethod(subscription, "watchLogins")
+  wrapmethod(subscription, "forgetLogins")
   wrapmethod(subscription, "remove")
   return subscription
 end

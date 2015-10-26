@@ -4,9 +4,9 @@ mode=$1
 name=$2
 port=$3
 
-busssl="${OPENBUS_OPENSSL_HOME}/bin/openssl"
-buscore="${OPENBUS_CORE_HOME}/bin/busservices"
-busadmin="${OPENBUS_CORE_HOME}/bin/busadmin"
+busssl="env LD_LIBRARY_PATH=$OPENBUS_OPENSSL_HOME/lib ${OPENBUS_OPENSSL_HOME}/bin/openssl"
+buscore="env LUA_PATH=${OPENBUS_CORE_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busservices"
+busadmin="env LUA_PATH=${OPENBUS_SDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
 
 if [[ "$mode" == "DEBUG" ]]; then
 	buscore="$buscore DEBUG"

@@ -76,6 +76,9 @@ project busservices
     <define>OPENBUS_PROGNAME=\\\""busservices\\\""
     <toolset>msvc-12.0:<cxxflags>/FS
     <debug-symbols>on
+  : default-build
+    <variant>release
+    <link>static
   ;
 
 make coreservices.c
@@ -158,7 +161,7 @@ exe busservices
     <target-os>darwin:<library>/lualdap//lualdap
     <target-os>linux:<library>/lualdap//lualdap
     <include>src
-    <include>.    
+    <include>.
   ;
 explicit busservices ;
 
@@ -181,7 +184,8 @@ exe busadmin
     /luascs//luascs
     /luaopenbus//luaopenbus
     /luasec//luasec    
-  : <dependency>/loop//loop
+  : <dependency>coreadmin.c
+    <dependency>/loop//loop
     <dependency>/loop//luatuple
     <dependency>/loop//luacothread
     <dependency>/oil//oil
