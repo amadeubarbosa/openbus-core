@@ -192,7 +192,6 @@ ldap_patterns = {
 \begin{verbatim}
 ldap_timeout = 10
 \end{verbatim}
-\end{description}
 
 \item[ldap\_cleartext] indica um valor booleano que determina se a comunicação com o servidor LDAP pode ser feita sem encriptação caso o servidor rejeite conexões LDAP+StartTLS ou a URL não começe com \code{ldaps://}.
 Neste caso as senhas podem ser interceptadas por terceiros capazes de observar o tráfego da rede usada para acesso ao servidor LDAP.
@@ -201,7 +200,6 @@ Exemplo:
 \begin{verbatim}
 ldap_cleartext = true
 \end{verbatim}
-\end{description}
 
 \item[ldap\_iorpath] indica um caminho de arquivo que será utilizado para armazenar dados temporários usados internamente pelo \code{busservices}.
 Em particular, nesse arquivo é gravado um IOR para acesso a thread de consulta ao serviço LDAP.
