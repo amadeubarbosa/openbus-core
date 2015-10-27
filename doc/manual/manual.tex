@@ -230,7 +230,6 @@ ldap_patterns = {
 \begin{verbatim}
 ldap_timeout = 10
 \end{verbatim}
-\end{description}
 
 \item[ldap\_cleartext] indica um valor booleano que determina se a comunicação com o servidor LDAP pode ser feita sem encriptação caso o servidor rejeite conexões LDAP+StartTLS ou a URL não começe com \code{ldaps://}.
 Neste caso as senhas podem ser interceptadas por terceiros capazes de observar o tráfego da rede usada para acesso ao servidor LDAP.
@@ -239,7 +238,6 @@ Exemplo:
 \begin{verbatim}
 ldap_cleartext = true
 \end{verbatim}
-\end{description}
 
 \item[ldap\_iorpath] indica um caminho de arquivo que será utilizado para armazenar dados temporários usados internamente pelo \code{busservices}.
 Em particular, nesse arquivo é gravado um IOR para acesso a thread de consulta ao serviço LDAP.
@@ -388,8 +386,8 @@ No pacote de instalação do barramento existem scripts que auxiliam algumas taref
 
 \subsection{Inicialização}
 
-Recomendamos que o administrador coloque o script \emph{businit} em /etc/init.d/openbus (ou outro lugar semelhante em seu sistema operacional) e faça o link simbólico apropriado para cada \textit{runlevel}. É possível editar o script \emph{businit} para redefinir o local da instalação do barramento (variável \code{INSTALL_DIR}), de modo que o script possa encontrar o executável do \emph{busservices}.
-Alternativamente, é possível também definir a variável de ambiente \code{OPENBUS_HOME} para indicar o local de instalação do barramento para os scripts \code{businit} e \code{buscheck} (veja a seção seguinte).
+Recomendamos que o administrador coloque o script \emph{businit} em /etc/init.d/openbus (ou outro lugar semelhante em seu sistema operacional) e faça o link simbólico apropriado para cada \textit{runlevel}. É possível editar o script \emph{businit} para redefinir o local da instalação do barramento (variável \code{INSTALL\_DIR}), de modo que o script possa encontrar o executável do \emph{busservices}.
+Alternativamente, é possível também definir a variável de ambiente \code{OPENBUS\_HOME} para indicar o local de instalação do barramento para os scripts \code{businit} e \code{buscheck} (veja a seção seguinte).
 
 Além disso, por padrão, este script carrega configurações adicionais definidas no  arquivo \code{/etc/default/openbus}, ou ainda no arquivo \code{config/openbus.rc} do diretório de instalação do barramento.
 Num desses arquivos podem ser definidas configurações adicionais tais como o nome do arquivo a ser criado para armazenar o PID do processo do \emph{busservices} disparado (variável \code{PIDFILE}), o arquivo de log do barramento (variável \code{OUTFILE}), ou ainda o mail de notificação de reinícios (variável \code{EMAIL}).
@@ -409,7 +407,7 @@ Num desses arquivos podem ser definidas configurações adicionais tais como o nom
 \subsection{Monitoramento}
 
 O script \emph{buscheck} foi criado para ser utilizado em conjunto com o agendador de tarefas do sistema (comando \emph{cron} no Unix).
-Assim como o script \code{businit}, o script \code{buscheck} também precisa ser alterado para indicar o local de instalação do barramento(variável \code{INSTALL_DIR}).
+Assim como o script \code{businit}, o script \code{buscheck} também precisa ser alterado para indicar o local de instalação do barramento(variável \code{INSTALL\_DIR}).
 Também como o script \code{businit}, o script \code{buscheck} também carrega configurações do arquivo \code{/etc/default/openbus}, ou do arquivo \code{config/openbus.rc} do diretório de instalação do barramento.
 
 Como o script \textbf{depende} do script \emph{businit}, caso o administrador decida colocar o \emph{businit} em um local particular, \textbf{é importante editar o script \emph{buscheck} de acordo} (variável \code{OPENBUS\_INIT}).
