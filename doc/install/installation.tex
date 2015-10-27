@@ -170,7 +170,7 @@ Atualmente pode-se utilizar 2 tipos de validadores no OpenBus: validadores LDAP 
 
 \subsection{Validadores LDAP}
 
-O validador LDAP, disponibilizado em \texttt{openbus.core.services.passwordvalidator.LDAP}, tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro ``-configs''. A seguir apresentamos quais são as propriedades, seus significados e possíveis valores:
+O validador LDAP, disponibilizado em \texttt{openbus.core.services.passwordvalidator.LDAP}, tem suporte a servidores Microsoft Active Directory e OpenLDAP. As configurações do validador precisam estar no arquivo de configuração que é informado ao \emph{busservices} através do parâmetro \code{-configs}. A seguir apresentamos quais são as propriedades, seus significados e possíveis valores:
 \begin{description}
 \item[ldap\_servers] indica uma lista de URLs de servidores LDAP. Cada URL deve seguir o formato \\ \texttt{<protocol>://<server>:<port>}, onde \texttt{<protocol>} pode ser \texttt{ldaps} ou \texttt{ldap}. Exemplo:
 \begin{verbatim}
@@ -191,6 +191,24 @@ ldap_patterns = {
 \item[ldap\_timeout] indica um tempo máximo de espera (em segundos) da resposta do servidor LDAP. Exemplo:
 \begin{verbatim}
 ldap_timeout = 10
+\end{verbatim}
+\end{description}
+
+\item[ldap\_cleartext] indica um valor booleano que determina se a comunicação com o servidor LDAP pode ser feita sem encriptação caso o servidor rejeite conexões LDAP+StartTLS ou a URL não começe com \code{ldaps://}.
+Neste caso as senhas podem ser interceptadas por terceiros capazes de observar o tráfego da rede usada para acesso ao servidor LDAP.
+Por padrão, essa propriedade não é definida fazendo com que as senhas não sejam trafegadas em claro pela rede.
+Exemplo:
+\begin{verbatim}
+ldap_cleartext = true
+\end{verbatim}
+\end{description}
+
+\item[ldap\_iorpath] indica um caminho de arquivo que será utilizado para armazenar dados temporários usados internamente pelo \code{busservices}.
+Em particular, nesse arquivo é gravado um IOR para acesso a thread de consulta ao serviço LDAP.
+Por padrão é utilizado um arquivo temporário indicado pelo sistema.
+Exemplo:
+\begin{verbatim}
+ldap_iorpath = "/tmp/openbus/ldapthread.ior"
 \end{verbatim}
 \end{description}
 
@@ -232,24 +250,25 @@ Um exemplo de como configurar o LUA\_PATH para um validador personalizado é apre
 
 No pacote de instalação do barramento existem scripts que auxiliam algumas tarefas diárias comuns ao administrador da máquina onde o barramento está instalado. Esses scripts estão localizados na pasta \emph{bin} e são eles:
 \begin{description}
-   \item[bus-init] script de inicialização para iniciar e parar o barramento, semelhante aos scripts do /etc/init.d em servidores Unix.
-   \item[bus-check-running] script que verifica se o barramento está executando e, caso não esteja, inicia o barramento utilizando o script \emph{bus-init}.
+   \item[businit] script de inicialização para iniciar e parar o barramento, semelhante aos scripts do /etc/init.d em servidores Unix.
+   \item[buscheck] script que verifica se o barramento está executando e, caso não esteja, inicia o barramento utilizando o script \emph{businit}.
 \end{description}
 
 \subsection{Inicialização}
 
-Recomendamos que o administrador coloque o script \emph{bus-init} em /etc/init.d/openbus (ou outro lugar semelhante em seu sistema operacional) e faça o link simbólico apropriado para cada \textit{runlevel}. É \textbf{necessário editar o script \emph{bus-init}} para redefinir o local da instalação do barramento, de modo que o script possa encontrar o executável do \emph{busservices}. 
+Recomendamos que o administrador coloque o script \emph{businit} em /etc/init.d/openbus (ou outro lugar semelhante em seu sistema operacional) e faça o link simbólico apropriado para cada \textit{runlevel}. É possível editar o script \emph{businit} para redefinir o local da instalação do barramento (variável \code{INSTALL_DIR}), de modo que o script possa encontrar o executável do \emph{busservices}.
+Alternativamente, é possível também definir a variável de ambiente \code{OPENBUS_HOME} para indicar o local de instalação do barramento para os scripts \code{businit} e \code{buscheck} (veja a seção seguinte).
 
-Além disso, por padrão, este script salva um arquivo de nome \emph{busservices.pid} (contendo o PID do processo do \emph{busservices}) dentro do diretório de instalação do barramento. Caso o administrador queira, ele também pode mudar a localização desse arquivo dentro do script.
+Além disso, por padrão, este script carrega configurações adicionais definidas no  arquivo \code{/etc/default/openbus}, ou ainda no arquivo \code{config/openbus.rc} do diretório de instalação do barramento.
+Num desses arquivos podem ser definidas configurações adicionais tais como o nome do arquivo a ser criado para armazenar o PID do processo do \emph{busservices} disparado (variável \code{PIDFILE}), o arquivo de log do barramento (variável \code{OUTFILE}), ou ainda o mail de notificação de reinícios (variável \code{EMAIL}).
 
-Para utilizar o script \emph{bus-init} \textbf{é recomendado} que o administrador do sistema configure o barramento para utilizar um arquivo de configuração. Nesse caso, o administrador \textbf{precisa} decidir onde colocar esse arquivo de configuração. Há duas formas de fazer isso utilizando o \emph{bus-init}:
+\textbf{É fortemente recomendado} que o administrador do sistema configure o barramento para utilizar um arquivo de configuração. Nesse caso, o administrador \textbf{precisa} decidir onde colocar esse arquivo de configuração. Há duas formas de fazer isso utilizando os arquivos \code{/etc/default/openbus} ou \code{config/openbus.rc}:
 \begin{enumerate}
-   \item Criando um arquivo /etc/default/openbus e definindo a variável OPENBUS\_CONFIG. Exemplo:
+   \item Definindo a variável de ambiente \code{OPENBUS\_CONFIG}. Exemplo:
    \begin{verbatim}
-   OPENBUS_CONFIG=/etc/openbus.cfg
-   export OPENBUS_CONFIG
+   export OPENBUS_CONFIG=/etc/openbus.cfg
    \end{verbatim}
-   \item Editando o script \emph{bus-init} e alterando a variável PARAMS com o parâmetro ``-configs'' e a localização do arquivo de configuração desejado. Exemplo:
+   \item Definindo a variável PARAMS com o parâmetro \code{-configs} e a localização do arquivo de configuração desejado. Exemplo:
    \begin{verbatim}
    PARAMS=-configs /etc/openbus.cfg
    \end{verbatim}
@@ -257,20 +276,24 @@ Para utilizar o script \emph{bus-init} \textbf{é recomendado} que o administrado
 
 \subsection{Monitoramento}
 
-O script \emph{bus-check-running} foi criado para ser utilizado em conjunto com o agendador de tarefas do sistema (comando \emph{cron} no Unix). Este script \textbf{aceita dois parâmetros} sendo que apenas o primeiro é obrigatório. O primeiro argumento deve indicar o local de instalação do barramento e o segundo um destinatário de email para receber as notificações de reinício do barramento (caso não seja informado, será enviado email para root@<hostname>). É importante observar que este script \textbf{depende} do script \emph{bus-init}.
+O script \emph{buscheck} foi criado para ser utilizado em conjunto com o agendador de tarefas do sistema (comando \emph{cron} no Unix).
+Assim como o script \code{businit}, o script \code{buscheck} também precisa ser alterado para indicar o local de instalação do barramento(variável \code{INSTALL_DIR}).
+Também como o script \code{businit}, o script \code{buscheck} também carrega configurações do arquivo \code{/etc/default/openbus}, ou do arquivo \code{config/openbus.rc} do diretório de instalação do barramento.
 
-Além disso, caso o administrador coloque o \emph{bus-init} em outro local (que não seja /etc/init.d/openbus), \textbf{será necessário editar o script \emph{bus-check-running}} para redefinir a variável OPENBUS\_INIT. Da mesma forma, caso o administrador altere o local do arquivo \emph{busservices.pid} \textbf{também será necessário editar este script} para redefinir a variável PID\_BUSSERVICES.
+Como o script \textbf{depende} do script \emph{businit}, caso o administrador decida colocar o \emph{businit} em um local particular, \textbf{é importante editar o script \emph{buscheck} de acordo} (variável \code{OPENBUS\_INIT}).
 
-Um exemplo de agendamento no \emph{cron} para utilizar o \emph{bus-check-running} é dado a seguir, neste exemplo consideramos que o barramento está instalado em /opt/openbus-2.0:
+Um exemplo de agendamento no \emph{cron} para utilizar o \emph{buscheck} é dado a seguir, neste exemplo consideramos que o barramento está instalado em /opt/openbus-2.0:
 \begin{verbatim}
-*/10 * * * * /opt/openbus-2.0/bin/bus-check-running /opt/openbus-2.0
+*/10 * * * * env OPENBUS_HOME=/opt/openbus-2.0 /opt/openbus-2.0/bin/buscheck
 \end{verbatim}
 
 \subsection{Rotacionamento de logs}
 
-Por padrão, o barramento imprime logs em tela. É \textbf{fortemente recomendado} configurar o barramento para salvar esses logs em arquivos, conforme documentado em~\cite{ob2.0core}. Por isso, recomendamos uma estratégia para rotacionar os arquivos de log.
+O script \code{businit} desvia toda saída do barramento para um arquivo (veja variável \code{OUTFILE} no arquivo de configurações adicionais). É \textbf{fortemente recomendado} manter esses arquivos de saída para identificar problemas no uso do barramento.
+Por isso, recomendamos uma estratégia para rotacionar esses arquivos de saída.
 
-O comando \textbf{logrotate} é um utilitário para simplificar a administração de arquivos de logs bem comum na maioria das instalações Linux e Solaris. O logrotate permite a rotação automática, a compressão dos logs antigos, a remoção de logs muito velhos e mesmo o envio de emails contendo os arquivos de logs.
+O comando \textbf{logrotate} é um utilitário para simplificar a administração de arquivos de logs bem comum na maioria das instalações Linux e Solaris.
+O logrotate permite a rotação automática, a compressão dos logs antigos, a remoção de logs muito velhos e mesmo o envio de emails contendo os arquivos de logs.
 
 Para rotacionar os logs do barramento, basta configurar o logrotate com as linhas a seguir. Neste exemplo consideramos que o barramento salva o log em /var/log/openbus.log:
 \begin{verbatim}
@@ -349,11 +372,11 @@ Não é necessário nenhuma permissão especial, basta o proprietário ser root e ter
 
 No mesmo diretório dos arquivos originais.
 
-\subsection{Preciso executar o comando ``logrotate /etc/logrotate.d/openbus''?}
+\subsection{Preciso executar o comando \code{logrotate /etc/logrotate.d/openbus}?}
 
 Não é preciso. Normalmente o logrotate é cadastrado como uma tarefa diária no cron. Mas isso não impede de que o administrador execute tal comando passando o parâmetro \-\-force para obrigar o primeiro rotacionamento. Isso é indicado principalmente logo após a configuração inicial.
 
-\subsection{Preciso configurar para o comando ``logrotate /etc/logrotate.d/openbus'' ser colocado na inicialização automática da máquina? Como saber que ele está executando?}
+\subsection{Preciso configurar para o comando \code{logrotate /etc/logrotate.d/openbus} ser colocado na inicialização automática da máquina? Como saber que ele está executando?}
 
 O logrotate não é um daemon, portanto não se mantém em execução. Normalmente, o logrotate é executado através do agendamento do cron. Caso não haja cron disponível em uma dada plataforma, então nesse caso será sim importante executar o comando do logrotate na inicialização da máquina.
 
@@ -396,7 +419,7 @@ Após esse procedimento basta ter a pasta \$HOME/bin no PATH.
 
 \subsection{Como configuro um validador personalizado?}
 
-Um exemplo simples de configuração de um validador personalizado, seria criar um código como o apresentado em \ref{subsec:valpersonalizados}, e salvar o código em um arquivo com a extensão ``.lua''. Depois, adicione o caminho onde foi salvo o arquivo à variável de ambiente LUA\_PATH, da seguinte forma: 
+Um exemplo simples de configuração de um validador personalizado, seria criar um código como o apresentado em \ref{subsec:valpersonalizados}, e salvar o código em um arquivo com a extensão \code{.lua}. Depois, adicione o caminho onde foi salvo o arquivo à variável de ambiente LUA\_PATH, da seguinte forma: 
 
 \begin{verbatim}
 export LUA_PATH+=";<caminho onde está o validador>/?.lua"

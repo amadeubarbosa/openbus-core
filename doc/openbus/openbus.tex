@@ -318,19 +318,23 @@ Se uma configuração não for explicitada, será utilizado o seu valor padrão.
 As opções de configuração são:
 \begin{description}
   \item [-host] Endereço de rede usado pelo barramento.\\
-Valor padrão é ``*'', que significa que vai ouvir em todos os IPs da máquina.
+Valor padrão é \code{*}, que significa que vai ouvir em todos os IPs da máquina.
   \item [-port] Número da porta usada pelo barramento.\\
 Valor padrão é 2089.
 
   \item [-database] Arquivo de dados do barramento.\\
-Valor padrão é ``openbus.db''.
+Valor padrão é \code{openbus.db}.
   \item [-privatekey] Arquivo com chave privada do barramento.\\
-Valor padrão é ``openbus.key''.
+Valor padrão é \code{openbus.key}.
 
   \item [-leasetime] Tempo em segundos de lease dos logins de acesso.\\
 Valor padrão é 1800 segundos.
   \item [-expirationgap] Tempo em segundos que os logins ficam válidos após o lease.\\
 Valor padrão é 10 segundos. 
+  \item [-challengetime] Tempo em segundos de duração do desafio de autenticação por certificado.\\
+Valor padrão é o valor do parâmetro \code{expirationgap}.
+  \item [-sharedauthtime] Tempo em segundos de validade dos segredos de autenticação compartilhada.\\
+Valor padrão é o valor do parâmetro \code{leasetime} 
 
   \item [-badpasswordpenalty] Tempo em segundos com tentativas de login limitadas após falha de senha.\\
 Após uma falha de autenticação, este é o período em que o número de falhas de autenticação por senha (ver badpasswordtries) provenientes de um mesmo IP ou entidade será limitado.\\
@@ -345,6 +349,9 @@ Por padrão, o controle de fluxo está desativado.
 
   \item [-badpasswordrate] Frequência máxima de autenticações com senha incorreta repassadas para os validadores de senha em períodos longos (maiores que 2*badpasswordlimit/badpasswordrate segundos).\\
 Por padrão, o controle de fluxo está desativado.
+
+  \item [-maxchannels] Número máximo de canais de comunicação com os sistemas.\\
+Por padrão nenhum limite é imposto ao número de canais mantidos abertos com os sistemas clientes.
 
   \item [-admin] Usuário com privilégio de administração.\\
 Não é definido um valor padrão.
@@ -365,10 +372,10 @@ Por padrão o log é direcionado para a saída padrão (\emph{standard output}).
   \item [-logaddress] Exibe o endereço IP do requisitante no log do barramento.
 
   \item [-configs] Arquivo de configurações adicionais do barramento.\\
-O valor padrão é ``openbus.cfg".
+O valor padrão é \code{openbus.cfg}.
 \end{description}
 
-As opções ``admin" e ``validator" podem receber mais de um valor.
+As opções \code{admin} e \code{validator} podem receber mais de um valor.
 Quando essas opções são configuradas por linha de comando, basta repetir a opção o número de vezes desejadas.
 Quando são configuradas através do arquivo de configuração, é necessário informar a lista de valores desejados, no formato de uma tabela \lua{}~\cite{web:lua}.
 O código~\ref{lst:openbus.cfg} apresenta um exemplo de arquivo do configuração.
@@ -381,16 +388,16 @@ O código~\ref{lst:openbus.cfg} apresenta um exemplo de arquivo do configuração.
   \inputlisting[language=lua]{openbus.cfg}{Exemplo de arquivo de configuração.}
 \end{latexonly}
 
-Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção ``config'' por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
+Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção \code{config} por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
 Porém, as opções passadas por linha de comando têm prioridade sobre as opções definidas no arquivo de configuração.
 
-Através da opção ``validator'' informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
+Através da opção \code{validator} informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
 Disponibilizamos em \texttt{openbus.core.services.passwordvalidator.LDAP} um validador LDAP, que precisa ser configurado com a lista de servidores utilizados na autenticação. Para maiores informações sobre como configurar o validador LDAP, consulte~\cite{ob2.0install}.
 
 %% NOTE: comentado parte que falava sobre o validador de teste: 
 % e em \\\texttt{openbus.test.core.services.TesterUserValidator} disponibilizamos um validador para ambientes de teste, que permite acesso quando o login é igual a senha.
 
-Também é possível desabilitar o suporte de compatibilidade com a versão anterior através da opção ``nolegacy''. Ao ativar essa opção, o barramento deixa de permitir que entidades se autentiquem no barramento utilizando as bibliotecas de acesso de versão 1.5.x. 
+Também é possível desabilitar o suporte de compatibilidade com a versão anterior através da opção \code{nolegacy}. Ao ativar essa opção, o barramento deixa de permitir que entidades se autentiquem no barramento utilizando as bibliotecas de acesso de versão 1.5.x. 
 
 
 \subsection{Gerentes do Barramento}
@@ -424,7 +431,7 @@ Para utilizar a ferramenta, deve-se executar:
 busadmin [opções] --login=<usuário> <comando>
 \end{verbatim} 
 
-Para adicionar e remover categorias, entidades, certificados, interfaces e autorizações, aconselhamos que se defina um arquivo de script \lua{} com o formato especificado no código~\ref{lst:openbus.adm}. Ele serve de entrada para os comandos ``script'' e ``undo-script'' da ferramenta \emph{busadmin}, que, respectivamente, executa e desfaz a execução do lote de comandos especificados pelo arquivo de script.
+Para adicionar e remover categorias, entidades, certificados, interfaces e autorizações, aconselhamos que se defina um arquivo de script \lua{} com o formato especificado no código~\ref{lst:openbus.adm}. Ele serve de entrada para os comandos \code{script} e \code{undo-script} da ferramenta \emph{busadmin}, que, respectivamente, executa e desfaz a execução do lote de comandos especificados pelo arquivo de script.
 
 \begin{htmlonly}
   \codeinput{openbus.adm}{Exemplo de script para a ferramenta \emph{busadmin}:}
@@ -534,9 +541,9 @@ O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha
   \item[\texttt{--}list-authorization=\textless id\_entidade\textgreater] Mostra todas as autorizações da entidade especificada.
 
   \item[\texttt{--}list-authorization 
-        \texttt{--}interface=``\textless interface1\textgreater \space
+        \texttt{--}interface="\textless interface1\textgreater \space
           \textless interface1\textgreater \dots 
-          \textless interfaceN\textgreater''] Mostra todas as autorizações contendo as interfaces especificadas.
+          \textless interfaceN\textgreater"] Mostra todas as autorizações contendo as interfaces especificadas.
 
 \end{description}
 
