@@ -2,7 +2,7 @@
 
 mode=$1
 
-busadmin="env LUA_PATH=${OPENBUS_SDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
+busadmin="env LUA_PATH=${OPENBUS_CORESDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
 
 if [[ "$mode" == "DEBUG" ]]; then
 	busadmin="$busadmin DEBUG"

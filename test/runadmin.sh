@@ -6,7 +6,7 @@ busport=$3
 param=${4%%=*}
 desc=${4#--*=}
 
-busadmin="env LUA_PATH=${OPENBUS_SDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
+busadmin="env LUA_PATH=${OPENBUS_CORESDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
 busadmdesc="${OPENBUS_CORE_HOME}/bin/busadmdesc.lua"
 
 if [[ "$mode" == "DEBUG" ]]; then

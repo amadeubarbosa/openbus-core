@@ -5,8 +5,8 @@ name=$2
 port=$3
 
 busssl="env LD_LIBRARY_PATH=$OPENBUS_OPENSSL_HOME/lib ${OPENBUS_OPENSSL_HOME}/bin/openssl"
-buscore="env LUA_PATH=${OPENBUS_CORE_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busservices"
-busadmin="env LUA_PATH=${OPENBUS_SDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
+buscore="env LUA_PATH=${OPENBUS_CORE_TEST}/?.lua;${OPENBUS_CORESDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busservices"
+busadmin="env LUA_PATH=${OPENBUS_CORESDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
 
 if [[ "$mode" == "DEBUG" ]]; then
 	buscore="$buscore DEBUG"
@@ -55,7 +55,8 @@ $buscore \
 	-tokenvalidator $domain:openbus.test.core.services.TestTokenValidator \
 	-validator $baddomain:openbus.test.core.services.BadPasswordValidator \
 	-tokenvalidator $baddomain:openbus.test.core.services.BadTokenValidator \
-	-legacydomain $domain \
+	-validator legacydomain:openbus.test.core.services.TryBothValidators \
+	-legacydomain legacydomain \
 	-admin $admin \
 	-badpasswordpenalty $passwordpenalty \
 	-leasetime $leasetime \

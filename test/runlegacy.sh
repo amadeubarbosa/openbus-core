@@ -11,7 +11,10 @@ fi
 
 runbus="source ${OPENBUS_CORE_TEST}/runbus.sh $mode"
 runadmin="source ${OPENBUS_CORE_TEST}/runadmin.sh $mode"
-runtests="env OPENBUS_SDKLUA_HOME=${OPENBUS_LEGACYSDKLUA_HOME} OPENBUS_SDKLUA_TEST=${OPENBUS_LEGACYSDKLUA_TEST} /bin/bash runtests.sh $mode"
+runtests="env \
+OPENBUS_SDKLUA_HOME=${OPENBUS_LEGACYSDKLUA_HOME} \
+OPENBUS_SDKLUA_TEST=${OPENBUS_LEGACYSDKLUA_TEST} \
+/bin/bash runtests.sh $mode"
 
 busport=21208
 leasetime=6
