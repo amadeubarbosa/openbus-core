@@ -7,7 +7,10 @@ if [[ "$mode" != "DEBUG" && "$mode" != "RELEASE" ]]; then
 	exit 1
 fi
 
-runconsole="source ${OPENBUS_SDKLUA_TEST}/runconsole.sh $mode"
+runconsole="env \
+OPENBUS_SDKLUA_HOME=${OPENBUS_CORESDKLUA_HOME} \
+OPENBUS_SDKLUA_TEST=${OPENBUS_CORESDKLUA_TEST} \
+/bin/bash ${OPENBUS_CORESDKLUA_TEST}/runconsole.sh $mode"
 
 TEST_PRELUDE='package.path=package.path..";"..(os.getenv("OPENBUS_CORE_LUA") or "../lua").."/?.lua"'
 

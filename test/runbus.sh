@@ -34,7 +34,10 @@ openbus@tecgraf.puc-rio.br
 	fi
 }
 
-runconsole="source ${OPENBUS_SDKLUA_TEST}/runconsole.sh $mode"
+runconsole="env \
+OPENBUS_SDKLUA_HOME=${OPENBUS_CORESDKLUA_HOME} \
+OPENBUS_SDKLUA_TEST=${OPENBUS_CORESDKLUA_TEST} \
+/bin/bash ${OPENBUS_CORESDKLUA_TEST}/runconsole.sh $mode"
 
 admin=`$runconsole -l openbus.test.configs -e 'print(admin)'`
 admpsw=`$runconsole -l openbus.test.configs -e 'print(admpsw)'`
