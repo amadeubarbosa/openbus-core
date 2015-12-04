@@ -342,13 +342,12 @@ O valor padrão é a string vazia.
 O valor padrão é \code{openbus.cfg}.
 \end{description}
 
-As opções \code{admin} e \code{validator} podem receber mais de um valor.
-Quando essas opções são configuradas por linha de comando, basta repetir a opção o número de vezes desejadas.
-Quando são configuradas através do arquivo de configuração, é necessário informar a lista de valores desejados, no formato de uma tabela \lua{}~\cite{web:lua}.
+As opções \code{admin}, \code{validator} e \code{tokenvalidator} podem aparecer mais de uma vez para definir multiplos valores.
+(ao contrário do OpenBus 2.0, isso também é válido para definições no arquivo de configuração.)
 O código~\ref{lst:openbus.cfg} apresenta um exemplo de arquivo do configuração.
 
 \begin{htmlonly}
-  \codeinput{openbus.cfg}{Exemplo de arquivo de configuração:} 
+  \codeinput{src/openbus.cfg}{Exemplo de arquivo de configuração:} 
 \end{htmlonly}
 
 \begin{latexonly}
@@ -356,6 +355,7 @@ O código~\ref{lst:openbus.cfg} apresenta um exemplo de arquivo do configuração.
 \end{latexonly}
 
 Existem duas formas de se definir o arquivo de configuração que o programa irá utilizar: utilizando a opção \code{config} por linha de comando, ou definindo um valor para a variável de ambiente \emph{OPENBUS\_CONFIG}.
+Quando a variável de ambiente \emph{OPENBUS\_CONFIG} não é definida, o arquivo \code{openbus.cfg} no diretório corrente é usado por default como arquivo de configuração.
 Porém, as opções passadas por linha de comando têm prioridade sobre as opções definidas no arquivo de configuração.
 
 Através da opção \code{validator} informa-se o módulo do validador de senhas que será utilizado pelo barramento. 
