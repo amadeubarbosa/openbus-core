@@ -316,7 +316,6 @@ Options:
   -- setup bus access
   local orbcfg = { host=Configs.host, port=Configs.port }
   log:config(msg.ServicesListeningAddress:tag(orbcfg))
-  orbcfg.tcpoptions = {timeout=nil,reuseaddr=true}
   orbcfg.maxchannels = Configs.maxchannels
   local orb = access.initORB(orbcfg)
   local legacy
