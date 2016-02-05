@@ -310,7 +310,7 @@ Options:
   end
 
   -- create a set of admin users
-  local adminUsers = { BusEntity }
+  local adminUsers = { [BusEntity] = true }
   for _, admin in ipairs(Configs.admin) do
     adminUsers[admin] = true
     log:config(msg.AdministrativeRightsGranted:tag{entity=admin})
