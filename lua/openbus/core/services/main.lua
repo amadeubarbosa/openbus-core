@@ -51,8 +51,11 @@ local newSCS = server.newSCS
 local setuplog = server.setuplog
 local readfile = server.readfrom
 local readprivatekey = server.readprivatekey
+local sysex = require "openbus.util.sysex"
+local NO_PERMISSION = sysex.NO_PERMISSION
 
 local idl = require "openbus.core.idl"
+local BusEntity = idl.const.BusEntity
 local BusObjectKey = idl.const.BusObjectKey
 local mngidl = require "openbus.core.admin.idl"
 local loadidl = mngidl.loadto
@@ -451,7 +454,7 @@ Options:
   end
 
   -- create a set of admin users
-  local adminUsers = {}
+  local adminUsers = { [BusEntity] = true }
   for _, admin in ipairs(Configs.admin) do
     adminUsers[admin] = true
     log:config(msg.AdministrativeRightsGranted:tag{entity=admin})
@@ -586,6 +589,15 @@ Options:
       facets.EntityRegistry:__init(params)
       facets.OfferRegistry:__init(params)
     end,
+    shutdown = function(self)
+      if iceptor:getCallerChain().caller.entity ~= BusEntity then
+        NO_PERMISSION{ completed = "COMPLETED_NO" }
+      end
+      self.context:deactivateComponent()
+      orb:shutdown()
+      facets.AccessControl:shutdown()
+      log:uptime(msg.CoreServicesTerminated)
+    end,
   }
   
   -- create legacy SCS components
@@ -635,6 +647,7 @@ Options:
     log:config(msg.BusCoreReferenceGenerated:tag{ior=tostring(bus.IComponent)})
   end
 
-  -- start ORB
+  -- start services
+  bus.IComponent:startup()
   log:uptime(msg.CoreServicesStarted)
 end

@@ -460,6 +460,13 @@ function script.quit()
   suspend()
 end
 
+function script.shutdown()
+  local conn = getCurrentConnection()
+  if conn ~= nil then
+    conn.connection.bus:shutdown()
+  end
+end
+
 function script.logins(entity)
   if isinstanceof(entity, LoginInfo) then entity = entity.entity end
   local logins = OpenBusContext:getLoginRegistry()
@@ -604,6 +611,7 @@ argchecker.module(script, {
   login = { "string", "string", "nil|string", "nil|string" },
   whoami = {},
   quit = {},
+  shutdown = {},
 
   logins = { "nil|string|table" },
   kick = { "string|table" },
