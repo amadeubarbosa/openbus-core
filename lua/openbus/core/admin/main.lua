@@ -181,7 +181,9 @@ return function(...)
     * Desfaz a execução de um script Lua com um lote de comandos:
       --undo-script=<arquivo>
 
-  - Relatório
+  - Manutenção
+    * Encerra a execução atual do barramento:
+      --shutown
     * Monta um relatório sobre o estado atual do barramento:
       --report
   -------------------------------------------------------------------------------
@@ -322,6 +324,9 @@ return function(...)
     };
     ["undo-script"] = {
       {n = 1, params = {}},
+    };
+    ["shutdown"] = {
+      {n = 0, params = {}}
     };
     ["report"] = {
       {n = 0, params = {}}
@@ -1276,6 +1281,24 @@ return function(...)
   handlers["undo-script"] = function(cmd)
     script.setup(handlers)
     return script.undoScript(cmd)
+  end
+
+  ---
+  -- Encerra a execução dos serviços do núcleo do barramento
+  --
+  -- @param cmd Comando e seus argumentos.
+  --
+  handlers["shutdown"] = function(cmd)
+    local conn = connect()
+    if not conn then
+      return false
+    end
+    local ok, errmsg = pcall(conn.bus.shutdown, conn.bus)
+    if not ok then
+      printf("[ERRO] Erro inesperado ao encerrar o barramento: %s", tostring(errmsg))
+      return false
+    end
+    return true
   end
 
   ---

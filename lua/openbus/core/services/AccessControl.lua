@@ -413,11 +413,11 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
           renewLogin(self, login)
           loginAttempts:granted(entity)
           return login, self.leaseTime
-        elseif errmsg ~= nil then
+        else
           log:exception(msg.FailedPasswordValidation:tag{
             entity = entity,
             validator = validator.name,
-            errmsg = errmsg,
+            errmsg = errmsg or msg.UnspecifiedValidationFailure,
           })
         end
       end
@@ -436,7 +436,10 @@ end
 function AccessControl:startLoginByCertificate(entity)
   local publickey = CertificateRegistry:getPublicKey(entity)
   if publickey == nil then
-    MissingCertificate{entity=entity}
+    if entity ~= self.login.entity then
+      MissingCertificate{entity=entity}
+    end
+    publickey = self.access.buskey
   end
   local secret = newid("random")
   local logger = LoginProcess{
