@@ -200,76 +200,54 @@ make lua/openbus/core/admin/parsed.lua
     <include>$(scs-idl-path)/src
   ;
 
+local exe_deps = 
+  /lua//lua
+  /luuid//luuid
+  /lce//lce
+  /luafilesystem//lfs
+  /luavararg//luavararg
+  /luastruct//luastruct
+  /luasocket//luasocket
+  /loop//loop
+  /loop//luatuple
+  /loop//luacothread
+  /oil//oil
+  /oil//luaidl
+  /luascs//luascs
+  /luaopenbus//luaopenbus
+;
+
+local exe_requirements =
+  <dependency>/loop//loop
+  <dependency>/loop//luatuple
+  <dependency>/loop//luacothread
+  <dependency>/oil//oil
+  <dependency>/oil//luaidl
+  <dependency>/lce//lce
+  <dependency>/luascs//luascs
+  <dependency>/luaopenbus//luaopenbus
+  <target-os>linux:<library>/unix//dl
+  <target-os>linux:<library>/unix//pthread
+  <target-os>darwin:<library>/lualdap//lualdap
+  <target-os>linux:<library>/lualdap//lualdap
+  <include>src
+  <include>.
+;
+
 exe busservices
   : coreservices.c
     src/launcher.c
     src/coreservlibs.c
-    /lua//lua
-    /luuid//luuid
-    /lce//lce
-    /luafilesystem//lfs
-    /luavararg//luavararg
-    /luastruct//luastruct
-    /luasocket//luasocket
-    /loop//loop
-    /loop//luatuple
-    /loop//luacothread
-    /oil//oil
-    /oil//luaidl
-    /luascs//luascs
-    /luaopenbus//luaopenbus
-    /luasec//luasec    
-  : <dependency>/loop//loop
-    <dependency>/loop//luatuple
-    <dependency>/loop//luacothread
-    <dependency>/oil//oil
-    <dependency>/oil//luaidl
-    <dependency>/lce//lce
-    <dependency>/luascs//luascs
-    <dependency>/luaopenbus//luaopenbus
-    <target-os>linux:<library>/unix//dl
-    <target-os>linux:<library>/unix//pthread
-    <target-os>darwin:<library>/lualdap//lualdap
-    <target-os>linux:<library>/lualdap//lualdap
-    <include>src
-    <include>.
+    $(exe_deps)
+  : $(exe_requirements)
   ;
 explicit busservices ;
 
 exe busadmin
   : src/launcher.c
     src/adminlibs.c
-    coreadmin.c
-    /lua//lua
-    /luuid//luuid
-    /lce//lce
-    /luafilesystem//lfs
-    /luavararg//luavararg
-    /luastruct//luastruct
-    /luasocket//luasocket
-    /loop//loop
-    /loop//luatuple
-    /loop//luacothread
-    /oil//oil
-    /oil//luaidl
-    /luascs//luascs
-    /luaopenbus//luaopenbus
-    /luasec//luasec    
-  : <dependency>coreadmin.c
-    <dependency>/loop//loop
-    <dependency>/loop//luatuple
-    <dependency>/loop//luacothread
-    <dependency>/oil//oil
-    <dependency>/oil//luaidl
-    <dependency>/lce//lce
-    <dependency>/luascs//luascs
-    <dependency>/luaopenbus//luaopenbus
-    <target-os>linux:<library>/unix//dl
-    <target-os>linux:<library>/unix//pthread
-    <target-os>darwin:<library>/lualdap//lualdap
-    <target-os>linux:<library>/lualdap//lualdap
-    <include>src
-    <include>.    
+    $(exe_deps)
+  : $(exe_requirements)
   ;
 explicit busadmin ;
     
@@ -281,6 +259,7 @@ install stage
 
 install deps
   : busservices
+    busadmin
   : <location>install
     <install-dependencies>on
     <install-type>LIB
