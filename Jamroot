@@ -66,7 +66,6 @@ if ! $(luasocket-root-path)
 {
   luasocket-root-path = "$(here)/../luasocket" ;
 }
-use-project luasocket : $(luasocket-root-path) ;
 
 loop-root-path = [ os.environ LOOP_ROOT_PATH ] ;
 if ! $(loop-root-path)
@@ -102,13 +101,6 @@ if ! $(luasec-root-path)
   luasec-root-path = "$(here)/../luasec" ;
 }
 use-project luasec : $(luasec-root-path) ;
-
-local lualdap-root-path = [ os.environ LUALDAP_ROOT_PATH ] ;
-if ! $(lualdap-root-path)
-{
-  lualdap-root-path = "$(here)/../lualdap" ;
-}
-use-project lualdap : $(lualdap-root-path) ;
 
 local openldap-jam-path = [ os.environ OPENLDAP_JAM_PATH ] ;
 if ! $(openldap-jam-path)
@@ -189,7 +181,7 @@ make coreadmin.c
   : preloader.pre-compile
   : <search>$(here)
   ;
-  
+
 modules.load idl2lua : : $(oil-root-path) ;
 import idl2lua ; 
 using idl2lua ;
@@ -235,7 +227,6 @@ exe busservices
     <dependency>/lce//lce
     <dependency>/luascs//luascs
     <dependency>/luaopenbus//luaopenbus
-    <target-os>linux:<library>/lualdap//lualdap
     <target-os>linux:<library>/unix//dl
     <target-os>linux:<library>/unix//pthread
     <target-os>darwin:<library>/lualdap//lualdap
@@ -273,7 +264,6 @@ exe busadmin
     <dependency>/lce//lce
     <dependency>/luascs//luascs
     <dependency>/luaopenbus//luaopenbus
-    <target-os>linux:<library>/lualdap//lualdap
     <target-os>linux:<library>/unix//dl
     <target-os>linux:<library>/unix//pthread
     <target-os>darwin:<library>/lualdap//lualdap
