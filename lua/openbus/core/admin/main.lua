@@ -186,6 +186,24 @@ return function(...)
       --shutown
     * Monta um relatório sobre o estado atual do barramento:
       --report
+  
+  - Configuração
+    * Recarrega o arquivo de configurações do barramento:
+      --reload-configs-file
+    * Atribui os privilégios de administração para uma lista de usuários:
+      --grant-admin-to="<user1> <user2> ... <userN>"
+    * Revoga os privilégios de administração para uma lista de usuários:
+      --revoke-admin-from="<user1> <user2> ... <userN>"
+    * Recarrega um validador de login. Se o não existir o validador é carregado:
+      --reload-validator=<validator>
+    * Remove um validador de login:
+      --del-validator=<validator>
+    * Redefine o número máximo de canais de comunicação do OiL:
+      --set-max-channels=<integer>
+    * Redefine o nível de log do barramento:
+      --set-log-level=<integer>
+    * Redefine o nível de log do OiL.
+      --set-oil-log-level=<integer>
   -------------------------------------------------------------------------------
   ]]
 
@@ -331,7 +349,34 @@ return function(...)
     ["report"] = {
       {n = 0, params = {}}
     };
-    
+    ["reload-configs-file"] = {
+      {n = 0, params = {}}
+    };
+    ["grant-admin-to"] = {
+      {n = 0, params = {}},
+      {n = 1, params = {users = 1}},
+      {n = 1, params = {}},
+    };
+    ["revoke-admin-from"] = {
+      {n = 0, params = {}},
+      {n = 1, params = {users = 1}},
+      {n = 1, params = {}},
+    };
+    ["reload-validator"] = {
+      {n = 1, params = {}},
+    };
+    ["del-validator"] = {
+      {n = 1, params = {}},
+    };
+    ["set-max-channels"] = {
+      {n = 1, params = {}},
+    };
+    ["set-log-level"] = {
+      {n = 1, params = {}},
+    };
+    ["set-oil-log-level"] = {
+      {n = 1, params = {}},
+    };    
   }
 
   ---
@@ -1300,6 +1345,74 @@ return function(...)
     end
     return true
   end
+  
+  local function handleConfigurationCall(cmd, method, paramtype)
+    local conn = connect()
+    if not conn then
+      return false
+    end
+    local param = cmd.params[cmd.name]
+    param = (paramtype and paramtype == "number") and tonumber(param) or param
+    local ok, errmsg = pcall(conn.configuration[method],
+                             conn.configuration, param)
+    if not ok then
+       print('[ERRO]: '..errmsg.message)
+      return false
+    end
+    return true
+  end
+
+  handlers["reload-configs-file"] = function()
+    local conn = connect()
+    if not conn then
+      return false
+    end
+    conn.configuration:reloadConfigsFile()
+    return true
+  end
+
+  local function list2table(list)
+    local t = {}
+    for entry in string.gmatch(list, "%S+") do
+      t[#t+1] = entry
+    end
+    return t
+  end
+  
+  handlers["grant-admin-to"] = function(cmd)
+    cmd.params[cmd.name] = list2table(cmd.params.users)
+    return handleConfigurationCall(cmd, "grantAdminTo")
+  end
+
+  handlers["revoke-admin-from"] = function(cmd)
+    cmd.params[cmd.name] = list2table(cmd.params.users)
+    return handleConfigurationCall(cmd, "revokeAdminFrom")
+  end
+
+  local function handleValidator(cmd, action)
+    return handleConfigurationCall(cmd, action.."Validator")
+  end
+
+
+  handlers["reload-validator"] = function(cmd)
+    return handleValidator(cmd, "reload")
+  end
+
+  handlers["del-validator"] = function(cmd)
+    return handleValidator(cmd, "del")
+  end
+
+  handlers["set-max-channels"] = function(cmd)
+    return handleConfigurationCall(cmd, "setMaxChannels", "number")
+  end
+
+  handlers["set-log-level"] = function(cmd)
+    return handleConfigurationCall(cmd, "setLogLevel", "number")
+  end
+
+  handlers["set-oil-log-level"] = function(cmd)
+    return handleConfigurationCall(cmd, "setOilLogLevel", "number")
+  end
 
   ---
   -- Monta um relatório sobre o estado atual do barramento
@@ -1546,6 +1659,10 @@ return function(...)
     conn.entities = OpenBusContext:getEntityRegistry()
     conn.interfaces = OpenBusContext:getInterfaceRegistry()
     conn.offers = OpenBusContext:getOfferRegistry()
+    local ref = "corbaloc::"..host..":"..port
+      .."/"..BusObjectKey.."/Configuration"
+    conn.configuration = orb:newproxy(ref, nil,
+      "tecgraf::openbus::core::v2_0::services::admin::v1_0::Configuration")
     -- END OF TODO
     connection = conn
     return connection

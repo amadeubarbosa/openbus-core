@@ -48,9 +48,11 @@ local sysex = require "openbus.util.sysex"
 local NO_PERMISSION = sysex.NO_PERMISSION
 
 local idl = require "openbus.core.idl"
+local ServiceFailure = idl.throw.services.ServiceFailure
 local BusEntity = idl.const.BusEntity
 local BusObjectKey = idl.const.BusObjectKey
 local mngidl = require "openbus.core.admin.idl"
+local ConfigurationType = mngidl.types.services.admin.v1_0.Configuration
 local loadidl = mngidl.loadto
 local access = require "openbus.core.services.Access"
 local msg = require "openbus.core.services.messages"
@@ -79,8 +81,15 @@ return function(...)
     UnableToConvertLegacyDatabase = 17,
   }
 
-  -- configuration parameters parser
-  local Configs = ConfigArgs{
+  local reloadConfigs = {
+    admin = {},
+    validator = {},
+    maxchannels = 0,
+    loglevel = 3,
+    oilloglevel = 0,
+  }
+
+  local defConfigs = {
     host = "*",
     port = 2089,
   
@@ -97,36 +106,165 @@ return function(...)
     badpasswordlimit = inf,
     badpasswordrate = inf,
 
-    maxchannels = 0,
-
-    admin = {},
-    validator = {},
-  
-    loglevel = 3,
     logfile = "",
-    oilloglevel = 0,
     oillogfile = "",
     
     noauthorizations = false,
     nolegacy = false,
     logaddress = false,
   }
+  for k, v in pairs(reloadConfigs) do
+    defConfigs[k] = v
+  end
+  
+  -- configuration parameters parser
+  local Configs = ConfigArgs(defConfigs)
 
   log:level(Configs.loglevel)
   log:version(msg.CopyrightNotice)
 
-  do -- parse configuration file
+  local function revokeAdmin(user, admins)
+    admins[user] = nil 
+    log:config(msg.AdministrativeRightsRevoked:tag{entity=user})
+  end
+
+  local function grantAdmin(user, admins)
+    if not admins[user] then
+      admins[user] = true
+      log:config(msg.AdministrativeRightsGranted:tag{entity=user})
+    end
+  end
+  
+  local adminUsers = { [BusEntity] = true }
+  local function setAdminUsers()
+    local updatedAdminUsers = {}
+    for _, admin in pairs(Configs.admin) do
+      updatedAdminUsers[admin] = true
+      grantAdmin(admin, adminUsers)
+    end
+    for admin,_ in pairs(adminUsers) do
+      if admin ~= BusEntity and not updatedAdminUsers[admin] then
+        revokeAdmin(admin, adminUsers)
+      end
+    end
+  end
+
+  local function loadValidatorModule(package)
+    local ok, result = pcall(require, package)
+    if not ok then
+      log:misconfig(msg.UnableToLoadPasswordValidator:tag{
+        validator = package,
+        error = result,
+      })
+      return false, errcode.UnableToLoadPasswordValidator, result
+    end
+    local validate, errmsg = result(Configs)
+    if validate == nil then
+      log:misconfig(msg.UnableToInitializePasswordValidator:tag{
+        validator = package,
+        error = errmsg,
+      })
+      return false, errcode.UnableToInitializePasswordValidator, result
+    end
+    return true, validate
+  end
+
+  local validators = {}
+  local function loadValidator(validator)
+    local loaded
+    if validators[validator] then
+      package.loaded[validator] = nil
+      loaded = true
+    end
+    local res, validate, errmsg = loadValidatorModule(validator)
+    if res then
+      validators[validator] = validate
+      local suffix
+      if loaded then
+        suffix = "Reloaded"
+      else
+        suffix = "Loaded"
+      end
+      local phrase = "PasswordValidator"..suffix
+      log:config(msg[phrase]:tag{name=validator})
+    else
+      return nil, validate, errmsg
+    end
+    return true
+  end
+
+  local function loadValidators(action)
+    local hasValidator = false
+    for _, validator in pairs(Configs.validator) do
+      if not hasValidator then hasValidator = true end
+      local res, validate = loadValidator(validator)
+      if not res then return false, validate end
+    end
+    if not hasValidator then
+      log:misconfig(msg.NoPasswordValidators)
+      return false, errcode.NoPasswordValidators
+    end
+    return true
+  end
+  
+  local function setLogLevel(logtype, loglevel)
+    local logobj, logmsg
+    if logtype == "oil" then
+      logobj = oillog
+      logmsg = msg.OilLogLevel
+    elseif logtype == "core" then
+      logobj = log
+      logmsg = msg.CoreServicesLogLevel
+    end
+    local currLogLevel = logobj:level()
+    if currLogLevel ~= loglevel then
+      logobj:level(loglevel)
+      log:config(logmsg:tag{value=loglevel})
+    end
+    return true
+  end
+
+  local function validateMaxChannels(maxchannels)
+    if maxchannels < 0 then
+      log:misconfig(msg.InvalidMaximumChannelLimit:tag{
+        value = maxchannels,
+      })
+      return false, errcode.InvalidMaximumChannelLimit
+    end
+    return true
+  end
+
+  local function resetMaxChannels(orb, maxchannels)
+    local ok, errmsg = validateMaxChannels(maxchannels)
+    if ok and maxchannels > 0 then
+      orb.ResourceManager.inuse.maxsize = maxchannels
+      log:config(msg.MaximumChannelLimit:tag{value=maxchannels})
+    else
+      return nil, errmsg
+    end
+    return true
+  end
+
+  local function loadConfigs(reload, orb)
     local path = getenv("OPENBUS_CONFIG")
     if path == nil then
       path = "openbus.cfg"
       local file = openfile(path)
-      if file == nil then goto done end
+      if file == nil then return end
       file:close()
     end
-    Configs:configs("configs", path)
-    ::done::
+    Configs:configs("configs", path, reload)
+    if (reload) then
+      setLogLevel("core", Configs.loglevel)
+      setLogLevel("oil", Configs.oilloglevel)
+      resetMaxChannels(orb, Configs.maxchannels)
+      setAdminUsers()
+      loadValidators("reload")
+    end
   end
 
+  loadConfigs()
+  
   -- parse command line parameters
   do
     local argidx, errmsg = Configs(...)
@@ -255,17 +393,10 @@ Options:
     })
     return errcode.InvalidPasswordValidationRate
   end
-  
-  -- validate time parameters
-  if Configs.maxchannels == 0 then
-    Configs.maxchannels = nil
-  elseif Configs.maxchannels < 0 then
-    log:misconfig(msg.InvalidMaximumChannelLimit:tag{
-      value = Configs.maxchannels,
-    })
-    return errcode.InvalidMaximumChannelLimit
-  end
 
+  local r, errcode = validateMaxChannels(Configs.maxchannels)
+  if not r then return errcode end
+  
   -- load private key
   local prvkey, errmsg = readprivatekey(Configs.privatekey)
   if prvkey == nil then
@@ -326,46 +457,18 @@ Options:
   end
 
   -- load all password validators to be used
-  local validators = {}
-  for index, package in ipairs(Configs.validator) do
-    local ok, result = pcall(require, package)
-    if not ok then
-      log:misconfig(msg.UnableToLoadPasswordValidator:tag{
-        validator = package,
-        error = result,
-      })
-      return errcode.UnableToLoadPasswordValidator
-    end
-    local validate, errmsg = result(Configs)
-    if validate == nil then
-      log:misconfig(msg.UnableToInitializePasswordValidator:tag{
-        validator = package,
-        error = errmsg,
-      })
-      return errcode.UnableToInitializePasswordValidator
-    end
-    validators[#validators+1] = {
-      name = package,
-      validate = validate,
-    }
-    log:config(msg.PasswordValidatorLoaded:tag{name=package})
-  end
-  if #validators == 0 then
-    log:misconfig(msg.NoPasswordValidators)
-    return errcode.NoPasswordValidators
-  end
-
+  local res, errcode = loadValidators()
+  if not res then return errcode end
+  
   -- create a set of admin users
-  local adminUsers = { [BusEntity] = true }
-  for _, admin in ipairs(Configs.admin) do
-    adminUsers[admin] = true
-    log:config(msg.AdministrativeRightsGranted:tag{entity=admin})
-  end
+  setAdminUsers()
   
   -- setup bus access
   local orbcfg = { host=Configs.host, port=Configs.port }
   log:config(msg.ServicesListeningAddress:tag(orbcfg))
-  orbcfg.maxchannels = Configs.maxchannels
+  if Configs.maxchannels > 0 then
+    orbcfg.maxchannels = Configs.maxchannels
+  end
   local orb = access.initORB(orbcfg)
   local legacy
   if not Configs.nolegacy then
@@ -383,6 +486,12 @@ Options:
   loadidl(orb)
   logaddress = logaddress and iceptor.callerAddressOf
 
+  local Configuration = {
+    __type = ConfigurationType,
+    __facet = "Configuration",
+    __objkey = BusObjectKey.."/Configuration"
+  }
+
   -- prepare facets to be published as CORBA objects
   local facets = {}
   do
@@ -390,6 +499,7 @@ Options:
       access_control = AccessControl,
       offer_registry = OfferRegistry,
     }
+    facets.Configuration = Configuration
     local objkeyfmt = BusObjectKey.."/%s"
     for modname, modfacets in pairs(facetmodules) do
       for name, facet in pairs(modfacets) do
@@ -398,6 +508,74 @@ Options:
         facets[name] = facet
       end
     end
+  end
+  
+  function Configuration:__init(data)
+  end
+  
+  function Configuration:reloadConfigsFile()
+    loadConfigs(reloadConfigs, orb, facets)
+  end
+
+  local function updateAdmins(users, action)     
+    for _, admin in ipairs(users) do
+      if "grant" == action then
+        grantAdmin(admin, adminUsers)
+      else
+        if admin ~= BusEntity and adminUsers[admin] then
+          revokeAdmin(admin, adminUsers)
+        end
+      end
+    end   
+  end
+  
+  function Configuration:grantAdminTo(users)
+    updateAdmins(users, "grant")
+  end
+
+  function Configuration:revokeAdminFrom(users)
+    updateAdmins(users, "revoke")
+  end
+
+  function Configuration:reloadValidator(validator)
+    local res, _, errmsg = loadValidator(validator)
+    if not res then 
+      return ServiceFailure{
+        message = msg.UnableToLoadPasswordValidator:tag{errmsg = errmsg}
+      }
+    end
+  end
+
+  function Configuration:delValidator(validator)
+    if validators[validator] then
+      package.loaded[validator] = nil
+      validators[validator] = nil
+      log:config(msg.PasswordValidatorRemoved:tag{validator = validator})
+    end
+  end
+
+  function Configuration:setMaxChannels(maxchannels)
+    if not resetMaxChannels(orb, maxchannels) then
+      return ServiceFailure{
+        message = msg.InvalidMaximumChannelLimit:tag{value=maxchannels}
+      }
+    end
+  end
+
+  local function updateLogLevel(log, loglevel)
+    if not setLogLevel(log, loglevel) then
+      return ServiceFailure{
+        message = msg.InvalidLogLevel:tag{value=loglevel}
+      }
+    end
+  end
+
+  function Configuration:setLogLevel(loglevel)
+    return updateLogLevel("core", loglevel)
+  end
+
+  function Configuration:setOilLogLevel(loglevel)
+    return updateLogLevel("oil", loglevel)
   end
 
   -- create SCS component
@@ -432,7 +610,7 @@ Options:
       log:config(msg.BadPasswordLimitedTries:tag{limit=Configs.badpasswordtries})
       log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})
       log:config(msg.BadPasswordMaxRate:tag{value=Configs.badpasswordrate})
-      if Configs.maxchannels ~= nil then
+      if Configs.maxchannels > 0 then
         log:config(msg.MaximumChannelLimit:tag{value=Configs.maxchannels})
       end
       if not params.enforceAuth then

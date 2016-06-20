@@ -410,8 +410,8 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
         log:exception(msg.TooManyFailedValidations:tag{entity=entity,wait=wait})
         NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
       end
-      for _, validator in ipairs(self.passwordValidators) do
-        local ok, valid, errmsg = xpcall(validator.validate, traceback, entity, decoded.data)
+      for validator, validate in pairs(self.passwordValidators) do
+        local ok, valid, errmsg = xpcall(validate, traceback, entity, decoded.data)
         if not ok then
           ServiceFailure{
             message = msg.FailedPasswordValidation:tag{

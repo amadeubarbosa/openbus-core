@@ -156,6 +156,7 @@ local core = $(root)/lua/openbus/core ;
 make $(core)/admin/parsed.lua 
   : $(root)/idl/access_management.idl
     $(root)/idl/offer_authorization.idl
+    $(root)/idl/configuration.idl
   : idl2lua.compile
   : <dependency>/lua//stage
     <include>$(openbus-idl)/src

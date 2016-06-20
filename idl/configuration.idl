@@ -1,0 +1,103 @@
+/**
+ * \mainpage Documentação da IDL
+ */
+#ifndef __TECGRAF_OPENBUS_CORE_V20_SERVICES_ADMIN_V10_IDL__
+#define __TECGRAF_OPENBUS_CORE_V20_SERVICES_ADMIN_V10_IDL__
+
+#include "core.idl"
+
+/** \brief Módulo dos sistemas e aplicações do Tecgraf. */
+module tecgraf {
+
+/** \brief Módulo do middleware OpenBus. */
+module openbus {
+
+/** \brief Módulo de definições básicas do OpenBus. */
+module core {
+
+/* \brief Módulo de versionamento dos Serviços Básicos do OpenBus. */
+module v2_0 {
+
+/** \brief Módulo dos Serviços Básicos do OpenBus. */
+module services {
+
+/** \brief Módulo de gerência do serviço. */
+module admin {
+
+/** \brief Módulo de versionamento da gerência do serviço. */
+module v1_0 {
+
+typedef sequence<Identifier> StrSeq;
+/**
+ * \brief Interface de administração das configurações do barramento.
+ */
+interface Configuration {
+    
+  /**
+   * \brief Recarrega o arquivo de configurações do barramento.
+   *
+   * Aplica imediatamente alterações realizadas nos parâmetros de
+   * configuração que são passíveis a reconfiguração dinâmica. Lista
+   * de parâmetros suportados:
+   *                                                       
+   * + Lista de administradores.
+   * + Nome de pacotes de validação de login e suas configurações
+   *   (ex: ldap_patterns, ldap_servers).
+   * + Número máximo de canais de comunicação do OiL.
+   * + Níveis de log (busservices e OiL).
+   */
+  void reloadConfigsFile() raises (ServiceFailure);
+
+  /**
+   * \brief Atribui os privilégios de administração para um grupo de usuários.
+   */
+  void grantAdminTo(in StrSeq users) raises (ServiceFailure);
+
+  /**
+   * \brief Revoga os privilégios de administração para um grupo de usuários.
+   */
+  void revokeAdminFrom(in StrSeq users) raises (ServiceFailure);
+
+  /**
+   * \brief Recarrega um validador de login.
+   *
+   * O validador é carregado se o mesmo não existir.
+   *
+   */
+  void reloadValidator(in string validator) raises (ServiceFailure);
+
+  /**
+   * \brief Remove um validador de login.
+   */
+  void delValidator(in string validator) raises (ServiceFailure);
+
+  /**
+   * \brief Redefine o número máximo de canais de comunicação do OiL.
+   */
+  void setMaxChannels(in long maxchannels) raises (ServiceFailure);
+
+  /**
+   * \brief Redefine o nível de log do barramento.
+   */
+  void setLogLevel(in unsigned short loglevel) raises (ServiceFailure);
+
+  /**
+   * \brief Redefine o nível de log do OiL.
+   */
+  void setOilLogLevel(in unsigned short oilloglevel) raises (ServiceFailure);
+
+};
+  
+}; // version
+
+}; // admin
+
+}; // services
+
+}; // core version
+
+}; // core
+
+}; // openbus
+
+}; // tecgraf
