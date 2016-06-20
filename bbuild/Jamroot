@@ -230,6 +230,8 @@ exe busservices
     $(root)/src/coreservlibs.c
     $(exe_deps)
   : $(exe_requirements)
+    #Workaround to build with -j option.
+    <dependency>coreservices.c 
   ;
 explicit busservices ;
 
@@ -239,6 +241,8 @@ exe busadmin
     $(root)/src/adminlibs.c
     $(exe_deps)
   : $(exe_requirements)
+    #Workaround to build with -j option.
+    <dependency>coreadmin.c
   ;
 explicit busadmin ;
     
