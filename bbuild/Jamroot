@@ -7,125 +7,126 @@ path-constant here : . ;
 path-constant root : $(here)/.. ;
 path-constant deps : $(root)/.. ;
 
-local lua-jam-path = [ os.environ LUA_JAM_PATH ] ;
-if ! $(lua-jam-path)
+local lua = [ os.environ LUA ] ;
+if ! $(lua)
 {
-  lua-jam-path = "$(deps)/lua.jam" ;
+  lua = "$(deps)/lua" ;
 }
-use-project lua : $(lua-jam-path) ; 
+use-project lua : $(lua)/bbuild ; 
 
-local lce-root-path = [ os.environ LCE_ROOT_PATH ] ;
-if ! $(lce-root-path)
+local lce = [ os.environ LCE ] ;
+if ! $(lce)
 {
-  lce-root-path = "$(deps)/lce" ;
+  lce = "$(deps)/lce" ;
 }
-use-project lce : $(lce-root-path)/bbuild ;
+use-project lce : $(lce)/bbuild ;
 
-local lualdap-root-path = [ os.environ LUALDAP_ROOT_PATH ] ;
-if ! $(lualdap-root-path)
+local lualdap = [ os.environ LUALDAP ] ;
+if ! $(lualdap)
 {
-  lualdap-root-path = "$(deps)/lualdap" ;
+  lualdap = "$(deps)/lualdap" ;
 }
-use-project lualdap : $(lualdap-root-path)/bbuild ;
+use-project lualdap : $(lualdap)/bbuild ;
 
-local luuid-root-path = [ os.environ LUUID_ROOT_PATH ] ;
-if ! $(luuid-root-path)
+local luuid = [ os.environ LUUID ] ;
+if ! $(luuid)
 {
-  luuid-root-path = "$(deps)/luuid" ;
+  luuid = "$(deps)/luuid" ;
 }
-use-project luuid : $(luuid-root-path)/bbuild ;
+use-project luuid : $(luuid)/bbuild ;
 
-local openssl-jam-path = [ os.environ OPENSSL_JAM_PATH ] ;
-if ! $(openssl-jam-path)
+local openssl-jam = [ os.environ OPENSSL_JAM_PATH ] ;
+if ! $(openssl-jam)
 {
-  openssl-jam-path = "$(deps)/openssl.jam" ;
+  openssl-jam = "$(deps)/openssl.jam" ;
 }
-use-project openssl : $(openssl-jam-path) ; 
+use-project openssl : $(openssl-jam) ; 
 
-local lfs-root-path = [ os.environ LFS_ROOT_PATH ] ;
-if ! $(lfs-root-path)
+local lfs = [ os.environ LUAFILESYSTEM ] ;
+if ! $(lfs)
 {
-  lfs-root-path = "$(deps)/luafilesystem" ;
+  lfs = "$(deps)/luafilesystem" ;
 }
-use-project lfs : $(lfs-root-path)/bbuild ;
+use-project lfs : $(lfs)/bbuild ;
 
-local luavararg-root-path = [ os.environ LUAVARARG_ROOT_PATH ] ;
-if ! $(luavararg-root-path)
+local luavararg = [ os.environ LUAVARARG ] ;
+if ! $(luavararg)
 {
-  luavararg-root-path = "$(deps)/luavararg" ;
+  luavararg = "$(deps)/luavararg" ;
 }
-use-project luavararg : $(luavararg-root-path)/bbuild ;
+use-project luavararg : $(luavararg)/bbuild ;
 
-local luastruct-root-path = [ os.environ LUASTRUCT_ROOT_PATH ] ;
-if ! $(luastruct-root-path)
+local luastruct = [ os.environ LUASTRUCT ] ;
+if ! $(luastruct)
 {
-  luastruct-root-path = "$(deps)/luastruct" ;
+  luastruct = "$(deps)/luastruct" ;
 }
-use-project luastruct : $(luastruct-root-path)/bbuild ;
+use-project luastruct : $(luastruct)/bbuild ;
 
-local luasocket-root-path = [ os.environ LUASOCKET_ROOT_PATH ] ;
-if ! $(luasocket-root-path)
+local luasocket = [ os.environ LUASOCKET ] ;
+if ! $(luasocket)
 {
-  luasocket-root-path = "$(deps)/luasocket" ;
+  luasocket = "$(deps)/luasocket" ;
 }
-use-project luasocket : $(luasocket-root-path)/bbuild ;
+use-project luasocket : $(luasocket)/bbuild ;
 
-loop-root-path = [ os.environ LOOP_ROOT_PATH ] ;
-if ! $(loop-root-path)
+loop = [ os.environ LOOP ] ;
+if ! $(loop)
 {
-  loop-root-path = "$(deps)/loop" ;
+  loop = "$(deps)/loop" ;
 }
-use-project loop : $(loop-root-path)/bbuild ;
+use-project loop : $(loop)/bbuild ;
 
-oil-root-path = [ os.environ OIL_ROOT_PATH ] ;
-if ! $(oil-root-path)
+oil = [ os.environ OIL ] ;
+if ! $(oil)
 {
-  oil-root-path = "$(deps)/oil" ;
+  oil = "$(deps)/oil" ;
 }
-use-project oil : $(oil-root-path)/bbuild ;
+use-project oil : $(oil)/bbuild ;
 
-local luascs-root-path = [ os.environ LUASCS_ROOT_PATH ] ;
-if ! $(luascs-root-path)
+local luascs = [ os.environ LUASCS ] ;
+if ! $(luascs)
 {
-  luascs-root-path = "$(deps)/scs-lua" ;
+  luascs = "$(deps)/scs-lua" ;
 }
-use-project luascs : $(luascs-root-path)/bbuild ;
+use-project luascs : $(luascs)/bbuild ;
 
-local luaopenbus-root-path = [ os.environ LUAOPENBUS_ROOT_PATH ] ;
-if ! $(luaopenbus-root-path)
+local luaopenbus = [ os.environ LUAOPENBUS ] ;
+if ! $(luaopenbus)
 {
-  luaopenbus-root-path = "$(deps)/openbus-lua" ;
+  luaopenbus = "$(deps)/openbus-lua" ;
 }
-use-project luaopenbus : $(luaopenbus-root-path)/bbuild ;
+use-project luaopenbus : $(luaopenbus)/bbuild ;
 
-local openldap-jam-path = [ os.environ OPENLDAP_JAM_PATH ] ;
-if ! $(openldap-jam-path)
+local openldap-jam = [ os.environ OPENLDAP_JAM ] ;
+if ! $(openldap-jam)
 {
-  openldap-jam-path = "$(deps)/openldap.jam" ;
+  openldap-jam = "$(deps)/openldap.jam" ;
 }
-use-project openldap : $(openldap-jam-path) ; 
+use-project openldap : $(openldap-jam) ; 
 
-scs-idl-path = [ os.environ SCS_IDL_PATH ] ;
-if ! $(scs-idl-path)
+scs-idl = [ os.environ SCS_IDL ] ;
+if ! $(scs-idl)
 {
-  scs-idl-path = "$(deps)/scs-idl" ;
-}
-
-openbus-idl-path = [ os.environ OPENBUS_IDL_PATH ] ;
-if ! $(openbus-idl-path)
-{
-  openbus-idl-path = "$(deps)/openbus-idl" ;
+  scs-idl = "$(deps)/scs-idl" ;
 }
 
-openbus-lib-idl-path = [ os.environ OPENBUS_LIB_IDL_PATH ] ;
-if ! $(openbus-lib-idl-path)
+openbus-idl = [ os.environ OPENBUS_IDL ] ;
+if ! $(openbus-idl)
 {
-  openbus-lib-idl-path = "$(deps)/openbus-lib-idl" ;
+  openbus-idl = "$(deps)/openbus-idl" ;
 }
 
-modules.load preloader : : $(loop-root-path)/bbuild ;
+openbus-lib-idl = [ os.environ OPENBUS_LIB_IDL ] ;
+if ! $(openbus-lib-idl)
+{
+  openbus-lib-idl = "$(deps)/openbus-lib-idl" ;
+}
+
+modules.load preloader : : $(loop)/bbuild ;
 import preloader ; 
-using preloader ;
+
+using preloader : $(lua) ;
 
 project busservices
   : requirements
@@ -138,56 +139,59 @@ project busservices
     <define>OPENBUS_PROGNAME=\\\""busservices\\\""
     <toolset>msvc-12.0:<cxxflags>/FS
     <debug-symbols>on
+    <link>static
   : default-build
     <variant>release
-    <link>static
   ;
 
-local core-path = $(root)/lua/openbus/core ;
+local core = $(root)/lua/openbus/core ;
 
-make $(core-path)/admin/parsed.lua 
+make $(core)/admin/parsed.lua 
   : $(root)/idl/access_management.idl
     $(root)/idl/offer_authorization.idl
   : idl2lua.compile
-  : <include>$(openbus-idl-path)/src
-    <include>$(scs-idl-path)/src
+  : <dependency>/lua//stage
+    <include>$(openbus-idl)/src
+    <include>$(scs-idl)/src
   ;
 
 make coreservices.c
-  : $(core-path)/admin/idl.lua
-    $(core-path)/admin/parsed.lua
-    $(core-path)/legacy/AccessControlService.lua
-    $(core-path)/legacy/RegistryService.lua
-    $(core-path)/services/Access.lua
-    $(core-path)/services/AccessControl.lua
-    $(core-path)/services/LoginDB.lua
-    $(core-path)/services/main.lua
-    $(core-path)/services/messages.lua
-    $(core-path)/services/PasswordAttempts.lua
-    $(core-path)/services/PropertyIndex.lua
-    $(core-path)/services/OfferRegistry.lua
-    $(core-path)/services/util.lua
-    $(core-path)/services/passwordvalidator/LDAP.lua
+  : $(core)/admin/idl.lua
+    $(core)/admin/parsed.lua
+    $(core)/legacy/AccessControlService.lua
+    $(core)/legacy/RegistryService.lua
+    $(core)/services/Access.lua
+    $(core)/services/AccessControl.lua
+    $(core)/services/LoginDB.lua
+    $(core)/services/main.lua
+    $(core)/services/messages.lua
+    $(core)/services/PasswordAttempts.lua
+    $(core)/services/PropertyIndex.lua
+    $(core)/services/OfferRegistry.lua
+    $(core)/services/util.lua
+    $(core)/services/passwordvalidator/LDAP.lua
   : preloader.pre-compile
-  : <search>$(root)
+  : <dependency>/lua//stage
+    <search>$(root)
     <location>$(here)
   ;
 
 make coreadmin.c
-  : $(core-path)/admin/idl.lua
-    $(core-path)/admin/main.lua
-    $(core-path)/admin/messages.lua
-    $(core-path)/admin/parsed.lua
-    $(core-path)/admin/print.lua
-    $(core-path)/admin/script.lua
+  : $(core)/admin/idl.lua
+    $(core)/admin/main.lua
+    $(core)/admin/messages.lua
+    $(core)/admin/parsed.lua
+    $(core)/admin/print.lua
+    $(core)/admin/script.lua
   : preloader.pre-compile
-  : <search>$(root)
+  : <dependency>/lua//stage
+    <search>$(root)
     <location>$(here)
   ;
 
-modules.load idl2lua : : $(oil-root-path)/bbuild ;
+modules.load idl2lua : : $(oil)/bbuild ;
 import idl2lua ; 
-using idl2lua ;
+using idl2lua : $(lua) ;
 
 local exe_deps = 
   /lua//lua
@@ -215,8 +219,8 @@ local exe_requirements =
   <dependency>/lce//lce
   <dependency>/luascs//luascs
   <dependency>/luaopenbus//luaopenbus
-  <target-os>linux:<library>/unix//dl
-  <target-os>linux:<library>/unix//pthread
+  <target-os>linux:<library>unix//dl
+  <target-os>linux:<library>unix//pthread
   <target-os>darwin:<library>/lualdap//lualdap
   <target-os>linux:<library>/lualdap//lualdap
   <include>$(root)/src
