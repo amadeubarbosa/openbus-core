@@ -35,7 +35,7 @@ if ! $(luuid)
 }
 use-project luuid : $(luuid)/bbuild ;
 
-local openssl-jam = [ os.environ OPENSSL_JAM_PATH ] ;
+local openssl-jam = [ os.environ OPENSSL_JAM ] ;
 if ! $(openssl-jam)
 {
   openssl-jam = "$(deps)/openssl.jam" ;
@@ -87,14 +87,14 @@ use-project oil : $(oil)/bbuild ;
 local luascs = [ os.environ LUASCS ] ;
 if ! $(luascs)
 {
-  luascs = "$(deps)/scs-lua" ;
+  luascs = "$(deps)/luascs" ;
 }
 use-project luascs : $(luascs)/bbuild ;
 
 local luaopenbus = [ os.environ LUAOPENBUS ] ;
 if ! $(luaopenbus)
 {
-  luaopenbus = "$(deps)/openbus-lua" ;
+  luaopenbus = "$(deps)/luaopenbus" ;
 }
 use-project luaopenbus : $(luaopenbus)/bbuild ;
 
