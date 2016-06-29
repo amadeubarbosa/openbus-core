@@ -20,25 +20,25 @@
 
 [luasocket](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luasocket/tree/2.0.2)
 
-[luastruct](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luastruct/tree/1.0)
+[luastruct](https://git.tecgraf.puc-rio.br/openbus-3rd-party/struct/tree/1.2)
 
-[luavararg](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luavararg/tree/1.1)
+[luavararg](https://git.tecgraf.puc-rio.br/openbus-3rd-party/vararg/tree/1.1)
 
-[openbuslua](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-lua/luaopenbus/02_00_01)
+[luaopenbus](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-lua/tree/02_00_01)
 
 [openbus-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/02_00)
 
-[openbus-idl-lib](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-idl/tree/02_00)
+[openbus-idl-lib](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-idl-lib/tree/02_00)
 
 [openbus-legacy-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/OB_IDL_v1_05_2010_05_13)
 
 [openssl-1.1.0o](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/openssl-1.0.0o.tar.gz)
 
-[openssl.jam](https://git.tecgraf.puc-rio.br/boost-build/openssl.jam/tree/master)
+[openssl.jam](https://git.tecgraf.puc-rio.br/boost-build/openssl/tree/master)
 
 [openldap-2.4.39](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/openldap-2.4.39.tgz)  (Somente Unix)
 
-[openldap.jam](https://git.tecgraf.puc-rio.br/boost-build/openldap.jam/tree/master)  (Somente Unix)
+[openldap.jam](https://git.tecgraf.puc-rio.br/boost-build/openldap/tree/master)  (Somente Unix)
 
 [boost-build](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/boost-build-2014-10_tecgraf_28112014snapshot.tgz)
 
