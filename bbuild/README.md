@@ -55,16 +55,16 @@ da instalação da OpenSSL e OpenLDAP (somente Unix):
 
 ```bash
 cd $BUILD/openbus-core/bbuild
-$INSTALL/boost-build/b2 warnings=off \
-  -sOPENSSL_INSTALL=$OPENLDAP_INSTALL \ 
-  -sOPENSSL_INSTALL=$OPENSSL_INSTALL
+$INSTALL/boost-build/bin/b2 warnings=off \
+  -sOPENSSL_INSTALL=$OPENSSL_INSTALL \
+  -sOPENLDAP_INSTALL=$OPENLDAP_INSTALL
 ```
 
 ### Windows
 
 ```
 cd %BUILD%\openbus-core\bbuild
-%INSTALL%\boost-build\b2 warnings=off ^
+%INSTALL%\boost-build\binzb2 warnings=off ^
   -sOPENSSL_INSTALL=%OPENSSL_INSTALL%
 ```
 
