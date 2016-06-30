@@ -64,7 +64,7 @@ $INSTALL/boost-build/bin/b2 warnings=off \
 
 ```
 cd %BUILD%\openbus-core\bbuild
-%INSTALL%\boost-build\binzb2 warnings=off ^
+%INSTALL%\boost-build\bin\b2 warnings=off ^
   -sOPENSSL_INSTALL=%OPENSSL_INSTALL%
 ```
 
