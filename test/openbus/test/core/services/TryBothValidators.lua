@@ -1,11 +1,16 @@
 local array = require "table"
 local concat = array.concat
 
-local log = require "openbus.util.logger"
 local msg = require "openbus.core.services.messages"
 local AccessControl = require("openbus.core.services.AccessControl").AccessControl
 
+do -- TODO: resolve this ugly workaround!
+	local server = require "openbus.util.server"
+	local backup = server.setuplog
+	function server.setuplog() end
 require "openbus.test.configs"
+	server.setuplog = backup
+end
 local domains = { domain, baddomain }
 
 return function (configs)
