@@ -105,6 +105,13 @@ if ! $(luasec)
 }
 use-project luasec : $(luasec)/bbuild ;
 
+local luasqlite3 = [ os.environ LUASQLITE3 ] ;
+if ! $(luasqlite3)
+{
+  luasqlite3 = "$(deps)/luasqlite3" ;
+}
+use-project luasqlite3 : $(luasqlite3)/bbuild ;
+
 local openldap-jam = [ os.environ OPENLDAP_JAM ] ;
 if ! $(openldap-jam)
 {
@@ -218,6 +225,7 @@ local exe_deps =
   /luavararg//luavararg
   /luastruct//luastruct
   /luasocket//luasocket
+  /luasec//luasec
   /loop//loop
   /loop//luatuple
   /loop//luacothread
@@ -225,6 +233,8 @@ local exe_deps =
   /oil//luaidl
   /luascs//luascs
   /luaopenbus//luaopenbus
+  /sqlite//sqlite3
+  /luasqlite3//lsqlite3
 ;
 
 local exe_requirements =
@@ -236,6 +246,7 @@ local exe_requirements =
   <dependency>/lce//lce
   <dependency>/luascs//luascs
   <dependency>/luaopenbus//luaopenbus
+  <dependency>/luasec//luasec
   <target-os>linux:<library>unix//dl
   <target-os>linux:<library>unix//pthread
   <target-os>darwin:<library>/lualdap//lualdap

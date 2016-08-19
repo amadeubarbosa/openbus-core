@@ -1,4 +1,6 @@
 -- $Id$
+local removefile = os.remove
+local renamefile = os.rename
 
 local _G = require "_G"
 local ipairs = _G.ipairs
@@ -43,8 +45,12 @@ local writeto = oil.writeto
 local oillog = require "oil.verbose"
 
 local log = require "openbus.util.logger"
+local dbconverter = require "openbus.util.database_converter"
+local dbconvert = dbconverter.convert
 local database = require "openbus.util.database"
 local opendb = database.open
+local database_legacy = require "openbus.util.database_legacy"
+local opendb_legacy = database_legacy.open
 local server = require "openbus.util.server"
 local ConfigArgs = server.ConfigArgs
 local newSCS = server.newSCS
@@ -107,6 +113,7 @@ return function(...)
     InvalidChallengeTime = 24,
     InvalidSharedAuthTime = 25,
     InvalidMaximumChannelLimit = 26,
+    UnableToConvertLegacyDatabase = 27,
   }
 
   -- configuration parameters parser
@@ -362,12 +369,51 @@ Options:
       return errcode.WrongCertificate
     end
   end
-  
-  -- open database
-  local database, errmsg = opendb(Configs.database)
+
+  local dbpath = Configs.database
+  local dblegacy = opendb_legacy(dbpath)
+  local converted
+  if dblegacy then
+     local dbtmppath = dbpath..".convert"
+    local res, errmsg = opendb(dbtmppath)
+    if not res then
+      dbpath = dbtmppath
+    else
+		  local dbtmp = res
+			res, errmsg = pcall(dbconvert, dblegacy, dbtmp)
+      if res then
+        local dbbakpath = dbpath..".bak"
+        res, errmsg = renamefile(dbpath, dbbakpath)
+        if not res then
+          errmsg = "unable to rename legacy database to '"..dbbakpath
+             .."' ("..errmsg..")"
+        else
+          res, errmsg = renamefile(dbtmppath, dbpath)
+          if not res then
+            errmsg = "unable to promote the converted database to '"..dbpath
+              .."' ("..errmsg..")"
+          else
+            converted = true
+            log:config(msg.ConvertedLegacyBusDatabase:tag{path=dbbakpath})
+          end 
+        end
+      end
+    end
+				
+    if not converted then
+			removefile(dbtmppath)
+      log:misconfig(msg.UnableToConvertLegacyDatabase:tag{
+        path = dbpath,
+        error = errmsg,
+      })
+      return errcode.UnableToConvertLegacyDatabase
+    end
+  end
+
+  local database, errmsg = opendb(dbpath)
   if database == nil then
     log:misconfig(msg.UnableToOpenDatabase:tag{
-      path = Configs.database,
+      path = dbpath,
       error = errmsg,
     })
     return errcode.UnableToOpenDatabase

@@ -7,6 +7,7 @@
 #include <lualdap.h>
 #endif
 #include "coreservices.h"
+#include "lsqlite3.h"
 
 
 const char const* OPENBUS_MAIN = "openbus.core.services.main";
@@ -22,6 +23,7 @@ void luapreload_extralibraries(lua_State *L)
   luaL_findtable(L, LUA_GLOBALSINDEX, "package.preload", 1);
 #endif
   lua_pushcfunction(L,luaopen_lualdap);lua_setfield(L,-2,"lualdap");
+  lua_pushcfunction(L,luaopen_lsqlite3);lua_setfield(L,-2,"lsqlite3");
   lua_pop(L, 1);  /* pop 'package.preload' table */
 
 #endif

@@ -37,7 +37,13 @@ local function setWatchedOf(self, login, new)
     watched[loginId] = new
     -- try to update saved data
     local id = self.id
-    local success, errmsg = self.table:setentryfield(id, "watched", watched)
+    local db = self.base.database
+    local success, errmsg
+    if new == true then
+      success, errmsg = assert(db:pexec("addWatchedLogin", id, loginId))
+    else
+      success, errmsg = assert(db:pexec("delWatchedLogin", id, loginId))
+    end
     if success then
       -- commit the changes in memory
       login.watchers[self] = new
@@ -57,10 +63,17 @@ function Observer:__init()
   local base = self.base
   local logins = base.logins
   logins[self.login].observers[self] = true
-  for id in pairs(self.watched) do
+  local stmt = base.database.pstmts.getWatchedLoginByObserver
+  local observer_id = self.id
+  stmt:bind_values(observer_id)
+  local watched = {}
+  for entry in stmt:nrows() do
+    local id = entry.login
+    watched[id] = true
     logins[id].watchers[self] = true
   end
-  base.observers[self.id] = self
+  self.watched = watched
+  base.observers[observer_id] = self
 end
 
 function Observer:watchLogin(login)
@@ -81,8 +94,9 @@ end
 
 function Observer:remove()
   local id = self.id
-  assert(self.table:removeentry(id))
   local base = self.base
+  local db = base.database
+  assert(db:pexec("delLoginObserver", id))
   local logins = base.logins
   logins[self.login].observers[self] = nil
   for id in pairs(self.watched) do
@@ -104,18 +118,20 @@ end
 
 function Login:newObserver(callback)
   local base = self.base
-  local table = base.obsTab
   local id = newid("time")
+  local ior = tostring(callback)
+  local login = self.id
   local data = {
     id = id,
-    login = self.id,
-    watched = {},
-    ior = tostring(callback),
+    login = login,
+    ior = ior,
+    legacy = legacy,
   }
-  assert(table:setentry(id, data))
+  local db = base.database
+  legacy = (legacy and 1) or 0
+  assert(db:pexec("addLoginObserver", id, ior, legacy, login))
   data.callback = callback
   data.base = base
-  data.table = table
   return Observer(data)
 end
 
@@ -140,7 +156,8 @@ function Login:remove()
   end
   -- remove this login
   local id = self.id
-  assert(self.table:removeentry(id))
+  local db = self.base.database
+  assert(db:pexec("delLogin", id))
   self.base.logins[id] = nil
   -- notify all watchers
   self.base.publisher:loginRemoved(self, watchers)
@@ -154,27 +171,28 @@ function Database:__init()
   self.observers = {}
   self.publisher = Publisher(self.publisher)
   local db = self.database
-  self.lgnTab = select(2, assert(pcall(readTable,
-                                       assert(db:gettable("Logins")),
-                                       Login,
-                                       self)))
-  self.obsTab = select(2, assert(pcall(readTable,
-                                       assert(db:gettable("LoginObservers")),
-                                       Observer,
-                                       self)))
+  for entry in db.pstmts.getLogin:nrows() do
+    entry.base = self    
+    Login(entry)
+  end
+  for entry in db.pstmts.getLoginObserver:nrows() do
+    entry.base = self
+    Observer(entry)
+  end
 end
 
 function Database:newLogin(entity, encodedkey)
   local id = newid("time")
+  allowLegacyDelegate = (allowLegacyDelegate and 1) or 0
   local data = {
     id = id,
     entity = entity,
     encodedkey = encodedkey,
+    allowLegacyDelegate = allowLegacyDelegate
   }
-  local table = self.lgnTab
-  assert(table:setentry(id, data))
+  assert(self.database:pexec("addLogin", id, entity, encodedkey,
+			     allowLegacyDelegate))
   data.base = self
-  data.table = table
   return Login(data)
 end
 
@@ -195,69 +213,3 @@ function Database:iObservers()
 end
 
 return Database
-
-
---[===[ This is a draft for a future implementation using SQLite3
-
-local SQL_Schema = [[
-CREATE TABLE IF NOT EXISTS Logins(
-  id        TEXT(36) PRIMARY KEY,
-  entity    TEXT NOT NULL)
-
-CREATE TABLE IF NOT EXISTS Observers(
-  id     TEXT(36) PRIMARY KEY,
-  entity TEXT NOT NULL,
-  ior    TEXT NOT NULL,
-  FOREIGN KEY(entity) REFERENCES Logins(id))
-
-CREATE TABLE IF NOT EXISTS ObservedLogins(
-  login    TEXT(36) NOT NULL,
-  observer TEXT(36) NOT NULL,
-  PRIMARY KEY(login, observer),
-  FOREIGN KEY(login) REFERENCES Logins(id),
-  FOREIGN KEY(observer) REFERENCES Observers(id))
-]]
-
-local SQL_AddLogin = [[
-INSERT INTO Logins VALUES (:id, :entity)
-]]
-
-local SQL_AddObserver = [[
-INSERT INTO Observers VALUES (:id, :entity, :ior)
-]]
-
-local SQL_AddLoginToObserver = [[
-INSERT INTO ObservedLogins VALUES (:login, :observer)
-]]
-
-local SQL_GetLogin = [[
-SELECT entity
-FROM Logins
-WHERE id = $id
-]]
-
-local SQL_GetObserverIor = [[
-SELECT ior
-FROM Observers
-WHERE id = $id
-]]
-
-local SQL_GetLoginObservers = [[
-SELECT id, ior
-FROM Observers JOIN ObservedLogins
-WHERE observer = id AND login = $id
-]]
-
-local SQL_RemoveLogin = [[
-DELETE FROM ObservedLogins WHERE login = $id
-DELETE FROM ObservedLogins WHERE entity = (SELECT id FROM Observers WHERE entity = $id)
-DELETE FROM Observers WHERE entity = $id
-DELETE FROM Logins WHERE id = $id
-]]
-
-local SQL_RemoveObserver = [[
-DELETE FROM ObservedLogins WHERE observer = $id
-DELETE FROM Observers WHERE id = $id
-]]
-
---]===]

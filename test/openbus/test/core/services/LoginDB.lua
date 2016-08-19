@@ -73,6 +73,13 @@ do
     delegator = {},
   }
   for id, login in logins:iLogins() do
+    -- check login
+    local entity = login.entity
+    if entity == "delegator" then
+      assert(login.allowLegacyDelegate == 1, "wrong stored login")
+    else
+      assert(login.allowLegacyDelegate == 0, "wrong stored login")
+    end
     -- check observers owned by this login
     local observers = assert(Data[login.entity], "unknown stored login")
     Data[login.entity] = nil
@@ -166,75 +173,5 @@ end
 
 do
   local lfs = require "lfs"
-  assert(lfs.rmdir("test.db/Logins"))
-  assert(io.open("test.db/Logins", "w")):close()
-  assertEx("'test%.db/Logins' expected to be directory %(got file%)",
-           LoginDB, {database=assert(database.open("test.db"))})
-  assert(os.remove("test.db/Logins"))
-  
-  assert(lfs.mkdir("test.db/Logins"))
-  local file = assert(io.open("test.db/Logins/corrupted.lua", "w"))
-  assert(file:write("illegal Lua code"))
-  file:close()
-  assertEx("unable to load file 'test%.db/Logins/corrupted%.lua'",
-           LoginDB, {database=assert(database.open("test.db"))})
-  
-  assert(os.execute("chmod 000 test.db/Logins"))
-  assertEx("cannot open test%.db/Logins/: Permission denied",
-           LoginDB, {database=assert(database.open("test.db"))})
-  assert(os.execute("chmod 755 test.db/Logins"))
-  assert(os.remove("test.db/Logins/corrupted.lua"))
-end
-
-do
-  local logins = LoginDB{
-    database = assert(database.open("test.db")),
-    orb = FakeORB,
-  }
-  local user = assert(logins:newLogin("user", key))
-  local obs = assert(user:newObserver(logins.orb:newproxy("obs", nil, "IObserver")))
-  
-  assert(os.execute("chmod 000 test.db/Logins"))
-  
-  obs:watchLogin(user)
-  assertIterator({[obs] = true}, user:iObservers())
-  assertIterator({[user.id] = true}, obs:iWatchedLoginIds())
-  
-  assert(os.execute("chmod 000 test.db/LoginObservers"))
-  
-  assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+%.lua' %(.-: Permission denied%)",
-           obs.forgetLogin, obs, user)
-  assertIterator({[obs] = true}, user:iWatchers())
-  assertIterator({[user.id] = true}, obs:iWatchedLoginIds())
-  
-  assertEx("unable to .- file 'test%.db/Logins/[%x-]+%.lua%.tmp' %(.-: Permission denied%)",
-           logins.newLogin, logins, "fail")
-  assertIterator({[user.id] = user}, logins:iLogins())
-  
-  assertEx("unable to .- file 'test%.db/LoginObservers/[%x-]+%.lua' %(.-: Permission denied%)",
-           user.remove, user)
-  assert(logins:getLogin(user.id) == user)
-  assert(logins:getObserver(obs.id) == obs)
-  assertIterator({[obs.id] = obs}, logins:iObservers())
-  assertIterator({[user.id] = user}, logins:iLogins())
-  assertIterator({[obs] = true}, user:iObservers())
-  
-  assert(os.execute("chmod 755 test.db/LoginObservers"))
-  obs:forgetLogin(user)
-  for _ in user:iWatchers() do error("failure") end
-  for _ in obs:iWatchedLoginIds() do error("failure") end
-  
-  assert(os.execute("chmod 755 test.db/Logins"))
-  user:remove()
-  assert(logins:getLogin(user.id) == nil)
-  assert(logins:getObserver(obs.id) == nil)
-  for _ in logins:iObservers() do error("failure") end
-  for _ in logins:iLogins() do error("failure") end
-end
-
-do
-  local lfs = require "lfs"
-  assert(lfs.rmdir("test.db/Logins"))
-  assert(lfs.rmdir("test.db/LoginObservers"))
-  assert(lfs.rmdir("test.db"))
+  assert(os.remove("test.db"))
 end

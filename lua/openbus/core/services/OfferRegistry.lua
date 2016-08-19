@@ -91,8 +91,13 @@ end
 
 local function updateAuthorization(db, id, set, spec, value)
   local backup = set[spec]
-  set[spec] = value
-  local ok, errmsg = db:setentryfield(id, "authorized", set)
+  set[spec] = value  
+  local ok, errmsg
+  if value then
+    ok, errmsg = assert(db:pexec("addEntityInterface", id, spec))
+  else
+    ok, errmsg = assert(db:pexec("delEntityInterface", id, spec))
+  end 
   if not ok then
     set[spec] = backup
     ServiceFailure{message=errmsg}
@@ -124,18 +129,22 @@ local function makePropertyList(entry, service_props)
     { name = "openbus.offer.id", value = entry.id },
     { name = "openbus.offer.login", value = entry.login },
     { name = "openbus.offer.entity", value = entry.entity },
-    { name = "openbus.offer.timestamp", value = entry.creation.timestamp },
-    { name = "openbus.offer.year", value = entry.creation.year },
-    { name = "openbus.offer.month", value = entry.creation.month },
-    { name = "openbus.offer.day", value = entry.creation.day },
-    { name = "openbus.offer.hour", value = entry.creation.hour },
-    { name = "openbus.offer.minute", value = entry.creation.minute },
-    { name = "openbus.offer.second", value = entry.creation.second },
-    { name = "openbus.component.name", value = entry.component.name },
-    { name = "openbus.component.version.major", value = tostring(entry.component.major_version) },
-    { name = "openbus.component.version.minor", value = tostring(entry.component.minor_version) },
-    { name = "openbus.component.version.patch", value = tostring(entry.component.patch_version) },
-    { name = "openbus.component.platform", value = entry.component.platform_spec },
+    { name = "openbus.offer.timestamp", value = entry.timestamp },
+    { name = "openbus.offer.year", value = entry.year },
+    { name = "openbus.offer.month", value = entry.month },
+    { name = "openbus.offer.day", value = entry.day },
+    { name = "openbus.offer.hour", value = entry.hour },
+    { name = "openbus.offer.minute", value = entry.minute },
+    { name = "openbus.offer.second", value = entry.second },
+    { name = "openbus.component.name", value = entry.component_name },
+    { name = "openbus.component.version.major",
+      value = tostring(entry.component_major_version) },
+    { name = "openbus.component.version.minor",
+      value = tostring(entry.component_minor_version) },
+    { name = "openbus.component.version.patch",
+      value = tostring(entry.component_patch_version) },
+    { name = "openbus.component.platform",
+      value = entry.component_platform_spec },
   }
   local interfaces = {}
   for _, facet in ipairs(entry.facets) do
@@ -217,7 +226,7 @@ function OfferObserverSubscription:remove(tag)
   local tag = tag or assertCaller(registry,
     AccessControl:getLoginEntry(self.login).entity)
   -- try to remove persisted observer (may raise expections)
-  assert(offer.database:setentryfield(offer.id, "observers", id, nil))
+  assert(self.database:pexec("delOfferObserver", id))
   -- commit changes in memory
   registry.access.orb:deactivate(self)
   unregisterObserver(registry, offer, id)
@@ -251,7 +260,7 @@ function OfferRegistryObserverSubscription:remove(tag)
   local tag = tag or assertCaller(registry,
     AccessControl:getLoginEntry(self.login).entity)
   -- try to remove persisted observer (may raise expections)
-  assert(registry.offerRegObsDB:removeentry(id))
+  assert(registry.database:pexec("delOfferRegistryObserver", id))
   -- commit change to memory
   registry.access.orb:deactivate(self)
   unregisterObserver(registry, registry, id)
@@ -273,6 +282,7 @@ function Offer:__init()
   self.observers = {} -- this table will contain entries in memory only
                       -- which is filled by operation 'registerObserver'
   local orb = self.registry.access.orb
+  local db = self.database
   for id, entry in pairs(persistedObs) do
     local login = entry.login
     if AccessControl:getLoginEntry(login) then
@@ -286,6 +296,7 @@ function Offer:__init()
         id = id,
         observer = orb:newproxy(entry.observer, nil, OfferObsType),
         offer = self,
+	database = self.database,
       })
     else
       log:action(msg.DiscardOfferObserverAfterLogout:tag{
@@ -294,10 +305,9 @@ function Offer:__init()
         id = id,
       })
       persistedObs[id] = nil
+      assert(db:pexec("delOfferObserver", id))
     end
   end
-  -- commit removal of logged out observers (may raise expections)
-  assert(self.database:setentryfield(self.id, "observers", persistedObs))
 end
 
 function Offer:describe()
@@ -308,8 +318,17 @@ function Offer:setProperties(properties)
   local registry = self.registry
   local tag = assertCaller(registry, self.entity)
   -- try to change persisted properties (may raise expections)
+  local db = self.database
+  local dbconn = db.conn
   local allprops = makePropertyList(self, properties)
-  assert(self.database:setentryfield(self.id, "properties", properties))
+  local offer = self.id
+  assert(dbconn:exec("BEGIN"))
+  assert(db:pexec("delPropertyOffer", offer))
+  for _, property in ipairs(properties) do
+    assert(db:pexec("addPropertyOffer",
+		    property.name, property.value, offer))
+  end  
+  assert(dbconn:exec("COMMIT"))
   -- commit changes in memory
   local offers = registry.offers
   offers:remove(self)
@@ -331,13 +350,14 @@ function Offer:remove(tag)
   for id, login in pairs(self.observers) do
     observerLogins[login][self][id]:remove(tag)
   end
+  local offer = self.id
   -- try to remove persisted offer (may raise expections)
-  assert(self.database:removeentry(self.id))
+  assert(self.database:pexec("delOffer", offer))
   -- commit changes in memory
   registry.access.orb:deactivate(self)
   registry.offers:remove(self)
   log[tag](log, msg.RemoveServiceOffer:tag{
-    offer = self.id,
+    offer = offer,
     entity = self.entity,
     login = self.login,
   })
@@ -350,16 +370,18 @@ function Offer:subscribeObserver(observer)
   local registry = self.registry
   local offerid = self.id
   local login = registry.access:getCallerChain().caller
+  local loginId = login.id
   local entry = {
-    login = login.id,
+    login = loginId,
     observer = tostring(observer),
   }
   local id = newid("time")
   -- try to persist observer (may raise expections)
-  assert(self.database:setentryfield(offerid, "observers", id, entry))
+  assert(self.database:pexec("addOfferObserver",
+			     id, loginId, tostring(observer), offerid))
   -- commit changes in memory
   log:request(msg.SubscribeOfferObserver:tag{
-    login = login.id,
+    login = loginId,
     offer = offerid,
     id = id,
   })
@@ -367,6 +389,7 @@ function Offer:subscribeObserver(observer)
   entry.owner = login
   entry.observer = observer
   entry.offer = self
+  entry.database = self.database
   return OfferObserverSubscription(entry)
 end
 
@@ -427,20 +450,19 @@ function OfferRegistry:__init(data)
   self.offers = PropertyIndex()
   self.observers = {}
   self.observerLogins = newautotab()
-  self.offerDB = assert(data.database:gettable("Offers"))
-  self.offerRegObsDB = assert(data.database:gettable("OfferRegistryObservers"))
-  
+  self.database = data.database
   -- register itself to receive logout notifications
   rawset(AccessControl.activeLogins.publisher, self, self)
   
   local access = self.access
   local orb = access.orb
+  local db = self.database
   do -- recover offers
-    local offerDB = self.offerDB
     local toberemoved = {}
-    for id, entry in assert(offerDB:ientries()) do
+    for entry in db.pstmts.getOffer:nrows() do
       local entity = entry.entity
       local login = entry.login
+      local id = entry.id
       if AccessControl:getLoginEntry(login) then
         log:action(msg.RecoverPersistedOffer:tag{
           offer = id,
@@ -455,38 +477,62 @@ function OfferRegistry:__init(data)
           }
         end
         -- create object for the new offer
-        entry.id = id
         entry.service_ref = orb:newproxy(entry.service_ref, nil,
                                          OfferedService)
-        entry.properties = makePropertyList(entry, entry.properties)
+	
+	local interfaces = {}
+	local getFacet = db.pstmts.getFacet
+	getFacet:bind_values(id)
+	for facet in getFacet:nrows() do
+          interfaces[#interfaces+1] = facet
+	end
+	entry.facets = interfaces
+
+	local props = {}
+	local getPropertyOffer = db.pstmts.getPropertyOffer
+	getPropertyOffer:bind_values(id)
+	for prop in getPropertyOffer:nrows() do
+	   props[#props+1] = prop
+	end
+	
+	entry.properties = makePropertyList(entry, props)
         entry.registry = self
-        entry.database = offerDB
+        entry.database = self.database
+	local getOfferObserver = db.pstmts.getOfferObserver
+	getOfferObserver:bind_values(id)
+	local observers = {}
+	for entry in getOfferObserver:nrows() do
+	  local t = {}
+	  t.observer = entry.observer
+	  t.login = entry.login
+          observers[entry.id] = t
+	end
+	entry.observers = observers
         orb:newservant(Offer(entry))
       else
         log:action(msg.DiscardPersistedOfferAfterLogout:tag{
-          offer = id,
+          offer = entry.id,
           entity = entity,
           login = login,
         })
-        toberemoved[id] = true
+        toberemoved[entry.id] = true
       end
     end
     for id in pairs(toberemoved) do
-      offerDB:removeentry(id)
+      assert(db:pexec("delOffer", id))
     end
   end
   local observerLogins = self.observerLogins
   do -- recover observers
-    local offerRegObsDB = self.offerRegObsDB
     local toberemoved = {}
-    for id, entry in assert(offerRegObsDB:ientries()) do
+    for entry in db.pstmts.getOfferRegistryObserver:nrows() do
+      local id = entry.id
       local login = entry.login
       if AccessControl:getLoginEntry(login) then
         log:action(msg.RecoverPersistedOfferRegistryObserver:tag{
           id = id,
           login = login,
         })
-        entry.id = id
         entry.observer = orb:newproxy(entry.observer, nil,
                                       OffRegObserverType)
         entry.registry = self
@@ -500,7 +546,7 @@ function OfferRegistry:__init(data)
       end
     end
     for id in pairs(toberemoved) do
-      offerRegObsDB:removeentry(id)
+      assert(db:pexec("delOfferRegistryObserver", id))
     end
   end
 end
@@ -549,7 +595,8 @@ function OfferRegistry:registerService(service_ref, properties)
     }
   end
   -- get information about the caller
-  local login = AccessControl:getLoginEntry(self.access:getCallerChain().caller.id)
+  local login = AccessControl:getLoginEntry(
+     self.access:getCallerChain().caller.id)
   if login == nil then
     NO_PERMISSION{ completed = "COMPLETED_NO", minor = InvalidLogin }
   end
@@ -576,34 +623,65 @@ function OfferRegistry:registerService(service_ref, properties)
   -- validate provided properties
   local id = newid("time")
   local timestamp = time()
+
   local entry = {
     id = id,
     service_ref = tostring(service_ref),
     entity = entityId,
     login = login.id,
-    creation = {
-      timestamp = tostring(timestamp),
-      day = date("%d", timestamp),
-      month = date("%m", timestamp),
-      year = date("%Y", timestamp),
-      hour = date("%H", timestamp),
-      minute = date("%M", timestamp),
-      second = date("%S", timestamp),
-    },
-    component = compId,
+    timestamp = tostring(timestamp),
+    day = date("%d", timestamp),
+    month = date("%m", timestamp),
+    year = date("%Y", timestamp),
+    hour = date("%H", timestamp),
+    minute = date("%M", timestamp),
+    second = date("%S", timestamp),
+    component_name = compId.name,
+    component_major_version = compId.major_version,
+    component_minor_version = compId.minor_version,
+    component_patch_version = compId.patch_version,
+    component_platform_spec = compId.platform_spec,
     facets = facets,
     properties = properties,
     observers = {},
   }
+  
+  local db = self.database
+  local dbconn = db.conn
   local allprops = makePropertyList(entry, properties)
-  -- persist the new offer
-  local database = self.offerDB
-  assert(database:setentry(id, entry))
+  
+  assert(dbconn:exec("BEGIN"));
+  assert(db:pexec("addOffer",
+                  id,
+                  entry.service_ref,
+                  entry.entity,
+                  entry.login,
+                  entry.timestamp,
+                  entry.day,
+                  entry.month,
+                  entry.year,
+                  entry.hour,
+                  entry.minute,
+                  entry.second,
+                  entry.component_name,
+                  tostring(entry.component_major_version),
+                  tostring(entry.component_minor_version),
+                  tostring(entry.component_patch_version),
+                  entry.component_platform_spec
+                 ))
+  for _, property in ipairs(properties) do
+    assert(db:pexec("addPropertyOffer", property.name, property.value, id))
+  end
+  for _, facet in ipairs(facets) do
+    assert(db:pexec("addFacet", facet.name, facet.interface_name, id))
+  end
+  assert(dbconn:exec("COMMIT"));
+  
   -- create object for the new offer
   entry.service_ref = service_ref
   entry.properties = allprops
   entry.registry = self
-  entry.database = database
+  entry.database = self.database
   log:request(msg.RegisterServiceOffer:tag{
     offer = id,
     entity = entityId,
@@ -633,17 +711,26 @@ function OfferRegistry:subscribeObserver(observer, properties)
     BAD_PARAM{ completed = "COMPLETED_NO", minor = 0 }
   end
   local login = self.access:getCallerChain().caller
+  local loginId = login.id
   local id = newid("time")
   local entry = { 
-    login = login.id,
+    login = loginId,
     properties = properties,
     observer = tostring(observer),
   }
   -- try to persist observer (may raise expections)
-  assert(self.offerRegObsDB:setentry(id, entry))
+  local db = self.database
+  local dbconn = db.conn
+  assert(dbconn:exec("BEGIN"));
+  assert(db:pexec("addOfferRegistryObserver", id, loginId, tostring(observer)))
+  for _, property in ipairs(properties) do
+    assert(db:pexec("addPropertyOfferRegistryObserver",
+		    property.name, property.value, id))
+  end
+  assert(dbconn:exec("COMMIT"));
   -- commit change to memory
   log:request(msg.SubscribeOfferRegistryObserver:tag{
-    login = login.id,
+    login = loginId,
     id = id,
   })
   entry.id = id
@@ -664,7 +751,7 @@ local InterfaceRegistry = {
 
 function InterfaceRegistry:__init(data)
   -- initialize attributes
-  self.database = data.database
+  self.db = data.database
   
   -- setup permissions
   local access = data.access
@@ -673,21 +760,16 @@ function InterfaceRegistry:__init(data)
   access:setGrantedUsers(self.__type,"removeInterface",admins)
   
   -- recover all registered interfaces
-  local database = self.database
-  local interfaces = self.interfaces
-  local interfaceDB = assert(database:gettable("Interfaces"))
-  for _, ifaceId in assert(interfaceDB:ientries()) do
-    interfaces[ifaceId] = {}
+  local db = self.db
+  for t in db.pstmts.getInterface:nrows() do
+    self.interfaces[t.repid] = {}
   end
-  self.interfaceDB = interfaceDB
 end
 
 function InterfaceRegistry:registerInterface(ifaceId)
-  local interfaces = self.interfaces
-  local entities = interfaces[ifaceId]
-  if entities == nil then
-    self.interfaceDB:setentry(ifaceId2Key(ifaceId), ifaceId)
-    interfaces[ifaceId] = {}
+  if self.interfaces[ifaceId] == nil then
+    assert(self.db:pexec("addInterface", ifaceId))
+    self.interfaces[ifaceId] = {}
     log:admin(msg.RegisteredInterfaceAdded:tag{interface=ifaceId})
     return true
   end
@@ -695,8 +777,7 @@ function InterfaceRegistry:registerInterface(ifaceId)
 end
 
 function InterfaceRegistry:removeInterface(ifaceId)
-  local interfaces = self.interfaces
-  local entities = interfaces[ifaceId]
+  local entities = self.interfaces[ifaceId]
   if entities ~= nil then
     if next(entities) ~= nil then
       local list = {}
@@ -705,8 +786,8 @@ function InterfaceRegistry:removeInterface(ifaceId)
       end
       InterfaceInUse{ ifaceId = ifaceId, entities = list }
     end
-    self.interfaceDB:removeentry(ifaceId2Key(ifaceId))
-    interfaces[ifaceId] = nil
+    assert(self.db:pexec("delInterface", ifaceId))
+    self.interfaces[ifaceId] = nil
     log:admin(msg.RegisteredInterfaceRemoved:tag{interface=ifaceId})
     return true
   end
@@ -742,9 +823,10 @@ function Entity:describe()
 end
 
 function Entity:setName(name)
-  assert(self.database:setentryfield(self.id, "name", name))
+  local id = self.id   
+  assert(self.db:pexec("setEntity", name, id))
   self.name = name
-  log:admin(msg.AuthorizedEntityNameChanged:tag{entity=self.id,name=name})
+  log:admin(msg.AuthorizedEntityNameChanged:tag{entity=id,name=name})
 end
 
 function Entity:remove()
@@ -756,13 +838,13 @@ function Entity:remove()
       offer:remove()
     end
   end
-  assert(self.database:removeentry(id))
+  assert(self.db:pexec("delEntity", id))
   registry.access.orb:deactivate(self)
   local interfaces = InterfaceRegistry.interfaces
   for ifaceId in pairs(self.authorized) do
     interfaces[ifaceId][self] = nil
   end
-  registry.entities[id] = nil
+  self.registry.entities[id] = nil
   self.category.entities[id] = nil
   log:admin(msg.AuthorizedEntityRemoved:tag{entity=id})
 end
@@ -776,7 +858,7 @@ function Entity:grantInterface(ifaceId)
   -- grant interface
   local authorized = self.authorized
   if authorized[ifaceId] == nil then
-    updateAuthorization(self.database, self.id, authorized, ifaceId, true)
+    updateAuthorization(self.db, self.id, self.authorized, ifaceId, true)
     entities[self] = true
     log:admin(msg.GrantedInterfaceAddedForEntity:tag{
       entity = self.id,
@@ -788,12 +870,12 @@ function Entity:grantInterface(ifaceId)
 end
 
 function Entity:revokeInterface(ifaceId)
-  -- check if interface is implemented by an offer
+   -- check if interface is implemented by an offer
   if self.registry.enforceAuth then
     local unauthorized = {}
     local offers = OfferRegistry.offers:get("openbus.offer.entity", self.id)
     for offer in pairs(offers) do
-      for _, facet in ipairs(offer.facets) do
+       for _, facet in ipairs(offer.facets) do
         if facet.interface_name == ifaceId then
           unauthorized[#unauthorized+1] = offer
         end
@@ -811,7 +893,7 @@ function Entity:revokeInterface(ifaceId)
   -- revoke interface
   local authorized = self.authorized
   if authorized[ifaceId] == true then
-    updateAuthorization(self.database, self.id, authorized, ifaceId, nil)
+    updateAuthorization(self.db, self.id, authorized, ifaceId, nil)
     entities[self] = nil
     log:admin(msg.GrantedInterfaceRemovedFromEntity:tag{
       entity = self.id,
@@ -848,9 +930,10 @@ function Category:describe()
 end
   
 function Category:setName(name)
-  assert(self.database:setentry(self.id, name))
+  local id = self.id  
+  assert(self.db:pexec("setCategory", name, id))
   self.name = name
-  log:admin(msg.EntityCategoryNameChanged:tag{category=self.id,name=name})
+  log:admin(msg.EntityCategoryNameChanged:tag{category=id,name=name})
 end
 
 function Category:remove()
@@ -858,10 +941,10 @@ function Category:remove()
   if next(self.entities) ~= nil then
     EntityCategoryInUse{ category = id, entities = self:getEntities() }
   end
-  assert(self.database:removeentry(id))
+  assert(self.db:pexec("delCategory", id))
   local registry = self.registry
   registry.access.orb:deactivate(self)
-  registry.categories[id] = nil
+  self.registry.categories[id] = nil
   log:admin(msg.EntityCategoryRemoved:tag{category=id})
 end
 
@@ -884,8 +967,8 @@ function Category:registerEntity(id, name)
     EntityAlreadyRegistered{ category = categoryId, existing = entity }
   end
   -- persist the new entity
-  local database = registry.entityDB
-  assert(database:setentry(id, {categoryId=categoryId, name=name}))
+  local db = self.db
+  assert(db:pexec("addEntity", id, name, categoryId))
   -- create object for the new entity
   log:admin(msg.AuthorizedEntityRegistered:tag{entity=id,name=name})
   return Entity{
@@ -893,7 +976,7 @@ function Category:registerEntity(id, name)
     name = name,
     category = self,
     registry = registry,
-    database = database,
+    db = db,
   }
 end
 
@@ -931,22 +1014,20 @@ function EntityRegistry:__init(data)
   access:setGrantedUsers(Entity.__type,"revokeInterface",admins)
   
   local orb = access.orb
-  local database = self.database
   -- recover all category objects
-  local categoryDB = assert(database:gettable("Categories"))
-  for id, name in assert(categoryDB:ientries()) do
+  local db = self.database
+  for category in db.pstmts.getCategory:nrows() do
     orb:newservant(Category{
-      id = id,
-      name = name,
+      id = category.id,
+      name = category.name,
       registry = self,
-      database = categoryDB,
+      db = db,
     })
   end
   -- recover all entity objects
-  local entityDB = assert(database:gettable("Entities"))
-  for id, entry in assert(entityDB:ientries()) do
+  for entity in db.pstmts.getEntity:nrows() do
     -- check if referenced category exists
-    local category = self.categories[entry.categoryId]
+    local category = self.categories[entity.category]
     if category == nil then
       ServiceFailure{
         message = msg.CorruptedDatabaseDueToMissingCategory:tag{
@@ -954,18 +1035,25 @@ function EntityRegistry:__init(data)
         },
       }
     end
+
+    local authorized = {}
+    local getAuthorizedInterfaces = db.pstmts.getAuthorizedInterfaces
+    getAuthorizedInterfaces:bind_values(entity.id)
+    for t in getAuthorizedInterfaces:nrows() do
+       authorized[t.repid] = true
+    end
     -- create the entity object
     local entry = Entity{
-      id = id,
-      name = entry.name,
+      id = entity.id,
+      name = entity.name,
       category = category,
-      authorized = entry.authorized,
+      authorized = authorized,
       registry = self,
-      database = entityDB,
+      db = self.database,
     }
     -- check if authorized interfaces exist
     local interfaces = InterfaceRegistry.interfaces
-    for ifaceId in pairs(entry.authorized) do
+    for ifaceId in pairs(authorized) do
       local entities = interfaces[ifaceId]
       if entities == nil then
         ServiceFailure{
@@ -979,9 +1067,6 @@ function EntityRegistry:__init(data)
     -- create object
     orb:newservant(entry)
   end
-  
-  self.categoryDB = categoryDB
-  self.entityDB = entityDB
 end
 
 function EntityRegistry:createEntityCategory(id, name)
@@ -995,15 +1080,14 @@ function EntityRegistry:createEntityCategory(id, name)
     EntityCategoryAlreadyExists{ category = id, existing = category }
   end
   -- persist the new category
-  local database = self.categoryDB
-  assert(database:setentry(id, name))
+  self.database:pexec("addCategory", id, name)
   -- create object for the new category
   log:admin(msg.EntityCategoryCreated:tag{category=id,name=name})
   return Category{
     id = id,
     name = name,
     registry = self,
-    database = database,
+    db = self.database,
   }
 end
 

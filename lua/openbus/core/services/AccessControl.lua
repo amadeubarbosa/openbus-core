@@ -90,6 +90,8 @@ local assertCaller = coreutil.assertCaller
 local MaxEncryptionSize = EncryptedBlockSize-11
 local MaxEncryptionData = repeatstring("\255", MaxEncryptionSize)
 
+local lsqlite = require "lsqlite3"
+
 ------------------------------------------------------------------------------
 -- Faceta CertificateRegistry
 ------------------------------------------------------------------------------
@@ -112,8 +114,12 @@ local CertificateRegistry = { __type = CertificateRegistryType }
 
 function CertificateRegistry:__init(data)
   self.database = data.database
-  self.certificateDB = assert(self.database:gettable("Certificates"))
   -- setup operation access
+  local certificates = {}
+  for entry in self.database.pstmts.getCertificate:nrows() do
+     certificates[entry.entity] = entry.certificate
+  end
+  self.certificates = certificates
   local access = data.access
   local admins = data.admins
   access:setGrantedUsers(self.__type, "registerCertificate", admins)
@@ -123,7 +129,7 @@ function CertificateRegistry:__init(data)
 end
 
 function CertificateRegistry:getPublicKey(entity)
-  local certificate, errmsg = self.certificateDB:getentry(entity)
+  local certificate = self:getCertificate(entity)
   if certificate ~= nil then
     return assert(assert(decodecertificate(certificate)):getpubkey())
   elseif errmsg ~= nil then
@@ -150,15 +156,17 @@ function CertificateRegistry:registerCertificate(entity, certificate)
     InvalidCertificate{entity=entity,message=errmsg}
   end
   log:admin(msg.RegisterEntityCertificate:tag{entity=entity})
-  assert(self.certificateDB:setentry(entity, certificate))
+  if not self.certificates[entity] then
+    assert(self.database:pexec("addCertificate", certificate, entity))
+  else
+    assert(self.database:pexec("setCertificate", certificate, entity))
+  end
+  self.certificates[entity] = certificate
 end
 
 function CertificateRegistry:getCertificate(entity)
-  local certificate, errmsg = self.certificateDB:getentry(entity)
-  if certificate == nil then
-    if errmsg ~= nil then
-      assert(nil, errmsg)
-    end
+  local certificate = self.certificates[entity]
+  if not certificate then
     MissingCertificate{entity=entity}
   end
   return certificate
@@ -166,17 +174,20 @@ end
 
 function CertificateRegistry:getEntitiesWithCertificate()
   local entities = {}
-  for entity in self.certificateDB:ientries() do
-    entities[#entities+1] = entity
+  for entity in pairs(self.certificates) do
+     entities[#entities+1] = entity
   end
   return entities
 end
 
 function CertificateRegistry:removeCertificate(entity)
-  local db = self.certificateDB
-  if db:getentry(entity) ~= nil then
+  if self.certificates[entity] then
     log:admin(msg.RemoveEntityCertificate:tag{entity=entity})
-    assert(db:removeentry(entity))
+    local delCertificate = self.database.pstmts.delCertificate
+    delCertificate:bind_values(entity)
+    delCertificate:step()
+    delCertificate:reset()
+    self.certificates[entity] = nil
     return true
   end
   return false
@@ -245,12 +256,19 @@ local AccessControl = {
 -- local operations
 
 function AccessControl:__init(data)
-  local database = data.database
-  local autosets = assert(database:gettable("AutoSetttings"))
-  local busid = autosets:getentry("BusId")
+  local db = data.database
+  -- TODO   
+  local getSettings = db.pstmts.getSettings
+  getSettings:bind_values("BusId")
+  local ret = getSettings:step()
+  local busid
+  if ret == lsqlite.ROW then
+    busid = getSettings:get_value(0)
+    getSettings:reset()
+  end  
   if busid == nil then
     busid = newid("time")
-    assert(autosets:setentry("BusId", busid))
+    assert(db:pexec("addSettings", "BusId", busid))
     log:action(msg.AdoptingNewBusIdentifier:tag{bus=busid})
   else
     log:action(msg.RecoveredBusIdentifier:tag{bus=busid})
@@ -274,7 +292,7 @@ function AccessControl:__init(data)
     limit = data.passwordFailureLimit,
     period = data.passwordFailureLimit/data.passwordFailureRate,
   }
-  self.activeLogins = Logins{ database = database }
+  self.activeLogins = Logins{ database = db }
   
   -- initialize access
   self.busid = busid
