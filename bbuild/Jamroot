@@ -124,10 +124,10 @@ if ! $(openbus-idl)
   openbus-idl = "$(deps)/openbus-idl" ;
 }
 
-openbus-legacy-idl-path = [ os.environ OPENBUS_LEGACY_IDL_PATH ] ;
-if ! $(openbus-legacy-idl-path)
+openbus-legacy-idl = [ os.environ OPENBUS_LEGACY_IDL ] ;
+if ! $(openbus-legacy-idl)
 {
-  openbus-legacy-idl-path = "$(deps)/openbus-legacy-idl" ;
+  openbus-legacy-idl = "$(deps)/openbus-legacy-idl" ;
 }
 
 openbus-lib-idl = [ os.environ OPENBUS_LIB_IDL ] ;
@@ -160,19 +160,19 @@ project busservices
 local core = $(root)/lua/openbus/core ;
 
 make coreservices.c
-  : $(core-path)/admin/idl.lua
-    $(core-path)/admin/parsed.lua
-    $(core-path)/legacy/ServiceWrappers.lua
-    $(core-path)/services/Access.lua
-    $(core-path)/services/AccessControl.lua
-    $(core-path)/services/LoginDB.lua
-    $(core-path)/services/main.lua
-    $(core-path)/services/messages.lua
-    $(core-path)/services/PasswordAttempts.lua
-    $(core-path)/services/PropertyIndex.lua
-    $(core-path)/services/OfferRegistry.lua
-    $(core-path)/services/util.lua
-    $(core-path)/services/passwordvalidator/LDAP.lua
+  : $(core)/admin/idl.lua
+    $(core)/admin/parsed.lua
+    $(core)/legacy/ServiceWrappers.lua
+    $(core)/services/Access.lua
+    $(core)/services/AccessControl.lua
+    $(core)/services/LoginDB.lua
+    $(core)/services/main.lua
+    $(core)/services/messages.lua
+    $(core)/services/PasswordAttempts.lua
+    $(core)/services/PropertyIndex.lua
+    $(core)/services/OfferRegistry.lua
+    $(core)/services/util.lua
+    $(core)/services/passwordvalidator/LDAP.lua
   : preloader.pre-compile
   : <dependency>/lua//stage
     <search>$(root)
@@ -180,12 +180,12 @@ make coreservices.c
   ;
 
 make coreadmin.c
-  : $(core-path)/admin/Description.lua
-    $(core-path)/admin/idl.lua
-    $(core-path)/admin/main.lua
-    $(core-path)/admin/messages.lua
-    $(core-path)/admin/parsed.lua
-    $(core-path)/admin/script.lua
+  : $(core)/admin/Description.lua
+    $(core)/admin/idl.lua
+    $(core)/admin/main.lua
+    $(core)/admin/messages.lua
+    $(core)/admin/parsed.lua
+    $(core)/admin/script.lua
   : preloader.pre-compile
   : <dependency>/lua//stage
     <search>$(root)
@@ -199,15 +199,15 @@ using idl2lua : $(lua) ;
 make $(root)/lua/openbus/core/admin/parsed.lua 
   : $(root)/idl/access_management.idl
     $(root)/idl/offer_authorization.idl
-    $(scs-idl-path)/src/scs.idl
-    $(openbus-idl-path)/src/openbus_core-2.1.idl
-    $(openbus-idl-path)/src/openbus_creden-2.1.idl
-    $(openbus-idl-path)/src/openbus_access-2.1.idl
-    $(openbus-idl-path)/src/openbus_offers-2.1.idl
+    $(scs-idl)/src/scs.idl
+    $(openbus-idl)/src/openbus_core-2.1.idl
+    $(openbus-idl)/src/openbus_creden-2.1.idl
+    $(openbus-idl)/src/openbus_access-2.1.idl
+    $(openbus-idl)/src/openbus_offers-2.1.idl
   : idl2lua.compile
-  : <include>$(openbus-idl-path)/src
-    <include>$(openbus-legacy-idl-path)/src
-    <include>$(scs-idl-path)/src
+  : <include>$(openbus-idl)/src
+    <include>$(openbus-legacy-idl)/src
+    <include>$(scs-idl)/src
   ;
 
 local exe_deps = 
@@ -246,7 +246,7 @@ local exe_requirements =
 
 exe busservices
   : coreservices.c
-    $(luaopenbus-root-path)/src/launcher.c
+    $(luaopenbus)/src/launcher.c
     $(root)/src/coreservlibs.c
     $(exe_deps)
   : $(exe_requirements)
@@ -256,7 +256,7 @@ exe busservices
 explicit busservices ;
 
 exe busadmin
-  : $(luaopenbus-root-path)/src/launcher.c
+  : $(luaopenbus)/src/launcher.c
     coreadmin.c
     $(root)/src/adminlibs.c
     $(exe_deps)
