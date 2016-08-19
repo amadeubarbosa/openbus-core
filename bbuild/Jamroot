@@ -98,6 +98,13 @@ if ! $(luaopenbus)
 }
 use-project luaopenbus : $(luaopenbus)/bbuild ;
 
+local luasqlite3 = [ os.environ LUASQLITE3 ] ;
+if ! $(luasqlite3)
+{
+  luasqlite3 = "$(deps)/luasqlite3" ;
+}
+use-project luasqlite3 : $(luasqlite3)/bbuild ;
+
 local openldap-jam = [ os.environ OPENLDAP_JAM ] ;
 if ! $(openldap-jam)
 {
@@ -208,6 +215,8 @@ local exe_deps =
   /oil//luaidl
   /luascs//luascs
   /luaopenbus//luaopenbus
+  /sqlite//sqlite3
+  /luasqlite3//lsqlite3
 ;
 
 local exe_requirements =

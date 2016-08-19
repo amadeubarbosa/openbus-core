@@ -20,6 +20,7 @@
 #include "luascs.h"
 #include "luaopenbus.h"
 #include "coreservices.h"
+#include "lsqlite3.h"
 
 LUAMOD_API int luaopen_openbus_util_thread (lua_State *L);
 
@@ -42,6 +43,7 @@ void luapreload_extralibraries(lua_State *L)
   lua_pushcfunction(L,luaopen_struct);lua_setfield(L,-2,"struct");
   lua_pushcfunction(L,luaopen_socket_core);lua_setfield(L,-2,"socket.core");
   lua_pushcfunction(L,luaopen_openbus_util_thread);lua_setfield(L,-2,"openbus.util.thread");
+  lua_pushcfunction(L,luaopen_lsqlite3);lua_setfield(L,-2,"lsqlite3");
   lua_pop(L, 1);  /* pop 'package.preload' table */
   /* preload other C libraries */
   luapreload_lce(L);
