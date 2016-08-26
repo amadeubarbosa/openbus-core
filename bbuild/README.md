@@ -26,6 +26,8 @@
 
 [luaopenbus](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-lua/tree/02_00_01)
 
+[luasqlite3](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luasqlite3/tree/master)
+
 [openbus-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/02_00)
 
 [openbus-idl-lib](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-idl-lib/tree/02_00)
@@ -41,6 +43,8 @@
 [openldap.jam](https://git.tecgraf.puc-rio.br/boost-build/openldap/tree/master)  (Somente Unix)
 
 [boost-build](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/boost-build-2014-10_tecgraf_28112014snapshot.tgz)
+
+[sqlite](https://git.tecgraf.puc-rio.br/openbus-3rd-party/sqlite/tree/master)
 
 ## Build
 0. É necessário ter o Boost Build, a OpenSSL e a OpenLDAP (no caso do Unix) instalados. [Instalação da Boost Build](https://jira.tecgraf.puc-rio.br/confluence/x/vYq_B), [Instalação da OpenSSL 1.0.0] (https://jira.tecgraf.puc-rio.br/confluence/x/wYq_B) e [Instalação da OpenLDAP] (https://jira.tecgraf.puc-rio.br/confluence/x/w4q_B).
@@ -97,6 +101,8 @@ seguintes variáveis de ambiente:
 
 `LUASOCKET`
 
+`LUASQLITE3`
+
 `LUASTRUCT`
 
 `LUAVARARG`
@@ -116,6 +122,8 @@ seguintes variáveis de ambiente:
 `OPENSSL_JAM`
 
 `OPENLDAP_JAM`
+
+`SQLITE`
 
 As variáveis acima podem ser passadas para o Boost Build através do argumento `-sVAR=value`, por exemplo, `-sLUA=/path/to/luasrc`.
 
