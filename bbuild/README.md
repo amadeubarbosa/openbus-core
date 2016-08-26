@@ -18,6 +18,8 @@
 
 [luafilesystem](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luafilesystem/tree/1.4.2)
 
+[luasec](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luasec/tree/master)
+
 [luasocket](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luasocket/tree/2.0.2)
 
 [luastruct](https://git.tecgraf.puc-rio.br/openbus-3rd-party/struct/tree/1.2)
@@ -98,6 +100,8 @@ seguintes variáveis de ambiente:
 `LUALDAP`
 
 `LUAFILESYSTEM`
+
+`LUASEC`
 
 `LUASOCKET`
 
