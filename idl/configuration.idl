@@ -59,6 +59,13 @@ interface Configuration {
   void revokeAdminFrom(in StrSeq users) raises (ServiceFailure);
 
   /**
+   * \brief Retorna a lista de usuários com permissão de administração.
+   *
+   * \return Lista de administradores
+   */
+  StrSeq getAdmins() raises (ServiceFailure);
+
+  /**
    * \brief Recarrega um validador de login.
    *
    * O validador é carregado se o mesmo não existir.
@@ -72,9 +79,23 @@ interface Configuration {
   void delValidator(in string validator) raises (ServiceFailure);
 
   /**
+   * \brief Retorna a lista de validadores.
+   *
+   * \return Lista de validadores
+   */
+  StrSeq getValidators() raises (ServiceFailure);
+
+  /**
    * \brief Redefine o número máximo de canais de comunicação do OiL.
    */
   void setMaxChannels(in long maxchannels) raises (ServiceFailure);
+
+  /**
+   * \brief Retorna o número máximo de canais de comunicação do OiL.
+   *
+   * \return Número máximo de canais de comunicação do OiL.
+   */
+  long getMaxChannels() raises (ServiceFailure);
 
   /**
    * \brief Redefine o nível de log do barramento.
@@ -82,10 +103,23 @@ interface Configuration {
   void setLogLevel(in unsigned short loglevel) raises (ServiceFailure);
 
   /**
+   * \brief Retorna o nível de log do barramento.
+   *
+   * \return Nível de log do barramento.
+   */
+  unsigned short getLogLevel() raises (ServiceFailure);
+
+  /**
    * \brief Redefine o nível de log do OiL.
    */
   void setOilLogLevel(in unsigned short oilloglevel) raises (ServiceFailure);
 
+  /**
+   * \brief Retorna o nível de log do OiL.
+   *
+   * \return Nível de log do OiL.
+   */
+  unsigned short getOilLogLevel() raises (ServiceFailure);
 };
   
 }; // version

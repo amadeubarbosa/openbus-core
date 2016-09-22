@@ -529,12 +529,24 @@ Options:
     end   
   end
   
+  local function getList(t)
+    local list = {}
+    for e in pairs(t) do
+      list[#list+1] = e
+    end
+    return list
+  end
+
   function Configuration:grantAdminTo(users)
     updateAdmins(users, "grant")
   end
 
   function Configuration:revokeAdminFrom(users)
     updateAdmins(users, "revoke")
+  end
+
+  function Configuration:getAdmins()
+    return getList(adminUsers)
   end
 
   function Configuration:reloadValidator(validator)
@@ -554,12 +566,20 @@ Options:
     end
   end
 
+  function Configuration:getValidators()
+    return getList(validators)
+  end
+
   function Configuration:setMaxChannels(maxchannels)
     if not resetMaxChannels(orb, maxchannels) then
       return ServiceFailure{
         message = msg.InvalidMaximumChannelLimit:tag{value=maxchannels}
       }
     end
+  end
+
+  function Configuration:getMaxChannels()
+    return orb.ResourceManager.inuse.maxsize
   end
 
   local function updateLogLevel(log, loglevel)
@@ -574,8 +594,16 @@ Options:
     return updateLogLevel("core", loglevel)
   end
 
+  function Configuration:getLogLevel()
+    return log:level()
+  end
+
   function Configuration:setOilLogLevel(loglevel)
     return updateLogLevel("oil", loglevel)
+  end
+
+  function Configuration:getOilLogLevel()
+    return oillog:level()
   end
 
   -- create SCS component

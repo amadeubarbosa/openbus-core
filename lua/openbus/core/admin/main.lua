@@ -194,16 +194,26 @@ return function(...)
       --grant-admin-to="<user1> <user2> ... <userN>"
     * Revoga os privilégios de administração para uma lista de usuários:
       --revoke-admin-from="<user1> <user2> ... <userN>"
+    * Mostra a lista de administradores:
+      --get-admins
     * Recarrega um validador de login. Se o não existir o validador é carregado:
       --reload-validator=<validator>
     * Remove um validador de login:
       --del-validator=<validator>
+    * Mostra a lista de validadores:
+      --get-validators
     * Redefine o número máximo de canais de comunicação do OiL:
       --set-max-channels=<integer>
+    * Mostra o número máximo de canais de comunicação do OiL:
+      --get-max-channels
     * Redefine o nível de log do barramento:
       --set-log-level=<integer>
+    * Mostra o nível de log do barramento:
+      --get-log-level
     * Redefine o nível de log do OiL.
       --set-oil-log-level=<integer>
+    * Mostra o nível de log do OiL:
+      --get-oil-log-level
   -------------------------------------------------------------------------------
   ]]
 
@@ -362,21 +372,36 @@ return function(...)
       {n = 1, params = {users = 1}},
       {n = 1, params = {}},
     };
+    ["get-admins"] = {
+      {n = 0, params = {}},
+    };
     ["reload-validator"] = {
       {n = 1, params = {}},
     };
     ["del-validator"] = {
       {n = 1, params = {}},
     };
+    ["get-validators"] = {
+      {n = 0, params = {}},
+    };
     ["set-max-channels"] = {
       {n = 1, params = {}},
+    };
+    ["get-max-channels"] = {
+      {n = 0, params = {}},
     };
     ["set-log-level"] = {
       {n = 1, params = {}},
     };
+    ["get-log-level"] = {
+      {n = 0, params = {}},
+    };
     ["set-oil-log-level"] = {
       {n = 1, params = {}},
     };    
+    ["get-oil-log-level"] = {
+      {n = 0, params = {}},
+    };
   }
 
   ---
@@ -1353,13 +1378,13 @@ return function(...)
     end
     local param = cmd.params[cmd.name]
     param = (paramtype and paramtype == "number") and tonumber(param) or param
-    local ok, errmsg = pcall(conn.configuration[method],
-                             conn.configuration, param)
+    local ok, res = pcall(conn.configuration[method],
+			  conn.configuration, param)
     if not ok then
-       print('[ERRO]: '..errmsg.message)
+      print('[ERRO]: '..res.message)
       return false
     end
-    return true
+    return ok, res
   end
 
   handlers["reload-configs-file"] = function()
@@ -1378,21 +1403,38 @@ return function(...)
     end
     return t
   end
+
+  local function handleConfigurationGetCall(cmd, method, attr)    
+    local ok, res = handleConfigurationCall(cmd, method)
+    if ok then
+       if type(res) == "table" then
+	 local admins = "{ "
+	 admins = admins..table.concat(res, ", ")
+	 admins = admins.." }"
+	 res = admins
+       end
+      print(attr.." = "..tostring(res))
+    end
+    return ok
+  end
   
   handlers["grant-admin-to"] = function(cmd)
-    cmd.params[cmd.name] = list2table(cmd.params.users)
+    cmd.params[cmd.name] = list2table(cmd.params[cmd.name])
     return handleConfigurationCall(cmd, "grantAdminTo")
   end
 
   handlers["revoke-admin-from"] = function(cmd)
-    cmd.params[cmd.name] = list2table(cmd.params.users)
+    cmd.params[cmd.name] = list2table(cmd.params[cmd.name])
     return handleConfigurationCall(cmd, "revokeAdminFrom")
+  end
+
+  handlers["get-admins"] = function(cmd)
+    return handleConfigurationGetCall(cmd, "getAdmins", "admins")
   end
 
   local function handleValidator(cmd, action)
     return handleConfigurationCall(cmd, action.."Validator")
   end
-
 
   handlers["reload-validator"] = function(cmd)
     return handleValidator(cmd, "reload")
@@ -1402,16 +1444,32 @@ return function(...)
     return handleValidator(cmd, "del")
   end
 
+  handlers["get-validators"] = function(cmd)
+    return handleConfigurationGetCall(cmd, "getValidators", "validators")
+  end
+
   handlers["set-max-channels"] = function(cmd)
     return handleConfigurationCall(cmd, "setMaxChannels", "number")
+  end
+
+  handlers["get-max-channels"] = function(cmd)
+    return handleConfigurationGetCall(cmd, "getMaxChannels", "maxchannels")
   end
 
   handlers["set-log-level"] = function(cmd)
     return handleConfigurationCall(cmd, "setLogLevel", "number")
   end
 
+  handlers["get-log-level"] = function(cmd)
+    return handleConfigurationGetCall(cmd, "getLogLevel", "loglevel")
+  end
+
   handlers["set-oil-log-level"] = function(cmd)
     return handleConfigurationCall(cmd, "setOilLogLevel", "number")
+  end
+
+  handlers["get-oil-log-level"] = function(cmd)
+    return handleConfigurationGetCall(cmd, "getOilLogLevel", "oilloglevel")
   end
 
   ---
