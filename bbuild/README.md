@@ -30,7 +30,7 @@
 
 [openbus-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/02_00)
 
-[openbus-idl-lib](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-idl-lib/tree/02_00)
+[openbus-lib-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-idl-lib/tree/02_00)
 
 [openbus-legacy-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/OB_IDL_v1_05_2010_05_13)
 
