@@ -358,6 +358,20 @@ function AccessControl:shutdown()
     unschedule(sweeper)
   end
   self.sweeper = false -- indicate no sweeper shall run anymore
+  for _, validator in pairs(self.passwordValidators) do
+    if type(validator) == "table" and type(validator.finalize) == "function" then
+      local ok, errmsg = xpcall(validator.finalize, traceback)
+      if not ok then
+        log:exception(msg.FailedPasswordValidatorFinalization:tag{
+            validator = validator.name,
+            errmsg = errmsg,
+          })
+      end
+      log:admin(msg.PasswordValidatorTerminated:tag{
+          validator = validator.name
+      })
+    end
+  end
   log:admin(msg.AccessControlShutDown)
 end
 
@@ -410,8 +424,8 @@ function AccessControl:loginByPassword(entity, pubkey, encrypted)
         log:exception(msg.TooManyFailedValidations:tag{entity=entity,wait=wait})
         NO_RESOURCES{ completed = "COMPLETED_YES", minor = 0x42555000 }
       end
-      for validator, validate in pairs(self.passwordValidators) do
-        local ok, valid, errmsg = xpcall(validate, traceback, entity, decoded.data)
+      for _, validator in pairs(self.passwordValidators) do
+        local ok, valid, errmsg = xpcall(validator.validate, traceback, entity, decoded.data)
         if not ok then
           ServiceFailure{
             message = msg.FailedPasswordValidation:tag{

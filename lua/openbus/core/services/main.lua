@@ -158,27 +158,37 @@ return function(...)
       })
       return false, errcode.UnableToLoadPasswordValidator, result
     end
-    local validate, errmsg = result(Configs)
+    local validate, finalize = result(Configs)
     if validate == nil then
+      local errmsg = finalize
       log:misconfig(msg.UnableToInitializePasswordValidator:tag{
         validator = package,
         error = errmsg,
       })
-      return false, errcode.UnableToInitializePasswordValidator, result
+      return false, errcode.UnableToInitializePasswordValidator, errmsg
     end
-    return true, validate
+    return true, validate, finalize
   end
 
   local validators = {}
   local function loadValidator(validator)
     local loaded
     if validators[validator] then
+      pcall(validators[validator].finalize)
       package.loaded[validator] = nil
       loaded = true
     end
-    local res, validate, errmsg = loadValidatorModule(validator)
-    if res then
-      validators[validator] = validate
+    local ok, validate, finalize = loadValidatorModule(validator)
+    if not ok then
+      local errcode = validate
+      local errmsg = finalize
+      return false, errcode, errmsg
+    else
+      validators[validator] = {
+        name = validator,
+        validate = validate,
+        finalize = finalize,
+      }
       local suffix
       if loaded then
         suffix = "Reloaded"
@@ -187,18 +197,16 @@ return function(...)
       end
       local phrase = "PasswordValidator"..suffix
       log:config(msg[phrase]:tag{name=validator})
-    else
-      return nil, validate, errmsg
     end
     return true
   end
 
-  local function loadValidators(action)
+  local function loadValidators()
     local hasValidator = false
     for _, validator in pairs(Configs.validator) do
       if not hasValidator then hasValidator = true end
-      local res, validate = loadValidator(validator)
-      if not res then return false, validate end
+      local ok, errcode, errmsg = loadValidator(validator)
+      if not ok then return false, errcode, errmsg end
     end
     if not hasValidator then
       log:misconfig(msg.NoPasswordValidators)
@@ -259,7 +267,7 @@ return function(...)
       setLogLevel("oil", Configs.oilloglevel)
       resetMaxChannels(orb, Configs.maxchannels)
       setAdminUsers()
-      loadValidators("reload")
+      loadValidators()
     end
   end
 

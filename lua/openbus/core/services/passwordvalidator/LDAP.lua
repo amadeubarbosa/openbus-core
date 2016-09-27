@@ -89,12 +89,11 @@ return function(configs)
     })
   ]=])
 
-  local openldap
+  local openldap, service
   do
     local oil = require "oil"
     local orb = oil.init{ flavor = "cooperative.client;corba.client" }
     orb:loadidl(idl)
-    local service
     repeat
       local ior = oil.readfrom(iorpath)
       if ior ~= nil then
@@ -108,8 +107,9 @@ return function(configs)
     end
   end
 
+  return
   -- validate function to be used in runtime
-  return function(entity, password)
+  function(entity, password)
     -- avoid blank password because this may be allowed as an anonymous bind
     local blankpatt ="^[%s%c%z]*$"
     if type(entity) ~= "string" or entity:match(blankpatt) or
@@ -138,5 +138,9 @@ return function(configs)
       end
     end
     return nil, msg.LdapAccessFailed:tag{errmsg=concat(errmsg,"; ")}
+  end,
+  -- finalize function to be used when shutting down the main process
+  function()
+    service:shutdown()
   end
 end
