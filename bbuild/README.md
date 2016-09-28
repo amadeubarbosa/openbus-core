@@ -46,18 +46,20 @@
 
 [openldap.jam](https://git.tecgraf.puc-rio.br/boost-build/openldap/tree/master)  (Somente Unix)
 
+[uuid.jam](https://git.tecgraf.puc-rio.br/boost-build/uuid/tree/master)  (Somente Unix)
+
 [boost-build](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/boost-build-2014-10_tecgraf_28112014snapshot.tgz)
 
 [sqlite](https://git.tecgraf.puc-rio.br/openbus-3rd-party/sqlite/tree/master)
 
 ## Build
-0. É necessário ter a ferramenta Boost Build e as bibliotecas OpenSSL, OpenLDAP (i) e libuuid (i) instaladas. [Instalação da Boost Build](https://jira.tecgraf.puc-rio.br/confluence/x/vYq_B), [Instalação da OpenSSL 1.0.0] (https://jira.tecgraf.puc-rio.br/confluence/x/wYq_B), [Instalação da OpenLDAP] (https://jira.tecgraf.puc-rio.br/confluence/x/w4q_B) e [Instalação da libuuid] (https://jira.tecgraf.puc-rio.br/confluence/x/1AXXB)
+0. É necessário ter a ferramenta Boost Build e as bibliotecas OpenSSL, OpenLDAP (i) e UUID (i) instaladas. [Instalação da Boost Build](https://jira.tecgraf.puc-rio.br/confluence/x/vYq_B), [Instalação da OpenSSL 1.0.0] (https://jira.tecgraf.puc-rio.br/confluence/x/wYq_B), [Instalação da OpenLDAP] (https://jira.tecgraf.puc-rio.br/confluence/x/w4q_B) e [Instalação da UUID 1.0.3] (https://jira.tecgraf.puc-rio.br/confluence/x/1AXXB)
 1. Escolher um diretório raiz para o build (`$BUILD`) e disponibilizar
 cada uma das dependências como um subdiretório com o nome da
 dependência conforme listado acima.Por exemplo:
 `$BUILD/lua`,`$BUILD/loop`, `$BUILD/oil` e assim por diante.
 2. Disparar o Boost Build em `$BUILD/openbus-core/bbuild` informando o local 
-da instalação da OpenSSL, OpenLDAP (i) e libuuid (i):
+da instalação da OpenSSL, OpenLDAP (i) e UUID (i):
 
 (i) Somente para ambientes Unix. 
 
@@ -79,9 +81,9 @@ cd %BUILD%\openbus-core\bbuild
   -sOPENSSL_INSTALL=%OPENSSL_INSTALL%
 ```
 
-Os locais de instalação das bibliotecas OpenSSL, OpenLDAP e libuuid podem ser
-informados através das variáveis `OPENSSL_INSTALL`, 
-`OPENLDAP_INSTALL` e `UUID_INSTALL`. Como alternativa, os diretórios `include` e `lib`
+Os locais de instalação das bibliotecas OpenSSL e OpenLDAP podem ser
+informados através das variáveis `OPENSSL_INSTALL`, `OPENLDAP_INSTALL`
+e `UUID_INSTALL`. Como alternativa, os diretórios `include` e `lib`
 podem ser informados de forma separada através das variáveis
 `OPENSSL_INC`, `OPENSSL_LIB`, `OPENLDAP_INC`, `OPENLDAP_LIB`, `UUID_INC` e `UUID_LIB`.
 
@@ -131,6 +133,8 @@ seguintes variáveis de ambiente:
 `OPENSSL_JAM`
 
 `OPENLDAP_JAM`
+
+`UUID_JAM`
 
 `SQLITE`
 
