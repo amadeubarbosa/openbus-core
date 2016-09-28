@@ -8,6 +8,8 @@
 
 [lce](https://git.tecgraf.puc-rio.br/engdist/lce/tree/master)
 
+[libuuid](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/libuuid-1.0.3.tar.gz) (Somente Unix)
+
 [luuid](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luuid/tree/1.0)
 
 [luascs](https://git.tecgraf.puc-rio.br/scs/scs-core-lua/tree/SCS_CORE_LUA_v1_02_03_2012_05_10)
@@ -42,8 +44,6 @@
 
 [openldap.jam](https://git.tecgraf.puc-rio.br/boost-build/openldap/tree/master)  (Somente Unix)
 
-[libuuid-1.0.3](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/libuuid-1.0.3.tar.gz)  (Somente Unix)
-
 [uuid.jam](https://git.tecgraf.puc-rio.br/boost-build/uuid/tree/master)  (Somente Unix)
 
 [boost-build](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/boost-build-2014-10_tecgraf_28112014snapshot.tgz)
@@ -57,7 +57,9 @@ cada uma das dependências como um subdiretório com o nome da
 dependência conforme listado acima.Por exemplo:
 `$BUILD/lua`,`$BUILD/loop`, `$BUILD/oil` e assim por diante.
 2. Disparar o Boost Build em `$BUILD/openbus-core/bbuild` informando o local 
-da instalação da OpenSSL, OpenLDAP (somente Unix) e UUID (somente Unix):
+da instalação da OpenSSL, OpenLDAP (i) e libuuid (i):
+
+(i) Somente para ambientes Unix. 
 
 ### Unix
 
@@ -81,7 +83,8 @@ Os locais de instalação das bibliotecas OpenSSL e OpenLDAP podem ser
 informados através das variáveis `OPENSSL_INSTALL`, `OPENLDAP_INSTALL`
 e `UUID_INSTALL`. Como alternativa, os diretórios `include` e `lib`
 podem ser informados de forma separada através das variáveis
-`OPENSSL_INC` e `OPENSSL_LIB`.
+`OPENSSL_INC`, `OPENSSL_LIB`, `OPENLDAP_INC`, `OPENLDAP_LIB`, `UUID_INC`
+e `UUID_LIB`.
 
 As outras dependências são buscadas automaticamente no diretório pai
 do pacote `openbus-core`. Para cada dependência descrita na tabela
