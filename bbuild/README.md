@@ -8,6 +8,8 @@
 
 [lce](https://git.tecgraf.puc-rio.br/engdist/lce/tree/master)
 
+[libuuid](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/libuuid-1.0.3.tar.gz) (Somente Unix)
+
 [luuid](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luuid/tree/1.0)
 
 [luascs](https://git.tecgraf.puc-rio.br/scs/scs-core-lua/tree/SCS_CORE_LUA_v1_02_03_2012_05_10)
@@ -47,13 +49,15 @@
 [sqlite](https://git.tecgraf.puc-rio.br/openbus-3rd-party/sqlite/tree/master)
 
 ## Build
-0. É necessário ter o Boost Build, a OpenSSL e a OpenLDAP (no caso do Unix) instalados. [Instalação da Boost Build](https://jira.tecgraf.puc-rio.br/confluence/x/vYq_B), [Instalação da OpenSSL 1.0.0] (https://jira.tecgraf.puc-rio.br/confluence/x/wYq_B) e [Instalação da OpenLDAP] (https://jira.tecgraf.puc-rio.br/confluence/x/w4q_B).
+0. É necessário ter a ferramenta Boost Build e as bibliotecas OpenSSL, OpenLDAP (i) e libuuid (i) instaladas. [Instalação da Boost Build](https://jira.tecgraf.puc-rio.br/confluence/x/vYq_B), [Instalação da OpenSSL 1.0.0] (https://jira.tecgraf.puc-rio.br/confluence/x/wYq_B), [Instalação da OpenLDAP] (https://jira.tecgraf.puc-rio.br/confluence/x/w4q_B) e [Instalação da libuuid] (https://jira.tecgraf.puc-rio.br/confluence/x/1AXXB)
 1. Escolher um diretório raiz para o build (`$BUILD`) e disponibilizar
 cada uma das dependências como um subdiretório com o nome da
 dependência conforme listado acima.Por exemplo:
 `$BUILD/lua`,`$BUILD/loop`, `$BUILD/oil` e assim por diante.
 2. Disparar o Boost Build em `$BUILD/openbus-core/bbuild` informando o local 
-da instalação da OpenSSL e OpenLDAP (somente Unix):
+da instalação da OpenSSL, OpenLDAP (i) e libuuid (i):
+
+(i) Somente para ambientes Unix. 
 
 ### Unix
 
@@ -61,7 +65,8 @@ da instalação da OpenSSL e OpenLDAP (somente Unix):
 cd $BUILD/openbus-core/bbuild
 $INSTALL/boost-build/bin/b2 warnings=off \
   -sOPENSSL_INSTALL=$OPENSSL_INSTALL \
-  -sOPENLDAP_INSTALL=$OPENLDAP_INSTALL
+  -sOPENLDAP_INSTALL=$OPENLDAP_INSTALL \
+  -sUUID_INSTALL=$UUID_INSTALL
 ```
 
 ### Windows
@@ -72,11 +77,11 @@ cd %BUILD%\openbus-core\bbuild
   -sOPENSSL_INSTALL=%OPENSSL_INSTALL%
 ```
 
-Os locais de instalação das bibliotecas OpenSSL e OpenLDAP podem ser
-informados através das variáveis `OPENSSL_INSTALL` e
-`OPENLDAP_INSTALL`. Como alternativa, os diretórios `include` e `lib`
+Os locais de instalação das bibliotecas OpenSSL, OpenLDAP e libuuid podem ser
+informados através das variáveis `OPENSSL_INSTALL`, 
+`OPENLDAP_INSTALL` e `UUID_INSTALL`. Como alternativa, os diretórios `include` e `lib`
 podem ser informados de forma separada através das variáveis
-`OPENSSL_INC` e `OPENSSL_LIB`.
+`OPENSSL_INC`, `OPENSSL_LIB`, `OPENLDAP_INC`, `OPENLDAP_LIB`, `UUID_INC` e `UUID_LIB`.
 
 As outras dependências são buscadas automaticamente no diretório pai
 do pacote `openbus-core`. Para cada dependência descrita na tabela
