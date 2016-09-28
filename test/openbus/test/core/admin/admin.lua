@@ -110,6 +110,21 @@ assert(execute("--del-entity=ENT03"))
 assert(execute("--del-entity=ENT04"))
 assert(execute("--del-category=CTG02"))
 
+-- reconfiguração dinâmica
+assert(execute("--set-max-channels=100"))
+assert(execute("--set-log-level=5"))
+assert(execute("--set-oi-log-leve=5"))
+assert(execute("--reload-validator=openbus.core.services.passwordvalidator.LDAP"))
+assert(execute("--del-validator=openbus.core.services.passwordvalidator.LDAP"))
+assert(execute("--reload-validator=openbus.core.services.passwordvalidator.LDAP"))
+assert(execute("--grant-admin-to='peter'"))
+login="--login=peter"
+password="--password=peter"
+assert(execute("--revoke-admin-from='peter'"))
+login="--login="..admin
+password="--password="..adminPassword
+assert(execute("--reload-configs-file"))
+
 finalize()
 print("[OK] Script de testes executado por completo!")
 
