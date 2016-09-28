@@ -243,12 +243,12 @@ return function(...)
   end
 
   local function resetMaxChannels(orb, maxchannels)
-    local ok, errmsg = validateMaxChannels(maxchannels)
-    if ok and maxchannels > 0 then
+    local ok, errcode = validateMaxChannels(maxchannels)
+    if not ok then
+      return false, errcode
+    else
       orb.ResourceManager.inuse.maxsize = maxchannels
       log:config(msg.MaximumChannelLimit:tag{value=maxchannels})
-    else
-      return nil, errmsg
     end
     return true
   end
@@ -402,8 +402,8 @@ Options:
     return errcode.InvalidPasswordValidationRate
   end
 
-  local r, errcode = validateMaxChannels(Configs.maxchannels)
-  if not r then return errcode end
+  local res, errcode = validateMaxChannels(Configs.maxchannels)
+  if not res then return errcode end
   
   -- load private key
   local prvkey, errmsg = readprivatekey(Configs.privatekey)
@@ -424,8 +424,8 @@ Options:
     if not res then
       dbpath = dbtmppath
     else
-		  local dbtmp = res
-			res, errmsg = pcall(dbconvert, dblegacy, dbtmp)
+      local dbtmp = res
+      res, errmsg = pcall(dbconvert, dblegacy, dbtmp)
       if res then
         local dbbakpath = dbpath..".bak"
         res, errmsg = renamefile(dbpath, dbbakpath)
@@ -444,9 +444,9 @@ Options:
         end
       end
     end
-				
+    
     if not converted then
-			removefile(dbtmppath)
+      removefile(dbtmppath)
       log:misconfig(msg.UnableToConvertLegacyDatabase:tag{
         path = dbpath,
         error = errmsg,
