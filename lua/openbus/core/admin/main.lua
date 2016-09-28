@@ -183,7 +183,7 @@ return function(...)
 
   - Manutenção
     * Encerra a execução atual do barramento:
-      --shutown
+      --shutdown
     * Monta um relatório sobre o estado atual do barramento:
       --report
   
