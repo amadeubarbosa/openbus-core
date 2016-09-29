@@ -23,6 +23,7 @@ local min = math.min
 local cothread = require "cothread"
 local time = cothread.now
 local running = cothread.running
+local runthread = cothread.next
 local schedule = cothread.schedule
 local unschedule = cothread.unschedule
 local waituntil = cothread.defer
@@ -313,8 +314,7 @@ function AccessControl:__init(data)
   end
   
   -- timer de limpeza de credenciais não renovadas e desafios não respondidos
-  self.sweeper = newthread(function()
-    local now = time()
+  runthread(newthread(function()
     local nextDeadline = time() + self.leaseTime + self.expirationGap
       
     repeat
@@ -322,7 +322,7 @@ function AccessControl:__init(data)
       waituntil(nextDeadline)
       self.sweeper = true
       
-      now = time()
+      local now = time()
       nextDeadline = now + self.leaseTime + self.expirationGap
 
       for id, login in self.activeLogins:iLogins() do
@@ -351,8 +351,7 @@ function AccessControl:__init(data)
         end
       end
     until self.sweeper == false
-  end)
-  schedule(self.sweeper)
+  end))
 end
 
 function AccessControl:shutdown()
