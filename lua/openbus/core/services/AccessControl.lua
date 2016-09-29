@@ -318,15 +318,17 @@ function AccessControl:__init(data)
   end
   
   -- timer de limpeza de credenciais não renovadas e desafios não respondidos
-  self.sweeper = true -- indicate sweeper shall run
-  schedule(newthread(function()
-    while self.sweeper do
-      local now = time()
-      local nextDeadline = now + self.leaseTime + self.expirationGap
+  self.sweeper = newthread(function()
+    local now = time()
+    local nextDeadline = time() + self.leaseTime + self.expirationGap
       
+    repeat
       self.sweeper = running()
       waituntil(nextDeadline)
       self.sweeper = true
+      
+      now = time()
+      nextDeadline = now + self.leaseTime + self.expirationGap
 
       for id, login in self.activeLogins:iLogins() do
         local deadline = login.deadline
@@ -353,8 +355,9 @@ function AccessControl:__init(data)
           process:cancel()
         end
       end
-    end
-  end))
+    until self.sweeper == false
+  end)
+  schedule(self.sweeper)
 end
 
 function AccessControl:shutdown()
