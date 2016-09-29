@@ -20,7 +20,7 @@ end
 -------------------------------------------------------------------------------
 
 local function finalize()
-  os.execute("rm -f " ..outputfile)
+  os.remove(outputfile)
 end
 
 local function readOutput()
@@ -112,9 +112,11 @@ assert(execute("--del-category=CTG02"))
 assert(execute("--set-max-channels=100"))
 assert(execute("--set-log-level=5"))
 assert(execute("--set-oil-log-level=5"))
-assert(execute("--reload-validator=openbus.test.core.services.BadPasswordValidator"))
-assert(execute("--del-validator=openbus.test.core.services.BadPasswordValidator"))
-assert(execute("--reload-validator=openbus.test.core.services.BadPasswordValidator"))
+assert(execute("--add-validator=openbus.test.core.services.BadPasswordValidator"))
+assert(not execute("--del-validator=openbus.test.core.services.BadPasswordValidator"))
+assert(execute("--add-validator=openbus.test.core.services.BadPasswordValidator"))
+assert(not execute("--add-validator=openbus.test.core.services.ErrorTestValidator"))
+assert(not execute("--add-validator=openbus.test.core.services.NullValidationValidator"))
 assert(execute("--grant-admin-to='peter'"))
 login="--login=peter "
 password="--password=peter "

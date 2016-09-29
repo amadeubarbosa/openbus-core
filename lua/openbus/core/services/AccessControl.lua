@@ -360,20 +360,6 @@ function AccessControl:shutdown()
     unschedule(sweeper)
   end
   self.sweeper = false -- indicate no sweeper shall run anymore
-  for _, validator in pairs(self.passwordValidators) do
-    if type(validator) == "table" and type(validator.finalize) == "function" then
-      local ok, errmsg = xpcall(validator.finalize, traceback)
-      if not ok then
-        log:exception(msg.FailedPasswordValidatorFinalization:tag{
-            validator = validator.name,
-            errmsg = errmsg,
-          })
-      end
-      log:admin(msg.PasswordValidatorTerminated:tag{
-          validator = validator.name
-      })
-    end
-  end
   log:admin(msg.AccessControlShutDown)
 end
 

@@ -66,22 +66,25 @@ interface Configuration {
   StrSeq getAdmins() raises (ServiceFailure);
 
   /**
-   * \brief Recarrega um validador de login.
+   * \brief Adiciona um validador de login. Caso o validador já tiver sido
+   *        adicionado, nada será feito.
    *
-   * O validador é carregado se o mesmo não existir.
-   *
+   * \param validator Nome do pacote Lua da implementação do validador.
    */
-  void reloadValidator(in string validator) raises (ServiceFailure);
+  void addValidator(in string validator) raises (ServiceFailure);
 
   /**
-   * \brief Remove um validador de login.
+   * \brief Remove um validador de login. Caso o validador não tenha sido
+   *        adicionado antes, nada será feito.
+   *
+   * \param validator Nome do pacote Lua da implementação do validador.
    */
   void delValidator(in string validator) raises (ServiceFailure);
 
   /**
    * \brief Retorna a lista de validadores.
    *
-   * \return Lista de validadores
+   * \return Lista dos nomes dos pacotes Lua da implementação dos validadores.
    */
   StrSeq getValidators() raises (ServiceFailure);
 

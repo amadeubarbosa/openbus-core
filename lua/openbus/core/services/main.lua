@@ -149,7 +149,35 @@ return function(...)
     end
   end
 
-  local function loadValidatorModule(package)
+  local validators = {}
+  local function unloadValidator(validator)
+    package.loaded[validator.name] = nil
+    validators[validator.name] = nil
+    local ok, errmsg = pcall(validator.finalize)
+    if not ok then
+      ServiceFailure{
+        message = msg.FailedPasswordValidatorTermination:tag{
+          validator = validator.name,
+          errmsg = errmsg or msg.UnspecifiedTerminationFailure,
+        }
+      }
+    end
+    return true
+  end
+
+  local function unloadValidators()
+    for _, validator in pairs(validators) do
+      local ok, errmsg = pcall(unloadValidator, validator)
+      if not ok then
+        log:exception(errmsg)
+      end
+      log:admin(msg.PasswordValidatorUnloaded:tag{
+          validator = validator.name
+      })
+    end
+  end
+
+  local function loadValidator(package)
     local ok, result = pcall(require, package)
     if not ok then
       log:misconfig(msg.UnableToLoadPasswordValidator:tag{
@@ -158,55 +186,33 @@ return function(...)
       })
       return false, errcode.UnableToLoadPasswordValidator, result
     end
-    local validate, finalize = result(Configs)
-    if validate == nil then
-      local errmsg = finalize
+    
+    local ok, validate, finalize = pcall(result, Configs)
+    if not ok or validate == nil then
+      local errmsg = (not ok and validate) or finalize
       log:misconfig(msg.UnableToInitializePasswordValidator:tag{
         validator = package,
         error = errmsg,
       })
       return false, errcode.UnableToInitializePasswordValidator, errmsg
     end
-    return true, validate, finalize
-  end
+    
+    validators[package] = {
+      name = package,
+      validate = validate,
+      finalize = finalize,
+    }
 
-  local validators = {}
-  local function loadValidator(validator)
-    local loaded
-    if validators[validator] then
-      pcall(validators[validator].finalize)
-      package.loaded[validator] = nil
-      loaded = true
-    end
-    local ok, validate, finalize = loadValidatorModule(validator)
-    if not ok then
-      local errcode = validate
-      local errmsg = finalize
-      return false, errcode, errmsg
-    else
-      validators[validator] = {
-        name = validator,
-        validate = validate,
-        finalize = finalize,
-      }
-      local suffix
-      if loaded then
-        suffix = "Reloaded"
-      else
-        suffix = "Loaded"
-      end
-      local phrase = "PasswordValidator"..suffix
-      log:config(msg[phrase]:tag{name=validator})
-    end
     return true
   end
 
   local function loadValidators()
     local hasValidator = false
-    for _, validator in pairs(Configs.validator) do
+    for _, package in pairs(Configs.validator) do
       if not hasValidator then hasValidator = true end
-      local ok, errcode, errmsg = loadValidator(validator)
+      local ok, errcode, errmsg = loadValidator(package)
       if not ok then return false, errcode, errmsg end
+      log:config(msg.PasswordValidatorLoaded:tag{ validator = package })
     end
     if not hasValidator then
       log:misconfig(msg.NoPasswordValidators)
@@ -557,20 +563,25 @@ Options:
     return getList(adminUsers)
   end
 
-  function Configuration:reloadValidator(validator)
-    local res, _, errmsg = loadValidator(validator)
-    if not res then 
-      return ServiceFailure{
-        message = msg.UnableToLoadPasswordValidator:tag{errmsg = errmsg}
-      }
+  function Configuration:addValidator(name)
+    if not validators[name] then
+      local ok, _, errmsg = loadValidator(name)
+      if not ok then
+        ServiceFailure{
+          message = msg.UnableToLoadPasswordValidator:tag{
+            validator = name,
+            error = errmsg,
+          }
+        }
+      end
+      log:admin(msg.PasswordValidatorLoaded:tag{validator = name})
     end
   end
 
-  function Configuration:delValidator(validator)
-    if validators[validator] then
-      package.loaded[validator] = nil
-      validators[validator] = nil
-      log:config(msg.PasswordValidatorRemoved:tag{validator = validator})
+  function Configuration:delValidator(name)
+    if validators[name] then
+      unloadValidator(validators[name])
+      log:admin(msg.PasswordValidatorUnloaded:tag{validator = name})
     end
   end
 
@@ -580,7 +591,7 @@ Options:
 
   function Configuration:setMaxChannels(maxchannels)
     if not resetMaxChannels(orb, maxchannels) then
-      return ServiceFailure{
+      ServiceFailure{
         message = msg.InvalidMaximumChannelLimit:tag{value=maxchannels}
       }
     end
@@ -592,7 +603,7 @@ Options:
 
   local function updateLogLevel(log, loglevel)
     if not setLogLevel(log, loglevel) then
-      return ServiceFailure{
+      ServiceFailure{
         message = msg.InvalidLogLevel:tag{value=loglevel}
       }
     end
@@ -667,6 +678,7 @@ Options:
       self.context:deactivateComponent()
       orb:shutdown()
       facets.AccessControl:shutdown()
+      unloadValidators()
       log:uptime(msg.CoreServicesTerminated)
     end,
   }

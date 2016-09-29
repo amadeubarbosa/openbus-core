@@ -196,8 +196,8 @@ return function(...)
       --revoke-admin-from="<user1> <user2> ... <userN>"
     * Mostra a lista de administradores:
       --get-admins
-    * Recarrega um validador de login. Se o não existir o validador é carregado:
-      --reload-validator=<validator>
+    * Adiciona um validador de login:
+      --add-validator=<validator>
     * Remove um validador de login:
       --del-validator=<validator>
     * Mostra a lista de validadores:
@@ -375,7 +375,7 @@ return function(...)
     ["get-admins"] = {
       {n = 0, params = {}},
     };
-    ["reload-validator"] = {
+    ["add-validator"] = {
       {n = 1, params = {}},
     };
     ["del-validator"] = {
@@ -1432,16 +1432,12 @@ return function(...)
     return handleConfigurationGetCall(cmd, "getAdmins", "admins")
   end
 
-  local function handleValidator(cmd, action)
-    return handleConfigurationCall(cmd, action.."Validator")
-  end
-
-  handlers["reload-validator"] = function(cmd)
-    return handleValidator(cmd, "reload")
+  handlers["add-validator"] = function(cmd)
+    return handleConfigurationCall(cmd, "addValidator")
   end
 
   handlers["del-validator"] = function(cmd)
-    return handleValidator(cmd, "del")
+    return handleConfigurationCall(cmd, "delValidator")
   end
 
   handlers["get-validators"] = function(cmd)
