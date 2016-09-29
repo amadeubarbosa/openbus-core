@@ -2,15 +2,13 @@
 -- configuração do teste
 bushost, busport = ...
 require "openbus.test.configs"
-local host = bushost
-local port = busport
 local admin = admin
 local adminPassword = admpsw
 local certfile = syscrt
 local script = admscript
 local outputfile = admoutput
 
-local bin = "busadmin "
+local bin = "busadmin --host="..bushost.." --port="..busport.." "
 local login = "--login="..admin.." "
 local password = "--password="..adminPassword.." "
 local certificate = "--certificate="..certfile
@@ -27,19 +25,19 @@ end
 
 local function readOutput()
   local f = io.open(outputfile)
-  local err = f:read("*a")
+  local contents = f:read("*a")
   f:close()
-  return err
+  return contents
 end
 
 local function execute(...)
   local command = bin..login..password
   local params = table.concat({...}, " ")
   local tofile = " > "..outputfile
-  os.execute(command..params..tofile)
+  local success = os.execute(command..params..tofile)
   local output = readOutput()
-  local failed = output:find("[ERRO]",1,true)
-  if not failed then
+  local errmsg = output:find("[ERRO]",1,true)
+  if success and not errmsg then
     return true
   else
     finalize()
@@ -114,9 +112,9 @@ assert(execute("--del-category=CTG02"))
 assert(execute("--set-max-channels=100"))
 assert(execute("--set-log-level=5"))
 assert(execute("--set-oil-log-level=5"))
-assert(execute("--reload-validator=openbus.core.services.passwordvalidator.LDAP"))
-assert(execute("--del-validator=openbus.core.services.passwordvalidator.LDAP"))
-assert(execute("--reload-validator=openbus.core.services.passwordvalidator.LDAP"))
+assert(execute("--reload-validator=openbus.test.core.services.BadPasswordValidator"))
+assert(execute("--del-validator=openbus.test.core.services.BadPasswordValidator"))
+assert(execute("--reload-validator=openbus.test.core.services.BadPasswordValidator"))
 assert(execute("--grant-admin-to='peter'"))
 login="--login=peter "
 password="--password=peter "
@@ -126,6 +124,5 @@ password="--password="..adminPassword.." "
 assert(execute("--reload-configs-file"))
 
 finalize()
-print("[OK] Script de testes executado por completo!")
 
 os.exit()
