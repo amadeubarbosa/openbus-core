@@ -895,6 +895,22 @@ return {
         },
       },
     },
+    {
+      type = "table",
+      title = "Core Services Management and Configuration",
+      description = [[
+        Functions to manage the core services, i.e: life-cycle, configuration, etc.
+      ]],
+      fields = {
+        shutdown = {
+          type = "function",
+          title = "Shuts down the core services",
+          description = [[
+            calls the bus to shut down itself. This operation can only be executed by OpenBus special entity otherwise a NO_PERMISSION exception will be raised.
+          ]],
+        },
+      }
+    },
     set = {
       type = "table",
       title = "Value Set",
