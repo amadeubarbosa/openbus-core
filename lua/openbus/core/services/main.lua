@@ -408,8 +408,10 @@ Options:
     return errcode.InvalidPasswordValidationRate
   end
 
-  local res, errcode = validateMaxChannels(Configs.maxchannels)
-  if not res then return errcode end
+  do
+    local res, errcode = validateMaxChannels(Configs.maxchannels)
+    if not res then return errcode end
+  end
   
   -- load private key
   local prvkey, errmsg = readprivatekey(Configs.privatekey)
@@ -471,8 +473,10 @@ Options:
   end
 
   -- load all password validators to be used
-  local res, errcode = loadValidators()
-  if not res then return errcode end
+  do
+    local res, errcode = loadValidators()
+    if not res then return errcode end
+  end
   
   -- create a set of admin users
   setAdminUsers()
