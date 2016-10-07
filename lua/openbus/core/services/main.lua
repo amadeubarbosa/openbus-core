@@ -135,49 +135,20 @@ return function(...)
     end
   end
   
-  local adminUsers = { [BusEntity] = true }
-  local function setAdminUsers()
+  local function resetAdminUsers(admins)
     local updatedAdminUsers = {}
     for _, admin in pairs(Configs.admin) do
       updatedAdminUsers[admin] = true
-      grantAdmin(admin, adminUsers)
+      grantAdmin(admin, admins)
     end
-    for admin,_ in pairs(adminUsers) do
+    for admin,_ in pairs(admins) do
       if admin ~= BusEntity and not updatedAdminUsers[admin] then
-        revokeAdmin(admin, adminUsers)
+        revokeAdmin(admin, admins)
       end
     end
   end
 
-  local validators = {}
-  local function unloadValidator(validator)
-    package.loaded[validator.name] = nil
-    validators[validator.name] = nil
-    local ok, errmsg = pcall(validator.finalize)
-    if not ok then
-      ServiceFailure{
-        message = msg.FailedPasswordValidatorTermination:tag{
-          validator = validator.name,
-          errmsg = errmsg or msg.UnspecifiedTerminationFailure,
-        }
-      }
-    end
-    return true
-  end
-
-  local function unloadValidators()
-    for _, validator in pairs(validators) do
-      local ok, errmsg = pcall(unloadValidator, validator)
-      if not ok then
-        log:exception(errmsg)
-      end
-      log:admin(msg.PasswordValidatorUnloaded:tag{
-          validator = validator.name
-      })
-    end
-  end
-
-  local function loadValidator(package)
+  local function loadValidator(package, validators)
     local ok, result = pcall(require, package)
     if not ok then
       log:misconfig(msg.UnableToLoadPasswordValidator:tag{
@@ -206,11 +177,11 @@ return function(...)
     return true
   end
 
-  local function loadValidators()
+  local function loadValidators(validators)
     local hasValidator = false
     for _, package in pairs(Configs.validator) do
       if not hasValidator then hasValidator = true end
-      local ok, errcode, errmsg = loadValidator(package)
+      local ok, errcode, errmsg = loadValidator(package, validators)
       if not ok then return false, errcode, errmsg end
       log:config(msg.PasswordValidatorLoaded:tag{ validator = package })
     end
@@ -259,7 +230,7 @@ return function(...)
     return true
   end
 
-  local function loadConfigs(reload, orb)
+  local function loadConfigs()
     local path = getenv("OPENBUS_CONFIG")
     if path == nil then
       path = "openbus.cfg"
@@ -267,14 +238,7 @@ return function(...)
       if file == nil then return end
       file:close()
     end
-    Configs:configs("configs", path, reload)
-    if (reload) then
-      setLogLevel("core", Configs.loglevel)
-      setLogLevel("oil", Configs.oilloglevel)
-      resetMaxChannels(orb, Configs.maxchannels)
-      setAdminUsers()
-      loadValidators()
-    end
+    Configs:configs("configs", path)
   end
 
   loadConfigs()
@@ -473,13 +437,15 @@ Options:
   end
 
   -- load all password validators to be used
+  local validators = {}
   do
-    local res, errcode = loadValidators()
+    local res, errcode = loadValidators(validators)
     if not res then return errcode end
   end
   
   -- create a set of admin users
-  setAdminUsers()
+  local adminUsers = { [BusEntity] = true }
+  resetAdminUsers(adminUsers)
   
   -- setup bus access
   local orbcfg = { host=Configs.host, port=Configs.port }
@@ -517,7 +483,6 @@ Options:
       access_control = AccessControl,
       offer_registry = OfferRegistry,
     }
-    facets.Configuration = Configuration
     local objkeyfmt = BusObjectKey.."/%s"
     for modname, modfacets in pairs(facetmodules) do
       for name, facet in pairs(modfacets) do
@@ -526,22 +491,41 @@ Options:
         facets[name] = facet
       end
     end
-  end
-  
-  function Configuration:__init(data)
-  end
-  
-  function Configuration:reloadConfigsFile()
-    loadConfigs(reloadConfigs, orb, facets)
+    facets.Configuration = Configuration
   end
 
-  local function updateAdmins(users, action)     
+  function Configuration:__init(data)
+    self.access = data.access
+    self.admins = data.admins
+    self.validators = data.validators
+    local access = self.access
+    local admins = self.admins
+    access:setGrantedUsers(self.__type, "reloadConfigsFile", admins)
+    access:setGrantedUsers(self.__type, "grantAdminTo", admins)
+    access:setGrantedUsers(self.__type, "revokeAdminFrom", admins)
+    access:setGrantedUsers(self.__type, "addValidator", admins)
+    access:setGrantedUsers(self.__type, "delValidator", admins)
+    access:setGrantedUsers(self.__type, "setMaxChannels", admins)
+    access:setGrantedUsers(self.__type, "setLogLevel", admins)
+    access:setGrantedUsers(self.__type, "setOilLogLevel", admins)
+  end
+  
+  -- local operations
+  local function updateLogLevel(log, loglevel)
+    if not setLogLevel(log, loglevel) then
+      ServiceFailure{
+        message = msg.InvalidLogLevel:tag{value=loglevel}
+      }
+    end
+  end
+
+  local function updateAdmins(users, action, admins)
     for _, admin in ipairs(users) do
       if "grant" == action then
-        grantAdmin(admin, adminUsers)
+        grantAdmin(admin, admins)
       else
-        if admin ~= BusEntity and adminUsers[admin] then
-          revokeAdmin(admin, adminUsers)
+        if admin ~= BusEntity and admins[admin] then
+          revokeAdmin(admin, admins)
         end
       end
     end   
@@ -555,21 +539,70 @@ Options:
     return list
   end
 
+  local function unloadValidator(name, validators)
+    local module = validators[name]
+    validators[name] = nil
+    package.loaded[name] = nil
+    local ok, errmsg = pcall(module.finalize)
+    if not ok then
+      ServiceFailure{
+        message = msg.FailedPasswordValidatorTermination:tag{
+          validator = name,
+          errmsg = errmsg or msg.UnspecifiedTerminationFailure,
+        }
+      }
+    end
+    return true
+  end
+
+  local function unloadValidators(validators)
+    for name, validator in pairs(validators) do
+      local ok, errmsg = pcall(unloadValidator, name, validators)
+      if not ok then
+        log:exception(errmsg)
+      end
+      log:admin(msg.PasswordValidatorUnloaded:tag{
+          validator = name
+      })
+    end
+  end
+
+  function Configuration:shutdown()
+    unloadValidators(self.validators)
+  end
+
+  -- public operations
+  function Configuration:reloadConfigsFile()
+    local orb = self.access.orb
+    local admins = self.admins
+    local validators = self.validators
+    -- load configuration from file
+    loadConfigs()
+    -- reconfigure its parameter
+    setLogLevel("core", Configs.loglevel)
+    setLogLevel("oil", Configs.oilloglevel)
+    resetMaxChannels(orb, Configs.maxchannels)
+    resetAdminUsers(admins)
+    unloadValidators(validators)
+    loadValidators(validators)
+  end
+
   function Configuration:grantAdminTo(users)
-    updateAdmins(users, "grant")
+    updateAdmins(users, "grant", self.admins)
   end
 
   function Configuration:revokeAdminFrom(users)
-    updateAdmins(users, "revoke")
+    updateAdmins(users, "revoke", self.admins)
   end
 
   function Configuration:getAdmins()
-    return getList(adminUsers)
+    return getList(self.admins)
   end
 
   function Configuration:addValidator(name)
+    local validators = self.validators
     if not validators[name] then
-      local ok, _, errmsg = loadValidator(name)
+      local ok, _, errmsg = loadValidator(name, validators)
       if not ok then
         ServiceFailure{
           message = msg.UnableToLoadPasswordValidator:tag{
@@ -583,14 +616,15 @@ Options:
   end
 
   function Configuration:delValidator(name)
+    local validators = self.validators
     if validators[name] then
-      unloadValidator(validators[name])
+      unloadValidator(name, validators)
       log:admin(msg.PasswordValidatorUnloaded:tag{validator = name})
     end
   end
 
   function Configuration:getValidators()
-    return getList(validators)
+    return getList(self.validators)
   end
 
   function Configuration:setMaxChannels(maxchannels)
@@ -603,14 +637,6 @@ Options:
 
   function Configuration:getMaxChannels()
     return orb.ResourceManager.inuse.maxsize
-  end
-
-  local function updateLogLevel(log, loglevel)
-    if not setLogLevel(log, loglevel) then
-      ServiceFailure{
-        message = msg.InvalidLogLevel:tag{value=loglevel}
-      }
-    end
   end
 
   function Configuration:setLogLevel(loglevel)
@@ -674,6 +700,7 @@ Options:
       facets.InterfaceRegistry:__init(params)
       facets.EntityRegistry:__init(params)
       facets.OfferRegistry:__init(params)
+      facets.Configuration:__init(params)
     end,
     shutdown = function(self)
       if iceptor:getCallerChain().caller.entity ~= BusEntity then
@@ -682,7 +709,7 @@ Options:
       self.context:deactivateComponent()
       orb:shutdown()
       facets.AccessControl:shutdown()
-      unloadValidators()
+      facets.Configuration:shutdown()
       log:uptime(msg.CoreServicesTerminated)
     end,
   }

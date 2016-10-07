@@ -46,24 +46,28 @@ interface Configuration {
    * + Número máximo de canais de comunicação do OiL.
    * + Níveis de log (busservices e OiL).
    */
-  void reloadConfigsFile() raises (ServiceFailure);
+  void reloadConfigsFile() 
+    raises (UnauthorizedOperation, ServiceFailure);
 
   /**
    * \brief Atribui os privilégios de administração para um grupo de usuários.
    */
-  void grantAdminTo(in StrSeq users) raises (ServiceFailure);
+  void grantAdminTo(in StrSeq users) 
+    raises (UnauthorizedOperation, ServiceFailure);
 
   /**
    * \brief Revoga os privilégios de administração para um grupo de usuários.
    */
-  void revokeAdminFrom(in StrSeq users) raises (ServiceFailure);
+  void revokeAdminFrom(in StrSeq users) 
+    raises (UnauthorizedOperation, ServiceFailure);
 
   /**
    * \brief Retorna a lista de usuários com permissão de administração.
    *
    * \return Lista de administradores
    */
-  StrSeq getAdmins() raises (ServiceFailure);
+  StrSeq getAdmins() 
+    raises (ServiceFailure);
 
   /**
    * \brief Adiciona um validador de login. Caso o validador já tiver sido
@@ -71,7 +75,8 @@ interface Configuration {
    *
    * \param validator Nome do pacote Lua da implementação do validador.
    */
-  void addValidator(in string validator) raises (ServiceFailure);
+  void addValidator(in string validator) 
+    raises (UnauthorizedOperation, ServiceFailure);
 
   /**
    * \brief Remove um validador de login. Caso o validador não tenha sido
@@ -79,50 +84,58 @@ interface Configuration {
    *
    * \param validator Nome do pacote Lua da implementação do validador.
    */
-  void delValidator(in string validator) raises (ServiceFailure);
+  void delValidator(in string validator) 
+    raises (UnauthorizedOperation, ServiceFailure);
 
   /**
    * \brief Retorna a lista de validadores.
    *
    * \return Lista dos nomes dos pacotes Lua da implementação dos validadores.
    */
-  StrSeq getValidators() raises (ServiceFailure);
+  StrSeq getValidators() 
+    raises (ServiceFailure);
 
   /**
    * \brief Redefine o número máximo de canais de comunicação do OiL.
    */
-  void setMaxChannels(in long maxchannels) raises (ServiceFailure);
+  void setMaxChannels(in long maxchannels) 
+    raises (UnauthorizedOperation, ServiceFailure);
 
   /**
    * \brief Retorna o número máximo de canais de comunicação do OiL.
    *
    * \return Número máximo de canais de comunicação do OiL.
    */
-  long getMaxChannels() raises (ServiceFailure);
+  long getMaxChannels() 
+    raises (ServiceFailure);
 
   /**
    * \brief Redefine o nível de log do barramento.
    */
-  void setLogLevel(in unsigned short loglevel) raises (ServiceFailure);
+  void setLogLevel(in unsigned short loglevel) 
+    raises (UnauthorizedOperation, ServiceFailure);
 
   /**
    * \brief Retorna o nível de log do barramento.
    *
    * \return Nível de log do barramento.
    */
-  unsigned short getLogLevel() raises (ServiceFailure);
+  unsigned short getLogLevel() 
+    raises (ServiceFailure);
 
   /**
    * \brief Redefine o nível de log do OiL.
    */
-  void setOilLogLevel(in unsigned short oilloglevel) raises (ServiceFailure);
+  void setOilLogLevel(in unsigned short oilloglevel) 
+    raises (UnauthorizedOperation, ServiceFailure);
 
   /**
    * \brief Retorna o nível de log do OiL.
    *
    * \return Nível de log do OiL.
    */
-  unsigned short getOilLogLevel() raises (ServiceFailure);
+  unsigned short getOilLogLevel() 
+    raises (ServiceFailure);
 };
   
 }; // version
