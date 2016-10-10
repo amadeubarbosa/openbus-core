@@ -84,7 +84,7 @@ return function(...)
   local reloadConfigs = {
     admin = {},
     validator = {},
-    maxchannels = 0,
+    maxchannels = 1000,
     loglevel = 3,
     oilloglevel = 0,
   }
@@ -210,7 +210,7 @@ return function(...)
   end
 
   local function validateMaxChannels(maxchannels)
-    if maxchannels < 0 then
+    if maxchannels < 1 then
       log:misconfig(msg.InvalidMaximumChannelLimit:tag{
         value = maxchannels,
       })
@@ -450,9 +450,7 @@ Options:
   -- setup bus access
   local orbcfg = { host=Configs.host, port=Configs.port }
   log:config(msg.ServicesListeningAddress:tag(orbcfg))
-  if Configs.maxchannels > 0 then
-    orbcfg.maxchannels = Configs.maxchannels
-  end
+  orbcfg.maxchannels = Configs.maxchannels
   local orb = access.initORB(orbcfg)
   local legacy
   if not Configs.nolegacy then
@@ -689,9 +687,7 @@ Options:
       log:config(msg.BadPasswordLimitedTries:tag{limit=Configs.badpasswordtries})
       log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})
       log:config(msg.BadPasswordMaxRate:tag{value=Configs.badpasswordrate})
-      if Configs.maxchannels > 0 then
-        log:config(msg.MaximumChannelLimit:tag{value=Configs.maxchannels})
-      end
+      log:config(msg.MaximumChannelLimit:tag{value=Configs.maxchannels})
       if not params.enforceAuth then
         log:config(msg.OfferAuthorizationDisabled)
       end
