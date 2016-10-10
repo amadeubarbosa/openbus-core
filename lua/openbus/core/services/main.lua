@@ -543,14 +543,16 @@ Options:
     local module = validators[name]
     validators[name] = nil
     package.loaded[name] = nil
-    local ok, errmsg = pcall(module.finalize)
-    if not ok then
-      ServiceFailure{
-        message = msg.FailedPasswordValidatorTermination:tag{
-          validator = name,
-          errmsg = errmsg or msg.UnspecifiedTerminationFailure,
+    if module.finalize ~= nil then
+      local ok, errmsg = pcall(module.finalize)
+      if not ok then
+        ServiceFailure{
+          message = msg.FailedPasswordValidatorTermination:tag{
+            validator = name,
+            errmsg = errmsg or msg.UnspecifiedTerminationFailure,
+          }
         }
-      }
+      end
     end
     return true
   end
