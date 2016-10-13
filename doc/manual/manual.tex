@@ -138,22 +138,18 @@ $OPENBUS_HOME/bin/busservices --help
 
   \item Gerar um par de chaves com tamanho de 2048 bits para o barramento.
   A chave privada (arquivo com terminação \emph{.key}) deve ser do formato PKCS8 codificada em DER, e o certificado (arquivo com terminação \emph{.crt}) deve ser do formato X.509 codificado em DER.
-%%TODO talvez o openssl passe a não ser mais incluído no pacote. Se for o caso, mudar a explicação aqui.
-  Esse par de chaves deve ser criado utilizando o comando \emph{openssl} que acompanha o pacote.
+  Esse par de chaves deve ser criado utilizando o comando \emph{openssl} na versão 1.0.0 ou maior.
 \begin{verbatim}
-  export LD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${LD_LIBRARY_PATH}"
-  
-  # caso seja MacOS é preciso também:
-  export DYLD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${DYLD_LIBRARY_PATH}"
-
   # Para gerar a chave privada, utilize os seguintes comandos:
-  ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
-  ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
+  openssl genrsa -out tmp_openssl.key 2048
+
+  openssl pkcs8 -topk8 -nocrypt \
     -in tmp_openssl.key -out <nome do par de chaves>.key -outform DER
+
   rm -f tmp_openssl.key
 
   # Para gerar o certificado:
-  ${OPENBUS_HOME}/bin/openssl req -config ${OPENBUS_HOME}/openssl/openssl.cnf -new -x509 \
+  openssl req -days <validade do certificado em dias> -new -x509 \
     -key <nome do par de chaves>.key -keyform DER \
     -out <nome do par de chaves>.crt -outform DER
 \end{verbatim}
