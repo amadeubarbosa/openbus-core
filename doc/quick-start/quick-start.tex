@@ -113,18 +113,17 @@ export OPENBUS_HOME=<caminho do openbus-core>
 export PATH="${OPENBUS_HOME}/bin:.:${PATH}"
 export LD_LIBRARY_PATH="/usr/lib:/lib/i386-linux-gnu:${OPENBUS_HOME}/lib: \
   ${LD_LIBRARY_PATH}"
-export OPENSSL_HOME="${OPENBUS_HOME}/openssl"
 export LUA_PATH="${OPENBUS_HOME}/?.lua;${LUA_PATH}"
 \end{verbatim}
 
-  \item Gere um arquivo de chave privada (arquivo com extensão ".key") e um certificado (arquivo com extensão ".crt") utilizando o comando \verb|openssl| que acompanha o pacote. Os arquivos podem ter um nome diferente do sugerido abaixo, desde que o nome do arquivo de chave privada seja passado no parâmetro \verb|-privatekey| do servidor do barramento (\verb|busservices|).
+  \item Gere um arquivo de chave privada (arquivo com extensão ".key") e um certificado (arquivo com extensão ".crt") utilizando o comando \verb|openssl| (a versão deve ser 1.0.0 ou maior). Os arquivos podem ter um nome diferente do sugerido abaixo, desde que o nome do arquivo de chave privada seja passado no parâmetro \verb|-privatekey| do servidor do barramento (\verb|busservices|). A validade do certificado em dias (definida pelo modificador -days) também pode ser diferente.
 \begin{verbatim}  
   $ cd $OPENBUS_HOME
-  $ ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
-  $ ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
+  $ openssl genrsa -out tmp_openssl.key 2048
+  $ openssl pkcs8 -topk8 -nocrypt \
     -in tmp_openssl.key -out openbus.key -outform DER
   $ rm -f tmp_openssl.key
-  $ ${OPENBUS_HOME}/bin/openssl req -config $OPENSSL_HOME/openssl.cnf -new -x509 \
+  $ openssl req -days 3650 -new -x509 \
     -key openbus.key -keyform DER \
     -out openbus.crt -outform DER
 \end{verbatim}
