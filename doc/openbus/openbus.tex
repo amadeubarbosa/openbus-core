@@ -605,32 +605,21 @@ O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha
 
 \subsection{Geração de chaves}
 
-Dentro do pacote de distribuição do OpenBus, está incluso o binário do OpenSSL, que permite gerar chaves privada e pública. 
-Antes de utilizar o binário, é necessário executar os seguintes comandos (estamos utilizando comandos do Bash shell~\cite{web:bash} no exemplo abaixo):
+Primeiramente deve-se obter um binário do openssl na versão 1.0.0 ou maior. Para gerar a chave privada, são necessários os seguintes comandos (estamos utilizando comandos do Bash shell~\cite{web:bash} no exemplo abaixo):
 
 \begin{verbatim}
-#este comando é apenas para facilitar a legibilidade do código abaixo, sendo opcional
-  export OPENBUS_HOME=<local de extracao do pacote>
+  openssl genrsa -out tmp_openssl.key 2048
 
-  export LD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${LD_LIBRARY_PATH}"
-  
-# caso seja MacOS é preciso também:
-  export DYLD_LIBRARY_PATH="${OPENBUS_HOME}/lib:${DYLD_LIBRARY_PATH}"
-\end{verbatim}
+  openssl pkcs8 -topk8 -nocrypt -in tmp_openssl.key -out \
+    <nome do par de chaves>.key -outform DER
 
-Para gerar a chave privada, utilize os seguintes comandos:
-
-\begin{verbatim}
- ${OPENBUS_HOME}/bin/openssl genrsa -out tmp_openssl.key 2048
-  ${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt \
-    -in tmp_openssl.key -out <nome do par de chaves>.key -outform DER
   rm -f tmp_openssl.key
 \end{verbatim}
 
 Para gerar o certificado, utilize o seguinte código:
 
 \begin{verbatim}
-  ${OPENBUS_HOME}/bin/openssl req -config ${OPENBUS_HOME}/openssl/openssl.cnf -new -x509 \
+  openssl req -days <validade do certificado em dias> -new -x509 \
     -key <nome do par de chaves>.key -keyform DER \
     -out <nome do par de chaves>.crt -outform DER
 \end{verbatim}
@@ -638,7 +627,7 @@ Para gerar o certificado, utilize o seguinte código:
 Para converter uma chave utilizada em um SDK 1.5 para uma chave que funcione com SDKs 2.0, utilize o seguinte comando:
 
 \begin{verbatim}
-${OPENBUS_HOME}/bin/openssl pkcs8 -topk8 -nocrypt -in chave.pem -inform PEM -out chave.der -outform DER
+  openssl pkcs8 -topk8 -nocrypt -in chave.pem -inform PEM -out chave.der -outform DER
 \end{verbatim}
 
 
