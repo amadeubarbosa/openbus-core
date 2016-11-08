@@ -1,4 +1,5 @@
 local _G = require "_G"
+local print = _G.print
 local pairs = _G.pairs
 local pcall = _G.pcall
 local select = _G.select
@@ -125,11 +126,10 @@ function Login:newObserver(callback)
     id = id,
     login = login,
     ior = ior,
-    legacy = legacy,
+    legacy = legacy or false,
   }
   local db = base.database
-  legacy = (legacy and 1) or 0
-  assert(db:pexec("addLoginObserver", id, ior, legacy, login))
+  assert(db:pexec("addLoginObserver", id, ior, (legacy and 1) or 0, login))
   data.callback = callback
   data.base = base
   return Observer(data)
@@ -172,26 +172,27 @@ function Database:__init()
   self.publisher = Publisher(self.publisher)
   local db = self.database
   for entry in db.pstmts.getLogin:nrows() do
-    entry.base = self    
+    entry.base = self
+    entry.allowLegacyDelegate = (entry.allowLegacyDelegate == 1)
     Login(entry)
   end
   for entry in db.pstmts.getLoginObserver:nrows() do
     entry.base = self
+    entry.legacy = (entry.legacy == 1)
     Observer(entry)
   end
 end
 
 function Database:newLogin(entity, encodedkey)
   local id = newid("time")
-  allowLegacyDelegate = (allowLegacyDelegate and 1) or 0
   local data = {
     id = id,
     entity = entity,
     encodedkey = encodedkey,
-    allowLegacyDelegate = allowLegacyDelegate
+    allowLegacyDelegate = allowLegacyDelegate or false
   }
   assert(self.database:pexec("addLogin", id, entity, encodedkey,
-			     allowLegacyDelegate))
+			     (allowLegacyDelegate and 1) or 0))
   data.base = self
   return Login(data)
 end

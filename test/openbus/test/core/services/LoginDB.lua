@@ -76,9 +76,9 @@ do
     -- check login
     local entity = login.entity
     if entity == "delegator" then
-      assert(login.allowLegacyDelegate == 1, "wrong stored login")
+      assert(login.allowLegacyDelegate == true, "wrong stored login")
     else
-      assert(login.allowLegacyDelegate == 0, "wrong stored login")
+      assert(login.allowLegacyDelegate == false, "wrong stored login")
     end
     -- check observers owned by this login
     local observers = assert(Data[login.entity], "unknown stored login")
