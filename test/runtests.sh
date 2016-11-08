@@ -38,6 +38,6 @@ local runner = Runner{
 	reporter = require('loop.test.Reporter'),
 	path = (#path > 0) and path or nil,
 }
-runner('OpenBus', suite)"
+if not runner('OpenBus', suite) then os.exit(1) end"
 
 $runconsole -e "$TEST_PRELUDE" -e "$TEST_RUNNER" || exit $?
