@@ -1,6 +1,6 @@
 PROJNAME= busadmin
 APPNAME= $(PROJNAME)
-CODEREV?= r$(shell svnversion -n $(PROJDIR))
+CODEREV?= r$(shell git rev-parse --short HEAD $(PROJDIR))
 
 SCSIDL= ${SCS_IDL1_2_HOME}/src
 OPENBUSIDL= ${OPENBUS_IDL2_0_HOME}/src
