@@ -157,6 +157,7 @@ project busservices
     <target-os>windows:<define>_CRT_SECURE_NO_WARNINGS
     <target-os>windows:<define>_WIN32
     <define>OPENBUS_PROGNAME=\\\""busservices\\\""
+    <define>OPENBUS_CODEREV=\\\""snapshot\\\""
     <toolset>msvc-12.0:<cxxflags>/FS
     <debug-symbols>on
     <link>static
