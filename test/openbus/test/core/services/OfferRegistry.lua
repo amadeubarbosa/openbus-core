@@ -183,13 +183,18 @@ local function isServiceOffer(comp, ...)
   end
 end
 
-local function isServiceOfferDesc(comp, ...)
-  local checkprops = isPropsList(comp, ...)
+local function isServiceOfferDesc(comp, login, props, removed)
+  local checkprops = isPropsList(comp, login, props)
   local checkoffer = isServiceOffer(comp, checkprops)
   return function (desc)
     checks.assert(desc.service_ref, checks.equal(comp.IComponent.__servant))
     checks.assert(desc.properties, checkprops)
-    checks.assert(desc.ref, checkoffer)
+    if removed then
+      checks.assert(desc.ref, checks.type("table"))
+      checks.assert(desc.ref.__reference.type_id, checks.equal(ServiceOffer))
+    else
+      checks.assert(desc.ref, checkoffer)
+    end
     return true
   end
 end
@@ -482,7 +487,7 @@ return OpenBusFixture{
           context:setCurrentConnection(fixture:newConn("system"))
           offers:registerService(fixture.component.IComponent, SomeOfferProps)
           context:setCurrentConnection(nil)
-          -- erro é apenas loggado no lado do bus
+          -- error is only in bus log
           subscription:remove()
         end,
         RegistryObserver = function (fixture, openbus)
@@ -881,7 +886,7 @@ return OpenBusFixture{
           openbus.context:setCurrentConnection(fixture.system)
           offer:setProperties({{name="newprop",value="newval"}})
           offer:remove()
-          -- erro é apenas loggado no lado do bus
+          -- error is only in bus log
         end,
         OfferPropertiesObserver = function (fixture, openbus)
           -- create observer
@@ -945,7 +950,7 @@ return OpenBusFixture{
           -- wait for observer notification
           local desc = observer:_wait("removed")
           -- assert the notification is correct
-          checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps))
+          checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps, "removed"))
           -- assert no other notification has arrived
           checks.assert(observer:_get("propertiesChanged"), checks.equal(nil))
         end,
@@ -996,9 +1001,9 @@ return OpenBusFixture{
           for index, subscription in pairs(subscriptions) do
             local observer = observers[index]
             local desc = observer:_wait("propertiesChanged")
-            checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps))
+            checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps, "removed"))
             desc = observer:_wait("removed")
-            checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps))
+            checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps, "removed"))
           end
           -- assert the unsubscribed observer were not notified
           local observer = observers[2]
@@ -1033,7 +1038,7 @@ return OpenBusFixture{
           -- wait for observer notification
           local desc = observer:_wait("removed")
           -- assert the notification is correct
-          checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps))
+          checks.assert(desc, isServiceOfferDesc(comp, login, SomeOfferProps, "removed"))
           -- assert no other notification has arrived
           checks.assert(observer:_get("propertiesChanged"), checks.equal(nil))
         end,

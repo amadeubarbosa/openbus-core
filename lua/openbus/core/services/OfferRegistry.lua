@@ -274,14 +274,15 @@ end
 local Offer = class{ __type = ServiceOffer }
   
 function Offer:__init()
-  self.ref = self -- IDL struct attribute (see operation 'describe')
+  local orb = self.registry.access.orb
   self.__objkey = "Offer:"..self.id -- for the ORB
+  -- IDL struct attribute (see operation 'describe')
+  self.ref = orb:newproxy(orb:newservant(self))
   self.registry.offers:add(self)
   -- recover observers
   local persistedObs = self.observers -- backup observer persisted entries
   self.observers = {} -- this table will contain entries in memory only
                       -- which is filled by operation 'registerObserver'
-  local orb = self.registry.access.orb
   local db = self.database
   for id, entry in pairs(persistedObs) do
     local login = entry.login
