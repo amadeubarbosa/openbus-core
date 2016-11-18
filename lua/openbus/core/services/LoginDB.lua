@@ -126,10 +126,9 @@ function Login:newObserver(callback)
     id = id,
     login = login,
     ior = ior,
-    legacy = legacy or false,
   }
   local db = base.database
-  assert(db:pexec("addLoginObserver", id, ior, (legacy and 1) or 0, login))
+  assert(db:pexec("addLoginObserver", id, ior, login))
   data.callback = callback
   data.base = base
   return Observer(data)
@@ -173,12 +172,10 @@ function Database:__init()
   local db = self.database
   for entry in db.pstmts.getLogin:nrows() do
     entry.base = self
-    entry.allowLegacyDelegate = (entry.allowLegacyDelegate == 1)
     Login(entry)
   end
   for entry in db.pstmts.getLoginObserver:nrows() do
     entry.base = self
-    entry.legacy = (entry.legacy == 1)
     Observer(entry)
   end
 end
@@ -189,10 +186,8 @@ function Database:newLogin(entity, encodedkey)
     id = id,
     entity = entity,
     encodedkey = encodedkey,
-    allowLegacyDelegate = allowLegacyDelegate or false
   }
-  assert(self.database:pexec("addLogin", id, entity, encodedkey,
-			     (allowLegacyDelegate and 1) or 0))
+  assert(self.database:pexec("addLogin", id, entity, encodedkey))
   data.base = self
   return Login(data)
 end
