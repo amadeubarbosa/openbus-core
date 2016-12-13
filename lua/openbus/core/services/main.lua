@@ -114,6 +114,7 @@ return function(...)
     InvalidSharedAuthTime = 25,
     InvalidMaximumChannelLimit = 26,
     UnableToConvertLegacyDatabase = 27,
+    WrongAlternateAddress = 28,
   }
 
   -- configuration parameters parser
@@ -160,6 +161,10 @@ return function(...)
     legacydomain = "",
 
     help = false,
+
+    nodnslookup = false,
+    noipaddress = false,
+    alternateaddr = {},
   }
 
   log:level(Configs.loglevel)
@@ -231,6 +236,10 @@ Options:
   -logaddress                exibe o endereço IP do requisitante no log do barramento
   -nolegacy                  desativa o suporte à versão antiga do barramento
   -legacydomain              domínio de autenticação com a versão antiga do barramento
+
+  -nodnslookup               desativa a busca no DNS por apelidos da máquina para compor as referências IOR
+  -noipaddress               desativa o uso de endereços IP para compor as referências IOR
+  -alternateaddr <address>   endereço de rede (host:port) alternativo para compor as referências IOR
 
   -configs <path>            arquivo de configurações adicionais do barramento
 
@@ -547,6 +556,29 @@ Options:
     })
     return errcode.InvalidSecurityLayerMode
   end
+  -- validate oil objrefaddr configuration
+  local objrefaddr = {
+    hostname = (not Configs.nodnslookup),
+    ipaddress = (not Configs.noipaddress),
+  }
+  local additional = {}
+  for _, address in ipairs(Configs.alternateaddr) do
+    local host, port = address:match("^([%w%-%_%.]+):(%d+)$")
+    port = tonumber(port)
+    if (host ~= nil) and (port ~= nil) then
+      additional[#additional+1] = { host = host, port = port }
+    else
+      log:misconfig(msg.WrongAlternateAddressSyntax:tag{
+        value = address,
+        expected = "host:port or ip:port",
+      })
+      return errcode.WrongAlternateAddress
+    end
+  end
+  if (#additional > 0) then
+    objrefaddr.additional = additional
+  end
+  log:config(msg.AdditionalInternetAddressConfiguration:tag(objrefaddr))
   local orb = initorb{
     host = Configs.host,
     port = getoptcfg(Configs, "port", 0),
@@ -554,6 +586,7 @@ Options:
     maxchannels = getoptcfg(Configs, "maxchannels", 0),
     flavor = orbflv,
     options = orbopt,
+    objrefaddr = objrefaddr,
   }
   if orbopt ~= nil then
     log:config(sslmode == "required" and msg.SecureConnectionEnforced
