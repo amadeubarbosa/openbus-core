@@ -79,6 +79,7 @@ return function(...)
     InvalidSharedAuthTime = 15,
     InvalidMaximumChannelLimit = 16,
     UnableToConvertLegacyDatabase = 17,
+    WrongAlternateAddress = 18,
   }
 
   local reloadConfigs = {
@@ -112,6 +113,10 @@ return function(...)
     noauthorizations = false,
     nolegacy = false,
     logaddress = false,
+
+    nodnslookup = false,
+    noipaddress = false,
+    alternateaddr = {},
   }
   for k, v in pairs(reloadConfigs) do
     defConfigs[k] = v
@@ -284,6 +289,10 @@ Options:
   -nolegacy                  desativa o suporte à versão antiga do barramento
   -logaddress                exibe o endereço IP do requisitante no log do barramento
 
+  -nodnslookup               desativa a busca no DNS por apelidos da máquina para compor as referências IOR
+  -noipaddress               desativa o uso de endereços IP para compor as referências IOR
+  -alternateaddr <address>   endereço de rede (host:port) alternativo para compor as referências IOR
+
   -configs <path>            arquivo de configurações adicionais do barramento
   
 ]])
@@ -446,11 +455,39 @@ Options:
   -- create a set of admin users
   local adminUsers = { [BusEntity] = true }
   resetAdminUsers(adminUsers)
-  
-  -- setup bus access
+
   local orbcfg = { host=Configs.host, port=Configs.port }
   log:config(msg.ServicesListeningAddress:tag(orbcfg))
   orbcfg.maxchannels = Configs.maxchannels
+
+  -- validate oil extra configurations
+  do
+    local objrefaddr = {
+      hostname = (not Configs.nodnslookup),
+      ipaddress = (not Configs.noipaddress),
+    }
+    local additional = {}
+    for _, address in ipairs(Configs.alternateaddr) do
+      local host, port = address:match("^([%w%-%_%.]+):(%d+)$")
+      port = tonumber(port)
+      if (host ~= nil) and (port ~= nil) then
+        additional[#additional+1] = { host = host, port = port }
+      else
+        log:misconfig(msg.WrongAlternateAddressSyntax:tag{
+          value = address,
+          expected = "host:port or ip:port",
+        })
+        return errcode.WrongAlternateAddress
+      end
+    end
+    if (#additional > 0) then
+      objrefaddr.additional = additional
+    end
+    orbcfg.objrefaddr = objrefaddr
+    log:config(msg.AdditionalInternetAddressConfiguration:tag(orbcfg.objrefaddr))
+  end
+
+  -- setup bus access
   local orb = access.initORB(orbcfg)
   local legacy
   if not Configs.nolegacy then

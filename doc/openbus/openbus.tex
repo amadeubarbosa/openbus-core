@@ -371,11 +371,19 @@ Por padrão o log é direcionado para a saída padrão (\emph{standard output}).
   \item [-nolegacy] Desativa o suporte à versão antiga do barramento.
   \item [-logaddress] Exibe o endereço IP do requisitante no log do barramento.
 
+  \item [-nodnslookup] Desativa a busca no DNS por apelidos da máquina para compor os endereços de rede contidos nas referências IOR.\\
+Por padrão, todos os apelidos de DNS são adicionados.
+  \item [-noipaddress] Desativa o uso de endereços IP para compor os endereços de rede contidos nas referências IOR.\\
+Por padrão, os endereços IP são adicionados.
+  \item [-alternateaddr] Endereço e porta alternativos que devem compor os endereços de rede contidos nas referências IOR.\\
+Essa configuração é útil para a travessia de NAT e firewalls.\\
+Não é definido um valor padrão. O valor deve ser um nome e porta separados pelo caractere \code{:} (dois pontos).
+
   \item [-configs] Arquivo de configurações adicionais do barramento.\\
 O valor padrão é \code{openbus.cfg}.
 \end{description}
 
-As opções \code{admin} e \code{validator} podem receber mais de um valor.
+As opções \code{admin}, \code{validator} e \code{alternateaddr} podem receber mais de um valor.
 Quando essas opções são configuradas por linha de comando, basta repetir a opção o número de vezes desejadas.
 Quando são configuradas através do arquivo de configuração, é necessário informar a lista de valores desejados, no formato de uma tabela \lua{}~\cite{web:lua}.
 O código~\ref{lst:openbus.cfg} apresenta um exemplo de arquivo do configuração.
