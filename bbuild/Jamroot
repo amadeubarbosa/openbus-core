@@ -7,6 +7,21 @@ path-constant here : . ;
 path-constant root : $(here)/.. ;
 path-constant deps : $(root)/.. ;
 
+rule trim ( string )
+{
+  local match = [ MATCH "^(.*)[\n\r]$" : $(string) ] ;
+  if $(match) { return $(match[1]) ; }
+  else { return $(string) ; }
+}
+
+local revision = [ os.environ OPENBUS_CODEREV ] ;
+if ! $(revision) {
+  revision = [ trim [ SHELL "git rev-parse --short HEAD" ] ] ;
+  if ! $(revision) { revision = "snapshot" ; }
+}
+
+ECHO ...using \".$(revision)\" as revision number... ;
+
 local lua = [ os.environ LUA ] ;
 if ! $(lua)
 {
@@ -143,8 +158,7 @@ project busservices
     <target-os>windows:<debug-store>database
     <target-os>windows:<define>_CRT_SECURE_NO_WARNINGS
     <target-os>windows:<define>_WIN32
-    <define>OPENBUS_PROGNAME=\\\""busservices\\\""
-    <define>OPENBUS_CODEREV=\\\""snapshot\\\""
+    <define>OPENBUS_CODEREV=\\\""'$(revision)'\\\""
     <toolset>msvc-12.0:<cxxflags>/FS
     <debug-symbols>on
     <link>static
@@ -238,9 +252,15 @@ local exe_requirements =
   <include>$(here)
 ;
 
+obj busservices_launcher
+  : $(root)/src/launcher.c
+    /lua//lua
+  : <define>OPENBUS_PROGNAME=\\\""busservices\\\""
+;
+
 exe busservices
   : coreservices.c
-    $(root)/src/launcher.c
+    busservices_launcher
     $(root)/src/lthreadlib.c
     $(root)/src/coreservlibs.c
     $(exe_deps)
@@ -250,9 +270,15 @@ exe busservices
   ;
 explicit busservices ;
 
+obj busadmin_launcher
+  : $(root)/src/launcher.c
+    /lua//lua
+  : <define>OPENBUS_PROGNAME=\\\""busadmin\\\""
+;
+
 exe busadmin
   : coreadmin.c
-    $(root)/src/launcher.c
+    busadmin_launcher
     $(root)/src/adminlibs.c
     $(exe_deps)
   : $(exe_requirements)
