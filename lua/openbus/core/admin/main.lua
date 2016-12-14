@@ -27,6 +27,8 @@ return function(...)
   local idl = require "openbus.core.idl"
   local BusObjectKey = idl.const.BusObjectKey
   local types = idl.types.services
+  local MajorVersion = idl.const.MajorVersion
+  local MinorVersion = idl.const.MinorVersion
   local logintypes = idl.types.services.access_control
   local idl = require "openbus.core.admin.idl"
   local admintypes = idl.types.services.access_control.admin.v1_0
@@ -79,6 +81,7 @@ return function(...)
   local help = [[
 
   Uso: %s [opções] --login=<usuário> <comando>
+  Versão: %s
 
   Por padrão realiza-se um login por senha. Vide opção '--password'
 
@@ -564,7 +567,9 @@ return function(...)
   -- @param cmd Comando e seus argumentos.
   --
   handlers["help"] = function(cmd)
-    printf(help, program)
+    printf(help, program, table.concat({
+      MajorVersion, MinorVersion, 0, OPENBUS_CODEREV
+    }, ".") )
     return true
   end
 

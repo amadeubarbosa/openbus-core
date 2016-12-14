@@ -12,7 +12,7 @@ msg.OpenBusVersion = concat({
 }, ".")
 
 -- openbus.core.services.main
-msg.CopyrightNotice = "OpenBus "..msg.OpenBusVersion.."  Copyright (C) 2012-2014 Tecgraf, PUC-Rio"
+msg.CopyrightNotice = "OpenBus "..msg.OpenBusVersion.."  Copyright (C) 2012-2016 Tecgraf, PUC-Rio"
 --msg.CoreServicesStarted = "serviços núcleo iniciados"
 --msg.RequestedByEntity = "por $entity (login=$login)"
 --
