@@ -167,7 +167,7 @@ Options:
       OPENBUS_CODEREV,
     }, ".")
     print("OpenBus Admin Console "..version..
-          "  Copyright (C) 2006-2015 Tecgraf, PUC-Rio")
+          "  Copyright (C) 2006-2016 Tecgraf, PUC-Rio")
   end
 
   -- setup log files
