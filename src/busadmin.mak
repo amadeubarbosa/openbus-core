@@ -1,9 +1,11 @@
 PROJNAME= busadmin
 APPNAME= $(PROJNAME)
-CODEREV?= r$(shell git rev-parse --short HEAD)
+CODEREV?= $(shell git rev-parse --short HEAD)
 
 SCSIDL= ${SCS_IDL1_2_HOME}/src
 OPENBUSIDL= ${OPENBUS_IDL2_0_HOME}/src
+
+OBJROOT = obj/$(PROJNAME)
 
 SRC= \
   launcher.c \
