@@ -534,6 +534,14 @@ function OfferRegistry:__init(data)
           id = id,
           login = login,
         })
+        local observerprops = {}
+        local getPropertyOfferRegistryObserver = db.pstmts.getPropertyOfferRegistryObserver
+        getPropertyOfferRegistryObserver:bind_values(id)
+        for prop in getPropertyOfferRegistryObserver:nrows() do
+           observerprops[#observerprops+1] = prop
+        end
+
+        entry.properties = observerprops
         entry.observer = orb:newproxy(entry.observer, nil,
                                       OffRegObserverType)
         entry.registry = self
