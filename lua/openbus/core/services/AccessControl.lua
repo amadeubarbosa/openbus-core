@@ -605,6 +605,11 @@ function Subscription:_get_observer()
   return getObserver(self.observer, self.registry.access.orb)
 end
 
+function Subscription:_get_owner()
+  local ownerId = self.observer.login
+  return self.logins:getLogin(ownerId)
+end
+
 function Subscription:describe()
   return { observer = self:_get_observer() }
 end
@@ -790,7 +795,6 @@ function LoginRegistry:subscribeObserver(callback)
   local id = observer.id
   local subscription = Subscription{
     id = id,
-    owner = login,
     logins = logins,
     registry = self,
   }

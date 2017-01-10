@@ -215,6 +215,10 @@ function OfferObserverSubscription:__init()
   registerObserver(offer.registry, offer, id, self)
 end
 
+function OfferObserverSubscription:_get_owner()
+  return AccessControl:getLoginEntry(self.login)
+end
+
 function OfferObserverSubscription:describe()
   return self
 end
@@ -248,6 +252,10 @@ function OfferRegistryObserverSubscription:__init()
   local registry = self.registry
   self.__objkey = "OfferRegObs_v2.1:"..id -- for the ORB
   registerObserver(registry, registry, id, self)
+end
+
+function OfferRegistryObserverSubscription:_get_owner()
+  return AccessControl:getLoginEntry(self.login)
 end
 
 function OfferRegistryObserverSubscription:describe()
@@ -309,6 +317,10 @@ function Offer:__init()
       assert(db:pexec("delOfferObserver", id))
     end
   end
+end
+
+function Offer:_get_owner()
+  return AccessControl:getLoginEntry(self.login)
 end
 
 function Offer:describe()
@@ -387,7 +399,6 @@ function Offer:subscribeObserver(observer)
     id = id,
   })
   entry.id = id
-  entry.owner = login
   entry.observer = observer
   entry.offer = self
   entry.database = self.database
@@ -743,7 +754,6 @@ function OfferRegistry:subscribeObserver(observer, properties)
     id = id,
   })
   entry.id = id
-  entry.owner = login
   entry.observer = observer
   entry.registry = self
   return OfferRegistryObserverSubscription(entry)

@@ -165,12 +165,13 @@ local function isPropsList(comp, login, props)
   end
 end
 
-local function isServiceOffer(comp, ...)
+local function isServiceOffer(comp, login, ...)
   local checkprops = ...
   if type(checkprops) ~= "function" then
-    checkprops = isPropsList(comp, ...)
+    checkprops = isPropsList(comp, login, ...)
   end
   return function (offer)
+    checks.assert(offer:_get_owner(), checks.like(login))
     checks.assert(offer:_get_service_ref(), checks.equal(comp.IComponent.__servant))
     local props = offer:_get_properties()
     checks.assert(props, checkprops)
@@ -185,7 +186,7 @@ end
 
 local function isServiceOfferDesc(comp, login, props, removed)
   local checkprops = isPropsList(comp, login, props)
-  local checkoffer = isServiceOffer(comp, checkprops)
+  local checkoffer = isServiceOffer(comp, login, checkprops)
   return function (desc)
     checks.assert(desc.service_ref, checks.equal(comp.IComponent.__servant))
     checks.assert(desc.properties, checkprops)
@@ -199,10 +200,10 @@ local function isServiceOfferDesc(comp, login, props, removed)
   end
 end
 
-local function isOfferSubscription(login, observer, comp, ...)
-  local checkoffer = isServiceOffer(comp, ...)
+local function isOfferSubscription(owner, observer, comp, login, ...)
+  local checkoffer = isServiceOffer(comp, login, ...)
   return function (subs)
-    checks.assert(subs:_get_owner(), checks.like(login))
+    checks.assert(subs:_get_owner(), checks.like(owner))
     checks.assert(subs:_get_observer(), checks.equal(observer))
     checks.assert(subs:_get_offer(), checkoffer)
     local desc = subs:describe()
@@ -212,10 +213,10 @@ local function isOfferSubscription(login, observer, comp, ...)
   end
 end
 
-local function isOfferRegSubscription(login, observer, properties)
+local function isOfferRegSubscription(owner, observer, properties)
   local checkprops = checks.like(properties)
   return function (subs)
-    checks.assert(subs:_get_owner(), checks.like(login))
+    checks.assert(subs:_get_owner(), checks.like(owner))
     checks.assert(subs:_get_observer(), checks.equal(observer))
     checks.assert(subs:_get_properties(), checkprops)
     local desc = subs:describe()
