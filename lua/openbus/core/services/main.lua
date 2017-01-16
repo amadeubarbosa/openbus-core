@@ -228,17 +228,6 @@ return function(...)
     return true
   end
 
-  local function resetMaxChannels(orb, maxchannels)
-    local ok, errcode = validateMaxChannels(maxchannels)
-    if not ok then
-      return false, errcode
-    else
-      orb.ResourceManager.inuse.maxsize = maxchannels
-      log:config(msg.MaximumChannelLimit:tag{value=maxchannels})
-    end
-    return true
-  end
-
   local function validateMaxCacheSize(maxsize)
     if maxsize < 0 then
       log:misconfig(msg.InvalidMaximumCacheSize:tag{value=maxsize})
@@ -639,7 +628,7 @@ Options:
     -- reconfigure its parameter
     setLogLevel("core", Configs.loglevel)
     setLogLevel("oil", Configs.oilloglevel)
-    resetMaxChannels(orb, Configs.maxchannels)
+    self:setMaxChannels(Configs.maxchannels)
     self:setMaxCacheSize(Configs.maxcachesize)
     resetAdminUsers(admins)
     unloadValidators(validators)
@@ -687,11 +676,14 @@ Options:
   end
 
   function Configuration:setMaxChannels(maxchannels)
-    if not resetMaxChannels(orb, maxchannels) then
+    local orb = self.access.orb
+    if not validateMaxChannels(maxchannels) then
       ServiceFailure{
         message = msg.InvalidMaximumChannelLimit:tag{value=maxchannels}
       }
     end
+    orb.ResourceManager.inuse.maxsize = maxchannels
+    log:admin(msg.MaximumChannelLimit:tag{value=maxchannels})
   end
 
   function Configuration:getMaxChannels()
