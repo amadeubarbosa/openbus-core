@@ -1396,8 +1396,12 @@ return function(...)
     local ok, res = pcall(conn.configuration[method],
 			  conn.configuration, param)
     if not ok then
-      print('[ERRO]: '..res.message)
-      return false
+      if res and res.message then
+        print('[ERRO]: '..res.message)
+        return false
+      else
+        error(res)
+      end
     end
     return ok, res
   end
