@@ -44,6 +44,7 @@ interface Configuration {
    * + Nome de pacotes de validação de login e suas configurações
    *   (ex: ldap_patterns, ldap_servers).
    * + Número máximo de canais de comunicação do OiL.
+   * + Tamanho máximo das caches LRU.
    * + Níveis de log (busservices e OiL).
    */
   void reloadConfigsFile() 
@@ -97,6 +98,8 @@ interface Configuration {
 
   /**
    * \brief Redefine o número máximo de canais de comunicação do OiL.
+   *
+   * \param maxchannels Novo máximo de canais.
    */
   void setMaxChannels(in long maxchannels) 
     raises (UnauthorizedOperation, ServiceFailure);
@@ -107,6 +110,24 @@ interface Configuration {
    * \return Número máximo de canais de comunicação do OiL.
    */
   long getMaxChannels() 
+    raises (ServiceFailure);
+
+  /**
+   * \brief Redefine o tamanho máximo das caches LRU do barramento (profiles
+   *        IOR, sessões de entrada e sessões de saída).
+   *
+   * \param maxCacheSize Novo tamanho máximo das caches LRU.
+   */
+  void setMaxCacheSize(in long maxCacheSize)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna o tamanho máximo das caches LRU do barramento (profiles
+   *        IOR, sessões de entrada e sessões de saída).
+   *
+   * \return Tamanho máximo das caches LRU.
+   */
+  long getMaxCacheSize()
     raises (ServiceFailure);
 
   /**

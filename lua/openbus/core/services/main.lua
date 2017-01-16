@@ -27,6 +27,8 @@ local table = require "loop.table"
 local copy = table.copy
 local memoize = table.memoize
 
+local LRUCache = require "loop.collection.LRUCache"
+
 local cothread = require "cothread"
 local running = cothread.running
 
@@ -80,12 +82,14 @@ return function(...)
     InvalidMaximumChannelLimit = 16,
     UnableToConvertLegacyDatabase = 17,
     WrongAlternateAddress = 18,
+    InvalidMaximumCacheSize = 19,
   }
 
   local reloadConfigs = {
     admin = {},
     validator = {},
     maxchannels = 1000,
+    maxcachesize = LRUCache.maxsize,
     loglevel = 3,
     oilloglevel = 0,
   }
@@ -235,6 +239,14 @@ return function(...)
     return true
   end
 
+  local function validateMaxCacheSize(maxsize)
+    if maxsize < 0 then
+      log:misconfig(msg.InvalidMaximumCacheSize:tag{value=maxsize})
+      return false, errcode.InvalidMaximumCacheSize
+    end
+    return true
+  end
+
   local function loadConfigs()
     local path = getenv("OPENBUS_CONFIG")
     if path == nil then
@@ -276,6 +288,7 @@ Options:
   -badpasswordrate <number>  frequência máxima de autenticações com senha incoreta (autenticação/segundo)
 
   -maxchannels <number>      número máximo de canais de comunicação com os sistemas
+  -maxcachesize <number>     tamanho máximo das caches LRU de profiles IOR, sessões de entrada e de saída
 
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
@@ -381,11 +394,17 @@ Options:
     return errcode.InvalidPasswordValidationRate
   end
 
+  -- validate max channels and cache size
   do
     local res, errcode = validateMaxChannels(Configs.maxchannels)
     if not res then return errcode end
   end
   
+  do
+    local res, errcode = validateMaxCacheSize(Configs.maxcachesize)
+    if not res then return errcode end
+  end
+
   -- load private key
   local prvkey, errmsg = readprivatekey(Configs.privatekey)
   if prvkey == nil then
@@ -500,6 +519,7 @@ Options:
     prvkey = prvkey,
     orb = orb,
     legacy = legacy,
+    maxcachesize = Configs.maxcachesize,
   }
   orb:setinterceptor(iceptor, "corba")
   loadidl(orb)
@@ -541,6 +561,7 @@ Options:
     access:setGrantedUsers(self.__type, "addValidator", admins)
     access:setGrantedUsers(self.__type, "delValidator", admins)
     access:setGrantedUsers(self.__type, "setMaxChannels", admins)
+    access:setGrantedUsers(self.__type, "setMaxCacheSize", admins)
     access:setGrantedUsers(self.__type, "setLogLevel", admins)
     access:setGrantedUsers(self.__type, "setOilLogLevel", admins)
   end
@@ -619,6 +640,7 @@ Options:
     setLogLevel("core", Configs.loglevel)
     setLogLevel("oil", Configs.oilloglevel)
     resetMaxChannels(orb, Configs.maxchannels)
+    self:setMaxCacheSize(Configs.maxcachesize)
     resetAdminUsers(admins)
     unloadValidators(validators)
     loadValidators(validators)
@@ -676,6 +698,20 @@ Options:
     return orb.ResourceManager.inuse.maxsize
   end
 
+  function Configuration:setMaxCacheSize(maxsize)
+    if not validateMaxCacheSize(maxsize) then
+      ServiceFailure{
+        message = msg.InvalidMaximumCacheSize:tag{value=maxsize}
+      }
+    end
+    self.access:maxCacheSize(maxsize)
+    log:admin(msg.MaximumCacheSize:tag{value=maxsize})
+  end
+
+  function Configuration:getMaxCacheSize()
+    return self.access:maxCacheSize()
+  end
+
   function Configuration:setLogLevel(loglevel)
     return updateLogLevel("core", loglevel)
   end
@@ -725,6 +761,7 @@ Options:
       log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})
       log:config(msg.BadPasswordMaxRate:tag{value=Configs.badpasswordrate})
       log:config(msg.MaximumChannelLimit:tag{value=Configs.maxchannels})
+      log:config(msg.MaximumCacheSize:tag{value=Configs.maxcachesize})
       if not params.enforceAuth then
         log:config(msg.OfferAuthorizationDisabled)
       end

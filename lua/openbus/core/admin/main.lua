@@ -209,6 +209,10 @@ return function(...)
       --set-max-channels=<integer>
     * Mostra o número máximo de canais de comunicação do OiL:
       --get-max-channels
+    * Redefine o tamnho máximo de caches LRU:
+      --set-max-cachesize=<integer>
+    * Mostra o tamanho máximo de caches LRU:
+      --get-max-cachesize
     * Redefine o nível de log do barramento:
       --set-log-level=<integer>
     * Mostra o nível de log do barramento:
@@ -391,6 +395,12 @@ return function(...)
       {n = 1, params = {}},
     };
     ["get-max-channels"] = {
+      {n = 0, params = {}},
+    };
+    ["set-max-cachesize"] = {
+      {n = 1, params = {}},
+    };
+    ["get-max-cachesize"] = {
       {n = 0, params = {}},
     };
     ["set-log-level"] = {
@@ -1455,6 +1465,14 @@ return function(...)
 
   handlers["get-max-channels"] = function(cmd)
     return handleConfigurationGetCall(cmd, "getMaxChannels", "maxchannels")
+  end
+
+  handlers["set-max-cachesize"] = function(cmd)
+    return handleConfigurationCall(cmd, "setMaxCacheSize", "number")
+  end
+
+  handlers["get-max-cachesize"] = function(cmd)
+    return handleConfigurationGetCall(cmd, "getMaxCacheSize", "maxcachesize")
   end
 
   handlers["set-log-level"] = function(cmd)
