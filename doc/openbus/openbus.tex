@@ -351,7 +351,9 @@ Por padrão, o controle de fluxo está desativado.
 Por padrão, o controle de fluxo está desativado.
 
   \item [-maxchannels] Número máximo de canais de comunicação com os sistemas.\\
-Por padrão nenhum limite é imposto ao número de canais mantidos abertos com os sistemas clientes.
+Por padrão, nenhum limite é imposto ao número de canais mantidos abertos com os sistemas clientes.
+  \item [-maxcachesize] Tamanho máximo das caches LRU de profiles IOR, sessões de entrada e de saída.\\
+O valor padrão é 128 (mesmo valor do campo maxsize da classe loop.collection.LRUCache).
 
   \item [-admin] Usuário com privilégio de administração.\\
 Não é definido um valor padrão.
