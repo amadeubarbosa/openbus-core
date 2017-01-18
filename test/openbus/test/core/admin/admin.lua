@@ -111,6 +111,7 @@ assert(execute("--del-category=CTG02"))
 -- reconfiguração dinâmica
 assert(execute("--set-max-cachesize=1024"))
 assert(execute("--set-max-channels=100"))
+assert(execute("--get-max-channels"))
 assert(execute("--set-log-level=5"))
 assert(execute("--set-oil-log-level=5"))
 assert(execute("--add-validator=openbus.test.core.services.BadPasswordValidator"))
