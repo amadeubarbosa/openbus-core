@@ -213,6 +213,10 @@ return function(...)
       --set-max-cachesize=<integer>
     * Mostra o tamanho máximo de caches LRU:
       --get-max-cachesize
+    * Redefine o tempo de espera por respostas em chamadas do barramento:
+      --set-calls-timeout=<integer>
+    * Mostra o tempo de espera por respostas em chamadas do barramento:
+      --get-calls-timeout
     * Redefine o nível de log do barramento:
       --set-log-level=<integer>
     * Mostra o nível de log do barramento:
@@ -401,6 +405,12 @@ return function(...)
       {n = 1, params = {}},
     };
     ["get-max-cachesize"] = {
+      {n = 0, params = {}},
+    };
+    ["set-calls-timeout"] = {
+      {n = 1, params = {}},
+    };
+    ["get-calls-timeout"] = {
       {n = 0, params = {}},
     };
     ["set-log-level"] = {
@@ -1477,6 +1487,14 @@ return function(...)
 
   handlers["get-max-cachesize"] = function(cmd)
     return handleConfigurationGetCall(cmd, "getMaxCacheSize", "maxcachesize")
+  end
+
+  handlers["set-calls-timeout"] = function(cmd)
+    return handleConfigurationCall(cmd, "setCallsTimeout", "number")
+  end
+
+  handlers["get-calls-timeout"] = function(cmd)
+    return handleConfigurationGetCall(cmd, "getCallsTimeout", "timeout")
   end
 
   handlers["set-log-level"] = function(cmd)

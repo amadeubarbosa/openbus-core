@@ -131,6 +131,23 @@ interface Configuration {
     raises (ServiceFailure);
 
   /**
+   * \brief Redefine o tempo de espera por respostas nas chamadas do barramento.
+   *
+   * \param timeout Novo tempo de espera.
+   */
+  void setCallsTimeout(in long timeout)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna o tamanho de espera por respostas nas chamadas do barramento.
+   *
+   * \return Tamanho de espera atual. Tempo 0 significa que o barramento espera
+   *         indefinidamente por respostas.
+   */
+  long getCallsTimeout()
+    raises (ServiceFailure);
+
+  /**
    * \brief Redefine o nível de log do barramento.
    */
   void setLogLevel(in unsigned short loglevel) 
