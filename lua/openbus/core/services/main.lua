@@ -37,6 +37,8 @@ local table = require "loop.table"
 local copy = table.copy
 local memoize = table.memoize
 
+local LRUCache = require "loop.collection.LRUCache"
+
 local cothread = require "cothread"
 local running = cothread.running
 
@@ -61,9 +63,11 @@ local sysex = require "openbus.util.sysex"
 local NO_PERMISSION = sysex.NO_PERMISSION
 
 local idl = require "openbus.core.idl"
+local ServiceFailure = idl.throw.services.ServiceFailure
 local BusEntity = idl.const.BusEntity
 local BusObjectKey = idl.const.BusObjectKey
 local mngidl = require "openbus.core.admin.idl"
+local ConfigurationType = mngidl.types.services.admin.v1_0.Configuration
 local loadidl = mngidl.loadto
 local access = require "openbus.core.services.Access"
 local initorb = access.initORB
@@ -115,6 +119,7 @@ return function(...)
     InvalidMaximumChannelLimit = 26,
     UnableToConvertLegacyDatabase = 27,
     WrongAlternateAddress = 28,
+    InvalidMaximumCacheSize = 29,
   }
 
   -- configuration parameters parser
@@ -144,7 +149,8 @@ return function(...)
     badpasswordlimit = inf,
     badpasswordrate = inf,
 
-    maxchannels = 0,
+    maxchannels = 1000,
+    maxcachesize = LRUCache.maxsize,
 
     admin = {},
     validator = {},
@@ -170,16 +176,35 @@ return function(...)
   log:level(Configs.loglevel)
   log:version(msg.CopyrightNotice)
 
-  do -- parse configuration file
+  local function loadConfigs()
     local path = getenv("OPENBUS_CONFIG")
     if path == nil then
       path = "openbus.cfg"
       local file = openfile(path)
-      if file == nil then goto done end
+      if file == nil then return end
       file:close()
     end
     Configs:configs("configs", path)
-    ::done::
+  end
+  -- parse configuration file
+  loadConfigs()
+  
+  local function validateMaxChannels(maxchannels)
+    if maxchannels < 1 then
+      return false,
+        errcode.InvalidMaximumChannelLimit,
+        msg.InvalidMaximumChannelLimit:tag{ value=maxchannels }
+    end
+    return true
+  end
+
+  local function validateMaxCacheSize(maxsize)
+    if maxsize < 0 then
+      return false,
+        errcode.InvalidMaximumCacheSize,
+        msg.InvalidMaximumCacheSize:tag{value=maxsize}
+    end
+    return true
   end
 
   do -- parse command line parameters
@@ -222,6 +247,7 @@ Options:
   -badpasswordrate <number>  frequência máxima de autenticações com senha incoreta (autenticação/segundo)
 
   -maxchannels <number>      número máximo de canais de comunicação com os sistemas
+  -maxcachesize <number>     tamanho máximo das caches LRU de profiles IOR, sessões de entrada e de saída
 
   -admin <user>              usuário com privilégio de administração
   -validator <name>          nome de pacote de validação de login
@@ -329,15 +355,21 @@ Options:
     })
     return errcode.InvalidPasswordValidationRate
   end
-  
-  -- validate time parameters
-  if Configs.maxchannels < 0 then
-    log:misconfig(msg.InvalidMaximumChannelLimit:tag{
-      value = Configs.maxchannels,
-    })
-    return errcode.InvalidMaximumChannelLimit
-  end
 
+  -- validate max channels and cache size
+  do
+    local ok, errcode, errmsg = validateMaxChannels(Configs.maxchannels)
+    if not ok then
+      log:misconfig(errmsg)
+      return errcode
+    end
+    local ok, errcode, errmsg = validateMaxCacheSize(Configs.maxcachesize)
+    if not ok then
+      log:misconfig(errmsg)
+      return errcode
+    end
+  end
+  
   -- load private key
   local prvkey, errmsg = readprivatekey(Configs.privatekey)
   if prvkey == nil then
@@ -379,17 +411,18 @@ Options:
     end
   end
 
+  -- if necessary, converting old textual database format
   local dbpath = Configs.database
   local dblegacy = opendb_legacy(dbpath)
   local converted
   if dblegacy then
-     local dbtmppath = dbpath..".convert"
+    local dbtmppath = dbpath..".convert"
     local res, errmsg = opendb(dbtmppath)
     if not res then
       dbpath = dbtmppath
     else
-		  local dbtmp = res
-			res, errmsg = pcall(dbconvert, dblegacy, dbtmp)
+      local dbtmp = res
+      res, errmsg = pcall(dbconvert, dblegacy, dbtmp)
       if res then
         local dbbakpath = dbpath..".bak"
         res, errmsg = renamefile(dbpath, dbbakpath)
@@ -408,9 +441,9 @@ Options:
         end
       end
     end
-				
+
     if not converted then
-			removefile(dbtmppath)
+      removefile(dbtmppath)
       log:misconfig(msg.UnableToConvertLegacyDatabase:tag{
         path = dbpath,
         error = errmsg,
@@ -419,6 +452,7 @@ Options:
     end
   end
 
+  -- loading database
   local database, errmsg = opendb(dbpath)
   if database == nil then
     log:misconfig(msg.UnableToOpenDatabase:tag{
@@ -428,7 +462,7 @@ Options:
     return errcode.UnableToOpenDatabase
   end
 
-  -- load all password and token validators to be used
+  -- utility validators functions
   local validators = {
     validator = {},
     tokenvalidator = {},
@@ -436,6 +470,9 @@ Options:
   local valinfo = {
     validator = {
       loaded = msg.PasswordValidatorLoaded,
+      notloaded = msg.PasswordValidatorIsNotLoaded,
+      unloaded = msg.PasswordValidatorUnloaded,
+      failedtermination = msg.FailedPasswordValidatorTermination,
       illegalerrmsg = msg.IllegalPasswordValidatorSpec,
       illegalerrcode = errcode.IllegalPasswordValidatorSpec,
       twiceerrmsg = msg.DuplicatedPasswordValidators,
@@ -444,9 +481,14 @@ Options:
       loaderrcode = errcode.UnableToLoadPasswordValidator,
       initerrmsg = msg.UnableToInitializePasswordValidator,
       initerrcode = errcode.UnableToInitializePasswordValidator,
+      legacyerrmsg = msg.NoPasswordValidatorForLegacyDomain,
+      legacyerrcode = errcode.NoPasswordValidatorForLegacyDomain,
     },
     tokenvalidator = {
       loaded = msg.TokenValidatorLoaded,
+      notloaded = msg.TokenValidatorIsNotLoaded,
+      unloaded = msg.TokenValidatorUnloaded,
+      failedtermination = msg.FailedTokenValidatorTermination,
       illegalerrmsg = msg.IllegalTokenValidatorSpec,
       illegalerrcode = errcode.IllegalTokenValidatorSpec,
       twiceerrmsg = msg.DuplicatedTokenValidators,
@@ -457,54 +499,74 @@ Options:
       initerrcode = errcode.UnableToInitializeTokenValidator,
     },
   }
-  for param, list in pairs(validators) do
-    local info = valinfo[param]
-    for index, spec in ipairs(Configs[param]) do
-      local domain, package = match(spec, "^([^:]-):?([^:]+)$")
+  local valpattern = "^([^:]-):?([^:]+)$"
+  local function loadValidator(list, spec, info)
+      local domain, package = match(spec, valpattern)
       if domain == nil then
-        log:misconfig(info.illegalerrmsg:tag{
+        return info.illegalerrcode, info.illegalerrmsg:tag{
           specification = spec,
-        })
-        return info.illegalerrcode
+        }
       end
       local other = list[domain]
       if other ~= nil then
-        log:misconfig(info.twiceerrmsg:tag{
+        return info.twiceerrcode, info.twiceerrmsg:tag{
           domain = domain,
           validator = package,
           other = other.name,
-        })
-        return info.twiceerrcode
+        }
       end
       local ok, result = pcall(require, package)
       if not ok then
-        log:misconfig(info.loaderrmsg:tag{
+        return info.loaderrcode, info.loaderrmsg:tag{
           domain = domain,
           validator = package,
           error = result,
-        })
-        return info.loaderrcode
+        }
       end
-      local validate, errmsg = result(Configs)
+      local validate, finalize = result(Configs)
       if validate == nil then
-        log:misconfig(info.initerrmsg:tag{
+        local errmsg = finalize
+        return info.initerrcode, info.initerrmsg:tag{
           domain = domain,
           validator = package,
           error = errmsg,
-        })
-        return info.initerrcode
+        }
       end
       list[domain] = {
         name = package,
         validate = validate,
+        finalize = finalize,
       }
-      log:config(info.loaded:tag{name=package,domain=domain})
+      return 0, info.loaded:tag{name=package,domain=domain}
+  end
+
+  local function loadAllValidators(action, configs, validators)
+    for param, list in pairs(validators) do
+      local info = valinfo[param]
+      for _, spec in ipairs(configs[param]) do
+        local retcode, msg = loadValidator(list, spec, info)
+        if retcode > 0 then
+          return retcode, msg
+        else
+          log[action](log, msg)
+        end
+      end
+      if param == "validator"
+      and not configs.nolegacy
+      and list[configs.legacydomain] == nil then
+        return info.legacyerrcode, info.legacyerrmsg:tag{ 
+          domain = configs.legacydomain 
+        }
+      end
     end
-    if param == "validator"
-    and not Configs.nolegacy
-    and list[Configs.legacydomain] == nil then
-      log:misconfig(msg.NoPasswordValidatorForLegacyDomain:tag{ domain = Configs.legacydomain })
-      return info.NoPasswordValidatorForLegacyDomain
+    return 0
+  end
+
+  do -- load all password and token validators to be used
+    local retcode, errmsg = loadAllValidators("config", Configs, validators)
+    if retcode > 0 then
+      log:misconfig(errmsg)
+      return retcode
     end
   end
 
@@ -514,7 +576,7 @@ Options:
     adminUsers[admin] = true
     log:config(msg.AdministrativeRightsGranted:tag{entity=admin})
   end
-  
+
   -- setup bus access
   local sslcfg = {
     key = getoptcfg(Configs, "sslkey", ""),
@@ -597,10 +659,17 @@ Options:
   local iceptor = access.Interceptor{
     prvkey = prvkey,
     orb = orb,
+    maxcachesize = Configs.maxcachesize,
   }
   orb:setinterceptor(iceptor, "corba")
   loadidl(orb)
   logaddress = logaddress and iceptor.callerAddressOf
+
+  local Configuration = {
+    __type = ConfigurationType,
+    __facet = "Configuration",
+    __objkey = BusObjectKey.."/Configuration"
+  }
 
   -- prepare facets to be published as CORBA objects
   local facets = {}
@@ -617,6 +686,232 @@ Options:
         facets[name] = facet
       end
     end
+    facets.Configuration = Configuration
+  end
+
+  function Configuration:__init(data)
+    self.access = data.access
+    self.admins = data.admins
+    self.passwordValidators = data.passwordValidators
+    self.tokenValidators = data.tokenValidators
+    local access = self.access
+    local admins = self.admins
+    access:setGrantedUsers(self.__type, "reloadConfigsFile", admins)
+    access:setGrantedUsers(self.__type, "grantAdminTo", admins)
+    access:setGrantedUsers(self.__type, "revokeAdminFrom", admins)
+    access:setGrantedUsers(self.__type, "addValidator", admins)
+    access:setGrantedUsers(self.__type, "delValidator", admins)
+    access:setGrantedUsers(self.__type, "setMaxChannels", admins)
+    access:setGrantedUsers(self.__type, "setMaxCacheSize", admins)
+    access:setGrantedUsers(self.__type, "setLogLevel", admins)
+    access:setGrantedUsers(self.__type, "setOilLogLevel", admins)
+    -- sugar syntax for password and token validators operations
+    local adaptee = function(self, func, context)
+      return function(self, ...)
+        return func(self, context, ...)
+      end
+    end
+    for _, kind in pairs{"Password", "Token"} do
+      local context = {
+        info = (kind == "Password") and valinfo.validator or valinfo.tokenvalidator,
+        list = self[kind:lower().."Validators"],
+      }
+      self["get"..kind.."Validators"] = adaptee(self, self.getValidators, context)
+      self["add"..kind.."Validator"] = adaptee(self, self.addValidator, context)
+      self["del"..kind.."Validator"] = adaptee(self, self.delValidator, context)
+      self["delAll"..kind.."Validators"] = adaptee(sef, self.delAllValidators, context)
+    end
+  end
+
+  function Configuration:getValidators(context)
+    local specs = {}
+    for domain, validator in pairs(context.list) do
+      specs[#specs+1] = domain..":"..validator.name
+    end
+    return specs
+  end
+
+  function Configuration:addValidator(context, spec)
+    local list = context.list
+    local info = context.info
+    local retcode, retmsg = loadValidator(list, spec, info)
+    if retcode > 0 then
+      ServiceFailure{ message=retmsg }
+    else
+      log:admin(retmsg)
+    end
+  end
+
+  function Configuration:delValidator(context, spec)
+    local list = context.list
+    local info = context.info
+    local domain, name = match(spec, valpattern)
+    local validator = list[domain]
+    if not domain or not name then
+      ServiceFailure{
+        message = info.illegalerrmsg:tag{specification=spec}
+      }
+    end
+    if not validator or (validator and name ~= validator.name) then
+      ServiceFailure{
+        message = info.notloaded:tag{
+          domain = domain,
+          validator = name,
+        }
+      }
+    end
+    list[domain] = nil
+    package.loaded[name] = nil
+    if validator.finalize ~= nil then
+      local ok, errmsg = pcall(validator.finalize)
+      if not ok then
+        local errmsg = errmsg or msg.UnspecifiedTerminationFailure
+        ServiceFailure{
+          message = info.failedtermination:tag{
+            domain = domain,
+            validator = name,
+            error = errmsg,
+          }
+        }
+      end
+    end
+    log:admin(info.unloaded:tag{ domain=domain, validator=name })
+  end
+
+  function Configuration:delAllValidators(context)
+    for domain, validator in pairs(context.list) do
+      local spec = domain..":"..validator.name
+      local ok, result = pcall(self.delValidator, self, context, spec)
+      if not ok then
+        log:exception(tostring(result))
+      end
+    end
+  end
+
+  function Configuration:shutdown()
+    self:delAllPasswordValidators()
+    self:delAllTokenValidators()
+  end
+
+  function Configuration:updateAdmins(entities, action)
+    local admins = self.admins
+    for _, entity in ipairs(entities) do
+      if "grant" == action then
+        if not admins[entity] then
+          admins[entity] = true
+          log:admin(msg.AdministrativeRightsGranted:tag{entity=entity})
+        end
+      else
+        if entity ~= BusEntity and admins[entity] then
+          admins[entity] = nil 
+          log:admin(msg.AdministrativeRightsRevoked:tag{entity=entity})
+        end
+      end
+    end
+  end
+
+  -- IDL operations
+  function Configuration:reloadConfigsFile()
+    local admins = self.admins
+    local passwordValidators = self.passwordValidators
+    local tokenValidators = self.tokenValidators
+    -- load configuration from file
+    loadConfigs()
+    -- reconfigure its parameters
+    self:setLogLevel(Configs.loglevel)
+    self:setOilLogLevel(Configs.oilloglevel)
+    self:setMaxChannels(Configs.maxchannels)
+    self:setMaxCacheSize(Configs.maxcachesize)
+    self:updateAdmins(admins)
+    self:delAllPasswordValidators()
+    self:delAllTokenValidators()
+    local retcode, errmsg = loadAllValidators("admin", Configs, {
+      validator = passwordValidators,
+      tokenvalidator = tokenValidators,
+      })
+    if retcode > 0 then
+      ServiceFailure{
+        message = errmsg
+      }
+    end
+  end
+
+  function Configuration:grantAdminTo(entities)
+    self:updateAdmins(entities, "grant")
+  end
+
+  function Configuration:revokeAdminFrom(entities)
+    self:updateAdmins(entities, "revoke")
+  end
+
+  function Configuration:getAdmins()
+    local result = {}
+    for entity in pairs(self.admins) do
+      result[#result+1] = entity
+    end
+    return result
+  end
+
+  function Configuration:setMaxChannels(maxchannels)
+    local orb = self.access.orb
+    local ok, errcode, errmsg = validateMaxChannels(maxchannels)
+    if not ok then
+      ServiceFailure{
+        message = errmsg
+      }
+    end
+    orb.ResourceManager.inuse.maxsize = maxchannels
+    log:admin(msg.MaximumChannelLimit:tag{value=maxchannels})
+  end
+
+  function Configuration:getMaxChannels()
+    local orb = self.access.orb
+    return orb.ResourceManager.inuse.maxsize
+  end
+
+  function Configuration:setMaxCacheSize(maxsize)
+    local ok, errcode, errmsg = validateMaxCacheSize(maxsize)
+    if not ok then
+      ServiceFailure{
+        message = errmsg
+      }
+    end
+    self.access:maxCacheSize(maxsize)
+    log:admin(msg.MaximumCacheSize:tag{value=maxsize})
+  end
+
+  function Configuration:getMaxCacheSize()
+    return self.access:maxCacheSize()
+  end
+
+  function Configuration:setLogLevel(loglevel)
+    if loglevel >= 0 then
+      log:level(loglevel)
+      log:admin(msg.CoreServicesLogLevel:tag{value=loglevel})
+    else
+      ServiceFailure{
+        message = msg.InvalidLogLevel:tag{value=loglevel}
+      }
+    end
+  end
+
+  function Configuration:getLogLevel()
+    return log:level()
+  end
+
+  function Configuration:setOilLogLevel(loglevel)
+    if loglevel >= 0 then
+      oillog:level(loglevel)
+      log:admin(msg.OilLogLevel:tag{value=loglevel})
+    else
+      ServiceFailure{
+        message = msg.InvalidLogLevel:tag{value=loglevel}
+      }
+    end
+  end
+
+  function Configuration:getOilLogLevel()
+    return oillog:level()
   end
 
   -- create SCS component
@@ -654,9 +949,8 @@ Options:
       log:config(msg.BadPasswordLimitedTries:tag{limit=Configs.badpasswordtries})
       log:config(msg.BadPasswordTotalLimit:tag{value=Configs.badpasswordlimit})
       log:config(msg.BadPasswordMaxRate:tag{value=Configs.badpasswordrate})
-      if Configs.maxchannels ~= nil then
-        log:config(msg.MaximumChannelLimit:tag{value=orb.maxchannels})
-      end
+      log:config(msg.MaximumChannelLimit:tag{value=Configs.maxchannels})
+      log:config(msg.MaximumCacheSize:tag{value=Configs.maxcachesize})
       if not params.enforceAuth then
         log:config(msg.OfferAuthorizationDisabled)
       end
@@ -667,6 +961,7 @@ Options:
       facets.InterfaceRegistry:__init(params)
       facets.EntityRegistry:__init(params)
       facets.OfferRegistry:__init(params)
+      facets.Configuration:__init(params)
     end,
     shutdown = function(self)
       if iceptor:getCallerChain().caller.entity ~= BusEntity then
@@ -675,6 +970,7 @@ Options:
       self.context:deactivateComponent()
       orb:shutdown()
       facets.AccessControl:shutdown()
+      facets.Configuration:shutdown()
       log:uptime(msg.CoreServicesTerminated)
     end,
   }

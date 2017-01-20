@@ -8,6 +8,7 @@ local parse = luaidl.parse
 
 local idlspec = [[
 #include "access_management.idl"
+#include "configuration.idl"
 #include "offer_authorization.idl"
 ]]
 

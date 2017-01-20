@@ -902,11 +902,321 @@ return {
         Functions to manage the core services, i.e: life-cycle, configuration, etc.
       ]],
       fields = {
+        reloadconf = {
+          type = "function",
+          title = "Reloads the Configuration File",
+          description = [[
+            reset all configurations to default values defined in the configuration file.
+          ]],
+        },
+        grantadmin = {
+          type = "function",
+          title = "Grants Admin privilegies to Entities",
+          description = [[
+            adds entities to the list of granted entities to perform administrative operations. 
+          ]],
+          parameters = {
+            {
+              type = "list",
+              name = "entities",
+              title = "List of entity names to be granted",
+              description = [[
+                contains strings with the name of each entity to be granted.
+              ]],
+            },
+          },
+        },
+        revokeadmin = {
+          type = "function",
+          title = "Revokes Admin Privilegies from Entities",
+          description = [[
+            removes entities from list of granted entities to perform administrative operations. 
+          ]],
+          parameters = {
+            {
+              type = "list",
+              name = "entities",
+              title = "List of entity names to be revoked",
+              description = [[
+                contains strings with the name of each entity to be revoked.
+              ]],
+            },
+          },
+        },
+        admins = {
+          type = "function",
+          title = "Lists the Names of Entities with Admin Privilegies",
+          description = [[
+            returns a list of entity names able to perform administrative operations.
+          ]],
+          results = {
+            {
+              name = "entities",
+              type = "list",
+              title = "Administrative entities",
+              description = [[
+                contains strings with the name of each entity granted to perform administrative operations.
+              ]],
+            },
+          },
+        },
+        addpasswordvalidator = {
+          type = "function",
+          title = "Loads a Password Validator",
+          description = [[
+            loads a password validator to current password validation mechanism of a domain. 
+            If the validator is already loaded, this operation has no effect.
+          ]],
+          parameters = {
+            {
+              type = "string",
+              name = "specification",
+              title = "Password validator specification",
+              description = [[
+                is separated by a colon (i.e. "domain:validatormodule") which the
+                first substring specifies the validation domain and the second 
+                substring specifies the Lua Module to be loaded.
+              ]],
+            },
+          },
+        },
+        delpasswordvalidator = {
+          type = "function",
+          title = "Unloads a Password Validator",
+          description = [[
+            unloads a password validator from current validation mechanism of a domain.
+            If the validator is already unloaded, this operation has no effect.
+          ]],
+          parameters = {
+            {
+              type = "string",
+              name = "specification",
+              title = "Password validator specification",
+              description = [[
+                is separated by a colon (i.e. "domain:validatormodule") which the 
+                first substring specifies the validation domain and the second 
+                substring specifies the Lua Module to be unloaded.
+              ]],
+            },
+          },
+        },
+        passwordvalidators = {
+          type = "function",
+          title = "Lists the Current Password Validators Loaded",
+          description = [[
+            retuns a list of password validator specifications currently being used.
+          ]],
+          results = {
+            {
+              type = "list",
+              name = "specifications",
+              title = "A list of password validator specifications",
+              description = [[
+                 contains a set of colon separated strings (i.e. "domain:validatormodule")
+                 which the first substring specifies the validation domain and the second
+                 substring specifies the Lua Module loaded.
+              ]],
+            },
+          },
+        },
+        addtokenvalidator = {
+          type = "function",
+          title = "Loads a Token Validator",
+          description = [[
+            loads a token validator to current token validation mechanism of a domain. 
+            If the validator is already loaded, this operation has no effect.
+          ]],
+          parameters = {
+            {
+              type = "string",
+              name = "specification",
+              title = "Token validator specification",
+              description = [[
+                is separated by a colon (i.e. "domain:validatormodule") which the 
+                first substring specifies the validation domain and the second
+                substring specifies the Lua Module to be loaded.
+              ]],
+            },
+          },
+        },
+        deltokenvalidator = {
+          type = "function",
+          title = "Unloads a Token Validator",
+          description = [[
+            unloads a token validator from current validation mechanism of a domain. 
+            If the validator is already unloaded, this operation has no effect.
+          ]],
+          parameters = {
+            {
+              type = "string",
+              name = "specification",
+              title = "Token validator specification",
+              description = [[
+                is separated by a colon (i.e. "domain:validatormodule") which the 
+                first substring specifies the validation domain and the second 
+                substring specifies the Lua Module to be unloaded.
+              ]],
+            },
+          },
+        },
+        tokenvalidators = {
+          type = "function",
+          title = "Lists the Current Token Validators Loaded",
+          description = [[
+            retuns a list of token validator specifications currently being used.
+          ]],
+          results = {
+            {
+              type = "list",
+              name = "specifications",
+              title = "A list of token validator specifications",
+              description = [[
+                 contains a set of colon separated strings (i.e. "domain:validatormodule") 
+                 which the first substring specifies the validation domain and the second
+                 substring specifies the Lua Module loaded.
+              ]],
+            },
+          },
+        },
+        maxchannels = {
+          type = "function",
+          title = "Gets and Sets the Limit of TCP Channels Managed by OiL",
+          description = [[
+            configures the current maximum channels limit configured in OiL or sets a new limit.
+          ]],
+          parameters = {
+            {
+              type = "number",
+              name = "max",
+              title = "The maximum TCP channels used in OiL",
+              description = [[
+                updates the value of maximum TCP channels managed by OiL.
+              ]],
+              eventual = [[
+                returns the current value of maximum TCP channels.
+              ]],
+            },
+          },
+          results = {
+            {
+              type = "number",
+              name = "max",
+              description = [[
+                returns the current value of maximum TCP channels managed by OiL.
+              ]],
+              eventual = [[
+                some value was provided as parameter.
+              ]],
+            },
+          },
+        },
+        maxcachesize = {
+          type = "function",
+          title = "Gets and Sets the Limit of All LRU Caches",
+          description = [[
+            configures the current maximum size of LRU caches. 
+            There is three independent caches for OpenBus protocol related communications 
+            (i.e. IOR profile cache, session incoming cache, session outgoing cache) and 
+            they use the same maximum size.
+          ]],
+          parameters = {
+            {
+              type = "number",
+              name = "max",
+              title = "The maximum size of all LRU caches",
+              description = [[
+                updates the value of maximum size of LRU caches.
+              ]],
+              eventual = [[
+                returns the current value of maximum size of LRU caches.
+              ]],
+            },
+          },
+          results = {
+            {
+              type = "number",
+              name = "max",
+              description = [[
+                returns the current value of maximum size of LRU caches.
+              ]],
+              eventual = [[
+                some value was provided as parameter.
+              ]],
+            },
+          },
+        },
+        loglevel = {
+          type = "function",
+          title = "Gets and Sets the Log Level of Bus Core Services",
+          description = [[
+            configures the current log level of bus core services.
+          ]],
+          parameters = {
+            {
+              type = "number",
+              name = "level",
+              title = "The log level of bus core services",
+              description = [[
+                updates the value of log level in bus core services.
+              ]],
+              eventual = [[
+                returns the current log level.
+              ]],
+            },
+          },
+          results = {
+            {
+              type = "number",
+              name = "level",
+              description = [[
+                returns the current log level used in bus core services.
+              ]],
+              eventual = [[
+                some value was provided as parameter.
+              ]],
+            },
+          },
+        },
+        oilloglevel = {
+          type = "function",
+          title = "Gets and Sets the OiL Log Level OiL of Bus Core Services",
+          description = [[
+            configures the current OiL log level of bus core services. 
+            Increase the OiL log level will generate a huge amount of log.
+          ]],
+          parameters = {
+            {
+              type = "number",
+              name = "level",
+              title = "The OiL log level of bus core services",
+              description = [[
+                updates the value of OiL log level in bus core services.
+              ]],
+              eventual = [[
+                returns the current OiL log level.
+              ]],
+            },
+          },
+          results = {
+            {
+              type = "number",
+              name = "level",
+              description = [[
+                returns the current OiL log level used in bus core services. 
+              ]],
+              eventual = [[
+                some value was provided as parameter.
+              ]],
+            },
+          },
+        },
         shutdown = {
           type = "function",
-          title = "Shuts down the core services",
+          title = "Shuts Down the Core Services",
           description = [[
-            calls the bus to shut down itself. This operation can only be executed by OpenBus special entity otherwise a NO_PERMISSION exception will be raised.
+            calls the bus to shut down itself. 
+            This operation must be executed by OpenBus special entity 
+            otherwise a NO_PERMISSION exception will be raised.
           ]],
         },
       }
@@ -1082,7 +1392,7 @@ return {
           parameters = {
             {
               type = "string",
-              name = "category",
+              name = "name",
               title = "Entity Name",
               description = [[
                 contains the name of the entity to be registered.
@@ -1090,7 +1400,7 @@ return {
             },
             {
               type = "string",
-              name = "name",
+              name = "description",
               title = "Entity's Description",
               description = [[
                 contains the textual description of the entity to be registered.

@@ -15,7 +15,8 @@ SRC= \
 IDLDIR= ../idl
 IDLSRC= \
   $(IDLDIR)/access_management.idl \
-  $(IDLDIR)/offer_authorization.idl
+  $(IDLDIR)/offer_authorization.idl \
+  $(IDLDIR)/configuration.idl
 
 DEPENDENTIDLSRC= \
   $(SCSIDL)/scs.idl \

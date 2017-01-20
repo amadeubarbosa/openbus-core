@@ -220,6 +220,7 @@ using idl2lua : $(lua) ;
 
 make $(root)/lua/openbus/core/admin/parsed.lua 
   : $(root)/idl/access_management.idl
+    $(root)/idl/configuration.idl
     $(root)/idl/offer_authorization.idl
     $(scs-idl)/src/scs.idl
     $(openbus-idl)/src/openbus_core-2.1.idl
@@ -266,7 +267,7 @@ local exe_requirements =
   <target-os>linux:<library>unix//pthread
   <target-os>darwin:<library>/lualdap//lualdap
   <target-os>linux:<library>/lualdap//lualdap
-  <include>$(root)src
+  <include>$(root)/src
   <include>$(here)
 ;
 

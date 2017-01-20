@@ -1,0 +1,200 @@
+/**
+ * \mainpage Documentação da IDL
+ */
+#ifndef __TECGRAF_OPENBUS_CORE_V21_SERVICES_ADMIN_V10_IDL__
+#define __TECGRAF_OPENBUS_CORE_V21_SERVICES_ADMIN_V10_IDL__
+
+#include "openbus_core-2.1.idl"
+
+/** \brief Módulo dos sistemas e aplicações do Tecgraf. */
+module tecgraf {
+
+/** \brief Módulo do middleware OpenBus. */
+module openbus {
+
+/** \brief Módulo de definições básicas do OpenBus. */
+module core {
+
+/* \brief Módulo de versionamento dos Serviços Básicos do OpenBus. */
+module v2_1 {
+
+/** \brief Módulo dos Serviços Básicos do OpenBus. */
+module services {
+
+/** \brief Módulo de gerência do serviço. */
+module admin {
+
+/** \brief Módulo de versionamento da gerência do serviço. */
+module v1_0 {
+
+typedef sequence<Identifier> StrSeq;
+/**
+ * \brief Interface de administração das configurações do barramento.
+ */
+interface Configuration {
+    
+  /**
+   * \brief Recarrega o arquivo de configurações do barramento.
+   *
+   * Aplica imediatamente alterações realizadas nos parâmetros de
+   * configuração que são passíveis a reconfiguração dinâmica. Lista
+   * de parâmetros suportados:
+   *                                                       
+   * + Lista de administradores.
+   * + Nome de pacotes de validação de login e suas configurações
+   *   (ex: ldap_patterns, ldap_servers).
+   * + Número máximo de canais de comunicação do OiL.
+   * + Tamanho máximo das caches LRU.
+   * + Níveis de log (busservices e OiL).
+   */
+  void reloadConfigsFile() 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Atribui os privilégios de administração para um grupo de usuários.
+   */
+  void grantAdminTo(in StrSeq users) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Revoga os privilégios de administração para um grupo de usuários.
+   */
+  void revokeAdminFrom(in StrSeq users) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna a lista de usuários com permissão de administração.
+   *
+   * \return Lista de administradores
+   */
+  StrSeq getAdmins() 
+    raises (ServiceFailure);
+
+  /**
+   * \brief Adiciona um validador de login. Caso o validador já tiver sido
+   *        adicionado, nada será feito.
+   *
+   * \param validator Nome do pacote Lua da implementação do validador.
+   */
+  void addPasswordValidator(in string validator) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Remove um validador de login. Caso o validador não tenha sido
+   *        adicionado antes, nada será feito.
+   *
+   * \param validator Nome do pacote Lua da implementação do validador.
+   */
+  void delPasswordValidator(in string validator) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna a lista de validadores de login.
+   *
+   * \return Lista dos nomes dos pacotes Lua da implementação dos validadores.
+   */
+  StrSeq getPasswordValidators() 
+    raises (ServiceFailure);
+
+  /**
+   * \brief Adiciona um validador de token. Caso o validador já tiver sido
+   *        adicionado, ocorrerá uma ServiceFailure.
+   *
+   * \param validator Nome do pacote Lua da implementação do validador.
+   */
+  void addTokenValidator(in string validator) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Remove um validador de token. Caso o validador não tenha sido
+   *        adicionado antes, ocorrerá uma ServiceFailure.
+   *
+   * \param validator Nome do pacote Lua da implementação do validador.
+   */
+  void delTokenValidator(in string validator) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna a lista de validadores de token.
+   *
+   * \return Lista dos nomes dos pacotes Lua da implementação dos validadores.
+   */
+  StrSeq getTokenValidators() 
+    raises (ServiceFailure);
+
+  /**
+   * \brief Redefine o número máximo de canais de comunicação do OiL.
+   *
+   * \param maxchannels Novo máximo de canais.
+   */
+  void setMaxChannels(in long maxchannels) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna o número máximo de canais de comunicação do OiL.
+   *
+   * \return Número máximo de canais de comunicação do OiL.
+   */
+  long getMaxChannels() 
+    raises (ServiceFailure);
+
+  /**
+   * \brief Redefine o tamanho máximo das caches LRU do barramento (profiles
+   *        IOR, sessões de entrada e sessões de saída).
+   *
+   * \param maxCacheSize Novo tamanho máximo das caches LRU.
+   */
+  void setMaxCacheSize(in long maxCacheSize)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna o tamanho máximo das caches LRU do barramento (profiles
+   *        IOR, sessões de entrada e sessões de saída).
+   *
+   * \return Tamanho máximo das caches LRU.
+   */
+  long getMaxCacheSize()
+    raises (ServiceFailure);
+
+  /**
+   * \brief Redefine o nível de log do barramento.
+   */
+  void setLogLevel(in unsigned short loglevel) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna o nível de log do barramento.
+   *
+   * \return Nível de log do barramento.
+   */
+  unsigned short getLogLevel() 
+    raises (ServiceFailure);
+
+  /**
+   * \brief Redefine o nível de log do OiL.
+   */
+  void setOilLogLevel(in unsigned short oilloglevel) 
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Retorna o nível de log do OiL.
+   *
+   * \return Nível de log do OiL.
+   */
+  unsigned short getOilLogLevel() 
+    raises (ServiceFailure);
+};
+  
+}; // version
+
+}; // admin
+
+}; // services
+
+}; // core version
+
+}; // core
+
+}; // openbus
+
+}; // tecgraf

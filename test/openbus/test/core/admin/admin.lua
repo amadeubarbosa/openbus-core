@@ -181,3 +181,84 @@ testscript([[
   delentity("ENT04")
   delcategory("CTG02")
 ]])
+
+-- reconfiguração dinâmica
+testscript([[
+  original={
+    channels=maxchannels(),
+    cache=maxcachesize(),
+    loglevel=loglevel(),
+    oilloglevel=oilloglevel(),
+    admins=admins(),
+    passwdvalidators=passwordvalidators(),
+    tokenvalidators=tokenvalidators(),
+  }
+  maxchannels(500)
+  assert(500 == maxchannels())
+  maxcachesize(1024)
+  assert(1024 == maxcachesize())
+  loglevel(5)
+  assert(5 == loglevel())
+  oilloglevel(5)
+  assert(5 == oilloglevel())
+  for i, val in ipairs(original.passwdvalidators) do
+    ok = pcall(delpasswordvalidator,val)
+    assert(ok or val:match("^erroneous"), "expected failure on delpasswordvalidator "..val)
+  end
+  for i, val in ipairs(original.tokenvalidators) do
+    ok = pcall(deltokenvalidator,val)
+    assert(ok or val:match("^erroneous"), "expected failure on deltokenvalidator "..val)
+  end
+  reloadconf()
+  assert(original.channels == maxchannels())
+  assert(original.cache == maxcachesize())
+  assert(original.loglevel == loglevel())
+  assert(original.oilloglevel == oilloglevel())
+  passwords = passwordvalidators()
+  for j, old in ipairs(original.passwdvalidators) do
+    local found=false
+    for i, new in ipairs(passwords) do
+      if new == old then
+        found=true
+        break
+      end
+    end
+    assert(found == true, "validator "..old.." wasnt reloaded")
+  end
+  tokens = tokenvalidators()
+  for j, old in ipairs(original.tokenvalidators) do
+    local found=false
+    for i, new in ipairs(tokens) do
+      if new == old then
+        found=true
+        break
+      end
+    end
+    assert(found == true, "validator "..old.." wasnt reloaded")
+  end
+]])
+
+testscript([[
+  ok = pcall(addpasswordvalidator, "none:openbus.test.core.services.ErrorTestValidator")
+  assert( ok == false, "expected failure on loading validator with wrong setup function")
+  ok = pcall(addpasswordvalidator, "none:openbus.test.core.services.NullValidationValidator")
+  assert( ok == false, "expected failure on loading validator with null validation function")
+]])
+
+testscript([[
+  grantadmin({"peter"})
+  newlist=admins()
+  found = false
+  for _, entity in ipairs(newlist) do
+    if entity == "peter" then
+      found = true
+      break
+    end
+  end
+  assert(found == true, "failure on grant admin to another user")
+]])
+
+testparams(
+  string.format("-e 'login(%q, %q, %q, %q)' -e '%s'", 
+    busref, "peter", "peter", domain, "revokeadmin({\"peter\"})")
+)

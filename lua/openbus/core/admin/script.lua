@@ -57,6 +57,7 @@ local is_MissingCertificate = accexp.is_MissingCertificate
 local admidl = require "openbus.core.admin.idl"
 local loadadmidl = admidl.loadto
 local admintypes = admidl.types.services.access_control.admin.v1_0
+local conftypes  = admidl.types.services.admin.v1_0
 local authotypes = admidl.types.services.offer_registry.admin.v1_0
 
 local msg = require "openbus.util.messages"
@@ -385,6 +386,7 @@ local function admServGetter(name, idlmod)
     return OpenBusORB:narrow(conn.connection.bus:getFacetByName(name), repid)
   end
 end
+local getConfiguration = admServGetter("Configuration", conftypes)
 local getCertificateRegistry = admServGetter("CertificateRegistry", admintypes)
 local getInterfaceRegistry = admServGetter("InterfaceRegistry", authotypes)
 local getEntityRegistry = admServGetter("EntityRegistry", authotypes)
@@ -605,7 +607,77 @@ function script.deliface(iface)
   return getInterfaceRegistry():removeInterface(iface)
 end
 
+function script.reloadconf()
+  return getConfiguration():reloadConfigsFile()
+end
 
+function script.grantadmin(entities)
+  return getConfiguration():grantAdminTo(entities)
+end
+
+function script.revokeadmin(entities)
+  return getConfiguration():revokeAdminFrom(entities)
+end
+
+function script.admins()
+  return getConfiguration():getAdmins()
+end
+
+function script.addpasswordvalidator(spec)
+  return getConfiguration():addPasswordValidator(spec)
+end
+
+function script.delpasswordvalidator(spec)
+  return getConfiguration():delPasswordValidator(spec)
+end
+
+function script.passwordvalidators()
+  return getConfiguration():getPasswordValidators()
+end
+
+function script.addtokenvalidator(spec)
+  return getConfiguration():addTokenValidator(spec)
+end
+
+function script.deltokenvalidator(spec)
+  return getConfiguration():delTokenValidator(spec)
+end
+
+function script.tokenvalidators()
+  return getConfiguration():getTokenValidators()
+end
+
+function script.maxchannels(max)
+  if max ~= nil then
+    return getConfiguration():setMaxChannels(max)
+  else
+    return getConfiguration():getMaxChannels()
+  end
+end
+
+function script.maxcachesize(max)
+  if max ~= nil then
+    return getConfiguration():setMaxCacheSize(max)
+  else
+    return getConfiguration():getMaxCacheSize()
+  end
+end
+
+function script.oilloglevel(level)
+  if level ~= nil then
+    return getConfiguration():setOilLogLevel(level)
+  else
+    return getConfiguration():getOilLogLevel()
+  end
+end
+
+function script.loglevel(level)
+  if level ~= nil then
+    return getConfiguration():setLogLevel(level)
+  else
+    return getConfiguration():getLogLevel()
+  end
+end
 
 argchecker.module(script, {
   login = { "string", "string", "nil|string", "nil|string" },
@@ -637,6 +709,27 @@ argchecker.module(script, {
   ifaces = {},
   addiface = { "string" },
   deliface = { "string" },
+
+  reloadconf = {},
+  
+  grantadmin = { "table" },
+  revokeadmin = { "table" },
+  admins = {},
+
+  addpasswordvalidator = { "string" },
+  delpasswordvalidator = { "string" },
+  passwordvalidators = {},
+
+  addtokenvalidator = { "string" },
+  deltokenvalidator = { "string" },
+  tokenvalidators = {},
+  
+  maxchannels = { "nil|number" },
+
+  maxcachesize = { "nil|number" },
+
+  oilloglevel = { "nil|number" },
+  loglevel = { "nil|number" },
 })
 
 argchecker.class(EntityCategory, {
