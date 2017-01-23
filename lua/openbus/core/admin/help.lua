@@ -1145,6 +1145,40 @@ return {
             },
           },
         },
+        callstimeout = {
+          type = "function",
+          title = "Gets and Sets the Timeout for Bus Calls",
+          description = [[
+            configures the timeout in seconds to wait for responses in calls performed by the bus.
+          ]],
+          parameters = {
+            {
+              type = "number",
+              name = "timeout",
+              title = "The timeout in seconds for Bus calls",
+              description = [[
+                represents the timeout in seconds for calls performed by the bus.
+                The value 0 means the bus should wait indefinitely for responses on its calls.
+              ]],
+              eventual = [[
+                returns the current timeout for calls performed by the bus.
+              ]],
+            },
+          },
+          results = {
+            {
+              type = "number",
+              name = "timeout",
+              description = [[
+                represents the current timeout in seconds for calls performed by the bus.
+                The value 0 means the bus waits indefinitely for responses on its calls.
+              ]],
+              eventual = [[
+                some value was provided as parameter.
+              ]],
+            },
+          },
+        },
         loglevel = {
           type = "function",
           title = "Gets and Sets the Log Level of Bus Core Services",

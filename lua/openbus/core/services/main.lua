@@ -120,6 +120,7 @@ return function(...)
     UnableToConvertLegacyDatabase = 27,
     WrongAlternateAddress = 28,
     InvalidMaximumCacheSize = 29,
+    InvalidOrbCallsTimeout = 30,
   }
 
   -- configuration parameters parser
@@ -139,6 +140,7 @@ return function(...)
     certificate = "openbus.crt",
     database = "openbus.db",
 
+    timeout = 0,
     leasetime = 30*60,
     expirationgap = 10,
     challengetime = 0,
@@ -236,6 +238,7 @@ Options:
   -certificate <path>        arquivo de certificado com chave pública do barramento
   -database <path>           arquivo de dados do barramento
 
+  -timeout <seconds>         tempo de espera por respostas nas chamadas realizadas pelo barramento
   -leasetime <seconds>       tempo de lease dos logins de acesso
   -expirationgap <seconds>   tempo que os logins ficam válidas após o lease
   -challengetime <seconds>   tempo de duração do desafio de autenticação por certificado
@@ -309,6 +312,10 @@ Options:
   log:config(msg.OilLogLevel:tag{value=Configs.oilloglevel})
 
   -- validate time parameters
+  if Configs.timeout < 0 then
+    log:misconfig(msg.InvalidOrbCallsTimeout:tag{value=Configs.timeout})
+    return errcode.InvalidOrbCallsTimeout
+  end
   if Configs.challengetime == 0 then
     Configs.challengetime = Configs.expirationgap
   end
@@ -656,6 +663,9 @@ Options:
     log:config(msg.SecureConnectionPortNumber:tag{port=orb.sslport})
   end
   log:config(msg.ServicesListeningAddress:tag{host=orb.host,port=orb.port})
+  if Configs.timeout ~= 0 then
+    orb:settimeout(Configs.timeout)
+  end
   local iceptor = access.Interceptor{
     prvkey = prvkey,
     orb = orb,
@@ -694,6 +704,7 @@ Options:
     self.admins = data.admins
     self.passwordValidators = data.passwordValidators
     self.tokenValidators = data.tokenValidators
+    self.timeout = data.timeout
     local access = self.access
     local admins = self.admins
     access:setGrantedUsers(self.__type, "reloadConfigsFile", admins)
@@ -703,6 +714,7 @@ Options:
     access:setGrantedUsers(self.__type, "delValidator", admins)
     access:setGrantedUsers(self.__type, "setMaxChannels", admins)
     access:setGrantedUsers(self.__type, "setMaxCacheSize", admins)
+    access:setGrantedUsers(self.__type, "setCallsTimeout", admins)
     access:setGrantedUsers(self.__type, "setLogLevel", admins)
     access:setGrantedUsers(self.__type, "setOilLogLevel", admins)
     -- sugar syntax for password and token validators operations
@@ -834,6 +846,7 @@ Options:
         message = errmsg
       }
     end
+    self:setCallsTimeout(Configs.timeout)
   end
 
   function Configuration:grantAdminTo(entities)
@@ -884,6 +897,25 @@ Options:
     return self.access:maxCacheSize()
   end
 
+  function Configuration:setCallsTimeout(timeout)
+    local orb = self.access.orb
+    if timeout == 0 then
+      orb:settimeout(nil)
+    elseif timeout > 0 then
+      orb:settimeout(timeout)
+    else
+      ServiceFailure{
+        message = msg.InvalidOrbCallsTimeout:tag{value=timeout}
+      }
+    end
+    self.timeout = timeout
+    log:admin(msg.OrbCallsTimeout:tag{value=timeout})
+  end
+
+  function Configuration:getCallsTimeout()
+    return self.timeout
+  end
+
   function Configuration:setLogLevel(loglevel)
     if loglevel >= 0 then
       log:level(loglevel)
@@ -925,6 +957,7 @@ Options:
         access = iceptor,
         certificate = certificate,
         database = database,
+        timeout = Configs.timeout,
         leaseTime = Configs.leasetime,
         expirationGap = Configs.expirationgap,
         challengeTime = Configs.challengetime,
@@ -941,6 +974,7 @@ Options:
       log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
       log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
       log:config(msg.LoadedBusCertificate:tag{path=Configs.certificate})
+      log:config(msg.OrbCallsTimeout:tag{value=params.timeout})
       log:config(msg.SetupLoginLeaseTime:tag{seconds=params.leaseTime})
       log:config(msg.SetupLoginExpirationGap:tag{seconds=params.expirationGap})
       log:config(msg.SetupLoginChallengeTime:tag{seconds=params.challengeTime})

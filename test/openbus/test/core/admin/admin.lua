@@ -190,6 +190,7 @@ testscript([[
     loglevel=loglevel(),
     oilloglevel=oilloglevel(),
     admins=admins(),
+    timeout=callstimeout(),
     passwdvalidators=passwordvalidators(),
     tokenvalidators=tokenvalidators(),
   }
@@ -201,6 +202,8 @@ testscript([[
   assert(5 == loglevel())
   oilloglevel(5)
   assert(5 == oilloglevel())
+  callstimeout(4)
+  assert(4 == callstimeout())
   for i, val in ipairs(original.passwdvalidators) do
     ok = pcall(delpasswordvalidator,val)
     assert(ok or val:match("^erroneous"), "expected failure on delpasswordvalidator "..val)
@@ -212,6 +215,7 @@ testscript([[
   reloadconf()
   assert(original.channels == maxchannels())
   assert(original.cache == maxcachesize())
+  assert(original.timeout == callstimeout())
   assert(original.loglevel == loglevel())
   assert(original.oilloglevel == oilloglevel())
   passwords = passwordvalidators()

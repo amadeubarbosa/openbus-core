@@ -663,6 +663,14 @@ function script.maxcachesize(max)
   end
 end
 
+function script.callstimeout(timeout)
+  if timeout ~= nil then
+    return getConfiguration():setCallsTimeout(timeout)
+  else
+    return getConfiguration():getCallsTimeout()
+  end
+end
+
 function script.oilloglevel(level)
   if level ~= nil then
     return getConfiguration():setOilLogLevel(level)
