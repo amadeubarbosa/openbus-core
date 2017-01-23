@@ -4,7 +4,7 @@ mode=$1
 name=$2
 port=$3
 
-busssl="env LD_LIBRARY_PATH=$OPENBUS_OPENSSL_HOME/lib ${OPENBUS_OPENSSL_HOME}/bin/openssl"
+busssl="env LD_LIBRARY_PATH=$OPENBUS_OPENSSL_HOME/lib DYLD_LIBRARY_PATH=$OPENBUS_OPENSSL_HOME/lib ${OPENBUS_OPENSSL_HOME}/bin/openssl"
 buscore="env LUA_PATH=${OPENBUS_CORE_TEST}/?.lua;${OPENBUS_CORESDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busservices"
 busadmin="env LUA_PATH=${OPENBUS_CORESDKLUA_TEST}/?.lua ${OPENBUS_CORE_HOME}/bin/busadmin"
 
@@ -17,7 +17,6 @@ fi
 
 function genkey {
 	if [[ ! -e $1.key ]]; then
-		export DYLD_LIBRARY_PATH="${OPENBUS_OPENSSL_HOME}/lib:${DYLD_LIBRARY_PATH}"
 		$busssl genrsa -out $1.tmp 2048 > /dev/null 2> /dev/null
 		$busssl pkcs8 -topk8 -nocrypt -in $1.tmp \
 		  -out $1.key -outform DER
@@ -42,10 +41,12 @@ baddomain=`$busadmin -l openbus.test.configs -e 'print(baddomain)'`
 leasetime=`$busadmin -l openbus.test.configs -e 'print(leasetime)'`
 expirationgap=`$busadmin -l openbus.test.configs -e 'print(expirationgap)'`
 passwordpenalty=`$busadmin -l openbus.test.configs -e 'print(passwordpenalty)'`
+hostname=`$busadmin -l openbus.test.configs -e 'print(bushost)'`
 
 genkey $OPENBUS_TEMP/$name
 
 $buscore \
+        -host $hostname \
 	-port $port \
 	-iorfile $OPENBUS_TEMP/$name.ior \
 	-database $OPENBUS_TEMP/$name.db \
