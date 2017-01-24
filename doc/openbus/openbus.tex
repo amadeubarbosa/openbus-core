@@ -589,6 +589,52 @@ O padrão é realizar a autenticação por senha, onde a ferramenta pergunta a senha
 
 \end{description}
 
+  \item \textbf{Manutenção e Configuração:}
+
+\begin{description}
+
+  \item[\texttt{--}reload-configs-file] Recarrega o arquivo de configurações do barramento.
+
+  \item[\texttt{--}grant-admin-to="\textless entity1\textgreater \space
+          \textless entity2\textgreater \dots 
+          \textless entityN\textgreater"] Atribui os privilégios de administração para uma lista de entidades.
+
+  \item[\texttt{--}revoke-admin-from="\textless entity1\textgreater \space
+          \textless entity2\textgreater \dots 
+          \textless entityN\textgreater"] Revoga os privilégios de administração para uma lista de entidades.
+
+  \item[\texttt{--}get-admins] Mostra a lista de administradores.
+
+  \item[\texttt{--}add-validator=\textless validador\textgreater] Adiciona um validador de login.
+
+  \item[\texttt{--}del-validator=\textless validador\textgreater] Remove um validador de login.
+
+  \item[\texttt{--}get-validators] Mostra a lista de validadores.
+
+  \item[\texttt{--}set-max-channels=\textless numero\textgreater] Redefine o número máximo de canais de comunicação do OiL.
+
+  \item[\texttt{--}get-max-channels] Mostra o número máximo de canais de comunicação do OiL.
+
+  \item[\texttt{--}set-max-cachesize=\textless numero\textgreater] Redefine o tamnho máximo de caches LRU.
+
+  \item[\texttt{--}get-max-cachesize] Mostra o tamanho máximo de caches LRU.
+
+  \item[\texttt{--}set-calls-timeout=\textless numero\textgreater] Redefine o tempo de espera por respostas em chamadas do barramento.
+
+  \item[\texttt{--}get-calls-timeout] Mostra o tempo de espera por respostas em chamadas do barramento.
+
+  \item[\texttt{--}set-log-level=\textless numero\textgreater] Redefine o nível de log do barramento.
+
+  \item[\texttt{--}get-log-level] Mostra o nível de log do barramento.
+
+  \item[\texttt{--}set-oil-log-level=\textless numero\textgreater] Redefine o nível de log do OiL. Essa configuração pode gerar logs muito grandes, cuidado!
+
+  \item[\texttt{--}get-oil-log-level] Mostra o nível de log do OiL.
+  
+  \item[\texttt{--}shutdown] Encerra a execução atual do barramento.
+
+\end{description}
+
   \item \textbf{Script:}
 
 \begin{description}
