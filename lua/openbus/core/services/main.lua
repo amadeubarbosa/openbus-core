@@ -822,6 +822,14 @@ Options:
     end
   end
 
+  local function toarray(set)
+    local array = {}
+    for value in pairs(set) do
+      array[#array+1] = value
+    end
+    return array
+  end
+
   -- IDL operations
   function Configuration:reloadConfigsFile()
     local admins = self.admins
@@ -834,7 +842,8 @@ Options:
     self:setOilLogLevel(Configs.oilloglevel)
     self:setMaxChannels(Configs.maxchannels)
     self:setMaxCacheSize(Configs.maxcachesize)
-    self:updateAdmins(admins)
+    self:updateAdmins(toarray(self.admins), "revoke")
+    self:updateAdmins(Configs.admin, "grant")
     self:delAllPasswordValidators()
     self:delAllTokenValidators()
     local retcode, errmsg = loadAllValidators("admin", Configs, {
@@ -858,11 +867,7 @@ Options:
   end
 
   function Configuration:getAdmins()
-    local result = {}
-    for entity in pairs(self.admins) do
-      result[#result+1] = entity
-    end
-    return result
+    return toarray(self.admins)
   end
 
   function Configuration:setMaxChannels(maxchannels)

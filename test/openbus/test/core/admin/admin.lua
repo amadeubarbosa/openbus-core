@@ -250,6 +250,18 @@ testscript([[
 ]])
 
 testscript([[
+  grantadmin({"john"})
+  grantadmin({"bob"})
+  reloadconf()
+  newlist = admins()
+  for k, updated in ipairs(newlist) do
+    if (updated == "john") or (updated == "bob") then
+      error("failure of reload configuration, "..updated.." is unexpected in the admin list")
+    end
+  end
+]])
+
+testscript([[
   grantadmin({"peter"})
   newlist=admins()
   found = false
