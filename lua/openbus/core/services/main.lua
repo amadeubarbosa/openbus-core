@@ -552,6 +552,7 @@ Options:
     self.access = data.access
     self.admins = data.admins
     self.validators = data.validators
+    self.timeout = data.timeout
     local access = self.access
     local admins = self.admins
     access:setGrantedUsers(self.__type, "reloadConfigsFile", admins)

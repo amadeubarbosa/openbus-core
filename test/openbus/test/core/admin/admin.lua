@@ -109,6 +109,7 @@ assert(execute("--del-entity=ENT04"))
 assert(execute("--del-category=CTG02"))
 
 -- reconfiguração dinâmica
+assert(execute("--get-calls-timeout"))
 assert(execute("--set-calls-timeout=120"))
 assert(execute("--get-calls-timeout"))
 assert(execute("--set-max-cachesize=1024"))
