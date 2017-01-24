@@ -733,8 +733,8 @@ argchecker.module(script, {
   tokenvalidators = {},
   
   maxchannels = { "nil|number" },
-
   maxcachesize = { "nil|number" },
+  callstimeout = { "nil|number" },
 
   oilloglevel = { "nil|number" },
   loglevel = { "nil|number" },
