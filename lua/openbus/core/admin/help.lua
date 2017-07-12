@@ -373,9 +373,9 @@ return {
             {
               type = "string",
               name = "certificate",
-              title = "Certificate File Path",
+              title = "Certificate File Contents",
               description = [[
-                contains the path of a file containing a public key certificate in X.509 format to be registered.
+                contains the binary stream of a public key certificate encoded in X.509 format to be registered.
               ]],
             },
           },
