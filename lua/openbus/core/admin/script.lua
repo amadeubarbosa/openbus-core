@@ -520,9 +520,8 @@ function script.delcert(entity)
 end
 
 function script.setcert(entity, certificate)
-  local x509cert = assert(readfile(certificate, "rb"))
   local certs = getCertificateRegistry()
-  certs:registerCertificate(entity, x509cert)
+  certs:registerCertificate(entity, certificate)
   return true
 end
 
