@@ -227,7 +227,7 @@ local function makePropList(props)
       if ListAliases[alias] == nil then
         props[#props+1] = {name=name,value=value}
       else
-        for value in pairs(value) do
+        for _, value in pairs(value) do
           props[#props+1] = {name=name,value=value}
         end
       end

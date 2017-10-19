@@ -4,7 +4,7 @@ local home = assert(os.getenv("OPENBUS_CORE_HOME"),
   "missing enviroment variable OPENBUS_CORE_HOME")
 local path = home.."/bin/busadmin"
 if mode=="DEBUG" then
-  path = path.." DEBUG"
+  path = "env LUA_PATH='"..package.path.."' "..path.." DEBUG "
 end
 local descscript = home.."/bin/busadmdesc.lua"
 
@@ -166,7 +166,9 @@ testscript([[print(entities("IDL:script/test:1.0"))]], {
 })
 
 -- oferta
-testscript([[print(offers())]], {})
+testscript([[print(offers())]])
+testscript([[print(offers{facets={"Anything"}})]])
+testscript([[print(offers{interfaces={"IDL:script/test:1.0"}})]])
 
 -- login
 testscript([[print(logins())]], {})
