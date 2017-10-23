@@ -426,6 +426,15 @@ function script.setorb(orb)
   return old
 end
 
+function script.loadidl(chunk)
+  local orb = OpenBusORB
+  if type(chunk) == "string" then
+    orb:loadidl(chunk)
+  elseif type(chunk) == "function" then
+    chunk(orb)
+  end
+end
+
 --script.setconn = setDefaultConnection
 --script.getconn = getCurrentConnection
 
@@ -692,6 +701,8 @@ argchecker.module(script, {
   whoami = {},
   quit = {},
   shutdown = {},
+
+  loadidl = { "string|function" },
 
   logins = { "nil|string|table" },
   kick = { "string|table" },

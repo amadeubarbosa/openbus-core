@@ -1303,6 +1303,130 @@ return {
         __tostring = ToStringMetaMethod(),
       },
     },
+    {
+      type = "table",
+      title = "General Facilities",
+      description = [[
+        Functions to use services themselves in general purporse activities, i.e: test service references, call service methods, etc.
+      ]],
+      fields = {
+        loadidl = {
+          type = "function",
+          title = "Loads an OMG CORBA IDL Code to the Current ORB Instance",
+          parameters = {
+            {
+              type = {
+                {
+                  type = "string",
+                  description = "contains the whole IDL code as string",
+                },
+                {
+                  type = "function",
+                  description = "a loader function that receives the ORB instance and loads the IDL structures into it",
+                },
+              },
+              name = "idl",
+              title = "OMG CORBA IDL Code",
+            },
+          },
+        },
+      },
+    },
+    reference = {
+      type = "table",
+      title = "CORBA Object Reference",
+      description = [[
+        represents the remote CORBA object reference itself. See also: http://www.tecgraf.puc-rio.br/~maia/lua/oil/v06/manual/corba
+      ]],
+      fields = {
+        __tostring = ToStringMetaMethod(),
+        __narrow = {
+          type = "method",
+          title = "Narrows the Object to the More Specific Type Available",
+          description = [[
+            narrow the reference itself to more specific type available. See also: http://webserver2.tecgraf.puc-rio.br/~maia/lua/oil/v06/manual/corba/features.html
+          ]],
+          results = {
+            name = "reference",
+            type = "reference",
+            title = "CORBA Object Reference Narrowed",
+            description = [[
+               the narrowed reference itself, or <code>nil</code> if the narrow failed
+            ]],
+          },
+        },
+        _non_existent = {
+          type = "method",
+          title = "Asks the Server for the Object Activation",
+          results = {
+            type = "boolean",
+            name = "existant",
+            title = "Indication of OBJECT_NOT_EXIST Occurence",
+            description = [[
+              is <code>true</code> when the server returns OBJECT_NOT_EXIST exception, or <code>false</code> otherwise.
+            ]],
+          },
+        },
+      },
+    },
+    icomponent = {
+      type = "table",
+      title = "SCS IComponent Reference",
+      description = [[
+        represents the remote service registered in the bus as a component. See also: http://www.tecgraf.puc-rio.br/scs
+      ]],
+      fields = {
+        __tostring = ToStringMetaMethod(),
+        getFacetByName = {
+          type = "method",
+          title = "Returns the remote reference of the facet identified by name",
+          parameters = {
+            {
+              type = "string",
+              name = "name",
+              title = "Facet Name",
+              description = [[
+                contains the name of the facet inside of the component.
+              ]]
+            },
+          },
+          results = {
+            {
+              name = "reference",
+              type = "reference",
+              title = "Service Reference",
+              description = [[
+                contains the remote <#reference> object of the component facet.
+              ]],
+            },
+          },
+        },
+        getFacet = {
+          type = "method",
+          title = "Returns the remote reference of the facet identified by its type",
+          parameters = {
+            {
+              type = "string",
+              name = "interface",
+              title = "IDL Interface Type",
+              description = [[
+                contains the type of the facet inside of the component.
+              ]]
+            },
+          },
+          results = {
+            {
+              name = "reference",
+              type = "reference",
+              title = "Service Reference",
+              description = [[
+                contains the remote <#reference> object of the component facet.
+              ]],
+            },
+          },
+        },
+      },
+    },
     offer = {
       type = "table",
       title = "Service Offer",
@@ -1387,6 +1511,13 @@ return {
           title = "Value of Properties <code>openbus.component.interface</code>",
           description = [[
             contains all values of properties <code>openbus.component.interface</code>.
+          ]],
+        },
+        service_ref = {
+          type = "icomponent",
+          title = "Service Reference Itself",
+          description = [[
+            reference to the <#icomponent> service into the offer registered in the bus.
           ]],
         },
       },
