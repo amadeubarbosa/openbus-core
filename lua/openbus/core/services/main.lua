@@ -71,6 +71,9 @@ local ConfigurationType = mngidl.types.services.admin.v1_0.Configuration
 local loadidl = mngidl.loadto
 local access = require "openbus.core.services.Access"
 local initorb = access.initORB
+
+local Audit = require "openbus.core.services.Audit"
+
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
@@ -666,10 +669,13 @@ Options:
   if Configs.timeout ~= 0 then
     orb:settimeout(Configs.timeout)
   end
-  local iceptor = access.Interceptor{
+  local iceptor = Audit.Interceptor{
     prvkey = prvkey,
     orb = orb,
     maxcachesize = Configs.maxcachesize,
+    config = {
+      auditlogfile = Configs.logfile:gsub("%.log$",".audit.log"),
+    }
   }
   orb:setinterceptor(iceptor, "corba")
   loadidl(orb)
@@ -1010,6 +1016,7 @@ Options:
       orb:shutdown()
       facets.AccessControl:shutdown()
       facets.Configuration:shutdown()
+      iceptor:shutdown()
       log:uptime(msg.CoreServicesTerminated)
     end,
   }
