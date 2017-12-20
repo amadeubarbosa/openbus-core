@@ -83,6 +83,8 @@ return function(...)
   Uso: %s [opções] --login=<usuário> <comando>
   Versão: %s
 
+  Copyright (C) 2006-2017 Tecgraf, PUC-Rio
+
   Por padrão realiza-se um login por senha. Vide opção '--password'
 
   -------------------------------------------------------------------------------
