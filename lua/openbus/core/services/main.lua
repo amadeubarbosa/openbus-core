@@ -33,6 +33,8 @@ local getenv = os.getenv
 local x509 = require "lce.x509"
 local decodecertificate = x509.decode
 
+local b64encode = require("base64").encode
+
 local table = require "loop.table"
 local copy = table.copy
 local memoize = table.memoize
@@ -672,6 +674,23 @@ Options:
     objrefaddr.additional = additional
   end
   log:config(msg.AdditionalInternetAddressConfiguration:tag(objrefaddr))
+  -- validate audit configuration
+  if Configs.enableaudit then
+    local auditendpoint = Configs.auditendpoint
+    if not auditendpoint:find("^http://") then
+      log:misconfig(msg.InvalidAuditAgentHttpEndpoint:tag{url=auditendpoint})
+      return errcode.MissingAuditServiceEndpoint
+    end
+    if Configs.auditcredentials ~= "" and Configs.auditcredentials:find(":") then
+      Configs.auditcredentials = b64encode(Configs.auditcredentials)
+    end
+    for name, value in pairs(Configs) do
+      if name:find("^audit") then
+        log:config(msg.AuditAgentParameters:tag{key=name, value=value})
+      end
+    end
+  end
+  -- build orb instance
   local orb = initorb{
     host = Configs.host,
     port = getoptcfg(Configs, "port", 0),
@@ -691,6 +710,7 @@ Options:
     orb:settimeout(Configs.timeout)
   end
 
+  -- buid interceptor instance
   local iceptor
   do
     local InterceptorParams = {
@@ -702,15 +722,8 @@ Options:
 
     if Configs.enableaudit then
       InterceptorClass = require "openbus.core.services.AuditInterceptor"
-
-      local auditendpoint = Configs.auditendpoint
-      if not auditendpoint:find("^http://") then
-        log:misconfig(msg.InvalidAuditAgentEndpoint:tag{endpoint=auditendpoint})
-        return errcode.MissingAuditServiceEndpoint
-      end
-
       InterceptorParams.config = {
-        httpendpoint = auditendpoint,
+        httpendpoint = Configs.auditendpoint,
         httpproxy = Configs.auditproxy ~= "" and Configs.auditproxy,
         httpcredentials = Configs.auditcredentials ~= "" and Configs.auditcredentials,
         concurrency = Configs.auditparallel,
@@ -718,7 +731,7 @@ Options:
         discardonexit = Configs.auditdiscardonexit,
         fifolimit = Configs.auditfifolimit,
         application = Configs.auditapplication,
-        instance = Configs.auditinstance ~= "" and Configs.auditinstance,
+        instance = Configs.auditinstance ~= "" and Configs.auditinstance or nil,
       }
     end
     iceptor = InterceptorClass(InterceptorParams)
