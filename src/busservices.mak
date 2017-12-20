@@ -84,7 +84,7 @@ INCLUDES+= . \
   $(SCS_LUA_HOME)/obj/$(TEC_UNAME) \
   $(OPENBUS_LUA_HOME)/obj/$(TEC_UNAME) \
   $(OPENBUS_LUA_HOME)/src \
-  $(OPENBUS_AUDIT_HOME)/obj/$(TEC_UNAME) \
+  $(OPENBUS_AUDIT_AGENT_HOME)/obj/$(TEC_UNAME) \
   $(SQLITE_HOME) \
   $(LSQLITE3_HOME)
 LDIR+= \
@@ -102,7 +102,7 @@ LDIR+= \
   $(LUASEC_HOME)/lib/$(TEC_UNAME) \
   $(SCS_LUA_HOME)/lib/$(TEC_UNAME) \
   $(OPENBUS_LUA_HOME)/lib/$(TEC_UNAME) \
-  $(OPENBUS_AUDIT_HOME)/lib/$(TEC_UNAME) \
+  $(OPENBUS_AUDIT_AGENT_HOME)/lib/$(TEC_UNAME) \
   $(SQLITE_HOME)/.libs \
   $(LSQLITE3_HOME)/bbuild/install
 
