@@ -1075,7 +1075,9 @@ Options:
       orb:shutdown()
       facets.AccessControl:shutdown()
       facets.Configuration:shutdown()
-      iceptor:shutdown()
+      if Configs.enableaudit then
+        iceptor:shutdown()
+      end
       log:uptime(msg.CoreServicesTerminated)
     end,
   }
