@@ -72,8 +72,6 @@ local loadidl = mngidl.loadto
 local access = require "openbus.core.services.Access"
 local initorb = access.initORB
 
-local Audit = require "openbus.core.services.Audit"
-
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
 local OfferRegistry = require "openbus.core.services.OfferRegistry"
@@ -124,6 +122,7 @@ return function(...)
     WrongAlternateAddress = 28,
     InvalidMaximumCacheSize = 29,
     InvalidOrbCallsTimeout = 30,
+    MissingAuditServiceEndpoint = 31,
   }
 
   -- configuration parameters parser
@@ -176,6 +175,17 @@ return function(...)
     nodnslookup = false,
     noipaddress = false,
     alternateaddr = {},
+
+    enableaudit = false,
+    auditendpoint = "http://localhost:8080/",
+    auditcredentials = "",
+    auditproxy = "",
+    auditparallel = 5,
+    auditretrytimeout = 1,
+    auditdiscardonexit = false,
+    auditfifolimit = 1000000,
+    auditapplication = "OPENBUS",
+    auditinstance = "",
   }
 
   log:level(Configs.loglevel)
@@ -272,6 +282,17 @@ Options:
   -nodnslookup               desativa a busca no DNS por apelidos da máquina para compor as referências IOR
   -noipaddress               desativa o uso de endereços IP para compor as referências IOR
   -alternateaddr <address>   endereço de rede (host:port) alternativo para compor as referências IOR
+
+  -enableaudit               ativa a publicação de dados de auditoria em serviço HTTP externo
+  -auditendpoint <url>       endereço do serviço HTTP da auditoria
+  -auditproxy <url>          endereço do proxy HTTP
+  -auditcredentials <auth>   credenciais para autenticação HTTP básica (ex: fulano:silva)
+  -auditparallel <number>    número máximo de corotinas simultâneas para o envio de dados de auditoria
+  -auditretrytimeout <sec.>  tempo de espera entre retentativas de conexão no serviço de auditoria
+  -auditdiscardonexit        ativa o descarte de dados de auditoria pendentes no ato do desligamento do barramento
+  -auditfifolimit <number>   tamanho máximo da fila de envio de dados para o serviço de auditoria
+  -auditapplication <name>   identificação do código da solução no serviço de auditoria
+  -auditinstance <name>      identificação da instância do barramento no serviço de auditoria
 
   -configs <path>            arquivo de configurações adicionais do barramento
 
@@ -669,14 +690,39 @@ Options:
   if Configs.timeout ~= 0 then
     orb:settimeout(Configs.timeout)
   end
-  local iceptor = Audit.Interceptor{
-    prvkey = prvkey,
-    orb = orb,
-    maxcachesize = Configs.maxcachesize,
-    config = {
-      auditlogfile = Configs.logfile:gsub("%.log$",".audit.log"),
+
+  local iceptor
+  do
+    local InterceptorParams = {
+      prvkey = prvkey,
+      orb = orb,
+      maxcachesize = Configs.maxcachesize,
     }
-  }
+    local InterceptorClass = access.Interceptor
+
+    if Configs.enableaudit then
+      InterceptorClass = require "openbus.core.services.AuditInterceptor"
+
+      local auditendpoint = Configs.auditendpoint
+      if not auditendpoint:find("^http://") then
+        log:misconfig(msg.InvalidAuditAgentEndpoint:tag{endpoint=auditendpoint})
+        return errcode.MissingAuditServiceEndpoint
+      end
+
+      InterceptorParams.config = {
+        httpendpoint = auditendpoint,
+        httpproxy = Configs.auditproxy ~= "" and Configs.auditproxy,
+        httpcredentials = Configs.auditcredentials ~= "" and Configs.auditcredentials,
+        concurrency = Configs.auditparallel,
+        retrytimeout = Configs.auditretrytimeout,
+        discardonexit = Configs.auditdiscardonexit,
+        fifolimit = Configs.auditfifolimit,
+        application = Configs.auditapplication,
+        instance = Configs.auditinstance ~= "" and Configs.auditinstance,
+      }
+    end
+    iceptor = InterceptorClass(InterceptorParams)
+  end
   orb:setinterceptor(iceptor, "corba")
   loadidl(orb)
   logaddress = logaddress and iceptor.callerAddressOf

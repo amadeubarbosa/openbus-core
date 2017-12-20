@@ -106,6 +106,13 @@ if ! $(luascs)
 }
 use-project luascs : $(luascs)/bbuild ;
 
+local luaopenbusaudit = [ os.environ LUAOPENBUSAUDIT ] ;
+if ! $(luaopenbusaudit)
+{
+  luaopenbus = "$(deps)/luaopenbusaudit" ;
+}
+use-project luaopenbusaudit : $(luaopenbusaudit)/bbuild ;
+
 local luaopenbus = [ os.environ LUAOPENBUS ] ;
 if ! $(luaopenbus)
 {
@@ -187,6 +194,7 @@ make coreservices.c
     $(core)/legacy/ServiceWrappers.lua
     $(core)/services/Access.lua
     $(core)/services/AccessControl.lua
+    $(core)/services/AuditInterceptor.lua
     $(core)/services/LoginDB.lua
     $(core)/services/main.lua
     $(core)/services/messages.lua
@@ -249,6 +257,7 @@ local exe_deps =
   /oil//luaidl
   /luascs//luascs
   /luaopenbus//luaopenbus
+  /luaopenbusaudit//luaopenbusaudit
   /sqlite//sqlite3
   /luasqlite3//lsqlite3
 ;
@@ -262,6 +271,7 @@ local exe_requirements =
   <dependency>/lce//lce
   <dependency>/luascs//luascs
   <dependency>/luaopenbus//luaopenbus
+  <dependency>/luaopenbusaudit//luaopenbusaudit
   <dependency>/luasec//luasec
   <target-os>linux:<library>unix//dl
   <target-os>linux:<library>unix//pthread

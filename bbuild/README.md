@@ -30,6 +30,8 @@
 
 [luaopenbus](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-lua/tree/02_00_01)
 
+[luaopenbusaudit](https://git.tecgraf.puc-rio.br/openbus/openbus-audit-agent/tree/01_00_00)
+
 [luasqlite3](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luasqlite3/tree/master)
 
 [openbus-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/02_00)
@@ -118,11 +120,13 @@ seguintes variáveis de ambiente:
 
 `LUAVARARG`
 
-`SCSLUA`
+`LUASCS`
+
+`LUAOPENBUS`
+
+`LUAOPENBUSAUDIT`
 
 `SCS_IDL`
-
-`OPENBUSLUA`
 
 `OPENBUS_IDL`
 
