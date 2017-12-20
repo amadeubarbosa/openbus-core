@@ -6,6 +6,7 @@
 #ifndef _WIN32
 #include <lualdap.h>
 #endif
+#include "luaopenbusaudit.h"
 #include "coreservices.h"
 #include "lsqlite3.h"
 
@@ -27,5 +28,6 @@ void luapreload_extralibraries(lua_State *L)
   lua_pop(L, 1);  /* pop 'package.preload' table */
 
 #endif
+  luapreload_luaopenbusaudit(L);
   luapreload_coreservices(L);
 }
