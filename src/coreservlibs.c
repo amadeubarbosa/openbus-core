@@ -3,6 +3,7 @@
 #include "lua.h"
 #include "lauxlib.h"
 
+#include "luaiconv.h"
 #include "luuid.h"
 #include "lce.h"
 #include "lfs.h"
@@ -34,6 +35,7 @@ void luapreload_extralibraries(lua_State *L)
 #else
   luaL_findtable(L, LUA_GLOBALSINDEX, "package.preload", 1);
 #endif
+  lua_pushcfunction(L,luaopen_iconv);lua_setfield(L,-2,"iconv");
   lua_pushcfunction(L,luaopen_uuid);lua_setfield(L,-2,"uuid");
   lua_pushcfunction(L,luaopen_lfs);lua_setfield(L,-2,"lfs");
 #ifndef _WIN32
