@@ -34,6 +34,9 @@ local running = cothread.running
 
 local oillog = require "oil.verbose"
 
+local CharsetContext = require("oil.corba.giop.CharsetContext")
+local CORBACharsets = CharsetContext.known
+
 local log = require "openbus.util.logger"
 local dbconverter = require "openbus.util.database_converter"
 local dbconvert = dbconverter.convert
@@ -84,6 +87,7 @@ return function(...)
     WrongAlternateAddress = 18,
     InvalidMaximumCacheSize = 19,
     InvalidOrbCallsTimeout = 20,
+    CharsetNotSupported = 21,
   }
 
   local reloadConfigs = {
@@ -123,6 +127,8 @@ return function(...)
     nodnslookup = false,
     noipaddress = false,
     alternateaddr = {},
+
+    nativecharset = "",
   }
   for k, v in pairs(reloadConfigs) do
     defConfigs[k] = v
@@ -297,6 +303,8 @@ Options:
   -nodnslookup               desativa a busca no DNS por apelidos da máquina para compor as referências IOR
   -noipaddress               desativa o uso de endereços IP para compor as referências IOR
   -alternateaddr <address>   endereço de rede (host:port) alternativo para compor as referências IOR
+
+  -nativecharset <name>      codificação dos caracteres usada quando um sistema solicita a conversão automática
 
   -configs <path>            arquivo de configurações adicionais do barramento
   
@@ -501,6 +509,24 @@ Options:
     orbcfg.objrefaddr = objrefaddr
     log:config(msg.AdditionalInternetAddressConfiguration:tag(orbcfg.objrefaddr))
   end
+  -- validate charsets supported
+  Configs.nativecharset = Configs.nativecharset:lower()
+  local nativecharset = Configs.nativecharset
+  if nativecharset ~= "" then
+    if not CORBACharsets[nativecharset] then
+      local list = {}
+      for name in pairs(CORBACharsets) do
+        if type(name) == "string" then
+          list[#list+1] = name
+        end
+      end
+      log:misconfig(msg.CharsetNotSupported:tag{supported=list, parameter=nativecharset})
+      return errcode.CharsetNotSupported
+    else
+      log:config(msg.NativeCharsetCodeSetConfigured:tag{charset=nativecharset})
+    end
+  end
+  orbcfg.charset = Configs.nativecharset
 
   -- setup bus access
   local orb = access.initORB(orbcfg)
