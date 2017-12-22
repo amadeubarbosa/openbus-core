@@ -48,6 +48,9 @@ local oil = require "oil"
 local writeto = oil.writeto
 local oillog = require "oil.verbose"
 
+local CharsetContext = require("oil.corba.giop.CharsetContext")
+local CORBACharsets = CharsetContext.known
+
 local log = require "openbus.util.logger"
 local dbconverter = require "openbus.util.database_converter"
 local dbconvert = dbconverter.convert
@@ -125,6 +128,7 @@ return function(...)
     InvalidMaximumCacheSize = 29,
     InvalidOrbCallsTimeout = 30,
     MissingAuditServiceEndpoint = 31,
+    CharsetNotSupported = 32,
   }
 
   -- configuration parameters parser
@@ -188,6 +192,8 @@ return function(...)
     auditfifolimit = 1000000,
     auditapplication = "OPENBUS",
     auditinstance = "",
+
+    nativecharset = "",
   }
 
   log:level(Configs.loglevel)
@@ -295,6 +301,8 @@ Options:
   -auditfifolimit <number>   tamanho máximo da fila de envio de dados para o serviço de auditoria
   -auditapplication <name>   identificação do código da solução no serviço de auditoria
   -auditinstance <name>      identificação da instância do barramento no serviço de auditoria
+
+  -nativecharset <name>      codificação dos caracteres usada quando um sistema solicita a conversão automática
 
   -configs <path>            arquivo de configurações adicionais do barramento
 
@@ -690,12 +698,30 @@ Options:
       end
     end
   end
+  -- validate charsets supported
+  Configs.nativecharset = Configs.nativecharset:lower()
+  local nativecharset = Configs.nativecharset
+  if nativecharset ~= "" then
+    if not CORBACharsets[nativecharset] then
+      local list = {}
+      for name in pairs(CORBACharsets) do
+        if type(name) == "string" then
+          list[#list+1] = name
+        end
+      end
+      log:misconfig(msg.CharsetNotSupported:tag{supported=list, parameter=nativecharset})
+      return errcode.CharsetNotSupported
+    else
+      log:config(msg.NativeCharsetCodeSetConfigured:tag{charset=nativecharset})
+    end
+  end
   -- build orb instance
   local orb = initorb{
     host = Configs.host,
     port = getoptcfg(Configs, "port", 0),
     sslport = getoptcfg(Configs, "sslport", 0),
     maxchannels = getoptcfg(Configs, "maxchannels", 0),
+    charset = getoptcfg(Configs, "nativecharset", ""),
     flavor = orbflv,
     options = orbopt,
     objrefaddr = objrefaddr,
