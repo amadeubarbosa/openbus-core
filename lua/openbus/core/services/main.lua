@@ -33,7 +33,9 @@ local getenv = os.getenv
 local x509 = require "lce.x509"
 local decodecertificate = x509.decode
 
-local b64encode = require("base64").encode
+local b64 = require "base64"
+local b64encode = b64.encode
+local b64decode = b64.decode
 
 local table = require "loop.table"
 local copy = table.copy
@@ -41,8 +43,12 @@ local memoize = table.memoize
 
 local LRUCache = require "loop.collection.LRUCache"
 
+local coroutine = require "coroutine"
+local newthread = coroutine.create
+
 local cothread = require "cothread"
 local running = cothread.running
+local schedule = cothread.schedule
 
 local oil = require "oil"
 local writeto = oil.writeto
@@ -71,11 +77,16 @@ local idl = require "openbus.core.idl"
 local ServiceFailure = idl.throw.services.ServiceFailure
 local BusEntity = idl.const.BusEntity
 local BusObjectKey = idl.const.BusObjectKey
+
 local mngidl = require "openbus.core.admin.idl"
 local ConfigurationType = mngidl.types.services.admin.v1_0.Configuration
+local AuditConfigurationType = mngidl.types.services.admin.v1_1.AuditConfiguration
 local loadidl = mngidl.loadto
 local access = require "openbus.core.services.Access"
 local initorb = access.initORB
+
+local AuditAgent = require "openbus.core.audit.Agent"
+local AuditInterceptor = require "openbus.core.services.AuditInterceptor"
 
 local msg = require "openbus.core.services.messages"
 local AccessControl = require "openbus.core.services.AccessControl"
@@ -127,8 +138,9 @@ return function(...)
     WrongAlternateAddress = 28,
     InvalidMaximumCacheSize = 29,
     InvalidOrbCallsTimeout = 30,
-    MissingAuditServiceEndpoint = 31,
-    CharsetNotSupported = 32,
+    CharsetNotSupported = 31,
+    MissingAuditServiceEndpoint = 32,
+    InvalidAuditAgentHttpCredentials = 33,
   }
 
   -- configuration parameters parser
@@ -136,14 +148,14 @@ return function(...)
     iorfile = "",
     host = "*",
     port = 2089,
-  
+
     sslmode = "",
     sslport = 2090,
     sslcafile = "",
     sslcapath = "",
     sslcert = "",
     sslkey = "",
-  
+
     privatekey = "openbus.key",
     certificate = "openbus.crt",
     database = "openbus.db",
@@ -165,12 +177,12 @@ return function(...)
     admin = {},
     validator = {},
     tokenvalidator = {},
-  
+
     loglevel = 3,
     logfile = "",
     oilloglevel = 0,
     oillogfile = "",
-    
+
     noauthorizations = false,
     logaddress = false,
     nolegacy = false,
@@ -187,9 +199,9 @@ return function(...)
     auditcredentials = "",
     auditproxy = "",
     auditparallel = 5,
-    auditretrytimeout = 1,
+    auditretrytimeout = 5,
     auditdiscardonexit = false,
-    auditfifolimit = 1000000,
+    auditfifolimit = 100000,
     auditapplication = "OPENBUS",
     auditinstance = "",
 
@@ -689,14 +701,24 @@ Options:
       log:misconfig(msg.InvalidAuditAgentHttpEndpoint:tag{url=auditendpoint})
       return errcode.MissingAuditServiceEndpoint
     end
-    if Configs.auditcredentials ~= "" and Configs.auditcredentials:find(":") then
-      Configs.auditcredentials = b64encode(Configs.auditcredentials)
+    local credentials = Configs.auditcredentials
+    if credentials ~= "" then
+      if not credentials:find(":") then
+        log:misconfig(msg.InvalidAuditAgentHttpCredentials:tag{expected="string user:password", given=credentials})
+        return errcode.InvalidAuditAgentHttpCredentials
+      end
+      Configs.auditcredentials = b64encode(credentials)
     end
     for name, value in pairs(Configs) do
       if name:find("^audit") then
+        if name == "auditcredentials" and value ~= "" then
+          value = "*******" -- hidden password on logs
+        end
         log:config(msg.AuditAgentParameters:tag{key=name, value=value})
       end
     end
+  else
+    log:config(msg.AuditAgentDisabled)
   end
   -- validate charsets supported
   Configs.nativecharset = Configs.nativecharset:lower()
@@ -736,32 +758,12 @@ Options:
     orb:settimeout(Configs.timeout)
   end
 
-  -- buid interceptor instance
-  local iceptor
-  do
-    local InterceptorParams = {
-      prvkey = prvkey,
-      orb = orb,
-      maxcachesize = Configs.maxcachesize,
-    }
-    local InterceptorClass = access.Interceptor
-
-    if Configs.enableaudit then
-      InterceptorClass = require "openbus.core.services.AuditInterceptor"
-      InterceptorParams.config = {
-        httpendpoint = Configs.auditendpoint,
-        httpproxy = Configs.auditproxy ~= "" and Configs.auditproxy,
-        httpcredentials = Configs.auditcredentials ~= "" and Configs.auditcredentials,
-        concurrency = Configs.auditparallel,
-        retrytimeout = Configs.auditretrytimeout,
-        discardonexit = Configs.auditdiscardonexit,
-        fifolimit = Configs.auditfifolimit,
-        application = Configs.auditapplication,
-        instance = Configs.auditinstance ~= "" and Configs.auditinstance or nil,
-      }
-    end
-    iceptor = InterceptorClass(InterceptorParams)
-  end
+  -- build interceptor instance
+  local iceptor = AuditInterceptor{
+    prvkey = prvkey,
+    orb = orb,
+    maxcachesize = Configs.maxcachesize,
+  }
   orb:setinterceptor(iceptor, "corba")
   loadidl(orb)
   logaddress = logaddress and iceptor.callerAddressOf
@@ -772,6 +774,11 @@ Options:
     __objkey = BusObjectKey.."/Configuration"
   }
 
+  local AuditConfiguration = {
+    __type = AuditConfigurationType,
+    __facet = "AuditConfiguration",
+    __objkey = BusObjectKey.."/AuditConfiguration"
+  }
   -- prepare facets to be published as CORBA objects
   local facets = {}
   do
@@ -788,6 +795,7 @@ Options:
       end
     end
     facets.Configuration = Configuration
+    facets.AuditConfiguration = AuditConfiguration
   end
 
   function Configuration:__init(data)
@@ -947,6 +955,8 @@ Options:
       }
     end
     self:setCallsTimeout(Configs.timeout)
+
+    -- FIXME: must reload AuditConfiguration also!
   end
 
   function Configuration:grantAdminTo(entities)
@@ -1042,6 +1052,147 @@ Options:
     return oillog:level()
   end
 
+  function AuditConfiguration:__init(data)
+    local admins = data.admins
+    local access = data.access
+    local busid = access.busid
+    -- grant permissions to admin
+    access:setGrantedUsers(self.__type, "setAuditEnabled", admins)
+    access:setGrantedUsers(self.__type, "setAuditHttpProxy", admins)
+    access:setGrantedUsers(self.__type, "setAuditHttpAuth", admins)
+    access:setGrantedUsers(self.__type, "getAuditHttpAuth", admins)
+    access:setGrantedUsers(self.__type, "setAuditServiceURL", admins)
+    access:setGrantedUsers(self.__type, "setAuditFIFOLimit", admins)
+    access:setGrantedUsers(self.__type, "setAuditDiscardOnExit", admins)
+    access:setGrantedUsers(self.__type, "setAuditPublishingTasks", admins)
+    access:setGrantedUsers(self.__type, "setAuditPublishingRetryTimeout", admins)
+    -- audit configuration
+    self.config = {
+      agent = { -- see details at openbus.core.audit.Agent
+        httpendpoint = Configs.auditendpoint,
+        httpproxy = Configs.auditproxy ~= "" and Configs.auditproxy,
+        httpcredentials = Configs.auditcredentials ~= "" and Configs.auditcredentials,
+        concurrency = Configs.auditparallel,
+        retrytimeout = Configs.auditretrytimeout,
+        discardonexit = Configs.auditdiscardonexit,
+        fifolimit = Configs.auditfifolimit,
+      },
+      event = { -- see details at openbus.core.audit.Event
+        application = Configs.auditapplication,
+        instance = Configs.auditinstance ~= "" and Configs.auditinstance or busid,
+      },
+    }
+    -- initialize the event configuration
+    self.access = access
+    self.access.eventconfig = self.config.event
+    -- start agent according to configuration
+    self:setAuditEnabled(Configs.enableaudit, "config")
+  end
+
+  function AuditConfiguration:setAuditEnabled(flag, loglevel)
+    local tag = loglevel or "admin"
+    local access = self.access -- bus interceptor with builtin audit feature
+    local agent = access.auditagent
+    if not agent and (flag == true) then -- start
+      access.auditagent = AuditAgent{ config = self.config.agent }
+      log[tag](log, msg.AuditAgentEnabled)
+    end
+    if agent and (flag == false) then -- stop
+      access.auditagent = false
+      agent:shutdown()
+      log[tag](log, msg.AuditAgentDisabled)
+    end
+  end
+
+  function AuditConfiguration:getAuditEnabled()
+    return self.access.auditagent ~= false
+  end
+
+  function AuditConfiguration:getAuditHttpProxy()
+    return self.config.agent.httpproxy or ""
+  end
+
+  function AuditConfiguration:setAuditHttpAuth(encrypted)
+    local caller = self.access:getCallerChain().caller
+    local agentconfig = self.config.agent
+    local buskey = self.access.prvkey
+    local result, errmsg = buskey:decrypt(encrypted)
+    if not result then
+      ServiceFailure{
+        message = msg.UnableToDecryptDataUsingBusPrivateKey:tag{error=errmsg}
+      }
+    end
+    if result == "" or (result:find("\0") == 1) then
+      agentconfig.httpcredentials = false
+      log:admin(msg.AuditAgentHttpCredentialsRemoved:tag{login=caller.id, entity=caller.entity})
+    else
+      if not result:find(":") then
+        ServiceFailure{
+          message = msg.InvalidAuditAgentHttpCredentials:tag{
+            expected="string user:password encrypted using bus public key"
+          }
+        }
+      end
+      agentconfig.httpcredentials = b64encode(result)
+      log:admin(msg.AuditAgentHttpCredentialsUpdated:tag{login=caller.id, entity=caller.entity})
+    end
+  end
+
+  function AuditConfiguration:getAuditHttpAuth()
+    local credentials = self.config.agent.httpcredentials or ""
+    local caller = self.access:getCallerChain().caller
+    local pubkey = caller.pubkey
+    if not pubkey then
+      ServiceFailure{
+        message = msg.MissingRemotePublicKey:tag{login=caller.id, entity=caller.entity}
+      }
+    else
+      local encrypted, errmsg = pubkey:encrypt(b64decode(credentials))
+      if not encrypted then
+        ServiceFailure{
+          message = msg.UnableToEncryptDataUsingRemotePublicKey:tag{login=caller.id, entity=caller.entity, error=errmsg}
+        }
+      else
+        return encrypted
+      end
+    end
+  end
+
+  function AuditConfiguration:getAuditServiceURL()
+    return self.config.agent.httpendpoint
+  end
+
+  function AuditConfiguration:getAuditFIFOLimit()
+    return self.config.agent.fifolimit
+  end
+
+  function AuditConfiguration:getAuditFIFOLength()
+    local agent = self.access.auditagent
+    if not agent then
+      ServiceFailure{
+        message = msg.AuditAgentDisabled,
+      }
+    else
+      return agent:fifolength()
+    end
+  end
+
+  function AuditConfiguration:getAuditDiscardOnExit()
+    return self.config.agent.discardonexit
+  end
+
+  function AuditConfiguration:getAuditPublishingTasks()
+    return self.config.agent.concurrency
+  end
+
+  function AuditConfiguration:getAuditPublishingRetryTimeout()
+    return self.config.agent.retrytimeout
+  end
+
+  function AuditConfiguration:shutdown()
+    schedule(newthread(function() self:setAuditEnabled(false) end), "last")
+  end
+
   -- create SCS component
   local bus = newSCS{
     orb = orb,
@@ -1092,6 +1243,7 @@ Options:
       facets.EntityRegistry:__init(params)
       facets.OfferRegistry:__init(params)
       facets.Configuration:__init(params)
+      facets.AuditConfiguration:__init(params)
     end,
     shutdown = function(self)
       if iceptor:getCallerChain().caller.entity ~= BusEntity then
@@ -1101,13 +1253,11 @@ Options:
       orb:shutdown()
       facets.AccessControl:shutdown()
       facets.Configuration:shutdown()
-      if Configs.enableaudit then
-        iceptor:shutdown()
-      end
+      facets.AuditConfiguration:shutdown()
       log:uptime(msg.CoreServicesTerminated)
     end,
   }
-  
+
   -- create legacy SCS components
   if not Configs.nolegacy then
     local oldidl = require "openbus.core.legacy.idl"

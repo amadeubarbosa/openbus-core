@@ -25,57 +25,40 @@ local access = require "openbus.core.services.Access"
 local BusInterceptor = access.Interceptor
 
 local AuditEvent = require "openbus.core.audit.Event"
-local AuditAgent = require "openbus.core.audit.Agent"
 local AuditInterceptor = class({}, BusInterceptor)
 
-local Default = {}
-
+-- Optional fields that will be used at runtime:
+--
+--   eventconfig : table containing event configuration
+--    auditagent : the agent instance itself
+--
 function AuditInterceptor:__init()
-  local config = class(self.config or {}, Default)
-  assert(config.httpendpoint, "missing audit agent httpendpoint")
-
-  self.config = config
+  self.auditagent = self.auditagent or false
   self.auditevents = setmetatable({},{__mode = "k"})
-  self.agent = AuditAgent{
-    config = {
-      -- see all configuration options on Audit Agent source code
-      concurrency = config.concurrency,
-      retrytimeout = config.retrytimeout,
-      discardonexit = config.discardonexit,
-      fifolimit = config.fifolimit,
-      httpproxy = config.httpproxy,
-      httpendpoint = config.httpendpoint,
-      httpcredentials = config.httpcredentials,
-    }
-  }
-  AuditEvent.config = {
-    -- see all configuration options on Audit Event source code
-    application = config.application,
-    instance = config.instance,
-  }
 end
 
 function AuditInterceptor:receiverequest(request, ...)
   BusInterceptor.receiverequest(self, request, ...)
-  local chain = self:getCallerChain()
-  local event = AuditEvent()
-  event:incoming(request, chain)
-  self.auditevents[running()] = event
+  if self.auditagent then
+    local eventconfig = self.eventconfig
+    local chain = self:getCallerChain()
+    local event = AuditEvent{ config = eventconfig }
+    event:incoming(request, chain)
+    self.auditevents[running()] = event
+  end
 end
 
 function AuditInterceptor:sendreply(request)
   BusInterceptor.sendreply(self, request)
-  local thread = running()
-  local event = self.auditevents[thread]
-  if event ~= nil then
-    event:outgoing(request)
-    self.agent:publish(event)
-    self.auditevents[thread] = nil
+  if self.auditagent then
+    local thread = running()
+    local event = self.auditevents[thread]
+    if event ~= nil then
+      event:outgoing(request)
+      self.auditagent:publish(event)
+      self.auditevents[thread] = nil
+    end
   end
-end
-
-function AuditInterceptor:shutdown()
-  self.agent:shutdown()
 end
 
 return AuditInterceptor

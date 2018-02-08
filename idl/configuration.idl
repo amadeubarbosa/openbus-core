@@ -24,7 +24,7 @@ module services {
 /** \brief Módulo de gerência do serviço. */
 module admin {
 
-/** \brief Módulo de versionamento da gerência do serviço. */
+/** \brief Módulo da versão 1.0 (legada) da gerência do serviço. */
 module v1_0 {
 
 typedef sequence<Identifier> StrSeq;
@@ -63,7 +63,7 @@ interface Configuration {
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
-   * \brief Retorna a lista de usuários com permissão de administração.
+   * \brief Devolve a lista de usuários com permissão de administração.
    *
    * \return Lista de administradores
    */
@@ -89,7 +89,7 @@ interface Configuration {
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
-   * \brief Retorna a lista de validadores de login.
+   * \brief Devolve a lista de validadores de login.
    *
    * \return Lista dos nomes dos pacotes Lua da implementação dos validadores.
    */
@@ -115,7 +115,7 @@ interface Configuration {
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
-   * \brief Retorna a lista de validadores de token.
+   * \brief Devolve a lista de validadores de token.
    *
    * \return Lista dos nomes dos pacotes Lua da implementação dos validadores.
    */
@@ -131,7 +131,7 @@ interface Configuration {
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
-   * \brief Retorna o número máximo de canais de comunicação do OiL.
+   * \brief Devolve o número máximo de canais de comunicação do OiL.
    *
    * \return Número máximo de canais de comunicação do OiL.
    */
@@ -148,7 +148,7 @@ interface Configuration {
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
-   * \brief Retorna o tamanho máximo das caches LRU do barramento (profiles
+   * \brief Devolve o tamanho máximo das caches LRU do barramento (profiles
    *        IOR, sessões de entrada e sessões de saída).
    *
    * \return Tamanho máximo das caches LRU.
@@ -165,7 +165,7 @@ interface Configuration {
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
-   * \brief Retorna o tempo de espera por respostas nas chamadas do barramento.
+   * \brief Devolve o tempo de espera por respostas nas chamadas do barramento.
    *
    * \return Tempo de espera atual. Tempo 0 significa que o barramento espera
    *         indefinidamente por respostas.
@@ -180,7 +180,7 @@ interface Configuration {
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
-   * \brief Retorna o nível de log do barramento.
+   * \brief Devolve o nível de log do barramento.
    *
    * \return Nível de log do barramento.
    */
@@ -194,7 +194,7 @@ interface Configuration {
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
-   * \brief Retorna o nível de log do OiL.
+   * \brief Devolve o nível de log do OiL.
    *
    * \return Nível de log do OiL.
    */
@@ -202,7 +202,244 @@ interface Configuration {
     raises (ServiceFailure);
 };
   
-}; // version
+}; // version 1.0
+
+/** \brief Módulo da versão 1.1 da gerência do serviço. */
+module v1_1 {
+
+/**
+ * \brief Interface de administração das configurações do agente de
+ *        auditoria do barramento.
+ *
+ * O agente de auditoria é um cliente de um serviço HTTP/1.1 RESTfull
+ * destinado a coletar estatísticas de uso do barramento.
+ * 
+ * O serviço HTTP/1.1 não é parte constituinte do núcleo e é opcional.
+ * Dessa forma, o agente de auditoria é desabilitado por padrão.
+ */
+interface AuditConfiguration {
+
+  /**
+   * \brief Inicia e interrompe o agente de auditoria em tempo de execução.
+   *
+   * \param flag Verdadeiro para ativar ou falso para desativar.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditEnabled(in boolean flag)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolve se o agente de auditoria está ativado.
+   *
+   * \return Verdadeiro para ativada e falso para desativada.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  boolean getAuditEnabled()
+    raises (ServiceFailure);
+
+  /**
+   * \brief Altera a configuração do proxy usado na comunicação HTTP/1.1 com
+   *        o serviço de auditoria.
+   *
+   * \param proxy String com a URL ou hostname:porta do proxy HTTP.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditHttpProxy(in string proxy)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolve a configuração do proxy usado na comunicação HTTP/1.1 com
+   *        o serviço de auditoria.
+   *
+   * \return String com a URL ou hostname:porta do proxy HTTP.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  string getAuditHttpProxy()
+    raises (ServiceFailure);
+
+  /**
+   * \brief Altera as credenciais necessárias para autenticação básica HTTP/1.1
+   *        quando o agente se comunica com o serviço externo de auditoria.
+   *        Só é suportado método de autenticação básica.
+   *
+   * \param credentials Bloco de bytes referente ao texto encriptado com a
+   *                    chave pública do barramento.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditHttpAuth(in EncryptedBlock credentials)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolver as credenciais usadas na autenticação básica HTTP/1.1
+   *        quando o agente se comunica com o serviço externo de auditoria.
+   *
+   * \return Bloco de bytes com o texto encriptado com a chave pública usada
+   *         pelo cliente que fez a requisição (por padrão, o SDK do OpenBus
+   *         gera um par de chaves automaticamente durante a negociação).
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  EncryptedBlock getAuditHttpAuth()
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Altera a URL do serviço de auditoria externo ao barramento.
+   *
+   * \param proxy String com a URL do serviço.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditServiceURL(in string url)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolve a URL do serviço de auditoria externo ao barramento.
+   *
+   * \return String com a URL do serviço.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  string getAuditServiceURL()
+    raises (ServiceFailure);
+
+  /**
+   * \brief Altera a quantidade máxima de eventos que podem ser enfileirados
+   *        caso o serviço de auditoria externo demore em responder.
+   *
+   * \param max Inteiro (não negativo) com o comprimento máximo da fila.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditFIFOLimit(in unsigned long max)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolve a quantidade máxima de eventos que podem ser enfileirados
+   *        caso o serviço de auditoria externo demore em responder.
+   *
+   * \return Inteiro (não negativo) com o comprimento máximo da fila.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  unsigned long getAuditFIFOLimit()
+    raises (ServiceFailure);
+
+  /**
+   * \brief Devolve o tamanho atual da fila de eventos coletados e aguardando
+   *        para publicação no serviço de auditoria externo ao barramento.
+   *
+   * \return Inteiro (não negativo) com o tamanho atual da fila.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  unsigned long getAuditFIFOLength()
+    raises (ServiceFailure);
+
+  /**
+   * \brief Ativa e desativa o descarte de eventos coletados no término do
+   *        processo do barramento. Caso essa funcionalidade esteja desativada,
+   *        o processo do barramento não finaliza enquanto todos os eventos
+   *        coletados não forem enviados ao serviço de auditoria.
+   *
+   * \param flag Verdadeiro para ativar e falso para desativar.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditDiscardOnExit(in boolean flag)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolve se o descarte de eventos coletados está ativado ou 
+   *        desativado. Caso esteja desativado, o processo do barramento não
+   *        finaliza enquanto todos os eventos coletados não forem enviados
+   *        ao serviço de auditoria.
+   *
+   * \return Verdadeiro se ativado e falso se desativado.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  boolean getAuditDiscardOnExit()
+    raises (ServiceFailure);
+
+  /**
+   * \brief Altera a quantidade de tarefas simultâneas usadas no consumo da
+   *        fila de auditoria e envio para o serviço externo da auditoria.
+   *        Esse envio é feito através de corotinas e async I/O.
+   *
+   *        A quantidade de tarefas não pode ser alterada com o agente ativo.
+   *
+   * \param max Inteiro (não negativo) com a quantidade máxima de tarefas criadas.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação ou se o agente de 
+   *            auditoria estiver ativo.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditPublishingTasks(in unsigned long max)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolve a quantidade de tarefas simultâneas usadas no consumo da
+   *        fila de auditoria e envio para o serviço externo da auditoria.
+   *        Esse envio é feito através de corotinas e async I/O.
+   *
+   * \return Inteiro (não negativo) com a quantidade de tarefas em uso.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  unsigned long getAuditPublishingTasks()
+    raises (ServiceFailure);
+
+  /**
+   * \brief Altera a quantidade de tempo de espera para retentar a publicação
+   *        de um evento após ter uma falha no envio para o serviço externo da
+   *        auditoria.
+   *
+   *        O tempo entre as retentativas não pode ser alterado com o agente ativo.
+   *
+   * \param max Inteiro (não negativo) com o tempo entre retentativas.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação ou se o agente de 
+   *            auditoria estiver ativo.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditPublishingRetryTimeout(in unsigned long max)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolve a quantidade de tempo de espera para retentar a publicação
+   *        de um evento após ter uma falha no envio para o serviço externo da
+   *        auditoria.
+   *
+   * \return Inteiro (não negativo) com o tempo entre retentativas.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  unsigned long getAuditPublishingRetryTimeout()
+    raises (ServiceFailure);
+};
+
+}; // version 1.1
 
 }; // admin
 
