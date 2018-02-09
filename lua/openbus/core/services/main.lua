@@ -312,7 +312,7 @@ Options:
   -auditcredentials <auth>   credenciais para autenticação HTTP básica (ex: fulano:silva)
   -auditparallel <number>    número máximo de corotinas simultâneas para o envio de dados de auditoria
   -auditretrytimeout <sec.>  tempo de espera entre retentativas de conexão no serviço de auditoria
-  -auditdiscardonexit        ativa o descarte de dados de auditoria pendentes no ato do desligamento do barramento
+  -auditdiscardonexit        ativa o descarte de dados de auditoria pendentes durante a parada do agente de auditoria
   -auditfifolimit <number>   tamanho máximo da fila de envio de dados para o serviço de auditoria
   -auditapplication <name>   identificação do código da solução no serviço de auditoria (padrão: OPENBUS)
   -auditenvironment <name>   identificação da instância do barramento no serviço de auditoria (padrão: valor do BusId)
