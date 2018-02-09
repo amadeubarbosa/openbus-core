@@ -141,6 +141,9 @@ return function(...)
     CharsetNotSupported = 31,
     MissingAuditServiceEndpoint = 32,
     InvalidAuditAgentHttpCredentials = 33,
+    InvalidAuditAgentFifoLimit = 34,
+    InvalidAuditAgentPublishingTasks = 35,
+    InvalidAuditAgentPublishingRetryTimeout = 36,
   }
 
   -- configuration parameters parser
@@ -203,7 +206,7 @@ return function(...)
     auditdiscardonexit = false,
     auditfifolimit = 100000,
     auditapplication = "OPENBUS",
-    auditinstance = "",
+    auditenvironment = "",
 
     nativecharset = "",
   }
@@ -223,7 +226,7 @@ return function(...)
   end
   -- parse configuration file
   loadConfigs()
-  
+
   local function validateMaxChannels(maxchannels)
     if maxchannels < 1 then
       return false,
@@ -311,8 +314,8 @@ Options:
   -auditretrytimeout <sec.>  tempo de espera entre retentativas de conexão no serviço de auditoria
   -auditdiscardonexit        ativa o descarte de dados de auditoria pendentes no ato do desligamento do barramento
   -auditfifolimit <number>   tamanho máximo da fila de envio de dados para o serviço de auditoria
-  -auditapplication <name>   identificação do código da solução no serviço de auditoria
-  -auditinstance <name>      identificação da instância do barramento no serviço de auditoria
+  -auditapplication <name>   identificação do código da solução no serviço de auditoria (padrão: OPENBUS)
+  -auditenvironment <name>   identificação da instância do barramento no serviço de auditoria (padrão: valor do BusId)
 
   -nativecharset <name>      codificação dos caracteres usada quando um sistema solicita a conversão automática
 
@@ -422,14 +425,14 @@ Options:
       return errcode
     end
   end
-  
+
   -- load private key
   local prvkey, errmsg = readprivatekey(Configs.privatekey)
   if prvkey == nil then
     log:misconfig(errmsg)
     return errcode.UnableToReadPrivateKey
   end
-  
+
   -- load certificate
   local certificate, errmsg = readfile(Configs.certificate)
   if certificate == nil then
@@ -708,6 +711,18 @@ Options:
         return errcode.InvalidAuditAgentHttpCredentials
       end
       Configs.auditcredentials = b64encode(credentials)
+    end
+    if Configs.auditfifolimit < 1 then
+      log:misconfig(msg.InvalidAuditAgentFifoLimit:tag{expected="must be at least 1"})
+      return errcode.InvalidAuditAgentFifoLimit
+    end
+    if Configs.auditparallel < 1 then
+      log:misconfig(msg.InvalidAuditAgentPublishingTasks:tag{expected="must be at least 1"})
+      return errcode.InvalidAuditAgentPublishingTasks
+    end
+    if Configs.auditretrytimeout <= 0 then
+      log:misconfig(msg.InvalidAuditAgentPublishingRetryTimeout:tag{excepted="must be greater than zero"})
+      return errcode.InvalidAuditAgentPublishingRetryTimeout
     end
     for name, value in pairs(Configs) do
       if name:find("^audit") then
@@ -1059,13 +1074,14 @@ Options:
     -- grant permissions to admin
     access:setGrantedUsers(self.__type, "setAuditEnabled", admins)
     access:setGrantedUsers(self.__type, "setAuditHttpProxy", admins)
-    access:setGrantedUsers(self.__type, "setAuditHttpAuth", admins)
-    access:setGrantedUsers(self.__type, "getAuditHttpAuth", admins)
+    access:setGrantedUsers(self.__type, "setAuditHttpAuth", admins) -- encrypted payload
+    access:setGrantedUsers(self.__type, "getAuditHttpAuth", admins) -- encrypted payload
     access:setGrantedUsers(self.__type, "setAuditServiceURL", admins)
     access:setGrantedUsers(self.__type, "setAuditFIFOLimit", admins)
     access:setGrantedUsers(self.__type, "setAuditDiscardOnExit", admins)
     access:setGrantedUsers(self.__type, "setAuditPublishingTasks", admins)
     access:setGrantedUsers(self.__type, "setAuditPublishingRetryTimeout", admins)
+    access:setGrantedUsers(self.__type, "setAuditEventTemplate", admins)
     -- audit configuration
     self.config = {
       agent = { -- see details at openbus.core.audit.Agent
@@ -1079,7 +1095,7 @@ Options:
       },
       event = { -- see details at openbus.core.audit.Event
         application = Configs.auditapplication,
-        instance = Configs.auditinstance ~= "" and Configs.auditinstance or busid,
+        environment = Configs.auditenvironment ~= "" and Configs.auditenvironment or busid,
       },
     }
     -- initialize the event configuration
@@ -1089,18 +1105,25 @@ Options:
     self:setAuditEnabled(Configs.enableaudit, "config")
   end
 
+  local function getCallerLoginInfo(self)
+    local caller = self.access:getCallerChain().caller
+    return {login=caller.id, entity=caller.entity}
+  end
+
   function AuditConfiguration:setAuditEnabled(flag, loglevel)
     local tag = loglevel or "admin"
     local access = self.access -- bus interceptor with builtin audit feature
+    local details = (tag == "admin" and getCallerLoginInfo(self)) or {entity=BusEntity}
+
     local agent = access.auditagent
     if not agent and (flag == true) then -- start
       access.auditagent = AuditAgent{ config = self.config.agent }
-      log[tag](log, msg.AuditAgentEnabled)
+      log[tag](log, msg.AuditAgentEnabled:tag(details))
     end
     if agent and (flag == false) then -- stop
       access.auditagent = false
       agent:shutdown()
-      log[tag](log, msg.AuditAgentDisabled)
+      log[tag](log, msg.AuditAgentDisabled:tag(details))
     end
   end
 
@@ -1108,12 +1131,19 @@ Options:
     return self.access.auditagent ~= false
   end
 
+  function AuditConfiguration:setAuditHttpProxy(proxy)
+    self.config.agent.httpproxy = (proxy ~= "") and proxy
+    local details = getCallerLoginInfo(self)
+    details.proxy = proxy
+    log:admin(msg.AuditAgentHttpProxyUpdated:tag(details))
+  end
+
   function AuditConfiguration:getAuditHttpProxy()
     return self.config.agent.httpproxy or ""
   end
 
   function AuditConfiguration:setAuditHttpAuth(encrypted)
-    local caller = self.access:getCallerChain().caller
+    local details = getCallerLoginInfo(self)
     local agentconfig = self.config.agent
     local buskey = self.access.prvkey
     local result, errmsg = buskey:decrypt(encrypted)
@@ -1124,7 +1154,7 @@ Options:
     end
     if result == "" or (result:find("\0") == 1) then
       agentconfig.httpcredentials = false
-      log:admin(msg.AuditAgentHttpCredentialsRemoved:tag{login=caller.id, entity=caller.entity})
+      log:admin(msg.AuditAgentHttpCredentialsRemoved:tag(details))
     else
       if not result:find(":") then
         ServiceFailure{
@@ -1134,13 +1164,13 @@ Options:
         }
       end
       agentconfig.httpcredentials = b64encode(result)
-      log:admin(msg.AuditAgentHttpCredentialsUpdated:tag{login=caller.id, entity=caller.entity})
+      log:admin(msg.AuditAgentHttpCredentialsUpdated:tag(details))
     end
   end
 
   function AuditConfiguration:getAuditHttpAuth()
-    local credentials = self.config.agent.httpcredentials or ""
     local caller = self.access:getCallerChain().caller
+    local credentials = self.config.agent.httpcredentials or ""
     local pubkey = caller.pubkey
     if not pubkey then
       ServiceFailure{
@@ -1158,8 +1188,32 @@ Options:
     end
   end
 
+  function AuditConfiguration:setAuditServiceURL(url)
+    if not url:find("^http://") then
+      ServiceFailure{
+        message = msg.InvalidAuditAgentHttpEndpoint:tag{url=url, expected="a string starting with http://"}
+      }
+    end
+    self.config.agent.httpendpoint = url
+    local details = getCallerLoginInfo(self)
+    details.url = url
+    log:admin(msg.AuditAgentHttpEndpointUpdated:tag(details))
+  end
+
   function AuditConfiguration:getAuditServiceURL()
     return self.config.agent.httpendpoint
+  end
+
+  function AuditConfiguration:setAuditFIFOLimit(limit)
+    if limit < 1 then
+      ServiceFailure{
+        message = msg.InvalidAuditAgentFifoLimit:tag{expected="must be at least 1", given=limit}
+      }
+    end
+    self.config.agent.fifolimit = limit
+    local details = getCallerLoginInfo(self)
+    details.limit = limit
+    log:admin(msg.AuditAgentFifoLimitUpdated:tag(details))
   end
 
   function AuditConfiguration:getAuditFIFOLimit()
@@ -1177,16 +1231,76 @@ Options:
     end
   end
 
+  function AuditConfiguration:setAuditDiscardOnExit(flag)
+    self.config.agent.discardonexit = flag
+    local details = getCallerLoginInfo(self)
+    details.activated = flag
+    log:admin(msg.AuditAgentDiscardOnExitUpdated:tag(details))
+  end
+
   function AuditConfiguration:getAuditDiscardOnExit()
     return self.config.agent.discardonexit
+  end
+
+  function AuditConfiguration:setAuditPublishingTasks(tasks)
+    local current = self.config.agent.concurrency
+    if self:getAuditEnabled() then
+      ServiceFailure{
+        message = msg.UnableToChangePublishingTasksWhileAgentIsRunning:tag{current=current}
+      }
+    end
+    if tasks < 1 then
+      ServiceFailure{
+        message = msg.InvalidAuditAgentPublishingTasks:tag{expected="must be at least 1"}
+      }
+    end
+    self.config.agent.concurrency = tasks
+    local details = getCallerLoginInfo(self)
+    details.concurrency = tasks
+    log:admin(msg.AuditAgentPublishingTasksUpdated:tag(details))
   end
 
   function AuditConfiguration:getAuditPublishingTasks()
     return self.config.agent.concurrency
   end
 
+  function AuditConfiguration:setAuditPublishingRetryTimeout(timeout)
+    if timeout <= 0 then
+      ServiceFailure{
+        message = msg.InvalidAuditAgentPublishingRetryTimeout:tag{expected="must be greater than zero"}
+      }
+    end
+    self.config.agent.retrytimeout = timeout
+    local details = getCallerLoginInfo(self)
+    details.retrytimeout = timeout
+    log:admin(msg.AuditAgentPublishingRetryTimeoutUpdated:tag(details))
+  end
+
   function AuditConfiguration:getAuditPublishingRetryTimeout()
     return self.config.agent.retrytimeout
+  end
+
+  function AuditConfiguration:setAuditEventTemplate(field, value)
+    local eventconfig = self.config.event
+    if not eventconfig[field] then
+      ServiceFailure{
+        message = msg.InvalidAuditEventTemplateFieldName:tag{name=field}
+      }
+    end
+    self.config.event[field] = value
+    local details = getCallerLoginInfo(self)
+    details.field = field
+    details.value = value
+    log:admin(msg.AuditEventTemplateUpdated:tag(details))
+  end
+
+  function AuditConfiguration:getAuditEventTemplate()
+    local result = {}
+    for k,v in pairs(self.config.event) do
+      result[#result+1] = {name=k, value=v}
+    end
+    log:print("getAuditEventTemplate=",result)
+    return result
   end
 
   function AuditConfiguration:shutdown()

@@ -200,12 +200,25 @@ interface Configuration {
    */
   unsigned short getOilLogLevel() 
     raises (ServiceFailure);
-};
+}; // Configuration interface
   
 }; // version 1.0
 
 /** \brief Módulo da versão 1.1 da gerência do serviço. */
 module v1_1 {
+
+/**
+ * \brief Estrutura para mapa de nomes e valores, ambos com tipos string.
+ */
+struct NameValueString {
+  string name;
+  string value;
+};
+
+/**
+ * \brief Lista da estrutura para mapa de nomes e valores.
+ */
+typedef sequence<NameValueString> NameValueStringSeq;
 
 /**
  * \brief Interface de administração das configurações do agente de
@@ -390,9 +403,9 @@ interface AuditConfiguration {
    * \param max Inteiro (não negativo) com a quantidade máxima de tarefas criadas.
    *
    * \exception UnauthorizedOperation Caso a entidade conectada não tenha
-   *            permissão para executar essa operação ou se o agente de 
-   *            auditoria estiver ativo.
-   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento ou se o
+   *            agente de auditoria estiver ativo.
    */
   void setAuditPublishingTasks(in unsigned long max)
     raises (UnauthorizedOperation, ServiceFailure);
@@ -414,16 +427,13 @@ interface AuditConfiguration {
    *        de um evento após ter uma falha no envio para o serviço externo da
    *        auditoria.
    *
-   *        O tempo entre as retentativas não pode ser alterado com o agente ativo.
-   *
-   * \param max Inteiro (não negativo) com o tempo entre retentativas.
+   * \param timeout Decimal (não negativo) com o tempo entre retentativas.
    *
    * \exception UnauthorizedOperation Caso a entidade conectada não tenha
-   *            permissão para executar essa operação ou se o agente de 
-   *            auditoria estiver ativo.
+   *            permissão para executar essa operação.
    * \exception ServiceFailure Caso ocorra alguma falha no barramento.
    */
-  void setAuditPublishingRetryTimeout(in unsigned long max)
+  void setAuditPublishingRetryTimeout(in double timeout)
     raises (UnauthorizedOperation, ServiceFailure);
 
   /**
@@ -431,13 +441,42 @@ interface AuditConfiguration {
    *        de um evento após ter uma falha no envio para o serviço externo da
    *        auditoria.
    *
-   * \return Inteiro (não negativo) com o tempo entre retentativas.
+   * \return Decimal (não negativo) com o tempo entre retentativas.
    *
    * \exception ServiceFailure Caso ocorra alguma falha no barramento.
    */
-  unsigned long getAuditPublishingRetryTimeout()
+  double getAuditPublishingRetryTimeout()
     raises (ServiceFailure);
-};
+
+  /**
+   * \brief Altera os campos configuráveis do evento a ser publicado no serviço
+   *        de auditoria. Exemplo de nomes de campos: application, environment.
+   *
+   *        Os valores passam a valer para os próximos eventos coletados.
+   *        Eventos já enfileirados serão publicados com os valores antigos.
+   *
+   * \param field String com o nome do campo no template de eventos.
+   * \param value String com o valor para o campo no template de eventos.
+   *
+   * \exception UnauthorizedOperation Caso a entidade conectada não tenha
+   *            permissão para executar essa operação.
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  void setAuditEventTemplate(in string field, in string value)
+    raises (UnauthorizedOperation, ServiceFailure);
+
+  /**
+   * \brief Devolve todos os campos configuráveis suportados pelo template de
+   *        eventos do agente de auditoria.
+   *
+   * \return Lista com os nomes e valores de todos os campos configuráveis.
+   *
+   * \exception ServiceFailure Caso ocorra alguma falha no barramento.
+   */
+  NameValueStringSeq getAuditEventTemplate()
+    raises (ServiceFailure);
+
+}; // AuditConfiguration interface
 
 }; // version 1.1
 
