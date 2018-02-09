@@ -350,7 +350,7 @@ Não é definido um valor padrão. O valor deve ser um nome e porta separados pelo 
   \item [-enableaudit] Ativa a publicação de dados de auditoria em serviço HTTP externo.\\
 Por padrão, a auditoria está desabilitada.
   \item [-auditendpoint] Endereço e porta do serviço HTTP da auditoria.\\
-O valor padrão é http://localhost:51398.
+O valor padrão é http://localhost:8080.
   \item [-auditproxy] Endereço e porta para o servidor de proxy HTTP.\\
 O valor padrão é vazio e as conexões HTTP são realizadas diretamente.
   \item [-auditcredentials] Credenciais para autenticação pelo método básico do HTTP.\\
@@ -476,8 +476,8 @@ Entre os campos acima, apenas \code{environment} e \code{solutionCode} podem ser
 Recomenda-se usar o \code{-auditapplication} como um identificador da tecnologia, por exemplo \code{OPENBUS}, e o \code{-auditenvironment} como um identificador da instalação.
 
 O serviço de auditoria, por sua vez, \textbf{não é fornecido} no pacote do barramento.
-Um exemplo de código baseado em Node.JS\cite{web:nodejs} que executa uma aplicação web para efeitos de teste da auditoria é dada a seguir. 
-Nesse exemplo utilize o endereço \code{http://localhost:51398} para publicar eventos sem autenticação e \code{http://localhost:51398/protected} para experimentar uso de credenciais HTTP (lembre-se de ajustar o parâmetro \code{-auditcredentials} no \emph{busservices}).
+Um exemplo de código baseado em Node.JS\cite{web:nodejs} que executa uma aplicação web para efeitos de teste da auditoria é dado a seguir. 
+Este exemplo utiliza o endereço \code{http://localhost:8080} para publicar eventos sem autenticação e \code{http://localhost:8080/protected} para experimentar uso de autenticação HTTP (será necessário usar os parâmetros \code{-auditendpoint} e \code{-auditcredentials} no \emph{busservices}).
 \begin{verbatim}
 const express = require('express')
 const app = express()
@@ -510,7 +510,7 @@ var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
 
-const port = 51398
+const port = 8080
 
 app.post('/protected', auth, (req, res) => {
   console.log('Received a protected event ' + req.url)
