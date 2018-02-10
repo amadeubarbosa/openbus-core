@@ -1098,11 +1098,15 @@ Options:
         environment = Configs.auditenvironment ~= "" and Configs.auditenvironment or busid,
       },
     }
-    -- initialize the event configuration
+    access.eventconfig = self.config.event
     self.access = access
-    self.access.eventconfig = self.config.event
-    -- start agent according to configuration
-    self:setAuditEnabled(Configs.enableaudit, "config")
+
+    if Configs.enableaudit then
+      self:agentStart()
+      log:config(msg.AuditAgentEnabled)
+    else
+      log:config(msg.AuditAgentDisabled)
+    end
   end
 
   local function getCallerLoginInfo(self)
@@ -1110,20 +1114,28 @@ Options:
     return {login=caller.id, entity=caller.entity}
   end
 
-  function AuditConfiguration:setAuditEnabled(flag, loglevel)
-    local tag = loglevel or "admin"
-    local access = self.access -- bus interceptor with builtin audit feature
-    local details = (tag == "admin" and getCallerLoginInfo(self)) or {entity=BusEntity}
+  function AuditConfiguration:agentStart()
+    self.access.auditagent = AuditAgent{ config = self.config.agent }
+  end
 
+  function AuditConfiguration:agentStop()
+    local access = self.access
     local agent = access.auditagent
+    access.auditagent = false -- interrupt the production of events
+    agent:shutdown()
+  end
+
+  function AuditConfiguration:setAuditEnabled(flag)
+    local agent = self.access.auditagent -- audit feature builtin
+    local details = getCallerLoginInfo(self)
+
     if not agent and (flag == true) then -- start
-      access.auditagent = AuditAgent{ config = self.config.agent }
-      log[tag](log, msg.AuditAgentEnabled:tag(details))
+      self:agentStart()
+      log:admin(msg.AuditAgentEnabled:tag(details))
     end
     if agent and (flag == false) then -- stop
-      access.auditagent = false
-      agent:shutdown()
-      log[tag](log, msg.AuditAgentDisabled:tag(details))
+      self:agentStop()
+      log:admin(msg.AuditAgentDisabled:tag(details))
     end
   end
 
@@ -1304,7 +1316,11 @@ Options:
   end
 
   function AuditConfiguration:shutdown()
-    schedule(newthread(function() self:setAuditEnabled(false) end), "last")
+    if self:getAuditEnabled() then
+      schedule(newthread(function()
+        self:agentStop()
+      end), "last")
+    end
   end
 
   -- create SCS component
