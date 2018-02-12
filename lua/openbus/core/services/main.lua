@@ -1311,7 +1311,6 @@ Options:
     for k,v in pairs(self.config.event) do
       result[#result+1] = {name=k, value=v}
     end
-    log:print("getAuditEventTemplate=",result)
     return result
   end
 
