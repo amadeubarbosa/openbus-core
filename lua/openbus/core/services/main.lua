@@ -14,6 +14,7 @@ local tostring = _G.tostring
 
 local array = require "table"
 local concat = array.concat
+local unpack = array.unpack or _G.unpack
 
 local string = require "string"
 local format = string.format
@@ -214,7 +215,7 @@ return function(...)
   log:level(Configs.loglevel)
   log:version(msg.CopyrightNotice)
 
-  local function loadConfigs()
+  local function loadConfigFiles()
     local path = getenv("OPENBUS_CONFIG")
     if path == nil then
       path = "openbus.cfg"
@@ -225,7 +226,7 @@ return function(...)
     Configs:configs("configs", path)
   end
   -- parse configuration file
-  loadConfigs()
+  loadConfigFiles()
 
   local function validateMaxChannels(maxchannels)
     if maxchannels < 1 then
@@ -245,6 +246,7 @@ return function(...)
     return true
   end
 
+  local commandLineParams = {...}
   do -- parse command line parameters
     local argidx, errmsg = Configs(...)
     if argidx == nil or argidx <= select("#", ...) then
@@ -710,7 +712,6 @@ Options:
         log:misconfig(msg.InvalidAuditAgentHttpCredentials:tag{expected="string user:password", given=credentials})
         return errcode.InvalidAuditAgentHttpCredentials
       end
-      Configs.auditcredentials = b64encode(credentials)
     end
     if Configs.auditfifolimit < 1 then
       log:misconfig(msg.InvalidAuditAgentFifoLimit:tag{expected="must be at least 1"})
@@ -819,6 +820,7 @@ Options:
     self.passwordValidators = data.passwordValidators
     self.tokenValidators = data.tokenValidators
     self.timeout = data.timeout
+    self.commandLine = data.commandLine
     local access = self.access
     local admins = self.admins
     access:setGrantedUsers(self.__type, "reloadConfigsFile", admins)
@@ -832,7 +834,7 @@ Options:
     access:setGrantedUsers(self.__type, "setLogLevel", admins)
     access:setGrantedUsers(self.__type, "setOilLogLevel", admins)
     -- sugar syntax for password and token validators operations
-    local adaptee = function(self, func, context)
+    local adaptee = function(func, context)
       return function(self, ...)
         return func(self, context, ...)
       end
@@ -842,10 +844,10 @@ Options:
         info = (kind == "Password") and valinfo.validator or valinfo.tokenvalidator,
         list = self[kind:lower().."Validators"],
       }
-      self["get"..kind.."Validators"] = adaptee(self, self.getValidators, context)
-      self["add"..kind.."Validator"] = adaptee(self, self.addValidator, context)
-      self["del"..kind.."Validator"] = adaptee(self, self.delValidator, context)
-      self["delAll"..kind.."Validators"] = adaptee(sef, self.delAllValidators, context)
+      self["get"..kind.."Validators"] = adaptee(self.getValidators, context)
+      self["add"..kind.."Validator"] = adaptee(self.addValidator, context)
+      self["del"..kind.."Validator"] = adaptee(self.delValidator, context)
+      self["delAll"..kind.."Validators"] = adaptee(self.delAllValidators, context)
     end
   end
 
@@ -944,18 +946,46 @@ Options:
     return array
   end
 
+  local function getCallerLoginInfo(self)
+    local caller = self.access:getCallerChain().caller
+    return {login=caller.id, entity=caller.entity}
+  end
+
   -- IDL operations
   function Configuration:reloadConfigsFile()
+    local caller = getCallerLoginInfo(self)
+    local facets = self.context
     local admins = self.admins
     local passwordValidators = self.passwordValidators
     local tokenValidators = self.tokenValidators
-    -- load configuration from file
-    loadConfigs()
-    -- reconfigure its parameters
+    local commandLine = self.commandLine
+    -- OPENBUS-3062: all multiple options must be reset before reload
+    local ConfigsBackup = copy(Configs)
+    for param, value in pairs(Configs) do
+      if type(value) == "table" then
+        Configs[param] = {}
+      end
+    end
+    -- load configuration from files again
+    loadConfigFiles()
+    -- parse command line to override config file values
+    local argidx, errmsg = Configs(unpack(commandLine))
+    if argidx == nil or argidx <= #commandLine then
+      if argidx ~= nil then
+        errmsg = msg.IllegalConfigurationParameter:tag{value=commandLine[argidx]}
+      end
+      Configs = ConfigsBackup
+      log:action(msg.RollingBackConfigurationDueToReloadFailure:tag(caller))
+      ServiceFailure{
+        message = errmsg
+      }
+    end
+    -- reconfigure only the supported parameters
     self:setLogLevel(Configs.loglevel)
     self:setOilLogLevel(Configs.oilloglevel)
     self:setMaxChannels(Configs.maxchannels)
     self:setMaxCacheSize(Configs.maxcachesize)
+    self:setCallsTimeout(Configs.timeout)
     self:updateAdmins(toarray(self.admins), "revoke")
     self:updateAdmins(Configs.admin, "grant")
     self:delAllPasswordValidators()
@@ -969,9 +999,9 @@ Options:
         message = errmsg
       }
     end
-    self:setCallsTimeout(Configs.timeout)
-
-    -- FIXME: must reload AuditConfiguration also!
+    log:admin(msg.BusConfigurationReloadedSuccessfully:tag(caller))
+    -- reload audit parameters also
+    facets.AuditConfiguration:reloadConfigs()
   end
 
   function Configuration:grantAdminTo(entities)
@@ -1083,23 +1113,11 @@ Options:
     access:setGrantedUsers(self.__type, "setAuditPublishingRetryTimeout", admins)
     access:setGrantedUsers(self.__type, "setAuditEventTemplate", admins)
     -- audit configuration
-    self.config = {
-      agent = { -- see details at openbus.core.audit.Agent
-        httpendpoint = Configs.auditendpoint,
-        httpproxy = Configs.auditproxy ~= "" and Configs.auditproxy,
-        httpcredentials = Configs.auditcredentials ~= "" and Configs.auditcredentials,
-        concurrency = Configs.auditparallel,
-        retrytimeout = Configs.auditretrytimeout,
-        discardonexit = Configs.auditdiscardonexit,
-        fifolimit = Configs.auditfifolimit,
-      },
-      event = { -- see details at openbus.core.audit.Event
-        application = Configs.auditapplication,
-        environment = Configs.auditenvironment ~= "" and Configs.auditenvironment or busid,
-      },
-    }
-    access.eventconfig = self.config.event
+    self.config = { agent = {}, event = {} }
     self.access = access
+    access.eventconfig = self.config.event
+    -- parse configuration
+    self:parseConfigs(Configs)
 
     if Configs.enableaudit then
       self:agentStart()
@@ -1109,9 +1127,30 @@ Options:
     end
   end
 
-  local function getCallerLoginInfo(self)
-    local caller = self.access:getCallerChain().caller
-    return {login=caller.id, entity=caller.entity}
+  function AuditConfiguration:reloadConfigs()
+    local caller = getCallerLoginInfo(self)
+    self:parseConfigs(Configs)
+    self:setAuditEnabled(Configs.enableaudit) -- start/stop if applies
+    log:admin(msg.AuditConfigurationReloadedSuccessfully:tag(caller))
+  end
+
+  function AuditConfiguration:parseConfigs(params)
+    local busid = self.access.busid
+    local agentcfg = self.config.agent
+    local eventcfg = self.config.event
+    -- see details at openbus.core.audit.Agent
+    agentcfg.httpendpoint = params.auditendpoint
+    agentcfg.httpproxy = params.auditproxy ~= "" and params.auditproxy
+    agentcfg.httpcredentials =
+      params.auditcredentials ~= "" and b64encode(params.auditcredentials)
+    agentcfg.concurrency = params.auditparallel
+    agentcfg.retrytimeout = params.auditretrytimeout
+    agentcfg.discardonexit = params.auditdiscardonexit
+    agentcfg.fifolimit = params.auditfifolimit
+    -- see details at openbus.core.audit.Event
+    eventcfg.application = params.auditapplication
+    eventcfg.environment =
+      params.auditenvironment ~= "" and params.auditenvironment or busid
   end
 
   function AuditConfiguration:agentStart()
@@ -1346,6 +1385,7 @@ Options:
         passwordValidators = validators.validator,
         tokenValidators = validators.tokenvalidator,
         enforceAuth = not Configs.noauthorizations,
+        commandLine = commandLineParams,
       }
       log:config(msg.LoadedBusDatabase:tag{path=Configs.database})
       log:config(msg.LoadedBusPrivateKey:tag{path=Configs.privatekey})
