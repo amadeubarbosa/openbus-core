@@ -448,19 +448,19 @@ O valor padrão é o mesmo do \code{BusID} (gerado automaticamente) e pode ser red
   \item [id] String com identificação única do evento.\\
 Valor gerado automaticamente. Exemplo: d3b0fbdb138f4bfca689d30b23e1fa38.
   \item [actionName] String com nome da ação.\\
-Valor preenchido com o campo \code{request.operation_name} da requisição CORBA. Exemplo: findServices.
+Valor preenchido com o campo \code{request.operation\_name} da requisição CORBA. Exemplo: findServices.
   \item [interfaceName]: String que contém o tipo do serviço em uso.\\
-Valor do campo \code{request.interface.repID} da requisição CORBA. Exemplo: IDL:tecgraf/openbus/core/v2_1/services/offer_registry/OfferRegistry:1.0.
+Valor do campo \code{request.interface.repID} da requisição CORBA. Exemplo: IDL:tecgraf/openbus/core/v2\_1/services/offer\_registry/OfferRegistry:1.0.
   \item [timestamp] String de data em que a requisição foi interceptada.\\
 Valor da chamada de sistema \code{gettimeofday} no ato do recebimento da requisição. Exemplo: 2017-09-06 09:05:37.022.
   \item [userName] String com o nome da entidade que fez a solicitação.\\
-Valor preenchido com o \code{CallChain.caller.entity} contido no \code{request.service_context} da requisição CORBA. Exemplo: fulano.
+Valor preenchido com o \code{CallChain.caller.entity} contido no \code{request.service\_context} da requisição CORBA. Exemplo: fulano.
   \item [loginId] String que contém o UUID do login da entidade que fez a solicitação.\\
-Valor preenchido com o \code{CallChain.caller.id} contido no \code{request.service_context} da requisição CORBA. Exemplo: fbedb4ba-9ce4-11e7-a153-0050569e00fc.
+Valor preenchido com o \code{CallChain.caller.id} contido no \code{request.service\_context} da requisição CORBA. Exemplo: fbedb4ba-9ce4-11e7-a153-0050569e00fc.
   \item [openbusProtocol] String com a versão do protocolo do OpenBus sendo utilizada na requisição.\\
-Valor é extraído da versão dos metadados do protocolo ou do nome das interfaces (quando ainda não é uma chamada do protocolo) ou ainda do \code{request.object_key} do objeto sendo acessado. Exemplo: v2_0, v2_1.
+Valor é extraído da versão dos metadados do protocolo ou do nome das interfaces (quando ainda não é uma chamada do protocolo) ou ainda do \code{request.object\_key} do objeto sendo acessado. Exemplo: v2\_0, v2\_1.
   \item [ipOrigin] String que contém o endereço de rede (IPv4) do processo cliente que fez a requisição.\\
-Valor do campo \code{request.channel_address} da requisição CORBA. Exemplo: 10.29.234.53:44000.
+Valor do campo \code{request.channel\_address} da requisição CORBA. Exemplo: 10.29.234.53:44000.
   \item [input] String codificada em Base64 com os parâmetros de entrada da operação.\\
 Valor preenchido com campo \code{request.parameters} da requisição CORBA.
   \item [resultCode] Booleano com o resultado da operação: verdadeiro caso finalizou com sucesso e falso caso ocorreu uma exceção.\\
