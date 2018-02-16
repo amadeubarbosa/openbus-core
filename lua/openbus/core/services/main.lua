@@ -98,6 +98,17 @@ local SSLRequiredOptions = {
   supported = true,
 }
 
+-- ATTENTION: don't prevent loops, use only for config
+local function deepcopy(source, destiny)
+  local destiny = copy(source, destiny)
+  for k, v in pairs(source) do
+    if type(v) == "table" then
+      destiny[k] = copy(source[k], {})
+    end
+  end
+  return destiny
+end
+
 local function getoptcfg(configs, field, default)
   local value = configs[field]
   if value ~= default then
@@ -148,7 +159,7 @@ return function(...)
   }
 
   -- configuration parameters parser
-  local Configs = ConfigArgs{
+  local Default = {
     iorfile = "",
     host = "*",
     port = 2089,
@@ -211,6 +222,10 @@ return function(...)
 
     nativecharset = "",
   }
+  -- OPENBUS-3062:
+  --- oo.class is defined as loop.hierarchy.mutator
+  --- but we need an explicit copy to reconfiguration
+  local Configs = ConfigArgs(deepcopy(Default))
 
   log:level(Configs.loglevel)
   log:version(msg.CopyrightNotice)
@@ -959,13 +974,10 @@ Options:
     local passwordValidators = self.passwordValidators
     local tokenValidators = self.tokenValidators
     local commandLine = self.commandLine
-    -- OPENBUS-3062: all multiple options must be reset before reload
-    local ConfigsBackup = copy(Configs)
-    for param, value in pairs(Configs) do
-      if type(value) == "table" then
-        Configs[param] = {}
-      end
-    end
+
+    local ConfigsBackup = deepcopy(Configs)
+    Configs = ConfigArgs(deepcopy(Default))
+
     -- load configuration from files again
     loadConfigFiles()
     -- parse command line to override config file values
@@ -974,6 +986,7 @@ Options:
       if argidx ~= nil then
         errmsg = msg.IllegalConfigurationParameter:tag{value=commandLine[argidx]}
       end
+      -- restore backup if it fails
       Configs = ConfigsBackup
       log:action(msg.RollingBackConfigurationDueToReloadFailure:tag(caller))
       ServiceFailure{
