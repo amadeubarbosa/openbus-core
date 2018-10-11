@@ -28,17 +28,17 @@
 
 [luavararg](https://git.tecgraf.puc-rio.br/openbus-3rd-party/vararg/tree/1.1)
 
-[luaopenbus](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-lua/tree/02_00_01)
+[luaopenbus](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-lua/tree/master)
 
 [luaopenbusaudit](https://git.tecgraf.puc-rio.br/openbus/openbus-audit-agent/tree/01_00_00)
 
 [luasqlite3](https://git.tecgraf.puc-rio.br/openbus-3rd-party/luasqlite3/tree/master)
 
-[openbus-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/02_00)
+[openbus-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/master)
 
-[openbus-lib-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-idl-lib/tree/02_00)
+[openbus-lib-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-sdk-idl-lib/tree/master)
 
-[openbus-legacy-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/OB_IDL_v1_05_2010_05_13)
+[openbus-legacy-idl](https://git.tecgraf.puc-rio.br/openbus/openbus-idl/tree/02_00)
 
 [openssl-1.1.0o](http://webserver2.tecgraf.puc-rio.br/ftp_pub/openbus/repository/openssl-1.0.0o.tar.gz)
 

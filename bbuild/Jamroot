@@ -109,7 +109,7 @@ use-project luascs : $(luascs)/bbuild ;
 local luaopenbusaudit = [ os.environ LUAOPENBUSAUDIT ] ;
 if ! $(luaopenbusaudit)
 {
-  luaopenbus = "$(deps)/luaopenbusaudit" ;
+  luaopenbusaudit = "$(deps)/luaopenbusaudit" ;
 }
 use-project luaopenbusaudit : $(luaopenbusaudit)/bbuild ;
 
