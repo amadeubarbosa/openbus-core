@@ -236,7 +236,8 @@ make $(root)/lua/openbus/core/admin/parsed.lua
     $(openbus-idl)/src/openbus_access-2.1.idl
     $(openbus-idl)/src/openbus_offers-2.1.idl
   : idl2lua.compile
-  : <include>$(openbus-idl)/src
+  : <dependency>/lua//stage
+    <include>$(openbus-idl)/src
     <include>$(openbus-legacy-idl)/src
     <include>$(scs-idl)/src
   ;
